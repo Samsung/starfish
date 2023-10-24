@@ -636,12 +636,12 @@ mkdir -p %{buildroot}%{_includedir}/%{name}
 cp inc/*.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
-cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
+cp %{out_tizen}/lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %if "%{?skip_dali_build}" == "0"
-cp lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
+cp %{out_tizen}/lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
 %endif
 %if "%{?enable_serviceworker}" == "1"
-cp lightweight-web-engine-serviceworker.pc %{buildroot}%{_libdir}/pkgconfig/
+cp %{out_tizen}/lightweight-web-engine-serviceworker.pc %{buildroot}%{_libdir}/pkgconfig/
 %endif
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/

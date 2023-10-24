@@ -31,3 +31,9 @@ jobs:
           cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DARCH=x86 -DMODE=release -Bout_windows/ -DHOST=windows
           cmake --build out_windows --config Release -j
         shell: cmd
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: windows_build_pr
+          path: |
+            ./out_windows/Release/*.dll
+            ./out_windows/Release/StarfishWinformShell.exe
