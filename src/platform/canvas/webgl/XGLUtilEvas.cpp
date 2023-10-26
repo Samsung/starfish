@@ -29,9 +29,9 @@
 
 namespace XGLUtil {
 
-bool createXGLContext(XGLContext& context, const XGLPlatform& platform,
-                      const XGLContext shareContext)
+bool createXGLContext(XGLContext& context, const XGLContext shareContext)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     XGLContext newContext = evas_gl_context_version_create(
         platform.evasgl.object, shareContext,
         Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
@@ -48,40 +48,38 @@ bool createXGLContext(XGLContext& context, const XGLPlatform& platform,
     return true;
 }
 
-bool destroyXGLContext(const XGLPlatform& platform, const XGLContext context)
+bool destroyXGLContext(const XGLContext context)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     evas_gl_context_destroy(platform.evasgl.object, context);
     return true;
 }
 
-bool makeCurrentXGLContext(const XGLPlatform& platform,
-                           const XGLContext context)
+bool makeCurrentXGLContext(const XGLContext context)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     Eina_Bool evas_result = evas_gl_make_current(
         platform.evasgl.object, platform.evasgl.surface, context);
+
+    STARFISH_ASSERT(evas_result == EINA_TRUE);
+
     return evas_result == EINA_TRUE ? true : false;
 }
 
-bool resetCurrentXGLContext(const XGLPlatform& platform)
+bool resetCurrentXGLContext()
 {
+    XGLPlatform platform = XGLPlatform::ref();
     evas_gl_make_current(platform.evasgl.object, nullptr, nullptr);
     return true;
 }
 
-XGLContext getCurrentXGLContext()
-{
-    // TODO
-    STARFISH_ASSERT(false);
-    return nullptr;
-}
-
-bool swapXGLBuffer(const XGLPlatform& platform)
+bool swapXGLBuffer()
 {
     // Handled by Evas, nothing to do.
     return true;
 }
 
-void printXGLInfo(const XGLPlatform& platform)
+void printXGLInfo()
 {
 }
 

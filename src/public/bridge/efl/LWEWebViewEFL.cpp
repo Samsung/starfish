@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
+#include "platform/canvas/webgl/XGLUtil.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 
@@ -346,7 +347,6 @@ public:
 
 #if defined(PORT_WINDOW_BACKEND_GL)
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
-        m_glGlapi = evas_gl_api_get(m_glEvasgl);
         m_isEvasGLOnDirectMode = false;
         m_isRenderedOnce = false;
         m_immediatelyClearScreenAnimator = nullptr;
@@ -387,10 +387,14 @@ public:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
+        m_glGlapi = evas_gl_context_api_get(m_glEvasgl, m_glCtx);
+
         Evas_Native_Surface ns;
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
+
+        updateGLPlatform();
 #else
         evas_object_image_content_hint_set(m_graphicsAdapter,
                                            EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
@@ -725,6 +729,7 @@ public:
                               w, h);
 
             wv->immediatelyClearScreen();
+            wv->updateGLPlatform();
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 
@@ -970,6 +975,8 @@ public:
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
+                XGLUtil::makeCurrentXGLContext(XGLPlatform::ref().context);
+
                 if (g_evasGL != m_glEvasgl) {
                     evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                     g_evasGL = m_glEvasgl;
@@ -1338,6 +1345,18 @@ protected:
     bool m_isRenderedOnce;
     void (*m_pixelDirtyCallback)(void* data, Evas_Object* o);
     Ecore_Animator* m_immediatelyClearScreenAnimator;
+
+    void updateGLPlatform()
+    {
+        XGLPlatform platform;
+        platform.type = XGLPlatform::Type::EVAS;
+        platform.context = m_glCtx;
+        platform.evasgl.object = m_glEvasgl;
+        platform.evasgl.api = m_glGlapi;
+        platform.evasgl.surface = m_glSfc;
+        XGLPlatform::instance()->update(platform);
+    }
+
     void immediatelyClearScreen()
     {
         evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);

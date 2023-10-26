@@ -26,10 +26,6 @@
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 
-#if defined(GL_BRIDGE_EVASGL)
-EVAS_GL_GLOBAL_GLES3_DEFINE();
-#endif
-
 namespace Starfish {
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)

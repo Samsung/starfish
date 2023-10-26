@@ -24,8 +24,8 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
+#include "core/page/Window.h"
 #include "platform/canvas/webgl/GLES.h"
-#include "platform/canvas/webgl/GLEnv.h"
 
 namespace Starfish {
 
@@ -58,7 +58,6 @@ void WebGLRenderingContextBaseMixIn::initialize()
 
     // Create a GL context for this rendering context
     {
-        GLContextScope scope(GLEnv::instance()->context());
         if (!m_context.create(true)) {
             STARFISH_LOG_ERROR("GLContext creation has failed.");
         }
@@ -72,12 +71,24 @@ void WebGLRenderingContextBaseMixIn::initialize()
             m_ownerHTMLCanvasElement->webView()->platformWindow(), width,
             height, 1, CanvasSurface::CanvasElement);
     }
+
+    // NOTE: Register a disposer to ensure that it's invoked also when a
+    // document, which owns this element, is disposed. We should not only rely
+    // on the GC finalizer to release GL resources. The finalizer may be invoked
+    // after the GL is disconnected (terminated) from the native display, and
+    // using any GL APIs inside will result in an error at the time.
+    m_ownerHTMLCanvasElement->window()->registerDisposer(
+        this, [this]() { finalize(); });
 }
 
 void WebGLRenderingContextBaseMixIn::finalize()
 {
-    m_framebufferTexture.reset();
-    m_context.destory();
+    if (m_context.isValid()) {
+        // Unlike EGL, EvasGL requires context setting before resource release.
+        m_context.setCurrent();
+        m_framebufferTexture.reset();
+        m_context.destory();
+    }
 }
 
 void WebGLRenderingContextBaseMixIn::flush()

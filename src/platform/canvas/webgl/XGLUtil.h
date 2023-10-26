@@ -27,21 +27,17 @@
 
 namespace XGLUtil {
 
-bool createXGLContext(XGLContext &context, const XGLPlatform &platform,
-                      const XGLContext shareContext);
+bool createXGLContext(XGLContext &context, const XGLContext shareContext);
 
-bool destroyXGLContext(const XGLPlatform &platform, const XGLContext context);
+bool destroyXGLContext(const XGLContext context);
 
-bool makeCurrentXGLContext(const XGLPlatform &platform,
-                           const XGLContext context);
+bool makeCurrentXGLContext(const XGLContext context);
 
-XGLContext getCurrentXGLContext();
+bool resetCurrentXGLContext();
 
-bool resetCurrentXGLContext(const XGLPlatform &platform);
+bool swapXGLBuffer();
 
-bool swapXGLBuffer(const XGLPlatform &platform);
-
-void printXGLInfo(const XGLPlatform &platform);
+void printXGLInfo();
 
 } // namespace XGLUtil
 

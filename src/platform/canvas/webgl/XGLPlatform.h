@@ -21,6 +21,8 @@
 #define __StarfishXGLPlatform__
 
 #include "StarfishPlatform.h"
+#include <cstring>
+#include <memory>
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #define GL_BRIDGE_EVASGL
@@ -88,7 +90,19 @@ struct XGLPlatform {
         } egl;
     };
 
-    static bool checkValid(const XGLPlatform& env);
+    XGLPlatform()
+    {
+        type = Type::UNDEFINED;
+        context = nullptr;
+        memset(&evasgl, 0, sizeof(evasgl));
+        memset(&egl, 0, sizeof(egl));
+    }
+
+    static std::shared_ptr<XGLPlatform> instance();
+    static const XGLPlatform& ref();
+
+    void update(const XGLPlatform platform);
+    bool isValid();
 };
 
 #endif

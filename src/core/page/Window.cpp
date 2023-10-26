@@ -152,6 +152,22 @@ WebView* Window::webView() const
     return browsingContext()->webView();
 }
 
+void Window::registerDisposer(void* object, Disposer function)
+{
+    STARFISH_ASSERT(GC_base(object) != 0);
+    STARFISH_ASSERT(function != nullptr);
+
+    // link is a weak pointer to the given object. *link will be nullptr when
+    // the object is inaccessible.
+    void** link = reinterpret_cast<void**>(GC_MALLOC_ATOMIC(sizeof(void*)));
+    *link = reinterpret_cast<void*>(GC_HIDE_POINTER(object));
+    int result = GC_GENERAL_REGISTER_DISAPPEARING_LINK(link, object);
+
+    STARFISH_ASSERT(result == 0);
+
+    m_disposers[link] = function;
+}
+
 void Window::dispose()
 {
     GCVector<Element*> iframeCollection;
@@ -163,6 +179,15 @@ void Window::dispose()
     for (size_t i = 0; i < iframeCollection.size(); i++) {
         iframeCollection[i]->asHTMLIFrameElement()->unloadSrc();
     }
+
+    for (const auto& pair : m_disposers) {
+        void** link = pair.first;
+        Disposer disposer = pair.second;
+        if (*link) {
+            disposer();
+        }
+    }
+    m_disposers.clear();
 
     clearEventListeners();
 
