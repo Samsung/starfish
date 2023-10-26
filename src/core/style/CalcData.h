@@ -102,7 +102,7 @@ public:
         return !(operator==(other));
     }
 
-    ValueKind m_type : 3;
+    ValueKind m_type : 8;
 };
 
 class CalcValue {
