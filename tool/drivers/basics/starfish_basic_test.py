@@ -77,8 +77,8 @@ def case_runner(tc):
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
     timeout = None
-    if os.environ["TC_TIMEOUT"]:
-        timeout = float(os.environ["TC_TIMEOUT"])
+    if os.environ.get("TC_TIMEOUT"):
+        timeout = float(os.environ.get("TC_TIMEOUT"))
 
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
