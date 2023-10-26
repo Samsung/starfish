@@ -20,11 +20,15 @@
 #include "StarfishPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_X11)
+
+#include "platform/canvas/webgl/XGLPlatform.h"
 #include "platform/canvas/webgl/XGLUtil.h"
 #include "public/bridge/x11/WindowEGL.h"
+
 #define NO_ESCARGOT_GC_CONFLICT_GUARD
 #include "platform/canvas/webgl/XGL.h"
-#define NOT_EXPOSE_GC
+
+#define NO_EXPOSE_GC
 #include "StarfishBase.h"
 
 namespace LWE {
@@ -114,7 +118,31 @@ static bool createEGLSurface(EGLSurface& surface, const EGLDisplay& eglDisplay,
     return true;
 }
 
-bool initEGL(const NativeWindowType window, XGLPlatform* platform)
+static bool createGLContext(EGLContext& context, const EGLDisplay eglDisplay,
+                            const EGLConfig eglConfig,
+                            const EGLContext shareContext)
+{
+    EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
+    EGLContext eglContext =
+        eglCreateContext(eglDisplay, eglConfig, shareContext, attributes);
+
+    if (eglContext == EGL_NO_CONTEXT) {
+        EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
+        eglContext =
+            eglCreateContext(eglDisplay, eglConfig, shareContext, attributes);
+
+        if (eglContext == EGL_NO_CONTEXT) {
+            STARFISH_LOG_ERROR("Unable to create EGL context (eglError: 0x%x)",
+                               eglGetError());
+            return false;
+        }
+    }
+
+    context = eglContext;
+    return true;
+}
+
+bool initEGL(const NativeWindowType window, XGLPlatform* outPlatform)
 {
     EGLDisplay display{ nullptr };
     EGLSurface surface{ nullptr };
@@ -123,24 +151,21 @@ bool initEGL(const NativeWindowType window, XGLPlatform* platform)
 
     if (!createEGLDisplay(display, config) ||
         !createEGLSurface(surface, display, config, window) ||
-        !XGLUtil::createXGLContext(context,
-                                   { .type = XGLPlatform::Type::EGL,
-                                     .context = nullptr,
-                                     .egl{
-                                         .display = display,
-                                         .config = config,
-                                         .surface = surface,
-                                     } },
-                                   nullptr)) {
+        !createGLContext(context, display, config, nullptr)) {
         return false;
     }
 
-    if (platform) {
-        platform->type = XGLPlatform::Type::EGL;
-        platform->egl.display = display;
-        platform->egl.surface = surface;
-        platform->egl.config = config;
-        platform->context = context;
+    XGLPlatform platform;
+    platform.type = XGLPlatform::Type::EGL;
+    platform.egl.display = display;
+    platform.egl.surface = surface;
+    platform.egl.config = config;
+    platform.context = context;
+
+    XGLPlatform::instance()->update(platform);
+
+    if (outPlatform) {
+        *outPlatform = platform;
     }
 
     return true;

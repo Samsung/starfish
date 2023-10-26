@@ -19,6 +19,8 @@
 
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
+#include "platform/canvas/webgl/XGL.h"
+#include "platform/canvas/webgl/XGLPlatform.h"
 
 #include "Starfish.h"
 
@@ -43,6 +45,7 @@ static void window_size_callback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow* window, int key, int scancode, int action,
                          int mods);
 static void poller(void* data);
+static void updateGLPlatform();
 
 class WebViewGLFW : public WebView {
 public:
@@ -109,6 +112,11 @@ public:
 #endif
 
         m_isMouseLbuttonDown = false;
+
+#if defined(STARFISH_ENABLE_WEBGL)
+        glfwMakeContextCurrent(m_glWindow);
+        updateGLPlatform();
+#endif
 
         glfwMakeContextCurrent(nullptr);
 
@@ -293,6 +301,53 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
         wnd->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
     }
 }
+
+#if defined(STARFISH_ENABLE_WEBGL)
+void updateGLPlatform()
+{
+    EGLContext context = eglGetCurrentContext();
+
+    if (!context) {
+        STARFISH_LOG_ERROR("No attached context found.");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    EGLDisplay display = eglGetCurrentDisplay();
+    EGLSurface read = eglGetCurrentSurface(EGL_READ);
+    EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
+
+    STARFISH_ASSERT(read == draw);
+
+    EGLConfig config = nullptr;
+    EGLint configId, numConfigs, currentConfigId;
+    eglQueryContext(display, context, EGL_CONFIG_ID, &configId);
+    eglGetConfigs(display, nullptr, 0, &numConfigs);
+
+    std::vector<EGLConfig> configs(numConfigs);
+    eglGetConfigs(display, configs.data(), numConfigs, &numConfigs);
+    for (const auto& c : configs) {
+        eglGetConfigAttrib(display, c, EGL_CONFIG_ID, &currentConfigId);
+        if (currentConfigId == configId) {
+            config = c;
+            break;
+        }
+    }
+
+    if (!display || !read || !draw || !config || !context) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    XGLPlatform platform;
+    platform.type = XGLPlatform::Type::EGL;
+    platform.context = context;
+    platform.egl.display = display;
+    platform.egl.surface = draw;
+    platform.egl.config = config;
+
+    XGLPlatform::instance()->update(platform);
+}
+
+#endif
 
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          unsigned height, float devicePixelRatio,

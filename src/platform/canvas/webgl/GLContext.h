@@ -68,9 +68,6 @@ public:
     GLRevertableContextScope& operator=(const GLRevertableContextScope& other) =
         delete;
     GLRevertableContextScope(GLRevertableContextScope&& other) = delete;
-
-private:
-    GLContext m_previousContext;
 };
 
 class WebGLContextScope final {

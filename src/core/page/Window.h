@@ -51,6 +51,7 @@ class LayoutUnit;
 class CustomElementRegistry;
 
 typedef void (*TimerHandler)(void* data);
+using Disposer = std::function<void()>;
 
 class Window : public EventTarget, public GlobalScope {
     friend class MessageLoop;
@@ -278,6 +279,8 @@ public:
         return m_crypto;
     }
 
+    void registerDisposer(void* holder, Disposer function);
+
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* event();
     void setEvent(Event* e);
@@ -420,6 +423,7 @@ private:
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* m_currentDispatchingEvent;
 #endif
+    GCUnorderedMap<void**, Disposer> m_disposers;
 };
 } // namespace Starfish
 

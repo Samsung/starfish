@@ -18,26 +18,71 @@
  */
 
 #include "platform/canvas/webgl/XGLPlatform.h"
+#include "platform/canvas/webgl/GLES.h"
+#include "StarfishBase.h"
 
-bool XGLPlatform::checkValid(const XGLPlatform& env)
+#if defined(GL_BRIDGE_EVASGL)
+EVAS_GL_GLOBAL_GLES3_DEFINE() // __evas_gl_glapi
+#endif
+
+std::shared_ptr<XGLPlatform> XGLPlatform::instance()
 {
-    if (env.type == Type::UNDEFINED) {
-        return false;
+    static std::shared_ptr<XGLPlatform> instance;
+
+    if (instance == nullptr) {
+        instance = std::make_shared<XGLPlatform>();
+    }
+    return instance;
+}
+
+const XGLPlatform& XGLPlatform::ref()
+{
+    std::shared_ptr<XGLPlatform> instance = XGLPlatform::instance();
+    STARFISH_ASSERT(instance->isValid());
+    return *instance;
+}
+
+void XGLPlatform::update(const XGLPlatform platform)
+{
+    STARFISH_LOG_WARN("XGLPlatform::update");
+
+    type = platform.type;
+    context = platform.context;
+
+    if (type == Type::EGL) {
+        egl.display = platform.egl.display;
+        egl.surface = platform.egl.surface;
+        egl.config = platform.egl.config;
+    } else if (type == Type::EVAS) {
+        evasgl.object = platform.evasgl.object;
+        evasgl.api = platform.evasgl.api;
+        evasgl.surface = platform.evasgl.surface;
     }
 
-    if (env.type == Type::EGL) {
-        if (!env.egl.display || !env.egl.surface || !env.egl.config) {
+    STARFISH_ASSERT(isValid());
+
+#if defined(GL_BRIDGE_EVASGL)
+    if (__evas_gl_glapi == nullptr) {
+        __evas_gl_glapi = evasgl.api;
+    }
+#endif
+}
+
+bool XGLPlatform::isValid()
+{
+    if (type == Type::EGL) {
+        if (!egl.display || !egl.surface || !egl.config) {
             return false;
         }
-    } else if (env.type == Type::EVAS) {
-        if (!env.evasgl.object || !env.evasgl.api || !env.evasgl.surface) {
+    } else if (type == Type::EVAS) {
+        if (!evasgl.object || !evasgl.api || !evasgl.surface) {
             return false;
         }
     } else {
         return false;
     }
 
-    if (!env.context) {
+    if (!context) {
         return false;
     }
 

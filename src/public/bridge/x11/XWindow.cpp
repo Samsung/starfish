@@ -22,7 +22,8 @@
 #if defined(PORT_WEBVIEW_BRIDGE_X11)
 
 #include <X11/Xutil.h>
-#define NOT_EXPOSE_GC
+
+#define NO_EXPOSE_GC
 #include "StarfishBase.h"
 
 namespace LWE {

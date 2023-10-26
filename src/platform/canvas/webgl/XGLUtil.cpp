@@ -29,9 +29,9 @@
 
 namespace XGLUtil {
 
-bool createXGLContext(XGLContext& context, const XGLPlatform& platform,
-                      const XGLContext shareContext)
+bool createXGLContext(XGLContext& context, const XGLContext shareContext)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
     XGLContext eglContext = eglCreateContext(
         platform.egl.display, platform.egl.config, shareContext, attributes);
@@ -52,8 +52,9 @@ bool createXGLContext(XGLContext& context, const XGLPlatform& platform,
     return true;
 }
 
-bool destroyXGLContext(const XGLPlatform& platform, const XGLContext context)
+bool destroyXGLContext(const XGLContext context)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     if (!eglDestroyContext(platform.egl.display, context)) {
         STARFISH_LOG_ERROR("Unable to destory EGL context (eglError: 0x%x)",
                            eglGetError());
@@ -62,9 +63,9 @@ bool destroyXGLContext(const XGLPlatform& platform, const XGLContext context)
     return true;
 }
 
-bool makeCurrentXGLContext(const XGLPlatform& platform,
-                           const XGLContext context)
+bool makeCurrentXGLContext(const XGLContext context)
 {
+    XGLPlatform platform = XGLPlatform::ref();
     if (!eglMakeCurrent(platform.egl.display, platform.egl.surface,
                         platform.egl.surface, context)) {
         STARFISH_LOG_ERROR("Failed to set current context (eglError: 0x%x)",
@@ -74,26 +75,24 @@ bool makeCurrentXGLContext(const XGLPlatform& platform,
     return true;
 }
 
-bool resetCurrentXGLContext(const XGLPlatform& platform)
+bool resetCurrentXGLContext()
 {
+    XGLPlatform platform = XGLPlatform::ref();
     eglMakeCurrent(platform.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                    EGL_NO_CONTEXT);
     return true;
 }
 
-XGLContext getCurrentXGLContext()
+bool swapXGLBuffer()
 {
-    return eglGetCurrentContext();
-}
-
-bool swapXGLBuffer(const XGLPlatform& platform)
-{
+    XGLPlatform platform = XGLPlatform::ref();
     eglSwapBuffers(platform.egl.display, platform.egl.surface);
     return true;
 }
 
-void printXGLInfo(const XGLPlatform& platform)
+void printXGLInfo()
 {
+    XGLPlatform platform = XGLPlatform::ref();
     EGLDisplay eglDisplay = platform.egl.display;
     EGLConfig eglConfig = platform.egl.config;
     XGLContext eglContext = platform.context;

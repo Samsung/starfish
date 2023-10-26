@@ -51,26 +51,25 @@ public:
             exit(1);
         }
 
-        if (!initEGL(m_window->getNativeWindowHandle(), &m_eglPlatform)) {
+        if (!initEGL(m_window->getNativeWindowHandle(), &m_glPlatform)) {
             STARFISH_LOG_ERROR("Initializing EGL failed.");
             exit(1);
         }
 
 #if defined(STARFISH_ENABLE_TEST)
         // For screenshot
-        XGLUtil::makeCurrentXGLContext(m_eglPlatform, m_eglPlatform.context);
-        eglSwapInterval(m_eglPlatform.egl.display, 0);
-        XGLUtil::resetCurrentXGLContext(m_eglPlatform);
+        XGLUtil::makeCurrentXGLContext(m_glPlatform.context);
+        eglSwapInterval(m_glPlatform.egl.display, 0);
+        XGLUtil::resetCurrentXGLContext();
 #endif
 
         m_impl = WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
-                XGLUtil::makeCurrentXGLContext(m_eglPlatform,
-                                               m_eglPlatform.context);
+                XGLUtil::makeCurrentXGLContext(m_glPlatform.context);
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
-                XGLUtil::swapXGLBuffer(m_eglPlatform);
+                XGLUtil::swapXGLBuffer();
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
@@ -149,6 +148,11 @@ public:
         FetchWebContainer()->Blur();
         FetchWebContainer()->ClearTimeout(m_pollTimer);
         FetchWebContainer()->Destroy();
+
+        eglDestroySurface(m_glPlatform.egl.display, m_glPlatform.egl.surface);
+        eglDestroyContext(m_glPlatform.egl.display, m_glPlatform.context);
+        eglTerminate(m_glPlatform.egl.display);
+
         m_window->terminate();
         delete this;
     }
@@ -186,7 +190,7 @@ public:
 private:
     bool m_isMouseLbuttonDown{ false };
     size_t m_pollTimer{ 0 };
-    XGLPlatform m_eglPlatform;
+    XGLPlatform m_glPlatform;
     std::shared_ptr<WindowBase> m_window;
 };
 

@@ -20,7 +20,7 @@
 #if defined(STARFISH_ENABLE_WEBGL)
 
 #include "platform/canvas/webgl/GLContext.h"
-#include "platform/canvas/webgl/GLEnv.h"
+
 #include "platform/canvas/webgl/XGLUtil.h"
 #include "StarfishBase.h"
 
@@ -41,17 +41,12 @@ bool GLContext::create(bool shareContext)
 {
     STARFISH_ASSERT(m_context == nullptr);
 
-    std::shared_ptr<GLEnv> env = GLEnv::instance();
-
-    if (!env->isInitialzed()) {
-        STARFISH_LOG_ERROR("Platform is not initialzed.");
-        return false;
-    }
+    XGLPlatform platform = XGLPlatform::ref();
 
     XGLContext newContext;
 
-    if (!XGLUtil::createXGLContext(newContext, env->platform(),
-                                   shareContext ? env->context() : nullptr)) {
+    if (!XGLUtil::createXGLContext(newContext,
+                                   shareContext ? platform.context : nullptr)) {
         return false;
     }
     m_context = newContext;
@@ -62,22 +57,20 @@ bool GLContext::setCurrent()
 {
     STARFISH_ASSERT(m_context != nullptr);
 
-    bool result = XGLUtil::makeCurrentXGLContext(GLEnv::instance()->platform(),
-                                                 m_context);
+    bool result = XGLUtil::makeCurrentXGLContext(m_context);
     STARFISH_ASSERT(result);
     return result;
 }
 
 void GLContext::resetCurrent()
 {
-    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
+    XGLUtil::resetCurrentXGLContext();
 }
 
 bool GLContext::destory()
 {
     if (m_context) {
-        if (!XGLUtil::destroyXGLContext(GLEnv::instance()->platform(),
-                                        m_context)) {
+        if (!XGLUtil::destroyXGLContext(m_context)) {
             STARFISH_LOG_WARN("Context is not destoryed.");
             return false;
         }
@@ -110,7 +103,7 @@ GLContextScope::GLContextScope(GLContext context)
 
 GLContextScope::~GLContextScope()
 {
-    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
+    XGLUtil::resetCurrentXGLContext();
     currentContext.reset();
 }
 
@@ -123,13 +116,16 @@ GLContext GLContextScope::getCurrentXGLContext()
 
 GLRevertableContextScope::GLRevertableContextScope(GLContext context)
 {
-    m_previousContext = GLContext(XGLUtil::getCurrentXGLContext());
     context.setCurrent();
 }
 
 GLRevertableContextScope::~GLRevertableContextScope()
 {
-    m_previousContext.setCurrent();
+    // We assume that the previous context is always the main context. EvasGL
+    // does not have an API to get the current GL context, so we cannot have a
+    // unified API to know the current context unless we unify the API to change
+    // context across the codebase.
+    XGLUtil::makeCurrentXGLContext(XGLPlatform::ref().context);
 }
 
 // WebGLContextScope
@@ -142,8 +138,8 @@ WebGLContextScope::WebGLContextScope(GLContext context, GLuint fbo)
 
 WebGLContextScope::~WebGLContextScope()
 {
-    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    XGLUtil::resetCurrentXGLContext();
 }
 
 } // namespace Starfish
