@@ -1675,6 +1675,7 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
 
     String* val = String::emptyString;
     if (keykind == CSSStyleValuePair::KeyKind::CustomProperty) {
+        updateValue(keykind, name);
         val = customProperty(name);
     } else {
         val = getPropertyValueInternal(keykind);
