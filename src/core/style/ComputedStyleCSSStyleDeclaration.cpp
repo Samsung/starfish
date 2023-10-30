@@ -150,7 +150,7 @@ static CSSStyleValuePair stylePaintDataToCSSStyleValue(
 }
 
 void ComputedStyleCSSStyleDeclaration::updateValue(
-    CSSStyleValuePair::KeyKind keyKind)
+    CSSStyleValuePair::KeyKind keyKind, String* customPropertyName)
 {
     triggerResolveComputedStyleIfNeeds(keyKind);
 
@@ -169,7 +169,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::Name:   \
         break;
         FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(IGNORE_SHORTHANDS_AND_ETC)
-        IGNORE_SHORTHANDS_AND_ETC(CustomProperty)
         IGNORE_SHORTHANDS_AND_ETC(KeyKindSize)
         IGNORE_SHORTHANDS_AND_ETC(Src)
         IGNORE_SHORTHANDS_AND_ETC(Unknown)
@@ -2215,6 +2214,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::CustomProperty: {
+        if (style->hasCustomProperty()) {
+            Nullable<MutablePropertyValueList*> customPropertyties =
+                style->customProperty();
+            if (customPropertyties) {
+                AtomicString key = AtomicString::createAtomicString(
+                    m_node->starfish(), customPropertyName);
+                Nullable<String*> value =
+                    customPropertyties.value()->property(key);
+                if (value) {
+                    setCustomProperty(key, value.value());
+                }
+            }
+        }
     } break;
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
     case CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius: {            \

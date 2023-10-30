@@ -191,7 +191,8 @@ public:
         return false;
     }
 
-    virtual void updateValue(CSSStyleValuePair::KeyKind keyKind)
+    virtual void updateValue(CSSStyleValuePair::KeyKind keyKind,
+                             String* customPropertyName = nullptr)
     {
         // Do nothing.
     }
@@ -463,7 +464,8 @@ public:
     void resolveStyleIfNeeds();
     void buildFrameTreeIfNeeds();
 
-    void updateValue(CSSStyleValuePair::KeyKind keyKind) override;
+    void updateValue(CSSStyleValuePair::KeyKind keyKind,
+                     String* customPropertyName) override;
 
 private:
     enum class RequreidStyleResolveStage {
