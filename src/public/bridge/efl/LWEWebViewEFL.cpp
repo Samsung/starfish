@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
-#include "platform/canvas/webgl/XGLUtil.h"
+#include "platform/canvas/webgl/XGLPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 
@@ -975,10 +975,9 @@ public:
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
-                XGLUtil::makeCurrentXGLContext(XGLPlatform::ref().context);
+                evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
 
                 if (g_evasGL != m_glEvasgl) {
-                    evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                     g_evasGL = m_glEvasgl;
                     g_evasGLAPI = m_glGlapi;
                     g_isEvasGLOnDirectMode = m_isEvasGLOnDirectMode;
