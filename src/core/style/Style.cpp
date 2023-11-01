@@ -8204,8 +8204,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     }
 
     // check new transition
-    if (oldStyle != nullptr &&
-        oldStyle->display() != DisplayValue::NoneDisplayValue &&
+    if (oldStyle && oldStyle->display() != DisplayValue::NoneDisplayValue &&
         style->display() != DisplayValue::NoneDisplayValue &&
         style->transitionLayerSize() > 0 &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone) {
@@ -8233,7 +8232,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    if (needsToRecomputeStylePropertyDamage == true) {
+    if (oldStyle && needsToRecomputeStylePropertyDamage) {
         recomputeStyleDamageInAnimation(
             element, oldStyle, style, damage, damagedKeys,
             isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
