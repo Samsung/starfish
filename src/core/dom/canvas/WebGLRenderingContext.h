@@ -26,16 +26,25 @@
 
 namespace Starfish {
 
+class WebGLBuffer;
+class WebGLShader;
+
 class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
 public:
     WebGLRenderingContext(HTMLCanvasElement* canvasElement);
+    virtual ~WebGLRenderingContext();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGLRenderingContext);
 
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
-    void viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+    WebGLShader* createShader(unsigned long type);
+
     GLenum getError();
+    String* getShaderSource(WebGLShader* shader);
+
+    void shaderSource(WebGLShader* shader, String* source);
+    void viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 };
 } // namespace Starfish
 

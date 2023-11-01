@@ -582,7 +582,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/framebuffers-ke
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-get-active-attribute.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-get-active-uniform.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-getshadersource.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-getshadersource.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-shader-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/invalid-UTF-16.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/program-test.html

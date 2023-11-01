@@ -78,6 +78,14 @@ public:
     WebGLContextScope(const WebGLContextScope& other) = delete;
     WebGLContextScope& operator=(const WebGLContextScope& other) = delete;
     WebGLContextScope(WebGLContextScope&& other) = delete;
+
+    bool hasError()
+    {
+        return m_result == false;
+    }
+
+private:
+    bool m_result{ false };
 };
 
 } // namespace Starfish
