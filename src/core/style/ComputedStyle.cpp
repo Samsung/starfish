@@ -1049,7 +1049,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         TO_FIXED(rx, RX);
         TO_FIXED(ry, RY);
         TO_FIXED(gridRowGap, GridRowGap);
-        TO_FIXED(gridColumnGap, GridColumnGap);
+        TO_FIXED(columnGap, ColumnGap);
 
 #undef TO_FIXED
     }
@@ -1477,6 +1477,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->maxHeight() != oldStyle->maxHeight()) {
         damagedKeys[CSSStyleValuePair::KeyKind::MaxHeight] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->columnGap() != oldStyle->columnGap()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ColumnGap] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
@@ -2215,12 +2221,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->gridRowGap() != oldStyle->gridRowGap()) {
         damagedKeys[CSSStyleValuePair::KeyKind::GridRowGap] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
-    }
-
-    if (newStyle->gridColumnGap() != oldStyle->gridColumnGap()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::GridColumnGap] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }

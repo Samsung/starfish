@@ -149,6 +149,7 @@ public:
         LineClamp,
         StopColor,
         StopOpacity,
+        ColumnGap,
         CustomProperty,
 
         // Grid
@@ -159,7 +160,6 @@ public:
         GridColumnStart,
         GridColumnEnd,
         GridRowGap,
-        GridColumnGap,
         GridTemplateAreas,
 
         WillChange
@@ -551,7 +551,6 @@ public:
     GETTER_VALUE(StylePaintData*, stopColor, stopColor, StopColor, nullptr);
     GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
     GETTER_VALUE(Length, length, gridRowGap, GridRowGap, 0);
-    GETTER_VALUE(Length, length, gridColumnGap, GridColumnGap, 0);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
                  NoneUserSelectValue);
     GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak,
@@ -569,6 +568,7 @@ public:
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
+    GETTER_VALUE(Length, length, columnGap, ColumnGap, 0);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -1800,6 +1800,20 @@ public:
     void setOpacity(float opacity)
     {
         *m_rareComputedStyleData.ensureOpacity() = opacity;
+    }
+
+    Length columnGap()
+    {
+        Nullable<Length> maybeLength = m_rareComputedStyleData.columnGap();
+        if (maybeLength.hasValue()) {
+            return maybeLength.getValue();
+        }
+        return Length();
+    }
+
+    void setColumnGap(const Length& length)
+    {
+        *m_rareComputedStyleData.ensureColumnGap() = length;
     }
 
     StylePaintData* stopColor()
@@ -3512,24 +3526,9 @@ public:
         *m_rareComputedStyleData.ensureGridRowGap() = l;
     }
 
-    void setGridColumnGap(Length l)
-    {
-        *m_rareComputedStyleData.ensureGridColumnGap() = l;
-    }
-
     Length gridRowGap()
     {
         Nullable<Length> gap = m_rareComputedStyleData.gridRowGap();
-        if (gap.hasValue()) {
-            return gap.getValue();
-        }
-
-        return Length();
-    }
-
-    Length gridColumnGap()
-    {
-        Nullable<Length> gap = m_rareComputedStyleData.gridColumnGap();
         if (gap.hasValue()) {
             return gap.getValue();
         }

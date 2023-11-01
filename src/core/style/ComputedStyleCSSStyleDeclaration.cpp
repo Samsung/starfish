@@ -1101,6 +1101,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setUrlValue(style->clipPath());
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::ColumnGap: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ColumnGap);
+        Length gap = style->columnGap();
+        if (gap.isFixed()) {
+            p.setLengthValue(CSSLength(gap.fixed()));
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::ListStyleImage: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);
@@ -1848,7 +1857,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* values = new ValueList(Separator::SpaceSeparator);
         Length row = style->gridRowGap();
-        Length column = style->gridColumnGap();
+        Length column = style->columnGap();
         CSSStyleValuePair ret1;
         if (row.isFixed()) {
             ret1.setLengthValue(CSSLength(row.numberData()));
@@ -1869,14 +1878,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         Length row = style->gridRowGap();
         if (row.isFixed()) {
             p.setLengthValue(CSSLength(row.fixed()));
-        }
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridColumnGap: {
-        CSSStyleValuePair p;
-        Length column = style->gridColumnGap();
-        if (column.isFixed()) {
-            p.setLengthValue(CSSLength(column.fixed()));
         }
         addValuePair(p);
     } break;
