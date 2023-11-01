@@ -18,34 +18,36 @@
  */
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#ifndef __StarfishTimerLibUV__
-#define __StarfishTimerLibUV__
+#ifndef __StarfishRunLoopLibUV__
+#define __StarfishRunLoopLibUV__
 
-#include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/RunLoop.h"
 
 #include <uv.h>
 
 namespace Starfish {
 
-class TimerLibUV : public Timer {
+class RunLoopLibUV final : public RunLoop {
+    friend class RunLoop;
+
 public:
-    TimerLibUV(WebBase* webBase);
+    RunLoopLibUV(uv_loop_t* loop);
 
-    size_t addTimer(unsigned delay, GlobalScope* globalScope,
-                    TimerHandler handler, void* data, bool repetitive) override;
-    void removeTimer(size_t reqID) override;
+    ~RunLoopLibUV();
 
-    size_t addAnimator(GlobalScope* globalScope,
-                       GenericAnimationHandler handler, void* data) override;
-    void removeGenericAnimator(size_t reqID) override;
+    uv_loop_t* uvLoop()
+    {
+        return m_uvLoop;
+    }
 
-    void clear(GlobalScope* globalScope) override;
-
-    void destroy() override;
-
-    uv_loop_t* uvLoop();
+    void run() override;
+    void stop() override;
 
 private:
+    RunLoopLibUV();
+
+    uv_loop_t* m_uvLoop;
+    std::atomic<size_t> m_uvRunCount{ 0 };
 };
 
 } // namespace Starfish

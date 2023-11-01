@@ -117,6 +117,12 @@ void MessageLoop::clearMicroTasks(GlobalScope* globalScope)
     }
 }
 
+RunLoop* MessageLoop::runLoop()
+{
+    STARFISH_ASSERT_NOT_REACHED();
+    return nullptr;
+}
+
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 int MessageLoop::runningThreadCount()
 {

@@ -16,40 +16,54 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+
+#include "StarfishPlatform.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#ifndef __StarfishTimerLibUV__
-#define __StarfishTimerLibUV__
+#include "StarfishConfig.h"
 
-#include "core/modules/message_loop/Timer.h"
-
-#include <uv.h>
+#include "platform/message_loop/RunLoopLibUV.h"
 
 namespace Starfish {
 
-class TimerLibUV : public Timer {
-public:
-    TimerLibUV(WebBase* webBase);
+RunLoopLibUV::RunLoopLibUV()
+    : m_uvLoop(new uv_loop_t())
+{
+    uv_loop_init(m_uvLoop);
+}
 
-    size_t addTimer(unsigned delay, GlobalScope* globalScope,
-                    TimerHandler handler, void* data, bool repetitive) override;
-    void removeTimer(size_t reqID) override;
+RunLoopLibUV::RunLoopLibUV(uv_loop_t* loop)
+    : m_uvLoop(loop)
+{
+}
 
-    size_t addAnimator(GlobalScope* globalScope,
-                       GenericAnimationHandler handler, void* data) override;
-    void removeGenericAnimator(size_t reqID) override;
+RunLoopLibUV::~RunLoopLibUV()
+{
+    if (m_uvLoop != uv_default_loop()) {
+        uv_loop_close(m_uvLoop);
+        delete m_uvLoop;
+    }
+}
 
-    void clear(GlobalScope* globalScope) override;
+void RunLoopLibUV::run()
+{
+    size_t theCountBefore = m_uvRunCount;
+    m_uvRunCount++;
+    while (true) {
+        uv_run(m_uvLoop, UV_RUN_ONCE);
+        if (UNLIKELY(theCountBefore >= m_uvRunCount)) {
+            break;
+        }
+    }
+}
 
-    void destroy() override;
-
-    uv_loop_t* uvLoop();
-
-private:
-};
+void RunLoopLibUV::stop()
+{
+    if (m_uvRunCount) {
+        m_uvRunCount--;
+    }
+    uv_stop(m_uvLoop);
+}
 
 } // namespace Starfish
-
-#endif
-
 #endif

@@ -26,6 +26,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/page/GlobalScope.h"
+#include "platform/message_loop/RunLoopLibUV.h"
 #include "platform/message_loop/MessageLoopLibUV.h"
 
 namespace Starfish {
@@ -36,9 +37,9 @@ static void on_close_handle(uv_handle_t* handle)
 }
 
 static uv_async_t g_idlerThreadSyncHandle;
-static size_t g_uvRunCount;
 static pthread_mutex_t g_threadSyncExecuteGuard;
 static pthread_mutex_t g_threadSyncFlowControler;
+static RunLoopLibUV g_defaultRunLoop(uv_default_loop());
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -54,45 +55,47 @@ struct IdlerData {
 };
 
 MessageLoopLibUV::MessageLoopLibUV()
-    : MessageLoop()
+    : MessageLoopLibUV(&g_defaultRunLoop)
 {
-    m_idlerThreadAsyncHandle =
-        static_cast<uv_async_t*>(malloc(sizeof(uv_async_t)));
+}
 
-    uv_async_init(
-        uv_default_loop(), m_idlerThreadAsyncHandle, [](uv_async_t* handle) {
+MessageLoopLibUV::MessageLoopLibUV(RunLoopLibUV* runLoop)
+    : m_runLoop(runLoop)
+{
+    m_idlerThreadAsyncHandle = new uv_async_t();
+
+    uv_async_init(uvLoop(), m_idlerThreadAsyncHandle, [](uv_async_t* handle) {
+        {
+            MessageLoopLibUV* ml = static_cast<MessageLoopLibUV*>(handle->data);
+
+            std::list<size_t> jobs;
             {
-                MessageLoopLibUV* ml =
-                    static_cast<MessageLoopLibUV*>(handle->data);
+                Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
+                jobs = std::move(ml->m_idlersFromOtherThreadForUV);
+            }
 
-                std::list<size_t> jobs;
+            while (!jobs.empty()) {
+                IdlerData* id = nullptr;
                 {
-                    Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
-                    jobs = std::move(ml->m_idlersFromOtherThreadForUV);
+                    id = (IdlerData*)*jobs.begin();
+                    jobs.erase(jobs.begin());
                 }
 
-                while (!jobs.empty()) {
-                    IdlerData* id = nullptr;
-                    {
-                        id = (IdlerData*)*jobs.begin();
-                        jobs.erase(jobs.begin());
-                    }
-
-                    if (id) {
-                        if (id->m_shouldExecute) {
-                            id->m_ml->invokeMicroTasksIfExist();
-                            if (id->m_pararmNum == 1) {
-                                id->m_fn((size_t)id, id->m_data);
-                            } else if (id->m_pararmNum == 2) {
-                                ((void (*)(size_t, void*, void*))id->m_fn)(
-                                    (size_t)id, id->m_data, id->m_data1);
-                            }
+                if (id) {
+                    if (id->m_shouldExecute) {
+                        id->m_ml->invokeMicroTasksIfExist();
+                        if (id->m_pararmNum == 1) {
+                            id->m_fn((size_t)id, id->m_data);
+                        } else if (id->m_pararmNum == 2) {
+                            ((void (*)(size_t, void*, void*))id->m_fn)(
+                                (size_t)id, id->m_data, id->m_data1);
                         }
-                        delete id;
                     }
+                    delete id;
                 }
             }
-        });
+        }
+    });
 
     m_idlerThreadAsyncHandle->data = this;
 }
@@ -109,7 +112,7 @@ size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
     id->m_ml = this;
     id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    uv_timer_init(uv_default_loop(), id->m_idler_uv);
+    uv_timer_init(uvLoop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
     uv_timer_start(
         id->m_idler_uv,
@@ -141,7 +144,7 @@ size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
     id->m_ml = this;
     id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    uv_timer_init(uv_default_loop(), id->m_idler_uv);
+    uv_timer_init(uvLoop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
     uv_timer_start(
         id->m_idler_uv,
@@ -175,7 +178,7 @@ size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
     id->m_ml = this;
     id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    uv_timer_init(uv_default_loop(), id->m_idler_uv);
+    uv_timer_init(uvLoop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
     uv_timer_start(
         id->m_idler_uv,
@@ -372,6 +375,16 @@ void MessageLoopLibUV::runOnMainThreadAsync(
     return;
 }
 
+RunLoop* MessageLoopLibUV::runLoop()
+{
+    return m_runLoop;
+}
+
+uv_loop_t* MessageLoopLibUV::uvLoop()
+{
+    return m_runLoop->uvLoop();
+}
+
 void MessageLoop::init()
 {
     static bool needsInit = true;
@@ -395,22 +408,12 @@ void MessageLoop::init()
 
 void MessageLoop::run()
 {
-    size_t theCountBefore = g_uvRunCount;
-    g_uvRunCount++;
-    while (true) {
-        uv_run(uv_default_loop(), UV_RUN_ONCE);
-        if (UNLIKELY(theCountBefore >= g_uvRunCount)) {
-            break;
-        }
-    }
+    g_defaultRunLoop.run();
 }
 
 void MessageLoop::stop()
 {
-    if (g_uvRunCount) {
-        g_uvRunCount--;
-    }
-    uv_stop(uv_default_loop());
+    g_defaultRunLoop.stop();
 }
 
 size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)

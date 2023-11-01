@@ -33,6 +33,7 @@
 namespace Starfish {
 class GlobalScope;
 class Mutex;
+class RunLoop;
 
 constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 
@@ -71,6 +72,8 @@ public:
     virtual void destroy() = 0;
 
     virtual void runOnMainThreadAsync(const std::function<void()>& functor) = 0;
+
+    virtual RunLoop* runLoop();
 
     // microtask is similar with idler, but it is executed before
     // idler(microtask has higher priority)

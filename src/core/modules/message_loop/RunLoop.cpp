@@ -16,40 +16,22 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#ifndef __StarfishTimerLibUV__
-#define __StarfishTimerLibUV__
+#include "StarfishConfig.h"
 
-#include "core/modules/message_loop/Timer.h"
-
-#include <uv.h>
+#include "platform/message_loop/RunLoopLibUV.h"
+#include "core/modules/message_loop/RunLoop.h"
 
 namespace Starfish {
 
-class TimerLibUV : public Timer {
-public:
-    TimerLibUV(WebBase* webBase);
-
-    size_t addTimer(unsigned delay, GlobalScope* globalScope,
-                    TimerHandler handler, void* data, bool repetitive) override;
-    void removeTimer(size_t reqID) override;
-
-    size_t addAnimator(GlobalScope* globalScope,
-                       GenericAnimationHandler handler, void* data) override;
-    void removeGenericAnimator(size_t reqID) override;
-
-    void clear(GlobalScope* globalScope) override;
-
-    void destroy() override;
-
-    uv_loop_t* uvLoop();
-
-private:
-};
+RunLoop* RunLoop::create()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    return new RunLoopLibUV();
+#else
+    STARFISH_ASSERT_NOT_REACHED();
+    return nullptr;
+#endif
+}
 
 } // namespace Starfish
-
-#endif
-
-#endif
