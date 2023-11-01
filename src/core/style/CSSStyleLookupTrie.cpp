@@ -57,9 +57,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 3:
-        // All
-        // Top
-        // Src
+        // all
+        // top
+        // src
         if (memcmp(data, "all", 3) == 0) {
             return CSSStyleValuePair::KeyKind::All;
         }
@@ -71,11 +71,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 4:
-        // Font
-        // Flex
-        // Left
-        // Fill
-        // Clip
+        // font
+        // flex
+        // left
+        // fill
+        // clip
         switch (data[0]) {
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
@@ -106,12 +106,12 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 5:
-        // Color
-        // Clear
-        // Float
-        // Width
-        // Right
-        // Order
+        // color
+        // clear
+        // float
+        // width
+        // right
+        // order
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "color", 5) == 0) {
@@ -144,12 +144,12 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 6:
-        // Bottom
-        // Border
-        // Height
-        // Margin
-        // Stroke
-        // Cursor
+        // bottom
+        // border
+        // height
+        // margin
+        // stroke
+        // cursor
         // resize
         switch (data[0]) {
         case 'b':
@@ -197,13 +197,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 7:
-        // Content
-        // Display
-        // Padding
-        // Z-Index
-        // Opacity
-        // Outline
-        // Hyphens
+        // content
+        // display
+        // padding
+        // z-index
+        // opacity
+        // outline
+        // hyphens
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
@@ -241,10 +241,10 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 8:
-        // Position
-        // Overflow
-        // Grid-Gap
-        // Grid-Row
+        // position
+        // overflow
+        // grid-gap
+        // grid-row
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -267,19 +267,19 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 9:
-        // Animation
-        // Font-Size
-        // Flex-Wrap
-        // Flex-Flow
-        // Flex-Grow
-        // Transform
-        // Direction
-        // Max-Width
-        // Min-Width
-        // Fill-Rule
-        // Word-Wrap
-        // Mask-Size
-        // Grid-Area
+        // animation
+        // font-size
+        // flex-wrap
+        // flex-flow
+        // flex-grow
+        // transform
+        // direction
+        // max-Width
+        // nin-width
+        // fill-rule
+        // word-wrap
+        // mask-size
+        // grid-area
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -344,28 +344,29 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 10:
-        // Background
-        // Border-Top
-        // Box-Shadow
-        // Box-Sizing
-        // Font-Style
-        // Flex-Basis
-        // List-Style
-        // Text-Align
-        // Transition
-        // Margin-Top
-        // Mask-Image
-        // Max-Height
-        // Min-Height
-        // Object-fit
-        // Overflow-X
-        // Overflow-Y
-        // Stop-Color
-        // Visibility
-        // Align-Self
-        // Line-Break
-        // Word-Break
-        // Appearance
+        // background
+        // border-top
+        // box-shadow
+        // box-sizing
+        // font-style
+        // flex-basis
+        // list-style
+        // text-align
+        // transition
+        // margin-top
+        // mask-image
+        // max-height
+        // min-height
+        // object-fit
+        // overflow-x
+        // overflow-y
+        // stop-color
+        // visibility
+        // align-self
+        // line-break
+        // word-break
+        // appearance
+        // column-gap
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "align-self", 10) == 0) {
@@ -387,6 +388,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "box-sizing", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::BoxSizing;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "column-gap", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::ColumnGap;
             }
             break;
         case 'f':
@@ -456,22 +462,22 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 11:
-        // Border-Left
-        // Font-Weight
-        // Font-Family
-        // Flex-Shrink
-        // Line-Height
-        // White-Space
-        // Padding-Top
-        // Margin-Left
-        // Text-Indent
-        // Text-Shadow
-        // Empty-Cells
-        // Align-Items
-        // User-Select
-        // Caret-Color
-        // Will-Change
-        // Grid-Column
+        // border-left
+        // font-weight
+        // font-family
+        // flex-shrink
+        // line-height
+        // white-space
+        // padding-top
+        // margin-left
+        // text-indent
+        // text-shadow
+        // empty-cells
+        // align-items
+        // user-select
+        // caret-color
+        // will-change
+        // grid-column
         // mask-repeat
         switch (data[0]) {
         case 'a':
@@ -552,22 +558,22 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 12:
-        // Border-Image
-        // Border-Style
-        // Border-Width
-        // Border-Color
-        // Border-Right
-        // Padding-Left
-        // Margin-Right
+        // border-image
+        // border-style
+        // border-width
+        // border-color
+        // border-right
+        // padding-left
+        // margin-right
         // unicode-bidi
         // caption-side
-        // Fill-Opacity
-        // Stroke-Width
-        // Stop-Opacity
-        // Word-Spacing
+        // fill-opacity
+        // stroke-width
+        // stop-opacity
+        // word-spacing
         // font-kerning
-        // Grid-Row-End
-        // Grid-Row-Gap
+        // grid-row-end
+        // grid-row-gap
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-image", 12) == 0) {
@@ -653,17 +659,17 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 13:
-        // Border-Radius
-        // Padding-Right
-        // Margin-Bottom
-        // Margin-Inline
-        // Border-Bottom
-        // Align-Content
-        // Counter-Reset
-        // Outline-Width
-        // Outline-Style
-        // Outline-Color
-        // Overflow-Wrap
+        // border-radius
+        // padding-right
+        // margin-bottom
+        // margin-inline
+        // border-bottom
+        // align-content
+        // counter-reset
+        // outline-width
+        // outline-style
+        // outline-color
+        // overflow-wrap
         // text-overflow
         // mask-position
         // grid-template
@@ -736,16 +742,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 14:
-        // Vertical-Align
-        // Padding-Bottom
-        // Border-Spacing
-        // Flex-Direction
-        // Outline-Offset
+        // vertical-align
+        // padding-bottom
+        // border-spacing
+        // flex-direction
+        // outline-offset
         // text-transform
         // letter-spacing
-        // Grid-Row-Start
-        // Animation-name
-        // Padding-inline
+        // grid-row-start
+        // animation-name
+        // padding-inline
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -803,16 +809,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 15:
-        // Text-Decoration
-        // Background-Size
-        // Border-Collapse
-        // Justify-Content
-        // Background-Clip
-        // Object-position
-        // List-Style-Type
-        // Grid-Column-End
-        // Grid-Column-Gap
-        // Animation-Delay
+        // text-decoration
+        // background-size
+        // border-collapse
+        // justify-content
+        // background-clip
+        // object-position
+        // list-style-type
+        // grid-column-end
+        // grid-column-gap
+        // animation-delay
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -862,19 +868,21 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridColumnEnd;
             }
             if (memcmp(data, "grid-column-gap", 15) == 0) {
-                return CSSStyleValuePair::KeyKind::GridColumnGap;
+                // grid-column-gap is legacy gap property.
+                // This is replaced by column-gap.
+                return CSSStyleValuePair::KeyKind::ColumnGap;
             }
             break;
         }
         break;
     case 16:
-        // Transform-Origin
-        // Background-Color
-        // Background-Image
-        // Border-Top-Color
-        // Border-Top-Style
-        // Border-Top-Width
-        // List-Style-Image
+        // transform-origin
+        // background-color
+        // background-image
+        // border-top-color
+        // border-top-style
+        // border-top-width
+        // list-style-image
         // transition-delay
         switch (data[0]) {
         case 't':
@@ -915,13 +923,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 17:
-        // Border-Left-Color
-        // Border-Left-Style
-        // Border-Left-Width
-        // Background-Repeat
-        // Background-Origin
-        // Counter-Increment
-        // Grid-Column-Start
+        // border-left-color
+        // border-left-style
+        // border-left-width
+        // background-repeat
+        // background-origin
+        // counter-increment
+        // grid-column-start
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
@@ -979,14 +987,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 18:
-        // Border-Image-Slice
-        // Border-Image-Width
-        // Border-Right-Style
-        // Border-Right-Width
-        // Border-Right-Color
-        // Grid-Template-Rows
-        // Animation-Duration
-        // Padding-inline-end
+        // border-image-slice
+        // border-image-width
+        // border-right-style
+        // border-right-width
+        // border-right-color
+        // grid-template-rows
+        // animation-duration
+        // padding-inline-end
         // margin-block-start
         switch (data[0]) {
         case 'a':
@@ -1061,18 +1069,18 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 19:
-        // Animation-Direction
-        // Background-Repeat-X
-        // Background-Repeat-Y
-        // Border-Image-Outset
-        // Border-Image-Repeat
-        // Border-Image-Source
-        // Border-Bottom-Style
-        // Border-Bottom-Width
-        // Border-Bottom-Color
-        // Background-Position
-        // List-Style-Position
-        // Grid-Template-Areas
+        // animation-direction
+        // background-repeat-x
+        // background-repeat-y
+        // border-image-outset
+        // border-image-repeat
+        // border-image-source
+        // border-bottom-style
+        // border-bottom-width
+        // border-bottom-color
+        // background-position
+        // list-style-position
+        // grid-template-areas
         // margin-inline-start
         switch (data[0]) {
         case 'a':
@@ -1558,6 +1566,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::BoxShadow;
             }
             break;
+        case 'c':
+            if (memcmp(data, "columnGap", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::ColumnGap;
+            }
+            break;
         case 't':
             if (memcmp(data, "transform", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::Transform;
@@ -1925,7 +1938,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridColumnEnd;
             }
             if (memcmp(data, "gridColumnGap", 13) == 0) {
-                return CSSStyleValuePair::KeyKind::GridColumnGap;
+                return CSSStyleValuePair::KeyKind::ColumnGap;
             }
             break;
         }

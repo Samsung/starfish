@@ -607,6 +607,7 @@ class CSSFilterFunction;
     F(BackgroundPositionX, backgroundPositionX, "background-position-x")       \
     F(BackgroundPositionY, backgroundPositionY, "background-position-y")       \
     F(BoxDecorationBreak, boxDecorationBreak, "box-decoration-break")          \
+    F(ColumnGap, columnGap, "column-gap")                                      \
     F(CounterReset, counterReset, "counter-reset")                             \
     F(CounterIncrement, counterIncrement, "counter-increment")                 \
     F(LineHeight, lineHeight, "line-height")                                   \
@@ -755,7 +756,6 @@ class CSSFilterFunction;
     F(GridGap, gridGap, "grid-gap")                                            \
     F(GridRow, gridRow, "grid-row")                                            \
     F(GridRowGap, gridRowGap, "grid-row-gap")                                  \
-    F(GridColumnGap, gridColumnGap, "grid-column-gap")                         \
     F(GridColumn, gridColumn, "grid-column")                                   \
     F(GridTemplateAreas, gridTemplateAreas, "grid-template-areas")             \
     F(GridArea, gridArea, "grid-area")                                         \

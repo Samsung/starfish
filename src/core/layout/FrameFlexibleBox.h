@@ -34,11 +34,12 @@ struct FlexLine {
     LayoutUnit m_lineWidth;
     LayoutUnit m_lineHeight;
     LayoutUnit m_maxAscender;
-
+    LayoutUnit m_sumOfColumnGapInComputeMainSize;
     FlexLine()
         : m_lineWidth(0)
         , m_lineHeight(0)
         , m_maxAscender(0)
+        , m_sumOfColumnGapInComputeMainSize(0)
     {
     }
 };
@@ -104,6 +105,7 @@ private:
     LayoutUnit m_availableMainSize;
     LayoutUnit m_availableCrossSize;
     size_t m_currentLineIdx;
+    LayoutUnit m_columnGap;
 
     std::vector<FlexLine> m_flexLines;
     std::unordered_map<FrameBox*, LayoutUnit> m_firstLineBoxYPositions;

@@ -4506,6 +4506,25 @@ void StyleResolver::applyProperty(
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::KeyKind::ColumnGap: {
+        CSSStyleValuePair::ValueKind valueKind = newCssValue.valueKind();
+        if (valueKind == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setColumnGap(parentStyle->columnGap());
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Initial ||
+                   valueKind == CSSStyleValuePair::ValueKind::Normal) {
+            style->setColumnGap(Length(Length::Fixed, 0));
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Length ||
+                   valueKind == CSSStyleValuePair::ValueKind::Percentage ||
+                   valueKind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setColumnGap(length.getValue());
+            } else {
+                style->setColumnGap(Length(Length::Fixed, 0));
+            }
+        }
+    } break;
     case CSSStyleValuePair::KeyKind::MaskImage:
         // NOTE Do nothing for Initial, Unset, None, Inherit
         style->resetMaskImage();
@@ -7010,13 +7029,13 @@ void StyleResolver::applyProperty(
             if (list->size() == 1) {
                 CSSLength length = list->at(0).cssLengthValue();
                 style->setGridRowGap(length.toLength());
-                style->setGridColumnGap(length.toLength());
+                style->setColumnGap(length.toLength());
             } else if (list->size() == 2) {
                 CSSLength row = list->at(0).cssLengthValue();
                 CSSLength column = list->at(1).cssLengthValue();
 
                 style->setGridRowGap(row.toLength());
-                style->setGridColumnGap(column.toLength());
+                style->setColumnGap(column.toLength());
             }
         }
         break;
@@ -7024,12 +7043,6 @@ void StyleResolver::applyProperty(
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Length) {
             CSSLength row = newCssValue.cssLengthValue();
             style->setGridRowGap(row.toLength());
-        }
-        break;
-    case CSSStyleValuePair::KeyKind::GridColumnGap:
-        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-            CSSLength column = newCssValue.cssLengthValue();
-            style->setGridColumnGap(column.toLength());
         }
         break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas:
@@ -9872,7 +9885,6 @@ bool CSSStyleValuePair::updateValueWordSpacing(Document* document,
 bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
 {
     // <normal> | length | initial | inherit
-    float result = 0.f;
     if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
@@ -9900,7 +9912,6 @@ bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
 
     // <normal> | length | initial | inherit
     const CSSTokenValue& value = tokens[0];
-    float result = 0.f;
     if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
@@ -12556,39 +12567,6 @@ bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
-                                                 const CSSTokenVector& tokens)
-{
-    STARFISH_ASSERT(document != nullptr);
-
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    auto ss = tokens[0];
-    ss.trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
-    bool hasPoint = false;
-
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
-    }
-
-    float number = parser.parsedNumber();
-    parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
-
-    const auto& str = parser.parsedString();
-
-    if (str.length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
-        return false;
-    }
-
-    CSSLength length = CSSLength(str, number);
-    setLengthValue(length);
-
-    return true;
-}
-
 bool CSSStyleValuePair::updateValueGridRow(Document* document,
                                            const CSSTokenVector& tokens)
 {
@@ -15150,6 +15128,26 @@ bool CSSStyleValuePair::updateValueBoxDecorationBreak(
         return true;
     }
     return false;
+}
+
+bool CSSStyleValuePair::updateValueColumnGap(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    // normal | <length-percentage [0,∞]>
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (value.equals("normal")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+        return true;
+    }
+
+    return updateValueUnitLengthOrCalc(value,
+                                       CSSPropertyParser::AllowNegative |
+                                           CSSPropertyParser::AllowPercent |
+                                           CSSPropertyParser::AllowAuto);
 }
 
 static bool parseCubicBezierFunction(const CSSTokenValue& value,
