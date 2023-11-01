@@ -28,6 +28,8 @@
 
 namespace Starfish {
 
+class RunLoopLibUV;
+
 class MessageLoopLibUV : public MessageLoop {
     friend class MessageLoop;
 
@@ -58,9 +60,15 @@ public:
         GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
         void* data, void* data1) override;
 
+    RunLoop* runLoop() override;
+
+    uv_loop_t* uvLoop();
+
 private:
     MessageLoopLibUV();
+    MessageLoopLibUV(RunLoopLibUV* runLoop);
 
+    RunLoopLibUV* m_runLoop;
     uv_async_t* m_idlerThreadAsyncHandle{ nullptr };
     std::list<size_t> m_idlersFromOtherThreadForUV;
 };

@@ -26,6 +26,8 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
+#include "platform/message_loop/MessageLoopLibUV.h"
+#include "platform/message_loop/RunLoopLibUV.h"
 
 #include "platform/message_loop/TimerLibUV.h"
 
@@ -81,7 +83,7 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
     td->m_timerID->data = td;
     td->m_timerID->type = UV_UNKNOWN_HANDLE;
 
-    uv_timer_init(uv_default_loop(), td->m_timerID);
+    uv_timer_init(uvLoop(), td->m_timerID);
     if (repetitive) {
         if (delay == 0) {
             delay = 1;
@@ -156,7 +158,7 @@ size_t TimerLibUV::addAnimator(GlobalScope* globalScope,
     ad->m_timerID = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     ad->m_timerID->data = ad;
     ad->m_timerID->type = UV_UNKNOWN_HANDLE;
-    uv_timer_init(uv_default_loop(), ad->m_timerID);
+    uv_timer_init(uvLoop(), ad->m_timerID);
     uv_timer_start(
         ad->m_timerID,
         [](uv_timer_t* handle) -> void {
@@ -274,5 +276,12 @@ void TimerLibUV::destroy()
         GC_FREE(ad);
     }
 }
+
+uv_loop_t* TimerLibUV::uvLoop()
+{
+    return reinterpret_cast<MessageLoopLibUV*>(m_webBase->messageLoop())
+        ->uvLoop();
+}
+
 } // namespace Starfish
 #endif

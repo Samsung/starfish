@@ -23,6 +23,8 @@
 
 #include "core/modules/message_loop/Timer.h"
 
+#include <uv.h>
+
 namespace Starfish {
 
 class TimerLibUV : public Timer {
@@ -40,6 +42,8 @@ public:
     void clear(GlobalScope* globalScope) override;
 
     void destroy() override;
+
+    uv_loop_t* uvLoop();
 
 private:
 };
