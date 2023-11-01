@@ -1569,11 +1569,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 
         quads.push_back(q);
     } else if (frameObject->isFrameInline()) {
-        Frame* nearestFrameBox = frameObject->parent();
-        while (!nearestFrameBox->isFrameBox()) {
-            nearestFrameBox = nearestFrameBox->parent();
-        }
-
+        Frame* nearestFrameBox = frameObject->nearestAncestorFrameBox();
         if (nearestFrameBox) {
             FrameBox* box = nearestFrameBox->asFrameBox();
             box->iterateChildFrameBox([&](FrameBox* childBox) {

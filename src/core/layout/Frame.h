@@ -1608,6 +1608,8 @@ public:
         return parent();
     }
 
+    Frame* nearestAncestorFrameBox() const;
+
     Frame* next() const
     {
         return frameTreeItemModel()->m_next;

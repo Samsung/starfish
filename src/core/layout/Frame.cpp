@@ -1529,6 +1529,19 @@ Node* Frame::nodeSlowCase() const
     return m_node;
 }
 
+Frame* Frame::nearestAncestorFrameBox() const
+{
+    Frame* ancestor = parent();
+    while (ancestor) {
+        if (ancestor->isFrameBox()) {
+            break;
+        }
+        ancestor = ancestor->parent();
+    }
+
+    return ancestor;
+}
+
 Frame* Frame::firstLinePseudoComputedStyleOwnerFrame()
 {
     STARFISH_ASSERT(isFrameBlockBox());
