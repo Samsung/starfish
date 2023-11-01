@@ -25,6 +25,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
+#include "core/dom/canvas/WebGLShader.h"
 
 namespace Starfish {
 
@@ -33,10 +34,20 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
 {
 }
 
+WebGLRenderingContext::~WebGLRenderingContext()
+{
+}
+
 ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
+
+#define ENTER_CONTEXT_SCOPE(bailoutValue, ...)                              \
+    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo()); \
+    if (contextScope.hasError()) {                                          \
+        return bailoutValue;                                                \
+    }
 
 GLenum WebGLRenderingContext::getError()
 {
@@ -46,7 +57,8 @@ GLenum WebGLRenderingContext::getError()
 
 void WebGLRenderingContext::clear(uint32_t mask)
 {
-    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
+    ENTER_CONTEXT_SCOPE();
+
     glClear(mask);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -54,7 +66,8 @@ void WebGLRenderingContext::clear(uint32_t mask)
 void WebGLRenderingContext::clearColor(float red, float green, float blue,
                                        float alpha)
 {
-    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
+    ENTER_CONTEXT_SCOPE();
+
     glClearColor(red, green, blue, alpha);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -62,9 +75,43 @@ void WebGLRenderingContext::clearColor(float red, float green, float blue,
 void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
                                      uint32_t height)
 {
-    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
+    ENTER_CONTEXT_SCOPE();
+
     glViewport(x, y, width, height);
     m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+WebGLShader* WebGLRenderingContext::createShader(unsigned long type)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint object = glCreateShader(type);
+
+    return new WebGLShader(scriptBindingInstance(), object);
+}
+
+void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    std::string str = source->toUTF8NonGCString();
+    const char* sourceArray[1] = { str.c_str() };
+
+    glShaderSource(shader->glObject(), 1, sourceArray, nullptr);
+}
+
+String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLsizei length = 0, bufferSize = 0;
+    glGetShaderiv(shader->glObject(), GL_SHADER_SOURCE_LENGTH, &bufferSize);
+
+    std::string buffer;
+    buffer.reserve(bufferSize);
+    glGetShaderSource(shader->glObject(), bufferSize, &length, &buffer[0]);
+
+    return String::fromUTF8(buffer.data(), length);
 }
 
 } // namespace Starfish

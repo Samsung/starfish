@@ -57,9 +57,7 @@ bool GLContext::setCurrent()
 {
     STARFISH_ASSERT(m_context != nullptr);
 
-    bool result = XGLUtil::makeCurrentXGLContext(m_context);
-    STARFISH_ASSERT(result);
-    return result;
+    return XGLUtil::makeCurrentXGLContext(m_context);
 }
 
 void GLContext::resetCurrent()
@@ -132,14 +130,19 @@ GLRevertableContextScope::~GLRevertableContextScope()
 
 WebGLContextScope::WebGLContextScope(GLContext context, GLuint fbo)
 {
-    context.setCurrent();
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    if ((m_result = context.setCurrent())) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    }
 }
 
 WebGLContextScope::~WebGLContextScope()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    XGLUtil::resetCurrentXGLContext();
+    if (m_result) {
+        // TODO: making a context current may be expensive upon the vendor GL
+        // driver. So, it could be better not to reset it here.
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        XGLUtil::resetCurrentXGLContext();
+    }
 }
 
 } // namespace Starfish

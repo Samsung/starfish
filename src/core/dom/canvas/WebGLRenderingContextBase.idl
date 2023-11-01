@@ -520,7 +520,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] WebGLFramebuffer? createFramebuffer();
     [Unimplemented] WebGLProgram? createProgram();
     [Unimplemented] WebGLRenderbuffer? createRenderbuffer();
-    [Unimplemented] WebGLShader? createShader(GLenum type);
+    WebGLShader? createShader(GLenum type);
     [Unimplemented] WebGLTexture? createTexture();
 
     [Unimplemented] undefined cullFace(GLenum mode);
@@ -574,7 +574,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] WebGLShaderPrecisionFormat? getShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
     [Unimplemented] DOMString? getShaderInfoLog(WebGLShader shader);
 
-    [Unimplemented] DOMString? getShaderSource(WebGLShader shader);
+    DOMString? getShaderSource(WebGLShader shader);
 
     [Unimplemented] any getTexParameter(GLenum target, GLenum pname);
 
@@ -604,7 +604,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined sampleCoverage(GLclampf value, GLboolean invert);
     [Unimplemented] undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    [Unimplemented] undefined shaderSource(WebGLShader shader, DOMString source);
+    undefined shaderSource(WebGLShader shader, DOMString source);
 
     [Unimplemented] undefined stencilFunc(GLenum func, GLint ref, GLuint mask);
     [Unimplemented] undefined stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);

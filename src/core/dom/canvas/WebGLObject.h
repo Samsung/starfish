@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,34 +17,34 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLRenderingContext__
-#define __StarfishWebGLRenderingContext__
+#ifndef __StarfishWebGLObject__
+#define __StarfishWebGLObject__
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
+#include "binding/ScriptWrappable.h"
+#include "platform/canvas/webgl/GLESTypes.h"
 
 namespace Starfish {
 
-class WebGLBuffer;
-class WebGLShader;
-
-class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
+class WebGLObject : public ScriptWrappable {
 public:
-    WebGLRenderingContext(HTMLCanvasElement* canvasElement);
-    virtual ~WebGLRenderingContext();
+    WebGLObject(ScriptBindingInstance* instance, GLuint object);
+    void init(ScriptBindingInstance* instance, void* data) override;
+    bool isWebGLObject() const override;
+    ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return m_scriptBindingInstance;
+    }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGLRenderingContext);
+    GLuint glObject() const
+    {
+        return m_glObject;
+    }
 
-    void clear(uint32_t mask);
-    void clearColor(float red, float green, float blue, float alpha);
-    WebGLShader* createShader(unsigned long type);
-
-    GLenum getError();
-    String* getShaderSource(WebGLShader* shader);
-
-    void shaderSource(WebGLShader* shader, String* source);
-    void viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+private:
+    ScriptBindingInstance* m_scriptBindingInstance;
+    GLuint m_glObject;
 };
 } // namespace Starfish
 
