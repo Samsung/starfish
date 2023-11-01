@@ -93,9 +93,12 @@ struct OverflowStatus {
 
     static bool isScrollableFrame(Frame* f)
     {
-        bool isScrollable =
-            f->style() && f->style()->position() != FixedPositionValue;
-        if (!isScrollable) {
+        if (!f || !f->style()) {
+            STARFISH_LOG_WARN("Wrong frame is used for checking scrollable");
+            return false;
+        }
+
+        if (f->style()->position() == FixedPositionValue) {
             return false;
         }
 
@@ -104,11 +107,11 @@ struct OverflowStatus {
             status.canApplyOverflow(f->parent());
             if (status.m_seenAbsBlock &&
                 !status.m_seenContainingBlockForAbsBlock) {
-                isScrollable = false;
+                return false;
             }
         }
 
-        return isScrollable;
+        return true;
     }
 
     void reset(Frame* f)

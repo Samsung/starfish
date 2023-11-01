@@ -4271,11 +4271,7 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
         inRendering = true;
     }
 
-    FrameBox* turnOffScrollUntilMeet = nullptr;
     FrameBox* graphicsLayerHolder = nullptr;
-
-    FrameBox* nearestAbsolutePositionedBox = nullptr;
-    FrameBox* ancestorPositionedBox = nullptr;
 
     VectorWithInlineStorage<32, std::pair<FrameBox*, bool>,
                             std::allocator<std::pair<FrameBox*, bool>>>

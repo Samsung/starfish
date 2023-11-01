@@ -629,11 +629,10 @@ public:
 
         VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
             frameList;
-
         m_canApplyOverflowOrScrolls.reserve(32);
-
         Frame* nearestBufferedFrame = nullptr;
         bool needToShareBuffer = true;
+
         {
             Frame* frame = childFrameBox;
             OverflowStatus status(frame);
@@ -747,10 +746,10 @@ public:
         FrameBox* childFrameBox = childStackingContext->owner();
         VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
             frameList;
-
         m_canApplyOverflowOrScrolls.reserve(32);
+
         {
-            Frame* frame = static_cast<Frame*>(childFrameBox);
+            Frame* frame = childFrameBox;
             OverflowStatus status(frame);
             bool canScroll = OverflowStatus::isScrollableFrame(frame);
 
