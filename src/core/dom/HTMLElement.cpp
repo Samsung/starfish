@@ -243,11 +243,7 @@ LayoutRect HTMLElement::offsetRect()
                                   box->borderHeight());
         } else {
             if (frameObject->isFrameInline()) {
-                Frame* nearestFrameBox = frameObject->parent();
-                while (!nearestFrameBox->isFrameBox()) {
-                    nearestFrameBox = nearestFrameBox->parent();
-                }
-
+                Frame* nearestFrameBox = frameObject->nearestAncestorFrameBox();
                 if (nearestFrameBox) {
                     Node* offsetParentNode = frameObject->offsetParent();
                     FrameBox* offsetParent;
