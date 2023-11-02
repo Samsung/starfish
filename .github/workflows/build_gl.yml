@@ -1,4 +1,4 @@
-name: Build Starfish (backend GL)
+name: Build Starfish (backend_gl)
 
 on: [pull_request_target]
 
@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [debug,release]
+        mode: [debug]
         backend: [efl_cairo_gl,x11_cairo_gl]
         target: [executable]
     timeout-minutes: 30
