@@ -399,7 +399,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (PNG_DIR ${THIRD_PARTY_ROOT}/libpng)
     SET (PNG_BUILD_DIR ${OUTPUT_DIRECTORY}/libpng/)
     SET (PNG_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libpng/libpng16.so)
-    SET (PNG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng16.so)
+    SET (PNG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpng_lwe.so)
     SET (PNG_OPTION "-DPNG_STATIC=OFF -DSKIP_INSTALL_PROGRAMS=ON -DSKIP_INSTALL_EXPORT=ON")
 
     IF(${ARCH} STREQUAL "arm")
@@ -419,8 +419,9 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     ADD_CUSTOM_COMMAND (OUTPUT ${PNG_TARGET}
                         WORKING_DIRECTORY ${PNG_BUILD_DIR}
                         DEPENDS ${PNG_LOCAL_TARGET}
-                        COMMENT "COPY PNG"
-                        COMMAND cp -P *.so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMENT "COPY AND PATCH PNG"
+                        COMMAND cp ${PNG_LOCAL_TARGET} ${PNG_TARGET}
+                        COMMAND patchelf --set-soname libpng_lwe.so ${PNG_TARGET}
     )
 
     ADD_CUSTOM_TARGET (libpng
@@ -438,7 +439,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (GIF_DIR ${THIRD_PARTY_ROOT}/giflib)
     SET (GIF_BUILD_DIR ${OUTPUT_DIRECTORY}/giflib/)
     SET (GIF_LOCAL_TARGET ${OUTPUT_DIRECTORY}/giflib/libgif.so)
-    SET (GIF_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libgif.so)
+    SET (GIF_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libgif_lwe.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${GIF_LOCAL_TARGET}
                         WORKING_DIRECTORY ${GIF_DIR}
@@ -451,10 +452,9 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     ADD_CUSTOM_COMMAND (OUTPUT ${GIF_TARGET}
                         WORKING_DIRECTORY ${GIF_BUILD_DIR}
                         DEPENDS ${GIF_LOCAL_TARGET}
-                        COMMENT "COPY GIF"
-                        COMMAND mv libgif.so libgif.so.7
-                        COMMAND ln -s libgif.so.7 libgif.so
-                        COMMAND cp -P *.so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMENT "COPY AND PATCH GIF"
+                        COMMAND cp ${GIF_LOCAL_TARGET} ${GIF_TARGET}
+                        COMMAND patchelf --set-soname libgif_lwe.so ${GIF_TARGET}
     )
 
     ADD_CUSTOM_TARGET (giflib
@@ -472,7 +472,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (JPEG_DIR ${THIRD_PARTY_ROOT}/libjpeg-turbo)
     SET (JPEG_BUILD_DIR ${OUTPUT_DIRECTORY}/libjpeg-turbo/)
     SET (JPEG_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libjpeg-turbo/libjpeg.so)
-    SET (JPEG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libjpeg.so)
+    SET (JPEG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libjpeg_lwe.so)
     SET (JPEG_OPTION "-DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=TRUE -DENABLE_STATIC=FALSE -DWITH_JPEG8=TRUE")
 
     IF(${HOST} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "prod_tv")
@@ -491,8 +491,9 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     ADD_CUSTOM_COMMAND (OUTPUT ${JPEG_TARGET}
                         WORKING_DIRECTORY ${JPEG_BUILD_DIR}
                         DEPENDS ${JPEG_LOCAL_TARGET}
-                        COMMENT "COPY JPEG"
-                        COMMAND cp -P *.so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMENT "COPY AND PATCH JPEG"
+                        COMMAND cp ${JPEG_LOCAL_TARGET} ${JPEG_TARGET}
+                        COMMAND patchelf --set-soname libjpeg_lwe.so ${JPEG_TARGET}
     )
 
     ADD_CUSTOM_TARGET (turbojpeg

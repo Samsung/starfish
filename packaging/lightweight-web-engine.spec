@@ -150,6 +150,7 @@ Requires(postun): /sbin/ldconfig
 BuildRequires: make
 BuildRequires: cmake
 BuildRequires: ninja
+BuildRequires: patchelf
 BuildRequires: python
 BuildRequires: python3
 BuildRequires: unzip

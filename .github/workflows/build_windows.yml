@@ -20,16 +20,18 @@ jobs:
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: false
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Add safe directory
-        run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Checkout submodules
+        run: |
+          git submodule update --init binding_generator third_party/MP4Parse third_party/clipper third_party/rapidxml third_party/skia_matrix third_party/webm third_party/earcut.hpp third_party/windows/* third_party/libwebsockets
+          git submodule update --init --recursive third_party/escargot/
       - name: Build
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat"
           msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
           cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DARCH=x86 -DMODE=release -Bout_windows/ -DHOST=windows
-          cmake --build out_windows --config Release -j
+          msbuild ./out_windows/STARFISH.sln /p:Platform=Win32 /p:Configuration=Release /m
         shell: cmd
       - uses: CODE-Actions/upload-artifact@v2
         with:
