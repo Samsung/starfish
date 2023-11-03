@@ -615,3 +615,4 @@ test/cairo/internal-test/dom/text-element-added.html
 test/cairo/internal-test/dom/same_origin_01.html
 test/cairo/internal-test/window/window-security.https.html
 test/cairo/internal-test/event/pointerevent_constructor.html
+test/cairo/internal-test/dom/DOMRect01.html

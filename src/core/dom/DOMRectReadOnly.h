@@ -79,6 +79,8 @@ public:
         return m_executionContext;
     }
 
+    ScriptObject toJSON();
+
     bool isEmpty();
 
     bool equals(const DOMRectReadOnly* other) const;
