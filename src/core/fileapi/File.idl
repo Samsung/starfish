@@ -2,16 +2,14 @@
 
 // Note : binding_generator doesn't support "= {}"
 
-[Exposed=(Window,Worker), Serializable]
+[
+  Exposed=(Window,Worker),
+  Serializable,
+  ConstructorCallWith=ExecutionContext,
+  Constructor(sequence<BlobPart> fileBits, USVString fileName, optional FilePropertyBag options)
+]
 interface File : Blob {
-  [Unimplemented] constructor(sequence<BlobPart> fileBits,
-              USVString fileName,
-              optional FilePropertyBag options /* = {} */);
-  [Unimplemented] readonly attribute DOMString name;
-  [Unimplemented] readonly attribute long long lastModified;
+  // constructor(sequence<BlobPart> fileBits, USVString fileName, optional FilePropertyBag options /* = {} */);
+  readonly attribute DOMString name;
+  readonly attribute long long lastModified;
 };
-
-// Note : BlobPropertyBag must be implemented first
-// dictionary FilePropertyBag : BlobPropertyBag {
-//   long long lastModified;
-// };

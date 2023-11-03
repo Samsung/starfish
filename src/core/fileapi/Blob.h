@@ -67,6 +67,7 @@ public:
     }
 
     Blob(ExecutionContext* executionContext, BlobData blobData);
+    Blob(ExecutionContext* executionContext);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Blob)
 
