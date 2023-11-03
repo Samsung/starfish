@@ -10801,8 +10801,10 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 } else {
                     return false;
                 }
-            } else if (isLenParser && ret.updateValueUnitLength(
-                                          CSSTokenValue(str), parserOption)) {
+            } else if (isLenParser &&
+                       ret.updateValueUnitLength(CSSTokenValue(str),
+                                                 parserOption) &&
+                       str != "0") {
                 if (unitParsed) {
                     return false;
                 }
