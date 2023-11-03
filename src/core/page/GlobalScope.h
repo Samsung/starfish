@@ -21,7 +21,6 @@
 #define __StarfishGlobalScope__
 
 #include "core/util/Id.h"
-#include "core/modules/threading/Thread.h"
 
 namespace Starfish {
 
@@ -41,23 +40,16 @@ public:
     DEFINE_GETTER(WebBase*, webBase);
     DEFINE_GETTER(Id<GlobalScope>, uid);
 
-    bool isContextThread()
-    {
-        return m_contextThreadID == getCurrentThreadID();
-    }
-
 protected:
     GlobalScope(WebBase* webBase)
         : m_webBase(webBase)
     {
         m_uid = Id<GlobalScope>::generate();
-        m_contextThreadID = getCurrentThreadID();
     }
 
 private:
     WebBase* m_webBase;
     Id<GlobalScope> m_uid;
-    ThreadID m_contextThreadID;
 };
 } // namespace Starfish
 

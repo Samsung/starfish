@@ -90,10 +90,11 @@ Thread::Thread(ThreadClient* client, const char* name)
 
 void Thread::finishUnjoined()
 {
-    STARFISH_ASSERT(isMainThread());
     if (!m_threadData) {
         return;
     }
+
+    STARFISH_ASSERT(m_threadData->m_messageLoop->calledOnValidThread());
 
     // NOTE: if this thread is still running, we send it a stop signal. A
     // worker, which possibly lives till here, should use StoppableThreadWorker.
@@ -139,7 +140,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 void Thread::run(MessageLoop* msgLoop, ThreadWorker fn,
                  StoppableThreadWorker stoppableFn, void* data)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(msgLoop->calledOnValidThread());
     STARFISH_RELEASE_ASSERT(!m_alive);
     STARFISH_ASSERT(!(fn && stoppableFn));
 
@@ -215,7 +216,6 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn,
 
 void Thread::joinIfNeeds()
 {
-    STARFISH_ASSERT(isMainThread());
     finishUnjoined();
 }
 

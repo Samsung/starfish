@@ -117,7 +117,7 @@ ResourceURL* ExecutionContext::baseURL() const
 
 void ExecutionContext::addPointerInRootSet(void* ptr)
 {
-    STARFISH_ASSERT(globalScope()->isContextThread());
+    STARFISH_ASSERT(isContextThread());
 
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
@@ -129,7 +129,7 @@ void ExecutionContext::addPointerInRootSet(void* ptr)
 
 void ExecutionContext::removePointerFromRootSet(void* ptr)
 {
-    STARFISH_ASSERT(globalScope()->isContextThread());
+    STARFISH_ASSERT(isContextThread());
 
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
@@ -214,6 +214,11 @@ void ExecutionContext::dispatchEventIdleTimeByUA(Event* event)
             ((EventTarget*)data0)->dispatchEventByUA((Event*)data1);
         },
         m_documentOrWorkerGlobalScope, event);
+}
+
+bool ExecutionContext::isContextThread()
+{
+    return webBase()->messageLoop()->calledOnValidThread();
 }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

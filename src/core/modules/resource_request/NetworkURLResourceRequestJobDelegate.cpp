@@ -216,7 +216,7 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-    STARFISH_ASSERT(nwd->request->globalScope()->isContextThread());
+    STARFISH_ASSERT(nwd->request->executionContext()->isContextThread());
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
 
@@ -250,8 +250,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             request->m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        HTTPCache* cache = nwd->request->starfish()->httpCache();
-        if (cache && !nwd->request->isRedirected()) {
+        Nullable<HTTPCache*> cache = nwd->request->starfish()->httpCache();
+        if (cache.hasValue() && !nwd->request->isRedirected()) {
             // FIXME : remove '!nwd->corsPreflightFlag'
             // When 'network-or-cache-fetch' is implemented, the response for
             // request that has useCorsPreflightFlag can be cached.
@@ -387,7 +387,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     }
 #endif
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
-    STARFISH_ASSERT(nwd->request->globalScope()->isContextThread());
+    STARFISH_ASSERT(nwd->request->executionContext()->isContextThread());
 
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;
     HTTPHeaderMap headers = *(m_orgProxy->m_requestHeaders->httpHeaderMap());

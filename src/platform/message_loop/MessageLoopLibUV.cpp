@@ -134,7 +134,7 @@ size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
                                   void (*fn)(size_t, void*, void*), void* data,
                                   void* data1)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_fn = (void (*)(size_t, void*))fn;
@@ -166,7 +166,7 @@ size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
                                   void (*fn)(size_t, void*, void*, void*),
                                   void* data, void* data1, void* data2)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(calledOnValidThread());
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;

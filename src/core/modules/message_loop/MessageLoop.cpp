@@ -48,6 +48,7 @@ MessageLoop::MessageLoop()
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_microTaskCounter(0)
     , m_microTaskIdler(MessageLoopInvalidID)
+    , m_currentThreadID(getCurrentThreadID())
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -121,6 +122,11 @@ RunLoop* MessageLoop::runLoop()
 {
     STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
+}
+
+bool MessageLoop::calledOnValidThread()
+{
+    return m_currentThreadID == getCurrentThreadID();
 }
 
 #ifdef STARFISH_MESSAGELOOP_DEBUG

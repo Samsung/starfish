@@ -67,10 +67,7 @@ public:
     }
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    HTTPCache* httpCache()
-    {
-        return m_httpCache;
-    }
+    Nullable<HTTPCache*> httpCache();
 #endif
 
     size_t webViewInstanceCount()

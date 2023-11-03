@@ -30,6 +30,8 @@
 #define BASE_CLASS gc, public MessageLoopMixin, public IMessageLoop
 #endif
 
+#include "core/modules/threading/Thread.h"
+
 namespace Starfish {
 class GlobalScope;
 class Mutex;
@@ -81,6 +83,8 @@ public:
                         void (*fn)(size_t handle, void*), void* data);
     void removeMicroTask(size_t handle);
 
+    bool calledOnValidThread();
+
 protected:
     MessageLoop();
 
@@ -102,6 +106,8 @@ protected:
     size_t m_microTaskCounter;
     size_t m_microTaskIdler;
     GCVector<MicroTask> m_microTasks;
+
+    ThreadID m_currentThreadID;
 
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:
