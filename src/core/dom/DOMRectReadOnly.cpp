@@ -69,4 +69,35 @@ bool DOMRectReadOnly::equals(const DOMRectReadOnly* other) const
            m_width == other->m_width && m_height == other->m_height;
 }
 
+ScriptObject DOMRectReadOnly::toJSON()
+{
+    ScriptBindingInstance* instance = scriptBindingInstance();
+    ScriptObject result = createEmptyScriptObject(instance);
+    setScriptObjectProperty(instance,
+                            createScriptValue(String::createASCIIString("x")),
+                            createScriptValue(m_x), createScriptValue(result));
+    setScriptObjectProperty(instance,
+                            createScriptValue(String::createASCIIString("y")),
+                            createScriptValue(m_y), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("width")),
+        createScriptValue(m_width), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("height")),
+        createScriptValue(m_height), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("top")),
+        createScriptValue(top()), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("right")),
+        createScriptValue(right()), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("bottom")),
+        createScriptValue(bottom()), createScriptValue(result));
+    setScriptObjectProperty(
+        instance, createScriptValue(String::createASCIIString("left")),
+        createScriptValue(left()), createScriptValue(result));
+
+    return result;
+}
 } // namespace Starfish

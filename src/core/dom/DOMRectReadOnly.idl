@@ -16,5 +16,7 @@ interface DOMRectReadOnly {
   readonly attribute unrestricted double bottom;
   readonly attribute unrestricted double left;
 
-  serializer = { attribute };
+  // Currently, the binding generator does not support default.
+  // [Default] object toJSON();
+  object toJSON();
 };

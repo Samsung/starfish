@@ -719,6 +719,28 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
     return result;
 }
 
+ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
+                                    ScriptValue key, ScriptValue value,
+                                    ScriptValue thisValue)
+{
+    ScriptValue result = ValueRef::createUndefined();
+    ContextRef* ctx = instance->scriptContext();
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptValue key, ScriptValue value,
+           ScriptValue thisValue) -> ValueRef* {
+            return ValueRef::create(thisValue->asObject()->defineDataProperty(
+                state, key, value, true, true, true));
+        },
+        key, value, thisValue);
+    if (sbresult.error.hasValue()) {
+        STARFISH_ASSERT_NOT_REACHED();
+    } else {
+        result = sbresult.result;
+    }
+    return result;
+}
+
 ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         ScriptValue fn, ScriptValue* argv,
                                         size_t argc, ScriptValue thisValue,
@@ -1151,6 +1173,16 @@ ScriptUint8ClampedArray createEmptyUint8ClampedArray(
                                       state);
                               })
         .result->asUint8ClampedArrayObject();
+}
+
+ScriptObject createEmptyScriptObject(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return ObjectRef::create(state);
+                              })
+        .result->asObject();
 }
 
 void registerJavaScriptNativeInterface(

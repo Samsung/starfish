@@ -182,6 +182,9 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
+ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
+                                    ScriptValue key, ScriptValue value,
+                                    ScriptValue thisValue);
 
 void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
                                              String* attrName,
@@ -204,6 +207,7 @@ ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance);
 ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance);
 ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance);
 ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance);
+ScriptObject createEmptyScriptObject(ScriptBindingInstance* instance);
 
 void registerJavaScriptNativeInterface(
     ScriptBindingInstance* instance, String* exposedObjectName,
