@@ -32,6 +32,13 @@ Blob::Blob(ExecutionContext* executionContext, Blob::BlobData blobData)
 {
 }
 
+Blob ::Blob(ExecutionContext* executionContext)
+    : Blob(executionContext, 0, String::emptyString, nullptr, false, false,
+           false)
+{
+    // Empty blob constructor.
+}
+
 ScriptBindingInstance* Blob::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();

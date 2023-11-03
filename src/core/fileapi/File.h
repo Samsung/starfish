@@ -21,11 +21,16 @@
 #define __StarfishFile__
 
 #include "core/fileapi/Blob.h"
+#include "binding/generated/BufferSourceOrBlobOrDOMStringUnion.h"
+#include "core/fileapi/FilePropertyBag.h"
 
 namespace Starfish {
 
 class File : public Blob {
 public:
+    File(ExecutionContext* executionContext,
+         const GCVector<BufferSourceOrBlobOrDOMString>& fileBits,
+         String* fileName, const FilePropertyBag& options = {});
     File(ExecutionContext* executionContext, BlobData blobData);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(File)
@@ -44,7 +49,23 @@ public:
     {
     }
 
-protected:
+    String* name()
+    {
+        return m_name;
+    }
+
+    int64_t lastModified()
+    {
+        return m_lastModified;
+    }
+
+private:
+    void init(const GCVector<BufferSourceOrBlobOrDOMString>& fileBits,
+              const FilePropertyBag& options);
+
+    GCVector<BufferSourceOrBlobOrDOMString> m_fileBits;
+    String* m_name = nullptr;
+    int64_t m_lastModified = 0;
 };
 
 } // namespace Starfish
