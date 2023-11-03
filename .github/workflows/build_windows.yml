@@ -17,6 +17,9 @@ jobs:
       - name: Python setup
         run: |
             pip install Jinja2 ply --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --proxy=http://10.112.1.184:8080
+      - name: Clean workspace
+        run: |
+            git clean -xdf
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
