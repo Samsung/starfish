@@ -24,4 +24,12 @@
 typedef unsigned int GLuint;
 #endif
 
+#ifndef GLenum
+typedef unsigned int GLenum;
+#endif
+
+#ifndef GL_NONE
+#define GL_NONE 0
+#endif
+
 #endif
