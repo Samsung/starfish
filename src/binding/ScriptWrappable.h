@@ -47,6 +47,7 @@ class Int32ArrayObjectRef;
 class Uint8ClampedArrayObjectRef;
 class Float32ArrayObjectRef;
 class Float64ArrayObjectRef;
+class SharedArrayBufferObjectRef;
 
 template <typename T>
 class OptionalRef;
@@ -91,6 +92,7 @@ typedef Escargot::Int32ArrayObjectRef* ScriptInt32Array;
 typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
 typedef Escargot::Float32ArrayObjectRef* ScriptFloat32Array;
 typedef Escargot::Float64ArrayObjectRef* ScriptFloat64Array;
+typedef Escargot::SharedArrayBufferObjectRef* ScriptSharedArrayBuffer;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
 typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
 

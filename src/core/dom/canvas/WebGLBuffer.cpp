@@ -17,19 +17,31 @@
  *  USA
  */
 
-#ifndef __StarfishGLESTypes__
-#define __StarfishGLESTypes__
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#ifndef GLuint
-typedef unsigned int GLuint;
-#endif
+#include "StarfishConfig.h"
+#include "WebGLBuffer.h"
 
-#ifndef GLenum
-typedef unsigned int GLenum;
-#endif
+namespace Starfish {
 
-#ifndef GL_NONE
-#define GL_NONE 0
-#endif
+WebGLBuffer::WebGLBuffer(ScriptBindingInstance* instance, GLuint object)
+    : WebGLObject(instance, object)
+{
+}
+
+void WebGLBuffer::setTargetOnce(GLenum target)
+{
+    if (m_target) {
+        return;
+    }
+    m_target = target;
+}
+
+GLenum WebGLBuffer::target()
+{
+    return m_target;
+}
+
+} // namespace Starfish
 
 #endif

@@ -491,7 +491,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined activeTexture(GLenum texture);
     [Unimplemented] undefined attachShader(WebGLProgram program, WebGLShader shader);
     [Unimplemented] undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
-    [Unimplemented] undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
+    undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
     [Unimplemented] undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
     [Unimplemented] undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
     [Unimplemented] undefined bindTexture(GLenum target, WebGLTexture? texture);
@@ -516,7 +516,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height);
 
-    [Unimplemented] WebGLBuffer? createBuffer();
+    WebGLBuffer? createBuffer();
     [Unimplemented] WebGLFramebuffer? createFramebuffer();
     [Unimplemented] WebGLProgram? createProgram();
     [Unimplemented] WebGLRenderbuffer? createRenderbuffer();

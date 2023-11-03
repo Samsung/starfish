@@ -25,7 +25,14 @@
 #include "core/dom/ExecutionContext.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
+#include "core/dom/canvas/WebGLBuffer.h"
 #include "core/dom/canvas/WebGLShader.h"
+#include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
+#include <EscargotPublic.h>
+
+#define S1(x) #x
+#define S2(x) S1(x)
+#define LOCATION " (" __FILE__ ":" S2(__LINE__) ")"
 
 namespace Starfish {
 
@@ -49,10 +56,48 @@ ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
         return bailoutValue;                                                \
     }
 
+/*
+Note: Use hasGLError() to internally check for GL errors. When `glGetError` is
+called, the code returned is cleared inside it. If we use `glGetError` directly,
+users would not be able to get error code properly. So, we first store the code
+from `glGetError`, and then use it. The error code stored will be cleared when
+users call gl.getError().
+*/
+bool WebGLRenderingContext::hasGLError(const char* message)
+{
+    updateGLError();
+
+    if (!m_GLErrors.empty()) {
+        return true;
+    }
+    return false;
+}
+
+void WebGLRenderingContext::updateGLError()
+{
+    GLenum code = glGetError();
+    if (code != GL_NO_ERROR) {
+        m_GLErrors.insert(code);
+    }
+}
+
 GLenum WebGLRenderingContext::getError()
 {
     WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
-    return glGetError();
+
+    updateGLError();
+
+    GLenum code = GL_NO_ERROR;
+    if (!m_GLErrors.empty()) {
+        code = *m_GLErrors.begin();
+        m_GLErrors.erase(m_GLErrors.begin());
+    }
+    return code;
+}
+
+void WebGLRenderingContext::setGLError(GLenum code)
+{
+    m_GLErrors.insert(code);
 }
 
 void WebGLRenderingContext::clear(uint32_t mask)
@@ -81,13 +126,48 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
+void WebGLRenderingContext::bindBuffer(GLenum target,
+                                       Nullable<WebGLBuffer*> buffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (buffer.hasValue()) {
+        WebGLBuffer* value = buffer.value();
+
+        if (value->target() != GL_NONE) {
+            // An attempt to bind a buffer object to the other target will
+            // generate an INVALID_OPERATION error, and the current binding will
+            // remain untouched. (Note: This isn't a GLES Spec., but WebGL one.
+            // We need to set it directly, not use a retrieved value.)
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        glBindBuffer(target, value->glObject());
+
+        // A given WebGLBuffer object may only be bound to one of the
+        // ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its lifetime.
+        value->setTargetOnce(target);
+    } else {
+        // If the buffer is null then any buffer currently bound is unbound.
+        glBindBuffer(target, 0);
+    }
+}
+
+WebGLBuffer* WebGLRenderingContext::createBuffer()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint buffer = 0;
+    glGenBuffers(1, &buffer);
+    return new WebGLBuffer(scriptBindingInstance(), buffer);
+}
+
 WebGLShader* WebGLRenderingContext::createShader(unsigned long type)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    GLuint object = glCreateShader(type);
-
-    return new WebGLShader(scriptBindingInstance(), object);
+    return new WebGLShader(scriptBindingInstance(), glCreateShader(type));
 }
 
 void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
@@ -110,8 +190,45 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     std::string buffer;
     buffer.reserve(bufferSize);
     glGetShaderSource(shader->glObject(), bufferSize, &length, &buffer[0]);
-
     return String::fromUTF8(buffer.data(), length);
+}
+
+// WebGLRenderingContextOverloads
+
+void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
+                                       GLenum usage)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void WebGLRenderingContext::bufferData(GLenum target,
+                                       Nullable<AllowSharedBufferSource*> data,
+                                       GLenum usage)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (data.hasValue()) {
+        if (data.value()->isArrayBufferValue()) {
+            ScriptArrayBuffer buffer = data.value()->getArrayBufferValue();
+            glBufferData(target, buffer->byteLength(), buffer->rawBuffer(),
+                         usage);
+        } else if (data.value()->isArrayBufferViewValue()) {
+            ScriptArrayBufferView view =
+                data.value()->getArrayBufferViewValue();
+            glBufferData(target, view->byteLength(), view->rawBuffer(), usage);
+        } else if (data.value()->isSharedArrayBufferValue()) {
+            ScriptSharedArrayBuffer buffer =
+                data.value()->getSharedArrayBufferValue();
+            glBufferData(target, buffer->byteLength(), buffer->rawBuffer(),
+                         usage);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } else {
+        //  If data is null, then the contents of the buffer object’s data store
+        //  are undefined.
+        glBufferData(target, 0, nullptr, usage);
+    }
 }
 
 } // namespace Starfish
