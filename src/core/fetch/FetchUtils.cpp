@@ -39,7 +39,6 @@ bool FetchUtils::isForbiddenMethod(const String* method)
 
 String* FetchUtils::normalizeMethod(String* method)
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
     STARFISH_RELEASE_ASSERT(method);
     if (method->equalsIgnoreCase("DELETE")) {
         return String::createASCIIString("DELETE");
@@ -77,7 +76,6 @@ bool FetchUtils::isCorsSafelistedRequestHeader(const String* name,
 bool FetchUtils::isCorsSafelistedRequestHeader(const std::string name,
                                                const std::string value)
 {
-    STARFISH_ASSERT(isMainThread());
     // https://fetch.spec.whatwg.org/#cors-safelisted-request-header
     auto lower = StringUtils::toLowerCase(name);
 

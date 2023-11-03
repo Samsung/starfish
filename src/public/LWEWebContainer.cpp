@@ -914,8 +914,9 @@ Settings WebContainer::GetSettings()
     result.SetUserAgentString(
         TO_WEBVIEW(m_impl)->userAgent()->toUTF8NonGCString());
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (TO_STARFISH(m_impl)->httpCache()) {
-        result.SetCacheMode(TO_STARFISH(m_impl)->httpCache()->cacheMode());
+    Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
+    if (cache.hasValue()) {
+        result.SetCacheMode(cache->cacheMode());
     } else {
         result.SetCacheMode(::Starfish::HTTPCache::LOAD_NO_CACHE);
     }
@@ -1172,8 +1173,9 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setBaseForegroundColor(
         Starfish::Unit::Color(r, g, b, a));
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (TO_STARFISH(m_impl)->httpCache()) {
-        TO_STARFISH(m_impl)->httpCache()->setCacheMode(settings.GetCacheMode());
+    Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
+    if (cache.hasValue()) {
+        cache->setCacheMode(settings.GetCacheMode());
     } else {
         STARFISH_LOG_ERROR(
             "Http Cache could not initialized. So Changing cache mode is no "
@@ -1223,8 +1225,9 @@ void WebContainer::ClearCache()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
-        TO_STARFISH(m_impl)->httpCache()->clear();
+    Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
+    if (cache.hasValue()) {
+        cache->clear();
     }
 #endif
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1514,8 +1517,9 @@ void WebContainer::SetCacheMode(int mode)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
-        TO_STARFISH(m_impl)->httpCache()->setCacheMode(mode);
+    Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
+    if (cache.hasValue()) {
+        cache->setCacheMode(mode);
     }
 #endif
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1527,8 +1531,9 @@ int WebContainer::GetCacheMode()
     int ret = 0;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
-        ret = TO_STARFISH(m_impl)->httpCache()->cacheMode();
+    Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
+    if (cache.hasValue()) {
+        ret = cache->cacheMode();
     }
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 #endif

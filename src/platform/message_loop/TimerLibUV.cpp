@@ -67,7 +67,7 @@ TimerLibUV::TimerLibUV(WebBase* webBase)
 size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
                             TimerHandler handler, void* data, bool repetitive)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
 
     auto id = ++m_timeoutCounter;
 
@@ -122,7 +122,8 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
 
 void TimerLibUV::removeTimer(size_t reqID)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
+
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
@@ -142,7 +143,7 @@ void TimerLibUV::removeTimer(size_t reqID)
 size_t TimerLibUV::addAnimator(GlobalScope* globalScope,
                                GenericAnimationHandler handler, void* data)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
 
     auto id = ++m_animationCounter;
 
@@ -190,7 +191,7 @@ size_t TimerLibUV::addAnimator(GlobalScope* globalScope,
 
 void TimerLibUV::removeGenericAnimator(size_t reqID)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_webBase->messageLoop()->calledOnValidThread());
 
     auto handlerData = m_animationHandler.find(reqID);
     if (handlerData != m_animationHandler.end()) {

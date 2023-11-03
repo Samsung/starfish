@@ -117,6 +117,8 @@ public:
 
     void dispatchEventIdleTimeByUA(Event* event);
 
+    bool isContextThread();
+
 private:
     GlobalScope* const m_globalScope;
     void* m_documentOrWorkerGlobalScope;

@@ -35,7 +35,7 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
 
 void ThreadPool::destroy()
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
     m_isClosed = true;
 
@@ -53,13 +53,13 @@ MessageLoop* ThreadPool::messageLoop()
 
 void ThreadPool::onThreadStarted(Thread* thread)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     m_activeUnPooledThreads.push_back(thread);
 }
 
 void ThreadPool::onThreadFinished(Thread* thread)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     auto it = std::find(m_activeUnPooledThreads.begin(),
                         m_activeUnPooledThreads.end(), thread);
     if (it != m_activeUnPooledThreads.end()) {
@@ -77,7 +77,7 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
     if (m_isClosed) {
         return;
     }
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     m_workerQueueMutex->lock();
     DataRooter* r = new (NoGC) DataRooter;
     r->data = data;

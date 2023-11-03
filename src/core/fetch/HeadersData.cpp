@@ -101,7 +101,6 @@ bool HeadersData::isForbiddenHeaderName(const String* name)
 HeadersData::HeadersData()
     : m_guard(Guard::None)
 {
-    STARFISH_RELEASE_ASSERT(isMainThread());
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {

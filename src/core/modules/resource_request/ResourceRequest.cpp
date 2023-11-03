@@ -193,7 +193,7 @@ void ResourceRequest::handleResponseEOFwithPreflightRequestRedirected()
 void ResourceRequest::changeReadyState(ReadyState readyState,
                                        bool isExplicitAction)
 {
-    STARFISH_ASSERT(globalScope()->isContextThread());
+    STARFISH_ASSERT(executionContext()->isContextThread());
     if (!isError() && readyState == ReadyState::Loading &&
         m_readyState == ReadyState::Opened) {
         changeReadyState(ReadyState::HeadersReceived, true);
@@ -302,7 +302,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 void ResourceRequest::changeProgress(ProgressState progress,
                                      bool isExplicitAction)
 {
-    STARFISH_ASSERT(globalScope()->isContextThread());
+    STARFISH_ASSERT(executionContext()->isContextThread());
     if (m_progressState != progress || (progress == ProgressState::Progress)) {
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i++) {
