@@ -146,6 +146,20 @@ RequestCredentials RequestData::requestCredentialsFromString(
     return RequestCredentials::Omit;
 }
 
+String* RequestData::requestCredentialsString(RequestCredentials credentials)
+{
+    switch (credentials) {
+    case RequestCredentials::Omit:
+        return String::createASCIIString("omit");
+    case RequestCredentials::SameOrigin:
+        return String::createASCIIString("same-origin");
+    case RequestCredentials::Include:
+        return String::createASCIIString("include");
+    default:
+        return String::emptyString;
+    }
+}
+
 RequestCache RequestData::requestCacheFromString(String* inputString)
 {
     if (inputString->equalsIgnoreCase("default")) {

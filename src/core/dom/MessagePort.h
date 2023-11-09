@@ -21,6 +21,7 @@
 #define __StarfishMessagePort__
 
 #include "core/dom/EventTarget.h"
+#include "core/dom/StructuredSerializeOptions.h"
 #include "core/page/Serializer.h"
 
 namespace Starfish {

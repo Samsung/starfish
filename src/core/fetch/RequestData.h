@@ -141,6 +141,7 @@ public:
     static RequestMode requestModeFromString(String* inputString);
     static RequestCredentials requestCredentialsFromString(String* inputString);
     static RequestCache requestCacheFromString(String* inputString);
+    static String* requestCredentialsString(RequestCredentials credentials);
     static RequestRedirect requestRedirectFromString(String* inputString);
     static RequestDestination requestDestinationFromString(String* inputString);
 };

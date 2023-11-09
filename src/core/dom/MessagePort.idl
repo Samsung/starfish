@@ -5,10 +5,15 @@
 interface MessagePort : EventTarget {
   // NOTE transfer: sequence<object> -> sequence<any>
   [RaisesException] void postMessage(any message, optional sequence<any> transfer);
+  [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options);
   void start();
   void close();
 
   // event handlers
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;
+};
+
+dictionary StructuredSerializeOptions {
+  sequence<object> transfer = [];
 };

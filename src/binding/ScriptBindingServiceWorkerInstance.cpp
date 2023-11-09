@@ -88,7 +88,8 @@ void ScriptBindingServiceWorkerInstance::initJavaScriptBinding(
     F(EventSource)                         \
     F(FormData)                            \
     F(Option)                              \
-    F(Image)
+    F(Image)                               \
+    F(Worker)
 
 #define FOR_EACH_BINDING_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \
