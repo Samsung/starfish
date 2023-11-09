@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/multipage/workers.html#the-abstractworker-mixin
+
+// mixin
+[STARFISH_ENABLE_WORKER, 
+ PartialInterface,
+ NoInterfaceObject]
+interface AbstractWorker {
+  attribute EventHandler onerror;
+};

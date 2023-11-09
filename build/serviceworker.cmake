@@ -57,7 +57,7 @@ FILE (GLOB_RECURSE STARFISH_IDL ${STARFISH_ROOT}/src/*.idl)
 SET (STARFISH_SERVICEWORKER_EXPOSED_INTERFACE_SRC)
 # TODO: include this interface or completely exclude in Worker.
 SET (EXCLUDE_INTERFACE_NAME
-    "Navigator" "EventSource" "FormData"  "CSS")
+    "Navigator" "EventSource" "FormData"  "CSS" "Worker")
 FOREACH (IDL_FILE ${STARFISH_IDL})
     FILE (READ ${IDL_FILE} IDL_STRING)
     STRING (REGEX MATCH "[[].*Exposed=(.*Worker|.*,.*Worker)" MATCHED_IDL_FILE ${IDL_STRING})

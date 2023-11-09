@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,10 +17,15 @@
  *  USA
  */
 
-// https://html.spec.whatwg.org/multipage/workers.html#worker
+#if defined(STARFISH_ENABLE_WORKER)
 
-[STARFISH_ENABLE_WORKER]
-enum WorkerType {
-    "classic",
-    "module"
-};
+#include "StarfishConfig.h"
+#include "Starfish.h"
+#include "core/modules/worker/AbstractWorker.h"
+
+namespace Starfish {
+
+DEFINE_EVENT_LISTENER(AbstractWorker, error);
+
+} // namespace Starfish
+#endif
