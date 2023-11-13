@@ -47,6 +47,18 @@ typedef unrestricted float GLclampf;
 [STARFISH_ENABLE_WEBGL]
 enum WebGLPowerPreference { "default", "low-power", "high-performance" };
 
+typedef (ImageBitmap or
+         ImageData or
+         HTMLImageElement or
+         HTMLCanvasElement or
+         HTMLVideoElement) TexImageSource;
+// typedef (ImageBitmap or
+//          ImageData or
+//          HTMLImageElement or
+//          HTMLCanvasElement or
+//          HTMLVideoElement or
+//          OffscreenCanvas or
+//          VideoFrame) TexImageSource;
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContextBase
 // mixin
@@ -488,13 +500,13 @@ interface WebGLRenderingContextBase
     [Unimplemented] sequence<DOMString>? getSupportedExtensions();
     [Unimplemented] object? getExtension(DOMString name);
 
-    [Unimplemented] undefined activeTexture(GLenum texture);
+    undefined activeTexture(GLenum texture);
     undefined attachShader(WebGLProgram program, WebGLShader shader);
-    [Unimplemented] undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
+    undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
     undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
     [Unimplemented] undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
     [Unimplemented] undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
-    [Unimplemented] undefined bindTexture(GLenum target, WebGLTexture? texture);
+    undefined bindTexture(GLenum target, WebGLTexture? texture);
     [Unimplemented] undefined blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     [Unimplemented] undefined blendEquation(GLenum mode);
     [Unimplemented] undefined blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
@@ -521,7 +533,7 @@ interface WebGLRenderingContextBase
     WebGLProgram? createProgram();
     [Unimplemented] WebGLRenderbuffer? createRenderbuffer();
     WebGLShader? createShader(GLenum type);
-    [Unimplemented] WebGLTexture? createTexture();
+    WebGLTexture? createTexture();
 
     [Unimplemented] undefined cullFace(GLenum mode);
 
@@ -561,7 +573,7 @@ interface WebGLRenderingContextBase
     [WebGLHandlesContextLoss]  GLint getAttribLocation(WebGLProgram program, DOMString name);
 
     [Unimplemented] any getBufferParameter(GLenum target, GLenum pname);
-    [Unimplemented] any getParameter(GLenum pname);
+    any getParameter(GLenum pname);
 
     [WebGLHandlesContextLoss]  GLenum getError();
 
@@ -596,7 +608,7 @@ interface WebGLRenderingContextBase
     [Unimplemented,WebGLHandlesContextLoss]  GLboolean isTexture(WebGLTexture? texture);
     [Unimplemented] undefined lineWidth(GLfloat width);
     undefined linkProgram(WebGLProgram program);
-    [Unimplemented] undefined pixelStorei(GLenum pname, GLint param);
+    undefined pixelStorei(GLenum pname, GLint param);
     [Unimplemented] undefined polygonOffset(GLfloat factor, GLfloat units);
 
     [Unimplemented] undefined renderbufferStorage(GLenum target, GLenum internalformat,
@@ -614,7 +626,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
     [Unimplemented] undefined texParameterf(GLenum target, GLenum pname, GLfloat param);
-    [Unimplemented] undefined texParameteri(GLenum target, GLenum pname, GLint param);
+    undefined texParameteri(GLenum target, GLenum pname, GLint param);
 
     [Unimplemented] undefined uniform1f(WebGLUniformLocation? location, GLfloat x);
     undefined uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);

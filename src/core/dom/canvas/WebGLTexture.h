@@ -17,55 +17,22 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLObject__
-#define __StarfishWebGLObject__
+#ifndef __StarfishWebGLTexture__
+#define __StarfishWebGLTexture__
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "binding/ScriptWrappable.h"
+#include "core/dom/canvas/WebGLObject.h"
 #include "platform/canvas/webgl/GLESTypes.h"
 
 namespace Starfish {
 
-class WebGLRenderingContext;
-
-class WebGLObject : public ScriptWrappable {
+class WebGLTexture : public WebGLObject {
 public:
-    WebGLObject(ScriptBindingInstance* instance, WebGLRenderingContext* context,
-                GLuint object);
-    void init(ScriptBindingInstance* instance, void* data) override;
-    bool isWebGLObject() const override;
-    ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-
-    GLuint glObject() const
-    {
-        return m_glObject;
-    }
-
-    WebGLRenderingContext* context()
-    {
-        return m_context;
-    }
-
-    bool invalidated()
-    {
-        return m_invalidated;
-    }
-
-    bool isDeleted()
-    {
-        return m_deleted;
-    }
-
-private:
-    ScriptBindingInstance* m_scriptBindingInstance;
-    WebGLRenderingContext* m_context;
-    GLuint m_glObject;
-    bool m_invalidated = false;
-    bool m_deleted = false;
+    WebGLTexture(ScriptBindingInstance* instance,
+                 WebGLRenderingContext* context, GLuint object);
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    bool isWebGLTexture() const override;
 };
 } // namespace Starfish
 

@@ -22,16 +22,25 @@
 #include "StarfishConfig.h"
 #include "core/dom/canvas/WebGLRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/canvas/CanvasImageSource.h"
+#include "core/dom/HTMLImageElement.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 #include "core/dom/canvas/WebGLBuffer.h"
 #include "core/dom/canvas/WebGLShader.h"
 #include "core/dom/canvas/WebGLProgram.h"
+#include "core/dom/canvas/WebGLTexture.h"
 #include "core/dom/canvas/WebGLUniformLocation.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
+#include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include <EscargotPublic.h>
+#include <sstream>
+#include <iomanip>
 
 #define S1(x) #x
 #define S2(x) S1(x)
@@ -39,11 +48,29 @@
 #define kMaximumUniformAndAttributeLocationLengths 256
 #define kMaximumSupportedStride 255
 
+/* WebGL-specific enums */
+static const GLenum kUNPACK_FLIP_Y_WEBGL = 0x9240;
+static const GLenum kUNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
+static const GLenum kCONTEXT_LOST_WEBGL = 0x9242;
+static const GLenum kUNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
+static const GLenum kBROWSER_DEFAULT_WEBGL = 0x9244;
+
+static std::string getHexString(GLenum pname)
+{
+    std::stringstream ss;
+    ss << "0x" << std::hex << std::setw(4) << std::setfill('0')
+       << std::uppercase << pname;
+    return ss.str();
+}
+
 namespace Starfish {
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     : WebGLRenderingContextBaseMixIn(canvasElement)
 {
+    m_unpackFlipY = false;
+    m_unpackPremultiplyAlpha = false;
+    m_unpackColorspaceConversion = kBROWSER_DEFAULT_WEBGL;
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
@@ -67,14 +94,27 @@ void WebGLRenderingContext::initialize()
     clear(GL_COLOR_BUFFER_BIT);
 }
 
-#define ENTER_CONTEXT_SCOPE(bailoutValue, ...)                              \
+#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)                         \
     WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo()); \
     if (contextScope.hasError()) {                                          \
         return bailoutValue;                                                \
     }                                                                       \
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    m_ownerHTMLCanvasElement                                                \
+        ->setNeedsComposite(); // TODO: Use CanvasElement::setNeedsComposite
+                               // only when really necessary.
 
-// TODO: Use CanvasElement::setNeedsComposite only when absolutely necessary.
+#ifdef NDEBUG
+#define ENTER_CONTEXT_SCOPE(bailoutValue, ...) \
+    ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);
+#else
+#define ENTER_CONTEXT_SCOPE(bailoutValue, ...)       \
+    ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);          \
+    auto onScopeLeave = OnScopeLeave::create([&]() { \
+        if (hasGLError()) {                          \
+            STARFISH_LOG_WARN("GL error detected."); \
+        }                                            \
+    });
+#endif
 
 /*
 Note: Use hasGLError() to internally check for GL errors. When `glGetError` is
@@ -143,6 +183,13 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
     glViewport(x, y, width, height);
 }
 
+void WebGLRenderingContext::activeTexture(GLenum texture)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glActiveTexture(texture);
+}
+
 void WebGLRenderingContext::attachShader(WebGLProgram* program,
                                          WebGLShader* shader)
 {
@@ -153,6 +200,22 @@ void WebGLRenderingContext::attachShader(WebGLProgram* program,
     ENTER_CONTEXT_SCOPE();
 
     glAttachShader(program->glObject(), shader->glObject());
+}
+
+void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
+                                               GLuint index, String* name)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!checkWebGLObject(program)) {
+        return;
+    }
+
+    if (!checkAttribOrUniformName(name)) {
+        return;
+    }
+
+    glBindAttribLocation(program->glObject(), index, CSTR(name));
 }
 
 void WebGLRenderingContext::bindBuffer(GLenum target,
@@ -183,6 +246,31 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
     }
 }
 
+void WebGLRenderingContext::bindTexture(GLenum target,
+                                        Nullable<WebGLTexture*> maybeTexture)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeTexture.hasValue()) {
+        WebGLTexture* texture = maybeTexture.value();
+
+        if (!checkWebGLObject(texture)) {
+            return;
+        }
+
+        if (texture->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        glBindTexture(target, texture->glObject());
+        m_boundTextures[target] = texture->glObject();
+    } else {
+        glBindTexture(target, 0);
+        m_boundTextures.erase(target);
+    }
+}
+
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -192,6 +280,15 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     }
 
     glCompileShader(shader->glObject());
+}
+
+WebGLTexture* WebGLRenderingContext::createTexture()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint textureId = 0;
+    glGenTextures(1, &textureId);
+    return new WebGLTexture(scriptBindingInstance(), this, textureId);
 }
 
 WebGLBuffer* WebGLRenderingContext::createBuffer()
@@ -252,6 +349,27 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
     const char* sourceArray[1] = { str.c_str() };
 
     glShaderSource(shader->glObject(), 1, sourceArray, nullptr);
+}
+
+static GLint getInteger(GLenum pname)
+{
+    GLint value[1]{};
+    glGetIntegerv(pname, value);
+    return value[0];
+}
+
+ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    switch (pname) {
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+        return ValueRef::create(getInteger(pname));
+    default:
+        STARFISH_UNIMPLEMENTED("pname: %s", getHexString(pname).c_str());
+        return scriptNull();
+    }
+    return scriptNull();
 }
 
 GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
@@ -429,6 +547,44 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     }
 }
 
+void WebGLRenderingContext::pixelStorei(GLenum pname, GLint param)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    switch (pname) {
+    case kUNPACK_FLIP_Y_WEBGL:
+        m_unpackFlipY = static_cast<bool>(param);
+        break;
+    case kUNPACK_PREMULTIPLY_ALPHA_WEBGL:
+        m_unpackPremultiplyAlpha = static_cast<bool>(param);
+        break;
+    case kUNPACK_COLORSPACE_CONVERSION_WEBGL:
+        if (param == kBROWSER_DEFAULT_WEBGL || param == GL_NONE) {
+            m_unpackColorspaceConversion = param;
+        }
+        break;
+    default:
+        glPixelStorei(pname, param);
+        break;
+    }
+}
+
+void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
+                                          GLint param)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        // If an attempt is made to call this function with no WebGLTexture
+        // bound, an INVALID_OPERATION error is generated.
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glTexParameteri(target, pname, param);
+}
+
+
 void WebGLRenderingContext::uniform2f(WebGLUniformLocation* location, GLfloat x,
                                       GLfloat y)
 {
@@ -530,6 +686,184 @@ void WebGLRenderingContext::bufferData(GLenum target,
         //  are undefined.
         glBufferData(target, 0, nullptr, usage);
     }
+}
+
+void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
+                                       GLint internalFormat, GLsizei width,
+                                       GLsizei height, GLint border,
+                                       GLenum format, GLenum type,
+                                       Nullable<ScriptArrayBufferView> pixels)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    STARFISH_UNIMPLEMENTED();
+}
+
+class TexImageHelper final {
+public:
+    // NOTE: Better to use common utilities for image manipulation. Canvas
+    // is not possible due to its WebView dependency.
+
+    TexImageHelper(NativeImageData* imageData)
+    {
+        STARFISH_ASSERT(imageData != nullptr);
+        m_sourceImage = imageData;
+    }
+
+    ~TexImageHelper()
+    {
+    }
+
+    void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
+              const bool colorConversion)
+    {
+        const size_t height = m_sourceImage->height();
+        const size_t width = m_sourceImage->width();
+        const size_t stride = m_sourceImage->stride();
+        const auto image = static_cast<unsigned char*>(m_sourceImage->data());
+
+        size_t offset = 0, newOffset = 0, srcOffset = 0, destOffset = 0;
+
+        m_data.resize(height * stride);
+
+        bool needsColorConversion = true;
+
+#if defined(PORT_PIXEL_ORDER_RGBA)
+        needsColorConversion = false;
+#elif defined(PORT_PIXEL_ORDER_BGRA)
+        needsColorConversion = colorConversion;
+#else
+        STARFISH_ASSERT_NOT_REACHED();
+#endif
+        std::vector<uint8_t> order;
+
+        if (needsColorConversion) {
+            order = { 2, 1, 0, 3 };
+        } else {
+            order = { 0, 1, 2, 3 };
+        }
+
+        for (size_t row = 0; row < height; row++) {
+            // Calculate the memory offset for the current row
+            newOffset = offset = row * stride;
+
+            if (needsFlipY || needsPremultiplyAlpha || needsColorConversion) {
+                if (needsFlipY) {
+                    newOffset = (height - row - 1) * stride;
+                }
+
+                for (size_t column = 0; column < width; column++) {
+                    // Calculate the memory offset for the current pixel
+                    srcOffset = offset + column * 4;
+                    destOffset = newOffset + column * 4;
+
+                    if (needsPremultiplyAlpha) {
+                        float alpha = image[srcOffset + order[3]] / 255.f;
+                        m_data[destOffset + 0] =
+                            multiplyAlpha(image[srcOffset + order[0]], alpha);
+                        m_data[destOffset + 1] =
+                            multiplyAlpha(image[srcOffset + order[1]], alpha);
+                        m_data[destOffset + 2] =
+                            multiplyAlpha(image[srcOffset + order[2]], alpha);
+                        m_data[destOffset + 3] = image[srcOffset + order[3]];
+                    } else {
+                        m_data[destOffset + 0] = image[srcOffset + order[0]];
+                        m_data[destOffset + 1] = image[srcOffset + order[1]];
+                        m_data[destOffset + 2] = image[srcOffset + order[2]];
+                        m_data[destOffset + 3] = image[srcOffset + order[3]];
+                    }
+                }
+            } else {
+                std::memcpy(&m_data[newOffset], &image[offset], stride);
+            }
+        }
+    }
+
+    const void* data()
+    {
+        return m_data.empty() ? m_sourceImage->data() : m_data.data();
+    }
+
+private:
+    unsigned char multiplyAlpha(unsigned char color, float alpha)
+    {
+        return ((color / 255.f) * alpha) * 255;
+    }
+
+    NativeImageData* m_sourceImage = nullptr;
+    std::vector<unsigned char> m_data;
+};
+
+void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
+                                       GLint internalFormat, GLenum format,
+                                       GLenum type, TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    // TODO: handle DOM exception with referring to CanvasImageSource. If this
+    // function is called with an HTMLImageElement or HTMLVideoElement whose
+    // origin differs from the origin of the containing Document, or with an
+    // HTMLCanvasElement, ImageBitmap or OffscreenCanvas whose bitmap's
+    // origin-clean flag is set to false, a SECURITY_ERR exception must be
+    // thrown. See Origin Restrictions.
+
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    GLsizei width = 0;
+    GLsizei height = 0;
+    GLsizei stride = 0;
+    NativeImageData* imageData = nullptr;
+
+    if (source.isNoneValue()) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    } else if (source.isImageBitmapValue()) {
+        STARFISH_UNIMPLEMENTED("ImageBitmap");
+    } else if (source.isImageDataValue()) {
+        STARFISH_UNIMPLEMENTED("ImageData");
+    } else if (source.isHTMLImageElementValue()) {
+        HTMLImageElement* element = source.getHTMLImageElementValue();
+        imageData = element->imageData();
+        if (imageData->isSVGNativeImageData()) {
+            STARFISH_UNIMPLEMENTED("SVGNativeImageData");
+            width = element->width();
+            height = element->height();
+        } else {
+            width = imageData->width();
+            height = imageData->height();
+        }
+    } else if (source.isHTMLCanvasElementValue()) {
+        // TODO: Consider using CanvasImageSourceUtils::toNativeImageData
+        HTMLCanvasElement* element = source.getHTMLCanvasElementValue();
+        CanvasRenderingContext* context = element->canvasRenderingContext();
+        STARFISH_ASSERT(context != nullptr);
+        auto context2d = static_cast<CanvasRenderingContext2DMixIn*>(context);
+        context2d->flush();
+        imageData = NativeImageData::attach(context2d->canvas());
+        width = element->width();
+        height = element->height();
+    }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    else if (source.isHTMLVideoElementValue()) {
+        STARFISH_UNIMPLEMENTED("HTMLVideoElement");
+    }
+#endif
+    else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    STARFISH_ASSERT(imageData != nullptr);
+
+    TexImageHelper image(imageData);
+    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha,
+               m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
+
+    // Uploads the given image data to the currently bound texture.
+    glTexImage2D(target, level, internalFormat, width, height, 0,
+                 internalFormat, type, image.data());
 }
 
 bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)

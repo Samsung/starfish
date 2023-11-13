@@ -956,4 +956,38 @@ inline bool isInfOrNan(float value)
     return std::isinf(value) || std::isnan(value);
 }
 
+class OnScopeLeave {
+public:
+    using Function = std::function<void()>;
+
+    explicit OnScopeLeave(Function&& function)
+        : m_function(std::move(function))
+    {
+    }
+
+    OnScopeLeave(OnScopeLeave&& other)
+        : m_function(std::move(other.m_function))
+    {
+        other.m_function = nullptr;
+    }
+
+    OnScopeLeave(const OnScopeLeave& other) = delete;
+    OnScopeLeave& operator=(const OnScopeLeave& other) = delete;
+
+    ~OnScopeLeave()
+    {
+        if (m_function) {
+            m_function();
+        }
+    }
+
+    static WARN_UNUSED_RETURN OnScopeLeave create(Function&& function)
+    {
+        return OnScopeLeave(std::move(function));
+    }
+
+private:
+    Function m_function;
+};
+
 #endif

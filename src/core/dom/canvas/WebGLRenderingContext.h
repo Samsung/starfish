@@ -25,6 +25,7 @@
 #include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
 #include "platform/canvas/webgl/GLESTypes.h"
 #include <unordered_set>
+#include <unordered_map>
 
 namespace Starfish {
 
@@ -32,11 +33,15 @@ class WebGLBuffer;
 class WebGLObject;
 class WebGLProgram;
 class WebGLShader;
+class WebGLTexture;
 class WebGLUniformLocation;
-
 class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
+class
+    ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 
 using AllowSharedBufferSource = ArrayBufferOrSharedArrayBufferOrArrayBufferView;
+using TexImageSource =
+    ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 
 class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
 public:
@@ -48,17 +53,22 @@ public:
     void initialize() override;
 
     // Implement WebGLRenderingContextBase
+    void activeTexture(GLenum texture);
     void attachShader(WebGLProgram* program, WebGLShader* shader);
+    void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
     void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
+    void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
     void compileShader(WebGLShader* shader);
+    WebGLTexture* createTexture();
     WebGLBuffer* createBuffer();
     WebGLProgram* createProgram();
     WebGLShader* createShader(unsigned long type);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
     void enableVertexAttribArray(GLuint index);
     GLint getAttribLocation(WebGLProgram* program, String* name);
+    ScriptValue getParameter(GLenum pname);
     GLenum getError();
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
@@ -66,6 +76,8 @@ public:
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
     void linkProgram(WebGLProgram* program);
+    void pixelStorei(GLenum pname, GLint param);
+    void texParameteri(GLenum target, GLenum pname, GLint param);
     void uniform2f(WebGLUniformLocation* location, GLfloat x, GLfloat y);
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
@@ -78,6 +90,11 @@ public:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, Nullable<AllowSharedBufferSource> data,
                     GLenum usage);
+    void texImage2D(GLenum target, GLint level, GLint internalFormat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
+                    GLenum type, Nullable<ScriptArrayBufferView> pixels);
+    void texImage2D(GLenum target, GLint level, GLint internalFormat,
+                    GLenum format, GLenum type, TexImageSource source);
 
 private:
     bool checkWebGLObject(WebGLObject* object);
@@ -86,6 +103,10 @@ private:
     void setGLError(GLenum code);
     void updateGLError();
     std::unordered_set<GLenum> m_GLErrors;
+    std::unordered_map<GLenum, GLuint> m_boundTextures;
+    bool m_unpackFlipY;
+    bool m_unpackPremultiplyAlpha;
+    GLenum m_unpackColorspaceConversion;
 };
 } // namespace Starfish
 
