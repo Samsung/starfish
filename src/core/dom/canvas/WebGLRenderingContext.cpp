@@ -87,11 +87,6 @@ void WebGLRenderingContext::initialize()
     WebGLRenderingContextBaseMixIn::initialize();
 
     viewport(0, 0, m_canvasSurface->width(), m_canvasSurface->height());
-
-    // Initial clear color is black per the spec, but some browsers may use
-    // white instead, which is browser-specific.
-    clearColor(1.f, 1.f, 1.f, 1.f);
-    clear(GL_COLOR_BUFFER_BIT);
 }
 
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)                         \
