@@ -78,7 +78,17 @@ public:
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
+    void uniform1f(WebGLUniformLocation* location, GLfloat x);
     void uniform2f(WebGLUniformLocation* location, GLfloat x, GLfloat y);
+    void uniform3f(WebGLUniformLocation* location, GLfloat x, GLfloat y,
+                   GLfloat z);
+    void uniform4f(WebGLUniformLocation* location, GLfloat x, GLfloat y,
+                   GLfloat z, GLfloat w);
+    void uniform1i(WebGLUniformLocation* location, GLint x);
+    void uniform2i(WebGLUniformLocation* location, GLint x, GLint y);
+    void uniform3i(WebGLUniformLocation* location, GLint x, GLint y, GLint z);
+    void uniform4i(WebGLUniformLocation* location, GLint x, GLint y, GLint z,
+                   GLint w);
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
     void vertexAttribPointer(GLuint index, GLint size, GLenum type,
