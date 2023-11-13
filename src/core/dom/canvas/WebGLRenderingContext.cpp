@@ -584,6 +584,12 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
     glTexParameteri(target, pname, param);
 }
 
+void WebGLRenderingContext::uniform1f(WebGLUniformLocation* location, GLfloat x)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform1f(location->glObject(), x);
+}
 
 void WebGLRenderingContext::uniform2f(WebGLUniformLocation* location, GLfloat x,
                                       GLfloat y)
@@ -594,6 +600,53 @@ void WebGLRenderingContext::uniform2f(WebGLUniformLocation* location, GLfloat x,
     // error handling in GLES3.
 
     glUniform2f(location->glObject(), x, y);
+}
+
+void WebGLRenderingContext::uniform3f(WebGLUniformLocation* location, GLfloat x,
+                                      GLfloat y, GLfloat z)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform3f(location->glObject(), x, y, z);
+}
+
+void WebGLRenderingContext::uniform4f(WebGLUniformLocation* location, GLfloat x,
+                                      GLfloat y, GLfloat z, GLfloat w)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform4f(location->glObject(), x, y, z, w);
+}
+
+void WebGLRenderingContext::uniform1i(WebGLUniformLocation* location, GLint x)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform1i(location->glObject(), x);
+}
+
+void WebGLRenderingContext::uniform2i(WebGLUniformLocation* location, GLint x,
+                                      GLint y)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform2i(location->glObject(), x, y);
+}
+
+void WebGLRenderingContext::uniform3i(WebGLUniformLocation* location, GLint x,
+                                      GLint y, GLint z)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform3i(location->glObject(), x, y, z);
+}
+
+void WebGLRenderingContext::uniform4i(WebGLUniformLocation* location, GLint x,
+                                      GLint y, GLint z, GLint w)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glUniform4i(location->glObject(), x, y, z, w);
 }
 
 void WebGLRenderingContext::useProgram(WebGLProgram* program)

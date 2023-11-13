@@ -628,15 +628,15 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined texParameterf(GLenum target, GLenum pname, GLfloat param);
     undefined texParameteri(GLenum target, GLenum pname, GLint param);
 
-    [Unimplemented] undefined uniform1f(WebGLUniformLocation? location, GLfloat x);
+    undefined uniform1f(WebGLUniformLocation? location, GLfloat x);
     undefined uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
-    [Unimplemented] undefined uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
-    [Unimplemented] undefined uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    undefined uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
+    undefined uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-    [Unimplemented] undefined uniform1i(WebGLUniformLocation? location, GLint x);
-    [Unimplemented] undefined uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
-    [Unimplemented] undefined uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
-    [Unimplemented] undefined uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
+    undefined uniform1i(WebGLUniformLocation? location, GLint x);
+    undefined uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
+    undefined uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
+    undefined uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
 
     undefined useProgram(WebGLProgram? program);
     [Unimplemented] undefined validateProgram(WebGLProgram program);
