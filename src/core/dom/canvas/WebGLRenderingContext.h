@@ -29,7 +29,11 @@
 namespace Starfish {
 
 class WebGLBuffer;
+class WebGLObject;
+class WebGLProgram;
 class WebGLShader;
+class WebGLUniformLocation;
+
 class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 
 using AllowSharedBufferSource = ArrayBufferOrSharedArrayBufferOrArrayBufferView;
@@ -41,26 +45,43 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGLRenderingContext);
 
-    // Implement WebGLRenderingContextBase
-    void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
+    void initialize() override;
 
+    // Implement WebGLRenderingContextBase
+    void attachShader(WebGLProgram* program, WebGLShader* shader);
+    void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
+    void compileShader(WebGLShader* shader);
     WebGLBuffer* createBuffer();
+    WebGLProgram* createProgram();
     WebGLShader* createShader(unsigned long type);
-
+    void drawArrays(GLenum mode, GLint first, GLsizei count);
+    void enableVertexAttribArray(GLuint index);
+    GLint getAttribLocation(WebGLProgram* program, String* name);
     GLenum getError();
+    ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
+    ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
     String* getShaderSource(WebGLShader* shader);
-
+    WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
+                                             String* name);
+    void linkProgram(WebGLProgram* program);
+    void uniform2f(WebGLUniformLocation* location, GLfloat x, GLfloat y);
+    void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
+    void vertexAttribPointer(GLuint index, GLint size, GLenum type,
+                             GLboolean normalized, GLsizei stride,
+                             GLintptr offset);
     void viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
     // Implement WebGLRenderingContextOverloads
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
-    void bufferData(GLenum target, Nullable<AllowSharedBufferSource*> data,
+    void bufferData(GLenum target, Nullable<AllowSharedBufferSource> data,
                     GLenum usage);
 
 private:
+    bool checkWebGLObject(WebGLObject* object);
+    bool checkAttribOrUniformName(String* name);
     bool hasGLError(const char* message = "");
     void setGLError(GLenum code);
     void updateGLError();

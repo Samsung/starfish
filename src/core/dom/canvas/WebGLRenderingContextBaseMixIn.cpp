@@ -35,7 +35,6 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
     , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
     , m_canvasSurface(nullptr)
 {
-    initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
@@ -57,10 +56,8 @@ void WebGLRenderingContextBaseMixIn::initialize()
                        m_ownerHTMLCanvasElement->height());
 
     // Create a GL context for this rendering context
-    {
-        if (!m_context.create(true)) {
-            STARFISH_LOG_ERROR("GLContext creation has failed.");
-        }
+    if (!m_context.create(true)) {
+        STARFISH_LOG_ERROR("GLContext creation has failed.");
     }
 
     // Create a surface for this rendering context
@@ -70,6 +67,13 @@ void WebGLRenderingContextBaseMixIn::initialize()
         m_canvasSurface = CanvasSurface::create(
             m_ownerHTMLCanvasElement->webView()->platformWindow(), width,
             height, 1, CanvasSurface::CanvasElement);
+
+        // Seeing CompositorGL::initCompositorContextGl, by default a surface is
+        // mapped to u,v coordinates that are set to the opposite of the y-axis
+        // of the screen coordinates. This results in that m_canvasSurface is
+        // rendered upside down. We here set "FlipY is Needed" so that the
+        // compositor can flip the surface to render it correctly.
+        m_canvasSurface->setFlipYNeeded(true);
     }
 
     // NOTE: Register a disposer to ensure that it's invoked also when a

@@ -24,9 +24,11 @@
 
 namespace Starfish {
 
-WebGLObject::WebGLObject(ScriptBindingInstance* instance, GLuint object)
+WebGLObject::WebGLObject(ScriptBindingInstance* instance,
+                         WebGLRenderingContext* context, GLuint object)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(instance)
+    , m_context(context)
     , m_glObject(object)
 
 {

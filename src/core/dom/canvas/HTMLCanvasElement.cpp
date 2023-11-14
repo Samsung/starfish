@@ -106,6 +106,7 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
                contextId->equals("experimental-webgl")) {
 #if defined(STARFISH_ENABLE_WEBGL)
         m_canvasRenderingContext = new WebGLRenderingContext(this);
+        m_canvasRenderingContext->initialize();
         return RenderingContextBindindingUnion::createWebGLRenderingContext(
             static_cast<WebGLRenderingContext*>(m_canvasRenderingContext));
 #endif
