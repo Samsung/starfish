@@ -24,8 +24,9 @@
 
 namespace Starfish {
 
-WebGLBuffer::WebGLBuffer(ScriptBindingInstance* instance, GLuint object)
-    : WebGLObject(instance, object)
+WebGLBuffer::WebGLBuffer(ScriptBindingInstance* instance,
+                         WebGLRenderingContext* context, GLuint object)
+    : WebGLObject(instance, context, object)
 {
 }
 

@@ -54,8 +54,8 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/angle-instanced-arrays-out-of-bounds.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-blend-minmax.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-frag-depth.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-shader-texture-lod.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-sRGB.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-shader-texture-lod.html # Passed since extension unsupported.
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-sRGB.html # Passed since extension unsupported.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extension.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element-index-uint.html
@@ -83,8 +83,8 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-depth-texture.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-draw-buffers.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-shared-resources.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/angle-d3d11-compiler-error.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/angle-dx-variable-bug.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/angle-d3d11-compiler-error.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/angle-dx-variable-bug.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/array-of-struct-with-int-first-position.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/compare-loop-index-to-uniform.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/complex-glsl-does-not-crash.html
@@ -233,7 +233,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/large-loop-compile.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/non-ascii-comments.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/non-ascii.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/re-compile-re-link.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/re-compile-re-link.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-precision-format-obeyed.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-struct-scope.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
@@ -324,7 +324,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-unary-operators.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-global-initializers.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-initializers.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/uniform-location-length-limits.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/uniform-location-length-limits.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/_webgl_field.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/webgl_field.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/_webgl_function.vert.html
@@ -447,9 +447,9 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/framebuffers-ke
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_009_to_016.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biuDepthRange/biuDepthRange_001_to_002.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_017_to_024.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_017_to_024.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_025_to_032.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_033_to_040.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_041_to_048.html

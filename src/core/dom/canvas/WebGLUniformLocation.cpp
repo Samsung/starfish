@@ -20,12 +20,13 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "StarfishConfig.h"
-#include "WebGLShader.h"
+#include "WebGLUniformLocation.h"
 
 namespace Starfish {
 
-WebGLShader::WebGLShader(ScriptBindingInstance* instance,
-                         WebGLRenderingContext* context, GLuint object)
+WebGLUniformLocation::WebGLUniformLocation(ScriptBindingInstance* instance,
+                                           WebGLRenderingContext* context,
+                                           GLuint object)
     : WebGLObject(instance, context, object)
 {
 }

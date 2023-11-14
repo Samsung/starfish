@@ -27,9 +27,12 @@
 
 namespace Starfish {
 
+class WebGLRenderingContext;
+
 class WebGLBuffer : public WebGLObject {
 public:
-    WebGLBuffer(ScriptBindingInstance* instance, GLuint object);
+    WebGLBuffer(ScriptBindingInstance* instance, WebGLRenderingContext* context,
+                GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLBuffer() const override;
 

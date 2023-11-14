@@ -253,6 +253,16 @@ public:
         return (m_flag & CanvasSurfaceFlag::CanvasElement);
     }
 
+    void setFlipYNeeded(bool flipY)
+    {
+        m_flipYNeeded = flipY;
+    }
+
+    bool isFlipYNeeded()
+    {
+        return m_flipYNeeded;
+    }
+
 protected:
     CanvasSurface(float additionalPixelRatio)
         : m_additionalPixelRatio(additionalPixelRatio)
@@ -261,6 +271,7 @@ protected:
 
     float m_additionalPixelRatio;
     CanvasSurfaceFlag m_flag = PlainElement;
+    bool m_flipYNeeded = false;
 };
 
 namespace CanvasSurfaceFactory {

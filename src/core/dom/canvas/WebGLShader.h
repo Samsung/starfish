@@ -28,7 +28,8 @@ namespace Starfish {
 
 class WebGLShader : public WebGLObject {
 public:
-    WebGLShader(ScriptBindingInstance* instance, GLuint object);
+    WebGLShader(ScriptBindingInstance* instance, WebGLRenderingContext* context,
+                GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLShader() const override;
 };

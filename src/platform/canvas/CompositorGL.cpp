@@ -1047,14 +1047,15 @@ public:
     GLuint texVertexShader()
     {
         if (!m_texVertexShader) {
-            GLchar texVertexSource[] =
-                "attribute vec2 aPosition;\n"
-                "attribute vec2 aTexPos;\n"
-                "varying vec2 vTexPos;\n"
-                "void main() {\n"
-                "  vTexPos = aTexPos;\n"
-                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
-                "}";
+            GLchar texVertexSource[] = R"(
+            attribute vec2 aPosition;
+            attribute vec2 aTexPos;
+            uniform float uFlipY;
+            varying vec2 vTexPos;
+            void main() {
+              vTexPos = vec2(aTexPos.x, uFlipY == 1.0 ? 1.0 - aTexPos.y : aTexPos.y);
+              gl_Position = vec4(aPosition.xy, 0.0, 1.0);
+            })";
             m_texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
         }
         return m_texVertexShader;
@@ -3109,6 +3110,13 @@ public:
                               position);
         if (a != 1) {
             glUniform1f(*alphaPos, a);
+        }
+
+        if (cs->isFlipYNeeded()) {
+            GLint location = glGetUniformLocation(
+                m_compositorContext->m_lastProgram, "uFlipY");
+            STARFISH_ASSERT(location != -1);
+            glUniform1f(location, 1.0);
         }
 
         checkError();

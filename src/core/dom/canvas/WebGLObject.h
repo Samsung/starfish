@@ -27,9 +27,12 @@
 
 namespace Starfish {
 
+class WebGLRenderingContext;
+
 class WebGLObject : public ScriptWrappable {
 public:
-    WebGLObject(ScriptBindingInstance* instance, GLuint object);
+    WebGLObject(ScriptBindingInstance* instance, WebGLRenderingContext* context,
+                GLuint object);
     void init(ScriptBindingInstance* instance, void* data) override;
     bool isWebGLObject() const override;
     ScriptBindingInstance* scriptBindingInstance() override
@@ -42,9 +45,21 @@ public:
         return m_glObject;
     }
 
+    WebGLRenderingContext* context()
+    {
+        return m_context;
+    }
+
+    bool invalidated()
+    {
+        return m_invalidated;
+    }
+
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
+    WebGLRenderingContext* m_context;
     GLuint m_glObject;
+    bool m_invalidated = false;
 };
 } // namespace Starfish
 
