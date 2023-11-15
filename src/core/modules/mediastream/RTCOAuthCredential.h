@@ -27,6 +27,13 @@
 #ifndef __StarfishRTCOAuthCredential__
 #define __StarfishRTCOAuthCredential__
 
+namespace Escargot {
+
+class ExecutionStateRef;
+class ValueRef;
+
+} // namespace Escargot
+
 namespace Starfish {
 class String;
 class RTCOAuthCredential;

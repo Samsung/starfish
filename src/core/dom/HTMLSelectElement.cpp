@@ -34,6 +34,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLOptionsCollection.h"
+#include "core/dom/HTMLOptGroupElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/layout/Frame.h"

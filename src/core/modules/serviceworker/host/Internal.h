@@ -24,6 +24,12 @@
 #include "core/dom/EventTarget.h"
 #include "core/fetch/Request.h"
 
+namespace Escargot {
+
+class ObjectRef;
+
+} // namespace Escargot
+
 namespace Starfish {
 
 class DOMException;
@@ -56,11 +62,11 @@ public:
     }
 
     Promise* open(String* cacheName); // binding interface
-    Promise* put(ObjectRef* fetchCacheStreamWrap, Request* request,
+    Promise* put(Escargot::ObjectRef* fetchCacheStreamWrap, Request* request,
                  Response* response); // binding interface
     Promise* cache_storage_keys();    // binding interface
     Promise* matchAll(ExecutionContext* executionContext,
-                      ObjectRef* fetchCacheStreamWrap,
+                      Escargot::ObjectRef* fetchCacheStreamWrap,
                       RequestInfo& request); // binding interface
 
     void setUrl(ResourceURL* url)

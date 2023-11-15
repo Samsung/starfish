@@ -18,10 +18,11 @@
  */
 
 #include "StarfishConfig.h"
-#include "SVGElement.h"
-#include "SVGAnimatedEnumeration.h"
-#include "SVGMarkerElement.h"
-#include "SVGGradientElement.h"
+#include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGAnimatedEnumeration.h"
+#include "core/dom/svg/SVGMarkerElement.h"
+#include "core/dom/svg/SVGGradientElement.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 

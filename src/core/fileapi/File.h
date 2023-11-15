@@ -60,10 +60,6 @@ public:
     }
 
 private:
-    void init(const GCVector<BufferSourceOrBlobOrDOMString>& fileBits,
-              const FilePropertyBag& options);
-
-    GCVector<BufferSourceOrBlobOrDOMString> m_fileBits;
     String* m_name = nullptr;
     int64_t m_lastModified = 0;
 };

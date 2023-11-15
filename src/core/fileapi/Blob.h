@@ -22,6 +22,8 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/page/Serializer.h"
+#include "binding/generated/BufferSourceOrBlobOrDOMStringUnion.h"
+#include "core/fileapi/BlobPropertyBag.h"
 
 namespace Starfish {
 
@@ -31,12 +33,16 @@ class Promise;
 class Blob : public ScriptWrappable, public Serializable {
 public:
     struct BlobData {
-        uint64_t m_size;
-        String* m_type;
-        void* m_data;
-        bool m_isClosed;
-        bool m_isEntryOfBlobURLStore;
-        bool m_isAllocatedByMalloc;
+        uint64_t m_size = 0;
+        String* m_type = String::emptyString;
+        void* m_data = nullptr;
+        bool m_isClosed = false;
+        bool m_isEntryOfBlobURLStore = false;
+        bool m_isAllocatedByMalloc = false;
+
+        BlobData()
+        {
+        }
 
         BlobData(uint64_t size, String* type, void* data, bool isClosed,
                  bool isEntryOfBlobURLStore, bool isAllocatedByMalloc = false)
@@ -50,24 +56,19 @@ public:
         }
     };
 
+    // idl constructors.
+    Blob(ExecutionContext* executionContext);
+    Blob(ExecutionContext* executionContext,
+         const GCVector<BufferSourceOrBlobOrDOMString>& blobParts);
+    Blob(ExecutionContext* executionContext,
+         const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
+         const BlobPropertyBag& options);
+
+    // lagacy constructors.
     Blob(ExecutionContext* executionContext, uint64_t size, String* type,
          void* data, bool isClosed, bool isEntryOfBlobURLStore,
-         bool isAllocatedByMalloc = false)
-        : ScriptWrappable(this)
-        , m_executionContext(executionContext)
-        , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore,
-                     isAllocatedByMalloc)
-    {
-        if (m_blobData.m_isEntryOfBlobURLStore) {
-            addBlobToBlobURLStore();
-        }
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this, [](void* obj, void* cd) { ((Blob*)obj)->finalize(); }, NULL,
-            NULL, NULL);
-    }
-
+         bool isAllocatedByMalloc = false);
     Blob(ExecutionContext* executionContext, BlobData blobData);
-    Blob(ExecutionContext* executionContext);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Blob)
 
@@ -138,6 +139,8 @@ public:
     }
 
 protected:
+    void initialize(const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
+                    const BlobPropertyBag& options = {});
     void addBlobToBlobURLStore();
     void removeBlobFromBlobURLStore();
 

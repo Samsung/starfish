@@ -65,6 +65,7 @@
 #include "core/page/Location.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 

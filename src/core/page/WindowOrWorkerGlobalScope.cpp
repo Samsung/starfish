@@ -36,7 +36,9 @@
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/modules/canvas/image/ImageDecoder.h"
 #include "core/fetch/ResponseData.h"
+#include "core/dom/ImageBitmap.h"
 #include "core/dom/canvas/ImageData.h"
+#include "core/fileapi/Blob.h"
 #endif
 
 namespace Starfish {

@@ -48,6 +48,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLScriptElement.h"
+#include "core/dom/svg/SVGScriptElement.h"
 
 namespace Starfish {
 

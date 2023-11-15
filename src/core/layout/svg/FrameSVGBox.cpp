@@ -26,6 +26,7 @@
 #include "FrameSVGMaskBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
+#include "core/dom/canvas/CanvasGradient.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"

@@ -139,7 +139,6 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingWorkerInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingServiceWorkerInstance.cpp
-    ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/EventTargetCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp
@@ -172,6 +171,7 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_BINDING_GENERATED_DIR}/XMLHttpRequestEventTargetBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/XMLHttpRequestUploadBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/BufferSourceOrBlobOrDOMStringBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/BlobPropertyBagBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/FilePropertyBagBinding.cpp
 )
 

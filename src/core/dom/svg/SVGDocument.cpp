@@ -30,6 +30,7 @@
 #include "core/dom/svg/SVGEllipseElement.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/svg/SVGTextElement.h"
+#include "core/dom/svg/SVGScriptElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
 #include "core/dom/svg/SVGLineElement.h"
 #include "core/dom/svg/SVGUseElement.h"

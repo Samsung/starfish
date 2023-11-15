@@ -57,6 +57,8 @@
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
 #include "platform/window/PlatformWindow.h"
+#include "binding/ScriptBindingSecurity.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"

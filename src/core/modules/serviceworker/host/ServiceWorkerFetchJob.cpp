@@ -24,6 +24,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/fetch/Response.h"
@@ -39,6 +40,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/host/FetchEvent.h"
 #include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 

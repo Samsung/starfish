@@ -29,6 +29,8 @@ namespace Starfish {
 typedef HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmap
     CanvasImageSource;
 
+class NativeImageData;
+
 class CanvasImageSourceUtils {
 public:
     static DOMExceptionOr<bool> checkUsability(

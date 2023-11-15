@@ -56,6 +56,7 @@
 #include "core/dom/Text.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/dom/canvas/TextMetrics.h"
+#include "core/dom/DOMException.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_CRASH

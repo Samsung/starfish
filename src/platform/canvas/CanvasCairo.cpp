@@ -29,8 +29,10 @@
 #endif
 
 #include "core/style/Style.h"
+#include "core/dom/canvas/CanvasGradient.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
+#include "core/dom/canvas/CanvasPattern.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"

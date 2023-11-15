@@ -25,6 +25,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE

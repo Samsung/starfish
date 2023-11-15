@@ -69,6 +69,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Scrolling.h"
 #include "core/page/PopStateEvent.h"
+#include "core/page/Serializer.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
@@ -84,6 +85,7 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/file/PlatformFile.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "EscargotPublic.h"
 
 #if defined(OS_POSIX)
 #include <malloc.h>
@@ -593,17 +595,19 @@ void WebView::ensureScriptEngineInstance()
 
         // Add a global promise hook to call on settled.
         m_scriptEngineInstance->engineInstance()->registerPromiseHook(
-            [](ExecutionStateRef* state, VMInstanceRef::PromiseHookType type,
-               PromiseObjectRef* promise, ValueRef* parent) {
+            [](Escargot::ExecutionStateRef* state,
+               Escargot::VMInstanceRef::PromiseHookType type,
+               Escargot::PromiseObjectRef* promise,
+               Escargot::ValueRef* parent) {
                 // Only promises created in starfish have an extraData.
                 if (promise && promise->extraData()) {
                     Promise* p = static_cast<Promise*>(promise->extraData());
                     switch (type) {
-                    case VMInstanceRef::PromiseHookType::Resolve:
+                    case Escargot::VMInstanceRef::PromiseHookType::Resolve:
                         p->onSettled();
-                    case VMInstanceRef::PromiseHookType::Init:
-                    case VMInstanceRef::PromiseHookType::Before:
-                    case VMInstanceRef::PromiseHookType::After:
+                    case Escargot::VMInstanceRef::PromiseHookType::Init:
+                    case Escargot::VMInstanceRef::PromiseHookType::Before:
+                    case Escargot::VMInstanceRef::PromiseHookType::After:
                         // Note: Implement if you need.
                         break;
                     default:

@@ -28,6 +28,7 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/style/ComputedStyle.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace Starfish {
 
