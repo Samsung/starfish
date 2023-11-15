@@ -25,6 +25,8 @@
 #include "core/style/WebFont.h"
 #include "binding/generated/HTMLScriptElementOrSVGScriptElementUnion.h"
 #include "binding/WindowProxy.h"
+#include "core/dom/Element.h"
+#include "core/dom/HTMLElement.h"
 
 // FIXME reduce cache size
 // if we optimize gradient painting we can reduce this size as FHD

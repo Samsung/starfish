@@ -22,6 +22,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMMatrix.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 

@@ -21,6 +21,7 @@
 #include "binding/ScriptBindingSecurity.h"
 #include "PlatformIntegrationData.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/Location.h"

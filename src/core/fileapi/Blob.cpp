@@ -23,8 +23,55 @@
 #include "core/page/Serializer.h"
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
+#include "binding/generated/ArrayBufferViewOrArrayBufferUnion.h"
+#include "EscargotPublic.h"
 
 namespace Starfish {
+
+Blob ::Blob(ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+{
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj, void* cd) { ((Blob*)obj)->finalize(); }, NULL, NULL,
+        NULL);
+}
+
+Blob::Blob(ExecutionContext* executionContext,
+           const GCVector<BufferSourceOrBlobOrDOMString>& blobParts)
+    : Blob(executionContext)
+{
+    initialize(blobParts);
+}
+
+Blob::Blob(ExecutionContext* executionContext,
+           const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
+           const BlobPropertyBag& options)
+    : Blob(executionContext)
+{
+    initialize(blobParts, options);
+}
+
+Blob ::Blob(ExecutionContext* executionContext, uint64_t size, String* type,
+            void* data, bool isClosed, bool isEntryOfBlobURLStore,
+            bool isAllocatedByMalloc)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+    , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore,
+                 isAllocatedByMalloc)
+{
+    // FIXME: Below is the legacy code. |isEntryOfBlobURLStore| is always
+    // explicitly specified as false. therefore, calling |addBlobToBlobURLStore|
+    // will never run. additionally, there is an assertion in
+    // |addBlobToBlobURLStore| that is exactly the opposite of the entry
+    // condition.
+    if (m_blobData.m_isEntryOfBlobURLStore) {
+        addBlobToBlobURLStore();
+    }
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj, void* cd) { ((Blob*)obj)->finalize(); }, NULL, NULL,
+        NULL);
+}
 
 Blob::Blob(ExecutionContext* executionContext, Blob::BlobData blobData)
     : Blob(executionContext, blobData.m_size, blobData.m_type, blobData.m_data,
@@ -32,11 +79,67 @@ Blob::Blob(ExecutionContext* executionContext, Blob::BlobData blobData)
 {
 }
 
-Blob ::Blob(ExecutionContext* executionContext)
-    : Blob(executionContext, 0, String::emptyString, nullptr, false, false,
-           false)
+void Blob::initialize(const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
+                      const BlobPropertyBag& options)
 {
-    // Empty blob constructor.
+    GCVector<std::pair<void*, size_t>> bufferInfo;
+    size_t totalByteLength = 0;
+    for (auto& item : blobParts) {
+        if (item.isDOMStringValue()) {
+            NullableUTF8String str =
+                item.getDOMStringValue()->toNullableUTF8String();
+            bufferInfo.push_back(std::make_pair(
+                reinterpret_cast<void*>(const_cast<char*>(str.m_buffer)),
+                str.m_bufferSize));
+            totalByteLength += str.m_bufferSize;
+        } else if (item.isArrayBufferViewOrArrayBufferValue()) {
+            ArrayBufferViewOrArrayBuffer itemValue =
+                item.getArrayBufferViewOrArrayBufferValue();
+            if (itemValue.isArrayBufferViewValue()) {
+                ArrayBufferViewRef* arrayBufferView =
+                    itemValue.getArrayBufferViewValue();
+                bufferInfo.push_back(
+                    std::make_pair(reinterpret_cast<void*>(
+                                       arrayBufferView->buffer()->rawBuffer()),
+                                   arrayBufferView->byteLength()));
+                totalByteLength += arrayBufferView->byteLength();
+            } else if (itemValue.isArrayBufferValue()) {
+                ArrayBufferObjectRef* arrayBuffer =
+                    itemValue.getArrayBufferValue();
+                bufferInfo.push_back(std::make_pair(
+                    reinterpret_cast<void*>(arrayBuffer->rawBuffer()),
+                    arrayBuffer->byteLength()));
+                totalByteLength += arrayBuffer->byteLength();
+            } else {
+                STARFISH_ASSERT_NOT_REACHED();
+            }
+        } else if (item.isBlobValue()) {
+            Blob* blob = item.getBlobValue();
+            bufferInfo.push_back(std::make_pair(blob->data(), blob->size()));
+            totalByteLength += blob->size();
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+
+    size_t offset = 0;
+    char* buffer = reinterpret_cast<char*>(
+        GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(totalByteLength));
+    for (size_t i = 0; i < bufferInfo.size(); i++) {
+        memcpy(buffer + offset, bufferInfo[i].first, bufferInfo[i].second);
+        offset += bufferInfo[i].second;
+    }
+
+    m_blobData.m_size = totalByteLength;
+    if (options.hasType()) {
+        m_blobData.m_type = options.type();
+    }
+    m_blobData.m_data = buffer;
+    m_blobData.m_isClosed = false;
+    m_blobData.m_isEntryOfBlobURLStore = false;
+    m_blobData.m_isAllocatedByMalloc = false;
+
+    // TODO: Apply ending type.
 }
 
 ScriptBindingInstance* Blob::scriptBindingInstance()

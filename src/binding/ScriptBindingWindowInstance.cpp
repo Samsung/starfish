@@ -37,6 +37,8 @@
 
 #include <EscargotPublic.h>
 
+using namespace Escargot;
+
 namespace Starfish {
 
 static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
@@ -344,10 +346,14 @@ static ValueRef* instantiateStreamingWASMFunction(ExecutionStateRef* state,
     ValueRef* source = argv[0];
     ValueRef* importObject = argv[1];
 
-    if (!source->isObject() || (!source->isPromiseObject() && (!source->asObject()->extraData() ||
-        !((ScriptWrappable*)source->asObject()->extraData())->isResponse()))) {
+    if (!source->isObject() ||
+        (!source->isPromiseObject() &&
+         (!source->asObject()->extraData() ||
+          !((ScriptWrappable*)source->asObject()->extraData())
+               ->isResponse()))) {
         // check `source` argument type
-        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH, "0", "source", "Response or Promise");
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH, "0", "source",
+                        "Response or Promise");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "instantiateStreaming",
                         "WebAssembly", reason);
         ValueRef* error = ErrorObjectRef::create(
@@ -369,13 +375,16 @@ static ValueRef* instantiateStreamingWASMFunction(ExecutionStateRef* state,
                    compilePotentialWASMResponse, 1, true, false));
 
     if (source->isPromiseObject()) {
-        promiseOfModule = source->asPromiseObject()->then(state, compiler)->asPromiseObject();
+        promiseOfModule =
+            source->asPromiseObject()->then(state, compiler)->asPromiseObject();
     } else {
-        STARFISH_ASSERT(((ScriptWrappable*)source->asObject()->extraData())->isResponse());
+        STARFISH_ASSERT(
+            ((ScriptWrappable*)source->asObject()->extraData())->isResponse());
         PromiseObjectRef* sourceReturn = PromiseObjectRef::create(state);
         sourceReturn->fulfill(state, source);
 
-        promiseOfModule = sourceReturn->then(state, compiler)->asPromiseObject();
+        promiseOfModule =
+            sourceReturn->then(state, compiler)->asPromiseObject();
     }
 
     // Return the result of instantiating the promise of a module

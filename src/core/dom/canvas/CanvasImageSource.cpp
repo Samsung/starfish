@@ -26,6 +26,11 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 #include "core/dom/WebOrigin.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/HTMLImageElement.h"
+#include "core/dom/ImageBitmap.h"
+#include "core/dom/svg/SVGImageElement.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(

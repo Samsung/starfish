@@ -21,11 +21,18 @@
 #define __StarfishFetch__
 
 #include "binding/generated/RequestOrUSVStringUnion.h"
+#include "core/fetch/Request.h"
+
+namespace Escargot {
+class ExecutionStateRef;
+class ValueRef;
+
+} // namespace Escargot
 
 namespace Starfish {
 
 extern RequestOrUSVString toRequestOrUSVStringFromValueRef(
-    ExecutionStateRef* state, ValueRef* from);
+    Escargot::ExecutionStateRef* state, Escargot::ValueRef* from);
 
 class Request;
 

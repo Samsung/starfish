@@ -30,6 +30,7 @@
 #include "core/dom/DOMRect.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
+#include "EscargotPublic.h"
 
 namespace Starfish {
 
@@ -195,14 +196,16 @@ void IntersectionObserver::notify()
     if (isCallableScriptValue(callback) && m_queuedEntries.size()) {
         ScriptValue* argv = nullptr;
         size_t argc = 0;
-        const auto& result = Evaluator::execute(
+        const auto& result = Escargot::Evaluator::execute(
             scriptBindingInstance()->scriptContext(),
-            [](ExecutionStateRef* state,
-               IntersectionObserver* self) -> ValueRef* {
-                ArrayObjectRef* arrayObj = ArrayObjectRef::create(state);
+            [](Escargot::ExecutionStateRef* state,
+               IntersectionObserver* self) -> Escargot::ValueRef* {
+                Escargot::ArrayObjectRef* arrayObj =
+                    Escargot::ArrayObjectRef::create(state);
                 for (size_t i = 0; i < self->m_queuedEntries.size(); i++) {
-                    ValueRef* item = self->m_queuedEntries[i]->scriptValue();
-                    arrayObj->set(state, ValueRef::create(i), item);
+                    Escargot::ValueRef* item =
+                        self->m_queuedEntries[i]->scriptValue();
+                    arrayObj->set(state, Escargot::ValueRef::create(i), item);
                 }
                 return arrayObj;
             },

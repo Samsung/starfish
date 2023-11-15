@@ -28,6 +28,7 @@
 #include "core/page/Serializer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/WebOrigin.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 

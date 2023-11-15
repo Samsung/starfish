@@ -219,7 +219,7 @@ bool FetchCacheStream::getKeys(size_t cacheScopeDirHash,
 
     for (const auto& entry : entries) {
         result->pushBack(
-            StringRef::createFromUTF8(entry.data(), entry.length()));
+            Escargot::StringRef::createFromUTF8(entry.data(), entry.length()));
     }
     return true;
 }
