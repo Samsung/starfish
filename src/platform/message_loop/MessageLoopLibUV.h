@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
 
 #ifndef __StarfishMessageLoopLibUV__
 #define __StarfishMessageLoopLibUV__

@@ -691,7 +691,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-larg
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-unit-tests.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-crash.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-test.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-bool.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html

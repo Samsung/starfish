@@ -39,6 +39,13 @@ Timer* Timer::create(WebBase* webBase)
 #endif
 }
 
+#if defined(STARFISH_ENABLE_WORKER)
+Timer* Timer::createForWorker(WebBase* webBase)
+{
+    return new TimerLibUV(webBase);
+}
+#endif
+
 Timer::Timer(WebBase* webBase)
     : m_webBase(webBase)
     , m_timeoutCounter(0)

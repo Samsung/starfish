@@ -27,12 +27,14 @@ namespace Starfish {
 class WorkerGlobalScope;
 class ServiceWorkerGlobalScope;
 class ScriptEngineInstance;
+class RunLoop;
 
 class WebWorker : public WebBase {
 public:
-    static WebWorker* create(Starfish* starfish, const char* locale,
-                             const char* timezoneID,
-                             String* customUserAgentString);
+    WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
+              String* customUserAgentString);
+
+    WebWorker(WebBase* webBase, RunLoop* runLoop);
 
     virtual ~WebWorker();
 
@@ -63,9 +65,6 @@ public:
     GlobalScopeType* createGlobalScope(ResourceURL* scriptURL);
 
 private:
-    WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
-              String* customUserAgentString);
-
     WorkerGlobalScope* m_workerGlobalScope{ nullptr };
     ScriptEngineInstance* m_scriptEngineInstance{ nullptr };
 

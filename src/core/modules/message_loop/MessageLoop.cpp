@@ -43,6 +43,13 @@ MessageLoop* MessageLoop::create()
 #endif
 }
 
+#if defined(STARFISH_ENABLE_WORKER)
+MessageLoop* MessageLoop::createForWorker(RunLoop* runLoop)
+{
+    return new MessageLoopLibUV(reinterpret_cast<RunLoopLibUV*>(runLoop));
+}
+#endif
+
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
