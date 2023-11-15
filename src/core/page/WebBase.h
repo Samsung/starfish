@@ -228,7 +228,8 @@ public:
     std::mt19937& randomEngine();
 
 protected:
-    WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
+    WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
+            const char* locale, const char* timezoneID,
             String* customUserAgentString);
 
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;

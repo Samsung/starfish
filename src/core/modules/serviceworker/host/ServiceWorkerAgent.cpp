@@ -161,8 +161,8 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
 
     // - For the global object, create a new ServiceWorkerGlobalScope object.
     // Let workerGlobalScope be the created object.
-    WebWorker* webWorker = WebWorker::create(m_starfish, "ko-KR", "Asia/Seoul",
-                                             String::emptyString);
+    WebWorker* webWorker =
+        new WebWorker(m_starfish, "ko-KR", "Asia/Seoul", String::emptyString);
     auto workerGlobalScope =
         webWorker->createGlobalScope<ServiceWorkerGlobalScope>(
             new ResourceURL(serviceWorker->scriptURL, serviceWorker->scopeURL));

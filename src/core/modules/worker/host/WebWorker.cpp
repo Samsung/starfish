@@ -25,6 +25,7 @@
 #include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/RunLoop.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
@@ -39,13 +40,18 @@ namespace Starfish {
 
 WebWorker::WebWorker(Starfish* starfish, const char* locale,
                      const char* timezoneID, String* customUserAgentString)
-    : WebBase(starfish, locale, timezoneID, customUserAgentString)
+    : WebBase(starfish, MessageLoop::createForWorker(RunLoop::create()),
+              Timer::createForWorker(this), locale, timezoneID,
+              customUserAgentString)
 {
-    STARFISH_ASSERT(starfish != nullptr);
-    STARFISH_ASSERT(locale != nullptr);
-    STARFISH_ASSERT(timezoneID != nullptr);
-    STARFISH_ASSERT(customUserAgentString != nullptr);
-    STARFISH_ASSERT(isMainThread() == true);
+}
+
+WebWorker::WebWorker(WebBase* webBase, RunLoop* runLoop)
+    : WebBase(webBase->starfish(), MessageLoop::createForWorker(runLoop),
+              Timer::createForWorker(this), webBase->locale().c_str(),
+              webBase->timezoneID()->toUTF8NonGCString().c_str(),
+              webBase->customUserAgentString())
+{
 }
 
 WebWorker::~WebWorker()
@@ -70,19 +76,6 @@ WebWorker::~WebWorker()
         m_timer->destroy();
         m_timer = nullptr;
     }
-}
-
-WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
-                             const char* timezoneID,
-                             String* customUserAgentString)
-{
-    TRACE_SCOPE(SVCWORKER);
-    STARFISH_ASSERT(starfish != nullptr);
-    STARFISH_ASSERT(locale != nullptr);
-    STARFISH_ASSERT(timezoneID != nullptr);
-    STARFISH_ASSERT(customUserAgentString != nullptr);
-
-    return new WebWorker(starfish, locale, timezoneID, customUserAgentString);
 }
 
 void WebWorker::destroy()

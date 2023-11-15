@@ -48,6 +48,9 @@ class MessageLoop : public BASE_CLASS {
 
 public:
     static MessageLoop* create();
+#if defined(STARFISH_ENABLE_WORKER)
+    static MessageLoop* createForWorker(RunLoop* runLoop = nullptr);
+#endif
 
 #if !defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     static void init();

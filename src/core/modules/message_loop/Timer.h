@@ -36,6 +36,9 @@ class Timer : public gc {
 
 public:
     static Timer* create(WebBase* webBase);
+#if defined(STARFISH_ENABLE_WORKER)
+    static Timer* createForWorker(WebBase* webBase);
+#endif
 
     virtual size_t addTimer(unsigned delay, GlobalScope* globalScope,
                             TimerHandler handler, void* data,

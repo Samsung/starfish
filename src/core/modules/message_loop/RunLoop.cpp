@@ -26,7 +26,7 @@ namespace Starfish {
 
 RunLoop* RunLoop::create()
 {
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
     return new RunLoopLibUV();
 #else
     STARFISH_ASSERT_NOT_REACHED();

@@ -18,7 +18,7 @@
  */
 
 #include "StarfishPlatform.h"
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) || defined(STARFISH_ENABLE_WORKER)
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
@@ -385,6 +385,8 @@ uv_loop_t* MessageLoopLibUV::uvLoop()
     return m_runLoop->uvLoop();
 }
 
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+
 void MessageLoop::init()
 {
     static bool needsInit = true;
@@ -434,6 +436,8 @@ size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
 
     return ret;
 }
+
+#endif
 
 } // namespace Starfish
 #endif

@@ -30,13 +30,14 @@
 
 namespace Starfish {
 
-WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
+WebBase::WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
+                 const char* locale, const char* timezoneID,
                  String* customUserAgentString)
     : StarfishHoldable(starfish)
     , m_timezoneID(String::fromUTF8(timezoneID, strlen(timezoneID)))
     , m_customUserAgentString(customUserAgentString)
-    , m_messageLoop(MessageLoop::create())
-    , m_timer(Timer::create(this))
+    , m_messageLoop(messageLoop)
+    , m_timer(timer)
     , m_console(new Console(this))
     , m_webSecurityMode(LWE::WebSecurityMode::Enable)
     , m_useHttp2(false)
