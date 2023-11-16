@@ -35,6 +35,8 @@ class SerializedArrayData;
 class SerializedPlatformObjectData;
 class SerializedObjectData;
 class SerializedTypedData;
+class SerializedArrayBufferData;
+class SerializedArrayBufferViewData;
 class TransferedPlatformObjectData;
 class TransferedTypedData;
 class ScriptWrappable;
@@ -86,6 +88,16 @@ public:
         return false;
     }
 
+    virtual bool isSerializedArrayBufferData() const
+    {
+        return false;
+    }
+
+    virtual bool isSerializedArrayBufferViewData() const
+    {
+        return false;
+    }
+
     SerializedPrimitiveValueData* asSerializedPrimitiveValueData() const
     {
         STARFISH_ASSERT(isSerializedValueData());
@@ -120,6 +132,18 @@ public:
     {
         STARFISH_ASSERT(isTransferedPlatformObjectData());
         return (TransferedPlatformObjectData*)this;
+    }
+
+    SerializedArrayBufferData* asArrayBufferData() const
+    {
+        STARFISH_ASSERT(isSerializedArrayBufferData());
+        return (SerializedArrayBufferData*)this;
+    }
+
+    SerializedArrayBufferViewData* asArrayBufferViewData() const
+    {
+        STARFISH_ASSERT(isSerializedArrayBufferViewData());
+        return (SerializedArrayBufferViewData*)this;
     }
 };
 
@@ -312,6 +336,61 @@ public:
 
 private:
     GCVector<std::pair<ScriptValue, SerializedTypedData*>> m_data;
+};
+
+class SerializedArrayBufferData : public SerializedData {
+public:
+    SerializedArrayBufferData(ExecutionContext* executionContext,
+                              ScriptArrayBuffer arrayBuffer);
+    SerializedArrayBufferData(uint8_t* buffer, size_t byteLength);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    virtual bool isSerializedArrayBufferData() const override
+    {
+        return true;
+    }
+
+    ScriptArrayBuffer createDeserializedValue(ScriptExecutionState state);
+
+private:
+    GCVector<uint8_t> m_data;
+    size_t m_byteLength{ 0 };
+};
+
+class SerializedArrayBufferViewData : public SerializedData {
+public:
+    enum Type {
+        None,
+        Int8Array,
+        Uint8Array,
+        Int16Array,
+        Uint16Array,
+        Int32Array,
+        Uint32Array
+    };
+
+    SerializedArrayBufferViewData(ExecutionContext* executionContext,
+                                  ScriptArrayBufferView arrayBufferView);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    virtual bool isSerializedArrayBufferViewData() const override
+    {
+        return true;
+    }
+
+    ScriptArrayBufferView createDeserializedValue(
+        ExecutionContext* executionContext, ScriptExecutionState state);
+
+protected:
+    SerializedArrayBufferData* m_arrayBufferData{ nullptr };
+    Type m_type{ Type::None };
+    size_t m_byteLength{ 0 };
+    size_t m_byteOffset{ 0 };
+    size_t m_arrayLength{ 0 };
 };
 
 class SerializedTypedData : public gc {

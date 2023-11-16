@@ -87,6 +87,40 @@ void* SerializedObjectData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void* SerializedArrayBufferData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SerializedArrayBufferData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedArrayBufferData)] = { 0 };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(SerializedArrayBufferData, m_data));
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(SerializedArrayBufferData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* SerializedArrayBufferViewData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SerializedArrayBufferViewData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedArrayBufferViewData)] = {
+            0
+        };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedArrayBufferViewData,
+                                              m_arrayBufferData));
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(SerializedArrayBufferViewData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void* SerializedTypedData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedTypedData));
@@ -100,6 +134,97 @@ void* SerializedTypedData::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+SerializedArrayBufferData::SerializedArrayBufferData(
+    ExecutionContext* executionContext, ScriptArrayBuffer arrayBuffer)
+{
+    if (arrayBuffer->isDetachedBuffer()) {
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
+                               "ArrayBuffer is already detached.");
+    }
+
+    m_byteLength = arrayBuffer->byteLength();
+    uint8_t* buffer = arrayBuffer->rawBuffer();
+    m_data.insert(m_data.end(), buffer, buffer + m_byteLength);
+}
+
+SerializedArrayBufferData::SerializedArrayBufferData(uint8_t* buffer,
+                                                     size_t byteLength)
+    : m_byteLength(byteLength)
+{
+    m_data.insert(m_data.end(), buffer, buffer + m_byteLength);
+}
+
+ScriptArrayBuffer SerializedArrayBufferData::createDeserializedValue(
+    ScriptExecutionState state)
+{
+    ArrayBufferObjectRef* arrayBuffer = ArrayBufferObjectRef::create(state);
+    arrayBuffer->allocateBuffer(state, m_byteLength);
+    memcpy(arrayBuffer->rawBuffer(), m_data.begin(), m_byteLength);
+
+    return arrayBuffer;
+}
+
+SerializedArrayBufferViewData::SerializedArrayBufferViewData(
+    ExecutionContext* executionContext, ScriptArrayBufferView arrayBufferView)
+{
+    if (arrayBufferView->isInt8ArrayObject()) {
+        m_type = Type::Int8Array;
+    } else if (arrayBufferView->isUint8ArrayObject()) {
+        m_type = Type::Uint8Array;
+    } else if (arrayBufferView->isInt16ArrayObject()) {
+        m_type = Type::Int16Array;
+    } else if (arrayBufferView->isUint16ArrayObject()) {
+        m_type = Type::Uint16Array;
+    } else if (arrayBufferView->isInt32ArrayObject()) {
+        m_type = Type::Int32Array;
+    } else if (arrayBufferView->isUint32ArrayObject()) {
+        m_type = Type::Uint32Array;
+    } else {
+        STARFISH_UNIMPLEMENTED();
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
+                               "Data clone error");
+    }
+
+    m_byteLength = arrayBufferView->byteLength();
+    m_byteOffset = arrayBufferView->byteOffset();
+    m_arrayLength = arrayBufferView->arrayLength();
+
+    m_arrayBufferData =
+        new SerializedArrayBufferData(arrayBufferView->buffer()->rawBuffer(),
+                                      arrayBufferView->buffer()->byteLength());
+}
+
+ScriptArrayBufferView SerializedArrayBufferViewData::createDeserializedValue(
+    ExecutionContext* executionContext, ScriptExecutionState state)
+{
+    ArrayBufferViewRef* arrayBufferView = nullptr;
+    if (m_type == Type::Int8Array) {
+        arrayBufferView = Int8ArrayObjectRef::create(state);
+    } else if (m_type == Type::Uint8Array) {
+        arrayBufferView = Uint8ArrayObjectRef::create(state);
+    } else if (m_type == Type::Int16Array) {
+        arrayBufferView = Int16ArrayObjectRef::create(state);
+    } else if (m_type == Type::Uint16Array) {
+        arrayBufferView = Uint16ArrayObjectRef::create(state);
+    } else if (m_type == Type::Int32Array) {
+        arrayBufferView = Int32ArrayObjectRef::create(state);
+    } else if (m_type == Type::Uint32Array) {
+        arrayBufferView = Uint32ArrayObjectRef::create(state);
+    } else {
+        STARFISH_UNIMPLEMENTED();
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
+                               "Data clone error");
+    }
+
+    ArrayBufferObjectRef* arrayBuffer =
+        m_arrayBufferData->createDeserializedValue(state);
+
+    arrayBufferView->setBuffer(arrayBuffer, m_byteOffset, m_byteLength,
+                               m_arrayLength);
+
+    return arrayBufferView;
 }
 
 static SerializedTypedData* serializeInternal(
@@ -283,9 +408,13 @@ static SerializedTypedData* serializeInternal(
         } else if (obj->isPromiseObject()) {
             return nullptr;
         } else if (obj->isArrayBufferObject()) {
-            STARFISH_UNIMPLEMENTED();
+            type = SerializedTypedData::ArrayBuffer;
+            data = new SerializedArrayBufferData(executionContext,
+                                                 obj->asArrayBufferObject());
         } else if (obj->isArrayBufferView()) {
-            STARFISH_UNIMPLEMENTED();
+            type = SerializedTypedData::ArrayBufferView;
+            data = new SerializedArrayBufferViewData(executionContext,
+                                                     obj->asArrayBufferView());
         } else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
@@ -397,6 +526,13 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                      ->asSerializedPlatformObjectData()
                      ->createDeserializingInstance(executionContext)
                      ->scriptValue();
+    } else if (value->isArrayBuffer()) {
+        result =
+            value->data()->asArrayBufferData()->createDeserializedValue(state);
+    } else if (value->isArrayBufferView()) {
+        result =
+            value->data()->asArrayBufferViewData()->createDeserializedValue(
+                executionContext, state);
     } else {
         STARFISH_UNIMPLEMENTED();
     }
