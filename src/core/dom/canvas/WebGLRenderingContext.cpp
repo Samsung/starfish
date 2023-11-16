@@ -221,7 +221,7 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
     if (buffer.hasValue()) {
         WebGLBuffer* value = buffer.value();
 
-        if (value->target() != GL_NONE) {
+        if (value->target() != GL_NONE && value->target() != target) {
             // An attempt to bind a buffer object to the other target will
             // generate an INVALID_OPERATION error, and the current binding will
             // remain untouched. (Note: This isn't a GLES Spec., but WebGL one.
