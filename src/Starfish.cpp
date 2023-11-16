@@ -25,6 +25,8 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/util/LineBreakerIteratorPool.h"
+#include "core/modules/profiling/Profiling.h"
+
 #include "LWEWebView.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/http/HTTPCache.h"
@@ -48,10 +50,19 @@ bool g_enableDumpAsText = false;
 bool g_DumpAsText_Async = false;
 int g_referenceTestState = 0;
 #endif
+
+#if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
+bool g_fireOnloadEvent = false;
+#endif
+
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
 bool g_starfishIgnoreSSLVerify = true;
 #else
 bool g_starfishIgnoreSSLVerify = false;
+#endif
+
+#ifdef STARFISH_ENABLE_PROFILE
+Profiler g_profiler;
 #endif
 
 #if defined(STARFISH_EFL_CAIRO)
@@ -165,6 +176,10 @@ Starfish::Starfish(const char* localStorageFilePath,
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init(m_perProcess, m_serviceWorkerOption);
 #endif
+#endif
+
+#ifdef STARFISH_ENABLE_PROFILE
+    g_profiler.start();
 #endif
 }
 

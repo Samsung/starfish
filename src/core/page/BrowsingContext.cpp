@@ -17,8 +17,6 @@
  *  USA
  */
 
-// #define STARFISH_ENABLE_PROFILE_TIMER
-
 #include <SkMatrix.h>
 
 #include "StarfishConfig.h"
@@ -257,7 +255,8 @@ void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
-            INSTALL_PROFILE_TIMER("parse sheet & collect rules");
+            INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kParse,
+                                             "parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
             document()->styleResolver().removeAllRules();
@@ -607,7 +606,8 @@ bool BrowsingContext::layoutIfNeeded()
     bool ret = false;
     if (m_needsLayout) {
         // layout frame tree
-        INSTALL_PROFILE_TIMER("layout frame tree");
+        INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kLayout,
+                                         "layout frame tree");
 
         LayoutContext ctx(starfish(), document()
                                           ->frame()

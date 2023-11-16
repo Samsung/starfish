@@ -42,7 +42,6 @@
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
-bool g_fireOnloadEvent = false;
 bool g_forceRendering = false;
 #endif
 

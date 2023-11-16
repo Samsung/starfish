@@ -38,10 +38,6 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 
-#ifdef STARFISH_ENABLE_TEST
-extern bool g_fireOnloadEvent;
-#endif
-
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
 #define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 4
 #endif

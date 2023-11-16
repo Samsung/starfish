@@ -39,7 +39,6 @@
 #include "platform/window/PlatformWindowFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
-extern bool g_fireOnloadEvent;
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
