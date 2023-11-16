@@ -20,24 +20,33 @@
 #ifndef __StarfishProfiling__
 #define __StarfishProfiling__
 
+#include <unordered_map>
+
 namespace Starfish {
 
 uint64_t tickCount();     // increase 1000 by 1 second
 uint64_t longTickCount(); // increase 1000000 by 1 second
 uint64_t timestamp();     // increase 1000 by 1 second
 
+enum class ProfileKind {
+    kParse,
+    kLayout,
+    kPaint,
+    kScript,
+    kMISC,
+};
+
 class ProfilerTimer {
 public:
-    ProfilerTimer(const char* msg)
-    {
-        m_start = longTickCount();
-        m_msg = msg;
-    }
+    ProfilerTimer(const char* msg);
+    ProfilerTimer(ProfileKind kind, const char* msg);
     ~ProfilerTimer();
 
 protected:
     uint64_t m_start;
     const char* m_msg;
+    bool m_needToRecord;
+    ProfileKind m_kind;
 };
 
 class LongTaskFinder {
@@ -56,6 +65,41 @@ protected:
     const char* m_msg;
 };
 
+class Profiler {
+public:
+    Profiler();
+    ~Profiler();
+    Profiler(const Profiler& other) = delete;
+    Profiler& operator=(const Profiler& other) = delete;
+
+    void Update(ProfileKind kind, float elapsedTimeInMS);
+
+    void start()
+    {
+        m_isStarted = true;
+        init();
+    }
+
+    void stop()
+    {
+        m_isStarted = false;
+    }
+
+    bool isStarted()
+    {
+        return m_isStarted;
+    }
+
+    void report();
+
+private:
+    void init();
+
+    bool m_isStarted = false;
+    float m_totalElapsedTime = 0.0f;
+    std::unordered_map<ProfileKind, float> m_records;
+};
+
 #ifdef STARFISH_ENABLE_PROFILING
 #define STARFISH_ENABLE_PROFILE_TIMER
 #endif
@@ -64,6 +108,14 @@ protected:
 #define INSTALL_PROFILE_TIMER(msg) ProfilerTimer _p(msg);
 #else
 #define INSTALL_PROFILE_TIMER(msg)
+#endif
+
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+#define INSTALL_PROFILE_TIMER(msg) ProfilerTimer _p(msg);
+#define INSTALL_RECORDABLE_PROFILE_TIMER(kind, msg) ProfilerTimer _p(kind, msg);
+#else
+#define INSTALL_PROFILE_TIMER(msg)
+#define INSTALL_RECORDABLE_PROFILE_TIMER(kind, msg)
 #endif
 } // namespace Starfish
 

@@ -683,6 +683,8 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                                ScriptValue* argv, size_t argc,
                                ScriptValue thisValue)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "call script function");
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
@@ -746,6 +748,8 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         size_t argc, ScriptValue thisValue,
                                         bool& error)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "call script function with error");
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
@@ -787,6 +791,8 @@ ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
                                     ScriptValue obj, ScriptValue* argv,
                                     size_t argc, ScriptValue thisValue)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "call handle event function");
     ScriptValue result = ValueRef::createUndefined();
     ContextRef* ctx = instance->scriptContext();
     auto sbresult = Evaluator::execute(
@@ -813,6 +819,8 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
                                          size_t argc, ScriptValue thisValue,
                                          bool& error)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "call handle node filter function");
     ScriptValue result = ValueRef::createUndefined();
     ContextRef* ctx = instance->scriptContext();
     auto sbresult = Evaluator::execute(
@@ -861,6 +869,8 @@ void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "evaluate javascript string");
     if (UNLIKELY(!instance->isScriptingEnabled())) {
         if (result) {
             *result = false;

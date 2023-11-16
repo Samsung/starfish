@@ -125,11 +125,32 @@ uint64_t timestamp()
     return (uint64_t)tv.tv_sec * 1000UL + tv.tv_usec / 1000UL;
 }
 
+ProfilerTimer::ProfilerTimer(const char *msg)
+{
+    m_start = longTickCount();
+    m_msg = msg;
+    m_needToRecord = false;
+    m_kind = ProfileKind::kMISC;
+}
+
+ProfilerTimer::ProfilerTimer(ProfileKind kind, const char *msg)
+{
+    m_start = longTickCount();
+    m_msg = msg;
+    m_needToRecord = true;
+    m_kind = kind;
+}
+
 ProfilerTimer::~ProfilerTimer()
 {
     uint64_t end = longTickCount();
     float time = (float)((end - m_start) / 1000.f);
     STARFISH_LOG_INFO("did %s in %f ms", m_msg, time);
+    if (m_needToRecord) {
+#ifdef STARFISH_ENABLE_PROFILE
+        g_profiler.Update(m_kind, time);
+#endif
+    }
 }
 
 LongTaskFinder::~LongTaskFinder()
@@ -138,6 +159,65 @@ LongTaskFinder::~LongTaskFinder()
     float time = (float)((end - m_start) / 1000.f);
     if (time >= m_loggingTime) {
         STARFISH_LOG_INFO("found long task %s in %f ms", m_msg, time);
+    }
+}
+
+static constexpr ProfileKind allProfileKinds[] = {
+    ProfileKind::kParse,  ProfileKind::kLayout, ProfileKind::kPaint,
+    ProfileKind::kScript, ProfileKind::kMISC,
+};
+
+static const char *profileKindToString(ProfileKind kind)
+{
+    switch (kind) {
+    case ProfileKind::kParse:
+        return "Parse";
+    case ProfileKind::kLayout:
+        return "Layout";
+    case ProfileKind::kPaint:
+        return "Paint";
+    case ProfileKind::kScript:
+        return "Script";
+    case ProfileKind::kMISC:
+        return "MISC";
+    default:
+        return "Unknown";
+    }
+    return "Unknown";
+}
+
+Profiler::Profiler()
+{
+}
+
+Profiler::~Profiler()
+{
+    report();
+}
+
+void Profiler::Update(ProfileKind kind, float elapsedTimeInMS)
+{
+    m_records[kind] += elapsedTimeInMS;
+    m_totalElapsedTime += elapsedTimeInMS;
+}
+
+void Profiler::report()
+{
+    STARFISH_LOG_INFO("================ Profile report ================");
+    STARFISH_LOG_INFO("Total elapsed time: %f ms", m_totalElapsedTime);
+    for (const auto kind : allProfileKinds) {
+        STARFISH_LOG_INFO("  Elapsed time for %s in %f ms (%.2f%%)",
+                          profileKindToString(kind), m_records[kind],
+                          m_records[kind] / m_totalElapsedTime * 100.0f);
+    }
+    STARFISH_LOG_INFO("================================================");
+}
+
+void Profiler::init()
+{
+    m_totalElapsedTime = 0;
+    for (auto &kind : allProfileKinds) {
+        m_records[kind] = 0;
     }
 }
 

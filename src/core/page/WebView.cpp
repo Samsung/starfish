@@ -17,16 +17,6 @@
  *  USA
  */
 
-// #define STARFISH_ENABLE_PROFILE_TIMER
-// #define STARFISH_ENABLE_PROFILE_LOADING
-
-#ifdef STARFISH_ENABLE_PROFILE_LOADING_TIMER
-#ifndef STARFISH_ENABLE_TEST
-#error \
-    "`STARFISH_ENABLE_PROFILE_LOADING_TIMER` flag needs `STARFISH_ENABLE_TEST`"
-#endif
-#endif
-
 #include <SkMatrix.h>
 
 #include "StarfishConfig.h"
@@ -112,7 +102,6 @@ ANNOTATE_DEFINE;
 #include "core/extra/Console.h"
 #include "core/dom/HTMLLinkElement.h"
 
-extern bool g_fireOnloadEvent;
 extern bool g_forceRendering;
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
@@ -1449,7 +1438,8 @@ RenderResult WebView::rendering(bool force)
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
                 m_repaintRegionInRendering, scrollX, scrollY);
             if (!m_needsComposite) {
-                INSTALL_PROFILE_TIMER("painting job");
+                INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
+                                                 "painting job");
                 canvas = platformWindow()->preparePainting();
                 canvas->save();
                 renderResult.updateRect = canvas->pixelSnappedClip(repaintRect);
@@ -1480,7 +1470,8 @@ RenderResult WebView::rendering(bool force)
                 canvas->restore();
                 m_didCompositeBefore = false;
             } else {
-                INSTALL_PROFILE_TIMER("painting job(composite)");
+                INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
+                                                 "painting job(composite)");
                 platformWindow()->willCompositing();
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
@@ -1657,19 +1648,17 @@ RenderResult WebView::rendering(bool force)
                 }
             });
         }
-
-#ifdef STARFISH_ENABLE_PROFILE_LOADING
-        if (g_fireOnloadEvent) {
-            auto currentTime = timestamp();
-            auto diff = currentTime - m_navigateStartingTime;
-            STARFISH_LOG_INFO(
-                "`STARFISH_ENABLE_PROFILE_LOADING` => %fms elapsed since "
-                "starting loading",
-                (float)diff);
-            ANNOTATE_CHANNEL_END(3001);
-            exit(0);
-        }
+    }
 #endif
+#ifdef STARFISH_ENABLE_PROFILE_LOADING
+    if (g_fireOnloadEvent) {
+        uint64_t currentTime = timestamp();
+        uint64_t diff = currentTime - m_navigateStartingTime;
+        STARFISH_LOG_INFO(
+            "`STARFISH_ENABLE_PROFILE_LOADING` => %lums elapsed since "
+            "starting loading",
+            diff);
+        ANNOTATE_CHANNEL_END(3001);
     }
 #endif
 
@@ -1956,6 +1945,10 @@ void WebView::resize(uint32_t width, uint32_t height)
 
 void WebView::onIdle()
 {
+#ifdef STARFISH_ENABLE_PROFILE
+    g_profiler.report();
+#endif
+
     clearActiveImageURLsInRenderingSet();
 
     if (m_topLevelBrowsingContext) {

@@ -344,6 +344,11 @@ const char* getWindowsTempDir();
 
 #include "core/util/ProgramOptions.h"
 
+#if defined(STARFISH_ENABLE_PROFILE)
+#define STARFISH_ENABLE_PROFILE_TIMER
+#define STARFISH_ENABLE_PROFILE_LOADING
+#endif
+
 #if defined(STARFISH_WEBWORKER_HOST)
 #define STARFISH_LOG_TAG "[WORKER] "
 #else

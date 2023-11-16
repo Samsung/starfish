@@ -31,6 +31,8 @@ class Mutex;
 class PerProcess;
 class ServiceWorkerProcessManager;
 class ServiceWorkerOption;
+class Profiler;
+
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
 #endif
@@ -91,6 +93,7 @@ protected:
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
+
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;
 #endif
@@ -128,7 +131,16 @@ extern bool g_enableDumpAsText;
 extern bool g_DumpAsText_Async;
 extern int g_referenceTestState; // 0:None, 1:RunningTC, 2:RunningReference
 #endif
+
+#if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
+extern bool g_fireOnloadEvent;
+#endif
+
+#ifdef STARFISH_ENABLE_PROFILE
+extern Profiler g_profiler;
+#endif
 extern bool g_starfishIgnoreSSLVerify;
+
 } // namespace Starfish
 
 #endif
