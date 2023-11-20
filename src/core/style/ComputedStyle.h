@@ -25,6 +25,7 @@
 #include "core/style/BorderRadiusData.h"
 #include "core/style/BorderData.h"
 #include "core/style/LengthData.h"
+#include "core/style/LengthDirectionAwereData.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterBaseList.h"
 #include "core/style/CSSStyleDeclaration.h"
