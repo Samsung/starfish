@@ -118,6 +118,7 @@ ResourceURL* CSSStyleSheet::url()
 
 void CSSStyleSheet::parseSheetIfneeds()
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kStyle, "Parse Style Sheet");
     if (m_sourceString != String::emptyString) {
         CSSParser parser(m_origin->document());
         parser.parseStyleSheet(m_sourceString, this);

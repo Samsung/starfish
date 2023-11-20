@@ -29,7 +29,7 @@ uint64_t longTickCount(); // increase 1000000 by 1 second
 uint64_t timestamp();     // increase 1000 by 1 second
 
 enum class ProfileKind {
-    kParse,
+    kStyle,
     kLayout,
     kPaint,
     kScript,

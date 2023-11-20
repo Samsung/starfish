@@ -9174,6 +9174,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
 void StyleResolver::resolveDOMStyle(Document* document, bool force)
 {
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kStyle, "Resolve DOMStyle");
     StyleResolveContext ctx(document);
     resolveChildrenStyle(ctx, &document->styleResolver(), document,
                          document->style(), force);
