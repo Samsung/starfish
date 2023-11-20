@@ -1262,6 +1262,21 @@ static bool parseAnimationShorthand(
     return true;
 }
 
+static bool shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::MarginBlockStart:
+    case CSSStyleValuePair::KeyKind::MarginBlockEnd:
+    case CSSStyleValuePair::KeyKind::MarginInlineStart:
+    case CSSStyleValuePair::KeyKind::MarginInlineEnd:
+    case CSSStyleValuePair::KeyKind::PaddingInlineStart:
+    case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
+        return true;
+    default:
+        return false;
+    }
+}
+
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
     , m_node(element)
@@ -1801,16 +1816,23 @@ bool CSSStyleDeclaration::setPropertyInternalFor<
         tokenizeCSSValue(tokens, value, valueLength, ",", 1);
     }
 
+    bool needToRemoveAndUpdate = shouldKeepAppearanceOrder(keyKind);
     CSSStyleValuePair cssStyleValuePair;
     if (cssStyleValuePair.updateValueCommon(tokens) ||
         cssStyleValuePair.updateValueForAttributeBasic(m_node->document(),
                                                        keyKind, tokens)) {
         cssStyleValuePair.setFlagImportant(isImportant);
+        if (needToRemoveAndUpdate) {
+            removeCSSValuePair(keyKind);
+        }
         addCSSValuePair(keyKind, cssStyleValuePair);
         return true;
     } else if (cssStyleValuePair.updateValueVarReferences(tokens)) {
         cssStyleValuePair.setValue(String::fromUTF8(value, valueLength));
         cssStyleValuePair.setFlagImportant(isImportant);
+        if (needToRemoveAndUpdate) {
+            removeCSSValuePair(keyKind);
+        }
         addCSSValuePair(keyKind, cssStyleValuePair);
         return true;
     }

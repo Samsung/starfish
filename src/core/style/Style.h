@@ -33,7 +33,6 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
-#include "core/style/LengthDirectionAwereData.h"
 #include "core/style/GridLength.h"
 #include "core/style/RectData.h"
 #include "core/style/TextOverflowData.h"

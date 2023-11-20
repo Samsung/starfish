@@ -27,7 +27,7 @@ class ComputedStyle;
 class LengthDirectionAwereData : public gc {
 public:
     LengthDirectionAwereData()
-        : m_length(Length(Length::Fixed, 0))
+        : m_length(nullptr)
     {
     }
 

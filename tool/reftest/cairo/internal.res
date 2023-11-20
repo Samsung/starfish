@@ -226,6 +226,7 @@ test/cairo/internal-test/css/clear/ignore-margin-collapse2.html
 test/cairo/internal-test/css/table/table_border-spacing_01.html
 test/cairo/internal-test/css/table/table_fixed_17.html
 test/cairo/internal-test/css/margin/margin.html
+test/cairo/internal-test/css/margin/margin_apply-order_direction-aware.html
 test/cairo/internal-test/css/margin/margin_with_direction-aware.html
 test/cairo/internal-test/css/margin/margin-block.html
 test/cairo/internal-test/css/margin/margin-inline_auto.html
@@ -294,6 +295,7 @@ test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow2.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-transform.html
 test/cairo/internal-test/css/overflow/scroll-rect-fixed-child.html
+test/cairo/internal-test/css/padding/padding_apply-order_direction-aware.html
 test/cairo/internal-test/css/padding/padding_with_direction-aware.html
 test/cairo/internal-test/css/legacy/center.html
 test/cairo/internal-test/css/fontSize/font_size_with_viewport_percent.html
