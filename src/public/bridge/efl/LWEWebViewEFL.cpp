@@ -343,6 +343,7 @@ public:
         evas_object_image_size_set(m_graphicsAdapter, width, height);
         evas_object_image_alpha_set(m_graphicsAdapter, EINA_TRUE);
 
+        elm_box_pack_end(m_mainBox, m_nonIMEKeyEventBox);
         elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
 #if defined(PORT_WINDOW_BACKEND_GL)
