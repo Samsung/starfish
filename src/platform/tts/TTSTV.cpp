@@ -180,8 +180,9 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
         if (u != nullptr) {
             ErrorEventInit errorInfo;
             errorInfo.setMessage(String::fromUTF8(errorMsg, strlen(errorMsg)));
-            errorInfo.setError(ValueRef::create(
-                StringRef::createFromASCII(errorCode, strlen(errorCode))));
+            errorInfo.setError(
+                Escargot::ValueRef::create(Escargot::StringRef::createFromASCII(
+                    errorCode, strlen(errorCode))));
             Event* errorEvent = new ErrorEvent(
                 u->executionContext(),
                 u->webView()->starfish()->staticStrings()->m_error.localName(),
@@ -195,8 +196,9 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
         if (u == nullptr && element) {
             ErrorEventInit errorInfo;
             errorInfo.setMessage(String::fromUTF8(errorMsg, strlen(errorMsg)));
-            errorInfo.setError(ValueRef::create(
-                StringRef::createFromASCII(errorCode, strlen(errorCode))));
+            errorInfo.setError(
+                Escargot::ValueRef::create(Escargot::StringRef::createFromASCII(
+                    errorCode, strlen(errorCode))));
             element->window()->dispatchErrorEvent(errorInfo);
         }
     }
