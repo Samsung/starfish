@@ -163,15 +163,15 @@ LongTaskFinder::~LongTaskFinder()
 }
 
 static constexpr ProfileKind allProfileKinds[] = {
-    ProfileKind::kParse,  ProfileKind::kLayout, ProfileKind::kPaint,
+    ProfileKind::kStyle,  ProfileKind::kLayout, ProfileKind::kPaint,
     ProfileKind::kScript, ProfileKind::kMISC,
 };
 
 static const char *profileKindToString(ProfileKind kind)
 {
     switch (kind) {
-    case ProfileKind::kParse:
-        return "Parse";
+    case ProfileKind::kStyle:
+        return "Style";
     case ProfileKind::kLayout:
         return "Layout";
     case ProfileKind::kPaint:

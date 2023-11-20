@@ -255,8 +255,7 @@ void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
-            INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kParse,
-                                             "parse sheet & collect rules");
+            INSTALL_PROFILE_TIMER("parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
             document()->styleResolver().removeAllRules();
