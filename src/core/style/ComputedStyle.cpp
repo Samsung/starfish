@@ -1010,6 +1010,13 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             }
         }
 
+        BorderBlockDirectionAwereData* borderBlockStart =
+            m_rareComputedStyleData.borderBlockStart();
+        if (borderBlockStart) {
+            borderBlockStart->borderValue().checkComputed(
+                curFontSize, rootFontSize, font, windowSize, this);
+        }
+
         LengthData* padding = m_rareComputedStyleData.padding();
         if (padding) {
             padding->checkComputed(curFontSize, rootFontSize, font, windowSize,
@@ -1519,6 +1526,36 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                     damagedKeys[CSSStyleValuePair::KeyKind::PaddingLeft])) {
                 damage = static_cast<ComputedStyleDamage>(
                     ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            }
+        }
+    }
+
+    {
+        BorderBlockDirectionAwereData* oldBorderBlockStart =
+            oldStyle->rareComputedStyleData()->borderBlockStart();
+        BorderBlockDirectionAwereData* newBorderBlockStart =
+            newStyle->rareComputedStyleData()->borderBlockStart();
+        if (oldBorderBlockStart || newBorderBlockStart) {
+            // TODO: Compare other properties.
+            if (BorderDirectionAwereData::damaged(
+                    oldBorderBlockStart, newBorderBlockStart, damagedKeys)) {
+                if (damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
+                    damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartStyle]) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
+                if (damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartWidth]) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamageLayout |
+                        damage);
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
             }
         }
     }
@@ -2546,17 +2583,37 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     // TODO: If 'writing-mode' is supported, the padding/margin value must be
     // updated using this property.
 
-    ComputedStyle* comptuedStyle = this;
-
-    LengthBlockDirectionAwereData start = marginBlockStart();
-    LengthBlockDirectionAwereData end = marginBlockEnd();
-
     // margin-block
-    if (start.legnth().hasValue() && !start.isCorrespondingTopSet()) {
-        setMarginTop(start.legnth().getValue());
+    LengthBlockDirectionAwereData marginStart = marginBlockStart();
+    LengthBlockDirectionAwereData marginEnd = marginBlockEnd();
+    if (marginStart.legnth().hasValue() &&
+        !marginStart.isCorrespondingTopSet()) {
+        setMarginTop(marginStart.legnth().getValue());
     }
-    if (end.legnth().hasValue() && !end.isCorrespondingBottomSet()) {
-        setMarginBottom(end.legnth().getValue());
+    if (marginEnd.legnth().hasValue() &&
+        !marginEnd.isCorrespondingBottomSet()) {
+        setMarginBottom(marginEnd.legnth().getValue());
+    }
+
+    // border-block
+    // border-block-start
+    BorderBlockDirectionAwereData borderStart = borderBlockStart();
+    if (borderStart.borderValue().hasBorderColor() &&
+        !borderStart.isCorrespondingTopSpecifiedLater(
+            BorderValueKind::kColor)) {
+        setBorderTopColor(borderStart.borderValue().color());
+    }
+    if (borderStart.borderValue().hasBorderStyle() &&
+        !borderStart.isCorrespondingTopSpecifiedLater(
+            BorderValueKind::kStyle)) {
+        setBorderTopStyle(borderStart.borderValue().style());
+    }
+    if (border().top().hasBorderStyle()) {
+        if (borderStart.borderValue().width().isSpecified() &&
+            !borderStart.isCorrespondingTopSpecifiedLater(
+                BorderValueKind::kWidth)) {
+            setBorderTopWidth(borderStart.borderValue().width());
+        }
     }
     // TODO: padding-block
 }

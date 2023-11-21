@@ -1262,21 +1262,6 @@ static bool parseAnimationShorthand(
     return true;
 }
 
-static bool shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind keyKind)
-{
-    switch (keyKind) {
-    case CSSStyleValuePair::KeyKind::MarginBlockStart:
-    case CSSStyleValuePair::KeyKind::MarginBlockEnd:
-    case CSSStyleValuePair::KeyKind::MarginInlineStart:
-    case CSSStyleValuePair::KeyKind::MarginInlineEnd:
-    case CSSStyleValuePair::KeyKind::PaddingInlineStart:
-    case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
-        return true;
-    default:
-        return false;
-    }
-}
-
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
     , m_node(element)
@@ -1580,6 +1565,96 @@ CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+}
+
+bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::MarginBlockStart:
+    case CSSStyleValuePair::KeyKind::MarginBlockEnd:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginTop) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginBottom)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MarginInlineStart:
+    case CSSStyleValuePair::KeyKind::MarginInlineEnd:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginLeft) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginRight)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingInlineStart:
+    case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingLeft) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingRight)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStartColor:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStartStyle:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStartWidth:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth)) {
+            return true;
+        }
+        break;
+    default:
+        break;
+    }
+
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::MarginTop:
+    case CSSStyleValuePair::KeyKind::MarginBottom:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MarginLeft:
+    case CSSStyleValuePair::KeyKind::MarginRight:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
+    case CSSStyleValuePair::KeyKind::PaddingRight:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderTopColor:
+        if (hasCSSValuePair(
+                CSSStyleValuePair::KeyKind::BorderBlockStartColor)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderTopStyle:
+        if (hasCSSValuePair(
+                CSSStyleValuePair::KeyKind::BorderBlockStartStyle)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderTopWidth:
+        if (hasCSSValuePair(
+                CSSStyleValuePair::KeyKind::BorderBlockStartWidth)) {
+            return true;
+        }
+        break;
+    default:
+        break;
+    }
+    return false;
 }
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
