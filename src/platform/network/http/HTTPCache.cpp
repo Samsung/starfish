@@ -329,7 +329,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
     }
 
     auto check = findEntryInCacheEntryTable(nwd->request->url()->urlString());
-    if (!check) {
+    if (check) {
         return;
     }
 
