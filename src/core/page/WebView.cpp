@@ -18,6 +18,7 @@
  */
 
 #include <SkMatrix.h>
+#include <inttypes.h>
 
 #include "StarfishConfig.h"
 
@@ -1655,10 +1656,10 @@ RenderResult WebView::rendering(bool force)
     if (g_fireOnloadEvent) {
         uint64_t currentTime = timestamp();
         uint64_t diff = currentTime - m_navigateStartingTime;
-        STARFISH_LOG_INFO(
-            "`STARFISH_ENABLE_PROFILE_LOADING` => %lums elapsed since "
-            "starting loading",
-            diff);
+        STARFISH_LOG_INFO("`STARFISH_ENABLE_PROFILE_LOADING` => %" PRIu64
+                          "ms elapsed since "
+                          "starting loading",
+                          diff);
         ANNOTATE_CHANNEL_END(3001);
     }
 #endif
