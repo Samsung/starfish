@@ -149,6 +149,117 @@ static CSSStyleValuePair stylePaintDataToCSSStyleValue(
     return ret;
 }
 
+static CSSStyleValuePair resolveInlineDirectionAwareProperty(
+    CSSStyleValuePair::KeyKind keykind, FrameBox* frame)
+{
+    // TODO: If 'writing-mode' is supported, the resolved value must be selected
+    // using this property as well as 'direction' property.
+
+    DirectionValue direction = frame->style()->direction();
+    CSSStyleValuePair ret;
+    if (direction == DirectionValue::LtrDirectionValue) {
+        // margin-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->marginRight()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineStart) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->marginLeft()));
+            return ret;
+        }
+
+        // padding-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->paddingRight()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->paddingLeft()));
+            return ret;
+        }
+        // TODO: padding-block, margin-block.
+    } else {
+        // margin-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->marginLeft()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineStart) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->marginRight()));
+            return ret;
+        }
+
+        // padding-inline
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->paddingLeft()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->paddingRight()));
+            return ret;
+        }
+        // TODO: padding-block, margin-block.
+    }
+
+    return ret;
+}
+
+static CSSStyleValuePair resolveBlockDirectionAwareProperty(
+    CSSStyleValuePair::KeyKind keykind, FrameBox* frame)
+{
+    // margin
+    CSSStyleValuePair ret;
+    if (keykind == CSSStyleValuePair::KeyKind::MarginBlockStart) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->marginTop()));
+        return ret;
+    }
+    if (keykind == CSSStyleValuePair::KeyKind::MarginBlockEnd) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->marginBottom()));
+        return ret;
+    }
+
+    // border
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockStartColor) {
+        ret.setKeyKind(keykind);
+        ret.setColorValue(frame->style()->border().top().color());
+        return ret;
+    }
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockStartStyle) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
+        ret.setValue(CSSLength(frame->style()->border().top().style()));
+        return ret;
+    }
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockStartWidth) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->borderTop()));
+        return ret;
+    }
+
+    return ret;
+}
+
 void ComputedStyleCSSStyleDeclaration::updateValue(
     CSSStyleValuePair::KeyKind keyKind, String* customPropertyName)
 {
@@ -210,6 +321,28 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_ABSOLUTE_LENGTH_PAIR(BorderBottomWidth, borderBottom);
         ADD_ABSOLUTE_LENGTH_PAIR(BorderLeftWidth, borderLeft)
 #undef ADD_ABSOLUTE_LENGTH_PAIR
+    case CSSStyleValuePair::KeyKind::BorderBlockStartWidth: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartWidth);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockStartWidth,
+                frame->asFrameBox());
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p = resolveBlockDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::BorderBlockStartWidth, inb);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
 
     case CSSStyleValuePair::KeyKind::Top:
     case CSSStyleValuePair::KeyKind::Right:
@@ -1041,6 +1174,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         rStyle.setBorderStyleValue(style->border().right().style());
         addValuePair(rStyle);
     } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStartStyle: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockStartStyle,
+                frame->asFrameBox());
+        }
+    } break;
     case CSSStyleValuePair::KeyKind::BorderTopColor: {
         CSSStyleValuePair tColor;
         tColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopColor);
@@ -1064,6 +1206,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         rColor.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightColor);
         rColor.setColorValue(style->border().right().color());
         addValuePair(rColor);
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStartColor: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartColor);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockStartColor,
+                frame->asFrameBox());
+        }
     } break;
     case CSSStyleValuePair::KeyKind::ObjectPosition: {
         CSSStyleValuePair p;
@@ -2076,18 +2227,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginBlockStart);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveBlockDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginBlockStart)));
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::MarginBlockStart,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveBlockDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginBlockStart)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveBlockDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginBlockStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
@@ -2100,18 +2249,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginBlockEnd);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveBlockDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginBlockEnd)));
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::MarginBlockEnd,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveBlockDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginBlockEnd)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveBlockDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginBlockEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
@@ -2124,18 +2271,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineEnd);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginInlineEnd)));
+            p = resolveInlineDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::MarginInlineEnd,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginInlineEnd)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveInlineDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
@@ -2148,18 +2293,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineStart);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginInlineStart)));
+            p = resolveInlineDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::MarginInlineStart,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::MarginInlineStart)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveInlineDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
@@ -2172,18 +2315,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::PaddingInlineEnd)));
+            p = resolveInlineDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::PaddingInlineEnd,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::PaddingInlineEnd)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveInlineDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }
@@ -2196,18 +2337,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineStart);
         if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(
-                frame->asFrameBox()->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::PaddingInlineStart)));
+            p = resolveInlineDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::PaddingInlineStart,
+                frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
             InlineNonReplacedBox* inb =
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p.setValue(CSSLength(inb->resolveInlineDirectionAwareProperty(
-                    CSSStyleValuePair::KeyKind::PaddingInlineStart)));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+                p = resolveInlineDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }

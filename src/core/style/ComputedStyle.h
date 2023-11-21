@@ -24,6 +24,7 @@
 
 #include "core/style/BorderRadiusData.h"
 #include "core/style/BorderData.h"
+#include "core/style/BorderDirectionAwereData.h"
 #include "core/style/LengthData.h"
 #include "core/style/LengthDirectionAwereData.h"
 #include "core/style/ContentData.h"
@@ -87,6 +88,7 @@ public:
         FlexShrink,
         Opacity,
         Border,
+        BorderBlockStart,
         BoxDecorationBreak,
         BoxShadow,
         Width,
@@ -172,6 +174,7 @@ public:
         String* m_stringValue;
         Length m_length;
         BorderData* m_borderData;
+        BorderBlockDirectionAwereData* m_borderBlockDirectionAwereData;
         BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
         LengthBlockDirectionAwereData* m_lengthBlockDirectionAwereData;
@@ -236,6 +239,12 @@ public:
 
         RareComputedStyleValue(BorderData* borderData)
             : m_borderData(borderData)
+        {
+        }
+
+        RareComputedStyleValue(
+            BorderBlockDirectionAwereData* m_borderBlockDirectionAwereData)
+            : m_borderBlockDirectionAwereData(m_borderBlockDirectionAwereData)
         {
         }
 
@@ -613,6 +622,8 @@ public:
     GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
                paddingInlineStart, PaddingInlineStart);
     GETTER_PTR(BorderData, borderData, border, Border);
+    GETTER_PTR(BorderBlockDirectionAwereData, borderBlockDirectionAwereData,
+               borderBlockStart, BorderBlockStart);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
                TransformOrigin);
@@ -2162,6 +2173,21 @@ public:
         return m_rareComputedStyleData.border();
     }
 
+    BorderBlockDirectionAwereData borderBlockStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return BorderBlockDirectionAwereData();
+        }
+
+        BorderBlockDirectionAwereData* data =
+            m_rareComputedStyleData.borderBlockStart();
+        if (data) {
+            return *data;
+        }
+
+        return BorderBlockDirectionAwereData();
+    }
+
     StyleTransformOrigin* transformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -2195,13 +2221,44 @@ public:
         return m_rareComputedStyleData.objectSizing() != nullptr;
     }
 
-#define SET_BORDER_COLOR(UPOS, LPOS, ...)                               \
-    void setBorder##UPOS##Color(Unit::Color color)                      \
-    {                                                                   \
-        m_rareComputedStyleData.ensureBorder()->LPOS().setColor(color); \
+    void setBorderTopColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorder()->top().setColor(color);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                  true);
     }
-    GEN_FOURSIDE(SET_BORDER_COLOR)
-#undef SET_BORDER_COLOR
+
+    void setBorderRightColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorder()->right().setColor(color);
+    }
+
+    void setBorderBottomColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorder()->bottom().setColor(color);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                     true);
+    }
+
+    void setBorderLeftColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorder()->left().setColor(color);
+    }
+
+    void setBorderBlockStartColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->borderValue()
+            .setColor(color);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                  false);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                     false);
+    }
 
 #define CLEAR_BORDER_COLOR(UPOS, LPOS, ...)                          \
     void clearBorder##UPOS##Color()                                  \
@@ -2211,21 +2268,90 @@ public:
     GEN_FOURSIDE(CLEAR_BORDER_COLOR)
 #undef CLEAR_BORDER_COLOR
 
-#define SET_BORDER_STYLE(UPOS, LPOS, ...)                               \
-    void setBorder##UPOS##Style(BorderStyleValue style)                 \
-    {                                                                   \
-        m_rareComputedStyleData.ensureBorder()->LPOS().setStyle(style); \
+    void clearBorderBlockStartColor()
+    {
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->borderValue()
+            .clearColor();
     }
-    GEN_FOURSIDE(SET_BORDER_STYLE)
-#undef SET_BORDER_STYLE
 
-#define SET_BORDER_WIDTH(UPOS, LPOS, ...)                               \
-    void setBorder##UPOS##Width(Length width)                           \
-    {                                                                   \
-        m_rareComputedStyleData.ensureBorder()->LPOS().setWidth(width); \
+    void setBorderTopStyle(BorderStyleValue style)
+    {
+        m_rareComputedStyleData.ensureBorder()->top().setStyle(style);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
+                                                  true);
     }
-    GEN_FOURSIDE(SET_BORDER_WIDTH)
-#undef SET_BORDER_WIDTH
+
+    void setBorderRightStyle(BorderStyleValue style)
+    {
+        m_rareComputedStyleData.ensureBorder()->right().setStyle(style);
+    }
+
+    void setBorderBottomStyle(BorderStyleValue style)
+    {
+        m_rareComputedStyleData.ensureBorder()->bottom().setStyle(style);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
+                                                     true);
+    }
+
+    void setBorderLeftStyle(BorderStyleValue style)
+    {
+        m_rareComputedStyleData.ensureBorder()->left().setStyle(style);
+    }
+
+    void setBorderBlockStartStyle(BorderStyleValue style)
+    {
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->borderValue()
+            .setStyle(style);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
+                                                  false);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
+                                                     false);
+    }
+
+    void setBorderTopWidth(Length width)
+    {
+        m_rareComputedStyleData.ensureBorder()->top().setWidth(width);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
+                                                  true);
+    }
+
+    void setBorderRightWidth(Length width)
+    {
+        m_rareComputedStyleData.ensureBorder()->right().setWidth(width);
+    }
+
+    void setBorderBottomWidth(Length width)
+    {
+        m_rareComputedStyleData.ensureBorder()->bottom().setWidth(width);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
+                                                     true);
+    }
+
+    void setBorderLeftWidth(Length width)
+    {
+        m_rareComputedStyleData.ensureBorder()->left().setWidth(width);
+    }
+
+    void setBorderBlockStartWidth(Length width)
+    {
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->borderValue()
+            .setWidth(width);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
+                                                  false);
+        m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
+                                                     false);
+    }
 
     void setBorderImageSource(String* url)
     {

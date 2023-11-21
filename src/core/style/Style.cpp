@@ -5348,6 +5348,31 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom, bottom)
         ADD_RESOLVE_STYLE_BORDER_STYLE(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_STYLE
+    case CSSStyleValuePair::KeyKind::BorderBlockStartStyle:
+        if (element->isHTMLTableElement() &&
+            style->pseudoType() != PseudoElementNone) {
+            break;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderBlockStartStyle(
+                parentStyle->borderBlockStart().borderValue().style());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderBlockStartStyle(
+                BorderStyleValue::NoneBorderStyleValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
+            style->setBorderBlockStartStyle(newCssValue.borderStyleValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+
 #define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                         \
     case CSSStyleValuePair::KeyKind::Border##POS##Width:                 \
         if (newCssValue.valueKind() ==                                   \
@@ -5387,6 +5412,39 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom, bottom)
         ADD_RESOLVE_STYLE_BORDER_WIDTH(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_WIDTH
+    case CSSStyleValuePair::KeyKind::BorderBlockStartWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderBlockStartWidth(
+                parentStyle->borderBlockStart().borderValue().width());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderBlockStartWidth(Length(Length::Fixed, 3));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Length) {
+            style->setBorderBlockStartWidth(
+                newCssValue.cssLengthValue().toLength());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
+            if (newCssValue.borderWidthValue() ==
+                BorderWidthValue::ThinBorderWidthValue) {
+                style->setBorderBlockStartWidth(Length(Length::Fixed, 1));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::MediumBorderWidthValue) {
+                style->setBorderBlockStartWidth(Length(Length::Fixed, 3));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::ThickBorderWidthValue) {
+                style->setBorderBlockStartWidth(Length(Length::Fixed, 5));
+            }
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+
 #define ADD_RESOLVE_STYLE_BORDER_COLOR(POS, pos)                            \
     case CSSStyleValuePair::KeyKind::Border##POS##Color:                    \
         if (newCssValue.valueKind() ==                                      \
@@ -5422,6 +5480,33 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom, bottom)
         ADD_RESOLVE_STYLE_BORDER_COLOR(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
+    case CSSStyleValuePair::KeyKind::BorderBlockStartColor: {
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderBlockStartColor(
+                parentStyle->borderBlockStart().borderValue().color());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->clearBorderBlockStartColor();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setBorderBlockStartColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->clearBorderBlockStartColor();
+            } else {
+                style->setBorderBlockStartColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+    } break;
 #define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
         if (newCssValue.valueKind() ==                           \
@@ -9434,6 +9519,12 @@ bool CSSStyleValuePair::updateValueCaretColor(Document* document,
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
 
+bool CSSStyleValuePair::updateValueBorderBlockStartColor(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueColor(document, tokens);
+}
+
 bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
@@ -9474,6 +9565,15 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
+
+bool CSSStyleValuePair::updateValueBorderBlockStartStyle(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderStyle(tokens[0]);
+}
 
 bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
 {
@@ -10737,6 +10837,15 @@ bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
     }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
+
+bool CSSStyleValuePair::updateValueBorderBlockStartWidth(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderWidth(tokens[0]);
+}
 
 bool CSSStyleValuePair::updateValueNumber(const CSSTokenVector& tokens,
                                           uint8_t option)

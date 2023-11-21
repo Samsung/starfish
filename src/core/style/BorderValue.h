@@ -36,19 +36,19 @@ public:
     {
     }
 
-    BorderStyleValue style()
+    BorderStyleValue style() const
     {
         return m_style;
     }
 
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    Length width()
+    Length width() const
     {
         return m_width;
     }
 
-    Unit::Color color()
+    Unit::Color color() const
     {
         return m_color;
     }
@@ -74,7 +74,7 @@ public:
         m_hasBorderColor = false;
     }
 
-    bool hasBorderColor()
+    bool hasBorderColor() const
     {
         return m_hasBorderColor;
     }

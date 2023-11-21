@@ -792,11 +792,6 @@ public:
                                  DirectionValue parentDirection);
     void computeVerticalMargin(LayoutUnit parentContentHeight);
 
-    LayoutUnit resolveInlineDirectionAwareProperty(
-        CSSStyleValuePair::KeyKind keykind);
-    LayoutUnit resolveBlockDirectionAwareProperty(
-        CSSStyleValuePair::KeyKind keykind);
-
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
         return nullptr;

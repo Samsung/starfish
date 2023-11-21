@@ -1269,17 +1269,31 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 #endif
         }
         break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
     case 24:
+        // border-block-start-color
+        // border-block-start-width
+        // -webkit-transform-origin
         switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-block-start-color", 24) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartColor;
+            }
+            if (memcmp(data, "border-block-start-style", 24) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartStyle;
+            }
+            if (memcmp(data, "border-block-start-width", 24) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartWidth;
+            }
+            break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case '-':
             if (memcmp(data, "-webkit-transform-origin", 24) == 0) {
                 return CSSStyleValuePair::KeyKind::TransformOrigin;
             }
             break;
+#endif
         }
         break;
-#endif
     case 25:
         // border-bottom-left-radius
         // animation-iteration-count
@@ -2291,6 +2305,17 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 21:
         switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderBlockStartColor", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartColor;
+            }
+            if (memcmp(data, "borderBlockStartStyle", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartStyle;
+            }
+            if (memcmp(data, "borderBlockStartWidth", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStartWidth;
+            }
+            break;
         case 't':
             if (memcmp(data, "textUnderlinePosition", 21) == 0) {
                 return CSSStyleValuePair::KeyKind::TextUnderlinePosition;

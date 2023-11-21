@@ -655,14 +655,20 @@ class CSSFilterFunction;
     F(BorderRightColor, borderRightColor, "border-right-color")                \
     F(BorderBottomColor, borderBottomColor, "border-bottom-color")             \
     F(BorderLeftColor, borderLeftColor, "border-left-color")                   \
+    F(BorderBlockStartColor, borderBlockStartColor,                            \
+      "border-block-start-color")                                              \
     F(BorderTopStyle, borderTopStyle, "border-top-style")                      \
     F(BorderRightStyle, borderRightStyle, "border-right-style")                \
     F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")             \
     F(BorderLeftStyle, borderLeftStyle, "border-left-style")                   \
+    F(BorderBlockStartStyle, borderBlockStartStyle,                            \
+      "border-block-start-style")                                              \
     F(BorderTopWidth, borderTopWidth, "border-top-width")                      \
     F(BorderRightWidth, borderRightWidth, "border-right-width")                \
     F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")             \
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")                   \
+    F(BorderBlockStartWidth, borderBlockStartWidth,                            \
+      "border-block-start-width")                                              \
     F(BorderCollapse, borderCollapse, "border-collapse")                       \
     F(BorderSpacing, borderSpacing, "border-spacing")                          \
     F(BoxOrient, boxOrient, "box-orient")                                      \

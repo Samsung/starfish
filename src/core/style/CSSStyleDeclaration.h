@@ -67,6 +67,8 @@ public:
     bool hasCSSValuePair(CSSStyleValuePair::KeyKind name);
     CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind name);
 
+    bool shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind keyKind);
+
     static String* combineBoxString(String* t, String* r, String* b, String* l,
                                     bool* isCombined = nullptr);
 
