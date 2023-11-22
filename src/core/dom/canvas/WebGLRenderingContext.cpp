@@ -25,6 +25,7 @@
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/canvas/WebGLExtensions.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
@@ -176,6 +177,43 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
     ENTER_CONTEXT_SCOPE();
 
     glViewport(x, y, width, height);
+}
+
+Nullable<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
+{
+    ENTER_CONTEXT_SCOPE(Nullable<GCVector<String*>>());
+
+    return WebGLExtensionRegistry::instance().getSupportedExtensions();
+}
+
+Nullable<ScriptObject> WebGLRenderingContext::getExtension(
+    String* requestedName)
+{
+    ENTER_CONTEXT_SCOPE(Nullable<ScriptObject>());
+
+    // TODO: An attempt to use any features of an extension without first
+    // calling getExtension to enable it must generate an appropriate GL
+    // error and must not make use of the feature.
+
+    std::string name = requestedName->toUTF8NonGCString();
+    const auto& iter = m_enabledExtensions.find(name);
+    if (iter != m_enabledExtensions.end()) {
+        // Multiple calls to getExtension with the same extension
+        // string, taking into account case-insensitive comparison, must
+        // return the same object as long as the extension is enabled.
+        return iter->second;
+    }
+
+    Optional<ExtensionGenerator> maybeGenerator =
+        WebGLExtensionRegistry::instance().getGenerator(name);
+
+    if (!maybeGenerator.hasValue()) {
+        return Nullable<ScriptObject>();
+    }
+
+    ScriptObject object = maybeGenerator.value()(scriptBindingInstance());
+    m_enabledExtensions.insert({ name, object });
+    return object;
 }
 
 void WebGLRenderingContext::activeTexture(GLenum texture)

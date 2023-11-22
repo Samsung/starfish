@@ -68,6 +68,7 @@
 #ifndef __StarfishString__
 #define __StarfishString__
 
+#include "StarfishBase.h"
 #include "core/util/BasicString.h"
 
 namespace Starfish {
@@ -1568,7 +1569,11 @@ public:
     static void skipSpaces(const std::string& input,
                            unsigned long int& startIndex);
     static std::vector<std::string> split(const std::string& s, char seperator);
+    static void split(const std::string& src, const char delimiter,
+                      std::vector<std::string>& tokens);
     static std::string toLowerCase(const std::string& str);
+    static std::string createAlignedString(
+        const std::vector<std::string>& strings, const size_t numColumns);
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX
