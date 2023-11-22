@@ -39,8 +39,6 @@ public:
     CSSStyleDeclaration(Element* element);
     CSSStyleDeclaration(Document* document);
 
-    void addValuePair(CSSStyleValuePair p);
-
     void clear();
 
     CSSStyleDeclaration* clone(Element* element);
@@ -60,12 +58,13 @@ public:
                                  bool isCaseSensitive = false,
                                  bool preserveContentWS = false);
 
-    void addCSSValuePair(CSSStyleValuePair::KeyKind name,
-                         const CSSStyleValuePair& ret);
+    void addValuePair(const CSSStyleValuePair& p);
+    void addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
+                         const CSSStyleValuePair& value);
 
-    void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
-    bool hasCSSValuePair(CSSStyleValuePair::KeyKind name);
-    CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind name);
+    void removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
+    bool hasCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
+    CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
 
     bool shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind keyKind);
 
@@ -242,22 +241,37 @@ protected:
     String* Border();
     void setBorder(const char* value, size_t len, bool isImportant);
     void removeBorder();
+    void addBorderCSSValuePairs(const CSSStyleValuePair& width,
+                                const CSSStyleValuePair& style,
+                                const CSSStyleValuePair& color);
 
     String* BorderTop();
     void setBorderTop(const char* value, size_t len, bool isImportant);
     void removeBorderTop();
+    void addBorderTopCSSValuePairs(const CSSStyleValuePair& width,
+                                   const CSSStyleValuePair& style,
+                                   const CSSStyleValuePair& color);
 
     String* BorderRight();
     void setBorderRight(const char* value, size_t len, bool isImportant);
     void removeBorderRight();
+    void addBorderRightCSSValuePairs(const CSSStyleValuePair& width,
+                                     const CSSStyleValuePair& style,
+                                     const CSSStyleValuePair& color);
 
     String* BorderBottom();
     void setBorderBottom(const char* value, size_t len, bool isImportant);
     void removeBorderBottom();
+    void addBorderBottomCSSValuePairs(const CSSStyleValuePair& width,
+                                      const CSSStyleValuePair& style,
+                                      const CSSStyleValuePair& color);
 
     String* BorderLeft();
     void setBorderLeft(const char* value, size_t len, bool isImportant);
     void removeBorderLeft();
+    void addBorderLeftCSSValuePairs(const CSSStyleValuePair& width,
+                                    const CSSStyleValuePair& style,
+                                    const CSSStyleValuePair& color);
 
     String* BorderImage();
     void setBorderImage(const char* value, size_t len, bool isImportant);

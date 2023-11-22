@@ -152,6 +152,7 @@ test/cairo/internal-test/css/border/border_top_color.html
 test/cairo/internal-test/css/border/border_left_color.html
 test/cairo/internal-test/css/border/border_bottom_color.html
 test/cairo/internal-test/css/border/border_right_color.html
+test/cairo/internal-test/css/border/border-block-start_longhand_with_border.html
 test/cairo/internal-test/css/border/border-block-start-color.html
 test/cairo/internal-test/css/border/border-block-start-style.html
 test/cairo/internal-test/css/border/border-block-start-width_do_not_apply.html

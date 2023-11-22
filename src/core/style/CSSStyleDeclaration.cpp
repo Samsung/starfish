@@ -518,61 +518,61 @@ static bool parseBorderShorthand(const CSSTokenVector& tokens,
     return true;
 }
 
-static void addBorderTopCSSValuePairs(CSSStyleDeclaration* target,
-                                      CSSStyleValuePair width,
-                                      CSSStyleValuePair style,
-                                      CSSStyleValuePair color)
+void CSSStyleDeclaration::addBorderTopCSSValuePairs(
+    const CSSStyleValuePair& width, const CSSStyleValuePair& style,
+    const CSSStyleValuePair& color)
 {
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, width);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, style);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, color);
+    if (shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind::BorderTopWidth)) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth);
+    }
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, width);
+
+    if (shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind::BorderTopStyle)) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle);
+    }
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, style);
+
+    if (shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind::BorderTopColor)) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor);
+    }
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, color);
 }
 
-static void addBorderRightCSSValuePairs(CSSStyleDeclaration* target,
-                                        CSSStyleValuePair width,
-                                        CSSStyleValuePair style,
-                                        CSSStyleValuePair color)
+void CSSStyleDeclaration::addBorderRightCSSValuePairs(
+    const CSSStyleValuePair& width, const CSSStyleValuePair& style,
+    const CSSStyleValuePair& color)
 {
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth,
-                            width);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle,
-                            style);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor,
-                            color);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth, width);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle, style);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor, color);
 }
 
-static void addBorderBottomCSSValuePairs(CSSStyleDeclaration* target,
-                                         CSSStyleValuePair width,
-                                         CSSStyleValuePair style,
-                                         CSSStyleValuePair color)
+void CSSStyleDeclaration::addBorderBottomCSSValuePairs(
+    const CSSStyleValuePair& width, const CSSStyleValuePair& style,
+    const CSSStyleValuePair& color)
 {
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth,
-                            width);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle,
-                            style);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor,
-                            color);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth, width);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle, style);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor, color);
 }
 
-static void addBorderLeftCSSValuePairs(CSSStyleDeclaration* target,
-                                       CSSStyleValuePair width,
-                                       CSSStyleValuePair style,
-                                       CSSStyleValuePair color)
+void CSSStyleDeclaration::addBorderLeftCSSValuePairs(
+    const CSSStyleValuePair& width, const CSSStyleValuePair& style,
+    const CSSStyleValuePair& color)
 {
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, width);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, style);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, color);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, width);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, style);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, color);
 }
 
-static void addBorderCSSValuePairs(CSSStyleDeclaration* target,
-                                   CSSStyleValuePair width,
-                                   CSSStyleValuePair style,
-                                   CSSStyleValuePair color)
+void CSSStyleDeclaration::addBorderCSSValuePairs(const CSSStyleValuePair& width,
+                                                 const CSSStyleValuePair& style,
+                                                 const CSSStyleValuePair& color)
 {
-    addBorderTopCSSValuePairs(target, width, style, color);
-    addBorderRightCSSValuePairs(target, width, style, color);
-    addBorderBottomCSSValuePairs(target, width, style, color);
-    addBorderLeftCSSValuePairs(target, width, style, color);
+    addBorderTopCSSValuePairs(width, style, color);
+    addBorderRightCSSValuePairs(width, style, color);
+    addBorderBottomCSSValuePairs(width, style, color);
+    addBorderLeftCSSValuePairs(width, style, color);
 }
 
 static void addBorderImageCSSValuePairs(CSSStyleDeclaration* target,
@@ -851,18 +851,19 @@ void CSSStyleDeclaration::setFourSidedShorthandProperty(
     CSSTokenVector tokens;
     tokenizeCSSValue(tokens, value, length);
 
-    CSSStyleValuePair c, top, right, bottom, left;
+    CSSStyleValuePair c;
     if (c.updateValueVarReferences(tokens)) {
         c.setValue(String::fromUTF8(value, length));
         c.setFlagImportant(isImportant);
         addCSSValuePair(fourSidedShorthand, c);
     } else if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
-        top = right = bottom = left = c;
-        addCSSValuePair(sides[0], top);
-        addCSSValuePair(sides[1], right);
-        addCSSValuePair(sides[2], bottom);
-        addCSSValuePair(sides[3], left);
+        for (int i = 0; i < 4; i++) {
+            if (shouldKeepAppearanceOrder(sides[i])) {
+                removeCSSValuePair(sides[i]);
+            }
+            addCSSValuePair(sides[i], c);
+        }
         return;
     }
 
@@ -882,20 +883,18 @@ void CSSStyleDeclaration::setFourSidedShorthandProperty(
         result.push_back(v);
     }
 
-    top = result[0];
-    right = len < 2 ? top : result[1];
-    bottom = len < 3 ? top : result[2];
-    left = len < 4 ? right : result[3];
+    CSSStyleValuePair* fourSides[4];
+    fourSides[0] = &result[0];
+    fourSides[1] = len < 2 ? fourSides[0] : &result[1];
+    fourSides[2] = len < 3 ? fourSides[0] : &result[2];
+    fourSides[3] = len < 4 ? fourSides[1] : &result[3];
 
-    top.setFlagImportant(isImportant);
-    right.setFlagImportant(isImportant);
-    bottom.setFlagImportant(isImportant);
-    left.setFlagImportant(isImportant);
-
-    addCSSValuePair(sides[0], top);
-    addCSSValuePair(sides[1], right);
-    addCSSValuePair(sides[2], bottom);
-    addCSSValuePair(sides[3], left);
+    for (int i = 0; i < 4; i++) {
+        if (shouldKeepAppearanceOrder(sides[i])) {
+            removeCSSValuePair(sides[i]);
+        }
+        addCSSValuePair(sides[i], *fourSides[i]);
+    }
 }
 
 bool CSSStyleDeclaration::parseFontShorthand(
@@ -1332,22 +1331,6 @@ void CSSStyleDeclaration::removeRootPointerValue(const CSSStyleValuePair& v)
     v.unrootPointerValue(m_pointerRooter);
 }
 
-void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
-{
-    for (size_t i = 0; i < m_cssValues.size(); i++) {
-        CSSStyleValuePair v = m_cssValues[i];
-        if (v.keyKind() == p.keyKind()) {
-            removeRootPointerValue(m_cssValues[i]);
-            m_cssValues[i] = p;
-            rootPointerValueIfExists(p);
-            return;
-        }
-    }
-
-    m_cssValues.push_back(p);
-    rootPointerValueIfExists(p);
-}
-
 void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
@@ -1505,37 +1488,53 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
     }
 }
 
-void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
-                                          const CSSStyleValuePair& ret)
+void CSSStyleDeclaration::addValuePair(const CSSStyleValuePair& p)
+{
+    for (size_t i = 0; i < m_cssValues.size(); i++) {
+        CSSStyleValuePair v = m_cssValues[i];
+        if (v.keyKind() == p.keyKind()) {
+            removeRootPointerValue(m_cssValues[i]);
+            m_cssValues[i] = p;
+            rootPointerValueIfExists(p);
+            return;
+        }
+    }
+
+    m_cssValues.push_back(p);
+    rootPointerValueIfExists(p);
+}
+
+void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
+                                          const CSSStyleValuePair& value)
 {
     for (unsigned i = 0; i < m_cssValues.size(); i++) {
-        if (m_cssValues[i].keyKind() == name) {
-            if (isInlineStyle() || ret.flagImportant() == true ||
-                (ret.flagImportant() == false &&
+        if (m_cssValues[i].keyKind() == keyKind) {
+            if (isInlineStyle() || value.flagImportant() == true ||
+                (value.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
-                if (!m_cssValues[i].valueEquals(ret)) {
+                if (!m_cssValues[i].valueEquals(value)) {
                     removeRootPointerValue(m_cssValues[i]);
-                    m_cssValues[i].setValueKind(ret.valueKind());
-                    m_cssValues[i].setValue(ret.value());
-                    m_cssValues[i].setFlagImportant(ret.flagImportant());
-                    rootPointerValueIfExists(ret);
+                    m_cssValues[i].setValueKind(value.valueKind());
+                    m_cssValues[i].setValue(value.value());
+                    m_cssValues[i].setFlagImportant(value.flagImportant());
+                    rootPointerValueIfExists(value);
                     notifyNeedsStyleRecalc();
                 }
             }
             return;
         }
     }
-    m_cssValues.push_back(CSSStyleValuePair(ret));
-    m_cssValues.back().setKeyKind(name);
-    rootPointerValueIfExists(ret);
+    m_cssValues.push_back(value);
+    m_cssValues.back().setKeyKind(keyKind);
+    rootPointerValueIfExists(value);
     notifyNeedsStyleRecalc();
 }
 
-void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind name)
+void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind)
 {
     unsigned len = m_cssValues.size();
     for (unsigned i = 0; i < len; i++) {
-        if (m_cssValues[i].keyKind() == name) {
+        if (m_cssValues[i].keyKind() == keyKind) {
             m_cssValues.erase(m_cssValues.begin() + i);
             notifyNeedsStyleRecalc();
             return;
@@ -1543,11 +1542,11 @@ void CSSStyleDeclaration::removeCSSValuePair(CSSStyleValuePair::KeyKind name)
     }
 }
 
-bool CSSStyleDeclaration::hasCSSValuePair(CSSStyleValuePair::KeyKind name)
+bool CSSStyleDeclaration::hasCSSValuePair(CSSStyleValuePair::KeyKind keyKind)
 {
     unsigned len = m_cssValues.size();
     for (unsigned i = 0; i < len; i++) {
-        if (m_cssValues[i].keyKind() == name) {
+        if (m_cssValues[i].keyKind() == keyKind) {
             return true;
         }
     }
@@ -1555,11 +1554,11 @@ bool CSSStyleDeclaration::hasCSSValuePair(CSSStyleValuePair::KeyKind name)
 }
 
 CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
-    CSSStyleValuePair::KeyKind name)
+    CSSStyleValuePair::KeyKind keyKind)
 {
     unsigned len = m_cssValues.size();
     for (unsigned i = 0; i < len; i++) {
-        if (m_cssValues[i].keyKind() == name) {
+        if (m_cssValues[i].keyKind() == keyKind) {
             return m_cssValues[i];
         }
     }
@@ -2615,12 +2614,12 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBorderCSSValuePairs(this, v, v, v);
+        addBorderCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
-        addBorderCSSValuePairs(this, width, style, color);
+        addBorderCSSValuePairs(width, style, color);
     }
 }
 void CSSStyleDeclaration::removeBorder()
@@ -2792,12 +2791,12 @@ void CSSStyleDeclaration::setBorderTop(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTop, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBorderTopCSSValuePairs(this, v, v, v);
+        addBorderTopCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
-        addBorderTopCSSValuePairs(this, width, style, color);
+        addBorderTopCSSValuePairs(width, style, color);
     }
 }
 
@@ -2837,12 +2836,12 @@ void CSSStyleDeclaration::setBorderRight(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRight, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBorderRightCSSValuePairs(this, v, v, v);
+        addBorderRightCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
-        addBorderRightCSSValuePairs(this, width, style, color);
+        addBorderRightCSSValuePairs(width, style, color);
     }
 }
 
@@ -2882,12 +2881,12 @@ void CSSStyleDeclaration::setBorderBottom(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottom, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBorderBottomCSSValuePairs(this, v, v, v);
+        addBorderBottomCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
-        addBorderBottomCSSValuePairs(this, width, style, color);
+        addBorderBottomCSSValuePairs(width, style, color);
     }
 }
 
@@ -2927,12 +2926,12 @@ void CSSStyleDeclaration::setBorderLeft(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeft, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
-        addBorderLeftCSSValuePairs(this, v, v, v);
+        addBorderLeftCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
-        addBorderLeftCSSValuePairs(this, width, style, color);
+        addBorderLeftCSSValuePairs(width, style, color);
     }
 }
 
