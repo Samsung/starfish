@@ -54,8 +54,7 @@ WebGLExtensionRegistry::WebGLExtensionRegistry()
     const std::string rawString =
         reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
 
-    std::vector<std::string> tokens;
-    StringUtils::split(rawString, ' ', tokens);
+    std::vector<std::string> tokens = StringUtils::split(rawString, ' ');
     STARFISH_LOG_DEBUG("GL_EXTENSIONS =\n%s",
                        StringUtils::createAlignedString(tokens, 3).c_str());
 
