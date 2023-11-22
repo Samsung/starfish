@@ -1332,29 +1332,16 @@ void StringUtils::skipSpaces(const std::string& input,
     }
 }
 
-std::vector<std::string> StringUtils::split(const std::string& s,
-                                            char seperator)
+std::vector<std::string> StringUtils::split(const std::string& src,
+                                            const char delimiter)
 {
     std::vector<std::string> output;
-    std::string::size_type prev_pos = 0, pos = 0;
-    while ((pos = s.find(seperator, pos)) != std::string::npos) {
-        std::string substring(s.substr(prev_pos, pos - prev_pos));
-        output.push_back(substring);
-        prev_pos = ++pos;
-    }
-
-    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
-    return output;
-}
-
-void StringUtils::split(const std::string& src, const char delimiter,
-                        std::vector<std::string>& tokens)
-{
     std::stringstream ss(src);
     std::string token;
     while (getline(ss, token, delimiter)) {
-        tokens.push_back(token);
+        output.push_back(token);
     }
+    return output;
 }
 
 std::string StringUtils::toLowerCase(const std::string& str)
