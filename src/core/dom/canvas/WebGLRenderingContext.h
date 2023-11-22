@@ -24,6 +24,7 @@
 
 #include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
 #include "platform/canvas/webgl/GLESTypes.h"
+#include "core/dom/canvas/WebGLUtils.h"
 #include <unordered_set>
 #include <unordered_map>
 
@@ -53,6 +54,8 @@ public:
     void initialize() override;
 
     // Implement WebGLRenderingContextBase
+    Nullable<GCVector<String*>> getSupportedExtensions();
+    Nullable<ScriptObject> getExtension(String* name);
     void activeTexture(GLenum texture);
     void attachShader(WebGLProgram* program, WebGLShader* shader);
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
@@ -114,6 +117,9 @@ private:
     void updateGLError();
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
+    GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
+                   CaseInsensitiveEqual>
+        m_enabledExtensions;
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;

@@ -57,7 +57,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-t
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-shader-texture-lod.html # Passed since extension unsupported.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-sRGB.html # Passed since extension unsupported.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extension.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extension.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element-index-uint.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-standard-derivatives.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-float.html

@@ -47,6 +47,7 @@
 #include "StarfishConfig.h"
 #include "String.h"
 #include <sstream>
+#include <iomanip> // setw
 
 namespace Starfish {
 
@@ -1346,12 +1347,43 @@ std::vector<std::string> StringUtils::split(const std::string& s,
     return output;
 }
 
+void StringUtils::split(const std::string& src, const char delimiter,
+                        std::vector<std::string>& tokens)
+{
+    std::stringstream ss(src);
+    std::string token;
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+}
+
 std::string StringUtils::toLowerCase(const std::string& str)
 {
     std::string lower;
     lower.resize(str.length());
     std::transform(str.begin(), str.end(), lower.begin(), tolower);
     return lower;
+}
+
+std::string StringUtils::createAlignedString(
+    const std::vector<std::string>& strings, const size_t numColumns)
+{
+    std::stringstream ss;
+    size_t longestLength = 0;
+    for (const auto& str : strings) {
+        if (str.length() > longestLength) {
+            longestLength = str.length();
+        }
+    }
+
+    const size_t numStrings = strings.size();
+    for (size_t i = 0; i < numStrings; i++) {
+        ss << std::left << std::setw(longestLength + 2) << strings[i];
+        if ((i + 1) % numColumns == 0 && i != numStrings - 1) {
+            ss << "\n";
+        }
+    }
+    return ss.str();
 }
 
 size_t utf32ToUtf16(char32_t i, char16_t* u)

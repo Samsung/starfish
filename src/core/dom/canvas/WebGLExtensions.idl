@@ -1,0 +1,12 @@
+// Support LegacyNoInterfaceObject renamed from NoInterfaceObject
+// Refs: https://github.com/whatwg/webidl/commit/62963e8f09522e05a281940a083ed21ab4a934fa
+
+// https://registry.khronos.org/webgl/extensions/OES_texture_float/
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_texture_float { };
+
+// https://registry.khronos.org/webgl/extensions/OES_texture_half_float/
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_texture_half_float {
+  const GLenum HALF_FLOAT_OES = 0x8D61;
+};

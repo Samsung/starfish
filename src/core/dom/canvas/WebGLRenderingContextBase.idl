@@ -497,8 +497,8 @@ interface WebGLRenderingContextBase
     [Unimplemented,WebGLHandlesContextLoss] WebGLContextAttributes? getContextAttributes();
     [Unimplemented,WebGLHandlesContextLoss] boolean isContextLost();
 
-    [Unimplemented] sequence<DOMString>? getSupportedExtensions();
-    [Unimplemented] object? getExtension(DOMString name);
+    sequence<DOMString>? getSupportedExtensions();
+    object? getExtension(DOMString name);
 
     undefined activeTexture(GLenum texture);
     undefined attachShader(WebGLProgram program, WebGLShader shader);
