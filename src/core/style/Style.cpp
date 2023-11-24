@@ -3284,6 +3284,23 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
     declaration->setPropertyInternal(keyKind, newCssValue.c_str(),
                                      newCssValue.size(), isImportant);
+    const GCAtomicVector<CSSStyleValuePair>& cssValues =
+        declaration->cssValues();
+    if (cssValues.size() == 1 &&
+        cssValues[0].valueKind() ==
+            CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+        STARFISH_ASSERT(declaration->cssValues().size() == 1);
+        CSSStyleValuePair newCssValuePair = declaration->cssValues()[0];
+        return resolveVarValue(element, newCssValuePair,
+                               newCssValuePair.keyKind(), cssCustomValues,
+                               newCssValuePair.flagImportant());
+    }
+#ifndef NDEBUG
+    for (auto& pair : cssValues) {
+        STARFISH_ASSERT(pair.valueKind() !=
+                        CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+    }
+#endif
     return declaration;
 }
 
@@ -3293,26 +3310,28 @@ void StyleResolver::apply(
     ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
     bool isImportant)
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(origin != nullptr);
-    STARFISH_ASSERT(style != nullptr);
-    STARFISH_ASSERT(parentStyle != nullptr);
+    STARFISH_ASSERT(element);
+    STARFISH_ASSERT(origin);
+    STARFISH_ASSERT(style);
+    STARFISH_ASSERT(parentStyle);
 
-    for (unsigned k = 0; k < cssValues.size(); k++) {
-        if (isImportant != cssValues[k].flagImportant()) {
+    for (const auto& cssValue : cssValues) {
+        if (isImportant != cssValue.flagImportant()) {
             continue;
         }
 
-        CSSStyleValuePair newCssValue = cssValues[k];
-        if (newCssValue.valueKind() ==
+        if (cssValue.valueKind() ==
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
-            CSSStyleDeclaration* declaration =
-                resolveVarValue(element, newCssValue, newCssValue.keyKind(),
-                                cssCustomValues, newCssValue.flagImportant());
-            apply(element, declaration->cssValues(), cssCustomValues, origin,
-                  style, parentStyle, isImportant);
+            CSSStyleDeclaration* resolvedDeclaration =
+                resolveVarValue(element, cssValue, cssValue.keyKind(),
+                                cssCustomValues, cssValue.flagImportant());
+            for (const auto& resolvedCssValues :
+                 resolvedDeclaration->cssValues()) {
+                applyProperty(element, resolvedCssValues, cssCustomValues,
+                              origin, style, parentStyle, isImportant);
+            }
         } else {
-            applyProperty(element, newCssValue, cssCustomValues, origin, style,
+            applyProperty(element, cssValue, cssCustomValues, origin, style,
                           parentStyle, isImportant);
         }
     }
@@ -3324,10 +3343,10 @@ void StyleResolver::applyProperty(
     ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
     bool isImportant)
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(origin != nullptr);
-    STARFISH_ASSERT(style != nullptr);
-    STARFISH_ASSERT(parentStyle != nullptr);
+    STARFISH_ASSERT(element);
+    STARFISH_ASSERT(origin);
+    STARFISH_ASSERT(style);
+    STARFISH_ASSERT(parentStyle);
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                \
     if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
