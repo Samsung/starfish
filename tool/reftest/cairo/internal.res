@@ -1,3 +1,4 @@
+test/cairo/internal-test/css/all/all_repeated_use.html
 test/cairo/internal-test/css/css-variables/customproperty_00.html
 test/cairo/internal-test/css/css-variables/customproperty_01.html
 test/cairo/internal-test/css/css-variables/customproperty_02.html

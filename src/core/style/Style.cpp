@@ -2669,28 +2669,25 @@ void StyleResolver::applyAllProperty(
     ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
     bool isImportant)
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(origin != nullptr);
-    STARFISH_ASSERT(parentStyle != nullptr);
-
-    GCAtomicVector<CSSStyleValuePair> cssValues;
-    CSSStyleValuePair::KeyKind kind;
-#define ADD_CSS_VALUE_PAIR(Name, name, cssname)            \
-    kind = lookupCSSStyle(cssname, strlen(cssname));       \
-    if (kind != CSSStyleValuePair::KeyKind::All &&         \
-        kind != CSSStyleValuePair::KeyKind::Direction &&   \
-        kind != CSSStyleValuePair::KeyKind::UnicodeBidi) { \
-        CSSStyleValuePair p;                               \
-        p.setKeyKind(CSSStyleValuePair::KeyKind::Name);    \
-        p.setValueKind(valueKind);                         \
-        p.setFlagImportant(isImportant);                   \
-        cssValues.push_back(p);                            \
+    STARFISH_ASSERT(element);
+    STARFISH_ASSERT(origin);
+    STARFISH_ASSERT(parentStyle);
+    for (size_t i = CSSStyleValuePair::KeyKind::Unknown + 1;
+         i < CSSStyleValuePair::KeyKind::KeyKindSize; i++) {
+        CSSStyleValuePair::KeyKind keyKind =
+            static_cast<CSSStyleValuePair::KeyKind>(i);
+        if (keyKind != CSSStyleValuePair::KeyKind::All &&
+            keyKind != CSSStyleValuePair::KeyKind::Direction &&
+            keyKind != CSSStyleValuePair::KeyKind::UnicodeBidi &&
+            keyKind != CSSStyleValuePair::KeyKind::CustomProperty) {
+            CSSStyleValuePair p;
+            p.setKeyKind(keyKind);
+            p.setValueKind(valueKind);
+            p.setFlagImportant(isImportant);
+            applyProperty(element, p, cssCustomValues, origin, style,
+                          parentStyle, isImportant);
+        }
     }
-    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_VALUE_PAIR)
-#undef ADD_CSS_VALUE_PAIR
-
-    apply(element, cssValues, cssCustomValues, origin, style, parentStyle,
-          isImportant);
 }
 
 ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
