@@ -1569,6 +1569,10 @@ CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
 bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
     CSSStyleValuePair::KeyKind keyKind)
 {
+    if (keyKind == CSSStyleValuePair::KeyKind::All) {
+        return hasCSSValuePair(CSSStyleValuePair::KeyKind::All);
+    }
+
     switch (keyKind) {
     case CSSStyleValuePair::KeyKind::MarginBlockStart:
     case CSSStyleValuePair::KeyKind::MarginBlockEnd:
