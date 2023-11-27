@@ -23,6 +23,7 @@ import platform
 from argparse import ArgumentParser
 from difflib import unified_diff
 from os.path import join, relpath, splitext
+from drivers.basics.constants import ENVOPTS, ERRORCODE
 
 script_path = "./tool/drivers/run_test.py"
 working_directory = os.path.dirname(os.path.abspath(__file__)) + "/../"
@@ -62,7 +63,7 @@ def run_test(argv_input, env=None):
         print(("test " + name + " runs successfully"))
     else:
         print(("test " + name + " is failed"))
-        sys.exit(-1)
+        sys.exit(ERRORCODE.TEST_FAILED)
 
 
 def internal_test():
@@ -119,10 +120,10 @@ def vendor_test_khronos():
 
     env = dict(os.environ)
 
-    if not env.get("TC_REPLACE_STR"):
-        env["TC_REPLACE_STR"] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
-    if not env.get("TC_TIMEOUT"):
-        env["TC_TIMEOUT"] = str(TIMEOUT)
+    if not env.get(ENVOPTS.REPLACE_STR):
+        env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
+    if not env.get(ENVOPTS.TIMEOUT):
+        env[ENVOPTS.TIMEOUT] = str(TIMEOUT)
 
     with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
         run_test(["basic", "tool/reftest/cairo/khronos_webgl.res", "common"], env)
@@ -285,14 +286,48 @@ if __name__ == "__main__":
                 test_functions.append(key)
     print_columns(sorted(test_functions), 4)
 
-    if len(sys.argv) > 1:
-        for arg in sys.argv[1:]:
-            function_name = arg
-            if function_name in locals():
-                locals()[function_name]()
+    parser = ArgumentParser()
+    parser.add_argument(
+        "test_suite_names", nargs="*", help="Names of test suite to run"
+    )
+    parser.add_argument(
+        "-t", "--timeout",
+        type=int,
+        default=0,
+        help="Set timeout in seconds to individual tests",
+    )
+    parser.add_argument(
+        "-f", "--force", action="store_true", help="Force commented tests to run"
+    )
+    parser.add_argument(
+        "--out-pass-list",
+        action="store_true",
+        help="Create a file that records passed tests",
+    )
+    parser.add_argument(
+        "--out-pass-list-filename",
+        nargs="?",
+        default="test_result.txt",
+        help="Set a file name to record passed tests",
+    )
+    args = parser.parse_args()
+
+    if args.timeout > 0:
+        os.environ[ENVOPTS.TIMEOUT] = str(args.timeout)
+
+    if args.force == True:
+        os.environ[ENVOPTS.FORCE_ENABLE] = str(True)
+
+    if args.out_pass_list == True:
+        os.environ[ENVOPTS.TEST_RESULT_FILE] = args.out_pass_list_filename
+
+    if args.test_suite_names:
+        for test_suite_name in args.test_suite_names:
+            if test_suite_name in locals() and callable(locals()[test_suite_name]):
+                locals()[test_suite_name]()
             else:
-                print(("there is no test named " + function_name))
-                sys.exit(-1)
+                print(f"There is no test named '{test_suite_name}'.")
+                sys.exit(ERRORCODE.TEST_STOPPED)
     else: # test all
         print("running every tests!")
         test_all()
