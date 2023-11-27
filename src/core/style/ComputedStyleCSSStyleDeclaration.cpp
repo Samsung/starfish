@@ -223,7 +223,7 @@ static CSSStyleValuePair resolveInlineDirectionAwareProperty(
 static CSSStyleValuePair resolveBlockDirectionAwareProperty(
     CSSStyleValuePair::KeyKind keykind, FrameBox* frame)
 {
-    // margin
+    // margin.
     CSSStyleValuePair ret;
     if (keykind == CSSStyleValuePair::KeyKind::MarginBlockStart) {
         ret.setKeyKind(keykind);
@@ -238,7 +238,8 @@ static CSSStyleValuePair resolveBlockDirectionAwareProperty(
         return ret;
     }
 
-    // border
+    // border.
+    // border-block-start.
     if (keykind == CSSStyleValuePair::KeyKind::BorderBlockStartColor) {
         ret.setKeyKind(keykind);
         ret.setColorValue(frame->style()->border().top().color());
@@ -257,6 +258,12 @@ static CSSStyleValuePair resolveBlockDirectionAwareProperty(
         return ret;
     }
 
+    // border-block-end.
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockEndColor) {
+        ret.setKeyKind(keykind);
+        ret.setColorValue(frame->style()->border().bottom().color());
+        return ret;
+    }
     return ret;
 }
 
@@ -1213,6 +1220,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (frame && frame->isFrameBox()) {
             p = resolveBlockDirectionAwareProperty(
                 CSSStyleValuePair::KeyKind::BorderBlockStartColor,
+                frame->asFrameBox());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockEndColor: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndColor);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockEndColor,
                 frame->asFrameBox());
         }
     } break;

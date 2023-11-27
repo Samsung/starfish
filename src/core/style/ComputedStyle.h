@@ -89,6 +89,7 @@ public:
         Opacity,
         Border,
         BorderBlockStart,
+        BorderBlockEnd,
         BoxDecorationBreak,
         BoxShadow,
         Width,
@@ -624,6 +625,8 @@ public:
     GETTER_PTR(BorderData, borderData, border, Border);
     GETTER_PTR(BorderBlockDirectionAwereData, borderBlockDirectionAwereData,
                borderBlockStart, BorderBlockStart);
+    GETTER_PTR(BorderBlockDirectionAwereData, borderBlockDirectionAwereData,
+               borderBlockEnd, BorderBlockEnd);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
                TransformOrigin);
@@ -2188,6 +2191,21 @@ public:
         return BorderBlockDirectionAwereData();
     }
 
+    BorderBlockDirectionAwereData borderBlockEnd()
+    {
+        if (!hasRareComputeStyleData()) {
+            return BorderBlockDirectionAwereData();
+        }
+
+        BorderBlockDirectionAwereData* data =
+            m_rareComputedStyleData.borderBlockEnd();
+        if (data) {
+            return *data;
+        }
+
+        return BorderBlockDirectionAwereData();
+    }
+
     StyleTransformOrigin* transformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -2227,6 +2245,9 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
                                                   true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                  true);
     }
 
     void setBorderRightColor(Unit::Color color)
@@ -2238,6 +2259,9 @@ public:
     {
         m_rareComputedStyleData.ensureBorder()->bottom().setColor(color);
         m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                     true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
                                                      true);
     }
@@ -2258,6 +2282,17 @@ public:
                                                      false);
     }
 
+    void setBorderBlockEndColor(Unit::Color color)
+    {
+        m_rareComputedStyleData.ensureBorderBlockEnd()->setColor(color);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                  false);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                     false);
+    }
+
 #define CLEAR_BORDER_COLOR(UPOS, LPOS, ...)                          \
     void clearBorder##UPOS##Color()                                  \
     {                                                                \
@@ -2269,6 +2304,13 @@ public:
     void clearBorderBlockStartColor()
     {
         m_rareComputedStyleData.ensureBorderBlockStart()
+            ->borderValue()
+            .clearColor();
+    }
+
+    void clearBorderBlockEndColor()
+    {
+        m_rareComputedStyleData.ensureBorderBlockEnd()
             ->borderValue()
             .clearColor();
     }

@@ -1553,6 +1553,36 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    {
+        BorderBlockDirectionAwereData* oldBorderBlockEnd =
+            oldStyle->rareComputedStyleData()->borderBlockEnd();
+        BorderBlockDirectionAwereData* newBorderBlockEnd =
+            newStyle->rareComputedStyleData()->borderBlockEnd();
+        if (oldBorderBlockEnd || newBorderBlockEnd) {
+            // TODO: Compare other properties.
+            if (BorderDirectionAwereData::damaged(
+                    oldBorderBlockEnd, newBorderBlockEnd, damagedKeys)) {
+                if (damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
+                    damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartStyle]) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
+                if (damagedKeys
+                        [CSSStyleValuePair::KeyKind::BorderBlockStartWidth]) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamageLayout |
+                        damage);
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
+            }
+        }
+    }
+
     if (newStyle->paddingInlineEnd() != oldStyle->paddingInlineEnd()) {
         damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineEnd] = true;
         damage = static_cast<ComputedStyleDamage>(
@@ -2606,6 +2636,13 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
             setBorderTopWidth(borderStart.borderValue().width());
         }
     }
+    // border-block-end
+    BorderBlockDirectionAwereData borderEnd = borderBlockEnd();
+    if (borderEnd.hasColor() && !borderEnd.isCorrespondingBottomSpecifiedLater(
+                                    BorderValueKind::kColor)) {
+        setBorderBottomColor(borderEnd.borderValue().color());
+    }
+
     // TODO: padding-block
 }
 
