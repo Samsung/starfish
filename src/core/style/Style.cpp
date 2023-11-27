@@ -5523,6 +5523,33 @@ void StyleResolver::applyProperty(
             }
         }
     } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockEndColor: {
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderBlockEndColor(
+                parentStyle->borderBlockEnd().borderValue().color());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->clearBorderBlockEndColor();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setBorderBlockEndColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->clearBorderBlockEndColor();
+            } else {
+                style->setBorderBlockEndColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+    } break;
 #define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
         if (newCssValue.valueKind() ==                           \
@@ -9536,6 +9563,12 @@ GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
 
 bool CSSStyleValuePair::updateValueBorderBlockStartColor(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueColor(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderBlockEndColor(
     Document* document, const CSSTokenVector& tokens)
 {
     return updateValueColor(document, tokens);
