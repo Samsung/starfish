@@ -5,6 +5,8 @@ import subprocess
 from . import utils
 from subprocess import Popen, PIPE
 import time
+import fcntl
+from basics.constants import ENVOPTS
 
 try:
   FNULL
@@ -18,6 +20,7 @@ NON_REGRESSION_OPT = ""
 DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_REGRESSION_OPT = NON_REGRESSION_OPT
+TEST_RESULT_FILE = None
 
 RE_PASS = re.compile(r"PASS")
 RE_FAIL = re.compile(r"FAIL")
@@ -77,8 +80,8 @@ def case_runner(tc):
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
     timeout = None
-    if os.environ.get("TC_TIMEOUT"):
-        timeout = float(os.environ.get("TC_TIMEOUT"))
+    if os.environ.get(ENVOPTS.TIMEOUT):
+        timeout = float(os.environ.get(ENVOPTS.TIMEOUT))
 
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
@@ -116,6 +119,10 @@ def run_parallel(list_file, nproc=None, width=None, height=None, regression=None
     return parallel.run_test_pool(case_runner, list_file, nproc,
                                   result_handler=result_handler)
 
+if os.environ.get(ENVOPTS.TEST_RESULT_FILE):
+    TEST_RESULT_FILE = os.environ.get(ENVOPTS.TEST_RESULT_FILE)
+    with open(TEST_RESULT_FILE, 'w'):
+        pass
 
 def default_tc_handler(tc_file, output, err, show_progress=True):
     word_pass = len(RE_PASS.findall(output))
@@ -123,6 +130,11 @@ def default_tc_handler(tc_file, output, err, show_progress=True):
     if word_pass != 0 and word_fail == 0:
         if show_progress:
             print(utils.Strings.PASS_SIGN + tc_file)
+        if TEST_RESULT_FILE:
+            with open(TEST_RESULT_FILE, 'a') as file:
+                fcntl.flock(file, fcntl.LOCK_EX)
+                file.write(tc_file + '\n')
+                fcntl.flock(file, fcntl.LOCK_UN)
         return True
     else:
         if show_progress:

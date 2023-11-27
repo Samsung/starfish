@@ -5,6 +5,7 @@ import types
 import multiprocessing
 import os
 from abc import ABC, abstractclassmethod
+from basics.constants import ENVOPTS
 
 class StringEditor(ABC):
     @abstractclassmethod
@@ -30,8 +31,9 @@ def run_test_pool(case_runner, in_path, nproc,
     tcs = []
     idx = 0
     editers = []
+    force = True if os.environ.get(ENVOPTS.FORCE_ENABLE) else False
 
-    for value in [v for k, v in os.environ.items() if k.startswith("TC_REPLACE_STR")]:
+    for value in [v for k, v in os.environ.items() if k.startswith(ENVOPTS.REPLACE_STR)]:
         tokens = value.split("\\")
         editers += [StringReplacer(tokens[0], tokens[1])] if len(tokens) > 1 else []
 
@@ -40,18 +42,26 @@ def run_test_pool(case_runner, in_path, nproc,
         with open(in_path) as fp:
             for line in fp:
                 line = line.strip()
-                if len(line) == 0 or line[0] == "#":
+
+                if len(line) == 0:
                     continue
+
+                if line[0] == "#":
+                    if force == True:
+                        line = line[1:].strip()
+                    else:
+                        continue
 
                 for editor in editers:
                     line = editor.run(line)
 
-                splited = line.split();
-                content = splited[0]
+                params = line.split()
+                content = params[0]
 
-                if (len(content) > 0) and content[0] != '#':
-                    if len(splited) >= 2:
-                        tcs.append((idx, [content, splited[1]]))
+                if len(content) > 0:
+                    # If the 2nd param starts with '#', it's considered a comment.
+                    if len(params) > 1 and (not params[1].startswith("#")):
+                        tcs.append((idx, [content, params[1]]))
                     else:
                         tcs.append((idx, content))
                     idx = idx + 1

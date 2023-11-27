@@ -1,0 +1,15 @@
+#! /usr/bin/env python3
+
+# Formatted by black.
+
+
+class ENVOPTS:
+    TEST_RESULT_FILE = "TC_TEST_RESULT_FILE"
+    FORCE_ENABLE = "TC_FORCE_ENABLE"
+    TIMEOUT = "TC_TIMEOUT"
+    REPLACE_STR = "TC_REPLACE_STR"
+
+class ERRORCODE:
+    TEST_PASSED = 0
+    TEST_FAILED = 1
+    TEST_STOPPED = 2
