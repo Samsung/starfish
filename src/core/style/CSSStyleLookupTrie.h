@@ -24,14 +24,18 @@
 
 namespace Starfish {
 
-// z-index, font-size...
-CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length);
+class CSSStyleLookupTrie {
+public:
+    // z-index, font-size...
+    static CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data,
+                                                     unsigned length);
 
-// zIndex, fontSize...
-CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
-                                                   unsigned length);
+    // zIndex, fontSize...
+    static CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
+                                                              unsigned length);
 
-UnitType lookupUnitType(const char* data, unsigned length);
+    static UnitType lookupUnitType(const char* data, unsigned length);
+};
 
 } /* namespace Starfish */
 

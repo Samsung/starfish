@@ -46,8 +46,44 @@ public:
         return m_borderValue;
     }
 
+    void setStyle(BorderStyleValue style)
+    {
+        m_borderValue.setStyle(style);
+        m_hasStyle = true;
+    }
+
+    bool hasStlye()
+    {
+        return m_hasStyle;
+    }
+
+    void setWidth(Length length)
+    {
+        m_borderValue.setWidth(length);
+        m_hasWidth = true;
+    }
+
+    bool hasWidth()
+    {
+        return m_hasWidth;
+    }
+
+    void setColor(Unit::Color color)
+    {
+        m_borderValue.setColor(color);
+        m_hasColor = true;
+    }
+
+    bool hasColor()
+    {
+        return m_hasColor;
+    }
+
 protected:
     BorderValue m_borderValue;
+    bool m_hasStyle = false;
+    bool m_hasWidth = false;
+    bool m_hasColor = false;
 };
 
 class BorderBlockDirectionAwereData : public BorderDirectionAwereData {

@@ -787,6 +787,10 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         rootFontSize = root->style()->fontSize();
     }
 
+    // Apply direction aware propreties.
+    applyBlockDirectionAwareProperty();
+    applyInlineDirectionAwareProperty();
+
     changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font(),
                                      current);
 
@@ -809,10 +813,6 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             break;
         }
     }
-
-    // Apply direction aware propreties.
-    applyBlockDirectionAwareProperty();
-    applyInlineDirectionAwareProperty();
 }
 
 void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
@@ -1008,13 +1008,6 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             if (!b->right().hasBorderColor()) {
                 b->right().setColor(color());
             }
-        }
-
-        BorderBlockDirectionAwereData* borderBlockStart =
-            m_rareComputedStyleData.borderBlockStart();
-        if (borderBlockStart) {
-            borderBlockStart->borderValue().checkComputed(
-                curFontSize, rootFontSize, font, windowSize, this);
         }
 
         LengthData* padding = m_rareComputedStyleData.padding();
@@ -2598,18 +2591,16 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     // border-block
     // border-block-start
     BorderBlockDirectionAwereData borderStart = borderBlockStart();
-    if (borderStart.borderValue().hasBorderColor() &&
-        !borderStart.isCorrespondingTopSpecifiedLater(
-            BorderValueKind::kColor)) {
+    if (borderStart.hasColor() && !borderStart.isCorrespondingTopSpecifiedLater(
+                                      BorderValueKind::kColor)) {
         setBorderTopColor(borderStart.borderValue().color());
     }
-    if (borderStart.borderValue().hasBorderStyle() &&
-        !borderStart.isCorrespondingTopSpecifiedLater(
-            BorderValueKind::kStyle)) {
+    if (borderStart.hasStlye() && !borderStart.isCorrespondingTopSpecifiedLater(
+                                      BorderValueKind::kStyle)) {
         setBorderTopStyle(borderStart.borderValue().style());
     }
     if (border().top().hasBorderStyle()) {
-        if (borderStart.borderValue().width().isSpecified() &&
+        if (borderStart.hasWidth() &&
             !borderStart.isCorrespondingTopSpecifiedLater(
                 BorderValueKind::kWidth)) {
             setBorderTopWidth(borderStart.borderValue().width());

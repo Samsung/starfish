@@ -245,6 +245,12 @@ protected:
                                 const CSSStyleValuePair& style,
                                 const CSSStyleValuePair& color);
 
+    String* BorderBlockStart();
+    void setBorderBlockStart(const char* value, size_t len, bool isImportant);
+    void removeBorderBlockStart();
+    void addBorderBlockStartCSSValuePairs(
+        std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3]);
+
     String* BorderTop();
     void setBorderTop(const char* value, size_t len, bool isImportant);
     void removeBorderTop();
