@@ -516,7 +516,7 @@ public:
             if (unit.hasASCIIContent()) {
                 type = (UnitType)unit.peekASCIIBuffer(
                     [](const char* buf, size_t len, void* data) -> size_t {
-                        return lookupUnitType(buf, len);
+                        return CSSStyleLookupTrie::lookupUnitType(buf, len);
                     },
                     nullptr);
             } else {

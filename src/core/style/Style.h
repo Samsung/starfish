@@ -811,6 +811,7 @@ class CSSFilterFunction;
     F(BorderWidth, borderWidth, "border-width")                      \
     F(BorderColor, borderColor, "border-color")                      \
     F(BorderRadius, borderRadius, "border-radius")                   \
+    F(BorderBlockStart, borderBlockStart, "border-block-start")      \
     F(Background, background, "background")                          \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \

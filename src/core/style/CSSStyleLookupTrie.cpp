@@ -22,7 +22,8 @@
 
 namespace Starfish {
 
-CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
+CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
+                                                              unsigned length)
 {
     STARFISH_ASSERT(data);
     switch (length) {
@@ -992,6 +993,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // border-right-style
         // border-right-width
         // border-right-color
+        // border-block-start
         // grid-template-rows
         // animation-duration
         // padding-inline-end
@@ -1019,6 +1021,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-right-color", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderRightColor;
+            }
+            if (memcmp(data, "border-block-start", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStart;
             }
             break;
         case 'g':
@@ -1342,8 +1347,8 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
     return CSSStyleValuePair::KeyKind::Unknown;
 }
 
-CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
-                                                   unsigned length)
+CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
+    const char* data, unsigned length)
 {
     switch (length) {
     case 3:
@@ -2118,6 +2123,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "borderRightColor", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderRightColor;
             }
+            if (memcmp(data, "borderBlockStart", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockStart;
+            }
             break;
         case 'c':
             if (memcmp(data, "counterIncrement", 16) == 0) {
@@ -2372,7 +2380,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
     return CSSStyleValuePair::KeyKind::Unknown;
 }
 
-UnitType lookupUnitType(const char* data, unsigned length)
+UnitType CSSStyleLookupTrie::lookupUnitType(const char* data, unsigned length)
 {
     switch (length) {
     case 1:

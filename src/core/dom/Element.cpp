@@ -2164,7 +2164,7 @@ void Element::makeKeyframesFromObject(
                     String* name = toBrowserString(state, key->toString(state));
                     // TODO: Need to check if camel case is really needed.
                     CSSStyleValuePair::KeyKind keykind =
-                        lookupCSSStyleCamelCase(
+                        CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                             name->toUTF8NonGCString().data(), name->length());
                     String* value =
                         toBrowserString(state, scirptValue->toString(state));

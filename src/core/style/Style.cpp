@@ -2590,7 +2590,7 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     const CSSTokenValue& value)
 {
     CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyle(value.data(), value.length());
+        CSSStyleLookupTrie::lookupCSSStyle(value.data(), value.length());
     if (CSSPropertyHelper::isAnimatable(kind)) {
         setCSSPropertyNameValue(kind);
         return true;

@@ -2249,9 +2249,7 @@ public:
 
     void setBorderBlockStartColor(Unit::Color color)
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->borderValue()
-            .setColor(color);
+        m_rareComputedStyleData.ensureBorderBlockStart()->setColor(color);
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
                                                   false);
@@ -2303,9 +2301,7 @@ public:
 
     void setBorderBlockStartStyle(BorderStyleValue style)
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->borderValue()
-            .setStyle(style);
+        m_rareComputedStyleData.ensureBorderBlockStart()->setStyle(style);
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
                                                   false);
@@ -2342,9 +2338,7 @@ public:
 
     void setBorderBlockStartWidth(Length width)
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->borderValue()
-            .setWidth(width);
+        m_rareComputedStyleData.ensureBorderBlockStart()->setWidth(width);
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
                                                   false);

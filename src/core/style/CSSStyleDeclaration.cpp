@@ -1727,7 +1727,7 @@ CSSStyleValuePair::KeyKind lookupName(const char* buf, size_t len)
             mutableBuf[i] = tolower(buf[i]);
         }
 
-        return lookupCSSStyle(mutableBuf, len);
+        return CSSStyleLookupTrie::lookupCSSStyle(mutableBuf, len);
     }
 }
 
@@ -1739,9 +1739,9 @@ Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
             CSSStyleValuePair::KeyKind* keykind =
                 reinterpret_cast<CSSStyleValuePair::KeyKind*>(data);
             // defaultNamedGetter allows camel-case name.
-            *keykind = lookupCSSStyleCamelCase(buf, len);
+            *keykind = CSSStyleLookupTrie::lookupCSSStyleCamelCase(buf, len);
             if (*keykind == CSSStyleValuePair::KeyKind::Unknown) {
-                *keykind = lookupCSSStyle(buf, len);
+                *keykind = CSSStyleLookupTrie::lookupCSSStyle(buf, len);
             }
             return 0;
         },
@@ -2071,9 +2071,9 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
             CSSStyleValuePair::KeyKind* keykind =
                 reinterpret_cast<CSSStyleValuePair::KeyKind*>(data);
             // defaultNamedSetter allows camel-case name.
-            *keykind = lookupCSSStyleCamelCase(buf, len);
+            *keykind = CSSStyleLookupTrie::lookupCSSStyleCamelCase(buf, len);
             if (*keykind == CSSStyleValuePair::KeyKind::Unknown) {
-                *keykind = lookupCSSStyle(buf, len);
+                *keykind = CSSStyleLookupTrie::lookupCSSStyle(buf, len);
             }
             return 0;
         },
@@ -2116,7 +2116,8 @@ void CSSStyleDeclaration::appendCSSText(StringBuilder& txtBuilder,
                                         const size_t pos, const char* cssName,
                                         String* value, bool isImportant) const
 {
-    CSSStyleValuePair::KeyKind kind = lookupCSSStyle(cssName, strlen(cssName));
+    CSSStyleValuePair::KeyKind kind =
+        CSSStyleLookupTrie::lookupCSSStyle(cssName, strlen(cssName));
     if (kind != CSSStyleValuePair::KeyKind::All &&
         kind != CSSStyleValuePair::KeyKind::Direction &&
         kind != CSSStyleValuePair::KeyKind::UnicodeBidi) {
@@ -2626,12 +2627,84 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         addBorderCSSValuePairs(width, style, color);
     }
 }
+
 void CSSStyleDeclaration::removeBorder()
 {
     removeBorderTop();
     removeBorderRight();
     removeBorderBottom();
     removeBorderLeft();
+}
+
+String* CSSStyleDeclaration::BorderBlockStart()
+{
+    String* width = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockStartWidth);
+    String* style = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
+    String* color = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockStartColor);
+    return BorderString(width, false, style, false, color, false);
+}
+
+void CSSStyleDeclaration::setBorderBlockStart(const char* value, size_t len,
+                                              bool isImportant)
+{
+    if (len == 0) {
+        removeBorderBlockStart();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+
+    std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3] = {
+        { CSSStyleValuePair::KeyKind::BorderBlockStartWidth,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderBlockStartStyle,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderBlockStartColor,
+          CSSStyleValuePair() },
+    };
+
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStart, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second = v;
+        }
+        addBorderBlockStartCSSValuePairs(longhands);
+    } else if (parseBorderShorthand(tokens, &longhands[0].second,
+                                    &longhands[1].second,
+                                    &longhands[2].second)) {
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second.setFlagImportant(isImportant);
+        }
+        addBorderBlockStartCSSValuePairs(longhands);
+    }
+}
+
+void CSSStyleDeclaration::removeBorderBlockStart()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartWidth);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartColor);
+}
+
+void CSSStyleDeclaration::addBorderBlockStartCSSValuePairs(
+    std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3])
+{
+    for (int i = 0; i < 3; i++) {
+        if (shouldKeepAppearanceOrder(longhands[i].first)) {
+            removeCSSValuePair(longhands[i].first);
+        }
+        addCSSValuePair(longhands[i].first, longhands[i].second);
+    }
 }
 
 String* CSSStyleDeclaration::BorderColor(bool* isCombined)
