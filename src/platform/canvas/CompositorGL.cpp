@@ -3110,12 +3110,10 @@ public:
             glUniform1f(*alphaPos, a);
         }
 
-        if (cs->isFlipYNeeded()) {
-            GLint location = glGetUniformLocation(
-                m_compositorContext->m_lastProgram, "uFlipY");
-            STARFISH_ASSERT(location != -1);
-            glUniform1f(location, 1.0);
-        }
+        GLint location =
+            glGetUniformLocation(m_compositorContext->m_lastProgram, "uFlipY");
+        STARFISH_ASSERT(location != -1);
+        glUniform1f(location, cs->isFlipYNeeded() ? 1.0 : 0.0);
 
         checkError();
 
