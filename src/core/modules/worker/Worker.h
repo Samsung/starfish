@@ -26,6 +26,8 @@
 
 namespace Starfish {
 
+class DedicatedWorkerThread;
+
 class Worker : public AbstractWorker {
 public:
     Worker(ExecutionContext* executionContext, String* scriptURL,
@@ -55,6 +57,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
+    DedicatedWorkerThread* m_workerThread;
 };
 } // namespace Starfish
 #endif

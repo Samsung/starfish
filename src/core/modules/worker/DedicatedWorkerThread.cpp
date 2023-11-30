@@ -17,47 +17,28 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER)
+#ifdef STARFISH_ENABLE_WORKER
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/ExecutionContext.h"
+
+#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/DedicatedWorkerThread.h"
-#include "core/modules/worker/Worker.h"
 
 namespace Starfish {
 
-Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
-               const WorkerOptions& workerOptions)
-    : m_executionContext(executionContext)
-    , m_workerThread(new DedicatedWorkerThread(executionContext))
+DedicatedWorkerThread::DedicatedWorkerThread(ExecutionContext* executionContext)
+    : WorkerThread(executionContext)
 {
-    m_workerThread->start();
 }
 
-void Worker::postMessage(ScriptValue message,
-                         GCAtomicVector<ScriptObject>& transfer)
+WorkerGlobalScope* DedicatedWorkerThread::createWorkerGlobalScope(
+    WebWorker* webWorker, ResourceURL* scriptURL)
 {
-    STARFISH_UNIMPLEMENTED();
+    return webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(scriptURL);
 }
-
-void Worker::postMessage(ScriptValue message,
-                         const StructuredSerializeOptions& options)
-{
-    STARFISH_UNIMPLEMENTED();
-}
-
-void Worker::terminate()
-{
-    STARFISH_UNIMPLEMENTED();
-}
-
-ScriptBindingInstance* Worker::scriptBindingInstance()
-{
-    return m_executionContext->scriptBindingInstance();
-}
-
-DEFINE_EVENT_LISTENER(Worker, message);
-DEFINE_EVENT_LISTENER(Worker, messageerror);
 
 } // namespace Starfish
-#endif
+
+#endif /* STARFISH_ENABLE_WORKER */
