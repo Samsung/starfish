@@ -2623,11 +2623,13 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border, v);
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
+        removeBorderBlockStart();
         addBorderCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
+        removeBorderBlockStart();
         addBorderCSSValuePairs(width, style, color);
     }
 }
@@ -2683,6 +2685,10 @@ void CSSStyleDeclaration::setBorderBlockStart(const char* value, size_t len,
             longhands[i].second = v;
         }
         addBorderBlockStartCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStart,
+                        CSSStyleValuePair());
     } else if (parseBorderShorthand(tokens, &longhands[0].second,
                                     &longhands[1].second,
                                     &longhands[2].second)) {
@@ -2690,6 +2696,10 @@ void CSSStyleDeclaration::setBorderBlockStart(const char* value, size_t len,
             longhands[i].second.setFlagImportant(isImportant);
         }
         addBorderBlockStartCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStart,
+                        CSSStyleValuePair());
     }
 }
 
@@ -2698,6 +2708,7 @@ void CSSStyleDeclaration::removeBorderBlockStart()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStart);
 }
 
 void CSSStyleDeclaration::addBorderBlockStartCSSValuePairs(
@@ -3753,31 +3764,39 @@ void CSSStyleDeclaration::setMarginBlock(const char* value, size_t len,
     CSSTokenVector tokens;
     tokenizeCSSValue(tokens, value, len);
 
-    CSSStyleValuePair v;
-    if (v.updateValueVarReferences(tokens)) {
-        v.setValue(String::fromUTF8(value, len));
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlock, v);
-    } else if (v.updateValueCommon(tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, v);
-    } else if (tokens.size() == 1 &&
-               v.updateValueMarginBlockStart(m_node->document(), tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, v);
-    } else if (tokens.size() == 2) {
-        CSSStyleValuePair start, end;
+    CSSStyleValuePair start, end;
+    bool canAdd = false;
+    if (start.updateValueVarReferences(tokens)) {
+        start.setValue(String::fromUTF8(value, len));
         start.setFlagImportant(isImportant);
-        end.setFlagImportant(isImportant);
-        if (start.updateValueUnitMargin(tokens[0]) &&
-            end.updateValueUnitMargin(tokens[1])) {
-            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart,
-                            start);
-            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, end);
-        }
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlock, start);
+        return;
+    } else if (start.updateValueCommon(tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 1 &&
+               start.updateValueMarginBlockStart(m_node->document(), tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 2 && start.updateValueUnitMargin(tokens[0]) &&
+               end.updateValueUnitMargin(tokens[1])) {
+        canAdd = true;
     }
+
+    if (!canAdd) {
+        return;
+    }
+
+    if (shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::MarginBlockStart) ||
+        shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind::MarginBlockEnd)) {
+        removeMarginBlock();
+    }
+
+    start.setFlagImportant(isImportant);
+    end.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart, start);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, end);
 }
 
 void CSSStyleDeclaration::removeMarginBlock()
@@ -3811,31 +3830,40 @@ void CSSStyleDeclaration::setMarginInline(const char* value, size_t len,
     CSSTokenVector tokens;
     tokenizeCSSValue(tokens, value, len);
 
-    CSSStyleValuePair v;
-    if (v.updateValueVarReferences(tokens)) {
-        v.setValue(String::fromUTF8(value, len));
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInline, v);
-    } else if (v.updateValueCommon(tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, v);
-    } else if (tokens.size() == 1 &&
-               v.updateValueMarginInlineStart(m_node->document(), tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, v);
-    } else if (tokens.size() == 2) {
-        CSSStyleValuePair start, end;
+    CSSStyleValuePair start, end;
+    bool canAdd = false;
+    if (start.updateValueVarReferences(tokens)) {
+        start.setValue(String::fromUTF8(value, len));
         start.setFlagImportant(isImportant);
-        end.setFlagImportant(isImportant);
-        if (start.updateValueUnitMargin(tokens[0]) &&
-            end.updateValueUnitMargin(tokens[1])) {
-            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart,
-                            start);
-            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, end);
-        }
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInline, start);
+        return;
+    } else if (start.updateValueCommon(tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 1 &&
+               start.updateValueMarginInlineStart(m_node->document(), tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 2 && start.updateValueUnitMargin(tokens[0]) &&
+               end.updateValueUnitMargin(tokens[1])) {
+        canAdd = true;
     }
+
+    if (!canAdd) {
+        return;
+    }
+
+    if (shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::MarginInlineStart) ||
+        shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::MarginInlineEnd)) {
+        removeMarginInline();
+    }
+
+    start.setFlagImportant(isImportant);
+    end.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart, start);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, end);
 }
 
 void CSSStyleDeclaration::removeMarginInline()
@@ -4012,31 +4040,40 @@ void CSSStyleDeclaration::setPaddingInline(const char* value, size_t len,
     CSSTokenVector tokens;
     tokenizeCSSValue(tokens, value, len);
 
-    CSSStyleValuePair v;
-    if (v.updateValueVarReferences(tokens)) {
-        v.setValue(String::fromUTF8(value, len));
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInline, v);
-    } else if (v.updateValueCommon(tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, v);
-    } else if (tokens.size() == 1 &&
-               v.updateValuePaddingInlineStart(m_node->document(), tokens)) {
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, v);
-    } else if (tokens.size() == 2) {
-        CSSStyleValuePair start, end;
+    CSSStyleValuePair start, end;
+    bool canAdd = false;
+    if (start.updateValueVarReferences(tokens)) {
+        start.setValue(String::fromUTF8(value, len));
         start.setFlagImportant(isImportant);
-        end.setFlagImportant(isImportant);
-        if (start.updateValueUnitPadding(tokens[0]) &&
-            end.updateValueUnitPadding(tokens[1])) {
-            addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart,
-                            start);
-            addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, end);
-        }
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInline, start);
+        return;
+    } else if (start.updateValueCommon(tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 1 && start.updateValuePaddingInlineStart(
+                                         m_node->document(), tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 2 && start.updateValueUnitPadding(tokens[0]) &&
+               end.updateValueUnitPadding(tokens[1])) {
+        canAdd = true;
     }
+
+    if (!canAdd) {
+        return;
+    }
+
+    if (shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::PaddingInlineStart) ||
+        shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::PaddingInlineEnd)) {
+        removePaddingInline();
+    }
+
+    start.setFlagImportant(isImportant);
+    end.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart, start);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, end);
 }
 
 void CSSStyleDeclaration::removePaddingInline()
