@@ -21,6 +21,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/worker/DedicatedWorkerThread.h"
 #include "core/modules/worker/Worker.h"
 
 namespace Starfish {
@@ -28,8 +29,9 @@ namespace Starfish {
 Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
                const WorkerOptions& workerOptions)
     : m_executionContext(executionContext)
+    , m_workerThread(new DedicatedWorkerThread(executionContext))
 {
-    STARFISH_UNIMPLEMENTED();
+    m_workerThread->start();
 }
 
 void Worker::postMessage(ScriptValue message,
