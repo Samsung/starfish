@@ -37,7 +37,7 @@ jobs:
       matrix:
         mode: [debug]
         backend: [glfw_cairo_gl]
-        options: [-DWEBGL=1]
+        options: ["-DWEBGL=1 -DWORKER=1"]
 
     # Set reasonable timeout value.
     timeout-minutes: 30
