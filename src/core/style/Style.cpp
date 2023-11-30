@@ -5550,6 +5550,15 @@ void StyleResolver::applyProperty(
             }
         }
     } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockStart: {
+        // Generally, shorthand properties are divided into longhand
+        // properties and registered in cssvalues. so, there is no need to
+        // directly handle it. But not in this case.
+        // to handle special case for color of border-block-start, marks that it
+        // is derived from a shorthand. But it still don't need to apply this
+        // value directly to computed style.
+        style->setBorderBlockStartFromShorthand(true);
+    } break;
 #define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
         if (newCssValue.valueKind() ==                           \

@@ -2273,24 +2273,26 @@ public:
 
     void setBorderBlockStartColor(Unit::Color color)
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()->setColor(color);
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
-                                                  false);
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
-                                                     false);
+        BorderBlockDirectionAwereData* start =
+            m_rareComputedStyleData.ensureBorderBlockStart();
+        start->setColor(color);
+        start->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                   false);
+        start->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                      false);
+        start->setFromShorthand(false);
     }
 
     void setBorderBlockEndColor(Unit::Color color)
     {
-        m_rareComputedStyleData.ensureBorderBlockEnd()->setColor(color);
-        m_rareComputedStyleData.ensureBorderBlockEnd()
-            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
-                                                  false);
-        m_rareComputedStyleData.ensureBorderBlockEnd()
-            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
-                                                     false);
+        BorderBlockDirectionAwereData* end =
+            m_rareComputedStyleData.ensureBorderBlockEnd();
+        end->setColor(color);
+        end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                 false);
+        end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                    false);
+        end->setFromShorthand(false);
     }
 
 #define CLEAR_BORDER_COLOR(UPOS, LPOS, ...)                          \
@@ -2303,16 +2305,26 @@ public:
 
     void clearBorderBlockStartColor()
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->borderValue()
-            .clearColor();
+        BorderBlockDirectionAwereData* start =
+            m_rareComputedStyleData.ensureBorderBlockStart();
+        start->borderValue().clearColor();
+        start->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                   false);
+        start->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                      false);
+        start->setFromShorthand(false);
     }
 
     void clearBorderBlockEndColor()
     {
-        m_rareComputedStyleData.ensureBorderBlockEnd()
-            ->borderValue()
-            .clearColor();
+        BorderBlockDirectionAwereData* end =
+            m_rareComputedStyleData.ensureBorderBlockEnd();
+        end->borderValue().clearColor();
+        end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
+                                                 false);
+        end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
+                                                    false);
+        end->setFromShorthand(false);
     }
 
     void setBorderTopStyle(BorderStyleValue style)
@@ -2387,6 +2399,12 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
                                                      false);
+    }
+
+    void setBorderBlockStartFromShorthand(bool value)
+    {
+        m_rareComputedStyleData.ensureBorderBlockStart()->setFromShorthand(
+            value);
     }
 
     void setBorderImageSource(String* url)

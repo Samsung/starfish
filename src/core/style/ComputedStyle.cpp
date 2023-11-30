@@ -2624,7 +2624,15 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     if (borderStart.hasColor() && !borderStart.isCorrespondingTopSpecifiedLater(
                                       BorderValueKind::kColor)) {
         setBorderTopColor(borderStart.borderValue().color());
+    } else if (!borderStart.hasColor() &&
+               !borderStart.isCorrespondingTopSpecifiedLater(
+                   BorderValueKind::kColor) &&
+               borderStart.isFromShorthand()) {
+        // If there is no color in the result interpreted from the long hand.
+        // Inherits color.
+        setBorderTopColor(color());
     }
+
     if (borderStart.hasStlye() && !borderStart.isCorrespondingTopSpecifiedLater(
                                       BorderValueKind::kStyle)) {
         setBorderTopStyle(borderStart.borderValue().style());

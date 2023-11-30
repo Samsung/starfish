@@ -79,11 +79,22 @@ public:
         return m_hasColor;
     }
 
+    void setFromShorthand(bool value)
+    {
+        m_fromShorthand = true;
+    }
+
+    bool isFromShorthand()
+    {
+        return m_fromShorthand;
+    }
+
 protected:
     BorderValue m_borderValue;
     bool m_hasStyle = false;
     bool m_hasWidth = false;
     bool m_hasColor = false;
+    bool m_fromShorthand = false;
 };
 
 class BorderBlockDirectionAwereData : public BorderDirectionAwereData {
