@@ -153,6 +153,10 @@ test/cairo/internal-test/css/border/border_top_color.html
 test/cairo/internal-test/css/border/border_left_color.html
 test/cairo/internal-test/css/border/border_bottom_color.html
 test/cairo/internal-test/css/border/border_right_color.html
+test/cairo/internal-test/css/border/border-block-end-color.html
+test/cairo/internal-test/css/border/margin-block_with_margin.html
+test/cairo/internal-test/css/border/margin-inline_with_margin.html
+test/cairo/internal-test/css/border/padding-block_with_padding.html
 test/cairo/internal-test/css/border/border-block-start_longhand_with_border.html
 test/cairo/internal-test/css/border/border-block-start-color.html
 test/cairo/internal-test/css/border/border-block-start-style.html
