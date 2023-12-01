@@ -1610,7 +1610,9 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
         }
         break;
     case CSSStyleValuePair::KeyKind::BorderBlockStartWidth:
-        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth)) {
+    case CSSStyleValuePair::KeyKind::BorderBlockEndWidth:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth)) {
             return true;
         }
         break;
@@ -1657,8 +1659,10 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
         }
         break;
     case CSSStyleValuePair::KeyKind::BorderTopWidth:
+    case CSSStyleValuePair::KeyKind::BorderBottomWidth:
         if (hasCSSValuePair(
-                CSSStyleValuePair::KeyKind::BorderBlockStartWidth)) {
+                CSSStyleValuePair::KeyKind::BorderBlockStartWidth) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEndWidth)) {
             return true;
         }
         break;

@@ -270,6 +270,12 @@ static CSSStyleValuePair resolveBlockDirectionAwareProperty(
         ret.setValue(CSSLength(frame->style()->border().bottom().style()));
         return ret;
     }
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockEndWidth) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->borderBottom()));
+        return ret;
+    }
     return ret;
 }
 
@@ -356,7 +362,28 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
-
+    case CSSStyleValuePair::KeyKind::BorderBlockEndWidth: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndWidth);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockEndWidth,
+                frame->asFrameBox());
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p = resolveBlockDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::BorderBlockEndWidth, inb);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::Top:
     case CSSStyleValuePair::KeyKind::Right:
     case CSSStyleValuePair::KeyKind::Bottom:

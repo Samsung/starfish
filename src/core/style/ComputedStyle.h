@@ -2387,6 +2387,9 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
                                                   true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
+                                                  true);
     }
 
     void setBorderRightWidth(Length width)
@@ -2398,6 +2401,9 @@ public:
     {
         m_rareComputedStyleData.ensureBorder()->bottom().setWidth(width);
         m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
+                                                     true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
                                                      true);
     }
@@ -2416,6 +2422,17 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
                                                      false);
+    }
+
+    void setBorderBlockEndWidth(Length width)
+    {
+        BorderBlockDirectionAwereData* end =
+            m_rareComputedStyleData.ensureBorderBlockEnd();
+        end->setWidth(width);
+        end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
+                                                 false);
+        end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
+                                                    false);
     }
 
     void setBorderBlockStartFromShorthand(bool value)

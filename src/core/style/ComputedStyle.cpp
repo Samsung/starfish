@@ -2655,6 +2655,13 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
                                     BorderValueKind::kStyle)) {
         setBorderBottomStyle(borderEnd.borderValue().style());
     }
+    if (border().bottom().hasBorderStyle()) {
+        if (borderEnd.hasWidth() &&
+            !borderEnd.isCorrespondingBottomSpecifiedLater(
+                BorderValueKind::kWidth)) {
+            setBorderBottomWidth(borderEnd.borderValue().width());
+        }
+    }
 
     // TODO: padding-block
 }

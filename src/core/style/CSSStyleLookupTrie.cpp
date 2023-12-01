@@ -1238,6 +1238,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // border-top-left-radius
         // border-block-end-color
         // border-block-end-style
+        // border-block-end-width
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-top-left-radius", 22) == 0) {
@@ -1248,6 +1249,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
             if (memcmp(data, "border-block-end-style", 22) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBlockEndStyle;
+            }
+            if (memcmp(data, "border-block-end-width", 22) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEndWidth;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
@@ -2282,6 +2286,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderBlockEndStyle", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBlockEndStyle;
+            }
+            if (memcmp(data, "borderBlockEndWidth", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEndWidth;
             }
             break;
         case 't':
