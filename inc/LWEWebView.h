@@ -34,6 +34,8 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <unordered_map>
+#include <sstream>
 
 namespace LWE {
 
@@ -105,6 +107,9 @@ private:
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
+    bool UpdateSetting(std::string key, std::string value);
+    std::string GetSetting(std::string key) const;
+
     std::string GetDefaultUserAgent() const;
     std::string GetUserAgentString() const;
     std::string GetProxyURL() const;
@@ -124,6 +129,7 @@ public:
     bool ScrollbarVisible() const;
     bool UseExternalPopup() const;
     bool UseSpatialNavigation() const;
+
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -134,6 +140,7 @@ public:
                                 unsigned char b, unsigned char a);
     void SetBaseForegroundColor(unsigned char r, unsigned char g,
                                 unsigned char b, unsigned char a);
+
     void SetWebSecurityMode(WebSecurityMode value);
     void SetIdleModeJob(IdleModeJob j);
     void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS);
@@ -146,24 +153,7 @@ public:
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
-    std::string m_defaultUserAgent;
-    std::string m_userAgent;
-    std::string m_proxyURL;
-    int m_cacheMode;
-    uint32_t m_defaultFontSize;
-    TTSMode m_ttsMode;
-    std::string m_ttsLanguage;
-    unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
-    unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
-    WebSecurityMode m_webSecurityMode;
-    IdleModeJob m_idleModeJob; // default value is IdleModeJob::IdleModeFull
-    uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
-    bool m_needsDownloadWebFontsEarly;
-    bool m_useHttp2; // default value is false
-    uint32_t m_needsDownScaleImageResourceLargerThan;
-    bool m_scrollbarVisible;
-    bool m_useExternalPopup;
-    bool m_useSpatialNavigation;
+    std::unordered_map<std::string, std::string> m_settings;
 };
 
 class LWE_EXPORT ResourceError {
