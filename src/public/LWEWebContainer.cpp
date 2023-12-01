@@ -101,220 +101,391 @@ extern Starfish::Starfish* g_starfishInstance;
 static CookieManager* g_cookieManager;
 
 Settings::Settings(const std::string& default_ua, const std::string& ua)
-    : m_defaultUserAgent(default_ua)
-    , m_userAgent(ua)
-#if defined(STARFISH_ENABLE_HTTPCACHE)
-    , m_cacheMode(Starfish::HTTPCache::LOAD_DEFAULT)
-#else
-    , m_cacheMode(0)
-#endif
-    , m_defaultFontSize(LWE_DEFAULT_FONT_SIZE)
-    , m_ttsMode(TTSMode::Default)
-    , m_ttsLanguage("")
-    , m_bgR(255)
-    , m_bgG(255)
-    , m_bgB(255)
-    , m_bgA(255)
-    , m_fgR(0)
-    , m_fgG(0)
-    , m_fgB(0)
-    , m_fgA(255)
-    , m_webSecurityMode(WebSecurityMode::Enable)
-    , m_idleModeJob(IdleModeJob::IdleModeDefault)
-    , m_idleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS)
-    , m_needsDownloadWebFontsEarly(false)
-    , m_useHttp2(false)
-    , m_needsDownScaleImageResourceLargerThan(0)
-#ifndef TIZEN_COMPAT_HEADER_5_0
-    , m_scrollbarVisible(true)
-#endif
-    , m_useExternalPopup(false)
-    , m_useSpatialNavigation(false)
 {
+    UpdateSetting("defaultUserAgent", default_ua);
+    UpdateSetting("userAgent", ua);
+    UpdateSetting("proxyURL", "");
+#if defined(STARFISH_ENABLE_HTTPCACHE)
+    UpdateSetting("cacheMode", "LOAD_DEFAULT");
+#else
+    UpdateSetting("cacheMode", "LOAD_NO_CACHE");
+#endif
+    UpdateSetting("defaultFontSize", std::to_string(LWE_DEFAULT_FONT_SIZE));
+    UpdateSetting("ttsMode", "Default");
+    UpdateSetting("ttsLanguage", "");
+    UpdateSetting("backgroundColor", "255,255,255,255");
+    UpdateSetting("foregroundColor", "0,0,0,255");
+    UpdateSetting("webSecurityMode", "Enable");
+    UpdateSetting("idleModeJob", "IdleModeDefault");
+    UpdateSetting("idleModeCheckIntervalInMS",
+                  std::to_string(IdleModeCheckDefaultIntervalInMS));
+    UpdateSetting("needsDownloadWebFontsEarly", "False");
+    UpdateSetting("useHttp2", "False");
+    UpdateSetting("needsDownScaleImageResourceLargerThan", std::to_string(0));
+#ifndef TIZEN_COMPAT_HEADER_5_0
+    UpdateSetting("scrollbarVisible", "True");
+#endif
+    UpdateSetting("useExternalPopup", "False");
+    UpdateSetting("useSpatialNavigation", "False");
+}
+
+bool Settings::UpdateSetting(std::string key, std::string value)
+{
+    m_settings[key] = value;
+    return true;
+}
+
+std::string Settings::GetSetting(std::string key) const
+{
+    std::string value = "";
+    auto iter = m_settings.find(key);
+    if (iter != m_settings.end()) {
+        value = iter->second;
+    }
+    return value;
 }
 
 std::string Settings::GetDefaultUserAgent() const
 {
-    return m_defaultUserAgent;
+    return GetSetting("defaultUserAgent");
 }
 
 std::string Settings::GetUserAgentString() const
 {
-    return m_userAgent;
+    return GetSetting("userAgent");
 }
 
 std::string Settings::GetProxyURL() const
 {
-    return m_proxyURL;
-}
-
-TTSMode Settings::GetTTSMode() const
-{
-    return m_ttsMode;
-}
-
-std::string Settings::GetTTSLanguage() const
-{
-    return m_ttsLanguage;
-}
-
-bool Settings::NeedsDownloadWebFontsEarly() const
-{
-    return m_needsDownloadWebFontsEarly;
-}
-
-bool Settings::UseHttp2() const
-{
-    return m_useHttp2;
-}
-
-uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
-{
-    return m_needsDownScaleImageResourceLargerThan;
-}
-
-#ifndef TIZEN_COMPAT_HEADER_5_0
-bool Settings::ScrollbarVisible() const
-{
-    return m_scrollbarVisible;
-}
-#endif
-
-bool Settings::UseExternalPopup() const
-{
-    return m_useExternalPopup;
-}
-
-bool Settings::UseSpatialNavigation() const
-{
-    return m_useSpatialNavigation;
-}
-
-void Settings::SetUserAgentString(const std::string& ua)
-{
-    m_userAgent = ua;
+    return GetSetting("proxyURL");
 }
 
 int Settings::GetCacheMode() const
 {
-    return m_cacheMode;
+    std::string value = GetSetting("cacheMode");
+    if (value.compare("LOAD_NORMAL") == 0) {
+        return 0;
+    } else if (value.compare("LOAD_CACHE_ELSE_NETWORK") == 0) {
+        return 1;
+    } else if (value.compare("LOAD_NO_CACHE") == 0) {
+        return 2;
+    } else if (value.compare("LOAD_CACHE_ONLY") == 0) {
+        return 3;
+    }
+    return -1;
 }
 
-void Settings::SetCacheMode(int mode)
+TTSMode Settings::GetTTSMode() const
 {
-    m_cacheMode = mode;
+    std::string value = GetSetting("ttsMode");
+    if (value.compare("Forced") == 0) {
+        return TTSMode::Forced;
+    }
+    return TTSMode::Default;
 }
 
-void Settings::SetProxyURL(const std::string& s)
+std::string Settings::GetTTSLanguage() const
 {
-    m_proxyURL = s;
+    return GetSetting("ttsLanguage");
 }
 
-void Settings::SetTTSMode(TTSMode mode)
+WebSecurityMode Settings::GetWebSecurityMode() const
 {
-    m_ttsMode = mode;
+    std::string value = GetSetting("webSecurityMode");
+    if (value.compare("Enable") == 0) {
+        return WebSecurityMode::Enable;
+    }
+    return WebSecurityMode::Disable;
 }
 
-void Settings::SetTTSLanguage(const std::string& language)
+IdleModeJob Settings::GetIdleModeJob() const
 {
-    m_ttsLanguage = language;
+    std::string value = GetSetting("idleModeJob");
+    if (value.compare("ClearDrawnBuffers") == 0) {
+        return IdleModeJob::ClearDrawnBuffers;
+    } else if (value.compare("ForceGC") == 0) {
+        return IdleModeJob::ForceGC;
+    } else if (value.compare("DropDecodedImageBuffer") == 0) {
+        return IdleModeJob::DropDecodedImageBuffer;
+    } else if (value.compare("IdleModeFull") == 0) {
+        return IdleModeJob::IdleModeFull;
+    } else if (value.compare("IdleModeMiddle") == 0) {
+        return IdleModeJob::IdleModeMiddle;
+    } else if (value.compare("IdleModeNone") == 0) {
+        return IdleModeJob::IdleModeNone;
+    }
+    return IdleModeJob::IdleModeDefault;
 }
 
-void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
-                                      unsigned char b, unsigned char a)
+uint32_t Settings::GetIdleModeCheckIntervalInMS() const
 {
-    m_bgR = r;
-    m_bgG = g;
-    m_bgB = b;
-    m_bgA = a;
-}
-
-void Settings::SetBaseForegroundColor(unsigned char r, unsigned char g,
-                                      unsigned char b, unsigned char a)
-{
-    m_fgR = r;
-    m_fgG = g;
-    m_fgB = b;
-    m_fgA = a;
+    std::string value = GetSetting("idleModeCheckIntervalInMS");
+    if (value.length() > 0) {
+        return std::stoi(value);
+    }
+    return 0;
 }
 
 void Settings::GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
                                       unsigned char& b, unsigned char& a) const
 {
-    r = m_bgR;
-    g = m_bgG;
-    b = m_bgB;
-    a = m_bgA;
+    std::string value = GetSetting("backgroundColor");
+    std::stringstream ss(value);
+    std::string temp;
+
+    if (std::getline(ss, temp, ',')) {
+        r = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        g = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        b = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        a = atoi(temp.c_str());
+    }
 }
+
 void Settings::GetBaseForegroundColor(unsigned char& r, unsigned char& g,
                                       unsigned char& b, unsigned char& a) const
 {
-    r = m_fgR;
-    g = m_fgG;
-    b = m_fgB;
-    a = m_fgA;
+    std::string value = GetSetting("foregroundColor");
+    std::stringstream ss(value);
+    std::string temp;
+
+    if (std::getline(ss, temp, ',')) {
+        r = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        g = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        b = atoi(temp.c_str());
+    }
+
+    if (std::getline(ss, temp, ',')) {
+        a = atoi(temp.c_str());
+    }
 }
 
-WebSecurityMode Settings::GetWebSecurityMode() const
+bool Settings::NeedsDownloadWebFontsEarly() const
 {
-    return m_webSecurityMode;
+    std::string value = GetSetting("needsDownloadWebFontsEarly");
+    if (value.compare("True") == 0) {
+        return true;
+    }
+    return false;
+}
+
+bool Settings::UseHttp2() const
+{
+    std::string value = GetSetting("useHttp2");
+    if (value.compare("True") == 0) {
+        return true;
+    }
+    return false;
+}
+
+uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
+{
+    std::string value = GetSetting("needsDownScaleImageResourceLargerThan");
+    if (value.length() > 0) {
+        return std::stoi(value);
+    }
+    return 0;
+}
+
+bool Settings::ScrollbarVisible() const
+{
+    std::string value = GetSetting("scrollbarVisible");
+    if (value.compare("True") == 0) {
+        return true;
+    }
+    return false;
+}
+
+bool Settings::UseExternalPopup() const
+{
+    std::string value = GetSetting("useExternalPopup");
+    if (value.compare("True") == 0) {
+        return true;
+    }
+    return false;
+}
+
+bool Settings::UseSpatialNavigation() const
+{
+    std::string value = GetSetting("useSpatialNavigation");
+    if (value.compare("True") == 0) {
+        return true;
+    }
+    return false;
+}
+
+void Settings::SetUserAgentString(const std::string& ua)
+{
+    UpdateSetting("userAgent", ua);
+}
+
+void Settings::SetCacheMode(int mode)
+{
+    std::string cacheMode;
+    switch (mode) {
+    case 0:
+        cacheMode = "LOAD_NORMAL";
+        break;
+    case 1:
+        cacheMode = "LOAD_CACHE_ELSE_NETWORK";
+        break;
+    case 2:
+        cacheMode = "LOAD_NO_CACHE";
+        break;
+    case 3:
+        cacheMode = "LOAD_CACHE_ONLY";
+        break;
+    default:
+        cacheMode = "LOAD_DEFAULT";
+        break;
+    }
+    UpdateSetting("cacheMode", cacheMode);
+}
+
+void Settings::SetProxyURL(const std::string& proxyURL)
+{
+    UpdateSetting("proxyURL", proxyURL);
+}
+
+void Settings::setDefaultFontSize(int size)
+{
+    UpdateSetting("defaultFontSize", std::to_string(size));
+}
+
+void Settings::SetTTSMode(TTSMode value)
+{
+    if (value == TTSMode::Forced) {
+        UpdateSetting("ttsMode", "Forced");
+    } else {
+        UpdateSetting("ttsMode", "Default");
+    }
+}
+
+void Settings::SetTTSLanguage(const std::string& language)
+{
+    UpdateSetting("ttsLanguage", language);
+}
+
+void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    char color[50];
+    sprintf(color, "%d, %d, %d ,%d", r, g, b, a);
+    UpdateSetting("backgroundColor", color);
+}
+
+void Settings::SetBaseForegroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    char color[50];
+    sprintf(color, "%d, %d, %d ,%d", r, g, b, a);
+    UpdateSetting("foregroundColor", color);
 }
 
 void Settings::SetWebSecurityMode(WebSecurityMode value)
 {
-    m_webSecurityMode = value;
-}
-
-IdleModeJob Settings::GetIdleModeJob() const
-{
-    return m_idleModeJob;
+    if (value == WebSecurityMode::Enable) {
+        UpdateSetting("webSecurityMode", "Enable");
+    } else {
+        UpdateSetting("webSecurityMode", "Disable");
+    }
 }
 
 void Settings::SetIdleModeJob(IdleModeJob j)
 {
-    m_idleModeJob = j;
-}
-
-uint32_t Settings::GetIdleModeCheckIntervalInMS() const
-{
-    return m_idleModeCheckIntervalInMS;
+    std::string value;
+    switch (j) {
+    case IdleModeJob::ClearDrawnBuffers:
+        value = "ClearDrawnBuffers";
+        break;
+    case IdleModeJob::ForceGC:
+        // case IdleModeJob::IdleModeMiddle:
+        value = "ForceGC";
+        break;
+    case IdleModeJob::DropDecodedImageBuffer:
+        value = "DropDecodedImageBuffer";
+        break;
+    case IdleModeJob::IdleModeNone:
+        value = "IdleModeNone";
+        break;
+    case IdleModeJob::IdleModeDefault:
+    // case IdleModeJob::IdleModeFull:
+    default:
+        value = "IdleModeDefault";
+        break;
+    }
+    UpdateSetting("idleModeJob", value);
 }
 
 void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 {
-    m_idleModeCheckIntervalInMS = intervalInMS;
+    UpdateSetting("idleModeCheckIntervalInMS", std::to_string(intervalInMS));
 }
 
 void Settings::SetNeedsDownloadWebFontsEarly(bool b)
 {
-    m_needsDownloadWebFontsEarly = b;
+    if (b) {
+        UpdateSetting("needsDownloadWebFontsEarly", "True");
+    } else {
+        UpdateSetting("needsDownloadWebFontsEarly", "False");
+    }
 }
 
 void Settings::SetUseHttp2(bool b)
 {
-    m_useHttp2 = b;
+    if (b) {
+        UpdateSetting("useHttp2", "True");
+    } else {
+        UpdateSetting("useHttp2", "False");
+    }
 }
 
-void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
+void Settings::SetNeedsDownScaleImageResourceLargerThan(
+    uint32_t demention) // Experimental
 {
-    m_needsDownScaleImageResourceLargerThan = demention;
+    UpdateSetting("needsDownScaleImageResourceLargerThan",
+                  std::to_string(demention));
 }
 
-#ifndef TIZEN_COMPAT_HEADER_5_0
 void Settings::SetScrollbarVisible(bool visible)
 {
-    m_scrollbarVisible = visible;
+    if (visible) {
+        UpdateSetting("scrollbarVisible", "True");
+    } else {
+        UpdateSetting("scrollbarVisible", "False");
+    }
 }
-#endif
 
 void Settings::SetUseExternalPopup(bool useExternalPopup)
 {
-    m_useExternalPopup = useExternalPopup;
+    if (useExternalPopup) {
+        UpdateSetting("useExternalPopup", "True");
+    } else {
+        UpdateSetting("useExternalPopup", "False");
+    }
 }
 
 void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
 {
-    m_useSpatialNavigation = useSpatialNavigation;
+    if (useSpatialNavigation) {
+        UpdateSetting("useSpatialNavigation", "True");
+    } else {
+        UpdateSetting("useSpatialNavigation", "False");
+    }
 }
 
 ResourceError::ResourceError(int code, const std::string& description,

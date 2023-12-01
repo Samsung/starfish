@@ -34,18 +34,57 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <unordered_map>
+#include <sstream>
 
 namespace LWE {
+
+/**
+ * \brief Perform initialization or cleanup of lightweight web engine.
+ */
 
 #define TIZEN_COMPAT_HEADER_5_0
 
 class LWE_EXPORT LWE {
 public:
-    // You must call Initialize function before using WebContainer or WebView
+    /**
+     * \brief Initialize a lightweight web engine.
+     * It performs tasks (thread initialization, GC preparation) necessary for
+     * the operation of a lightweight web engine. You must call Initialize
+     * function before using WebContainer or WebView
+     *
+     * \code{.cpp}
+     *     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
+     *                    "/tmp/Starfish_Cookies.txt", "/tmp/Starfish-cache");
+     * \endcode
+     *
+     * \param localStorageDataFilePath File path for local storage.
+     * \param cookieStoreDataFilePath File path for cookie storage.
+     * \param httpCacheDataDirectorypath Directory path for http cache.
+     *
+     */
     static void Initialize(const char* localStorageDataFilePath,
                            const char* cookieStoreDataFilePath,
                            const char* httpCacheDataDirectorypath);
+
+    /**
+     * \brief Returns the initialization status of lightweight web engine.
+     * Before performing an initialization, this function can be used to check
+     * if an initialization has already been performed.
+     *
+     * \return Initialization status of lightweight web engine.
+     */
     static bool IsInitialized();
+
+    /**
+     * \brief Perform lightweight web engine cleanup.
+     * Called once when the lightweight web engine is no longer in use.
+     *
+     * \code{.cpp}
+     *     LWE::LWE::Finalize();
+     * \endcode
+     *
+     */
     static void Finalize();
 };
 
@@ -60,7 +99,6 @@ public:
     std::string GetCookie(std::string url);
     bool HasCookies();
     void ClearCookies();
-
     static CookieManager* GetInstance();
     static void Destroy();
 
@@ -72,6 +110,9 @@ private:
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
+    bool UpdateSetting(std::string key, std::string value);
+    std::string GetSetting(std::string key) const;
+
     std::string GetDefaultUserAgent() const;
     std::string GetUserAgentString() const;
     std::string GetProxyURL() const;
@@ -88,8 +129,10 @@ public:
     bool NeedsDownloadWebFontsEarly() const;
     bool UseHttp2() const;
     uint32_t NeedsDownScaleImageResourceLargerThan() const;
+    bool ScrollbarVisible() const;
     bool UseExternalPopup() const;
     bool UseSpatialNavigation() const;
+
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -100,34 +143,20 @@ public:
                                 unsigned char b, unsigned char a);
     void SetBaseForegroundColor(unsigned char r, unsigned char g,
                                 unsigned char b, unsigned char a);
+
     void SetWebSecurityMode(WebSecurityMode value);
     void SetIdleModeJob(IdleModeJob j);
     void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS);
-    void SetNeedsDownloadWebFontsEarly(bool mode);
+    void SetNeedsDownloadWebFontsEarly(bool b);
     void SetUseHttp2(bool b);
     void SetNeedsDownScaleImageResourceLargerThan(
         uint32_t demention); // Experimental
+    void SetScrollbarVisible(bool visible);
     void SetUseExternalPopup(bool useExternalPopup);
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
-    std::string m_defaultUserAgent;
-    std::string m_userAgent;
-    std::string m_proxyURL;
-    int m_cacheMode;
-    uint32_t m_defaultFontSize;
-    TTSMode m_ttsMode;
-    std::string m_ttsLanguage;
-    unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
-    unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
-    WebSecurityMode m_webSecurityMode;
-    IdleModeJob m_idleModeJob; // default value is IdleModeJob::IdleModeFull
-    uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
-    bool m_needsDownloadWebFontsEarly;
-    bool m_useHttp2; // default value is false
-    uint32_t m_needsDownScaleImageResourceLargerThan;
-    bool m_useExternalPopup;
-    bool m_useSpatialNavigation;
+    std::unordered_map<std::string, std::string> m_settings;
 };
 
 class LWE_EXPORT ResourceError {
@@ -206,7 +235,6 @@ public:
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
 
-    void ResizeTo(size_t width, size_t height);
     // <--- end of function set for render with OpenGL
 
     // Function set for headless
@@ -244,6 +272,8 @@ public:
     void Destroy();
     void Pause();
     void Resume();
+
+    void ResizeTo(size_t width, size_t height);
 
     void Focus();
     void Blur();
@@ -297,8 +327,12 @@ public:
     void CallHandler(const std::string& handler, void* param);
 
     void SetUserAgentString(const std::string& userAgent);
+    std::string GetUserAgentString();
     void SetCacheMode(int mode);
+    int GetCacheMode();
     void SetDefaultFontSize(uint32_t size);
+    uint32_t GetDefaultFontSize();
+
     void DispatchMouseMoveEvent(MouseButtonValue button,
                                 MouseButtonsValue buttons, double x, double y);
     void DispatchMouseDownEvent(MouseButtonValue button,
@@ -345,52 +379,418 @@ private:
     void* m_impl;
 };
 
+/**
+ * \brief WebView of lightweight web engine.
+ */
 class LWE_EXPORT WebView {
 protected:
-    // use Destroy function instead of using delete operator
     virtual ~WebView()
     {
     }
 
 public:
+    /**
+     * \brief Create a Webview instance.
+     * The webview instance should be obtained through this function, not
+     * separately.
+     *
+     * \code{.cpp}
+     *
+     * LWE::WebView* webView = LWE::WebView::Create(wndObj, 0, 0, 800, 600, 1.0,
+     * "serif", "ko-KR", "Asia/Seoul");
+     *
+     * \endcode
+     *
+     * \param win Window object where the content will be rendered. It accepts
+     * different window objects depending on which platform the LWE was compiled
+     * for. For EFL, Pass an Win(Elementary Widget) object.
+     *
+     * \param x The value of x among the initial positions of the webview.
+     *
+     * \param y The value of y among the initial positions of the webview.
+     *
+     * \param width The width value of the webview.
+     *
+     * \param height The height value of the webview.
+     *
+     * \param devicePixelRatio The device pixel ratio value. Width, height
+     * divided by this value is used as the logical width, height for web
+     * content. This means it can be utilized like a scale value.
+     *
+     * \param defaultFontName The font value, which will try to match this font
+     * first if there is not given font family.
+     *
+     * \param locale Default locale used by the javascript engine.
+     *
+     * \param timezoneID Default time zone used by the javascript engine.
+     *
+     * \return new webview instance.
+     */
     static WebView* Create(void* win, unsigned x, unsigned y, unsigned width,
                            unsigned height, float devicePixelRatio,
                            const char* defaultFontName, const char* locale,
                            const char* timezoneID);
 
+    /**
+     * \brief Destory a webview instance.
+     * Use Destroy function instead of using delete operator
+     *
+     * \code{.cpp}
+     *
+     * webView->Destroy();
+     *
+     * \endcode
+     */
     virtual void Destroy();
 
+    /**
+     * \brief Gets the settings used by the webview.
+     *
+     * \return Current webview's setting value.
+     */
     Settings GetSettings();
+
+    /**
+     * \brief Loads the given URL.
+     *
+     * \code{.cpp}
+     *
+     * webView->LoadURL("https://www.w3.org/");
+     *
+     * \endcode
+     *
+     * \param url the URL of the resource to load.
+     *
+     */
     virtual void LoadURL(const std::string& url);
+
+    /**
+     * \brief Gets the URL for the current page.
+     *
+     * \code{.cpp}
+     *
+     * std::string currentURL = webView->GetURL();
+     *
+     * \endcode
+     *
+     * \return The URL for the current page.
+     */
     std::string GetURL();
+
+    /**
+     * \brief Loads the given data into this WebView using a 'data' scheme URL.
+     *
+     * \code{.cpp}
+     *
+     * webView->LoadData("<html><body>TEST!</body></html>");
+     *
+     * \endcode
+     *
+     * \param data String of data.
+     *
+     */
     void LoadData(const std::string& data);
+
+    /**
+     * \brief Reloads the current URL.
+     *
+     * \code{.cpp}
+     *
+     * webView->Reload();
+     *
+     * \endcode
+     *
+     */
     void Reload();
+
+    /**
+     * \brief Stops the current load.
+     *
+     * \code{.cpp}
+     *
+     * webView->StopLoading();
+     *
+     * \endcode
+     *
+     */
     void StopLoading();
+
+    /**
+     * \brief Goes back in the history of this WebView.
+     *
+     * \code{.cpp}
+     *
+     * webView->GoBack();
+     *
+     * \endcode
+     *
+     */
     void GoBack();
+
+    /**
+     * \brief Goes forward in the history of this WebView.
+     *
+     * \code{.cpp}
+     *
+     * webView->GoForward();
+     *
+     * \endcode
+     *
+     */
     void GoForward();
+
+    /**
+     * \brief Gets whether this WebView has a back history item.
+     *
+     * \code{.cpp}
+     *
+     * if(webView->CanGoBack())
+     * {
+     *      webView->GoBack();
+     * }
+     *
+     * \endcode
+     *
+     * \return true if this WebView has a back history item.
+     */
     bool CanGoBack();
+
+    /**
+     * \brief Gets whether this WebView has a forward history item.
+     *
+     * \code{.cpp}
+     *
+     * if(webView->CanGoForward())
+     * {
+     *      webView->GoForward();
+     * }
+     *
+     * \endcode
+     *
+     * \return true if this WebView has a forward history item.
+     */
     bool CanGoForward();
+
+    /**
+     * \brief Change the visibilityState property of the Document to hidden.
+     * This has the effect of stopping the rendering of web contents.
+     *
+     */
     void Pause();
+
+    /**
+     * \brief Change the visibilityState property of the Document to visible.
+     * This has the effect of resuming the rendering of web contents.
+     *
+     */
     void Resume();
+
+    /**
+     * \brief Injects the supplied native callback into this webview.
+     * ....
+     *
+     * \code{.cpp}
+     *
+     * webView->AddJavaScriptInterface("TEST", "set", [](std::string param) ->
+     * std::string { return ""; });
+     *
+     * \endcode
+     *
+     * \param exposedObjectName Global object names exposed in javascript.
+     *
+     * \param jsFunctionName Function name to call in javascript.
+     *
+     * \param cb Native callback which wants to be called from javascript side.
+     *
+     */
     void AddJavaScriptInterface(
         const std::string& exposedObjectName, const std::string& jsFunctionName,
         std::function<std::string(const std::string&)> cb);
+
+    /**
+     * \brief Synchronously evaluates JavaScript in the context of the currently
+     * displayed page.
+     *
+     * \code{.cpp}
+     *
+     * std::string result = webView->EvaluateJavaScript("1+1");
+     * printf("%s\n",result.c_str());
+     *
+     * \endcode
+     *
+     * \param script Javascript string to execute.
+     *
+     * \return The result of running the javascript(only supported string).
+     */
     std::string EvaluateJavaScript(const std::string& script);
+
+    /**
+     * \brief Asynchronously evaluates JavaScript in the context of the
+     * currently displayed page.
+     * ....
+     *
+     * \code{.cpp}
+     *
+     * webView->EvaluateJavaScript("1+1",[](const std::string& result) -> void{
+     * printf("%s\n",result.c_str()); });
+     *
+     * \endcode
+     *
+     * \param script Javascript string to execute.
+     *
+     * \param cb A callback that is called at the end of performing javascript .
+     *
+     */
     void EvaluateJavaScript(const std::string& script,
                             std::function<void(const std::string&)> cb);
+
+    /**
+     * \brief Tells this webview to clear its internal back/forward list.
+     *
+     * \code{.cpp}
+     *
+     * webView->ClearHistory();
+     *
+     * \endcode
+     *
+     */
     void ClearHistory();
+
+    /**
+     * \brief Set the settings for current webview.
+     *
+     * \param settings Settings value for current webview.
+     *
+     */
     void SetSettings(const Settings& settings);
+
+    /**
+     * \brief Removes a previously injected native callback from this webview.
+     *
+     * \code{.cpp}
+     *
+     * webView->RemoveJavascriptInterface("TEST", "set");
+     *
+     * \endcode
+     *
+     * \param exposedObjectName Global object names exposed in javascript.
+     *
+     * \param jsFunctionName Function name to call in javascript.
+     *
+     */
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);
+
+    /**
+     * \brief Clears the resource cache.
+     *
+     * \code{.cpp}
+     *
+     * webView->ClearCache();
+     *
+     * \endcode
+     *
+     */
     void ClearCache();
+
+    /**
+     * \brief Register callbacks that will be used to handle web resource
+     * loading error.
+     *
+     * \code{.cpp}
+     *
+     * webView->RegisterOnReceivedErrorHandler(
+     *  [](LWE::WebView* webview, LWE::ResourceError err) -> void {
+     *      printf("Error URL : %s\n", err.GetUrl().c_str());
+     *      printf("Error Code : %d\n", err.GetErrorCode());
+     *      printf("Error Description : %s\n", err.GetDescription().c_str());
+     *   }
+     *  );
+     *
+     * \endcode
+     *
+     * \param cb error handling callback.
+     *
+     */
     void RegisterOnReceivedErrorHandler(
         std::function<void(WebView*, ResourceError)> cb);
+
+    /**
+     * \brief Register a callback to be called when the DOMContentLoaded event
+     * occurs.
+     *
+     * \code{.cpp}
+     *
+     * webView->RegisterOnPageParsedHandler(
+     *  [](LWE::WebView* webview, const std::string& url) -> void {
+     *      printf("URL : %s\n", url.c_str());
+     *   }
+     *  );
+     *
+     * \endcode
+     *
+     * \param cb Event handling callback.
+     *
+     */
     void RegisterOnPageParsedHandler(
         std::function<void(WebView*, const std::string&)> cb);
+
+    /**
+     * \brief Register a callback to be called when the document load event
+     * occurs.
+     *
+     * \code{.cpp}
+     *
+     * webView->RegisterOnPageLoadedHandler(
+     *  [](LWE::WebView* webview, const std::string& url) -> void {
+     *      printf("URL : %s\n", url.c_str());
+     *   }
+     *  );
+     *
+     * \endcode
+     *
+     * \param cb Event handling callback.
+     *
+     */
     void RegisterOnPageLoadedHandler(
         std::function<void(WebView*, const std::string&)> cb);
+
+    /**
+     * \brief Register a callback to be called when url navigation start.
+     *
+     * \code{.cpp}
+     *
+     * webView->RegisterOnPageStartedHandler(
+     *  [](LWE::WebView* webview, const std::string& url) -> void {
+     *      printf("URL : %s\n", url.c_str());
+     *   }
+     *  );
+     *
+     * \endcode
+     *
+     * \param cb Event handling callback.
+     *
+     */
     void RegisterOnPageStartedHandler(
         std::function<void(WebView*, const std::string&)> cb);
+
+    /**
+     * \brief Register a callback to be called at the end of loading individual
+     * resources.
+     *
+     * \code{.cpp}
+     *
+     * webView->RegisterOnLoadResourceHandler(
+     *  [](LWE::WebView* webview, const std::string& url) -> void {
+     *      printf("URL : %s\n", url.c_str());
+     *   }
+     *  );
+     *
+     * \endcode
+     *
+     * \param cb Event handling callback.
+     *
+     */
     void RegisterOnLoadResourceHandler(
         std::function<void(WebView*, const std::string&)> cb);
 
@@ -401,7 +801,6 @@ public:
             fileReadCallback,
         std::function<long int(void* handle)> fileLengthCallback,
         std::function<void(void* handle)> fileCloseCallback);
-
     void RegisterDebuggerShouldInitHandler(
         const std::function<void(const std::string& url, int port,
                                  bool& shouldInit)>& cb);
@@ -409,21 +808,94 @@ public:
         const std::function<void(const std::string& url, int port,
                                  bool& shouldWait)>& cb);
 
+    /**
+     * \brief Storing separate user data(pointers) in webview object.
+     *
+     * \param key User data key.
+     *
+     * \param data User data pointer.
+     *
+     */
     void SetUserData(const std::string& key, void* data);
+
+    /**
+     * \brief Getting user data(pointers) from webview object.
+     *
+     * \param key User data key.
+     *
+     * \return User data pointer.
+     *
+     */
     void* GetUserData(const std::string& key);
 
+    /**
+     * \brief Get the document's title value.
+     *
+     * \return document's title value.
+     */
     std::string GetTitle();
+
+    /**
+     * \brief Scrolls to a absolute position in the current document.
+     *
+     * \param x The x-coordinate value of the position that user want to scroll.
+     *
+     * \param y The x-coordinate value of the position that user want to scroll.
+     *
+     */
     void ScrollTo(int x, int y);
+
+    /**
+     * \brief Scrolls to a relative position in the current document.
+     *
+     * \param x The x-coordinate value of the position that user want to scroll.
+     *
+     * \param y The x-coordinate value of the position that user want to scroll.
+     *
+     */
     void ScrollBy(int x, int y);
+
+    /**
+     * \brief Get x-coordinate of the scrolled position for the current
+     * document.
+     *
+     * \return The x-coordinate value of position.
+     *
+     */
     int GetScrollX();
+
+    /**
+     * \brief Get y-coordinate of the scrolled position for the current
+     * document.
+     *
+     * \return The y-coordinate value of position.
+     *
+     */
     int GetScrollY();
 
+    /**
+     * \brief Get platform native handle.
+     * This is intended for specialized use. It is platform dependent. For
+     * example, For EFL ports, the object you get by this API is an Evas_Object
+     * handle. You can use EFL API to resize, show, hide with this handle.
+     *
+     * \return platform native handle.
+     */
     virtual void* Unwrap()
     {
-        // Some platform returns associated native handle ex) Evas_Object*
         return nullptr;
     }
+
+    /**
+     * \brief Give focus to current webview.
+     *
+     */
     virtual void Focus();
+
+    /**
+     * \brief Blur the current webview.
+     *
+     */
     virtual void Blur();
 
 protected:
