@@ -24,9 +24,6 @@ build/android/**/jniLibs/
 build/android/**/*.iml
 build/android/**/local.properties
 
-# Binding Generator generated
-src/binding/generated
-
 # Node releated
 node_modules
 test/tool/pixel_test/bin/nodejs
