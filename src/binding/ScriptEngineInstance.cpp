@@ -42,6 +42,14 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
     m_engineInstance = Escargot::VMInstanceRef::create(
         locale, timezone);
 #endif
+    if (m_engineInstance->isCodeCacheEnabled()) {
+        m_engineInstance->setMaxCompiledByteCodeSize(1024 * 1024 * 8);
+        m_engineInstance->setCodeCacheMinSourceLength(1024 * 2);
+        m_engineInstance->setCodeCacheMaxCacheCount(16);
+        m_engineInstance->setCodeCacheShouldLoadFunctionOnScriptLoading(true);
+    } else {
+        m_engineInstance->setMaxCompiledByteCodeSize(1024 * 1024 * 4);
+    }
 }
 
 void ScriptEngineInstance::dispose()
