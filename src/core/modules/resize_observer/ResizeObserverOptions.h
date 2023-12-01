@@ -31,18 +31,12 @@ enum class ResizeObserverBoxOptions {
     DevicePixelContentBox
 };
 
-struct ResizeObserverOptions : public gc {
+struct ResizeObserverOptions {
 public:
-    void setBox(String* box)
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
-
-    String* box() const
-    {
-        STARFISH_UNIMPLEMENTED();
-        return String::emptyString;
-    }
+    ResizeObserverOptions();
+    ResizeObserverOptions(ResizeObserverBoxOptions option);
+    void setBox(String* box);
+    String* box() const;
 
 private:
     ResizeObserverBoxOptions m_box;

@@ -71,6 +71,8 @@
 #include "core/dom/IntersectionObserver.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/IntersectionObserverEntry.h"
+#include "core/modules/resize_observer/ResizeObserver.h"
+#include "core/modules/resize_observer/ResizeObserverEntry.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -779,6 +781,13 @@ void Document::dispose()
     if (m_intersectionObservers.size()) {
         GCVector<IntersectionObserver*> observers = m_intersectionObservers;
         for (auto* observer : m_intersectionObservers) {
+            observer->disconnect();
+        }
+    }
+
+    if (m_resizeObservers.size()) {
+        GCVector<ResizeObserver*> observers = m_resizeObservers;
+        for (auto* observer : m_resizeObservers) {
             observer->disconnect();
         }
     }
@@ -2308,7 +2317,69 @@ void Document::removeIntersectionObserver(IntersectionObserver* observer)
     }
 }
 
+void Document::addResizeObserver(ResizeObserver* observer)
+{
+    m_resizeObservers.emplace_back(observer);
+}
+
+void Document::removeResizeObserver(ResizeObserver* observer)
+{
+    if (m_resizeObservers.size()) {
+        m_resizeObservers.erase(
+            std::remove_if(m_resizeObservers.begin(), m_resizeObservers.end(),
+                           [observer](const ResizeObserver* item) {
+                               return item == observer;
+                           }));
+    }
+}
+
 void Document::updateObservation()
+{
+    updateIntersectionObservation();
+    updateResizeObservation();
+}
+
+void Document::updateResizeObservation()
+{
+    if (!frame()) {
+        return;
+    }
+
+    double time = timestamp();
+    GCVector<ResizeObserver*> observersToNotify;
+    for (auto* observer : m_resizeObservers) {
+        for (auto* target : observer->targets()) {
+            Unit::Rect currentRect = { 0, 0, 0, 0 };
+            DOMRect* targetBoundingClientRect = target->getBoundingClientRect();
+            currentRect.setWidth(targetBoundingClientRect->width());
+            currentRect.setHeight(targetBoundingClientRect->height());
+            ResizeObserverRegistration* registration =
+                target->findResizeObserverRegistration(observer);
+
+            bool isResizeRectChanged =
+                registration->previousSizeRect != currentRect;
+            if (isResizeRectChanged) {
+                ResizeObserverEntry* entry = new ResizeObserverEntry(
+                    executionContext(),
+                    new DOMRectReadOnly(executionContext(), 0, 0,
+                                        currentRect.width(),
+                                        currentRect.height()),
+                    target);
+                observer->queueResizeObserverEntry(entry);
+            }
+            registration->previousSizeRect = currentRect;
+        }
+
+        if (observer->hasRecords()) {
+            observersToNotify.emplace_back(observer);
+        }
+    }
+    for (auto* observer : observersToNotify) {
+        observer->notify();
+    }
+}
+
+void Document::updateIntersectionObservation()
 {
     if (!frame()) {
         return;

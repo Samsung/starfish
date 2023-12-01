@@ -58,6 +58,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/animation/TimingOptions.h"
 #include "core/dom/IntersectionObserver.h"
+#include "core/modules/resize_observer/ResizeObserver.h"
 
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -130,6 +131,16 @@ RareElementMembers::ensureRegisteredIntersectionObservers()
             new (GC) GCVector<IntersectionObserverRegistration*>();
     }
     return m_registeredIntersectionObservers;
+}
+
+GCVector<ResizeObserverRegistration*>*
+RareElementMembers::ensureRegisteredResizeObservers()
+{
+    if (!m_registeredResizeObservers) {
+        m_registeredResizeObservers =
+            new (GC) GCVector<ResizeObserverRegistration*>();
+    }
+    return m_registeredResizeObservers;
 }
 
 String* Element::tagName()
@@ -1664,6 +1675,43 @@ IntersectionObserverRegistration* Element::findIntersectionObserverRegistration(
     if (ensureRareElementMembers()->m_registeredIntersectionObservers) {
         GCVector<IntersectionObserverRegistration*>* registrations =
             ensureRareElementMembers()->m_registeredIntersectionObservers;
+        for (auto* registration : *registrations) {
+            if (registration->observer == observer) {
+                return registration;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void Element::appendResizeObserverRegistration(
+    ResizeObserverRegistration* resizeObserverRegistration)
+{
+    ensureRareElementMembers()->ensureRegisteredResizeObservers()->emplace_back(
+        resizeObserverRegistration);
+}
+
+void Element::removeResizeObserverRegistration(ResizeObserver* observer)
+{
+    if (ensureRareElementMembers()->m_registeredResizeObservers) {
+        GCVector<ResizeObserverRegistration*>* registrations =
+            ensureRareElementMembers()->m_registeredResizeObservers;
+        if (registrations->size()) {
+            registrations->erase(std::remove_if(
+                registrations->begin(), registrations->end(),
+                [observer](const ResizeObserverRegistration* item) {
+                    return item->observer == observer;
+                }));
+        }
+    }
+}
+
+ResizeObserverRegistration* Element::findResizeObserverRegistration(
+    ResizeObserver* observer)
+{
+    if (ensureRareElementMembers()->m_registeredResizeObservers) {
+        GCVector<ResizeObserverRegistration*>* registrations =
+            ensureRareElementMembers()->m_registeredResizeObservers;
         for (auto* registration : *registrations) {
             if (registration->observer == observer) {
                 return registration;

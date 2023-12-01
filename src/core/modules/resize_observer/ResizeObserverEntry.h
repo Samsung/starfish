@@ -25,25 +25,25 @@
 
 namespace Starfish {
 
+class DOMRectReadOnly;
+
 class ResizeObserverEntry final : public ScriptWrappable {
 public:
-    ResizeObserverEntry()
-        : ScriptWrappable(this)
-    {
-    }
+    ResizeObserverEntry(ExecutionContext* executionContext,
+                        DOMRectReadOnly* contentRect, Element* target);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     void init(ScriptBindingInstance*, void*) override;
-
     bool isResizeObserverEntry() const override;
+    DOMRectReadOnly* contentRect() const;
+    Element* target() const;
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ExecutionContext* m_executionContext = nullptr;
+    DOMRectReadOnly* m_contentRect = nullptr;
+    Element* m_target = nullptr;
 };
-} // namespace Starfish
 
+} // namespace Starfish
 #endif
