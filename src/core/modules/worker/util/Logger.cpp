@@ -18,6 +18,7 @@
  */
 
 #include "core/modules/worker/util/Logger.h"
+#include "core/util/GlobalOptions.h"
 
 #include <map>
 #include <thread>
@@ -31,18 +32,21 @@ std::string getPrettyFunctionName(const std::string fullname,
 {
     std::stringstream ss;
     if (!prefixPattern.empty()) {
-        ss << "(?:" << prefixPattern << ")";
+        ss << "(?:" << prefixPattern << ")|";
     }
-    ss << R"(([\w\:~]+)\()";
+    ss << R"((?::\()|([\w:~]+)\()";
 
     try {
         std::smatch match;
         const std::regex re(ss.str());
 
-        if (std::regex_search(fullname, match, re) && match.size() > 1) {
-            return match.str(1);
+        std::stringstream result;
+        std::string suffix = fullname;
+        while (std::regex_search(suffix, match, re)) {
+            result << match[1];
+            suffix = match.suffix();
         }
-        return "";
+        return result.str();
     } catch (std::regex_error& e) {
         return "";
     }
@@ -68,7 +72,13 @@ void writeThreadIdentifier(std::ostream& os)
     os << "[" << thisThreadId << "] ";
 }
 
-std::function<bool(const std::string&)> LogOption::s_externalIsEnabled;
+std::function<bool(const std::string&)> LogOption::s_externalIsEnabled =
+    [](const std::string& id) -> bool {
+    if (Starfish::GlobalOptions::instance().has("TRACE", id.c_str())) {
+        return true;
+    }
+    return false;
+};
 
 void LogOption::setExternalIsEnabled(
     std::function<bool(const std::string&)> func)
@@ -81,7 +91,7 @@ void LogOption::setExternalIsEnabled(
 bool LogOption::isEnabled(const std::string& pattern)
 {
     if (!s_externalIsEnabled) {
-        return true;
+        return false;
     }
     return s_externalIsEnabled(pattern);
 }

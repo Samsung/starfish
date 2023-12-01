@@ -43,6 +43,8 @@ struct CaseInsensitiveEqual {
     }
 };
 
+const char* webglErrorString(unsigned int code);
+
 } // namespace Starfish
 
 #endif

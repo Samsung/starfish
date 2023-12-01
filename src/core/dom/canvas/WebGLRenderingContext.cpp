@@ -27,6 +27,8 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/WebGLExtensions.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/worker/util/Trace.h"
+#include "core/util/String.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 #include "core/dom/canvas/WebGLBuffer.h"
@@ -37,6 +39,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
+#include "binding/ScriptBindingInstance.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include <EscargotPublic.h>
@@ -48,6 +51,7 @@
 #define LOCATION " (" __FILE__ ":" S2(__LINE__) ")"
 #define kMaximumUniformAndAttributeLocationLengths 256
 #define kMaximumSupportedStride 255
+#define KV(x) S1(x), x
 
 /* WebGL-specific enums */
 static const GLenum kUNPACK_FLIP_Y_WEBGL = 0x9240;
@@ -56,15 +60,12 @@ static const GLenum kCONTEXT_LOST_WEBGL = 0x9242;
 static const GLenum kUNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
 static const GLenum kBROWSER_DEFAULT_WEBGL = 0x9244;
 
-static std::string getHexString(GLenum pname)
-{
-    std::stringstream ss;
-    ss << "0x" << std::hex << std::setw(4) << std::setfill('0')
-       << std::uppercase << pname;
-    return ss.str();
-}
-
 namespace Starfish {
+
+inline static std::string hex(GLenum name)
+{
+    return StringUtils::formatString("0x%04X", name);
+}
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     : WebGLRenderingContextBaseMixIn(canvasElement)
@@ -93,6 +94,7 @@ void WebGLRenderingContext::initialize()
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)                         \
     WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo()); \
     if (contextScope.hasError()) {                                          \
+        TRACE(WEBGL, "GL Context error detected.");                         \
         return bailoutValue;                                                \
     }                                                                       \
     m_ownerHTMLCanvasElement                                                \
@@ -107,7 +109,7 @@ void WebGLRenderingContext::initialize()
     ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);          \
     auto onScopeLeave = OnScopeLeave::create([&]() { \
         if (hasGLError()) {                          \
-            STARFISH_LOG_WARN("GL error detected."); \
+            TRACE(WEBGL, "GL error detected.");      \
         }                                            \
     });
 #endif
@@ -119,7 +121,7 @@ users would not be able to get error code properly. So, we first store the code
 from `glGetError`, and then use it. The error code stored will be cleared when
 users call gl.getError().
 */
-bool WebGLRenderingContext::hasGLError(const char* message)
+bool WebGLRenderingContext::hasGLError()
 {
     updateGLError();
 
@@ -133,6 +135,7 @@ void WebGLRenderingContext::updateGLError()
 {
     GLenum code = glGetError();
     if (code != GL_NO_ERROR) {
+        TRACE(WEBGL, "Error:", hex(code));
         setGLError(code);
     }
 }
@@ -151,32 +154,19 @@ GLenum WebGLRenderingContext::getError()
     return code;
 }
 
-void WebGLRenderingContext::setGLError(GLenum code)
+void WebGLRenderingContext::setGLError(GLenum code, const char* message)
 {
     m_GLErrors.insert(code);
+    if (message) {
+        TRACE(WEBGL, "Error(%s): %s", webglErrorString(code), message);
+    }
 }
 
-void WebGLRenderingContext::clear(uint32_t mask)
+Nullable<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
 {
-    ENTER_CONTEXT_SCOPE();
+    ENTER_CONTEXT_SCOPE(Nullable<WebGLContextAttributes>());
 
-    glClear(mask);
-}
-
-void WebGLRenderingContext::clearColor(float red, float green, float blue,
-                                       float alpha)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    glClearColor(red, green, blue, alpha);
-}
-
-void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
-                                     uint32_t height)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    glViewport(x, y, width, height);
+    return m_attributes;
 }
 
 Nullable<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
@@ -296,12 +286,51 @@ void WebGLRenderingContext::bindTexture(GLenum target,
             return;
         }
 
+        TRACE(WEBGL, "target", hex(target), "ON");
         glBindTexture(target, texture->glObject());
         m_boundTextures[target] = texture->glObject();
     } else {
+        TRACE(WEBGL, "target", hex(target), "OFF");
         glBindTexture(target, 0);
         m_boundTextures.erase(target);
     }
+}
+
+void WebGLRenderingContext::clear(uint32_t mask)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glClear(mask);
+}
+
+void WebGLRenderingContext::clearColor(float red, float green, float blue,
+                                       float alpha)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glClearColor(red, green, blue, alpha);
+}
+
+void WebGLRenderingContext::clearDepth(GLclampf depth)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glClearDepthf(depth);
+}
+
+void WebGLRenderingContext::clearStencil(GLint s)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glClearStencil(s);
+}
+
+void WebGLRenderingContext::colorMask(GLboolean red, GLboolean green,
+                                      GLboolean blue, GLboolean alpha)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glColorMask(red, green, blue, alpha);
 }
 
 void WebGLRenderingContext::compileShader(WebGLShader* shader)
@@ -313,15 +342,6 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     }
 
     glCompileShader(shader->glObject());
-}
-
-WebGLTexture* WebGLRenderingContext::createTexture()
-{
-    ENTER_CONTEXT_SCOPE(nullptr);
-
-    GLuint textureId = 0;
-    glGenTextures(1, &textureId);
-    return new WebGLTexture(scriptBindingInstance(), this, textureId);
 }
 
 WebGLBuffer* WebGLRenderingContext::createBuffer()
@@ -346,6 +366,36 @@ WebGLShader* WebGLRenderingContext::createShader(unsigned long type)
     return new WebGLShader(scriptBindingInstance(), this, glCreateShader(type));
 }
 
+WebGLTexture* WebGLRenderingContext::createTexture()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint textureId = 0;
+    glGenTextures(1, &textureId);
+    return new WebGLTexture(scriptBindingInstance(), this, textureId);
+}
+
+void WebGLRenderingContext::depthFunc(GLenum func)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDepthFunc(func);
+}
+
+void WebGLRenderingContext::disable(GLenum cap)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDisable(cap);
+}
+
+void WebGLRenderingContext::cullFace(GLenum mode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glCullFace(mode);
+}
+
 void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
     ENTER_CONTEXT_SCOPE();
@@ -362,6 +412,13 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
     glDrawArrays(mode, first, count);
 }
 
+void WebGLRenderingContext::enable(GLenum cap)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glEnable(cap);
+}
+
 void WebGLRenderingContext::enableVertexAttribArray(GLuint index)
 {
     ENTER_CONTEXT_SCOPE();
@@ -374,6 +431,13 @@ void WebGLRenderingContext::enableVertexAttribArray(GLuint index)
     glEnableVertexAttribArray(index);
 }
 
+void WebGLRenderingContext::frontFace(GLenum mode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glFrontFace(mode);
+}
+
 void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
 {
     ENTER_CONTEXT_SCOPE();
@@ -384,11 +448,11 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
     glShaderSource(shader->glObject(), 1, sourceArray, nullptr);
 }
 
-static GLint getInteger(GLenum pname)
+void WebGLRenderingContext::stencilMask(GLuint mask)
 {
-    GLint value[1]{};
-    glGetIntegerv(pname, value);
-    return value[0];
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilMask(mask);
 }
 
 ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
@@ -396,10 +460,58 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     ENTER_CONTEXT_SCOPE(scriptNull());
 
     switch (pname) {
+    case GL_ALPHA_BITS:
+    case GL_BLUE_BITS:
+    case GL_DEPTH_BITS:
+    case GL_GREEN_BITS:
+    case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+    case GL_MAX_RENDERBUFFER_SIZE:
+    case GL_MAX_TEXTURE_IMAGE_UNITS:
+    case GL_MAX_TEXTURE_SIZE:
+    case GL_MAX_VARYING_VECTORS:
+    case GL_MAX_VERTEX_ATTRIBS:
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-        return ValueRef::create(getInteger(pname));
+    case GL_MAX_VERTEX_UNIFORM_VECTORS:
+    case GL_PACK_ALIGNMENT:
+    case GL_RED_BITS:
+    case GL_SAMPLE_BUFFERS:
+    case GL_SAMPLES:
+    case GL_STENCIL_BACK_REF:
+    case GL_STENCIL_BITS:
+    case GL_STENCIL_CLEAR_VALUE:
+    case GL_STENCIL_REF:
+    case GL_SUBPIXEL_BITS:
+    case GL_UNPACK_ALIGNMENT: {
+        std::vector<int> values(1);
+        glGetIntegerv(pname, &values[0]);
+        return ValueRef::create(values[0]);
+    }
+
+    case GL_RENDERER:
+    case GL_SHADING_LANGUAGE_VERSION:
+    case GL_VERSION:
+    case GL_VENDOR: {
+        const std::string output =
+            reinterpret_cast<const char*>(glGetString(pname));
+        return StringRef::createFromASCII(output.c_str(), output.length());
+    }
+    case GL_MAX_VIEWPORT_DIMS: {
+        std::vector<int> values(2);
+        glGetIntegerv(pname, &values[0]);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     values);
+    }
+    case GL_SCISSOR_BOX:
+    case GL_VIEWPORT: {
+        std::vector<int> values(4);
+        glGetIntegerv(pname, &values[0]);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     values);
+    }
     default:
-        STARFISH_UNIMPLEMENTED("pname: %s", getHexString(pname).c_str());
+        STARFISH_UNIMPLEMENTED("pname: 0x%04X", pname);
         return scriptNull();
     }
     return scriptNull();
@@ -466,6 +578,26 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
     return scriptNull();
 }
 
+String* WebGLRenderingContext::getProgramInfoLog(WebGLProgram* program)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLsizei length = 0, bufferSize = 0;
+    glGetProgramiv(program->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
+
+    std::string buffer;
+    buffer.reserve(bufferSize);
+    glGetProgramInfoLog(program->glObject(), bufferSize, &length, &buffer[0]);
+
+    if (hasGLError()) {
+        return nullptr;
+    }
+
+    TRACE(WEBGL, buffer);
+
+    return String::fromUTF8(buffer.data(), length);
+}
+
 ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
                                                       GLenum pname)
 {
@@ -499,6 +631,26 @@ ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
     return scriptNull();
 }
 
+String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLsizei length = 0, bufferSize = 0;
+    glGetShaderiv(shader->glObject(), GL_INFO_LOG_LENGTH, &bufferSize);
+
+    std::string buffer;
+    buffer.reserve(bufferSize);
+    glGetShaderInfoLog(shader->glObject(), bufferSize, &length, &buffer[0]);
+
+    if (hasGLError()) {
+        return nullptr;
+    }
+
+    TRACE(WEBGL, buffer);
+
+    return String::fromUTF8(buffer.data(), length);
+}
+
 String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
@@ -509,6 +661,11 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     std::string buffer;
     buffer.reserve(bufferSize);
     glGetShaderSource(shader->glObject(), bufferSize, &length, &buffer[0]);
+
+    if (hasGLError()) {
+        return nullptr;
+    }
+
     return String::fromUTF8(buffer.data(), length);
 }
 
@@ -737,6 +894,14 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
     */
 }
 
+void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
+                                     uint32_t height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glViewport(x, y, width, height);
+}
+
 // WebGLRenderingContextOverloads
 
 void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
@@ -774,26 +939,36 @@ void WebGLRenderingContext::bufferData(GLenum target,
     }
 }
 
-void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
-                                       GLint internalFormat, GLsizei width,
-                                       GLsizei height, GLint border,
-                                       GLenum format, GLenum type,
-                                       Nullable<ScriptArrayBufferView> pixels)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    STARFISH_UNIMPLEMENTED();
-}
-
 class TexImageHelper final {
 public:
     // NOTE: Better to use common utilities for image manipulation. Canvas
     // is not possible due to its WebView dependency.
+    struct ImageData {
+        ImageData() = default;
+        size_t width = 0;
+        size_t height = 0;
+        size_t stride = 0;
+        unsigned char* data = nullptr;
+    };
+
+    TexImageHelper(size_t width, size_t height, size_t stride, void* data)
+    {
+        STARFISH_ASSERT(data != nullptr);
+
+        m_sourceImage.width = width;
+        m_sourceImage.height = height;
+        m_sourceImage.stride = stride;
+        m_sourceImage.data = static_cast<unsigned char*>(data);
+    }
 
     TexImageHelper(NativeImageData* imageData)
     {
         STARFISH_ASSERT(imageData != nullptr);
-        m_sourceImage = imageData;
+
+        m_sourceImage.width = imageData->width();
+        m_sourceImage.height = imageData->height();
+        m_sourceImage.stride = imageData->stride();
+        m_sourceImage.data = static_cast<unsigned char*>(imageData->data());
     }
 
     ~TexImageHelper()
@@ -803,10 +978,10 @@ public:
     void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
               const bool colorConversion)
     {
-        const size_t height = m_sourceImage->height();
-        const size_t width = m_sourceImage->width();
-        const size_t stride = m_sourceImage->stride();
-        const auto image = static_cast<unsigned char*>(m_sourceImage->data());
+        const size_t width = m_sourceImage.width;
+        const size_t height = m_sourceImage.height;
+        const size_t stride = m_sourceImage.stride;
+        const unsigned char* image = m_sourceImage.data;
 
         size_t offset = 0, newOffset = 0, srcOffset = 0, destOffset = 0;
 
@@ -867,7 +1042,7 @@ public:
 
     const void* data()
     {
-        return m_data.empty() ? m_sourceImage->data() : m_data.data();
+        return m_data.empty() ? m_sourceImage.data : m_data.data();
     }
 
 private:
@@ -876,9 +1051,80 @@ private:
         return ((color / 255.f) * alpha) * 255;
     }
 
-    NativeImageData* m_sourceImage = nullptr;
+    ImageData m_sourceImage;
     std::vector<unsigned char> m_data;
 };
+
+void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
+                                       GLint internalFormat, GLsizei width,
+                                       GLsizei height, GLint border,
+                                       GLenum format, GLenum type,
+                                       Nullable<ScriptArrayBufferView> pixels)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end() &&
+        !isBoundCubeMapTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (pixels.hasValue()) {
+        ArrayBufferViewRef* pixelsView = pixels.getValue();
+
+        if (type == GL_UNSIGNED_BYTE &&
+            (!pixelsView->isUint8ArrayObject() &&
+             !pixelsView->isUint8ClampedArrayObject())) {
+            // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
+            // must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        } else if ((type == GL_UNSIGNED_SHORT_5_6_5 ||
+                    type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+                    type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+                   !pixelsView->isUint16ArrayObject()) {
+            // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
+            // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        // If pixels is non-null but its size is less than what is required by
+        // the specified width, height, format, type, and pixel storage
+        // parameters, generates an INVALID_OPERATION error.
+        size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
+        size_t byteLengthOfPixels = width * height * bytesPerPixel;
+        size_t byteLengthOfView = pixels->byteLength();
+
+        TRACEF(WEBGL, "\n%s",
+               StringUtils::createTableString(20, KV(hex(target)), KV(width),
+                                              KV(height), KV(bytesPerPixel),
+                                              KV(byteLengthOfPixels)));
+
+        if (byteLengthOfView < byteLengthOfPixels) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
+
+        // Handle WebGL-specific pixel storage parameters that affect the
+        // behavior of this function.
+        TexImageHelper image(width, height, width * bytesPerPixel, data);
+        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha,
+                   m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
+
+        glTexImage2D(target, level, internalFormat, width, height, 0, format,
+                     type, image.data());
+    } else {
+        // TODO: If pixels is null, a buffer of sufficient size initialized to 0
+        // is passed.
+        STARFISH_UNIMPLEMENTED();
+    }
+}
 
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        GLint internalFormat, GLenum format,
@@ -893,8 +1139,12 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     // origin-clean flag is set to false, a SECURITY_ERR exception must be
     // thrown. See Origin Restrictions.
 
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
-        setGLError(GL_INVALID_OPERATION);
+    if (m_boundTextures.find(target) == m_boundTextures.end() &&
+        !isBoundCubeMapTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
         return;
     }
 
@@ -943,13 +1193,15 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
     STARFISH_ASSERT(imageData != nullptr);
 
+    // Handle WebGL-specific pixel storage parameters that affect the behavior
+    // of this function.
     TexImageHelper image(imageData);
     image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha,
                m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
 
     // Uploads the given image data to the currently bound texture.
-    glTexImage2D(target, level, internalFormat, width, height, 0,
-                 internalFormat, type, image.data());
+    glTexImage2D(target, level, internalFormat, width, height, 0, format, type,
+                 image.data());
 }
 
 bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)
@@ -984,6 +1236,18 @@ bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
     // implementations generally must ensure that the shader source sent to a
     // GLSL driver only contains ASCII for safety.
     return true;
+}
+
+bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
+{
+    if (target > GL_TEXTURE_BINDING_CUBE_MAP &&
+        target < GL_MAX_CUBE_MAP_TEXTURE_SIZE) {
+        if (m_boundTextures.find(GL_TEXTURE_CUBE_MAP) !=
+            m_boundTextures.end()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace Starfish

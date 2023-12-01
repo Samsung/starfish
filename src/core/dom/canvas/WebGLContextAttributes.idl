@@ -1,0 +1,14 @@
+// https://registry.khronos.org/webgl/specs/latest/1.0/#5.2
+
+[STARFISH_ENABLE_WEBGL]
+dictionary WebGLContextAttributes {
+  boolean alpha = true;
+  boolean depth = true;
+  boolean stencil = false;
+  boolean antialias = true;
+  boolean premultipliedAlpha = true;
+  boolean preserveDrawingBuffer = false;
+  WebGLPowerPreference powerPreference = "default";
+  boolean failIfMajorPerformanceCaveat = false;
+  boolean desynchronized = false;
+};

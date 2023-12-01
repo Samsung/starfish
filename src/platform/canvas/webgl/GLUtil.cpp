@@ -127,6 +127,44 @@ FBOScope::~FBOScope()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
+{
+    // Format      Type                Bytes per Pixel
+    // ------------------------------------------------
+    // RGBA        UNSIGNED_BYTE            4
+    // RGB         UNSIGNED_BYTE            3
+    // RGBA        UNSIGNED_SHORT_4_4_4_4   2
+    // RGBA        UNSIGNED_SHORT_5_5_5_1   2
+    // RGB         UNSIGNED_SHORT_5_6_5     2
+    // LUMINANCE_ALPHA  UNSIGNED_BYTE       2
+    // LUMINANCE   UNSIGNED_BYTE            1
+    // ALPHA       UNSIGNED_BYTE            1
+    //
+    // Refs: Table 3.4: Valid pixel format and type combinations.
+    // https://registry.khronos.org/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
+
+    if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
+        return 4;
+    } else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
+        return 3;
+    } else if (format == GL_RGBA && type == GL_UNSIGNED_SHORT_4_4_4_4) {
+        return 2;
+    } else if (format == GL_RGBA && type == GL_UNSIGNED_SHORT_5_5_5_1) {
+        return 2;
+    } else if (format == GL_RGB && type == GL_UNSIGNED_SHORT_5_6_5) {
+        return 2;
+    } else if (format == GL_LUMINANCE_ALPHA && type == GL_UNSIGNED_BYTE) {
+        return 2;
+    } else if (format == GL_LUMINANCE && type == GL_UNSIGNED_BYTE) {
+        return 1;
+    } else if (format == GL_ALPHA && type == GL_UNSIGNED_BYTE) {
+        return 1;
+    }
+
+    STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
+    return 0;
+}
+
 } // namespace Starfish
 
 #endif // #if defined(STARFISH_ENABLE_WEBGL)

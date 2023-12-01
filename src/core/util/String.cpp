@@ -1373,6 +1373,23 @@ std::string StringUtils::createAlignedString(
     return ss.str();
 }
 
+std::string StringUtils::formatString(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int size = vsnprintf(nullptr, 0, format, args);
+    va_end(args);
+    if (size < 0) {
+        return "";
+    }
+
+    std::unique_ptr<char[]> buffer(new char[size + 1]);
+    va_start(args, format);
+    vsnprintf(buffer.get(), size + 1, format, args);
+    va_end(args);
+    return std::string(buffer.get(), buffer.get() + size);
+}
+
 size_t utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {
