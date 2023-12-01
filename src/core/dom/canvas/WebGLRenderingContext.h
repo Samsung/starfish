@@ -25,6 +25,7 @@
 #include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
 #include "platform/canvas/webgl/GLESTypes.h"
 #include "core/dom/canvas/WebGLUtils.h"
+#include "core/dom/canvas/WebGLContextAttributes.h"
 #include <unordered_set>
 #include <unordered_map>
 
@@ -54,6 +55,7 @@ public:
     void initialize() override;
 
     // Implement WebGLRenderingContextBase
+    Nullable<WebGLContextAttributes> getContextAttributes();
     Nullable<GCVector<String*>> getSupportedExtensions();
     Nullable<ScriptObject> getExtension(String* name);
     void activeTexture(GLenum texture);
@@ -63,18 +65,29 @@ public:
     void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
+    void clearDepth(GLclampf depth);
+    void clearStencil(GLint s);
+    void colorMask(GLboolean red, GLboolean green, GLboolean blue,
+                   GLboolean alpha);
     void compileShader(WebGLShader* shader);
-    WebGLTexture* createTexture();
     WebGLBuffer* createBuffer();
     WebGLProgram* createProgram();
     WebGLShader* createShader(unsigned long type);
+    WebGLTexture* createTexture();
+    void cullFace(GLenum mode);
+    void depthFunc(GLenum func);
+    void disable(GLenum cap);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
+    void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
+    void frontFace(GLenum mode);
     GLint getAttribLocation(WebGLProgram* program, String* name);
     ScriptValue getParameter(GLenum pname);
     GLenum getError();
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
+    String* getProgramInfoLog(WebGLProgram* program);
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
+    String* getShaderInfoLog(WebGLShader* shader);
     String* getShaderSource(WebGLShader* shader);
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
@@ -94,6 +107,7 @@ public:
                    GLint w);
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
+    void stencilMask(GLuint mask);
     void vertexAttribPointer(GLuint index, GLint size, GLenum type,
                              GLboolean normalized, GLsizei stride,
                              GLintptr offset);
@@ -112,9 +126,10 @@ public:
 private:
     bool checkWebGLObject(WebGLObject* object);
     bool checkAttribOrUniformName(String* name);
-    bool hasGLError(const char* message = "");
-    void setGLError(GLenum code);
+    bool hasGLError();
+    void setGLError(GLenum code, const char* message = nullptr);
     void updateGLError();
+    bool isBoundCubeMapTexture(GLenum target);
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
@@ -123,6 +138,7 @@ private:
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
+    WebGLContextAttributes m_attributes;
 };
 } // namespace Starfish
 

@@ -70,6 +70,7 @@
 
 #include "StarfishBase.h"
 #include "core/util/BasicString.h"
+#include <iomanip>
 
 namespace Starfish {
 
@@ -1573,6 +1574,22 @@ public:
     static std::string toLowerCase(const std::string& str);
     static std::string createAlignedString(
         const std::vector<std::string>& strings, const size_t numColumns);
+    static std::string formatString(const char* format, ...);
+    template <typename Key, typename Value>
+    static std::string createTableString(const int padding, const Key& key,
+                                         const Value& value)
+    {
+        std::stringstream ss;
+        ss << std::setw(padding) << std::left << key << value;
+        return ss.str();
+    }
+    template <typename Key, typename Value, typename... Args>
+    static std::string createTableString(const int padding, const Key& key,
+                                         const Value& value, Args... args)
+    {
+        return createTableString(padding, key, value) + "\n" +
+               createTableString(padding, args...);
+    }
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX

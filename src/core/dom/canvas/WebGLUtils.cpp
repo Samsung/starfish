@@ -17,33 +17,32 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLUtils__
-#define __StarfishWebGLUtils__
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include <string>
-#include "core/util/String.h"
+#include "StarfishConfig.h"
+#include "WebGLUtils.h"
+#include "platform/canvas/webgl/GLES.h"
 
 namespace Starfish {
 
-struct CaseInsensitiveHash {
-    size_t operator()(const std::string& str) const
-    {
-        size_t hash = 0;
-        for (unsigned char c : str) {
-            hash = hash * 31 + std::tolower(c);
-        }
-        return hash;
+const char* webglErrorString(unsigned int code)
+{
+    switch (code) {
+    case GL_NO_ERROR:
+        return "NO_ERROR";
+    case GL_INVALID_ENUM:
+        return "INVALID_ENUM";
+    case GL_INVALID_VALUE:
+        return "INVALID_VALUE";
+    case GL_INVALID_OPERATION:
+        return "INVALID_OPERATION";
+    case GL_OUT_OF_MEMORY:
+        return "OUT_OF_MEMORY";
+    default:
+        return "UNDEFINED_ERROR";
     }
-};
-
-struct CaseInsensitiveEqual {
-    bool operator()(const std::string& a, const std::string& b) const
-    {
-        return StringUtils::equalsIgnoreCase(a, b);
-    }
-};
-
-const char* webglErrorString(unsigned int code);
+    return "";
+}
 
 } // namespace Starfish
 

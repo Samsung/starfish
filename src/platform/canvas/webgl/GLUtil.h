@@ -68,6 +68,11 @@ public:
     void operator delete(void* p) = delete;
 };
 
+class Pixel {
+public:
+    static size_t getBytesPerPixel(GLenum format, GLenum type);
+};
+
 } // namespace Starfish
 
 #endif

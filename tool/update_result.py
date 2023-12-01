@@ -28,10 +28,20 @@ def update_file(pass_fname, tc_fname, dry_run=False):
                 continue
             # Use only the first token to consider inline comments
             if tokens[0] in pass_list:
+                # Not update if an inline comment has @ignore annotation
+                if "@ignore" in tokens:
+                    print(f"= Ignored: {content}")
+                    continue
                 tc_list[i] = content + "\n"
                 updated = True
-                if dry_run:
-                    print(f"Updated: {content}")
+                print(f"+ Updated: {content}")
+        else:
+            content = tc_list[i].strip()
+            tokens = content.split()
+            if tokens[0] not in pass_list:
+                tc_list[i] = "# " + content + "\n"
+                updated = True
+                print(f"- Updated: {content}")
 
     if updated:
         if dry_run:
@@ -39,6 +49,7 @@ def update_file(pass_fname, tc_fname, dry_run=False):
         else:
             with open(tc_fname, "w") as file_b:
                 file_b.writelines(tc_list)
+            print("Updated.")
     else:
         print("No updates needed.")
 

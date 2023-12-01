@@ -238,6 +238,9 @@ uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);
 unsigned arrayBufferByteSize(ScriptArrayBuffer buffer);
 unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
 unsigned arrayBufferViewByteSize(ScriptArrayBufferView buffer);
+template <typename T, typename U>
+ScriptArrayBufferView createTypedArray(ScriptBindingInstance* instance,
+                                       const std::vector<U>& vector);
 
 void detachArrayBuffer(ScriptBindingInstance* instance,
                        ScriptArrayBuffer buffer);
