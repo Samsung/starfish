@@ -66,6 +66,7 @@ class PreloadScanner;
 class ContentSecurityPolicy;
 class ExecutionContext;
 class IntersectionObserver;
+class ResizeObserver;
 
 struct GradientDrawingInfo;
 
@@ -587,7 +588,13 @@ public:
 
     void addIntersectionObserver(IntersectionObserver* observer);
     void removeIntersectionObserver(IntersectionObserver* observer);
+
+    void addResizeObserver(ResizeObserver* observer);
+    void removeResizeObserver(ResizeObserver* observer);
+
     void updateObservation();
+    void updateIntersectionObservation();
+    void updateResizeObservation();
 
     bool isFullyActive();
 #define VIRTUAL
@@ -732,6 +739,7 @@ protected:
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
     }
 
     bool m_inParsing : 1;
@@ -799,6 +807,7 @@ protected:
     GCVector<SVGUseElement*> m_useElementListNeedUpdating;
     bool m_isMiddleOfUseElementUpdating;
     GCVector<IntersectionObserver*> m_intersectionObservers;
+    GCVector<ResizeObserver*> m_resizeObservers;
 };
 } // namespace Starfish
 

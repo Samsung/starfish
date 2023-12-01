@@ -22,69 +22,69 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/ExecutionContext.h"
+#include "binding/generated/ElementOrDocumentUnion.h"
+#include "ResizeObserverEntry.h"
+#include "ResizeObserverOptions.h"
 
 namespace Starfish {
 
 class ResizeObserverCallback : public gc {
 public:
-    static ResizeObserverCallback* toResizeObserverCallback(ScriptValue fn)
+    static ResizeObserverCallback* toResizeObserverCallback(ScriptValue fn);
+    ScriptValue scriptValue()
     {
-        if (!isCallableScriptValue(fn)) {
-            return nullptr;
-        }
-        return new ResizeObserverCallback(fn);
+        return m_resizeObserverCallback;
     }
 
 private:
-    ResizeObserverCallback(ScriptValue fn)
-        : m_callback(fn)
-    {
-    }
-
-    ScriptValue m_callback;
+    ResizeObserverCallback(ScriptValue fn);
+    ScriptValue m_resizeObserverCallback;
 };
 
 class ResizeObserver : public ScriptWrappable {
 public:
     ResizeObserver(ExecutionContext* executionContext,
-                   ResizeObserverCallback* callBack)
-        : ScriptWrappable(this)
-        , m_scriptBindingInstance(executionContext->scriptBindingInstance())
-    {
-    }
+                   ResizeObserverCallback* callBack);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {
-        return m_scriptBindingInstance;
+        return m_executionContext->scriptBindingInstance();
     }
 
     void init(ScriptBindingInstance*, void*) override;
 
     bool isResizeObserver() const override;
 
-    void observe(Element* target)
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
+    void observe(Element* target);
+    void observe(Element* target, ResizeObserverOptions options);
+    void unobserve(Element* target);
+    void disconnect();
 
-    void observe(Element* target, ResizeObserverOptions options)
+    GCVector<ResizeObserverEntry*> takeRecords();
+    bool hasRecords()
     {
-        STARFISH_UNIMPLEMENTED();
+        return !m_queuedEntries.empty();
     }
-
-    void unobserve(Element* target)
+    void notify();
+    GCVector<Element*>& targets()
     {
-        STARFISH_UNIMPLEMENTED();
+        return m_targets;
     }
-
-    void disconnect()
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
+    void queueResizeObserverEntry(ResizeObserverEntry* entry);
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ExecutionContext* m_executionContext;
+    Nullable<ElementOrDocument> m_root;
+    ResizeObserverCallback* m_callback = nullptr;
+    GCVector<Element*> m_targets;
+    GCVector<ResizeObserverEntry*> m_queuedEntries;
 };
+
+struct ResizeObserverRegistration : public gc {
+    ResizeObserver* observer = nullptr;
+    Unit::Rect previousSizeRect = { 0, 0, 0, 0 };
+};
+
 } // namespace Starfish
 
 #endif

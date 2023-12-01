@@ -17,33 +17,35 @@
  *  USA
  */
 
-#ifndef __StarfishResizeObserverEntry__
-#define __StarfishResizeObserverEntry__
-
-#include "binding/ScriptWrappable.h"
-#include "core/dom/ExecutionContext.h"
+#include "StarfishConfig.h"
+#include "ResizeObserverEntry.h"
+#include "core/dom/DOMRectReadOnly.h"
 
 namespace Starfish {
 
-class DOMRectReadOnly;
+ResizeObserverEntry::ResizeObserverEntry(ExecutionContext* executionContext,
+                                         DOMRectReadOnly* contentRect,
+                                         Element* target)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+    , m_contentRect(contentRect)
+    , m_target(target)
+{
+}
 
-class ResizeObserverEntry final : public ScriptWrappable {
-public:
-    ResizeObserverEntry(ExecutionContext* executionContext,
-                        DOMRectReadOnly* contentRect, Element* target);
+ScriptBindingInstance* ResizeObserverEntry::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
+}
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
+DOMRectReadOnly* ResizeObserverEntry::contentRect() const
+{
+    return m_contentRect;
+}
 
-    void init(ScriptBindingInstance*, void*) override;
-    bool isResizeObserverEntry() const override;
-    DOMRectReadOnly* contentRect() const;
-    Element* target() const;
-
-private:
-    ExecutionContext* m_executionContext = nullptr;
-    DOMRectReadOnly* m_contentRect = nullptr;
-    Element* m_target = nullptr;
-};
+Element* ResizeObserverEntry::target() const
+{
+    return m_target;
+}
 
 } // namespace Starfish
-#endif

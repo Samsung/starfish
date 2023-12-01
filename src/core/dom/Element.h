@@ -39,6 +39,7 @@ class Scrolling;
 class ShadowRoot;
 class IntersectionObserver;
 struct IntersectionObserverRegistration;
+struct ResizeObserverRegistration;
 
 class PseudoElementMap : public gc {
 public:
@@ -102,6 +103,7 @@ public:
 
     GCVector<IntersectionObserverRegistration*>*
     ensureRegisteredIntersectionObservers();
+    GCVector<ResizeObserverRegistration*>* ensureRegisteredResizeObservers();
 
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
@@ -113,6 +115,7 @@ public:
     ShadowRoot* m_shadowRoot;
     GCVector<IntersectionObserverRegistration*>*
         m_registeredIntersectionObservers;
+    GCVector<ResizeObserverRegistration*>* m_registeredResizeObservers;
 };
 
 class Element : public Node {
@@ -443,6 +446,12 @@ public:
     void removeIntersectionObserverRegistration(IntersectionObserver* observer);
     IntersectionObserverRegistration* findIntersectionObserverRegistration(
         IntersectionObserver* observer);
+
+    void appendResizeObserverRegistration(
+        ResizeObserverRegistration* resizeObserverRegistration);
+    void removeResizeObserverRegistration(ResizeObserver* observer);
+    ResizeObserverRegistration* findResizeObserverRegistration(
+        ResizeObserver* observer);
 
 protected:
     void setFocused(bool flag)
