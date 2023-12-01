@@ -5388,7 +5388,30 @@ void StyleResolver::applyProperty(
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
-
+    case CSSStyleValuePair::KeyKind::BorderBlockEndStyle:
+        if (element->isHTMLTableElement() &&
+            style->pseudoType() != PseudoElementNone) {
+            break;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderBlockEndStyle(
+                parentStyle->borderBlockEnd().borderValue().style());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderBlockEndStyle(
+                BorderStyleValue::NoneBorderStyleValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
+            style->setBorderBlockEndStyle(newCssValue.borderStyleValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
 #define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                         \
     case CSSStyleValuePair::KeyKind::Border##POS##Width:                 \
         if (newCssValue.valueKind() ==                                   \
@@ -9625,6 +9648,15 @@ GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
 
 bool CSSStyleValuePair::updateValueBorderBlockStartStyle(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderStyle(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueBorderBlockEndStyle(
     Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {

@@ -2644,11 +2644,16 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
             setBorderTopWidth(borderStart.borderValue().width());
         }
     }
+
     // border-block-end
     BorderBlockDirectionAwereData borderEnd = borderBlockEnd();
     if (borderEnd.hasColor() && !borderEnd.isCorrespondingBottomSpecifiedLater(
                                     BorderValueKind::kColor)) {
         setBorderBottomColor(borderEnd.borderValue().color());
+    }
+    if (borderEnd.hasStlye() && !borderEnd.isCorrespondingBottomSpecifiedLater(
+                                    BorderValueKind::kStyle)) {
+        setBorderBottomStyle(borderEnd.borderValue().style());
     }
 
     // TODO: padding-block
