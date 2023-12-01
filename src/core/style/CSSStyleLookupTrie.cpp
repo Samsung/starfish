@@ -1237,6 +1237,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
     case 22:
         // border-top-left-radius
         // border-block-end-color
+        // border-block-end-style
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-top-left-radius", 22) == 0) {
@@ -1244,6 +1245,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
             if (memcmp(data, "border-block-end-color", 22) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBlockEndColor;
+            }
+            if (memcmp(data, "border-block-end-style", 22) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEndStyle;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
@@ -2275,6 +2279,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderBlockEndColor", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBlockEndColor;
+            }
+            if (memcmp(data, "borderBlockEndStyle", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEndStyle;
             }
             break;
         case 't':

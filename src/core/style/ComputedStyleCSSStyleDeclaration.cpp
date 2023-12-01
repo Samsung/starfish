@@ -264,6 +264,12 @@ static CSSStyleValuePair resolveBlockDirectionAwareProperty(
         ret.setColorValue(frame->style()->border().bottom().color());
         return ret;
     }
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockEndColor) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
+        ret.setValue(CSSLength(frame->style()->border().bottom().style()));
+        return ret;
+    }
     return ret;
 }
 
@@ -1187,6 +1193,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (frame && frame->isFrameBox()) {
             p = resolveBlockDirectionAwareProperty(
                 CSSStyleValuePair::KeyKind::BorderBlockStartStyle,
+                frame->asFrameBox());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockEndStyle: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndStyle);
+        if (frame && frame->isFrameBox()) {
+            p = resolveBlockDirectionAwareProperty(
+                CSSStyleValuePair::KeyKind::BorderBlockEndStyle,
                 frame->asFrameBox());
         }
     } break;

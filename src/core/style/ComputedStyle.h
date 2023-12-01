@@ -2333,6 +2333,9 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
                                                   true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
+            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
+                                                  true);
     }
 
     void setBorderRightStyle(BorderStyleValue style)
@@ -2344,6 +2347,9 @@ public:
     {
         m_rareComputedStyleData.ensureBorder()->bottom().setStyle(style);
         m_rareComputedStyleData.ensureBorderBlockStart()
+            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
+                                                     true);
+        m_rareComputedStyleData.ensureBorderBlockEnd()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
                                                      true);
     }
@@ -2362,6 +2368,17 @@ public:
         m_rareComputedStyleData.ensureBorderBlockStart()
             ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
                                                      false);
+    }
+
+    void setBorderBlockEndStyle(BorderStyleValue style)
+    {
+        BorderBlockDirectionAwereData* end =
+            m_rareComputedStyleData.ensureBorderBlockEnd();
+        end->setStyle(style);
+        end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
+                                                 false);
+        end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kStyle,
+                                                    false);
     }
 
     void setBorderTopWidth(Length width)
