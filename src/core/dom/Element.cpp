@@ -1660,11 +1660,13 @@ void Element::removeIntersectionObserverRegistration(
         GCVector<IntersectionObserverRegistration*>* registrations =
             ensureRareElementMembers()->m_registeredIntersectionObservers;
         if (registrations->size()) {
-            registrations->erase(std::remove_if(
-                registrations->begin(), registrations->end(),
-                [observer](const IntersectionObserverRegistration* item) {
-                    return item->observer == observer;
-                }));
+            registrations->erase(
+                std::remove_if(
+                    registrations->begin(), registrations->end(),
+                    [observer](const IntersectionObserverRegistration* item) {
+                        return item->observer == observer;
+                    }),
+                registrations->end());
         }
     }
 }
@@ -1697,11 +1699,13 @@ void Element::removeResizeObserverRegistration(ResizeObserver* observer)
         GCVector<ResizeObserverRegistration*>* registrations =
             ensureRareElementMembers()->m_registeredResizeObservers;
         if (registrations->size()) {
-            registrations->erase(std::remove_if(
-                registrations->begin(), registrations->end(),
-                [observer](const ResizeObserverRegistration* item) {
-                    return item->observer == observer;
-                }));
+            registrations->erase(
+                std::remove_if(
+                    registrations->begin(), registrations->end(),
+                    [observer](const ResizeObserverRegistration* item) {
+                        return item->observer == observer;
+                    }),
+                registrations->end());
         }
     }
 }
