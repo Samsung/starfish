@@ -94,6 +94,8 @@
 #define START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #define END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #endif
+#define STR_INDIR(x) #x
+#define TO_STR(x) STR_INDIR(x)
 
 namespace LWE {
 
@@ -110,18 +112,18 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 #else
     UpdateSetting("cacheMode", "LOAD_NO_CACHE");
 #endif
-    UpdateSetting("defaultFontSize", std::to_string(LWE_DEFAULT_FONT_SIZE));
+    UpdateSetting("defaultFontSize", TO_STR(LWE_DEFAULT_FONT_SIZE));
     UpdateSetting("ttsMode", "Default");
     UpdateSetting("ttsLanguage", "");
-    UpdateSetting("backgroundColor", "255,255,255,255");
-    UpdateSetting("foregroundColor", "0,0,0,255");
+    UpdateSetting("backgroundColor", "255, 255, 255, 255");
+    UpdateSetting("foregroundColor", "0, 0, 0, 255");
     UpdateSetting("webSecurityMode", "Enable");
     UpdateSetting("idleModeJob", "IdleModeDefault");
     UpdateSetting("idleModeCheckIntervalInMS",
                   std::to_string(IdleModeCheckDefaultIntervalInMS));
     UpdateSetting("needsDownloadWebFontsEarly", "False");
     UpdateSetting("useHttp2", "False");
-    UpdateSetting("needsDownScaleImageResourceLargerThan", std::to_string(0));
+    UpdateSetting("needsDownScaleImageResourceLargerThan", "0");
 #ifndef TIZEN_COMPAT_HEADER_5_0
     UpdateSetting("scrollbarVisible", "True");
 #endif
