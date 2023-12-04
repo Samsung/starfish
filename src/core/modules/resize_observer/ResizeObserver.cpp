@@ -69,17 +69,26 @@ void ResizeObserver::observe(Element* target, ResizeObserverOptions options)
     target->appendResizeObserverRegistration(resizeObserverRegistration);
     m_targets.emplace_back(target);
 
-    target->document()->addResizeObserver(this);
+    Document* document = target->document();
+    if (!document->hasResizeObserver(this)) {
+        document->addResizeObserver(this);
+    }
 }
 
 void ResizeObserver::unobserve(Element* target)
 {
     if (m_targets.size()) {
         target->removeResizeObserverRegistration(this);
-        target->document()->removeResizeObserver(this);
-        m_targets.erase(std::remove_if(
-            m_targets.begin(), m_targets.end(),
-            [target](const Element* item) { return item == target; }));
+        m_targets.erase(std::remove_if(m_targets.begin(), m_targets.end(),
+                                       [target](const Element* item) {
+                                           return item == target;
+                                       }),
+                        m_targets.end());
+    }
+
+    Document* document = target->document();
+    if (!m_targets.size() && document->hasResizeObserver(this)) {
+        document->removeResizeObserver(this);
     }
 }
 

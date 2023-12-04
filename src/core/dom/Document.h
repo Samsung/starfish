@@ -588,9 +588,11 @@ public:
 
     void addIntersectionObserver(IntersectionObserver* observer);
     void removeIntersectionObserver(IntersectionObserver* observer);
+    bool hasIntersectionObserver(IntersectionObserver* observer) const;
 
     void addResizeObserver(ResizeObserver* observer);
     void removeResizeObserver(ResizeObserver* observer);
+    bool hasResizeObserver(ResizeObserver* observer) const;
 
     void updateObservation();
     void updateIntersectionObservation();

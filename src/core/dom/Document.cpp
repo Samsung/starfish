@@ -780,14 +780,14 @@ void Document::dispose()
 
     if (m_intersectionObservers.size()) {
         GCVector<IntersectionObserver*> observers = m_intersectionObservers;
-        for (auto* observer : m_intersectionObservers) {
+        for (auto* observer : observers) {
             observer->disconnect();
         }
     }
 
     if (m_resizeObservers.size()) {
         GCVector<ResizeObserver*> observers = m_resizeObservers;
-        for (auto* observer : m_resizeObservers) {
+        for (auto* observer : observers) {
             observer->disconnect();
         }
     }
@@ -2309,12 +2309,25 @@ void Document::addIntersectionObserver(IntersectionObserver* observer)
 void Document::removeIntersectionObserver(IntersectionObserver* observer)
 {
     if (m_intersectionObservers.size()) {
-        m_intersectionObservers.erase(std::remove_if(
-            m_intersectionObservers.begin(), m_intersectionObservers.end(),
-            [observer](const IntersectionObserver* item) {
-                return item == observer;
-            }));
+        m_intersectionObservers.erase(
+            std::remove_if(m_intersectionObservers.begin(),
+                           m_intersectionObservers.end(),
+                           [observer](const IntersectionObserver* item) {
+                               return item == observer;
+                           }),
+            m_intersectionObservers.end());
     }
+}
+
+bool Document::hasIntersectionObserver(IntersectionObserver* observer) const
+{
+    for (const auto* intersectionObserver : m_intersectionObservers) {
+        if (intersectionObserver == observer) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Document::addResizeObserver(ResizeObserver* observer)
@@ -2329,8 +2342,20 @@ void Document::removeResizeObserver(ResizeObserver* observer)
             std::remove_if(m_resizeObservers.begin(), m_resizeObservers.end(),
                            [observer](const ResizeObserver* item) {
                                return item == observer;
-                           }));
+                           }),
+            m_resizeObservers.end());
     }
+}
+
+bool Document::hasResizeObserver(ResizeObserver* observer) const
+{
+    for (const auto* resizeObserver : m_resizeObservers) {
+        if (resizeObserver == observer) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Document::updateObservation()

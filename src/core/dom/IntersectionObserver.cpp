@@ -159,17 +159,26 @@ void IntersectionObserver::observe(Element* target)
 
     m_targets.emplace_back(target);
 
-    target->document()->addIntersectionObserver(this);
+    Document* document = target->document();
+    if (!document->hasIntersectionObserver(this)) {
+        document->addIntersectionObserver(this);
+    }
 }
 
 void IntersectionObserver::unobserve(Element* target)
 {
     if (m_targets.size()) {
         target->removeIntersectionObserverRegistration(this);
-        target->document()->removeIntersectionObserver(this);
-        m_targets.erase(std::remove_if(
-            m_targets.begin(), m_targets.end(),
-            [target](const Element* item) { return item == target; }));
+        m_targets.erase(std::remove_if(m_targets.begin(), m_targets.end(),
+                                       [target](const Element* item) {
+                                           return item == target;
+                                       }),
+                        m_targets.end());
+    }
+
+    Document* document = target->document();
+    if (!m_targets.size() && document->hasIntersectionObserver(this)) {
+        document->removeIntersectionObserver(this);
     }
 }
 
