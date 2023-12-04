@@ -202,7 +202,7 @@ smaps_sizes getSmapsStats()
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
-static volatile sig_atomic_t g_doneFlag = 0;
+volatile sig_atomic_t g_doneFlag = 0;
 
 static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 {

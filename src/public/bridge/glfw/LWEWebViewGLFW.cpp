@@ -29,23 +29,30 @@
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
 
+#include <signal.h>
+
+extern volatile sig_atomic_t g_doneFlag; // It is declared in shell.cpp.
+
 namespace LWE {
 
-static void error_callback(int error, const char* description)
+static void onCursorPosition(GLFWwindow* window, double xpos, double ypos);
+static void onMouseButton(GLFWwindow* window, int button, int action, int mods);
+static void onScroll(GLFWwindow* window, double xoffset, double yoffset);
+static void onWindowSize(GLFWwindow* window, int width, int height);
+static void onKey(GLFWwindow* window, int key, int scancode, int action,
+                  int mods);
+static void poller(void* data);
+static void updateGLPlatform();
+
+static void onError(int error, const char* description)
 {
     STARFISH_LOG_ERROR("%s", description);
 }
 
-static void cursor_position_callback(GLFWwindow* window, double xpos,
-                                     double ypos);
-static void mouse_button_callback(GLFWwindow* window, int button, int action,
-                                  int mods);
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-static void window_size_callback(GLFWwindow* window, int width, int height);
-static void key_callback(GLFWwindow* window, int key, int scancode, int action,
-                         int mods);
-static void poller(void* data);
-static void updateGLPlatform();
+static void onWindowClose(GLFWwindow* window)
+{
+    g_doneFlag = 1;
+}
 
 class WebViewGLFW : public WebView {
 public:
@@ -55,7 +62,7 @@ public:
                 const char* timezoneID)
         : WebView(nullptr)
     {
-        glfwSetErrorCallback(error_callback);
+        glfwSetErrorCallback(onError);
         if (!glfwInit())
             exit(-1);
 
@@ -100,11 +107,12 @@ public:
         glfwMakeContextCurrent(m_glWindow);
 
         glfwSetWindowUserPointer(m_glWindow, this);
-        glfwSetCursorPosCallback(m_glWindow, cursor_position_callback);
-        glfwSetMouseButtonCallback(m_glWindow, mouse_button_callback);
-        glfwSetScrollCallback(m_glWindow, scroll_callback);
-        glfwSetWindowSizeCallback(m_glWindow, window_size_callback);
-        glfwSetKeyCallback(m_glWindow, key_callback);
+        glfwSetCursorPosCallback(m_glWindow, onCursorPosition);
+        glfwSetMouseButtonCallback(m_glWindow, onMouseButton);
+        glfwSetScrollCallback(m_glWindow, onScroll);
+        glfwSetWindowSizeCallback(m_glWindow, onWindowSize);
+        glfwSetKeyCallback(m_glWindow, onKey);
+        glfwSetWindowCloseCallback(m_glWindow, onWindowClose);
 
 #if defined(STARFISH_ENABLE_TEST)
         // for screen shot
@@ -163,8 +171,7 @@ static void poller(void* data)
     self->m_pollTimer = self->FetchWebContainer()->AddTimeout(poller, self, 25);
 }
 
-static void cursor_position_callback(GLFWwindow* window, double xpos,
-                                     double ypos)
+static void onCursorPosition(GLFWwindow* window, double xpos, double ypos)
 {
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
     MouseButtonsValue buttons = wnd->m_isMouseLbuttonDown
@@ -174,8 +181,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos,
                                                      buttons, xpos, ypos);
 }
 
-static void mouse_button_callback(GLFWwindow* window, int button, int action,
-                                  int mods)
+static void onMouseButton(GLFWwindow* window, int button, int action, int mods)
 {
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -195,7 +201,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action,
     }
 }
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+static void onScroll(GLFWwindow* window, double xoffset, double yoffset)
 {
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
     double xpos, ypos;
@@ -203,14 +209,14 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     wnd->FetchWebContainer()->DispatchMouseWheelEvent(xpos, ypos, -yoffset);
 }
 
-static void window_size_callback(GLFWwindow* window, int width, int height)
+static void onWindowSize(GLFWwindow* window, int width, int height)
 {
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
     wnd->FetchWebContainer()->ResizeTo(width, height);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action,
-                         int mods)
+static void onKey(GLFWwindow* window, int key, int scancode, int action,
+                  int mods)
 {
     KeyValue keyValue = KeyValue::UnidentifiedKey;
 
