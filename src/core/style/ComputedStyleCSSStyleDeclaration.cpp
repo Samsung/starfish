@@ -264,7 +264,7 @@ static CSSStyleValuePair resolveBlockDirectionAwareProperty(
         ret.setColorValue(frame->style()->border().bottom().color());
         return ret;
     }
-    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockEndColor) {
+    if (keykind == CSSStyleValuePair::KeyKind::BorderBlockEndStyle) {
         ret.setKeyKind(keykind);
         ret.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind);
         ret.setValue(CSSLength(frame->style()->border().bottom().style()));
