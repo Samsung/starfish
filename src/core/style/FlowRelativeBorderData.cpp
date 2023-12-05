@@ -20,14 +20,14 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/style/BorderDirectionAwereData.h"
+#include "core/style/FlowRelativeBorderData.h"
 #include "core/style/Style.h"
 
 namespace Starfish {
 
-bool BorderDirectionAwereData::damaged(const BorderDirectionAwereData* lhs,
-                                       const BorderDirectionAwereData* rhs,
-                                       bool* damagedKeys)
+bool FlowRelativeBorderData::damaged(const FlowRelativeBorderData* lhs,
+                                     const FlowRelativeBorderData* rhs,
+                                     bool* damagedKeys)
 {
     if (!lhs && !rhs) {
         return false;
@@ -35,7 +35,7 @@ bool BorderDirectionAwereData::damaged(const BorderDirectionAwereData* lhs,
 
     damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartColor] = false;
 
-    BorderDirectionAwereData temp;
+    FlowRelativeBorderData temp;
     lhs = lhs ? lhs : &temp;
     rhs = rhs ? rhs : &temp;
     bool hasDamage = false;

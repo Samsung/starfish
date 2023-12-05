@@ -24,9 +24,9 @@
 
 #include "core/style/BorderRadiusData.h"
 #include "core/style/BorderData.h"
-#include "core/style/BorderDirectionAwereData.h"
+#include "core/style/FlowRelativeBorderData.h"
 #include "core/style/LengthData.h"
-#include "core/style/LengthDirectionAwereData.h"
+#include "core/style/FlowRelativeLengthData.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterBaseList.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -175,11 +175,11 @@ public:
         String* m_stringValue;
         Length m_length;
         BorderData* m_borderData;
-        BorderBlockDirectionAwereData* m_borderBlockDirectionAwereData;
+        FlowRelativeBorderBlockData* m_flowRelativeBorderBlockData;
         BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
-        LengthBlockDirectionAwereData* m_lengthBlockDirectionAwereData;
-        LengthInlineDirectionAwereData* m_lengthInlineDirectionAwereData;
+        FlowRelativeLengthBlockData* m_flowRelativeLengthBlockData;
+        FlowRelativeLengthInlineData* m_flowRelativeLengthInlineData;
         FlexBasisData* m_flexBasis;
         StyleTransformDataGroup* m_transforms;
         StyleTransformOrigin* m_transformOrigin;
@@ -244,8 +244,8 @@ public:
         }
 
         RareComputedStyleValue(
-            BorderBlockDirectionAwereData* m_borderBlockDirectionAwereData)
-            : m_borderBlockDirectionAwereData(m_borderBlockDirectionAwereData)
+            FlowRelativeBorderBlockData* flowRelativeBorderBlockData)
+            : m_flowRelativeBorderBlockData(flowRelativeBorderBlockData)
         {
         }
 
@@ -260,14 +260,14 @@ public:
         }
 
         RareComputedStyleValue(
-            LengthBlockDirectionAwereData* lengthBlockDirectionAwereData)
-            : m_lengthBlockDirectionAwereData(lengthBlockDirectionAwereData)
+            FlowRelativeLengthBlockData* flowRelativeLengthBlockData)
+            : m_flowRelativeLengthBlockData(flowRelativeLengthBlockData)
         {
         }
 
         RareComputedStyleValue(
-            LengthInlineDirectionAwereData* lengthInlineDirectionAwereData)
-            : m_lengthInlineDirectionAwereData(lengthInlineDirectionAwereData)
+            FlowRelativeLengthInlineData* flowRelativeLengthInlineData)
+            : m_flowRelativeLengthInlineData(flowRelativeLengthInlineData)
         {
         }
 
@@ -609,23 +609,23 @@ public:
 
     GETTER_PTR(FlexBasisData, flexBasis, flexBasis, FlexBasis);
     GETTER_PTR(LengthData, lengthData, margin, Margin);
-    GETTER_PTR(LengthBlockDirectionAwereData, lengthBlockDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthBlockData, flowRelativeLengthBlockData,
                marginBlockStart, MarginBlockStart);
-    GETTER_PTR(LengthBlockDirectionAwereData, lengthBlockDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthBlockData, flowRelativeLengthBlockData,
                marginBlockEnd, MarginBlockEnd);
-    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                marginInlineEnd, MarginInlineEnd);
-    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                marginInlineStart, MarginInlineStart);
     GETTER_PTR(LengthData, lengthData, padding, Padding);
-    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                paddingInlineEnd, PaddingInlineEnd);
-    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+    GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                paddingInlineStart, PaddingInlineStart);
     GETTER_PTR(BorderData, borderData, border, Border);
-    GETTER_PTR(BorderBlockDirectionAwereData, borderBlockDirectionAwereData,
+    GETTER_PTR(FlowRelativeBorderBlockData, flowRelativeBorderBlockData,
                borderBlockStart, BorderBlockStart);
-    GETTER_PTR(BorderBlockDirectionAwereData, borderBlockDirectionAwereData,
+    GETTER_PTR(FlowRelativeBorderBlockData, flowRelativeBorderBlockData,
                borderBlockEnd, BorderBlockEnd);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
@@ -947,32 +947,32 @@ public:
         *m_rareComputedStyleData.ensureClipPath() = url;
     }
 
-    void setPaddingInlineEnd(LengthInlineDirectionAwereData length)
+    void setPaddingInlineEnd(FlowRelativeLengthInlineData length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineEnd() = length;
     }
 
-    void setPaddingInlineStart(LengthInlineDirectionAwereData length)
+    void setPaddingInlineStart(FlowRelativeLengthInlineData length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineStart() = length;
     }
 
-    void setMarginBlockStart(LengthBlockDirectionAwereData length)
+    void setMarginBlockStart(FlowRelativeLengthBlockData length)
     {
         *m_rareComputedStyleData.ensureMarginBlockStart() = length;
     }
 
-    void setMarginBlockEnd(LengthBlockDirectionAwereData length)
+    void setMarginBlockEnd(FlowRelativeLengthBlockData length)
     {
         *m_rareComputedStyleData.ensureMarginBlockEnd() = length;
     }
 
-    void setMarginInlineEnd(LengthInlineDirectionAwereData length)
+    void setMarginInlineEnd(FlowRelativeLengthInlineData length)
     {
         *m_rareComputedStyleData.ensureMarginInlineEnd() = length;
     }
 
-    void setMarginInlineStart(LengthInlineDirectionAwereData length)
+    void setMarginInlineStart(FlowRelativeLengthInlineData length)
     {
         *m_rareComputedStyleData.ensureMarginInlineStart() = length;
     }
@@ -2176,34 +2176,34 @@ public:
         return m_rareComputedStyleData.border();
     }
 
-    BorderBlockDirectionAwereData borderBlockStart()
+    FlowRelativeBorderBlockData borderBlockStart()
     {
         if (!hasRareComputeStyleData()) {
-            return BorderBlockDirectionAwereData();
+            return FlowRelativeBorderBlockData();
         }
 
-        BorderBlockDirectionAwereData* data =
+        FlowRelativeBorderBlockData* data =
             m_rareComputedStyleData.borderBlockStart();
         if (data) {
             return *data;
         }
 
-        return BorderBlockDirectionAwereData();
+        return FlowRelativeBorderBlockData();
     }
 
-    BorderBlockDirectionAwereData borderBlockEnd()
+    FlowRelativeBorderBlockData borderBlockEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return BorderBlockDirectionAwereData();
+            return FlowRelativeBorderBlockData();
         }
 
-        BorderBlockDirectionAwereData* data =
+        FlowRelativeBorderBlockData* data =
             m_rareComputedStyleData.borderBlockEnd();
         if (data) {
             return *data;
         }
 
-        return BorderBlockDirectionAwereData();
+        return FlowRelativeBorderBlockData();
     }
 
     StyleTransformOrigin* transformOrigin()
@@ -2273,7 +2273,7 @@ public:
 
     void setBorderBlockStartColor(Unit::Color color)
     {
-        BorderBlockDirectionAwereData* start =
+        FlowRelativeBorderBlockData* start =
             m_rareComputedStyleData.ensureBorderBlockStart();
         start->setColor(color);
         start->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
@@ -2285,7 +2285,7 @@ public:
 
     void setBorderBlockEndColor(Unit::Color color)
     {
-        BorderBlockDirectionAwereData* end =
+        FlowRelativeBorderBlockData* end =
             m_rareComputedStyleData.ensureBorderBlockEnd();
         end->setColor(color);
         end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
@@ -2305,7 +2305,7 @@ public:
 
     void clearBorderBlockStartColor()
     {
-        BorderBlockDirectionAwereData* start =
+        FlowRelativeBorderBlockData* start =
             m_rareComputedStyleData.ensureBorderBlockStart();
         start->borderValue().clearColor();
         start->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
@@ -2317,7 +2317,7 @@ public:
 
     void clearBorderBlockEndColor()
     {
-        BorderBlockDirectionAwereData* end =
+        FlowRelativeBorderBlockData* end =
             m_rareComputedStyleData.ensureBorderBlockEnd();
         end->borderValue().clearColor();
         end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kColor,
@@ -2372,7 +2372,7 @@ public:
 
     void setBorderBlockEndStyle(BorderStyleValue style)
     {
-        BorderBlockDirectionAwereData* end =
+        FlowRelativeBorderBlockData* end =
             m_rareComputedStyleData.ensureBorderBlockEnd();
         end->setStyle(style);
         end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kStyle,
@@ -2426,7 +2426,7 @@ public:
 
     void setBorderBlockEndWidth(Length width)
     {
-        BorderBlockDirectionAwereData* end =
+        FlowRelativeBorderBlockData* end =
             m_rareComputedStyleData.ensureBorderBlockEnd();
         end->setWidth(width);
         end->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
@@ -3574,94 +3574,94 @@ public:
         return String::emptyString;
     }
 
-    LengthInlineDirectionAwereData paddingInlineEnd()
+    FlowRelativeLengthInlineData paddingInlineEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthInlineDirectionAwereData();
+            return FlowRelativeLengthInlineData();
         }
 
-        LengthInlineDirectionAwereData* data =
+        FlowRelativeLengthInlineData* data =
             m_rareComputedStyleData.paddingInlineEnd();
         if (data) {
             return *data;
         }
 
-        return LengthInlineDirectionAwereData();
+        return FlowRelativeLengthInlineData();
     }
 
-    LengthInlineDirectionAwereData paddingInlineStart()
+    FlowRelativeLengthInlineData paddingInlineStart()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthInlineDirectionAwereData();
+            return FlowRelativeLengthInlineData();
         }
 
-        LengthInlineDirectionAwereData* data =
+        FlowRelativeLengthInlineData* data =
             m_rareComputedStyleData.paddingInlineStart();
         if (data) {
             return *data;
         }
 
-        return LengthInlineDirectionAwereData();
+        return FlowRelativeLengthInlineData();
     }
 
-    LengthBlockDirectionAwereData marginBlockStart()
+    FlowRelativeLengthBlockData marginBlockStart()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthBlockDirectionAwereData();
+            return FlowRelativeLengthBlockData();
         }
 
-        LengthBlockDirectionAwereData* data =
+        FlowRelativeLengthBlockData* data =
             m_rareComputedStyleData.marginBlockStart();
         if (data) {
             return *data;
         }
 
-        return LengthBlockDirectionAwereData();
+        return FlowRelativeLengthBlockData();
     }
 
-    LengthBlockDirectionAwereData marginBlockEnd()
+    FlowRelativeLengthBlockData marginBlockEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthBlockDirectionAwereData();
+            return FlowRelativeLengthBlockData();
         }
 
-        LengthBlockDirectionAwereData* data =
+        FlowRelativeLengthBlockData* data =
             m_rareComputedStyleData.marginBlockEnd();
         if (data) {
             return *data;
         }
 
-        return LengthBlockDirectionAwereData();
+        return FlowRelativeLengthBlockData();
     }
 
-    LengthInlineDirectionAwereData marginInlineEnd()
+    FlowRelativeLengthInlineData marginInlineEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthInlineDirectionAwereData();
+            return FlowRelativeLengthInlineData();
         }
 
-        LengthInlineDirectionAwereData* data =
+        FlowRelativeLengthInlineData* data =
             m_rareComputedStyleData.marginInlineEnd();
         if (data) {
             return *data;
         }
 
-        return LengthInlineDirectionAwereData();
+        return FlowRelativeLengthInlineData();
     }
 
-    LengthInlineDirectionAwereData marginInlineStart()
+    FlowRelativeLengthInlineData marginInlineStart()
     {
         if (!hasRareComputeStyleData()) {
-            return LengthInlineDirectionAwereData();
+            return FlowRelativeLengthInlineData();
         }
 
-        LengthInlineDirectionAwereData* data =
+        FlowRelativeLengthInlineData* data =
             m_rareComputedStyleData.marginInlineStart();
         if (data) {
             return *data;
         }
 
-        return LengthInlineDirectionAwereData();
+        return FlowRelativeLengthInlineData();
     }
 
     PositionedMaskData* mask()
@@ -4519,8 +4519,8 @@ protected:
         ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx);
     void removeCachedPseudoStyle(PseudoElementType pid);
 
-    void applyBlockDirectionAwareProperty();
-    void applyInlineDirectionAwareProperty();
+    void applyFlowRelativeBlockProperties();
+    void applyFlowRelativeInlineProperties();
 
     InheritedStylesRareData* ensureInheritedRareData()
     {

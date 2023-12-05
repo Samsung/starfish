@@ -17,21 +17,21 @@
  *  USA
  */
 
-#ifndef __StarfishLengthDirectionAwereData__
-#define __StarfishLengthDirectionAwereData__
+#ifndef __StarfishFlowRelativeLengthData__
+#define __StarfishFlowRelativeLengthData__
 
 namespace Starfish {
 
 class ComputedStyle;
 
-class LengthDirectionAwereData : public gc {
+class FlowRelativeLengthData : public gc {
 public:
-    LengthDirectionAwereData()
+    FlowRelativeLengthData()
         : m_length(nullptr)
     {
     }
 
-    LengthDirectionAwereData(Length length)
+    FlowRelativeLengthData(Length length)
         : m_length(length)
     {
     }
@@ -50,18 +50,18 @@ protected:
     Nullable<Length> m_length;
 };
 
-class LengthInlineDirectionAwereData : public LengthDirectionAwereData {
+class FlowRelativeLengthInlineData : public FlowRelativeLengthData {
 public:
-    LengthInlineDirectionAwereData()
-        : LengthDirectionAwereData()
+    FlowRelativeLengthInlineData()
+        : FlowRelativeLengthData()
         , m_isCorrespondingLeftSet(false)
         , m_isCorrespondingRightSet(false)
 
     {
     }
 
-    LengthInlineDirectionAwereData(Length length)
-        : LengthDirectionAwereData(length)
+    FlowRelativeLengthInlineData(Length length)
+        : FlowRelativeLengthData(length)
         , m_isCorrespondingLeftSet(false)
         , m_isCorrespondingRightSet(false)
 
@@ -88,12 +88,12 @@ public:
         m_isCorrespondingRightSet = true;
     }
 
-    bool operator==(const LengthInlineDirectionAwereData& o)
+    bool operator==(const FlowRelativeLengthInlineData& o)
     {
         return m_length == o.m_length;
     }
 
-    bool operator!=(const LengthInlineDirectionAwereData& o)
+    bool operator!=(const FlowRelativeLengthInlineData& o)
     {
         return !operator==(o);
     }
@@ -103,18 +103,18 @@ private:
     bool m_isCorrespondingRightSet = false;
 };
 
-class LengthBlockDirectionAwereData : public LengthDirectionAwereData {
+class FlowRelativeLengthBlockData : public FlowRelativeLengthData {
 public:
-    LengthBlockDirectionAwereData()
-        : LengthDirectionAwereData()
+    FlowRelativeLengthBlockData()
+        : FlowRelativeLengthData()
         , m_isCorrespondingTopSet(false)
         , m_isCorrespondingBottomSet(false)
 
     {
     }
 
-    LengthBlockDirectionAwereData(Length length)
-        : LengthDirectionAwereData(length)
+    FlowRelativeLengthBlockData(Length length)
+        : FlowRelativeLengthData(length)
         , m_isCorrespondingTopSet(false)
         , m_isCorrespondingBottomSet(false)
 
@@ -141,12 +141,12 @@ public:
         m_isCorrespondingBottomSet = true;
     }
 
-    bool operator==(const LengthBlockDirectionAwereData& o)
+    bool operator==(const FlowRelativeLengthBlockData& o)
     {
         return m_length == o.m_length;
     }
 
-    bool operator!=(const LengthBlockDirectionAwereData& o)
+    bool operator!=(const FlowRelativeLengthBlockData& o)
     {
         return !operator==(o);
     }
