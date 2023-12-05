@@ -2637,6 +2637,7 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
                                       BorderValueKind::kStyle)) {
         setBorderTopStyle(borderStart.borderValue().style());
     }
+
     if (border().top().hasBorderStyle()) {
         if (borderStart.hasWidth() &&
             !borderStart.isCorrespondingTopSpecifiedLater(
@@ -2650,11 +2651,20 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     if (borderEnd.hasColor() && !borderEnd.isCorrespondingBottomSpecifiedLater(
                                     BorderValueKind::kColor)) {
         setBorderBottomColor(borderEnd.borderValue().color());
+    } else if (!borderEnd.hasColor() &&
+               !borderEnd.isCorrespondingBottomSpecifiedLater(
+                   BorderValueKind::kColor) &&
+               borderEnd.isFromShorthand()) {
+        // If there is no color in the result interpreted from the long hand.
+        // Inherits color.
+        setBorderBottomColor(color());
     }
+
     if (borderEnd.hasStlye() && !borderEnd.isCorrespondingBottomSpecifiedLater(
                                     BorderValueKind::kStyle)) {
         setBorderBottomStyle(borderEnd.borderValue().style());
     }
+
     if (border().bottom().hasBorderStyle()) {
         if (borderEnd.hasWidth() &&
             !borderEnd.isCorrespondingBottomSpecifiedLater(

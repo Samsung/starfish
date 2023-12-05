@@ -911,6 +911,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-top-width", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderTopWidth;
             }
+            if (memcmp(data, "border-block-end", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEnd;
+            }
             break;
         case 'l':
             if (memcmp(data, "list-style-image", 16) == 0) {
@@ -2021,6 +2024,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderCollapse", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderCollapse;
+            }
+            if (memcmp(data, "borderBlockEnd", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderBlockEnd;
             }
             break;
         case 'o':

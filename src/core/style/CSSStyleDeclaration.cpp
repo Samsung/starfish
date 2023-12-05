@@ -2632,12 +2632,14 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
     } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         removeBorderBlockStart();
+        removeBorderBlockEnd();
         addBorderCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);
         removeBorderBlockStart();
+        removeBorderBlockEnd();
         addBorderCSSValuePairs(width, style, color);
     }
 }
@@ -2717,6 +2719,75 @@ void CSSStyleDeclaration::removeBorderBlockStart()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStartColor);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockStart);
+}
+
+String* CSSStyleDeclaration::BorderBlockEnd()
+{
+    String* width = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockEndWidth);
+    String* style = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockEndStyle);
+    String* color = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderBlockEndColor);
+    return BorderString(width, false, style, false, color, false);
+}
+
+void CSSStyleDeclaration::setBorderBlockEnd(const char* value, size_t len,
+                                            bool isImportant)
+{
+    if (len == 0) {
+        removeBorderBlockStart();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+
+    std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3] = {
+        { CSSStyleValuePair::KeyKind::BorderBlockEndWidth,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderBlockEndStyle,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderBlockEndColor,
+          CSSStyleValuePair() },
+    };
+
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEnd, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second = v;
+        }
+        addBorderBlockStartCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEnd,
+                        CSSStyleValuePair());
+    } else if (parseBorderShorthand(tokens, &longhands[0].second,
+                                    &longhands[1].second,
+                                    &longhands[2].second)) {
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second.setFlagImportant(isImportant);
+        }
+        addBorderBlockStartCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEnd,
+                        CSSStyleValuePair());
+    }
+}
+
+void CSSStyleDeclaration::removeBorderBlockEnd()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEndWidth);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEndStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEndColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBlockEnd);
 }
 
 void CSSStyleDeclaration::addBorderBlockStartCSSValuePairs(
