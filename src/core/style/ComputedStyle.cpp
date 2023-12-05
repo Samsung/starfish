@@ -788,8 +788,8 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     // Apply direction aware propreties.
-    applyBlockDirectionAwareProperty();
-    applyInlineDirectionAwareProperty();
+    applyFlowRelativeBlockProperties();
+    applyFlowRelativeInlineProperties();
 
     changeFontPercentToFixedIfNeeded(curFontSize, rootFontSize, font(),
                                      current);
@@ -1524,13 +1524,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     {
-        BorderBlockDirectionAwereData* oldBorderBlockStart =
+        FlowRelativeBorderBlockData* oldBorderBlockStart =
             oldStyle->rareComputedStyleData()->borderBlockStart();
-        BorderBlockDirectionAwereData* newBorderBlockStart =
+        FlowRelativeBorderBlockData* newBorderBlockStart =
             newStyle->rareComputedStyleData()->borderBlockStart();
         if (oldBorderBlockStart || newBorderBlockStart) {
             // TODO: Compare other properties.
-            if (BorderDirectionAwereData::damaged(
+            if (FlowRelativeBorderData::damaged(
                     oldBorderBlockStart, newBorderBlockStart, damagedKeys)) {
                 if (damagedKeys
                         [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
@@ -1554,13 +1554,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     {
-        BorderBlockDirectionAwereData* oldBorderBlockEnd =
+        FlowRelativeBorderBlockData* oldBorderBlockEnd =
             oldStyle->rareComputedStyleData()->borderBlockEnd();
-        BorderBlockDirectionAwereData* newBorderBlockEnd =
+        FlowRelativeBorderBlockData* newBorderBlockEnd =
             newStyle->rareComputedStyleData()->borderBlockEnd();
         if (oldBorderBlockEnd || newBorderBlockEnd) {
             // TODO: Compare other properties.
-            if (BorderDirectionAwereData::damaged(
+            if (FlowRelativeBorderData::damaged(
                     oldBorderBlockEnd, newBorderBlockEnd, damagedKeys)) {
                 if (damagedKeys
                         [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
@@ -2601,14 +2601,14 @@ bool ComputedStyle::isFourSideBorderStyleValueSolid()
     return false;
 }
 
-void ComputedStyle::applyBlockDirectionAwareProperty()
+void ComputedStyle::applyFlowRelativeBlockProperties()
 {
     // TODO: If 'writing-mode' is supported, the padding/margin value must be
     // updated using this property.
 
     // margin-block
-    LengthBlockDirectionAwereData marginStart = marginBlockStart();
-    LengthBlockDirectionAwereData marginEnd = marginBlockEnd();
+    FlowRelativeLengthBlockData marginStart = marginBlockStart();
+    FlowRelativeLengthBlockData marginEnd = marginBlockEnd();
     if (marginStart.legnth().hasValue() &&
         !marginStart.isCorrespondingTopSet()) {
         setMarginTop(marginStart.legnth().getValue());
@@ -2620,7 +2620,7 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
 
     // border-block
     // border-block-start
-    BorderBlockDirectionAwereData borderStart = borderBlockStart();
+    FlowRelativeBorderBlockData borderStart = borderBlockStart();
     if (borderStart.hasColor() && !borderStart.isCorrespondingTopSpecifiedLater(
                                       BorderValueKind::kColor)) {
         setBorderTopColor(borderStart.borderValue().color());
@@ -2647,7 +2647,7 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     }
 
     // border-block-end
-    BorderBlockDirectionAwereData borderEnd = borderBlockEnd();
+    FlowRelativeBorderBlockData borderEnd = borderBlockEnd();
     if (borderEnd.hasColor() && !borderEnd.isCorrespondingBottomSpecifiedLater(
                                     BorderValueKind::kColor)) {
         setBorderBottomColor(borderEnd.borderValue().color());
@@ -2676,17 +2676,16 @@ void ComputedStyle::applyBlockDirectionAwareProperty()
     // TODO: padding-block
 }
 
-void ComputedStyle::applyInlineDirectionAwareProperty()
+void ComputedStyle::applyFlowRelativeInlineProperties()
 {
     // TODO: If 'writing-mode' is supported, the padding/margin value must be
     // updated using this property as well as 'direction' property.
 
     DirectionValue direction = this->direction();
-    LengthInlineDirectionAwereData margineInlineEnd = this->marginInlineEnd();
-    LengthInlineDirectionAwereData margineInlineStart =
-        this->marginInlineStart();
-    LengthInlineDirectionAwereData paddingInlineEnd = this->paddingInlineEnd();
-    LengthInlineDirectionAwereData paddingInlineStart =
+    FlowRelativeLengthInlineData margineInlineEnd = this->marginInlineEnd();
+    FlowRelativeLengthInlineData margineInlineStart = this->marginInlineStart();
+    FlowRelativeLengthInlineData paddingInlineEnd = this->paddingInlineEnd();
+    FlowRelativeLengthInlineData paddingInlineStart =
         this->paddingInlineStart();
 
     if (direction == DirectionValue::LtrDirectionValue) {

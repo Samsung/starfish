@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishBorderDirectionAwereData__
-#define __StarfishBorderDirectionAwereData__
+#ifndef __StarfishFlowRelativeBorderData__
+#define __StarfishFlowRelativeBorderData__
 
 #include "core/style/BorderValue.h"
 #include "core/style/BorderImage.h"
@@ -31,12 +31,12 @@ enum class BorderValueKind {
     kStyle,
 };
 
-class BorderDirectionAwereData : public gc {
+class FlowRelativeBorderData : public gc {
 public:
-    static bool damaged(const BorderDirectionAwereData* lhs,
-                        const BorderDirectionAwereData* rhs, bool* damagedKeys);
+    static bool damaged(const FlowRelativeBorderData* lhs,
+                        const FlowRelativeBorderData* rhs, bool* damagedKeys);
 
-    BorderDirectionAwereData()
+    FlowRelativeBorderData()
     {
         m_borderValue.setWidth(Length());
     }
@@ -97,9 +97,9 @@ protected:
     bool m_fromShorthand = false;
 };
 
-class BorderBlockDirectionAwereData : public BorderDirectionAwereData {
+class FlowRelativeBorderBlockData : public FlowRelativeBorderData {
 public:
-    BorderBlockDirectionAwereData()
+    FlowRelativeBorderBlockData()
     {
     }
 
@@ -125,12 +125,12 @@ public:
             value;
     }
 
-    bool operator==(const BorderBlockDirectionAwereData& o)
+    bool operator==(const FlowRelativeBorderBlockData& o)
     {
         return m_borderValue == o.m_borderValue;
     }
 
-    bool operator!=(const BorderBlockDirectionAwereData& o)
+    bool operator!=(const FlowRelativeBorderBlockData& o)
     {
         return !operator==(o);
     }

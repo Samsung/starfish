@@ -149,7 +149,7 @@ static CSSStyleValuePair stylePaintDataToCSSStyleValue(
     return ret;
 }
 
-static CSSStyleValuePair resolveInlineDirectionAwareProperty(
+static CSSStyleValuePair resolveFlowRelativeInlineProperties(
     CSSStyleValuePair::KeyKind keykind, FrameBox* frame)
 {
     // TODO: If 'writing-mode' is supported, the resolved value must be selected
@@ -220,7 +220,7 @@ static CSSStyleValuePair resolveInlineDirectionAwareProperty(
     return ret;
 }
 
-static CSSStyleValuePair resolveBlockDirectionAwareProperty(
+static CSSStyleValuePair resolveFlowRelativeBlockProperties(
     CSSStyleValuePair::KeyKind keykind, FrameBox* frame)
 {
     // margin.
@@ -344,7 +344,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartWidth);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockStartWidth,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -352,7 +352,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveBlockDirectionAwareProperty(
+                p = resolveFlowRelativeBlockProperties(
                     CSSStyleValuePair::KeyKind::BorderBlockStartWidth, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -366,7 +366,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndWidth);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockEndWidth,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -374,7 +374,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveBlockDirectionAwareProperty(
+                p = resolveFlowRelativeBlockProperties(
                     CSSStyleValuePair::KeyKind::BorderBlockEndWidth, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -1218,7 +1218,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartStyle);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockStartStyle,
                 frame->asFrameBox());
         }
@@ -1227,7 +1227,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndStyle);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockEndStyle,
                 frame->asFrameBox());
         }
@@ -1260,7 +1260,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockStartColor);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockStartColor,
                 frame->asFrameBox());
         }
@@ -1269,7 +1269,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBlockEndColor);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockEndColor,
                 frame->asFrameBox());
         }
@@ -2285,7 +2285,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginBlockStart);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::MarginBlockStart,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2293,7 +2293,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveBlockDirectionAwareProperty(
+                p = resolveFlowRelativeBlockProperties(
                     CSSStyleValuePair::KeyKind::MarginBlockStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -2307,7 +2307,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginBlockEnd);
         if (frame && frame->isFrameBox()) {
-            p = resolveBlockDirectionAwareProperty(
+            p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::MarginBlockEnd,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2315,7 +2315,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveBlockDirectionAwareProperty(
+                p = resolveFlowRelativeBlockProperties(
                     CSSStyleValuePair::KeyKind::MarginBlockEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -2329,7 +2329,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineEnd);
         if (frame && frame->isFrameBox()) {
-            p = resolveInlineDirectionAwareProperty(
+            p = resolveFlowRelativeInlineProperties(
                 CSSStyleValuePair::KeyKind::MarginInlineEnd,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2337,7 +2337,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveInlineDirectionAwareProperty(
+                p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::MarginInlineEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -2351,7 +2351,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineStart);
         if (frame && frame->isFrameBox()) {
-            p = resolveInlineDirectionAwareProperty(
+            p = resolveFlowRelativeInlineProperties(
                 CSSStyleValuePair::KeyKind::MarginInlineStart,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2359,7 +2359,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveInlineDirectionAwareProperty(
+                p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::MarginInlineStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -2373,7 +2373,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
         if (frame && frame->isFrameBox()) {
-            p = resolveInlineDirectionAwareProperty(
+            p = resolveFlowRelativeInlineProperties(
                 CSSStyleValuePair::KeyKind::PaddingInlineEnd,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2381,7 +2381,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveInlineDirectionAwareProperty(
+                p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::PaddingInlineEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
@@ -2395,7 +2395,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineStart);
         if (frame && frame->isFrameBox()) {
-            p = resolveInlineDirectionAwareProperty(
+            p = resolveFlowRelativeInlineProperties(
                 CSSStyleValuePair::KeyKind::PaddingInlineStart,
                 frame->asFrameBox());
         } else if (frame && frame->isFrameInline()) {
@@ -2403,7 +2403,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 blockContainer(frame)->firstInlineNonReplacedBox(
                     frame->asFrameInline());
             if (inb != nullptr) {
-                p = resolveInlineDirectionAwareProperty(
+                p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::PaddingInlineStart, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
