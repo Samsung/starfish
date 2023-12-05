@@ -140,6 +140,47 @@ private:
     bool m_isCorrespondingBottomSpecifiedLater[3] = { false };
 };
 
+class FlowRelativeBorderInlineData : public FlowRelativeBorderData {
+public:
+    FlowRelativeBorderInlineData()
+    {
+    }
+
+    bool isCorrespondingLeftSpecifiedLater(BorderValueKind type) const
+    {
+        return m_isCorrespondingLeftSpecifiedLater[static_cast<size_t>(type)];
+    }
+
+    bool isCorrespondingRightSpecifiedLater(BorderValueKind type) const
+    {
+        return m_isCorrespondingRightSpecifiedLater[static_cast<size_t>(type)];
+    }
+
+    void setCorrespondingLeftIsSpecifiedLater(BorderValueKind type, bool value)
+    {
+        m_isCorrespondingLeftSpecifiedLater[static_cast<size_t>(type)] = value;
+    }
+
+    void setCorrespondingRightIsSpecifiedLater(BorderValueKind type, bool value)
+    {
+        m_isCorrespondingRightSpecifiedLater[static_cast<size_t>(type)] = value;
+    }
+
+    bool operator==(const FlowRelativeBorderInlineData& o)
+    {
+        return m_borderValue == o.m_borderValue;
+    }
+
+    bool operator!=(const FlowRelativeBorderInlineData& o)
+    {
+        return !operator==(o);
+    }
+
+private:
+    bool m_isCorrespondingLeftSpecifiedLater[3] = { false };
+    bool m_isCorrespondingRightSpecifiedLater[3] = { false };
+};
+
 } // namespace Starfish
 
 #endif

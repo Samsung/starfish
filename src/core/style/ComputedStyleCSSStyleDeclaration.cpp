@@ -155,37 +155,43 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
     // TODO: If 'writing-mode' is supported, the resolved value must be selected
     // using this property as well as 'direction' property.
 
-    DirectionValue direction = frame->style()->direction();
     CSSStyleValuePair ret;
-    if (direction == DirectionValue::LtrDirectionValue) {
+    if (frame->style()->direction() == DirectionValue::LtrDirectionValue) {
         // margin-inline.
-        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
-            ret.setKeyKind(keykind);
-            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            ret.setValue(CSSLength(frame->marginRight()));
-            return ret;
-        }
         if (keykind == CSSStyleValuePair::KeyKind::MarginInlineStart) {
             ret.setKeyKind(keykind);
             ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
             ret.setValue(CSSLength(frame->marginLeft()));
             return ret;
         }
-
-        // padding-inline.
-        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
             ret.setKeyKind(keykind);
             ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            ret.setValue(CSSLength(frame->paddingRight()));
+            ret.setValue(CSSLength(frame->marginRight()));
             return ret;
         }
+
+        // padding-inline.
         if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
             ret.setKeyKind(keykind);
             ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
             ret.setValue(CSSLength(frame->paddingLeft()));
             return ret;
         }
-        // TODO: padding-block, margin-block.
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->paddingRight()));
+            return ret;
+        }
+
+        // border-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartColor) {
+            ret.setKeyKind(keykind);
+            ret.setColorValue(frame->style()->border().left().color());
+            return ret;
+        }
+
     } else {
         // margin-inline.
         if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
@@ -214,7 +220,13 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValue(CSSLength(frame->paddingRight()));
             return ret;
         }
-        // TODO: padding-block, margin-block.
+
+        // border-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartColor) {
+            ret.setKeyKind(keykind);
+            ret.setColorValue(frame->style()->border().right().color());
+            return ret;
+        }
     }
 
     return ret;
@@ -1271,6 +1283,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (frame && frame->isFrameBox()) {
             p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockEndColor,
+                frame->asFrameBox());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineStartColor: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderInlineStartColor);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeInlineProperties(
+                CSSStyleValuePair::KeyKind::BorderInlineStartColor,
                 frame->asFrameBox());
         }
     } break;

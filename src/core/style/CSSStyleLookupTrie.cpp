@@ -1333,6 +1333,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-bottom-left-radius", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomLeftRadius;
             }
+            if (memcmp(data, "border-inline-start-color", 25) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStartColor;
+            }
             break;
         }
         break;
@@ -2370,6 +2373,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'b':
             if (memcmp(data, "borderBottomLeftRadius", 22) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomLeftRadius;
+            }
+            if (memcmp(data, "borderInlineStartColor", 22) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStartColor;
             }
             break;
         }

@@ -5604,6 +5604,33 @@ void StyleResolver::applyProperty(
             }
         }
     } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineStartColor: {
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderInlineStartColor(
+                parentStyle->borderInlineStart().borderValue().color());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->clearBorderInlineStartColor();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setBorderInlineStartColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->clearBorderInlineStartColor();
+            } else {
+                style->setBorderInlineStartColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+    } break;
     case CSSStyleValuePair::KeyKind::BorderBlockStart: {
         // Generally, shorthand properties are divided into longhand
         // properties and registered in cssvalues. so, there is no need to
@@ -9635,6 +9662,12 @@ bool CSSStyleValuePair::updateValueBorderBlockStartColor(
 }
 
 bool CSSStyleValuePair::updateValueBorderBlockEndColor(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueColor(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderInlineStartColor(
     Document* document, const CSSTokenVector& tokens)
 {
     return updateValueColor(document, tokens);
