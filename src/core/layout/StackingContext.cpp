@@ -3379,121 +3379,222 @@ void StackingContext::applyMask(Canvas* canvas,
             continue;
         }
 
-        auto type = style->maskImage(i)->type();
+        PositionedMaskData* maskStyle =
+            style->rareComputedStyleData()->positionedMask();
 
-        if (type.isGradient()) {
-            ImageValue* imageValue = style->maskImage(i);
-            auto gradientValue = imageValue->gradientValue();
-            Unit::Rect rect = m_owner->makeRect(BoxValue::BorderBoxBoxValue)
-                                  .snapSizeToPixel();
-            bool cacheable =
-                gradientValue->isCacheable(rect.width(), rect.height(), false);
-            auto info = imageValue->gradientValue()->makeGradientDrawingInfo(
-                rect, m_owner);
-            NativeImageData* gradientNativeImageData = nullptr;
-            if (cacheable) {
-                std::shared_ptr<NativeGradient> gradient =
-                    document->findInNativeGradientCache(info);
+        {
+            FrameBox* box = m_owner;
+            auto type = style->maskImage(i)->type();
+            NativeImageData* id = nullptr;
+            float width = 0;
+            float height = 0;
+            unsigned int idx = i;
+            if (type.isURL()) {
+                STARFISH_ASSERT(maskStyle != nullptr);
 
-                if (gradient.get() == nullptr) {
-                    gradient = NativeGradient::create(info);
+                ImageResource* ir = maskStyle->imageResource(i);
+
+                if (box->node() != nullptr && ir != nullptr) {
+                    box->node()
+                        ->webView()
+                        ->putURLIntoActiveImageURLsInRenderingSet(
+                            ir->url()->urlString()->toUTF8NonGCString());
                 }
 
-                if (gradient->gradientImageDataCached() == nullptr) {
-                    auto imageData = BufferedNativeImageData::create(
-                        rect.width(), rect.height());
-                    Canvas* gradientCanvas =
-                        Canvas::create(m_owner->node()->webView(), imageData);
-                    gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
-                    if (imageValue->gradientValue()->type() ==
-                        GradientType::LinearGradient) {
-                        gradientCanvas->drawLinearGradient(rect, info,
-                                                           gradient.get());
-                    } else if (imageValue->gradientValue()->type() ==
-                               GradientType::RadialGradient) {
-                        gradientCanvas->drawRadialGradient(rect, info,
-                                                           gradient.get());
-                    }
-                    gradientCanvas->fill();
-                    delete gradientCanvas;
-                    gradient->setGradientImageDataCached(imageData);
-                    document->cacheNativeGradient(info, gradient);
+                id = ir->imageData();
+                if (id == nullptr || id->width() == 0 || id->height() == 0) {
+                    return;
                 }
-                gradientNativeImageData = gradient->gradientImageDataCached();
-                canvas->maskNativeImage(gradientNativeImageData, rect, false);
+
+                if (id->isSVGNativeImageData() &&
+                    !id->asSVGNativeImageData()->hasViewport()) {
+                    id->asSVGNativeImageData()->updateContentSize(box);
+                }
+
+                width = id->width();
+                height = id->height();
+            } else if (type.isGradient()) {
+                ImageValue* imageValue = style->maskImage(i);
+
+                if (!imageValue->gradientValue()->isEffective()) {
+                    continue;
+                }
+
+                Unit::Rect rect;
+                rect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+                width = rect.width();
+                height = rect.height();
             } else {
-                auto gradient = NativeGradient::create(info);
-                auto imageData = BufferedNativeImageData::create(rect.width(),
-                                                                 rect.height());
-                Canvas* gradientCanvas =
-                    Canvas::create(m_owner->node()->webView(), imageData);
-                gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
-                if (imageValue->gradientValue()->type() ==
-                    GradientType::LinearGradient) {
-                    gradientCanvas->drawLinearGradient(rect, info,
-                                                       gradient.get());
-                } else if (imageValue->gradientValue()->type() ==
-                           GradientType::RadialGradient) {
-                    gradientCanvas->drawRadialGradient(rect, info,
-                                                       gradient.get());
-                }
-                gradientCanvas->fill();
-                delete gradientCanvas;
-                gradientNativeImageData = imageData;
-                canvas->maskNativeImage(gradientNativeImageData, rect);
-            }
-
-        } else if (type.isURL()) {
-            ImageValue* imageValue = style->maskImage(i);
-            Unit::Rect rect = m_owner->makeRect(BoxValue::BorderBoxBoxValue)
-                                  .snapSizeToPixel();
-            auto maskNativeImage = style->rareComputedStyleData()
-                                       ->positionedMask()
-                                       ->imageResource(i)
-                                       ->imageData();
-
-            if (!maskNativeImage) {
-                // Resource fetching may not be finished.
                 continue;
             }
 
-            int width = maskNativeImage->width();
-            int height = maskNativeImage->height();
+            Unit::Rect paintingRect;
+            Unit::Rect positioningRect;
+
+            if (box->isFrameBlockBox()) {
+                FrameBox scrollBox(box->node(), style);
+                scrollBox.copyFrom(box, FrameBox::BorderCopy |
+                                            FrameBox::PaddingCopy);
+                scrollBox.setWidth(box->asFrameBlockBox()->scrollWidth());
+                scrollBox.setHeight(box->asFrameBlockBox()->scrollHeight());
+
+                positioningRect =
+                    scrollBox.makeRect(BoxValue::PaddingBoxBoxValue);
+                positioningRect.setX(positioningRect.x() -
+                                     box->asFrameBlockBox()->scrollLeft());
+                positioningRect.setY(positioningRect.x() -
+                                     box->asFrameBlockBox()->scrollTop());
+                paintingRect = scrollBox.makeRect(BoxValue::BorderBoxBoxValue);
+            } else {
+                positioningRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+                paintingRect = box->makeRect(BoxValue::BorderBoxBoxValue);
+            }
+            canvas->translate(paintingRect.x(), paintingRect.y());
+            canvas->clip(
+                Unit::Rect(0, 0, paintingRect.width(), paintingRect.height()));
+
+            float positionW = positioningRect.width();
+            float positionH = positioningRect.height();
+            float paintingW = paintingRect.width();
+            float paintingH = paintingRect.height();
+            float imgW = positionW;
+            float imgH = positionH;
+
+            float boxR = positionW / positionH;
+            float imgR = width / height;
+            float hasSpecifiedSize = false;
+
+            if (maskStyle->maskSizeIsLength(i)) {
+                LengthSize bgSize = maskStyle->maskSizeLengthValue(i);
+                if (bgSize.width().isAuto() && bgSize.height().isAuto()) {
+                    imgW = width;
+                    imgH = height;
+                } else if (bgSize.width().isAuto() &&
+                           !bgSize.height().isAuto()) {
+                    hasSpecifiedSize = true;
+                    imgH = bgSize.height().specifiedValue(positionH, box);
+                    imgW = imgH * width / height;
+                } else if (!bgSize.width().isAuto() &&
+                           bgSize.height().isAuto()) {
+                    hasSpecifiedSize = true;
+                    imgW = bgSize.width().specifiedValue(positionW, box);
+                    imgH = imgW * height / width;
+                } else {
+                    hasSpecifiedSize = true;
+                    imgW = bgSize.width().specifiedValue(positionW, box);
+                    imgH = bgSize.height().specifiedValue(positionH, box);
+                }
+            } else {
+                BackgroundSizeValue bgSize = maskStyle->maskSizeTypeValue(i);
+                if (bgSize == BackgroundSizeValue::CoverBackgroundSizeValue) {
+                    if (boxR < imgR) {
+                        imgW = positionH * imgR;
+                    } else {
+                        imgH = positionW / imgR;
+                    }
+                } else {
+                    STARFISH_ASSERT(
+                        bgSize ==
+                        BackgroundSizeValue::ContainBackgroundSizeValue);
+                    if (boxR > imgR) {
+                        imgW = positionH * imgR;
+                    } else {
+                        imgH = positionW / imgR;
+                    }
+                }
+            }
+
+            Length positionX = maskStyle->positionX(i);
+            Length positionY = maskStyle->positionY(i);
+            LayoutUnit x;
+            LayoutUnit y;
+
+            if (positionX.isSpecified()) {
+                x = positionX.specifiedValue(positionW - imgW, box) +
+                    positioningRect.x() - paintingRect.x();
+            }
+
+            if (positionY.isSpecified()) {
+                y = positionY.specifiedValue(positionH - imgH, box) +
+                    positioningRect.y() - paintingRect.y();
+            }
+
+            auto repeatX = maskStyle->repeatX(i);
+            auto repeatY = maskStyle->repeatY(i);
+
+            bool shouldApplyRepeat =
+                type.isGradient() ? hasSpecifiedSize : true;
+
+            Unit::Rect rect = m_owner->makeRect(BoxValue::BorderBoxBoxValue)
+                                  .snapSizeToPixel();
             auto imageData =
                 BufferedNativeImageData::create(rect.width(), rect.height());
-
-            // TODO : These are the parameters that need to be determined to be
-            // applied as a mask and will be implemented when mask-position and
-            // mask-size are implemented.
-            float scaleFactor = 1;
-            float positionFactor = 0;
-            float scaleX = scaleFactor;
-            float scaleY = scaleFactor;
-            float translateX = -(width - rect.width()) * positionFactor * 0.01;
-            float translateY =
-                -(height - rect.height()) * positionFactor * 0.01;
-            float maskBufferX = 0;
-            float maskBufferY = 0;
-            float maskBufferWidth = rect.width();
-            float maskBufferHeight = rect.height();
-
-            Unit::Rect destRect(maskBufferX, maskBufferY, maskBufferWidth,
-                                maskBufferHeight);
             Canvas* maskCanvas =
                 Canvas::create(m_owner->node()->webView(), imageData);
             maskCanvas->clearColor(Unit::Color(0, 0, 0, 0));
             maskCanvas->save();
-            maskCanvas->translate(translateX, translateY);
-            maskCanvas->scale(scaleX, scaleY);
-            maskCanvas->drawRepeatImage(maskNativeImage, destRect, width,
-                                        height, true, true);
+
+            if (shouldApplyRepeat &&
+                (repeatX == RepeatStyleValue::RepeatRepeatValue &&
+                 repeatY == RepeatStyleValue::RepeatRepeatValue)) {
+                if (type.isURL()) {
+                    if (positioningRect.x() == paintingRect.x() &&
+                        positioningRect.y() == paintingRect.y() &&
+                        paintingW == imgW && paintingH == imgH) {
+                        maskCanvas->drawImage(id, Unit::Rect(x, y, imgW, imgH));
+                    } else {
+                        maskCanvas->drawRepeatImage(
+                            id, Unit::Rect(x, y, paintingW, paintingH), imgW,
+                            imgH, true, true);
+                    }
+                } else if (type.isGradient()) {
+                    FrameBox::paintGradient(
+                        maskCanvas, box, style->maskImage(idx),
+                        Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
+                        true, true,
+                        ImageRenderingValue::ImageRenderingAutoValue);
+                }
+            } else if (shouldApplyRepeat &&
+                       repeatX == RepeatStyleValue::NoRepeatRepeatValue &&
+                       repeatY == RepeatStyleValue::RepeatRepeatValue) {
+                if (type.isURL()) {
+                    maskCanvas->drawRepeatImage(
+                        id, Unit::Rect(x, y, imgW, paintingH), imgW, imgH,
+                        false, true);
+                } else if (type.isGradient()) {
+                    FrameBox::paintGradient(
+                        maskCanvas, box, style->maskImage(idx),
+                        Unit::Rect(x, y, imgW, paintingH), imgW, imgH, false,
+                        true, ImageRenderingValue::ImageRenderingAutoValue);
+                }
+
+            } else if (shouldApplyRepeat &&
+                       repeatX == RepeatStyleValue::RepeatRepeatValue &&
+                       repeatY == RepeatStyleValue::NoRepeatRepeatValue) {
+                if (type.isURL()) {
+                    maskCanvas->drawRepeatImage(
+                        id, Unit::Rect(x, y, paintingW, imgH), imgW, imgH, true,
+                        false);
+                } else if (type.isGradient()) {
+                    FrameBox::paintGradient(
+                        maskCanvas, box, style->maskImage(idx),
+                        Unit::Rect(x, y, paintingW, imgH), imgW, imgH, true,
+                        false, ImageRenderingValue::ImageRenderingAutoValue);
+                }
+            } else {
+                if (type.isURL()) {
+                    maskCanvas->drawImage(id, Unit::Rect(x, y, imgW, imgH));
+                } else if (type.isGradient()) {
+                    FrameBox::paintGradient(
+                        maskCanvas, box, style->maskImage(idx),
+                        Unit::Rect(x, y, imgW, imgH), imgW, imgH, false, false,
+                        ImageRenderingValue::ImageRenderingAutoValue);
+                }
+            }
             maskCanvas->fill();
             maskCanvas->restore();
             delete maskCanvas;
-
             canvas->maskNativeImage(imageData, rect);
-        } else {
-            STARFISH_UNIMPLEMENTED();
         }
     }
 }

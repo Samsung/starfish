@@ -711,6 +711,11 @@ public:
     virtual Unit::Rect makeRect(BoxValue box);
     static void paintBackground(Canvas* canvas, FrameBox* box,
                                 HTMLElement* rootOrBodyelement);
+    static void paintGradient(Canvas* canvas, FrameBox* box,
+                              ImageValue* imageValue, Unit::Rect dst,
+                              const float& width, const float& height,
+                              bool repeatX, bool repeatY,
+                              ImageRenderingValue imageRenderingValue);
     void paintBorders(Canvas* canvas, const LayoutRect& rect);
     void paintOutline(Canvas* canvas);
     void paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
