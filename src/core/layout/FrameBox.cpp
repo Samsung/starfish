@@ -977,9 +977,10 @@ static std::pair<bool, float> canUseFastPathOfPaintingBoxShadow(
     return std::make_pair(canUseFastPath, topLeftHorizontal);
 }
 
-static void drawBoxShadowRotatePieceImage(Canvas* canvas,
-        Unit::Rect& src, Unit::Rect& dst,
-        float deg, NativeImageData* piece, const DrawImageInfo& drawImageInfo)
+static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect& src,
+                                          Unit::Rect& dst, float deg,
+                                          NativeImageData* piece,
+                                          const DrawImageInfo& drawImageInfo)
 {
     canvas->save();
     canvas->translate(dst.x(), dst.y());
@@ -993,65 +994,58 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas,
 }
 
 static void drawBoxShadowPieceImage(Canvas* canvas, NativeImageData* piece,
-                           size_t pieceSize, const Unit::Rect& imageRect)
+                                    size_t pieceSize,
+                                    const Unit::Rect& imageRect)
 {
     // top-left
     Unit::Rect src;
     Unit::Rect dst;
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.x(), imageRect.y(), pieceSize,
-                     pieceSize);
-    DrawImageInfo drawImageInfo = {
-        1.0, 1.0, BorderImageRepeatValue::StretchValue,
-        BorderImageRepeatValue::StretchValue
-    };
+    dst = Unit::Rect(imageRect.x(), imageRect.y(), pieceSize, pieceSize);
+    DrawImageInfo drawImageInfo = { 1.0, 1.0,
+                                    BorderImageRepeatValue::StretchValue,
+                                    BorderImageRepeatValue::StretchValue };
     canvas->drawImage(piece, src, dst, drawImageInfo);
 
     // top-left -> top-right
     src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
     dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.y(),
-                     imageRect.width() - pieceSize * 2,
-                     pieceSize);
+                     imageRect.width() - pieceSize * 2, pieceSize);
     canvas->drawImage(piece, src, dst, drawImageInfo);
 
     // top-right
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize,
-                     imageRect.y(), pieceSize, pieceSize);
+    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y(), pieceSize,
+                     pieceSize);
     drawBoxShadowRotatePieceImage(canvas, src, dst, 90, piece, drawImageInfo);
 
     // top-right -> bottom-right
     src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize,
-                     imageRect.y() + pieceSize, pieceSize,
-                     imageRect.height() - pieceSize * 2);
+    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y() + pieceSize,
+                     pieceSize, imageRect.height() - pieceSize * 2);
     drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
 
     // bottom-right
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst = Unit::Rect(imageRect.maxX() - pieceSize,
-                     imageRect.maxY() - pieceSize, pieceSize,
-                     pieceSize);
+    dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.maxY() - pieceSize,
+                     pieceSize, pieceSize);
     drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
 
     // bottom-right -> bottom-left
     src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
-    dst = Unit::Rect(
-        imageRect.x() + pieceSize, imageRect.maxY() - pieceSize,
-        imageRect.width() - pieceSize * 2, pieceSize);
+    dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.maxY() - pieceSize,
+                     imageRect.width() - pieceSize * 2, pieceSize);
     drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
 
     // bottom-left
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
-    dst =
-        Unit::Rect(imageRect.x(), imageRect.maxY() - pieceSize,
-                   pieceSize, pieceSize);
+    dst = Unit::Rect(imageRect.x(), imageRect.maxY() - pieceSize, pieceSize,
+                     pieceSize);
     drawBoxShadowRotatePieceImage(canvas, src, dst, 270, piece, drawImageInfo);
 
     // bottom-left -> top-left
     src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
-    dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize,
-                     pieceSize,
+    dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize, pieceSize,
                      imageRect.height() - pieceSize * 2);
     canvas->drawImage(piece, src, dst, drawImageInfo);
 }
@@ -1141,8 +1135,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 bool canUseFastPath = result.first;
                 float topLeftHorizontal = result.second;
                 WebView* wv = node()->webView();
-                bool shouldCacheBoxShadowImage =
-                    node() && wv->needsComposite();
+                bool shouldCacheBoxShadowImage = node() && wv->needsComposite();
 
                 if (canUseFastPath) {
                     canvas->save();
@@ -1151,8 +1144,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                                                    (double)topLeftHorizontal);
                     BufferedNativeImageData* nativeImage = nullptr;
                     if (shouldCacheBoxShadowImage) {
-                        auto test = wv->isThereImageInBoxShadowCache(
-                                this, shadowIndex);
+                        auto test =
+                            wv->isThereImageInBoxShadowCache(this, shadowIndex);
                         if (test) {
                             nativeImage = test.value();
                         }
@@ -1160,9 +1153,9 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     if (!nativeImage) {
                         nativeImage = BufferedNativeImageData::create(
-                            wv->screenInfo().devicePixelRatio, bufImageSize, bufImageSize);
-                        Canvas* cv =
-                            Canvas::create(wv, nativeImage);
+                            wv->screenInfo().devicePixelRatio, bufImageSize,
+                            bufImageSize);
+                        Canvas* cv = Canvas::create(wv, nativeImage);
                         cv->setFillColor(shadowColor);
                         cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1175,7 +1168,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                       nativeImage->height(),
                                       nativeImage->stride());
-                        sb.process(shadow->radius() / 2 * wv->screenInfo().devicePixelRatio);
+                        sb.process(shadow->radius() / 2 *
+                                   wv->screenInfo().devicePixelRatio);
                         delete cv;
                     }
 
@@ -1219,7 +1213,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         imageRect.width() - pieceSize * 2,
                         imageRect.height() - pieceSize * 2));
 
-                    drawBoxShadowPieceImage(canvas, nativeImage, pieceSize, imageRect);
+                    drawBoxShadowPieceImage(canvas, nativeImage, pieceSize,
+                                            imageRect);
 
                     canvas->restore();
 
@@ -1232,7 +1227,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 } else {
                     canvas->save();
                     BufferedNativeImageData* nativeImage =
-                        BufferedNativeImageData::create(wv->screenInfo().devicePixelRatio,
+                        BufferedNativeImageData::create(
+                            wv->screenInfo().devicePixelRatio,
                             ceil(shadowRect.width() + radiusOffset),
                             ceil(shadowRect.height() + radiusOffset));
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
@@ -1253,7 +1249,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                   nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius() / 2 * wv->screenInfo().devicePixelRatio);
+                    sb.process(shadow->radius() / 2 *
+                               wv->screenInfo().devicePixelRatio);
                     delete cv;
 
                     float offset = ceil(radiusOffset / 2);
@@ -1306,25 +1303,32 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
                 Unit::Rect paddingRect = makeRect(BoxValue::PaddingBoxBoxValue);
                 WebView* wv = node()->webView();
-                auto canUseFastPath = canUseFastPathOfPaintingBoxShadow(this, paddingRect, *shadow);
+                auto canUseFastPath = canUseFastPathOfPaintingBoxShadow(
+                    this, paddingRect, *shadow);
                 bool shouldCacheBoxShadowImage = wv->needsComposite();
 
                 if (shadow->radius() == 0) {
                     // fast path #1(no blur)
                     Unit::Rect shadowInnerRect(
-                                        paddingRect.x() + shadow->offsetX() + sd,
-                                        paddingRect.y() + shadow->offsetY() + sd,
-                                        paddingRect.width() - sd * 2,
-                                        paddingRect.height() - sd * 2);
+                        paddingRect.x() + shadow->offsetX() + sd,
+                        paddingRect.y() + shadow->offsetY() + sd,
+                        paddingRect.width() - sd * 2,
+                        paddingRect.height() - sd * 2);
                     canvas->save();
                     if (hasFrameBorderRadius()) {
-                        applyBorderRadius(canvas, LayoutRect(
-                                paddingRect.x(), paddingRect.y(),
-                                paddingRect.width(), paddingRect.height()), 0, true);
+                        applyBorderRadius(canvas,
+                                          LayoutRect(paddingRect.x(),
+                                                     paddingRect.y(),
+                                                     paddingRect.width(),
+                                                     paddingRect.height()),
+                                          0, true);
 
-                        applyBorderRadius(canvas, LayoutRect(
-                                shadowInnerRect.x(), shadowInnerRect.y(),
-                                shadowInnerRect.width(), shadowInnerRect.height()), sd, true);
+                        applyBorderRadius(canvas,
+                                          LayoutRect(shadowInnerRect.x(),
+                                                     shadowInnerRect.y(),
+                                                     shadowInnerRect.width(),
+                                                     shadowInnerRect.height()),
+                                          sd, true);
                     } else {
                         canvas->clip(paddingRect);
                         canvas->rect(paddingRect);
@@ -1337,36 +1341,46 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                     canvas->restore();
                     continue;
-                } else if (canUseFastPath.first && borderLeft() == borderTop() &&
-                        borderTop() == borderRight() && borderRight() == borderBottom()) {
+                } else if (canUseFastPath.first &&
+                           borderLeft() == borderTop() &&
+                           borderTop() == borderRight() &&
+                           borderRight() == borderBottom()) {
                     float topLeftHorizontal = canUseFastPath.second;
                     float radius = shadow->radius();
-                    size_t pieceSize = std::max(ceil(radius * 2), topLeftHorizontal) + borderLeft();
+                    size_t pieceSize =
+                        std::max(ceil(radius * 2), topLeftHorizontal) +
+                        borderLeft();
                     float pieceSizeHalf = pieceSize / 2.f;
 
-                    if (pieceSize <= paddingRect.width() / 2 && pieceSize <= paddingRect.height() / 2) {
-                        // fast path #2 (since all four corners have same border, border-radius value)
-                        BufferedNativeImageData* nativeImage = BufferedNativeImageData::create(
-                            wv->screenInfo().devicePixelRatio,
-                            pieceSize, pieceSize);
+                    if (pieceSize <= paddingRect.width() / 2 &&
+                        pieceSize <= paddingRect.height() / 2) {
+                        // fast path #2 (since all four corners have same
+                        // border, border-radius value)
+                        BufferedNativeImageData* nativeImage =
+                            BufferedNativeImageData::create(
+                                wv->screenInfo().devicePixelRatio, pieceSize,
+                                pieceSize);
                         canvas->save();
                         canvas->setNeedsNoneAntialias();
 
-                        Canvas* cv = Canvas::create(node()->webView(), nativeImage);
+                        Canvas* cv =
+                            Canvas::create(node()->webView(), nativeImage);
                         cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                         Unit::Rect pieceShadowInnerRect(
-                                            pieceSizeHalf,
-                                            pieceSizeHalf,
-                                            paddingRect.width(),
-                                            paddingRect.height());
+                            pieceSizeHalf, pieceSizeHalf, paddingRect.width(),
+                            paddingRect.height());
 
                         cv->rect(Unit::Rect(0, 0, pieceSize, pieceSize));
 
                         if (hasFrameBorderRadius()) {
-                            applyBorderRadius(cv, LayoutRect(
-                                    pieceShadowInnerRect.x(), pieceShadowInnerRect.y(),
-                                    pieceShadowInnerRect.width(), pieceShadowInnerRect.height()), sd, true);
+                            applyBorderRadius(
+                                cv,
+                                LayoutRect(pieceShadowInnerRect.x(),
+                                           pieceShadowInnerRect.y(),
+                                           pieceShadowInnerRect.width(),
+                                           pieceShadowInnerRect.height()),
+                                sd, true);
                         } else {
                             cv->rect(pieceShadowInnerRect);
                         }
@@ -1376,15 +1390,19 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                         cv->fill();
                         cv->flush();
                         ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                                      nativeImage->height(), nativeImage->stride());
-                        sb.process(shadow->radius() * wv->screenInfo().devicePixelRatio / 2);
+                                      nativeImage->height(),
+                                      nativeImage->stride());
+                        sb.process(shadow->radius() *
+                                   wv->screenInfo().devicePixelRatio / 2);
                         delete cv;
 
                         Unit::Rect pieceDrawRect(
-                                    paddingRect.x() + shadow->offsetX() + sd - pieceSizeHalf,
-                                    paddingRect.y() + shadow->offsetY() + sd - pieceSizeHalf,
-                                    paddingRect.width() - sd * 2 + pieceSize,
-                                    paddingRect.height() - sd * 2 + pieceSize);
+                            paddingRect.x() + shadow->offsetX() + sd -
+                                pieceSizeHalf,
+                            paddingRect.y() + shadow->offsetY() + sd -
+                                pieceSizeHalf,
+                            paddingRect.width() - sd * 2 + pieceSize,
+                            paddingRect.height() - sd * 2 + pieceSize);
 
                         if (hasFrameBorderRadius()) {
                             int xx = 0, yy = 0, ww = 0, hh = 0;
@@ -1394,11 +1412,11 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                             yy = ry.floor();
                             ww = snapSizeToPixel(paddingRect.width(), rx);
                             hh = snapSizeToPixel(paddingRect.height(), ry);
-                            applyBorderRadiusClippingIfNeeds(canvas, LayoutRect(xx, yy, ww, hh), 0, true);
+                            applyBorderRadiusClippingIfNeeds(
+                                canvas, LayoutRect(xx, yy, ww, hh), 0, true);
                         } else {
                             canvas->clip(paddingRect);
                         }
-
 
                         canvas->rect(paddingRect);
                         canvas->rect(pieceDrawRect);
@@ -1406,7 +1424,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                         canvas->setFillRule(false);
                         canvas->fill();
 
-                        drawBoxShadowPieceImage(canvas, nativeImage, pieceSize, pieceDrawRect);
+                        drawBoxShadowPieceImage(canvas, nativeImage, pieceSize,
+                                                pieceDrawRect);
 
                         canvas->restore();
                         continue;
@@ -1446,8 +1465,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 BufferedNativeImageData* nativeImage = nullptr;
                 if (shouldCacheBoxShadowImage) {
-                    auto test = wv->isThereImageInBoxShadowCache(
-                        this, shadowIndex);
+                    auto test =
+                        wv->isThereImageInBoxShadowCache(this, shadowIndex);
                     if (test) {
                         nativeImage = test.value();
                     }
@@ -1455,8 +1474,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 if (!nativeImage) {
                     nativeImage = BufferedNativeImageData::create(
-                        wv->screenInfo().devicePixelRatio,
-                        imageRect.width(), imageRect.height());
+                        wv->screenInfo().devicePixelRatio, imageRect.width(),
+                        imageRect.height());
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
                     cv->setFillColor(shadowColor);
@@ -1487,7 +1506,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                     ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                   nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius() * wv->screenInfo().devicePixelRatio / 2);
+                    sb.process(shadow->radius() *
+                               wv->screenInfo().devicePixelRatio / 2);
                     delete cv;
                 }
 
@@ -1647,12 +1667,11 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
 }
 
-static inline void paintGradient(Canvas* canvas, FrameBox* box,
-                                 ComputedStyle* style, const unsigned int& idx,
-                                 Unit::Rect dst, const float& width,
-                                 const float& height, bool repeatX,
-                                 bool repeatY,
-                                 ImageRenderingValue imageRenderingValue)
+void FrameBox::paintGradient(Canvas* canvas, FrameBox* box,
+                             ImageValue* imageValue, Unit::Rect dst,
+                             const float& width, const float& height,
+                             bool repeatX, bool repeatY,
+                             ImageRenderingValue imageRenderingValue)
 {
     if (width == 0 || height == 0) {
         return;
@@ -1673,7 +1692,6 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
             startY -= height;
         }
     }
-    ImageValue* imageValue = style->backgroundImage(idx);
     auto value = imageValue->gradientValue();
     bool cacheable = value->isCacheable(width, height, true) &&
                      value->isCacheable(dst.width(), dst.height(), true);
@@ -1712,11 +1730,13 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
 #endif
 
         if (gradient->gradientImageDataCached() == nullptr) {
-            float w = floor(imageWidth / imageScale * wv->screenInfo().devicePixelRatio);
+            float w = floor(imageWidth / imageScale *
+                            wv->screenInfo().devicePixelRatio);
             if (!w) {
                 w = 1;
             }
-            float h = floor(imageHeight / imageScale * wv->screenInfo().devicePixelRatio);
+            float h = floor(imageHeight / imageScale *
+                            wv->screenInfo().devicePixelRatio);
             if (!h) {
                 h = 1;
             }
@@ -1986,7 +2006,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                         true, true, imageRenderingValue);
                 }
             } else if (type.isGradient()) {
-                paintGradient(canvas, box, style, idx,
+                paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, paintingW, paintingH), imgW,
                               imgH, true, true, imageRenderingValue);
             }
@@ -1998,7 +2018,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, false, true,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                paintGradient(canvas, box, style, idx,
+                paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, imgW, paintingH), imgW, imgH,
                               false, true, imageRenderingValue);
             }
@@ -2011,7 +2031,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, true, false,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                paintGradient(canvas, box, style, idx,
+                paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, paintingW, imgH), imgW, imgH,
                               true, false, imageRenderingValue);
             }
@@ -2020,7 +2040,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
                                   imageRenderingValue);
             } else if (type.isGradient()) {
-                paintGradient(canvas, box, style, idx,
+                paintGradient(canvas, box, style->backgroundImage(idx),
                               Unit::Rect(x, y, imgW, imgH), imgW, imgH, false,
                               false, imageRenderingValue);
             }
