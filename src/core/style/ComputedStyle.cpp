@@ -1529,26 +1529,26 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         FlowRelativeBorderBlockData* newBorderBlockStart =
             newStyle->rareComputedStyleData()->borderBlockStart();
         if (oldBorderBlockStart || newBorderBlockStart) {
-            // TODO: Compare other properties.
-            if (FlowRelativeBorderData::damaged(
-                    oldBorderBlockStart, newBorderBlockStart, damagedKeys)) {
-                if (damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
-                    damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartStyle]) {
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
-                        damage);
-                }
-                if (damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartWidth]) {
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamageLayout |
-                        damage);
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
-                        damage);
-                }
+            const std::array<bool, 3> damages = FlowRelativeBorderData::damaged(
+                oldBorderBlockStart, newBorderBlockStart);
+
+            if (damages[static_cast<size_t>(BorderValueKind::kColor)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartColor] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+            if (damages[static_cast<size_t>(BorderValueKind::kWidth)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartWidth] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            }
+            if (damages[static_cast<size_t>(BorderValueKind::kStyle)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartStyle] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
         }
     }
@@ -1559,26 +1559,26 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         FlowRelativeBorderBlockData* newBorderBlockEnd =
             newStyle->rareComputedStyleData()->borderBlockEnd();
         if (oldBorderBlockEnd || newBorderBlockEnd) {
-            // TODO: Compare other properties.
-            if (FlowRelativeBorderData::damaged(
-                    oldBorderBlockEnd, newBorderBlockEnd, damagedKeys)) {
-                if (damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartColor] ||
-                    damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartStyle]) {
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
-                        damage);
-                }
-                if (damagedKeys
-                        [CSSStyleValuePair::KeyKind::BorderBlockStartWidth]) {
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamageLayout |
-                        damage);
-                    damage = static_cast<ComputedStyleDamage>(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
-                        damage);
-                }
+            const std::array<bool, 3> damages = FlowRelativeBorderData::damaged(
+                oldBorderBlockEnd, newBorderBlockEnd);
+
+            if (damages[static_cast<size_t>(BorderValueKind::kColor)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockEndColor] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+            if (damages[static_cast<size_t>(BorderValueKind::kWidth)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockEndWidth] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            }
+            if (damages[static_cast<size_t>(BorderValueKind::kStyle)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockEndStyle] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
         }
     }

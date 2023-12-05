@@ -25,37 +25,32 @@
 
 namespace Starfish {
 
-bool FlowRelativeBorderData::damaged(const FlowRelativeBorderData* lhs,
-                                     const FlowRelativeBorderData* rhs,
-                                     bool* damagedKeys)
+const std::array<bool, 3> FlowRelativeBorderData::damaged(
+    const FlowRelativeBorderData* lhs, const FlowRelativeBorderData* rhs)
 {
-    if (!lhs && !rhs) {
-        return false;
-    }
+    std::array<bool, 3> damages = { false, false, false };
 
-    damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartColor] = false;
+    if (!lhs && !rhs) {
+        return damages;
+    }
 
     FlowRelativeBorderData temp;
     lhs = lhs ? lhs : &temp;
     rhs = rhs ? rhs : &temp;
-    bool hasDamage = false;
 
     if (lhs->m_borderValue.hasBorderColor() !=
             rhs->m_borderValue.hasBorderColor() ||
         lhs->m_borderValue.color() != rhs->m_borderValue.color()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartColor] =
-            hasDamage = true;
+        damages[static_cast<size_t>(BorderValueKind::kColor)] = true;
     }
     if (lhs->m_borderValue.style() != rhs->m_borderValue.style()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartStyle] =
-            hasDamage = true;
+        damages[static_cast<size_t>(BorderValueKind::kStyle)] = true;
     }
     if (lhs->m_borderValue.width() != rhs->m_borderValue.width()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::BorderBlockStartWidth] =
-            hasDamage = true;
+        damages[static_cast<size_t>(BorderValueKind::kWidth)] = true;
     }
 
-    return hasDamage;
+    return damages;
 }
 
 } // namespace Starfish
