@@ -251,6 +251,10 @@ protected:
     void addBorderBlockStartCSSValuePairs(
         std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3]);
 
+    String* BorderBlockEnd();
+    void setBorderBlockEnd(const char* value, size_t len, bool isImportant);
+    void removeBorderBlockEnd();
+
     String* BorderTop();
     void setBorderTop(const char* value, size_t len, bool isImportant);
     void removeBorderTop();

@@ -2441,6 +2441,11 @@ public:
             value);
     }
 
+    void setBorderBlockEndFromShorthand(bool value)
+    {
+        m_rareComputedStyleData.ensureBorderBlockEnd()->setFromShorthand(value);
+    }
+
     void setBorderImageSource(String* url)
     {
         m_rareComputedStyleData.ensureBorder()->image().setUrl(url);

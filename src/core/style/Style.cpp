@@ -5613,6 +5613,9 @@ void StyleResolver::applyProperty(
         // value directly to computed style.
         style->setBorderBlockStartFromShorthand(true);
     } break;
+    case CSSStyleValuePair::KeyKind::BorderBlockEnd: {
+        style->setBorderBlockEndFromShorthand(true);
+    } break;
 #define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
         if (newCssValue.valueKind() ==                           \
