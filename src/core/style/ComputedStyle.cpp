@@ -1583,6 +1583,24 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    {
+        FlowRelativeBorderInlineData* oldBorderInlineStart =
+            oldStyle->rareComputedStyleData()->borderInlineStart();
+        FlowRelativeBorderInlineData* newBorderInlineStart =
+            newStyle->rareComputedStyleData()->borderInlineStart();
+        if (oldBorderInlineStart || newBorderInlineStart) {
+            const std::array<bool, 3> damages = FlowRelativeBorderData::damaged(
+                oldBorderInlineStart, newBorderInlineStart);
+
+            if (damages[static_cast<size_t>(BorderValueKind::kColor)]) {
+                damagedKeys
+                    [CSSStyleValuePair::KeyKind::BorderInlineStartColor] = true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+        }
+    }
+
     if (newStyle->paddingInlineEnd() != oldStyle->paddingInlineEnd()) {
         damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineEnd] = true;
         damage = static_cast<ComputedStyleDamage>(
@@ -2681,55 +2699,83 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
     // TODO: If 'writing-mode' is supported, the padding/margin value must be
     // updated using this property as well as 'direction' property.
 
-    DirectionValue direction = this->direction();
-    FlowRelativeLengthInlineData margineInlineEnd = this->marginInlineEnd();
-    FlowRelativeLengthInlineData margineInlineStart = this->marginInlineStart();
-    FlowRelativeLengthInlineData paddingInlineEnd = this->paddingInlineEnd();
-    FlowRelativeLengthInlineData paddingInlineStart =
-        this->paddingInlineStart();
+    FlowRelativeLengthInlineData margineEnd = marginInlineEnd();
+    FlowRelativeLengthInlineData margineStart = marginInlineStart();
+    FlowRelativeLengthInlineData paddingEnd = paddingInlineEnd();
+    FlowRelativeLengthInlineData paddingStart = paddingInlineStart();
+    FlowRelativeBorderInlineData borderStart = borderInlineStart();
 
-    if (direction == DirectionValue::LtrDirectionValue) {
+    if (direction() == DirectionValue::LtrDirectionValue) {
         // margin-inline
-        if (margineInlineEnd.legnth().hasValue() &&
-            !margineInlineEnd.isCorrespondingRightSet()) {
-            setMarginRight(margineInlineEnd.legnth().getValue());
+        if (margineStart.legnth().hasValue() &&
+            !margineStart.isCorrespondingLeftSet()) {
+            setMarginLeft(margineStart.legnth().getValue());
         }
-        if (margineInlineStart.legnth().hasValue() &&
-            !margineInlineStart.isCorrespondingLeftSet()) {
-            setMarginLeft(margineInlineStart.legnth().getValue());
+        if (margineEnd.legnth().hasValue() &&
+            !margineEnd.isCorrespondingRightSet()) {
+            setMarginRight(margineEnd.legnth().getValue());
         }
 
         // padding-inline
-        if (paddingInlineEnd.legnth().hasValue() &&
-            !paddingInlineEnd.isCorrespondingRightSet()) {
-            setPaddingRight(paddingInlineEnd.legnth().getValue());
+        if (paddingStart.legnth().hasValue() &&
+            !paddingStart.isCorrespondingLeftSet()) {
+            setPaddingLeft(paddingStart.legnth().getValue());
         }
-        if (paddingInlineStart.legnth().hasValue() &&
-            !paddingInlineStart.isCorrespondingLeftSet()) {
-            setPaddingLeft(paddingInlineStart.legnth().getValue());
+        if (paddingEnd.legnth().hasValue() &&
+            !paddingEnd.isCorrespondingRightSet()) {
+            setPaddingRight(paddingEnd.legnth().getValue());
         }
-        // TODO: padding-block, margin-block.
+
+        // border-inline
+        // border-inline-start
+        if (borderStart.hasColor() &&
+            !borderStart.isCorrespondingLeftSpecifiedLater(
+                BorderValueKind::kColor)) {
+            setBorderLeftColor(borderStart.borderValue().color());
+        } else if (!borderStart.hasColor() &&
+                   !borderStart.isCorrespondingLeftSpecifiedLater(
+                       BorderValueKind::kColor) &&
+                   borderStart.isFromShorthand()) {
+            // If there is no color in the result interpreted from the long
+            // hand. Inherits color.
+            setBorderLeftColor(color());
+        }
     } else {
         // margin-inline
-        if (margineInlineEnd.legnth().hasValue() &&
-            !margineInlineEnd.isCorrespondingLeftSet()) {
-            setMarginLeft(margineInlineEnd.legnth().getValue());
+        if (margineStart.legnth().hasValue() &&
+            !margineStart.isCorrespondingRightSet()) {
+            setMarginRight(margineStart.legnth().getValue());
         }
-        if (margineInlineStart.legnth().hasValue() &&
-            !margineInlineStart.isCorrespondingRightSet()) {
-            setMarginRight(margineInlineStart.legnth().getValue());
+        if (margineEnd.legnth().hasValue() &&
+            !margineEnd.isCorrespondingLeftSet()) {
+            setMarginLeft(margineEnd.legnth().getValue());
         }
 
         // padding-inline
-        if (paddingInlineEnd.legnth().hasValue() &&
-            !paddingInlineEnd.isCorrespondingLeftSet()) {
-            setPaddingLeft(paddingInlineEnd.legnth().getValue());
+        if (paddingStart.legnth().hasValue() &&
+            !paddingStart.isCorrespondingRightSet()) {
+            setPaddingRight(paddingStart.legnth().getValue());
         }
-        if (paddingInlineStart.legnth().hasValue() &&
-            !paddingInlineStart.isCorrespondingRightSet()) {
-            setPaddingRight(paddingInlineStart.legnth().getValue());
+
+        if (paddingEnd.legnth().hasValue() &&
+            !paddingEnd.isCorrespondingLeftSet()) {
+            setPaddingLeft(paddingEnd.legnth().getValue());
         }
-        // TODO: padding-block, margin-block, margin-inline
+
+        // border-inline
+        // border-inline-start
+        if (borderStart.hasColor() &&
+            !borderStart.isCorrespondingRightSpecifiedLater(
+                BorderValueKind::kColor)) {
+            setBorderRightColor(borderStart.borderValue().color());
+        } else if (!borderStart.hasColor() &&
+                   !borderStart.isCorrespondingRightSpecifiedLater(
+                       BorderValueKind::kColor) &&
+                   borderStart.isFromShorthand()) {
+            // If there is no color in the result interpreted from the long
+            // hand. Inherits color.
+            setBorderRightColor(color());
+        }
     }
 }
 

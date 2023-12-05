@@ -658,6 +658,8 @@ class CSSFilterFunction;
     F(BorderBlockStartColor, borderBlockStartColor,                            \
       "border-block-start-color")                                              \
     F(BorderBlockEndColor, borderBlockEndColor, "border-block-end-color")      \
+    F(BorderInlineStartColor, borderInlineStartColor,                          \
+      "border-inline-start-color")                                             \
     F(BorderTopStyle, borderTopStyle, "border-top-style")                      \
     F(BorderRightStyle, borderRightStyle, "border-right-style")                \
     F(BorderBottomStyle, borderBottomStyle, "border-bottom-style")             \

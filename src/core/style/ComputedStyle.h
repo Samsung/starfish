@@ -90,6 +90,7 @@ public:
         Border,
         BorderBlockStart,
         BorderBlockEnd,
+        BorderInlineStart,
         BoxDecorationBreak,
         BoxShadow,
         Width,
@@ -176,6 +177,7 @@ public:
         Length m_length;
         BorderData* m_borderData;
         FlowRelativeBorderBlockData* m_flowRelativeBorderBlockData;
+        FlowRelativeBorderInlineData* m_flowRelativeBorderInlineData;
         BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
         FlowRelativeLengthBlockData* m_flowRelativeLengthBlockData;
@@ -246,6 +248,12 @@ public:
         RareComputedStyleValue(
             FlowRelativeBorderBlockData* flowRelativeBorderBlockData)
             : m_flowRelativeBorderBlockData(flowRelativeBorderBlockData)
+        {
+        }
+
+        RareComputedStyleValue(
+            FlowRelativeBorderInlineData* flowRelativeBorderInlineData)
+            : m_flowRelativeBorderInlineData(flowRelativeBorderInlineData)
         {
         }
 
@@ -627,6 +635,8 @@ public:
                borderBlockStart, BorderBlockStart);
     GETTER_PTR(FlowRelativeBorderBlockData, flowRelativeBorderBlockData,
                borderBlockEnd, BorderBlockEnd);
+    GETTER_PTR(FlowRelativeBorderInlineData, flowRelativeBorderInlineData,
+               borderInlineStart, BorderInlineStart);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
                TransformOrigin);
@@ -2206,6 +2216,21 @@ public:
         return FlowRelativeBorderBlockData();
     }
 
+    FlowRelativeBorderInlineData borderInlineStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return FlowRelativeBorderInlineData();
+        }
+
+        FlowRelativeBorderInlineData* data =
+            m_rareComputedStyleData.borderInlineStart();
+        if (data) {
+            return *data;
+        }
+
+        return FlowRelativeBorderInlineData();
+    }
+
     StyleTransformOrigin* transformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -2253,6 +2278,9 @@ public:
     void setBorderRightColor(Unit::Color color)
     {
         m_rareComputedStyleData.ensureBorder()->right().setColor(color);
+        m_rareComputedStyleData.ensureBorderInlineStart()
+            ->setCorrespondingRightIsSpecifiedLater(BorderValueKind::kColor,
+                                                    true);
     }
 
     void setBorderBottomColor(Unit::Color color)
@@ -2269,6 +2297,9 @@ public:
     void setBorderLeftColor(Unit::Color color)
     {
         m_rareComputedStyleData.ensureBorder()->left().setColor(color);
+        m_rareComputedStyleData.ensureBorderInlineStart()
+            ->setCorrespondingLeftIsSpecifiedLater(BorderValueKind::kColor,
+                                                   true);
     }
 
     void setBorderBlockStartColor(Unit::Color color)
@@ -2293,6 +2324,18 @@ public:
         end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
                                                     false);
         end->setFromShorthand(false);
+    }
+
+    void setBorderInlineStartColor(Unit::Color color)
+    {
+        FlowRelativeBorderInlineData* start =
+            m_rareComputedStyleData.ensureBorderInlineStart();
+        start->setColor(color);
+        start->setCorrespondingLeftIsSpecifiedLater(BorderValueKind::kColor,
+                                                    false);
+        start->setCorrespondingRightIsSpecifiedLater(BorderValueKind::kColor,
+                                                     false);
+        start->setFromShorthand(false);
     }
 
 #define CLEAR_BORDER_COLOR(UPOS, LPOS, ...)                          \
@@ -2325,6 +2368,18 @@ public:
         end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kColor,
                                                     false);
         end->setFromShorthand(false);
+    }
+
+    void clearBorderInlineStartColor()
+    {
+        FlowRelativeBorderInlineData* start =
+            m_rareComputedStyleData.ensureBorderInlineStart();
+        start->borderValue().clearColor();
+        start->setCorrespondingLeftIsSpecifiedLater(BorderValueKind::kColor,
+                                                    false);
+        start->setCorrespondingRightIsSpecifiedLater(BorderValueKind::kColor,
+                                                     false);
+        start->setFromShorthand(false);
     }
 
     void setBorderTopStyle(BorderStyleValue style)
