@@ -33,8 +33,8 @@ enum class BorderValueKind {
 
 class FlowRelativeBorderData : public gc {
 public:
-    static bool damaged(const FlowRelativeBorderData* lhs,
-                        const FlowRelativeBorderData* rhs, bool* damagedKeys);
+    static const std::array<bool, 3> damaged(const FlowRelativeBorderData* lhs,
+                                             const FlowRelativeBorderData* rhs);
 
     FlowRelativeBorderData()
     {
