@@ -1598,6 +1598,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 damage = static_cast<ComputedStyleDamage>(
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
+            if (damages[static_cast<size_t>(BorderValueKind::kWidth)]) {
+                damagedKeys
+                    [CSSStyleValuePair::KeyKind::BorderInlineStartWidth] = true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            }
         }
     }
 
@@ -2740,6 +2746,14 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
             // hand. Inherits color.
             setBorderLeftColor(color());
         }
+
+        if (border().left().hasBorderStyle()) {
+            if (borderStart.hasWidth() &&
+                !borderStart.isCorrespondingLeftSpecifiedLater(
+                    BorderValueKind::kWidth)) {
+                setBorderLeftWidth(borderStart.borderValue().width());
+            }
+        }
     } else {
         // margin-inline
         if (margineStart.legnth().hasValue() &&
@@ -2775,6 +2789,14 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
             // If there is no color in the result interpreted from the long
             // hand. Inherits color.
             setBorderRightColor(color());
+        }
+
+        if (border().right().hasBorderStyle()) {
+            if (borderStart.hasWidth() &&
+                !borderStart.isCorrespondingRightSpecifiedLater(
+                    BorderValueKind::kWidth)) {
+                setBorderRightWidth(borderStart.borderValue().width());
+            }
         }
     }
 }

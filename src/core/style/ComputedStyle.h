@@ -2450,6 +2450,9 @@ public:
     void setBorderRightWidth(Length width)
     {
         m_rareComputedStyleData.ensureBorder()->right().setWidth(width);
+        m_rareComputedStyleData.ensureBorderInlineStart()
+            ->setCorrespondingRightIsSpecifiedLater(BorderValueKind::kWidth,
+                                                    true);
     }
 
     void setBorderBottomWidth(Length width)
@@ -2466,17 +2469,20 @@ public:
     void setBorderLeftWidth(Length width)
     {
         m_rareComputedStyleData.ensureBorder()->left().setWidth(width);
+        m_rareComputedStyleData.ensureBorderInlineStart()
+            ->setCorrespondingLeftIsSpecifiedLater(BorderValueKind::kWidth,
+                                                   true);
     }
 
     void setBorderBlockStartWidth(Length width)
     {
-        m_rareComputedStyleData.ensureBorderBlockStart()->setWidth(width);
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
-                                                  false);
-        m_rareComputedStyleData.ensureBorderBlockStart()
-            ->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
-                                                     false);
+        FlowRelativeBorderBlockData* start =
+            m_rareComputedStyleData.ensureBorderBlockStart();
+        start->setWidth(width);
+        start->setCorrespondingTopIsSpecifiedLater(BorderValueKind::kWidth,
+                                                   false);
+        start->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
+                                                      false);
     }
 
     void setBorderBlockEndWidth(Length width)
@@ -2488,6 +2494,17 @@ public:
                                                  false);
         end->setCorrespondingBottomIsSpecifiedLater(BorderValueKind::kWidth,
                                                     false);
+    }
+
+    void setBorderInlineStartWidth(Length width)
+    {
+        FlowRelativeBorderInlineData* start =
+            m_rareComputedStyleData.ensureBorderInlineStart();
+        start->setWidth(width);
+        start->setCorrespondingLeftIsSpecifiedLater(BorderValueKind::kWidth,
+                                                    false);
+        start->setCorrespondingRightIsSpecifiedLater(BorderValueKind::kWidth,
+                                                     false);
     }
 
     void setBorderBlockStartFromShorthand(bool value)
