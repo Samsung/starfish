@@ -1336,6 +1336,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-inline-start-color", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderInlineStartColor;
             }
+            if (memcmp(data, "border-inline-start-width", 25) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStartWidth;
+            }
             break;
         }
         break;
@@ -2376,6 +2379,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderInlineStartColor", 22) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderInlineStartColor;
+            }
+            if (memcmp(data, "borderInlineStartWidth", 22) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStartWidth;
             }
             break;
         }
