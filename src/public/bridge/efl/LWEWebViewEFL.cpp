@@ -827,6 +827,10 @@ public:
                 STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]",
                                   ev->key);
 
+                if (evas_object_focus_get(wv->m_mainBox) == EINA_FALSE) {
+                    return;
+                }
+
 #ifdef STARFISH_TIZEN_TV
                 if ((strcmp(ev->key, "XF86Red") == 0)) {
                     ev->key = "Tab";
@@ -896,6 +900,10 @@ public:
                 Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
                 STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]",
                                   ev->key);
+
+                if (evas_object_focus_get(wv->m_mainBox) == EINA_FALSE) {
+                    return;
+                }
 
 #ifdef STARFISH_TIZEN_TV
                 if ((strcmp(ev->key, "XF86Red") == 0)) {
