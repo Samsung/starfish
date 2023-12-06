@@ -1604,6 +1604,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 damage = static_cast<ComputedStyleDamage>(
                     ComputedStyleDamage::ComputedStyleDamageLayout | damage);
             }
+            if (damages[static_cast<size_t>(BorderValueKind::kStyle)]) {
+                damagedKeys
+                    [CSSStyleValuePair::KeyKind::BorderInlineStartStyle] = true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
         }
     }
 
@@ -2747,6 +2753,12 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
             setBorderLeftColor(color());
         }
 
+        if (borderStart.hasStlye() &&
+            !borderStart.isCorrespondingLeftSpecifiedLater(
+                BorderValueKind::kStyle)) {
+            setBorderLeftStyle(borderStart.borderValue().style());
+        }
+
         if (border().left().hasBorderStyle()) {
             if (borderStart.hasWidth() &&
                 !borderStart.isCorrespondingLeftSpecifiedLater(
@@ -2789,6 +2801,12 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
             // If there is no color in the result interpreted from the long
             // hand. Inherits color.
             setBorderRightColor(color());
+        }
+
+        if (borderStart.hasStlye() &&
+            !borderStart.isCorrespondingRightSpecifiedLater(
+                BorderValueKind::kStyle)) {
+            setBorderRightStyle(borderStart.borderValue().style());
         }
 
         if (border().right().hasBorderStyle()) {

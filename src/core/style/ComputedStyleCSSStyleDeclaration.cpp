@@ -197,6 +197,13 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValue(CSSLength(frame->borderLeft()));
             return ret;
         }
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartStyle) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(
+                CSSStyleValuePair::ValueKind::BorderStyleValueKind);
+            ret.setValue(CSSLength(frame->style()->border().left().style()));
+            return ret;
+        }
     } else {
         // margin-inline.
         if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
@@ -236,6 +243,13 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setKeyKind(keykind);
             ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
             ret.setValue(CSSLength(frame->borderRight()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartStyle) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(
+                CSSStyleValuePair::ValueKind::BorderStyleValueKind);
+            ret.setValue(CSSLength(frame->style()->border().right().style()));
             return ret;
         }
     }
@@ -1274,6 +1288,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (frame && frame->isFrameBox()) {
             p = resolveFlowRelativeBlockProperties(
                 CSSStyleValuePair::KeyKind::BorderBlockEndStyle,
+                frame->asFrameBox());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineStartStyle: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderInlineStartStyle);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeInlineProperties(
+                CSSStyleValuePair::KeyKind::BorderInlineStartStyle,
                 frame->asFrameBox());
         }
     } break;
