@@ -1129,6 +1129,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-bottom-color", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomColor;
             }
+            if (memcmp(data, "border-inline-start", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStart;
+            }
             break;
         case 'l':
             if (memcmp(data, "list-style-position", 19) == 0) {
@@ -2225,6 +2228,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomColor;
+            }
+            if (memcmp(data, "borderInlineStart", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineStart;
             }
             break;
         case 'm':

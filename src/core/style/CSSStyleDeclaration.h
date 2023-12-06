@@ -248,12 +248,16 @@ protected:
     String* BorderBlockStart();
     void setBorderBlockStart(const char* value, size_t len, bool isImportant);
     void removeBorderBlockStart();
-    void addBorderBlockStartCSSValuePairs(
+    void addFlowRelativeBorderCSSValuePairs(
         std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3]);
 
     String* BorderBlockEnd();
     void setBorderBlockEnd(const char* value, size_t len, bool isImportant);
     void removeBorderBlockEnd();
+
+    String* BorderInlineStart();
+    void setBorderInlineStart(const char* value, size_t len, bool isImportant);
+    void removeBorderInlineStart();
 
     String* BorderTop();
     void setBorderTop(const char* value, size_t len, bool isImportant);
