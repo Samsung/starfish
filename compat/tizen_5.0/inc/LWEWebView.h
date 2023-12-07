@@ -371,6 +371,8 @@ public:
     void RegisterSetNeedsRenderingCallback(
         const std::function<void(WebContainer*, const std::function<void()>&
                                                     doRenderingFunction)>& cb);
+    void SetDevicePixelRatio(float dpr);
+    float GetDevicePixelRatio();
 
 protected:
     WebContainer(void* webView);
@@ -897,6 +899,22 @@ public:
      *
      */
     virtual void Blur();
+
+    /**
+     * \brief Change DPR value at current webview.
+     *
+     * \param dpr Device pixel ratio.
+     *
+     */
+    void SetDevicePixelRatio(float dpr);
+
+    /**
+     * \brief DPR value of current webview.
+     *
+     * \return Device pixel ratio.
+     *
+     */
+    float GetDevicePixelRatio();
 
 protected:
     WebView(void* impl)

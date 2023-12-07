@@ -1370,6 +1370,7 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setUseExternalPopup(settings.UseExternalPopup());
     TO_WEBVIEW(m_impl)->setUseSpatialNavigation(
         settings.UseSpatialNavigation());
+
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -1934,6 +1935,22 @@ int WebContainer::GetScrollY()
     y = (int)TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollY();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return y;
+}
+
+void WebContainer::SetDevicePixelRatio(float dpr)
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)->platformWindow()->setDevicePixelRatio(dpr);
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
+float WebContainer::GetDevicePixelRatio()
+{
+    float dpr = 0;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    dpr = TO_WEBVIEW(m_impl)->platformWindow()->getDevicePixelRatio();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return dpr;
 }
 
 std::string CookieManager::GetCookie(std::string url)

@@ -184,6 +184,7 @@ public:
     void pause();
     void resume();
     void resize(uint32_t w, uint32_t h);
+    void setDevicePixelRatio(float dpr);
 
     bool isActive()
     {
