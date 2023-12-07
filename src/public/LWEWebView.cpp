@@ -232,4 +232,14 @@ void WebView::Blur()
 {
     FetchWebContainer()->Blur();
 }
+
+void WebView::SetDevicePixelRatio(float dpr)
+{
+    FetchWebContainer()->SetDevicePixelRatio(dpr);
+}
+
+float WebView::GetDevicePixelRatio()
+{
+    return FetchWebContainer()->GetDevicePixelRatio();
+}
 } // namespace LWE

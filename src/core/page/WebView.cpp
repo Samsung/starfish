@@ -1925,6 +1925,14 @@ void WebView::resume()
     }
 }
 
+void WebView::setDevicePixelRatio(float dpr)
+{
+    STARFISH_LOG_INFO("WebView::setDevicePixelRatio");
+    if (screenInfo().devicePixelRatio != dpr) {
+        mutableScreenInfo().devicePixelRatio = dpr;
+    }
+}
+
 void WebView::resize(uint32_t width, uint32_t height)
 {
     STARFISH_LOG_INFO("WebView::resize");

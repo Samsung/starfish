@@ -242,6 +242,8 @@ public:
     virtual void resume();
     virtual void destroy();
     void clearNativeHandlers();
+    void setDevicePixelRatio(float dpr);
+    float getDevicePixelRatio();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     template <typename T>

@@ -502,6 +502,17 @@ void PlatformWindow::onResize()
     webView()->resize(width(), height());
 }
 
+void PlatformWindow::setDevicePixelRatio(float dpr)
+{
+    webView()->setDevicePixelRatio(dpr);
+    webView()->resize(width(), height());
+}
+
+float PlatformWindow::getDevicePixelRatio()
+{
+    return webView()->screenInfo().devicePixelRatio;
+}
+
 #ifdef STARFISH_ENABLE_TEST
 void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
                                 void* data)
