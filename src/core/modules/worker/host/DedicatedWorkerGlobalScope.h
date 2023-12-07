@@ -25,12 +25,16 @@
 
 namespace Starfish {
 
-class DedicatedWorkerGlobalScope : public WorkerGlobalScope {
+class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {
 public:
     DedicatedWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
                                String* charSet);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DedicatedWorkerGlobalScope)
+
+    void initJavaScriptGlobalBinding(
+        ScriptExecutionState state,
+        ScriptBindingInstance* scriptBindingInstance) override;
 
     String* name()
     {

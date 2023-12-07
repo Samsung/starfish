@@ -46,6 +46,10 @@ public:
                       void* domObjectPointer) override;
     virtual bool isWorkerGlobalScope() const override;
 
+    virtual void initJavaScriptGlobalBinding(
+        ScriptExecutionState state,
+        ScriptBindingInstance* scriptBindingInstance) = 0;
+
     ExecutionContext* executionContext() const override
     {
         return m_executionContext;
