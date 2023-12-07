@@ -36,6 +36,12 @@ template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 #endif
 
+#define DECLARE_WORKER_NAME_FOR_BINDING(exportName)                   \
+    scriptBindingInstance->defineGlobalBindingNameAccessor(           \
+        state, globalObject, StringRef::createFromASCII(#exportName), \
+        std::mem_fn(&ScriptBindingInstance::value##exportName),       \
+        std::mem_fn(&ScriptBindingInstance::setValue##exportName));
+
 template <typename T>
 static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                                        ValueRef* key)
@@ -51,6 +57,28 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
 
     return OptionalRef<ValueRef>();
 }
+
+void DedicatedWorkerGlobalScope::initJavaScriptGlobalBinding(
+    ScriptExecutionState state, ScriptBindingInstance* scriptBindingInstance)
+{
+    GlobalObjectRef* globalObject = state->context()->globalObject();
+    STARFISH_ENUM_GLOBAL_BINDING_DEDICATEDWORKER_NAMES(
+        DECLARE_WORKER_NAME_FOR_BINDING);
+
+    scriptBindingInstance->fnDedicatedWorkerGlobalScope();
+}
+
+#if defined(STARFISH_SERVICE_WORKER_HOST)
+void ServiceWorkerGlobalScope::initJavaScriptGlobalBinding(
+    ScriptExecutionState state, ScriptBindingInstance* scriptBindingInstance)
+{
+    GlobalObjectRef* globalObject = state->context()->globalObject();
+    STARFISH_ENUM_GLOBAL_BINDING_SERVICEWORKER_NAMES(
+        DECLARE_WORKER_NAME_FOR_BINDING);
+
+    scriptBindingInstance->fnServiceWorkerGlobalScope();
+}
+#endif
 
 template <typename T>
 ScriptBindingWorkerInstance<T>::ScriptBindingWorkerInstance(
@@ -68,20 +96,12 @@ void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
 {
     STARFISH_ASSERT(context != nullptr);
     STARFISH_ASSERT(state != nullptr);
-    ScriptBindingInstance::initJavaScriptBinding(context, state);
 
-    GlobalObjectRef* globalObject = context->globalObject();
-#define DECLARE_NAME_FOR_BINDING(exportName)                          \
-    defineGlobalBindingNameAccessor(                                  \
-        state, globalObject, StringRef::createFromASCII(#exportName), \
-        std::mem_fn(&ScriptBindingInstance::value##exportName),       \
-        std::mem_fn(&ScriptBindingInstance::setValue##exportName));
-    STARFISH_ENUM_GLOBAL_BINDING_WORKER_NAMES(DECLARE_NAME_FOR_BINDING)
-#undef DECLARE_NAME_FOR_BINDING
+    ScriptBindingInstance::initJavaScriptBinding(context, state);
+    m_ownerWorkerGlobalScope->initJavaScriptGlobalBinding(state, this);
 
     fnEventTarget();
     fnWorkerGlobalScope();
-    fnDedicatedWorkerGlobalScope();
 
     m_ownerWorkerGlobalScope->init(this, m_ownerWorkerGlobalScope);
 
@@ -114,6 +134,34 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 {
     m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);
 }
+
+#if defined(STARFISH_SERVICE_WORKER_HOST)
+// TODO: Remove mockup function
+#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
+    defined(STARFISH_WEBWORKER_HOST)
+#define FOR_EACH_MOCKUP_INTERFACE(F) \
+    F(CSS)                                 \
+    F(EventSource)                         \
+    F(FormData)                            \
+    F(Option)                              \
+    F(Image)                               \
+    F(Worker)
+
+#define DEFINE_BINDING_FN(exportName)               \
+    Escargot::FunctionObjectRef* binding##exportName( \
+        ScriptBindingInstance* scriptBindingInstance) \
+    {                                                 \
+        STARFISH_ASSERT_NOT_REACHED();                \
+        return nullptr;                               \
+    }
+
+FOR_EACH_MOCKUP_INTERFACE(DEFINE_BINDING_FN)
+#undef DEFINE_BINDING_FN
+#undef FOR_EACH_MOCKUP_INTERFACE
+#endif
+#endif
+
+#undef DECLARE_WORKER_NAME_FOR_BINDING
 
 } // namespace Starfish
 

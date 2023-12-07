@@ -22,7 +22,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
-#include "binding/ScriptBindingServiceWorkerInstance.h"
+#include "binding/ScriptBindingWorkerInstance.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
@@ -55,8 +55,9 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(charSet != nullptr);
 
-    m_scriptBindingInstance = new ScriptBindingServiceWorkerInstance(
-        webWorker->scriptEngineInstance(), this);
+    m_scriptBindingInstance =
+        new ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>(
+            webWorker->scriptEngineInstance(), this);
 
     initGlobalScope(url, charSet);
     initCacheStorage();

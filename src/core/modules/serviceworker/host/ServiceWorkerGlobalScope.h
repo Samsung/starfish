@@ -36,7 +36,7 @@ class StorageNamespace;
 class CustomStorage;
 class Internal;
 
-class ServiceWorkerGlobalScope : public WorkerGlobalScope {
+class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
 public:
     ServiceWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
                              String* charSet);
@@ -47,6 +47,10 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerGlobalScope() const override;
+
+    void initJavaScriptGlobalBinding(
+        ScriptExecutionState state,
+        ScriptBindingInstance* scriptBindingInstance) override;
 
     // bindings
     ServiceWorker* serviceWorker();

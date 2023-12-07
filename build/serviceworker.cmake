@@ -138,7 +138,6 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingWorkerInstance.cpp
-    ${STARFISH_ROOT}/src/binding/ScriptBindingServiceWorkerInstance.cpp
     ${STARFISH_ROOT}/src/binding/EventTargetCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp

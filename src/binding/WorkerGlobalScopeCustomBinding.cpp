@@ -61,7 +61,7 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(thisValue != nullptr);
-    GENERATE_WORKER_GLOBALSCOPE();
+    GENERATE_WORKER_GLOBALSCOPE(WorkerGlobalScope);
     size_t argCount = argc;
     if (argCount < 1) {
         char buffer[2];
@@ -112,7 +112,7 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(thisValue != nullptr);
-    GENERATE_WORKER_GLOBALSCOPE();
+    GENERATE_WORKER_GLOBALSCOPE(WorkerGlobalScope);
     size_t argCount = argc;
     if (argCount < 2) {
         char buffer[2];
