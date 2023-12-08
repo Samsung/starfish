@@ -2679,6 +2679,7 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         removeBorderBlockStart();
         removeBorderBlockEnd();
         removeBorderInlineStart();
+        removeBorderInlineEnd();
         addBorderCSSValuePairs(v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
         width.setFlagImportant(isImportant);
@@ -2687,6 +2688,7 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         removeBorderBlockStart();
         removeBorderBlockEnd();
         removeBorderInlineStart();
+        removeBorderInlineEnd();
         addBorderCSSValuePairs(width, style, color);
     }
 }
@@ -2904,6 +2906,75 @@ void CSSStyleDeclaration::removeBorderInlineStart()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineStartStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineStartColor);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineStart);
+}
+
+String* CSSStyleDeclaration::BorderInlineEnd()
+{
+    String* width = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderInlineEndWidth);
+    String* style = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderInlineEndStyle);
+    String* color = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::BorderInlineEndColor);
+    return BorderString(width, false, style, false, color, false);
+}
+
+void CSSStyleDeclaration::setBorderInlineEnd(const char* value, size_t len,
+                                             bool isImportant)
+{
+    if (len == 0) {
+        removeBorderInlineEnd();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+
+    std::pair<CSSStyleValuePair::KeyKind, CSSStyleValuePair> longhands[3] = {
+        { CSSStyleValuePair::KeyKind::BorderInlineEndWidth,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderInlineEndStyle,
+          CSSStyleValuePair() },
+        { CSSStyleValuePair::KeyKind::BorderInlineEndColor,
+          CSSStyleValuePair() },
+    };
+
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEnd, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second = v;
+        }
+        addFlowRelativeBorderCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEnd,
+                        CSSStyleValuePair());
+    } else if (parseBorderShorthand(tokens, &longhands[0].second,
+                                    &longhands[1].second,
+                                    &longhands[2].second)) {
+        for (int i = 0; i < 3; i++) {
+            longhands[i].second.setFlagImportant(isImportant);
+        }
+        addFlowRelativeBorderCSSValuePairs(longhands);
+        // Add dummy value to mark that above longhands are derived from
+        // shorthand.
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEnd,
+                        CSSStyleValuePair());
+    }
+}
+
+void CSSStyleDeclaration::removeBorderInlineEnd()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEndWidth);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEndStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEndColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEnd);
 }
 
 void CSSStyleDeclaration::addFlowRelativeBorderCSSValuePairs(

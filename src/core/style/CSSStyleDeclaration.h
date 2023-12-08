@@ -259,6 +259,10 @@ protected:
     void setBorderInlineStart(const char* value, size_t len, bool isImportant);
     void removeBorderInlineStart();
 
+    String* BorderInlineEnd();
+    void setBorderInlineEnd(const char* value, size_t len, bool isImportant);
+    void removeBorderInlineEnd();
+
     String* BorderTop();
     void setBorderTop(const char* value, size_t len, bool isImportant);
     void removeBorderTop();
