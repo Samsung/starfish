@@ -5595,6 +5595,38 @@ void StyleResolver::applyProperty(
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::KeyKind::BorderInlineEndWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderInlineEndWidth(
+                parentStyle->borderInlineEnd().borderValue().width());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderInlineEndWidth(Length(Length::Fixed, 3));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Length) {
+            style->setBorderInlineEndWidth(
+                newCssValue.cssLengthValue().toLength());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
+            if (newCssValue.borderWidthValue() ==
+                BorderWidthValue::ThinBorderWidthValue) {
+                style->setBorderInlineEndWidth(Length(Length::Fixed, 1));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::MediumBorderWidthValue) {
+                style->setBorderInlineEndWidth(Length(Length::Fixed, 3));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::ThickBorderWidthValue) {
+                style->setBorderInlineEndWidth(Length(Length::Fixed, 5));
+            }
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
 #define ADD_RESOLVE_STYLE_BORDER_COLOR(POS, pos)                            \
     case CSSStyleValuePair::KeyKind::Border##POS##Color:                    \
         if (newCssValue.valueKind() ==                                      \
@@ -11148,6 +11180,15 @@ bool CSSStyleValuePair::updateValueBorderBlockEndWidth(
 }
 
 bool CSSStyleValuePair::updateValueBorderInlineStartWidth(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitBorderWidth(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueBorderInlineEndWidth(
     Document* document, const CSSTokenVector& tokens)
 {
     if (tokens.size() != 1) {
