@@ -636,36 +636,171 @@ bool isBMP(char32_t ch)
     return U_IS_BMP(ch);
 }
 
+static String* fromBMP(const char* src, size_t srcLen, size_t stringLength)
+{
+    BMPString data;
+    data.resizeWithUninitializedValues(stringLength);
+    size_t idx = 0;
+
+    const char* utf8 = src;
+    const char* end = src + srcLen;
+    while (utf8 < end) {
+        char16_t c = *utf8;
+        if (utf8[0] & 0x80) {
+            if (0xC0 == (utf8[0] & 0xE0) && utf8 + 1 < end &&
+                0x80 == (utf8[1] & 0xC0)) {
+                // Start byte for 2byte
+                c = (utf8[0] & 0x1F) << 6;
+                c += (utf8[1] & 0x3F) << 0;
+                utf8 += 2;
+            } else if (0xE0 == (utf8[0] & 0xF0) && utf8 + 2 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0)) {
+                // Start byte for 3byte
+                c = (utf8[0] & 0x0F) << 12;
+                c += (utf8[1] & 0x3F) << 6;
+                c += (utf8[2] & 0x3F) << 0;
+                utf8 += 3;
+            } else {
+                // error case
+                utf8++;
+                c = 0xFFFD;
+            }
+        } else {
+            utf8++;
+        }
+        data[idx++] = c;
+    }
+
+    return new StringDataBMP(std::move(data));
+}
+
+static String* fromOverBMP(const char* src, size_t srcLen, size_t stringLength)
+{
+    UTF32String data;
+    data.resizeWithUninitializedValues(stringLength);
+    size_t idx = 0;
+
+    const char* utf8 = src;
+    const char* end = src + srcLen;
+    while (utf8 < end) {
+        char32_t c = *utf8;
+        if (utf8[0] & 0x80) {
+            if (0xC0 == (utf8[0] & 0xE0) && utf8 + 1 < end &&
+                0x80 == (utf8[1] & 0xC0)) {
+                // Start byte for 2byte
+                c = (utf8[0] & 0x1F) << 6;
+                c += (utf8[1] & 0x3F) << 0;
+                utf8 += 2;
+            } else if (0xE0 == (utf8[0] & 0xF0) && utf8 + 2 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0)) {
+                // Start byte for 3byte
+                c = (utf8[0] & 0x0F) << 12;
+                c += (utf8[1] & 0x3F) << 6;
+                c += (utf8[2] & 0x3F) << 0;
+                utf8 += 3;
+            } else if (0xF0 == (utf8[0] & 0xF8) && utf8 + 3 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0)) {
+                // Start byte for 4byte
+                c = (utf8[0] & 0x07) << 18;
+                c += (utf8[1] & 0x3F) << 12;
+                c += (utf8[2] & 0x3F) << 6;
+                c += (utf8[3] & 0x3F) << 0;
+                utf8 += 4;
+            } else if (0xF8 == (utf8[0] & 0xFC) && utf8 + 4 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0) && 0x80 == (utf8[4] & 0xC0)) {
+                // Start byte for 5byte
+                c = (utf8[0] & 0x03) << 24;
+                c += (utf8[1] & 0x3F) << 18;
+                c += (utf8[2] & 0x3F) << 12;
+                c += (utf8[3] & 0x3F) << 6;
+                c += (utf8[4] & 0x3F) << 0;
+                utf8 += 5;
+            } else if (0xFC == (utf8[0] & 0xFE) && utf8 + 5 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0) && 0x80 == (utf8[4] & 0xC0) &&
+                       0x80 == (utf8[5] & 0xC0)) {
+                // Start byte for 6byte
+                c = (utf8[0] & 0x01) << 30;
+                c += (utf8[1] & 0x3F) << 24;
+                c += (utf8[2] & 0x3F) << 18;
+                c += (utf8[3] & 0x3F) << 12;
+                c += (utf8[4] & 0x3F) << 6;
+                c += (utf8[5] & 0x3F) << 0;
+                utf8 += 6;
+            } else {
+                // error case
+                utf8++;
+                c = 0xFFFD;
+            }
+        } else {
+            utf8++;
+        }
+        data[idx++] = c;
+    }
+
+    return new StringDataUTF32(std::move(data));
+}
+
 String* String::fromUTF8(const char* src, size_t len)
 {
     if (len == 0) {
         return String::emptyString;
     }
 
-    STARFISH_ASSERT(src != nullptr);
-
+    size_t stringLength = 0;
     bool isAllBMP = true;
     bool isAllASCII = true;
-    for (unsigned i = 0; i < len;) {
-        if (src[i] & 0x80) {
+    const char* utf8 = src;
+    const char* end = src + len;
+    while (utf8 < end) {
+        if (utf8[0] & 0x80) {
             isAllASCII = false;
-            char32_t uc;
-            i += utf8ToUtf32(src + i, src + len, uc);
-            if (!isBMP(uc)) {
+            if (0xC0 == (utf8[0] & 0xE0) && utf8 + 1 < end &&
+                0x80 == (utf8[1] & 0xC0)) {
+                // Start byte for 2byte (below BMP area ~65535)
+                utf8 += 2;
+            } else if (0xE0 == (utf8[0] & 0xF0) && utf8 + 2 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0)) {
+                // Start byte for 3byte (below BMP area ~65535)
+                utf8 += 3;
+            } else if (0xF0 == (utf8[0] & 0xF8) && utf8 + 3 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0)) {
+                // Start byte for 4byte
+                utf8 += 4;
                 isAllBMP = false;
-                break;
+            } else if (0xF8 == (utf8[0] & 0xFC) && utf8 + 4 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0) && 0x80 == (utf8[4] & 0xC0)) {
+                // Start byte for 5byte
+                utf8 += 5;
+                isAllBMP = false;
+            } else if (0xFC == (utf8[0] & 0xFE) && utf8 + 5 < end &&
+                       0x80 == (utf8[1] & 0xC0) && 0x80 == (utf8[2] & 0xC0) &&
+                       0x80 == (utf8[3] & 0xC0) && 0x80 == (utf8[4] & 0xC0) &&
+                       0x80 == (utf8[5] & 0xC0)) {
+                // Start byte for 6byte
+                utf8 += 6;
+                isAllBMP = false;
+            } else {
+                // error case
+                utf8 += 1;
             }
+            stringLength++;
         } else {
-            i++;
+            utf8++;
+            stringLength++;
         }
     }
 
     if (isAllASCII) {
         return new StringDataASCII(src, len);
     } else if (isAllBMP) {
-        return new StringDataBMP(src, len);
+        return fromBMP(src, len, stringLength);
     } else {
-        return new StringDataUTF32(src, len);
+        return fromOverBMP(src, len, stringLength);
     }
 }
 

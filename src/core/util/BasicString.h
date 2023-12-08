@@ -326,6 +326,12 @@ public:
         setLen(newSize);
     }
 
+    void resizeWithUninitializedValues(size_t newSize)
+    {
+        reserve(newSize);
+        setLen(newSize);
+    }
+
     void reserve(size_t newSize);
 
     int compare(const BasicString<T, Allocator>& other) const;
