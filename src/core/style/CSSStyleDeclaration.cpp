@@ -1630,6 +1630,7 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
         }
         break;
     case CSSStyleValuePair::KeyKind::BorderInlineStartStyle:
+    case CSSStyleValuePair::KeyKind::BorderInlineEndStyle:
         if (hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle) ||
             hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle)) {
             return true;
@@ -1703,7 +1704,8 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
     case CSSStyleValuePair::KeyKind::BorderLeftStyle:
     case CSSStyleValuePair::KeyKind::BorderRightStyle:
         if (hasCSSValuePair(
-                CSSStyleValuePair::KeyKind::BorderInlineStartStyle)) {
+                CSSStyleValuePair::KeyKind::BorderInlineStartStyle) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::BorderInlineEndStyle)) {
             return true;
         }
         break;

@@ -670,6 +670,7 @@ class CSSFilterFunction;
     F(BorderBlockEndStyle, borderBlockEndStyle, "border-block-end-style")      \
     F(BorderInlineStartStyle, borderInlineStartStyle,                          \
       "border-inline-start-style")                                             \
+    F(BorderInlineEndStyle, borderInlineEndStyle, "border-inline-end-style")   \
     F(BorderTopWidth, borderTopWidth, "border-top-width")                      \
     F(BorderRightWidth, borderRightWidth, "border-right-width")                \
     F(BorderBottomWidth, borderBottomWidth, "border-bottom-width")             \
