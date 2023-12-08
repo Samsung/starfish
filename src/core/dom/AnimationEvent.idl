@@ -2,7 +2,7 @@
 
 dictionary AnimationEventInit : EventInit {
   CSSOMString animationName = "";
-  float elapsedTime = 0.0;
+  double elapsedTime = 0.0;
   [Unimplemented] CSSOMString pseudoElement = "";
 };
 
@@ -10,7 +10,7 @@ dictionary AnimationEventInit : EventInit {
  Constructor(DOMString type, optional AnimationEventInit animationEventInitDict), ConstructorCallWith=ExecutionContext]
 interface AnimationEvent : Event {
   readonly attribute CSSOMString animationName;
-  readonly attribute float elapsedTime;
+  readonly attribute double elapsedTime;
   [Unimplemented] readonly attribute CSSOMString pseudoElement;
 };
 

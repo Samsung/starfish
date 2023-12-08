@@ -31,7 +31,7 @@ struct AnimationEventInit : EventInit {
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
     AnimationEventInit(String* animationName = String::emptyString,
-                       float elapsedTime = 0.0,
+                       double elapsedTime = 0.0,
                        String* pseudoElement = String::emptyString)
         : EventInit()
         , m_animationName(animationName)
@@ -50,12 +50,12 @@ public:
         m_animationName = animationName;
     }
 
-    float elapsedTime() const
+    double elapsedTime() const
     {
         return m_elapsedTime;
     }
 
-    void setElapsedTime(float elapsedTime)
+    void setElapsedTime(double elapsedTime)
     {
         m_elapsedTime = elapsedTime;
     }
@@ -71,7 +71,7 @@ public:
     }
 
     String* m_animationName;
-    float m_elapsedTime;
+    double m_elapsedTime;
     String* m_pseudoElement;
 };
 
@@ -116,12 +116,12 @@ public:
         m_animationName = animationName;
     }
 
-    float elapsedTime() const
+    double elapsedTime() const
     {
         return m_elapsedTime;
     }
 
-    void setElapsedTime(float elapsedTime)
+    void setElapsedTime(double elapsedTime)
     {
         m_elapsedTime = elapsedTime;
     }
@@ -138,7 +138,7 @@ public:
 
 private:
     String* m_animationName;
-    float m_elapsedTime;
+    double m_elapsedTime;
     String* m_pseudoElement;
 };
 } // namespace Starfish

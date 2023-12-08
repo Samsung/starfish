@@ -34,13 +34,13 @@ public:
         return new Steps(numberOfSteps, position);
     }
 
-    float getValue(float t) override
+    double getValue(double t) override
     {
         if (m_position == StepPosition::END) {
             return floor(m_numberOfSteps * t) / m_numberOfSteps;
         }
-        return std::min(1.0, ((double)floor(m_numberOfSteps * t) + 1) /
-                                 m_numberOfSteps);
+        return std::min(1.0,
+                        (floor(m_numberOfSteps * t) + 1) / m_numberOfSteps);
     }
 
     TimingFunctionType timingFunctionType()

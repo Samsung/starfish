@@ -31,7 +31,7 @@ public:
     virtual ~TimingFunction()
     {
     }
-    virtual float getValue(float x) = 0;
+    virtual double getValue(double x) = 0;
     virtual String* toString() const = 0;
     virtual TimingFunctionType timingFunctionType() = 0;
     virtual bool isCubicBezier() const

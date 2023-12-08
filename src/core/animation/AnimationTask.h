@@ -255,7 +255,7 @@ protected:
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
     ComputedStyle* newStyle, const bool* damagedKeys,
-    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress); // returns true if animation registered
 
 bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
@@ -293,9 +293,11 @@ public:
     }
 
     void step(uint64_t tickCount, ComputedStyle* style);
-    virtual void execute(float progress, ComputedStyle* style)
+
+    virtual void execute(double progress, ComputedStyle* style)
     {
     }
+
     virtual bool taskCanContinue(ComputedStyle* newStyle)
     {
         return false;
@@ -328,15 +330,15 @@ public:
         return 0;
     }
 
-    float fraction(uint64_t tickCount) const
+    double fraction(uint64_t tickCount) const
     {
         if (m_isInForwardsFillMode) {
             return 1.0f;
         }
 
         if (!m_isRunning) {
-            float result = m_gapTimeMs / ((float)m_durationMs);
-            return std::min(result, 1.0f);
+            double result = m_gapTimeMs / static_cast<double>(m_durationMs);
+            return std::min(result, 1.0);
         }
 
         if (!m_startTimeMs) {
@@ -347,9 +349,9 @@ public:
             return 0;
         }
         uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
-        float result = timeDiff / ((float)m_durationMs);
+        double result = timeDiff / static_cast<double>(m_durationMs);
 
-        return std::min(result, 1.0f);
+        return std::min(result, 1.0);
     }
 
     uint64_t remainTime(uint64_t tickCount) const
@@ -544,7 +546,7 @@ protected:
                    GC_WORD_OFFSET(ActiveAnimationTask, m_timingFunctions));
     }
 
-    float computeProgress(float& fraction);
+    double computeProgress(double& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
     TYPE m_type : 1;
@@ -600,7 +602,7 @@ public:
                                AnimationPlayStateValue playState,
                                AnimationFillModeValue fillMode);
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual void attachToElement(ComputedStyle* style) override;
     virtual void detachFromElement(ComputedStyle* style) override;
@@ -653,7 +655,7 @@ public:
     virtual void resolveUnresolvedAnimatedValues() override;
     virtual void didAnimationFrameChanged() override;
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual void attachToElement(ComputedStyle* style) override;
     virtual void detachFromElement(ComputedStyle* style) override;
@@ -732,7 +734,7 @@ public:
         STARFISH_ASSERT(target != nullptr);
     }
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
 };
 
@@ -757,7 +759,7 @@ public:
                               AnimationFillModeValue fillMode,
                               size_t indexForBgLayer = 0);
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
         CSSStyleValuePair::KeyKind k) override;
@@ -804,7 +806,7 @@ public:
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode,
         size_t indexForBgLayer = 0);
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
         CSSStyleValuePair::KeyKind k) override;
@@ -855,7 +857,7 @@ public:
         STARFISH_ASSERT(target != nullptr);
     }
 
-    void execute(float progress, ComputedStyle* style) override;
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
 };
 
@@ -1043,9 +1045,9 @@ public:
 
     void fireAnimationStartEvent(Element* element, String* name, double delay);
     void fireAnimationEndEvent(Element* element, String* name,
-                               float elapsedTime);
+                               double elapsedTime);
     void fireAnimationCancelEvent(Element* element, String* name,
-                                  float elapsedTime);
+                                  double elapsedTime);
 
 private:
     Window* m_window;

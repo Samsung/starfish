@@ -45,7 +45,7 @@
 namespace Starfish {
 
 template <typename T>
-static float interpolate(const T from, const T to, float progress,
+static float interpolate(const T from, const T to, double progress,
                          bool isForward = true)
 {
     if (isForward == true) {
@@ -144,7 +144,7 @@ void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
 }
 
 void AnimationExecutor::fireAnimationEndEvent(Element* element, String* name,
-                                              float elapsedTime)
+                                              double elapsedTime)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
@@ -163,7 +163,7 @@ void AnimationExecutor::fireAnimationEndEvent(Element* element, String* name,
 }
 
 void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
-                                                 float elapsedTime)
+                                                 double elapsedTime)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
@@ -272,7 +272,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
-    float f = 0;
+    double f = 0;
     if (m_startTimeMs != 0) {
         f = fraction(currentTickCount);
     }
@@ -391,10 +391,10 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
     return m_timingFunctions[m_frameIdx];
 }
 
-float ActiveAnimationTask::computeProgress(float& fraction)
+double ActiveAnimationTask::computeProgress(double& fraction)
 {
-    STARFISH_ASSERT(fraction >= 0.0f);
-    STARFISH_ASSERT(fraction <= 1.0f);
+    STARFISH_ASSERT(fraction >= 0.0);
+    STARFISH_ASSERT(fraction <= 1.0);
 
     if (m_type == ANIMATION_TYPE) {
         if (m_isForward == true) {
@@ -424,7 +424,7 @@ ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
     STARFISH_ASSERT(target != nullptr);
 }
 
-void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
+void ActiveOpacityAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
     float from = currentAnimatedFromValue()->getFloat();
@@ -792,7 +792,8 @@ void* ActiveTransformAnimationTask::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
+void ActiveTransformAnimationTask::execute(double progress,
+                                           ComputedStyle* style)
 {
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
@@ -914,7 +915,7 @@ void ActiveTransformAnimationTask::detachFromElement(ComputedStyle* style)
     m_targetElement->clearRunningTransformAnimation();
 }
 
-void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
+void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
@@ -1209,7 +1210,7 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
     ActiveAnimationTask::resolveUnresolvedAnimatedValues();
 }
 
-void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
+void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
     Length newLength;
@@ -1224,7 +1225,7 @@ void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
             // newLength remains as auto
         } else if (fromValue->getLength().isAuto() == true ||
                    toValue->getLength().isAuto() == true) {
-            if (progress < 0.5f) {
+            if (progress < 0.5) {
                 if (fromValue->isLength() == true) {
                     newLength = fromValue->getLength();
                 } else {
@@ -1552,7 +1553,8 @@ void* ActiveLengthSizeAnimationTask::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
+static LengthSize interpolateLengthSize(double progress,
+                                        AnimatedValue fromValue,
                                         AnimatedValue toValue, bool isForward)
 {
 #define INTERPOLATE_LENGTHSIZE(WH)                                     \
@@ -1583,7 +1585,7 @@ static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
 #undef INTERPOLATE_LENGTHSIZE
 }
 
-void ActiveLengthSizeAnimationTask::execute(float progress,
+void ActiveLengthSizeAnimationTask::execute(double progress,
                                             ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
@@ -1625,7 +1627,7 @@ bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return false;
 }
 
-void ActiveVisibilityAnimationTask::execute(float progress,
+void ActiveVisibilityAnimationTask::execute(double progress,
                                             ComputedStyle* style)
 {
     if (currentAnimatedToValue()->getVisibilityValue() ==
@@ -1738,7 +1740,7 @@ static Length getLengthHeight(Frame* frame, Element* element, Length length)
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
     ComputedStyle* newStyle, const bool* damagedKeys,
-    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress)
 {
     STARFISH_ASSERT(element != nullptr);
@@ -1759,8 +1761,8 @@ bool applyTransitionIfNeeds(
         CSSStyleValuePair::KeyKind property = data->property(i);
         bool isPropertyAll = property == CSSStyleValuePair::All;
 
-        auto duration = data->duration(i).toTimeValue();
-        auto delay = data->delay(i).toTimeValue();
+        double duration = data->duration(i).toTimeValue();
+        double delay = data->delay(i).toTimeValue();
         auto timingFunction = data->timingFunction(i);
 
         if (NEED_TRANSITION(CSSStyleValuePair::Opacity) == true) {
