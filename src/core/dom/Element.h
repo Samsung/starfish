@@ -83,6 +83,7 @@ public:
         , m_pseudoElementMap(nullptr)
         , m_shadowRoot(nullptr)
         , m_registeredIntersectionObservers(nullptr)
+        , m_registeredResizeObservers(nullptr)
     {
     }
 
