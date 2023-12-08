@@ -170,6 +170,10 @@ test/cairo/internal-test/css/border/border-inline-start-color.html
 test/cairo/internal-test/css/border/border-inline-start-style.html
 test/cairo/internal-test/css/border/border-inline-start-width.html
 test/cairo/internal-test/css/border/border-inline-start.html
+test/cairo/internal-test/css/border/border-inline-end-color.html
+test/cairo/internal-test/css/border/border-inline-end-style.html
+test/cairo/internal-test/css/border/border-inline-end-width.html
+test/cairo/internal-test/css/border/border-inline-end.html
 test/cairo/internal-test/css/width/rtl-image-element-width-static.html
 test/cairo/internal-test/css/width/ltr-image-element-width-static.html
 test/cairo/internal-test/css/background/background_shorthand_invalid.html
