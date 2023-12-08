@@ -34,17 +34,23 @@ namespace Starfish {
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                                            const char* timezone)
 {
-#ifdef STARFISH_TIZEN_PROD_TV
+#ifdef STARFISH_TIZEN
     // add argument for CodeCache directory
+	auto cachePath = app_get_cache_path();
     m_engineInstance = Escargot::VMInstanceRef::create(
-        locale, timezone, app_get_data_path());
+        locale, timezone, cachePath);
+    free(cachePath);
 #else
     m_engineInstance = Escargot::VMInstanceRef::create(
         locale, timezone);
 #endif
     if (m_engineInstance->isCodeCacheEnabled()) {
+#if defined(STARFISH_64)
+        m_engineInstance->setMaxCompiledByteCodeSize(1024 * 1024 * 8 * 2);
+#else
         m_engineInstance->setMaxCompiledByteCodeSize(1024 * 1024 * 8);
-        m_engineInstance->setCodeCacheMinSourceLength(1024 * 2);
+#endif
+        m_engineInstance->setCodeCacheMinSourceLength(1024);
         m_engineInstance->setCodeCacheMaxCacheCount(16);
         m_engineInstance->setCodeCacheShouldLoadFunctionOnScriptLoading(true);
     } else {
