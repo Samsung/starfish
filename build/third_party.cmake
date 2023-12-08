@@ -324,10 +324,6 @@ IF (${WORKER} STREQUAL "1")
     add_compile_options("-DGC_THREAD_ISOLATE=1")
 ENDIF()
 
-# ESCARGOT INTERNAL COMPILE OPTION
-add_compile_options("-DESCARGOT_OBJECT_STRUCTURE_ACCESS_CACHE_BUILD_MIN_SIZE=32")
-add_compile_options("-DESCARGOT_OBJECT_STRUCTURE_TRANSITION_MODE_MAX_SIZE=36")
-
 ADD_SUBDIRECTORY (third_party/escargot)
 
 #######################################################
