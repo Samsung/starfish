@@ -2440,11 +2440,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     return damage;
 }
 
-inline double deg2rad(float degree)
-{
-    return degree * M_PI / 180;
-}
-
 SkMatrix ComputedStyle::transformToMatrix(StyleTransformDataGroup* transforms,
                                           LayoutUnit containerWidth,
                                           LayoutUnit containerHeight, Frame* f)
@@ -2477,8 +2472,8 @@ SkMatrix ComputedStyle::transformToMatrix(StyleTransformDataGroup* transforms,
             matrix.preRotate(m->angle(), m->cx().fixed(), m->cy().fixed());
         } else if (t.type() == StyleTransformData::Skew) {
             SkewTransform* m = t.skew();
-            matrix.preSkew(tan(deg2rad(m->angleX())),
-                           tan(deg2rad(m->angleY())));
+            matrix.preSkew(tan(UnitHelper::convertFromDegToRad(m->angleX())),
+                           tan(UnitHelper::convertFromDegToRad(m->angleY())));
         } else if (t.type() == StyleTransformData::Translate) {
             TranslateTransform* m = t.translate();
             matrix.preTranslate(m->tx().specifiedValue(containerWidth, f),
