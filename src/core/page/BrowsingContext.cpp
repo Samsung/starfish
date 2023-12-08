@@ -544,7 +544,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                             DisplayValue::NoneDisplayValue) {
                         canceled = true;
                         (*task)->detachFromElement(nullptr);
-                        float progress = (*task)->fraction(currentTick);
+                        double progress = (*task)->fraction(currentTick);
                         cancelTick = (*task)->duration() * progress / 1000;
                         task = animation.erase(task);
                     } else {

@@ -23,7 +23,7 @@
 
 namespace Starfish {
 
-static const float bezierEpsilon = 1e-4;
+static constexpr double bezierEpsilon = 1e-4;
 
 CubicBezier* CubicBezier::createCubicBezier(EaseType type)
 {
@@ -43,7 +43,8 @@ CubicBezier* CubicBezier::createCubicBezier(EaseType type)
     }
 }
 
-CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2, EaseType type)
+CubicBezier::CubicBezier(double X1, double Y1, double X2, double Y2,
+                         EaseType type)
     : m_easeType(type)
 {
     STARFISH_ASSERT(0 <= X1 && X1 <= 1);
@@ -74,7 +75,7 @@ CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2, EaseType type)
     }
 }
 
-float CubicBezier::getValue(float t)
+double CubicBezier::getValue(double t)
 {
     if (t < 0.0) {
         return 0.0 + m_startGradient * t;
@@ -82,27 +83,27 @@ float CubicBezier::getValue(float t)
         return 1.0 + m_endGradient * (t - 1.0);
     }
 
-    float x = getCurveX(t, bezierEpsilon);
+    double x = getCurveX(t, bezierEpsilon);
     return ((m_coffY1 * x + m_coffY2) * x + m_coffY3) * x;
 }
 
-float CubicBezier::getValueX(float t)
+double CubicBezier::getValueX(double t)
 {
     return ((m_coffX1 * t + m_coffX2) * t + m_coffX3) * t;
 }
 
-float CubicBezier::curveDerivativeX(float t)
+double CubicBezier::curveDerivativeX(double t)
 {
     return (3.0 * m_coffX1 * t + 2.0 * m_coffX2) * t + m_coffX3;
 }
 
-float CubicBezier::getCurveX(float x, float epsilon)
+double CubicBezier::getCurveX(double x, double epsilon)
 {
-    float t0;
-    float t1;
-    float t2;
-    float x2;
-    float d2;
+    double t0;
+    double t1;
+    double t2;
+    double x2;
+    double d2;
     int i;
     // First try a few iterations of Newton's method -- normally very fast.
     for (t2 = x, i = 0; i < 8; i++) {

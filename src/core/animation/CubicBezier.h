@@ -37,9 +37,9 @@ public:
 
     static CubicBezier* createCubicBezier(EaseType type);
 
-    CubicBezier(float X1, float Y1, float X2, float Y2,
+    CubicBezier(double X1, double Y1, double X2, double Y2,
                 EaseType type = EaseType::CUSTOM);
-    float getValue(float x) override;
+    double getValue(double x) override;
 
     TimingFunctionType timingFunctionType()
     {
@@ -60,19 +60,19 @@ public:
     {
         StringBuilder builder;
         if (m_easeType == EaseType::CUSTOM) {
-            float x1 = m_coffX3 / 3.0;
-            float y1 = m_coffY3 / 3.0;
-            float x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
-            float y2 = (m_coffY2 + m_coffY3) / 3.0 + y1;
+            double x1 = m_coffX3 / 3.0;
+            double y1 = m_coffY3 / 3.0;
+            double x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
+            double y2 = (m_coffY2 + m_coffY3) / 3.0 + y1;
 
             builder.appendString("cubic-bezier(");
-            builder.appendString(String::fromFloat(x1));
+            builder.appendString(String::fromDouble(x1));
             builder.appendString(", ");
-            builder.appendString(String::fromFloat(y1));
+            builder.appendString(String::fromDouble(y1));
             builder.appendString(", ");
-            builder.appendString(String::fromFloat(x2));
+            builder.appendString(String::fromDouble(x2));
             builder.appendString(", ");
-            builder.appendString(String::fromFloat(y2));
+            builder.appendString(String::fromDouble(y2));
             builder.appendString(")");
         } else if (m_easeType == EaseType::EASE) {
             builder.appendString("ease");
@@ -88,9 +88,12 @@ public:
 
         return builder.finalize();
     }
-    float getCurveX(float x, float epsilon);
-    float getValueX(float x);
-    float curveDerivativeX(float t);
+
+    double getCurveX(double x, double epsilon);
+
+    double getValueX(double x);
+
+    double curveDerivativeX(double t);
 
     bool operator==(const CubicBezier& b) const
     {
@@ -123,15 +126,15 @@ public:
     }
 
 private:
-    float m_coffX1;
-    float m_coffX2;
-    float m_coffX3;
-    float m_coffY1;
-    float m_coffY2;
-    float m_coffY3;
+    double m_coffX1;
+    double m_coffX2;
+    double m_coffX3;
+    double m_coffY1;
+    double m_coffY2;
+    double m_coffY3;
 
-    float m_startGradient;
-    float m_endGradient;
+    double m_startGradient;
+    double m_endGradient;
 
     EaseType m_easeType;
 };

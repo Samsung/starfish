@@ -8492,7 +8492,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     STARFISH_ASSERT(executor != nullptr);
 
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
-    std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
+    std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
         canceledAnimationProgress;
     // check transition have to remove
     {
@@ -8552,7 +8552,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                         activeAnimations[i]->fireTransitionEndEvent();
                     } else {
                         auto key = activeAnimations[i]->property();
-                        float progress = activeAnimations[i]->fraction(tick);
+                        double progress = activeAnimations[i]->fraction(tick);
                         canceledAnimationProgress.push_back(
                             std::make_pair(key, progress));
                         activeAnimations[i]->fireTransitionCancelEvent();
@@ -9009,12 +9009,13 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         computeCSSAnimationKeyframes(resolver, element, toStyle);
     }
 
-    auto tick = element->document()->browsingContext()->styleResolveStartTick();
-    float cancelTick = 0;
-    float endTick = 0;
+    uint64_t tick =
+        element->document()->browsingContext()->styleResolveStartTick();
+    double cancelTick = 0;
+    double endTick = 0;
 
     // check animation have to remove
-    std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
+    std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
         canceledAnimationProgress;
 
     // Because the style is recalculated for each Animation Frame,
@@ -9124,16 +9125,16 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
                 if (shouldRemove == true) {
                     if (isCancel == false) {
-                        endTick = animationTasks[i]->duration() / 1000;
+                        endTick = animationTasks[i]->duration() / 1000.0;
                         needsToFireAnimationEndEvent = true;
                     } else {
                         auto key = animationTasks[i]->property();
-                        float progress = animationTasks[i]->fraction(tick);
+                        double progress = animationTasks[i]->fraction(tick);
                         canceledAnimationProgress.push_back(
                             std::make_pair(key, progress));
 
                         cancelTick =
-                            animationTasks[i]->duration() * progress / 1000;
+                            animationTasks[i]->duration() * progress / 1000.0;
                         needsToFireAnimationCancelEvent = true;
                     }
                     // FIXME
