@@ -218,6 +218,12 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValue(CSSLength(frame->style()->border().right().style()));
             return ret;
         }
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartWidth) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->borderRight()));
+            return ret;
+        }
     } else {
         // margin-inline.
         if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
@@ -278,6 +284,12 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValueKind(
                 CSSStyleValuePair::ValueKind::BorderStyleValueKind);
             ret.setValue(CSSLength(frame->style()->border().left().style()));
+            return ret;
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartWidth) {
+            ret.setKeyKind(keykind);
+            ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            ret.setValue(CSSLength(frame->borderLeft()));
             return ret;
         }
     }
@@ -463,6 +475,28 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             if (inb != nullptr) {
                 p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::BorderInlineStartWidth, inb);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineEndWidth: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderInlineEndWidth);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeInlineProperties(
+                CSSStyleValuePair::KeyKind::BorderInlineEndWidth,
+                frame->asFrameBox());
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p = resolveFlowRelativeInlineProperties(
+                    CSSStyleValuePair::KeyKind::BorderInlineEndWidth, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }

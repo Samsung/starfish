@@ -680,6 +680,7 @@ class CSSFilterFunction;
     F(BorderBlockEndWidth, borderBlockEndWidth, "border-block-end-width")      \
     F(BorderInlineStartWidth, borderInlineStartWidth,                          \
       "border-inline-start-width")                                             \
+    F(BorderInlineEndWidth, borderInlineEndWidth, "border-inline-end-width")   \
     F(BorderCollapse, borderCollapse, "border-collapse")                       \
     F(BorderSpacing, borderSpacing, "border-spacing")                          \
     F(BoxOrient, boxOrient, "box-orient")                                      \

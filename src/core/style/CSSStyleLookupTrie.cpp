@@ -1283,6 +1283,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-inline-end-style", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderInlineEndStyle;
             }
+            if (memcmp(data, "border-inline-end-width", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEndWidth;
+            }
             break;
         case 't':
             if (memcmp(data, "text-underline-position", 23) == 0) {
@@ -2354,6 +2357,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderInlineEndStyle", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderInlineEndStyle;
+            }
+            if (memcmp(data, "borderInlineEndWidth", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEndWidth;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)

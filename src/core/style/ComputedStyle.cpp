@@ -1634,6 +1634,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 damage = static_cast<ComputedStyleDamage>(
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
+            if (damages[static_cast<size_t>(BorderValueKind::kWidth)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderInlineEndWidth] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            }
         }
     }
 
@@ -2811,6 +2817,14 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
                 BorderValueKind::kStyle)) {
             setBorderRightStyle(borderEnd.borderValue().style());
         }
+
+        if (border().right().hasBorderStyle()) {
+            if (borderEnd.hasWidth() &&
+                !borderEnd.isCorrespondingRightSpecifiedLater(
+                    BorderValueKind::kWidth)) {
+                setBorderRightWidth(borderEnd.borderValue().width());
+            }
+        }
     } else {
         // margin-inline
         if (margineStart.legnth().hasValue() &&
@@ -2880,6 +2894,14 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
             !borderEnd.isCorrespondingLeftSpecifiedLater(
                 BorderValueKind::kStyle)) {
             setBorderLeftStyle(borderEnd.borderValue().style());
+        }
+
+        if (border().left().hasBorderStyle()) {
+            if (borderEnd.hasWidth() &&
+                !borderEnd.isCorrespondingLeftSpecifiedLater(
+                    BorderValueKind::kWidth)) {
+                setBorderLeftWidth(borderEnd.borderValue().width());
+            }
         }
     }
 }
