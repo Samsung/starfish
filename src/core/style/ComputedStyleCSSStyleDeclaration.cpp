@@ -186,6 +186,7 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
         }
 
         // border-inline.
+        // border-inline-start.
         if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartColor) {
             ret.setKeyKind(keykind);
             ret.setColorValue(frame->style()->border().left().color());
@@ -202,6 +203,12 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValueKind(
                 CSSStyleValuePair::ValueKind::BorderStyleValueKind);
             ret.setValue(CSSLength(frame->style()->border().left().style()));
+            return ret;
+        }
+        // border-inline-end.
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineEndColor) {
+            ret.setKeyKind(keykind);
+            ret.setColorValue(frame->style()->border().right().color());
             return ret;
         }
     } else {
@@ -234,6 +241,7 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
         }
 
         // border-inline.
+        // border-inline-start.
         if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartColor) {
             ret.setKeyKind(keykind);
             ret.setColorValue(frame->style()->border().right().color());
@@ -250,6 +258,12 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValueKind(
                 CSSStyleValuePair::ValueKind::BorderStyleValueKind);
             ret.setValue(CSSLength(frame->style()->border().right().style()));
+            return ret;
+        }
+        // border-inline-end.
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineEndColor) {
+            ret.setKeyKind(keykind);
+            ret.setColorValue(frame->style()->border().left().color());
             return ret;
         }
     }
@@ -1348,6 +1362,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (frame && frame->isFrameBox()) {
             p = resolveFlowRelativeInlineProperties(
                 CSSStyleValuePair::KeyKind::BorderInlineStartColor,
+                frame->asFrameBox());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineEndColor: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderInlineEndColor);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeInlineProperties(
+                CSSStyleValuePair::KeyKind::BorderInlineEndColor,
                 frame->asFrameBox());
         }
     } break;
