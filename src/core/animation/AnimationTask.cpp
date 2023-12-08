@@ -457,16 +457,6 @@ void ActiveOpacityAnimationTask::detachFromElement(ComputedStyle* style)
     m_targetElement->clearRunningOpacityAnimation();
 }
 
-inline double rad2deg(double rad)
-{
-    return rad * (180.0 / M_PI);
-}
-
-inline double deg2rad(float degree)
-{
-    return degree * M_PI / 180;
-}
-
 /// https://drafts.csswg.org/css-transforms/#decomposing-a-2d-matrix
 static ActiveTransformAnimationTask::MatrixDecomposed2D decomposing2DMatrix(
     const SkMatrix& matrix)
@@ -530,7 +520,7 @@ static ActiveTransformAnimationTask::MatrixDecomposed2D decomposing2DMatrix(
     ret.matrixM21 = row1x;
     ret.matrixM22 = row1y;
     // Convert into degrees because our rotation functions expect it.
-    ret.angle = rad2deg(angle);
+    ret.angle = UnitHelper::convertFromRadToDeg(angle);
     ret.scaleX = scaleX;
     ret.scaleY = scaleY;
     ret.translateX = translateX;
@@ -590,7 +580,7 @@ static SkMatrix recomposing2DMatrix(
                       decomposed.translateY * decomposed.matrixM22);
 
     // Rotate matrix.
-    float angle = deg2rad(decomposed.angle);
+    float angle = UnitHelper::convertFromDegToRad(decomposed.angle);
     float cosAngle = cos(angle);
     float sinAngle = sin(angle);
 
