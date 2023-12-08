@@ -2623,6 +2623,12 @@ public:
             value);
     }
 
+    void setBorderInlineEndFromShorthand(bool value)
+    {
+        m_rareComputedStyleData.ensureBorderInlineEnd()->setFromShorthand(
+            value);
+    }
+
     void setBorderImageSource(String* url)
     {
         m_rareComputedStyleData.ensureBorder()->image().setUrl(url);

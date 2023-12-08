@@ -945,6 +945,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-left-width", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderLeftWidth;
             }
+            if (memcmp(data, "border-inline-end", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEnd;
+            }
             if (memcmp(data, "background-repeat", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundRepeat;
             }
@@ -2100,6 +2103,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "borderLeftWidth", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderLeftWidth;
+            }
+            if (memcmp(data, "borderInlineEnd", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEnd;
             }
             break;
         case 'g':
