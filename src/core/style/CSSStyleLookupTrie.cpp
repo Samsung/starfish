@@ -1277,6 +1277,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "border-top-right-radius", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderTopRightRadius;
             }
+            if (memcmp(data, "border-inline-end-color", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEndColor;
+            }
             break;
         case 't':
             if (memcmp(data, "text-underline-position", 23) == 0) {
@@ -2342,6 +2345,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "backgroundAttachment", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundAttachment;
+            }
+            if (memcmp(data, "borderInlineEndColor", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::BorderInlineEndColor;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)

@@ -1613,6 +1613,24 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    {
+        FlowRelativeBorderInlineData* oldBorderInlineEnd =
+            oldStyle->rareComputedStyleData()->borderInlineEnd();
+        FlowRelativeBorderInlineData* newBorderInlineEnd =
+            newStyle->rareComputedStyleData()->borderInlineEnd();
+        if (oldBorderInlineEnd || newBorderInlineEnd) {
+            const std::array<bool, 3> damages = FlowRelativeBorderData::damaged(
+                oldBorderInlineEnd, newBorderInlineEnd);
+
+            if (damages[static_cast<size_t>(BorderValueKind::kColor)]) {
+                damagedKeys[CSSStyleValuePair::KeyKind::BorderInlineEndColor] =
+                    true;
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+        }
+    }
+
     if (newStyle->paddingInlineEnd() != oldStyle->paddingInlineEnd()) {
         damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineEnd] = true;
         damage = static_cast<ComputedStyleDamage>(
@@ -2716,6 +2734,7 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
     FlowRelativeLengthInlineData paddingEnd = paddingInlineEnd();
     FlowRelativeLengthInlineData paddingStart = paddingInlineStart();
     FlowRelativeBorderInlineData borderStart = borderInlineStart();
+    FlowRelativeBorderInlineData borderEnd = borderInlineEnd();
 
     if (direction() == DirectionValue::LtrDirectionValue) {
         // margin-inline
@@ -2766,6 +2785,20 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
                 setBorderLeftWidth(borderStart.borderValue().width());
             }
         }
+
+        // border-inline-end
+        if (borderEnd.hasColor() &&
+            !borderEnd.isCorrespondingRightSpecifiedLater(
+                BorderValueKind::kColor)) {
+            setBorderRightColor(borderEnd.borderValue().color());
+        } else if (!borderEnd.hasColor() &&
+                   !borderEnd.isCorrespondingRightSpecifiedLater(
+                       BorderValueKind::kColor) &&
+                   borderEnd.isFromShorthand()) {
+            // If there is no color in the result interpreted from the long
+            // hand. Inherits color.
+            setBorderRightColor(color());
+        }
     } else {
         // margin-inline
         if (margineStart.legnth().hasValue() &&
@@ -2815,6 +2848,20 @@ void ComputedStyle::applyFlowRelativeInlineProperties()
                     BorderValueKind::kWidth)) {
                 setBorderRightWidth(borderStart.borderValue().width());
             }
+        }
+
+        // border-inline-end
+        if (borderEnd.hasColor() &&
+            !borderEnd.isCorrespondingLeftSpecifiedLater(
+                BorderValueKind::kColor)) {
+            setBorderLeftColor(borderEnd.borderValue().color());
+        } else if (!borderEnd.hasColor() &&
+                   !borderEnd.isCorrespondingLeftSpecifiedLater(
+                       BorderValueKind::kColor) &&
+                   borderEnd.isFromShorthand()) {
+            // If there is no color in the result interpreted from the long
+            // hand. Inherits color.
+            setBorderLeftColor(color());
         }
     }
 }

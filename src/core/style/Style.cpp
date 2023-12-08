@@ -5687,6 +5687,33 @@ void StyleResolver::applyProperty(
             }
         }
     } break;
+    case CSSStyleValuePair::KeyKind::BorderInlineEndColor: {
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setBorderInlineEndColor(
+                parentStyle->borderInlineEnd().borderValue().color());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->clearBorderInlineEndColor();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setBorderInlineEndColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->clearBorderInlineEndColor();
+            } else {
+                style->setBorderInlineEndColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+    } break;
     case CSSStyleValuePair::KeyKind::BorderBlockStart: {
         // Generally, shorthand properties are divided into longhand
         // properties and registered in cssvalues. so, there is no need to
@@ -9727,6 +9754,12 @@ bool CSSStyleValuePair::updateValueBorderBlockEndColor(
 }
 
 bool CSSStyleValuePair::updateValueBorderInlineStartColor(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueColor(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderInlineEndColor(
     Document* document, const CSSTokenVector& tokens)
 {
     return updateValueColor(document, tokens);
