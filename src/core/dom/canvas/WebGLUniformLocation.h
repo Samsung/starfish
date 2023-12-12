@@ -22,17 +22,37 @@
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "core/dom/canvas/WebGLObject.h"
+#include "binding/ScriptWrappable.h"
 #include "platform/canvas/webgl/GLESTypes.h"
 
 namespace Starfish {
+class WebGLProgram;
 
-class WebGLUniformLocation : public WebGLObject {
+class WebGLUniformLocation : public ScriptWrappable {
 public:
-    WebGLUniformLocation(ScriptBindingInstance* instance,
-                         WebGLRenderingContext* context, GLuint object);
+    WebGLUniformLocation(ScriptBindingInstance* instance, WebGLProgram* program,
+                         GLint location)
+        : ScriptWrappable(this)
+        , m_scriptBindingInstance(instance)
+        , m_program(program)
+        , m_location(location)
+    {
+    }
+
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLUniformLocation() const override;
+    ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return m_scriptBindingInstance;
+    }
+
+    DEFINE_GETTER(WebGLProgram*, program);
+    DEFINE_GETTER(GLint, location);
+
+private:
+    ScriptBindingInstance* m_scriptBindingInstance;
+    WebGLProgram* m_program;
+    GLint m_location;
 };
 } // namespace Starfish
 

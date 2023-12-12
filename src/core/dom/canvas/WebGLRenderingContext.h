@@ -94,16 +94,16 @@ public:
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
-    void uniform1f(WebGLUniformLocation* location, GLfloat x);
-    void uniform2f(WebGLUniformLocation* location, GLfloat x, GLfloat y);
-    void uniform3f(WebGLUniformLocation* location, GLfloat x, GLfloat y,
+    void uniform1f(WebGLUniformLocation* uniform, GLfloat x);
+    void uniform2f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y);
+    void uniform3f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y,
                    GLfloat z);
-    void uniform4f(WebGLUniformLocation* location, GLfloat x, GLfloat y,
+    void uniform4f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y,
                    GLfloat z, GLfloat w);
-    void uniform1i(WebGLUniformLocation* location, GLint x);
-    void uniform2i(WebGLUniformLocation* location, GLint x, GLint y);
-    void uniform3i(WebGLUniformLocation* location, GLint x, GLint y, GLint z);
-    void uniform4i(WebGLUniformLocation* location, GLint x, GLint y, GLint z,
+    void uniform1i(WebGLUniformLocation* uniform, GLint x);
+    void uniform2i(WebGLUniformLocation* uniform, GLint x, GLint y);
+    void uniform3i(WebGLUniformLocation* uniform, GLint x, GLint y, GLint z);
+    void uniform4i(WebGLUniformLocation* uniform, GLint x, GLint y, GLint z,
                    GLint w);
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
@@ -130,6 +130,7 @@ private:
     void setGLError(GLenum code, const char* message = nullptr);
     void updateGLError();
     bool isBoundCubeMapTexture(GLenum target);
+    bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
