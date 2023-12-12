@@ -541,7 +541,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined deleteFramebuffer(WebGLFramebuffer? framebuffer);
     [Unimplemented] undefined deleteProgram(WebGLProgram? program);
     [Unimplemented] undefined deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
-    [Unimplemented] undefined deleteShader(WebGLShader? shader);
+    undefined deleteShader(WebGLShader? shader);
     [Unimplemented] undefined deleteTexture(WebGLTexture? texture);
 
     undefined depthFunc(GLenum func);

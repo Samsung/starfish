@@ -76,6 +76,7 @@ public:
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
+    void deleteShader(WebGLShader* shader);
     void depthFunc(GLenum func);
     void disable(GLenum cap);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
