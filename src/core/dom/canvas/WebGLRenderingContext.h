@@ -31,6 +31,7 @@
 
 namespace Starfish {
 
+class WebGLActiveInfo;
 class WebGLBuffer;
 class WebGLObject;
 class WebGLProgram;
@@ -81,6 +82,7 @@ public:
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void frontFace(GLenum mode);
+    WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
     GLint getAttribLocation(WebGLProgram* program, String* name);
     ScriptValue getParameter(GLenum pname);
     GLenum getError();

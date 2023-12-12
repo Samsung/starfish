@@ -1,0 +1,8 @@
+// https://registry.khronos.org/webgl/specs/latest/1.0/#5.11
+
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker)]
+interface WebGLActiveInfo {
+    readonly attribute GLint size;
+    readonly attribute GLenum type;
+    readonly attribute DOMString name;
+};

@@ -60,6 +60,11 @@ public:
         return m_deleted;
     }
 
+    void markDeleted()
+    {
+        m_deleted = true;
+    }
+
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
     WebGLRenderingContext* m_context;
