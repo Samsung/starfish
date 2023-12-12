@@ -701,7 +701,7 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
         return nullptr;
     }
 
-    return new WebGLUniformLocation(scriptBindingInstance(), this, location);
+    return new WebGLUniformLocation(scriptBindingInstance(), program, location);
 }
 
 void WebGLRenderingContext::linkProgram(WebGLProgram* program)
@@ -774,69 +774,113 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
     glTexParameteri(target, pname, param);
 }
 
-void WebGLRenderingContext::uniform1f(WebGLUniformLocation* location, GLfloat x)
+void WebGLRenderingContext::uniform1f(WebGLUniformLocation* uniform, GLfloat x)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform1f(location->glObject(), x);
+    // Each of the uniform* functions sets the specified uniform or uniforms to
+    // the values provided.
+    if (!isFromCurrentProgram(uniform)) {
+        // If the passed location is not null and was not obtained from the
+        // currently used program via an earlier call to getUniformLocation, an
+        // INVALID_OPERATION error will be generated.
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    // If the passed location is null, the data passed in will be silently
+    // ignored and no uniform variables will be changed.
+    glUniform1f(uniform->location(), x);
 }
 
-void WebGLRenderingContext::uniform2f(WebGLUniformLocation* location, GLfloat x,
+void WebGLRenderingContext::uniform2f(WebGLUniformLocation* uniform, GLfloat x,
                                       GLfloat y)
 {
     ENTER_CONTEXT_SCOPE();
 
-    // NOTE: See https://docs.gl/es3/glUniform for details of verification and
-    // error handling in GLES3.
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
 
-    glUniform2f(location->glObject(), x, y);
+    glUniform2f(uniform->location(), x, y);
 }
 
-void WebGLRenderingContext::uniform3f(WebGLUniformLocation* location, GLfloat x,
+void WebGLRenderingContext::uniform3f(WebGLUniformLocation* uniform, GLfloat x,
                                       GLfloat y, GLfloat z)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform3f(location->glObject(), x, y, z);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform3f(uniform->location(), x, y, z);
 }
 
-void WebGLRenderingContext::uniform4f(WebGLUniformLocation* location, GLfloat x,
+void WebGLRenderingContext::uniform4f(WebGLUniformLocation* uniform, GLfloat x,
                                       GLfloat y, GLfloat z, GLfloat w)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform4f(location->glObject(), x, y, z, w);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform4f(uniform->location(), x, y, z, w);
 }
 
-void WebGLRenderingContext::uniform1i(WebGLUniformLocation* location, GLint x)
+void WebGLRenderingContext::uniform1i(WebGLUniformLocation* uniform, GLint x)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform1i(location->glObject(), x);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform1i(uniform->location(), x);
 }
 
-void WebGLRenderingContext::uniform2i(WebGLUniformLocation* location, GLint x,
+void WebGLRenderingContext::uniform2i(WebGLUniformLocation* uniform, GLint x,
                                       GLint y)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform2i(location->glObject(), x, y);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform2i(uniform->location(), x, y);
 }
 
-void WebGLRenderingContext::uniform3i(WebGLUniformLocation* location, GLint x,
+void WebGLRenderingContext::uniform3i(WebGLUniformLocation* uniform, GLint x,
                                       GLint y, GLint z)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform3i(location->glObject(), x, y, z);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform3i(uniform->location(), x, y, z);
 }
 
-void WebGLRenderingContext::uniform4i(WebGLUniformLocation* location, GLint x,
+void WebGLRenderingContext::uniform4i(WebGLUniformLocation* uniform, GLint x,
                                       GLint y, GLint z, GLint w)
 {
     ENTER_CONTEXT_SCOPE();
 
-    glUniform4i(location->glObject(), x, y, z, w);
+    if (!isFromCurrentProgram(uniform)) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glUniform4i(uniform->location(), x, y, z, w);
 }
 
 void WebGLRenderingContext::useProgram(WebGLProgram* program)
@@ -1248,6 +1292,19 @@ bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
         }
     }
     return false;
+}
+
+bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* uniform)
+{
+    // Consider caching this program id when useProgram is called.
+    GLint program = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+
+    if (program == 0 ||
+        uniform->program()->glObject() != static_cast<GLuint>(program)) {
+        return false;
+    }
+    return true;
 }
 
 } // namespace Starfish
