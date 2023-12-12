@@ -376,6 +376,18 @@ WebGLTexture* WebGLRenderingContext::createTexture()
     return new WebGLTexture(scriptBindingInstance(), this, textureId);
 }
 
+void WebGLRenderingContext::deleteShader(WebGLShader* shader)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!checkWebGLObject(shader) || shader->isDeleted()) {
+        return;
+    }
+
+    glDeleteShader(shader->glObject());
+    shader->markDeleted();
+}
+
 void WebGLRenderingContext::depthFunc(GLenum func)
 {
     ENTER_CONTEXT_SCOPE();
@@ -582,7 +594,7 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
     }
 
     GLint params = 0;
-    glGetProgramiv(program->glObject(), GL_LINK_STATUS, &params);
+    glGetProgramiv(program->glObject(), pname, &params);
 
     if (hasGLError()) {
         /*
