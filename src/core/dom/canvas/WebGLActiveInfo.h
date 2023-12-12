@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLObject__
-#define __StarfishWebGLObject__
+#ifndef __StarfishWebGLActiveInfo__
+#define __StarfishWebGLActiveInfo__
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
@@ -27,50 +27,36 @@
 
 namespace Starfish {
 
-class WebGLRenderingContext;
+class ScriptBindingInstance;
+class String;
 
-class WebGLObject : public ScriptWrappable {
+class WebGLActiveInfo : public ScriptWrappable {
 public:
-    WebGLObject(ScriptBindingInstance* instance, WebGLRenderingContext* context,
-                GLuint object);
-    void init(ScriptBindingInstance* instance, void* data) override;
-    bool isWebGLObject() const override;
+    WebGLActiveInfo(ScriptBindingInstance* instance, GLint size, GLenum type,
+                    String* name)
+        : ScriptWrappable(this)
+        , m_scriptBindingInstance(instance)
+        , m_size(size)
+        , m_type(type)
+        , m_name(name)
+    {
+    }
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    bool isWebGLActiveInfo() const override;
     ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }
 
-    GLuint glObject() const
-    {
-        return m_glObject;
-    }
-
-    WebGLRenderingContext* context()
-    {
-        return m_context;
-    }
-
-    bool invalidated()
-    {
-        return m_invalidated;
-    }
-
-    bool isDeleted()
-    {
-        return m_deleted;
-    }
-
-    void markDeleted()
-    {
-        m_deleted = true;
-    }
+    DEFINE_GETTER(GLint, size);
+    DEFINE_GETTER(GLenum, type);
+    DEFINE_GETTER(String*, name);
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
-    WebGLRenderingContext* m_context;
-    GLuint m_glObject;
-    bool m_invalidated = false;
-    bool m_deleted = false;
+    GLint m_size;
+    GLenum m_type;
+    String* m_name;
 };
 } // namespace Starfish
 

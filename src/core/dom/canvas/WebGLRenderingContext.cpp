@@ -31,6 +31,7 @@
 #include "core/util/String.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
+#include "core/dom/canvas/WebGLActiveInfo.h"
 #include "core/dom/canvas/WebGLBuffer.h"
 #include "core/dom/canvas/WebGLShader.h"
 #include "core/dom/canvas/WebGLProgram.h"
@@ -515,6 +516,35 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         return scriptNull();
     }
     return scriptNull();
+}
+
+WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
+                                                         GLuint index)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLint maxNameLength;
+    glGetProgramiv(program->glObject(), GL_ACTIVE_UNIFORM_MAX_LENGTH,
+                   &maxNameLength);
+
+    GLint size;
+    GLenum type;
+    GLsizei length;
+
+    std::vector<char> name;
+    name.resize(maxNameLength, '\0');
+    glGetActiveUniform(program->glObject(), index, maxNameLength, &length,
+                       &size, &type, &name[0]);
+
+    if (hasGLError()) {
+        // a) If the passed index is out of range, generates an INVALID_VALUE
+        // error and returns null. b) Returns null if any OpenGL errors are
+        // generated during the execution of this function.
+        return nullptr;
+    }
+
+    return new WebGLActiveInfo(scriptBindingInstance(), size, type,
+                               String::createASCIIString(name.data(), length));
 }
 
 GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,

@@ -20,6 +20,10 @@
 #ifndef __StarfishGLESTypes__
 #define __StarfishGLESTypes__
 
+#ifndef GLint
+typedef int GLint;
+#endif
+
 #ifndef GLuint
 typedef unsigned int GLuint;
 #endif
