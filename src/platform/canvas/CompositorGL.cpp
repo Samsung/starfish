@@ -2438,15 +2438,23 @@ public:
     void applyDevicePixelRatio()
     {
         m_state.back().matrix.preScale(
-            m_webView->screenInfo().devicePixelRatio,
-            m_webView->screenInfo().devicePixelRatio);
+            m_webView->screenInfo().devicePixelRatio * m_globalScale,
+            m_webView->screenInfo().devicePixelRatio * m_globalScale);
     }
 
     void setViewport()
     {
-        size_t w = m_webView->platformWindow()->width();
-        size_t h = m_webView->platformWindow()->height();
-        glViewport(0, 0, w, h);
+        glViewport(0, 0, screenWidth(), screenHeight());
+    }
+
+    size_t screenWidth()
+    {
+        return m_screenWidth * m_globalScale;
+    }
+
+    size_t screenHeight()
+    {
+        return m_screenHeight * m_globalScale;
     }
 
     void scissor(float x, float y, float width, float height)
@@ -2454,9 +2462,7 @@ public:
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
         glScissor(x, y, width, height);
 #else
-        glScissor(x,
-                  (float)m_webView->platformWindow()->height() - (y + height),
-                  width, height);
+        glScissor(x, (float)screenHeight() - (y + height), width, height);
 #endif
     }
 
@@ -2492,8 +2498,8 @@ public:
     {
         SkMatrix m = SkMatrix::I();
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
-        size_t w = m_webView->platformWindow()->width();
-        size_t h = m_webView->platformWindow()->height();
+        size_t w = screenWidth();
+        size_t h = screenHeight();
         int deg = evas_gl_rotation_get(g_evasGL);
         if (deg % 180 == 90) {
             float tx = w / 2.f;
@@ -2529,6 +2535,9 @@ public:
 
         m_seenFBOUsage = false;
         m_webView = webView;
+        m_globalScale = m_webView->glCompsitorScale();
+        m_screenWidth = m_webView->platformWindow()->width();
+        m_screenHeight = m_webView->platformWindow()->height();
         m_compositorContext = (CompositorContextGL*)compositorContext;
         m_screenMatrix = computeScreenMatrix();
 
@@ -2545,8 +2554,7 @@ public:
         lastState.blurRadius = 0;
         lastState.clipPaths.reset(new ClipperLib::Paths());
 
-        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
-                        m_webView->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
 
         applyDevicePixelRatio();
     }
@@ -2734,9 +2742,9 @@ public:
                     mapLogicalScreenPointsToScreen(minX, minY);
                     mapLogicalScreenPointsToScreen(maxX, maxY);
 
-                    float hw = 2.f / m_webView->platformWindow()->width();
+                    float hw = 2.f / screenWidth();
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                    float hh = 2.f / m_webView->platformWindow()->height();
+                    float hh = 2.f / screenHeight();
                     float position[] = {
                         minX * hw - 1, minY * hh - 1, // V1
                         minX * hw - 1, maxY * hh - 1, // V2
@@ -2744,7 +2752,7 @@ public:
                         maxX * hw - 1, maxY * hh - 1, // V4
                     };
 #else
-                    float hh = -2.f / m_webView->platformWindow()->height();
+                    float hh = -2.f / screenHeight();
                     float position[] = {
                         minX * hw - 1, minY * hh + 1, // V1
                         minX * hw - 1, maxY * hh + 1, // V2
@@ -2799,9 +2807,9 @@ public:
                         mapLogicalScreenPointsToScreen(trianglePoints[4],
                                                        trianglePoints[5]);
 
-                        float hw = 2.f / m_webView->platformWindow()->width();
+                        float hw = 2.f / screenWidth();
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                        float hh = 2.f / m_webView->platformWindow()->height();
+                        float hh = 2.f / screenHeight();
                         float position[] = {
                             trianglePoints[0] * hw - 1,
                             trianglePoints[1] * hh - 1, // V1
@@ -2811,7 +2819,7 @@ public:
                             trianglePoints[5] * hh - 1, // V3
                         };
 #else
-                        float hh = -2.f / m_webView->platformWindow()->height();
+                        float hh = -2.f / screenHeight();
                         float position[] = {
                             trianglePoints[0] * hw - 1,
                             trianglePoints[1] * hh + 1, // V1
@@ -2841,9 +2849,9 @@ public:
             mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
             mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
 
-            float hw = 2.f / m_webView->platformWindow()->width();
+            float hw = 2.f / screenWidth();
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-            float hh = 2.f / m_webView->platformWindow()->height();
+            float hh = 2.f / screenHeight();
             float data[] = {
                 dest[0][0] * hw - 1, dest[0][1] * hh - 1, // V1
                 dest[1][0] * hw - 1, dest[1][1] * hh - 1, // V2
@@ -2852,7 +2860,7 @@ public:
             };
 
 #else
-            float hh = -2.f / m_webView->platformWindow()->height();
+            float hh = -2.f / screenHeight();
             float data[] = {
                 dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
                 dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
@@ -3220,13 +3228,12 @@ public:
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
-            Unit::Rect(0, 0, m_webView->platformWindow()->width(),
-                       m_webView->platformWindow()->height());
+            Unit::Rect(0, 0, screenWidth(), screenHeight());
 
         SkMatrix screenMatrix = m_screenMatrix;
         SkMatrix ctm = lastState.matrix;
-        size_t screenWidth = m_webView->platformWindow()->width();
-        size_t screenHeight = m_webView->platformWindow()->height();
+        size_t screenWidth = this->screenWidth();
+        size_t screenHeight = this->screenHeight();
 
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
         dest[0][0] = dst.x();
@@ -3565,9 +3572,9 @@ public:
                 mapPointsByMatrix(dest[2][0], dest[2][1], m_screenMatrix);
                 mapPointsByMatrix(dest[3][0], dest[3][1], m_screenMatrix);
 
-                float hw = 2.f / m_webView->platformWindow()->width();
+                float hw = 2.f / screenWidth;
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                float hh = 2.f / m_webView->platformWindow()->height();
+                float hh = 2.f / screenHeight;
 
                 float position[8];
                 position[0] = dest[0][0] * hw - 1;
@@ -3582,7 +3589,7 @@ public:
                 position[6] = dest[3][0] * hw - 1;
                 position[7] = dest[3][1] * hh - 1;
 #else
-                float hh = -2.f / m_webView->platformWindow()->height();
+                float hh = -2.f / screenHeight;
 
                 float position[8];
                 position[0] = dest[0][0] * hw - 1;
@@ -3671,8 +3678,7 @@ public:
         lastState.matrixStaysInRect = true;
         lastState.clipPathsAreSimple = true;
 
-        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
-                        m_webView->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
         applyDevicePixelRatio();
     }
 
@@ -3686,8 +3692,7 @@ public:
             lastState.clipPaths.get()->clear();
         }
         lastState.clipPathsAreSimple = true;
-        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
-                        m_webView->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
     }
 
     void addToPath(float x, float y)
@@ -3881,6 +3886,9 @@ public:
 
 protected:
     bool m_seenFBOUsage;
+    float m_globalScale;
+    size_t m_screenWidth;
+    size_t m_screenHeight;
     WebView* m_webView;
     CompositorContextGL* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;

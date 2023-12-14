@@ -430,6 +430,10 @@ int main(int argc, char* argv[])
             GlobalOptions::instance().set("--leave-ipc-handle", true);
         } else if (strstr(argv[i], "--ignore-ssl-verify")) {
             Starfish::g_starfishIgnoreSSLVerify = true;
+        } else if (strstr(argv[i], "--gl-compositor-scale=") == argv[i]) {
+            std::string s(argv[i] + strlen("--gl-compositor-scale="));
+            // this is secret feature for testing(working on gl + efl webview)
+            setenv("LWE_GL_COMPOSITOR_SCALE", s.data(), 1);
         }
     }
 

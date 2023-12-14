@@ -981,6 +981,15 @@ public:
 #endif
 
 #if defined(PORT_WINDOW_BACKEND_GL)
+        float glScale = 1;
+        if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
+            glScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
+        }
+        if (glScale != 1) {
+            width = (unsigned)(width / glScale);
+            height = (unsigned)(height / glScale);
+            devicePixelRatio = 1 / glScale;
+        }
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
