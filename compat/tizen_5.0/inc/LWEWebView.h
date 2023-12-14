@@ -86,6 +86,20 @@ public:
      *
      */
     static void Finalize();
+
+    /**
+     * \brief Returns GC frequency. default value is 6
+     * If you want to cause more GC while running,
+     * you can increase this value.
+     */
+    static unsigned char GetGCFrequency();
+
+    /**
+     * \brief Set GC frequency. default value is 6
+     * If you want to cause more GC while running,
+     * you can increase this value.
+     */
+    static void SetGCFrequency(unsigned char freq);
 };
 
 #define LWE_DEFAULT_FONT_SIZE 16

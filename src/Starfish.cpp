@@ -120,6 +120,7 @@ Starfish::Starfish(const char* localStorageFilePath,
     , m_httpCache(nullptr)
 #endif
     , m_webViewInstanceCount(0)
+    , m_gcFrequency(BDWGC_FREE_SPACE_DIVISOR)
 {
     STARFISH_RELEASE_ASSERT(localStorageFilePath != nullptr);
     STARFISH_RELEASE_ASSERT(cookieStoreFilePath != nullptr);
@@ -139,7 +140,7 @@ Starfish::Starfish(const char* localStorageFilePath,
             STARFISH_LOG_ERROR("%s", msg);
         });
 
-        GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
+        GC_set_free_space_divisor(m_gcFrequency);
         GC_set_force_unmap_on_gcollect(1);
     }
 
