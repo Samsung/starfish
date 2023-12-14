@@ -76,7 +76,7 @@ class TouchData;
 class PlatformKeyEventData;
 class EventTarget;
 class Scrolling;
-class NativeImageData;
+class BufferedNativeImageData;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
@@ -505,9 +505,9 @@ public:
         NULLABLE void* data);
 
     void putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
-                                    NativeImageData* image);
-    Nullable<NativeImageData*> isThereImageInBoxShadowCache(FrameBox* box,
-                                                            size_t idx);
+                                    BufferedNativeImageData* image);
+    Nullable<BufferedNativeImageData*> isThereImageInBoxShadowCache(
+        FrameBox* box, size_t idx);
 
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
@@ -613,7 +613,7 @@ private:
             return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
         }
     };
-    GCUnorderedMap<std::pair<FrameBox*, size_t>, NativeImageData*,
+    GCUnorderedMap<std::pair<FrameBox*, size_t>, BufferedNativeImageData*,
                    pair_hash<FrameBox*, size_t>>
         m_boxShadowCachePerRendering;
 

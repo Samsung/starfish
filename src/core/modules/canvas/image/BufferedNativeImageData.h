@@ -39,12 +39,13 @@ public:
     static int nativeImageDataGCKind();
     static std::vector<BufferedNativeImageData*>& everyNativeImageInstances();
 
-    static NativeImageData* create(size_t actualDeviceWidth,
-                                   size_t actualDeviceHeight);
-    static NativeImageData* create(float devicePixelRatio, size_t width,
-                                   size_t height); // this function will apply
-                                                   // device-pixel-ratio to
-                                                   // width, height
+    static BufferedNativeImageData* create(size_t actualDeviceWidth,
+                                           size_t actualDeviceHeight);
+    static BufferedNativeImageData* create(
+        float devicePixelRatio, size_t width,
+        size_t height); // this function will apply
+                        // device-pixel-ratio to
+                        // width, height
     virtual void pruneInternalDataIfPossible()
     {
     }
@@ -52,11 +53,15 @@ public:
     {
 #if !defined(OS_WINDOWS)
         auto& r = everyNativeImageInstances();
-        r.erase(std::find(r.begin(), r.end(), this));
+        auto iter = std::find(r.begin(), r.end(), this);
+        if (iter != r.end()) {
+            r.erase(iter);
+        }
 #endif
     }
     virtual ~BufferedNativeImageData()
     {
+        disposeNativeImageData();
         GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
     }
 

@@ -2181,15 +2181,15 @@ void WebView::accessActiveImageURLsInRenderingSet(
 }
 
 void WebView::putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
-                                         NativeImageData* image)
+                                         BufferedNativeImageData* image)
 {
     m_boxShadowCachePerRendering[std::make_pair(box, idx)] = image;
 }
 
-Nullable<NativeImageData*> WebView::isThereImageInBoxShadowCache(FrameBox* box,
-                                                                 size_t idx)
+Nullable<BufferedNativeImageData*> WebView::isThereImageInBoxShadowCache(
+    FrameBox* box, size_t idx)
 {
-    Nullable<NativeImageData*> data =
+    Nullable<BufferedNativeImageData*> data =
         m_boxShadowCachePerRendering[std::make_pair(box, idx)];
     return data;
 }
