@@ -77,6 +77,17 @@ public:
         return m_webViewInstanceCount;
     }
 
+    unsigned char gcFrequency()
+    {
+        return m_gcFrequency;
+    }
+
+    void setGCFrequency(unsigned char c)
+    {
+        m_gcFrequency = c;
+        GC_set_free_space_divisor(c);
+    }
+
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG
@@ -120,6 +131,7 @@ protected:
 #endif // STARFISH_ENABLE_SERVICE_WORKER
 
     size_t m_webViewInstanceCount;
+    unsigned char m_gcFrequency;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

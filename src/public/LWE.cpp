@@ -289,4 +289,16 @@ bool LWE::IsInitialized()
 {
     return g_starfishInstance;
 }
+
+void LWE::SetGCFrequency(unsigned char freq)
+{
+    STARFISH_RELEASE_ASSERT(IsInitialized());
+    g_starfishInstance->setGCFrequency(freq);
+}
+
+unsigned char LWE::GetGCFrequency()
+{
+    STARFISH_RELEASE_ASSERT(IsInitialized());
+    return g_starfishInstance->gcFrequency();
+}
 } // namespace LWE

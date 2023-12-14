@@ -53,7 +53,6 @@ using N = uint32_t;
 using Point = std::array<Coord, 2>;
 
 // We only Support OpenGL ES 2.0+ context
-
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Evas_GL.h>
 #if defined(STARFISH_TIZEN) // PORT_WEBVIEW_BRIDGE_EFL + STARFISH_TIZEN

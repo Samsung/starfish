@@ -1785,7 +1785,7 @@ RenderResult WebView::rendering(bool force)
         m_needsRendering = true;
         GC_set_free_space_divisor(1);
     } else {
-        GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
+        GC_set_free_space_divisor(starfish()->gcFrequency());
     }
 
     ANNOTATE_CHANNEL_END(3001);
