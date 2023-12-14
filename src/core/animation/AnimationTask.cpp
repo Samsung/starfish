@@ -41,6 +41,7 @@
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/animation/TransitionApplier.h"
 
 namespace Starfish {
 
@@ -952,47 +953,29 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
-        if (newStyle->backgroundColor() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->backgroundColor() ==
+               currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
-        if (newStyle->border().bottom().color() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->border().bottom().color() ==
+               currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
-        if (newStyle->border().left().color() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->border().left().color() ==
+               currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
-        if (newStyle->border().right().color() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->border().right().color() ==
+               currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
-        if (newStyle->border().top().color() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->border().top().color() ==
+               currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
-        if (newStyle->color() == currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->color() == currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
-        if (newStyle->caretColor() == currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->caretColor() == currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
-        if (newStyle->outlineColor() == currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->outlineColor() == currentAnimatedToValue()->getColor();
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
-        if (newStyle->textDecorationColor() ==
-            currentAnimatedToValue()->getColor()) {
-            return true;
-        }
+        return newStyle->textDecorationColor() ==
+               currentAnimatedToValue()->getColor();
     } else {
         STARFISH_UNIMPLEMENTED();
     }
@@ -1245,254 +1228,208 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
         }
     }
 
-    if (m_property == CSSStyleValuePair::KeyKind::Width) {
+    switch (m_property) {
+    case CSSStyleValuePair::KeyKind::Width:
         style->setWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
+        break;
+    case CSSStyleValuePair::KeyKind::Height:
         style->setHeight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        break;
+    case CSSStyleValuePair::KeyKind::MarginTop:
         style->setMarginTop(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        break;
+    case CSSStyleValuePair::KeyKind::MarginRight:
         style->setMarginRight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        break;
+    case CSSStyleValuePair::KeyKind::MarginBottom:
         style->setMarginBottom(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        break;
+    case CSSStyleValuePair::KeyKind::MarginLeft:
         style->setMarginLeft(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::MinWidth:
         style->setMinWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+        break;
+    case CSSStyleValuePair::KeyKind::MinHeight:
         style->setMinHeight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::MaxWidth:
         style->setMaxWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+        break;
+    case CSSStyleValuePair::KeyKind::MaxHeight:
         style->setMaxHeight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingTop:
         style->setPaddingTop(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingRight:
         style->setPaddingRight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
         style->setPaddingBottom(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
         style->setPaddingLeft(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::BorderTopWidth:
         style->setBorderTopWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::BorderRightWidth:
         style->setBorderRightWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::BorderBottomWidth:
         style->setBorderBottomWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftWidth) {
+        break;
+    case CSSStyleValuePair::KeyKind::BorderLeftWidth:
         style->setBorderLeftWidth(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::Left) {
+        break;
+    case CSSStyleValuePair::KeyKind::Left:
         style->setLeft(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::Top) {
+        break;
+    case CSSStyleValuePair::KeyKind::Top:
         style->setTop(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::Right) {
+        break;
+    case CSSStyleValuePair::KeyKind::Right:
         style->setRight(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::Bottom) {
+        break;
+    case CSSStyleValuePair::KeyKind::Bottom:
         style->setBottom(newLength);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
         style->setBackgroundPositionX(newLength, m_indexForBgLayer);
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
         style->setBackgroundPositionY(newLength, m_indexForBgLayer);
-    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
+        break;
+    case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);
         style->loadFont(m_targetElement);
+        break;
+    default:
+        break;
     }
 }
 
 bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
     CSSStyleValuePair::KeyKind k)
 {
-    if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
-        if (k == CSSStyleValuePair::KeyKind::MarginTop ||
-            k == CSSStyleValuePair::KeyKind::Margin) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
-        if (k == CSSStyleValuePair::KeyKind::MarginRight ||
-            k == CSSStyleValuePair::KeyKind::Margin) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
-        if (k == CSSStyleValuePair::KeyKind::MarginBottom ||
-            k == CSSStyleValuePair::KeyKind::Margin) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
-        if (k == CSSStyleValuePair::KeyKind::MarginLeft ||
-            k == CSSStyleValuePair::KeyKind::Margin) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTop) {
-        if (k == CSSStyleValuePair::KeyKind::BorderTop ||
-            k == CSSStyleValuePair::KeyKind::Border) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRight) {
-        if (k == CSSStyleValuePair::KeyKind::BorderRight ||
-            k == CSSStyleValuePair::KeyKind::Border) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottom) {
-        if (k == CSSStyleValuePair::KeyKind::BorderBottom ||
-            k == CSSStyleValuePair::KeyKind::Border) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeft) {
-        if (k == CSSStyleValuePair::KeyKind::BorderLeft ||
-            k == CSSStyleValuePair::KeyKind::Border) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
-        if (k == CSSStyleValuePair::KeyKind::PaddingTop ||
-            k == CSSStyleValuePair::KeyKind::Padding) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
-        if (k == CSSStyleValuePair::KeyKind::PaddingRight ||
-            k == CSSStyleValuePair::KeyKind::Padding) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
-        if (k == CSSStyleValuePair::KeyKind::PaddingBottom ||
-            k == CSSStyleValuePair::KeyKind::Padding) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
-        if (k == CSSStyleValuePair::KeyKind::PaddingLeft ||
-            k == CSSStyleValuePair::KeyKind::Padding) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
-        if (k == CSSStyleValuePair::KeyKind::BackgroundPositionX ||
-            k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
-            k == CSSStyleValuePair::KeyKind::Background) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
-        if (k == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
-            k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
-            k == CSSStyleValuePair::KeyKind::Background) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
-        if (k == CSSStyleValuePair::KeyKind::FontSize ||
-            k == CSSStyleValuePair::KeyKind::Font) {
-            return true;
-        }
-    } else {
+    switch (m_property) {
+    case CSSStyleValuePair::KeyKind::MarginTop:
+        return k == CSSStyleValuePair::KeyKind::MarginTop ||
+               k == CSSStyleValuePair::KeyKind::Margin;
+    case CSSStyleValuePair::KeyKind::MarginRight:
+        return k == CSSStyleValuePair::KeyKind::MarginRight ||
+               k == CSSStyleValuePair::KeyKind::Margin;
+    case CSSStyleValuePair::KeyKind::MarginBottom:
+        return k == CSSStyleValuePair::KeyKind::MarginBottom ||
+               k == CSSStyleValuePair::KeyKind::Margin;
+    case CSSStyleValuePair::KeyKind::MarginLeft:
+        return k == CSSStyleValuePair::KeyKind::MarginLeft ||
+               k == CSSStyleValuePair::KeyKind::Margin;
+    case CSSStyleValuePair::KeyKind::BorderTop:
+        return k == CSSStyleValuePair::KeyKind::BorderTop ||
+               k == CSSStyleValuePair::KeyKind::Border;
+    case CSSStyleValuePair::KeyKind::BorderRight:
+        return k == CSSStyleValuePair::KeyKind::BorderRight ||
+               k == CSSStyleValuePair::KeyKind::Border;
+    case CSSStyleValuePair::KeyKind::BorderBottom:
+        return k == CSSStyleValuePair::KeyKind::BorderBottom ||
+               k == CSSStyleValuePair::KeyKind::Border;
+    case CSSStyleValuePair::KeyKind::BorderLeft:
+        return k == CSSStyleValuePair::KeyKind::BorderLeft ||
+               k == CSSStyleValuePair::KeyKind::Border;
+    case CSSStyleValuePair::KeyKind::PaddingTop:
+        return k == CSSStyleValuePair::KeyKind::PaddingTop ||
+               k == CSSStyleValuePair::KeyKind::Padding;
+    case CSSStyleValuePair::KeyKind::PaddingRight:
+        return k == CSSStyleValuePair::KeyKind::PaddingRight ||
+               k == CSSStyleValuePair::KeyKind::Padding;
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
+        return k == CSSStyleValuePair::KeyKind::PaddingBottom ||
+               k == CSSStyleValuePair::KeyKind::Padding;
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
+        return k == CSSStyleValuePair::KeyKind::PaddingLeft ||
+               k == CSSStyleValuePair::KeyKind::Padding;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
+        return k == CSSStyleValuePair::KeyKind::BackgroundPositionX ||
+               k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+               k == CSSStyleValuePair::KeyKind::Background;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+        return k == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
+               k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+               k == CSSStyleValuePair::KeyKind::Background;
+    case CSSStyleValuePair::KeyKind::FontSize:
+        return k == CSSStyleValuePair::KeyKind::FontSize ||
+               k == CSSStyleValuePair::KeyKind::Font;
+    default:
         return m_property == k;
     }
+
     return false;
 }
 
 bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
-    if (m_property == CSSStyleValuePair::KeyKind::Width) {
-        if (m_originalToValue == newStyle->width()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-        if (m_originalToValue == newStyle->height()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
-        if (m_originalToValue == newStyle->margin().top()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
-        if (m_originalToValue == newStyle->margin().right()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
-        if (m_originalToValue == newStyle->margin().bottom()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
-        if (m_originalToValue == newStyle->margin().left()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-        if (m_originalToValue == newStyle->minWidth()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-        if (m_originalToValue == newStyle->minHeight()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-        if (m_originalToValue == newStyle->maxWidth()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-        if (m_originalToValue == newStyle->maxHeight()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTop) {
-        if (m_originalToValue == newStyle->border().top().width()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRight) {
-        if (m_originalToValue == newStyle->border().right().width()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottom) {
-        if (m_originalToValue == newStyle->border().bottom().width()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeft) {
-        if (m_originalToValue == newStyle->border().left().width()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
-        if (m_originalToValue == newStyle->padding().top()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
-        if (m_originalToValue == newStyle->padding().right()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
-        if (m_originalToValue == newStyle->padding().bottom()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
-        if (m_originalToValue == newStyle->padding().left()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::Left) {
-        if (m_originalToValue == newStyle->left()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::Top) {
-        if (m_originalToValue == newStyle->top()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::Right) {
-        if (m_originalToValue == newStyle->right()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::Bottom) {
-        if (m_originalToValue == newStyle->bottom()) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
-        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
-            m_originalToValue ==
-                newStyle->backgroundPositionX(m_indexForBgLayer)) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
-        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
-            m_originalToValue ==
-                newStyle->backgroundPositionY(m_indexForBgLayer)) {
-            return true;
-        }
-    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
-        if (m_originalToValue.fixed() == newStyle->fixedFontSize()) {
-            return true;
-        }
+    switch (m_property) {
+    case CSSStyleValuePair::KeyKind::Width:
+        return m_originalToValue == newStyle->width();
+    case CSSStyleValuePair::KeyKind::Height:
+        return m_originalToValue == newStyle->height();
+    case CSSStyleValuePair::KeyKind::MarginTop:
+        return m_originalToValue == newStyle->margin().top();
+    case CSSStyleValuePair::KeyKind::MarginRight:
+        return m_originalToValue == newStyle->margin().right();
+    case CSSStyleValuePair::KeyKind::MarginBottom:
+        return m_originalToValue == newStyle->margin().bottom();
+    case CSSStyleValuePair::KeyKind::MarginLeft:
+        return m_originalToValue == newStyle->margin().left();
+    case CSSStyleValuePair::KeyKind::MinWidth:
+        return m_originalToValue == newStyle->minWidth();
+    case CSSStyleValuePair::KeyKind::MinHeight:
+        return m_originalToValue == newStyle->minHeight();
+    case CSSStyleValuePair::KeyKind::MaxWidth:
+        return m_originalToValue == newStyle->maxWidth();
+    case CSSStyleValuePair::KeyKind::MaxHeight:
+        return m_originalToValue == newStyle->maxHeight();
+    case CSSStyleValuePair::KeyKind::BorderTop:
+        return m_originalToValue == newStyle->border().top().width();
+    case CSSStyleValuePair::KeyKind::BorderRight:
+        return m_originalToValue == newStyle->border().right().width();
+    case CSSStyleValuePair::KeyKind::BorderBottom:
+        return m_originalToValue == newStyle->border().bottom().width();
+    case CSSStyleValuePair::KeyKind::BorderLeft:
+        return m_originalToValue == newStyle->border().left().width();
+    case CSSStyleValuePair::KeyKind::PaddingTop:
+        return m_originalToValue == newStyle->padding().top();
+    case CSSStyleValuePair::KeyKind::PaddingRight:
+        return m_originalToValue == newStyle->padding().right();
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
+        return m_originalToValue == newStyle->padding().bottom();
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
+        return m_originalToValue == newStyle->padding().left();
+    case CSSStyleValuePair::KeyKind::Left:
+        return m_originalToValue == newStyle->left();
+    case CSSStyleValuePair::KeyKind::Top:
+        return m_originalToValue == newStyle->top();
+    case CSSStyleValuePair::KeyKind::Right:
+        return m_originalToValue == newStyle->right();
+    case CSSStyleValuePair::KeyKind::Bottom:
+        return m_originalToValue == newStyle->bottom();
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
+        return m_indexForBgLayer < newStyle->backgroundLayerSize() &&
+               m_originalToValue ==
+                   newStyle->backgroundPositionX(m_indexForBgLayer);
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+        return m_indexForBgLayer < newStyle->backgroundLayerSize() &&
+               m_originalToValue ==
+                   newStyle->backgroundPositionY(m_indexForBgLayer);
+    case CSSStyleValuePair::KeyKind::FontSize:
+        return m_originalToValue.fixed() == newStyle->fixedFontSize();
+    default:
+        return false;
     }
+
     return false;
 }
 
@@ -1650,27 +1587,6 @@ bool ActiveVisibilityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return false;
 }
 
-static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                     CSSStyleValuePair::KeyKind a)
-{
-    return kind == a;
-}
-
-static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                     CSSStyleValuePair::KeyKind a,
-                                     CSSStyleValuePair::KeyKind b)
-{
-    return kind == a || kind == b;
-}
-
-static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                     CSSStyleValuePair::KeyKind a,
-                                     CSSStyleValuePair::KeyKind b,
-                                     CSSStyleValuePair::KeyKind c)
-{
-    return kind == a || kind == b || kind == c;
-}
-
 static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
@@ -1687,45 +1603,8 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
-static Length getLengthWidth(Frame* frame, Element* element, Length length)
-{
-    if (length.isCalc()) {
-        return Length(Length::Fixed,
-                      length.calcData()->specifiedValue(
-                          containingBlock(frame)->contentWidth(), element));
-    }
-    return length;
-}
-
-static Length getLengthHeight(Frame* frame, Element* element, Length length)
-{
-    if (length.isCalc()) {
-        return Length(Length::Fixed,
-                      length.calcData()->specifiedValue(
-                          containingBlock(frame)->contentHeight(), element));
-    }
-    return length;
-}
-
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                             \
-    STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&            \
-                    currentAnimatedToValue()->isLength());               \
-    STARFISH_ASSERT(currentAnimatedFromValue()->getLength().isFixed() && \
-                    currentAnimatedToValue()->getLength().isFixed());
-
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()                     \
-    STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&               \
-                    currentAnimatedToValue()->isLength());                  \
-    STARFISH_ASSERT((currentAnimatedFromValue()->getLength().isFixed() &&   \
-                     currentAnimatedToValue()->getLength().isFixed()) ||    \
-                    (currentAnimatedFromValue()->getLength().isPercent() && \
-                     currentAnimatedToValue()->getLength().isPercent()));
-
-#define _DAMAGED_KEYS(PropName, ...) (damagedKeys[PropName])
-#define NEED_TRANSITION(...)       \
-    (_DAMAGED_KEYS(__VA_ARGS__) && \
-     (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
-#define CHECK_ANIMATION(...) (_checkCSSProperty(keyKind, __VA_ARGS__))
+#define CHECK_ANIMATION(...) \
+    (AnimationUtil::checkCSSProperty(keyKind, __VA_ARGS__))
 
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
@@ -1737,882 +1616,9 @@ bool applyTransitionIfNeeds(
     STARFISH_ASSERT(oldStyle != nullptr);
     STARFISH_ASSERT(newStyle != nullptr);
     STARFISH_ASSERT(damagedKeys != nullptr);
-    bool ret = false;
-
-    StyleTransitionData* data = newStyle->transition();
-    AnimationExecutor* executor = element->document()->animationExecutor();
-
-    for (size_t i = 0; i < data->size(); i++) {
-        if (data->duration(i).toTimeValue() == 0) {
-            continue;
-        }
-
-        bool gotTransition = false;
-        CSSStyleValuePair::KeyKind property = data->property(i);
-        bool isPropertyAll = property == CSSStyleValuePair::All;
-
-        double duration = data->duration(i).toTimeValue();
-        double delay = data->delay(i).toTimeValue();
-        auto timingFunction = data->timingFunction(i);
-
-        if (NEED_TRANSITION(CSSStyleValuePair::Opacity) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Opacity);
-            if (found == false) {
-                auto task = new ActiveOpacityAnimationTask(
-                    element, CSSStyleValuePair::Opacity,
-                    AnimatedValue(oldStyle->opacity()),
-                    AnimatedValue(newStyle->opacity()), duration, delay,
-                    timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::Transform) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Transform);
-            if (found == false && oldFrame &&
-                oldFrame->isTransformable() == true) {
-                auto newTransform =
-                    newStyle->rareComputedStyleData()->ensureTransforms();
-                auto task = new ActiveTransformAnimationTask(
-                    element, CSSStyleValuePair::Transform,
-                    AnimatedValue(
-                        oldStyle->rareComputedStyleData()->ensureTransforms()),
-                    AnimatedValue(newTransform), duration, delay,
-                    timingFunction, newTransform);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        // color series
-        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
-                            CSSStyleValuePair::Background) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BackgroundColor);
-            if (found == false) {
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BackgroundColor,
-                    AnimatedValue(oldStyle->backgroundColor()),
-                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
-                    timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
-                            CSSStyleValuePair::BorderColor,
-                            CSSStyleValuePair::BorderBottom) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderBottomColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->border().bottom().color();
-                Unit::Color newColor = newStyle->border().bottom().color();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BorderBottomColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderLeftColor,
-                            CSSStyleValuePair::BorderColor,
-                            CSSStyleValuePair::BorderLeft) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderLeftColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->border().left().color();
-                Unit::Color newColor = newStyle->border().left().color();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BorderLeftColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderRightColor,
-                            CSSStyleValuePair::BorderColor,
-                            CSSStyleValuePair::BorderRight) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderRightColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->border().right().color();
-                Unit::Color newColor = newStyle->border().right().color();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BorderRightColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
-                            CSSStyleValuePair::BorderColor,
-                            CSSStyleValuePair::BorderTop) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderTopColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->border().top().color();
-                Unit::Color newColor = newStyle->border().top().color();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BorderTopColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::Color) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Color);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->color();
-                Unit::Color newColor = newStyle->color();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
-                    AnimatedValue(newColor), duration, delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::CaretColor) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::CaretColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->caretColor();
-                Unit::Color newColor = newStyle->caretColor();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::CaretColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::OutlineColor) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::OutlineColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->outlineColor();
-                Unit::Color newColor = newStyle->outlineColor();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::OutlineColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::TextDecorationColor,
-                            CSSStyleValuePair::TextDecoration) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::TextDecorationColor);
-            if (found == false) {
-                Unit::Color oldColor = oldStyle->textDecorationColor();
-                Unit::Color newColor = newStyle->textDecorationColor();
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::TextDecorationColor,
-                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
-                    delay, timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-        // <- color series
-
-        // length series
-        if (NEED_TRANSITION(CSSStyleValuePair::Width) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Width);
-            if (found == false) {
-                auto oldWidth =
-                    getLengthWidth(oldFrame, element, oldStyle->width());
-                auto newWidth =
-                    getLengthWidth(oldFrame, element, newStyle->width());
-
-                if ((oldWidth.isPercent() == true ||
-                     oldWidth.isFixed() == true) &&
-                    (newWidth.isPercent() == true ||
-                     newWidth.isFixed() == true)) {
-                    auto fromValue = oldWidth;
-                    auto toValue = newWidth;
-
-                    if (toValue.isPercent() == true &&
-                        !fromValue.isPercent() == true) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue = Length(Length::Percent,
-                                               oldFrame->asFrameBox()->width() /
-                                                   cb->contentWidth());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentWidth() /
-                                           cb->contentWidth());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->width();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentWidth();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::Width,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->width());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::Height) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Height);
-            if (found == false) {
-                auto oldHeight =
-                    getLengthHeight(oldFrame, element, oldStyle->height());
-                auto newHeight =
-                    getLengthHeight(oldFrame, element, newStyle->height());
-
-                if ((oldHeight.isPercent() == true ||
-                     oldHeight.isFixed() == true) &&
-                    (newHeight.isPercent() == true ||
-                     newHeight.isFixed() == true)) {
-                    auto fromValue = oldHeight;
-                    auto toValue = newHeight;
-
-                    if (toValue.isPercent() == true &&
-                        fromValue.isPercent() == false) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentHeight() /
-                                           cb->contentHeight());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->height();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentHeight();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::Height,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->height());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MinWidth) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MinWidth);
-            if (found == false) {
-                auto oldWidth =
-                    getLengthWidth(oldFrame, element, oldStyle->minWidth());
-                auto newWidth =
-                    getLengthWidth(oldFrame, element, newStyle->minWidth());
-
-                if ((oldWidth.isPercent() == true ||
-                     oldWidth.isFixed() == true) &&
-                    (newWidth.isPercent() == true ||
-                     newWidth.isFixed() == true)) {
-                    auto fromValue = oldWidth;
-                    auto toValue = newWidth;
-
-                    if (toValue.isPercent() == true &&
-                        fromValue.isPercent() == false) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue = Length(Length::Percent,
-                                               oldFrame->asFrameBox()->width() /
-                                                   cb->contentWidth());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentWidth() /
-                                           cb->contentWidth());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->width();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentWidth();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::MinWidth,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->minWidth());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MinHeight) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MinHeight);
-            if (found == false) {
-                auto oldHeight =
-                    getLengthHeight(oldFrame, element, oldStyle->minHeight());
-                auto newHeight =
-                    getLengthHeight(oldFrame, element, newStyle->minHeight());
-
-                if ((oldHeight.isPercent() == true ||
-                     oldHeight.isFixed() == true) &&
-                    (newHeight.isPercent() == true ||
-                     newHeight.isFixed() == true)) {
-                    auto fromValue = oldHeight;
-                    auto toValue = newHeight;
-
-                    if (toValue.isPercent() == true &&
-                        fromValue.isPercent() == false) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentHeight() /
-                                           cb->contentHeight());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->height();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentHeight();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::MinHeight,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->minHeight());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MaxWidth) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MaxWidth);
-            if (found == false) {
-                auto oldWidth =
-                    getLengthWidth(oldFrame, element, oldStyle->maxWidth());
-                auto newWidth =
-                    getLengthWidth(oldFrame, element, newStyle->maxWidth());
-
-                if ((oldWidth.isPercent() == true ||
-                     oldWidth.isFixed() == true) &&
-                    (newWidth.isPercent() == true ||
-                     newWidth.isFixed() == true)) {
-                    auto fromValue = oldWidth;
-                    auto toValue = newWidth;
-
-                    if (toValue.isPercent() == true &&
-                        fromValue.isPercent() == false) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue = Length(Length::Percent,
-                                               oldFrame->asFrameBox()->width() /
-                                                   cb->contentWidth());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentWidth() /
-                                           cb->contentWidth());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->width();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentWidth();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::MaxWidth,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->maxWidth());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight) == true &&
-            oldFrame != nullptr && oldFrame->isFrameBox() == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MaxHeight);
-            if (found == false) {
-                auto oldHeight =
-                    getLengthHeight(oldFrame, element, oldStyle->maxHeight());
-                auto newHeight =
-                    getLengthHeight(oldFrame, element, newStyle->maxHeight());
-
-                if ((oldHeight.isPercent() == true ||
-                     oldHeight.isFixed() == true) &&
-                    (newHeight.isPercent() == true ||
-                     newHeight.isFixed() == true)) {
-                    auto fromValue = oldHeight;
-                    auto toValue = newHeight;
-
-                    if (toValue.isPercent() == true &&
-                        fromValue.isPercent() == false) {
-                        FrameBox* cb = containingBlock(oldFrame);
-                        if (cb->contentWidth() == 0) {
-                            fromValue = Length(Length::Percent, 0);
-                        } else if (oldStyle->boxSizing() ==
-                                   BoxSizingValue::BorderBoxBoxSizingValue) {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                        } else {
-                            fromValue =
-                                Length(Length::Percent,
-                                       oldFrame->asFrameBox()->contentHeight() /
-                                           cb->contentHeight());
-                        }
-                    } else if (toValue.isFixed() == true &&
-                               fromValue.isFixed() == false) {
-                        float value;
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                            value = oldFrame->asFrameBox()->height();
-                        } else {
-                            value = oldFrame->asFrameBox()->contentHeight();
-                        }
-                        fromValue = Length(Length::Fixed, value);
-                    }
-
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::MaxHeight,
-                        AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newStyle->maxHeight());
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MarginTop,
-                            CSSStyleValuePair::Margin) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MarginTop);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::marginTopToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::MarginTop, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->margin().top());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MarginRight,
-                            CSSStyleValuePair::Margin) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MarginRight);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::marginRightToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::MarginRight, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->margin().right());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
-                            CSSStyleValuePair::Margin) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MarginBottom);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::marginBottomToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::MarginBottom, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->margin().bottom());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::MarginLeft,
-                            CSSStyleValuePair::Margin) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::MarginLeft);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::marginLeftToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::MarginLeft, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->margin().left());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderTop,
-                            CSSStyleValuePair::Border) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderTop);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::borderTopToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::BorderTop, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->border().top().width());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderRight,
-                            CSSStyleValuePair::Border) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderRight);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::borderRightToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::BorderRight, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->border().right().width());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderBottom,
-                            CSSStyleValuePair::Border) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderBottom);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::borderBottomToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::BorderBottom, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->border().bottom().width());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BorderLeft,
-                            CSSStyleValuePair::Border) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::BorderLeft);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::borderLeftToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::BorderLeft, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->border().left().width());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::PaddingTop,
-                            CSSStyleValuePair::Padding) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::PaddingTop);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::paddingTopToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::PaddingTop, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->padding().top());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::PaddingRight,
-                            CSSStyleValuePair::Padding) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::PaddingRight);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::paddingRightToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::PaddingRight, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->padding().right());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::PaddingBottom,
-                            CSSStyleValuePair::Padding) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::PaddingBottom);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::paddingBottomToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::PaddingBottom,
-                    AnimatedValue(v1), AnimatedValue(v2), duration, delay,
-                    timingFunction, newStyle->padding().bottom());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::PaddingLeft,
-                            CSSStyleValuePair::Padding) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::PaddingLeft);
-            AnimatedValue v1, v2;
-            if (found == false &&
-                AnimationUtil::paddingLeftToAnimatedValue(
-                    oldStyle, newStyle, element, v1, v2) == true) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::PaddingLeft, AnimatedValue(v1),
-                    AnimatedValue(v2), duration, delay, timingFunction,
-                    newStyle->padding().left());
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-#define GEN_SIDE(Side, side)                                                   \
-    if (NEED_TRANSITION(CSSStyleValuePair::Side) == true) {                    \
-        bool found =                                                           \
-            executor->hasActiveTransition(element, CSSStyleValuePair::Side);   \
-        AnimatedValue v1, v2;                                                  \
-        if (found == false && AnimationUtil::lengthToAnimatedValue(            \
-                                  oldStyle->side(), newStyle->side(), element, \
-                                  v1, v2) == true) {                           \
-            auto task = new ActiveLengthAnimationTask(                         \
-                element, CSSStyleValuePair::Side, AnimatedValue(v1),           \
-                AnimatedValue(v2), duration, delay, timingFunction,            \
-                newStyle->side());                                             \
-            executor->registerTransition(task, newStyle);                      \
-            gotTransition = true;                                              \
-        }                                                                      \
-    }
-        GEN_SIDE(Left, left)
-        GEN_SIDE(Right, right)
-        GEN_SIDE(Top, top)
-        GEN_SIDE(Bottom, bottom)
-#undef GEN_SIDE
-
-        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionX,
-                            CSSStyleValuePair::BackgroundPosition,
-                            CSSStyleValuePair::Background) == true) {
-            if (oldStyle->hasBlockLikeDisplay() == false ||
-                newStyle->hasBlockLikeDisplay() == false) {
-                // TODO Inline Element
-                continue;
-            }
-            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
-            size_t layerSize = newStyle->backgroundLayerSize();
-            for (size_t i = 0; i < layerSize; i++) {
-                bool found = executor->hasActiveTransition(
-                    element, CSSStyleValuePair::BackgroundPositionX);
-                AnimatedValue pos1, pos2;
-                if (found == false &&
-                    AnimationUtil::backgroundPosXToAnimatedValue(
-                        oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
-                        i) == true) {
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::BackgroundPositionX,
-                        AnimatedValue(pos1), AnimatedValue(pos2), duration,
-                        delay, timingFunction, newStyle->backgroundPositionX(i),
-                        i);
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionY,
-                            CSSStyleValuePair::BackgroundPosition,
-                            CSSStyleValuePair::Background) == true) {
-            if (oldStyle->hasBlockLikeDisplay() == false ||
-                newStyle->hasBlockLikeDisplay() == false) {
-                // TODO Inline Element
-                continue;
-            }
-            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
-            size_t layerSize = newStyle->backgroundLayerSize();
-            for (size_t i = 0; i < layerSize; i++) {
-                bool found = executor->hasActiveTransition(
-                    element, CSSStyleValuePair::BackgroundPositionY);
-                AnimatedValue pos1, pos2;
-                if (found == false &&
-                    AnimationUtil::backgroundPosYToAnimatedValue(
-                        oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
-                        i) == true) {
-                    auto task = new ActiveLengthAnimationTask(
-                        element, CSSStyleValuePair::BackgroundPositionY,
-                        AnimatedValue(pos1), AnimatedValue(pos2), duration,
-                        delay, timingFunction, newStyle->backgroundPositionY(i),
-                        i);
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        // NOTE background-size should come after background-position
-        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundSize,
-                            CSSStyleValuePair::Background) == true) {
-            if (oldStyle->hasBlockLikeDisplay() == false ||
-                newStyle->hasBlockLikeDisplay() == false) {
-                // TODO Inline Element
-                continue;
-            }
-            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
-            size_t layerSize = newStyle->backgroundLayerSize();
-            for (size_t i = 0; i < layerSize; i++) {
-                AnimatedValue size1, size2;
-                bool found = executor->hasActiveTransition(
-                    element, CSSStyleValuePair::BackgroundSize);
-                if (found == false &&
-                    AnimationUtil::backgroundSizeToAnimatedValue(
-                        oldStyle, newStyle, oldPaintingBox, element, size1,
-                        size2, i) == true) {
-                    auto task = new ActiveLengthSizeAnimationTask(
-                        element, CSSStyleValuePair::BackgroundSize,
-                        AnimatedValue(size1), AnimatedValue(size2), duration,
-                        delay, timingFunction,
-                        newStyle->backgroundSizeLengthValue(i), i);
-                    executor->registerTransition(task, newStyle);
-                    gotTransition = true;
-                }
-            }
-        }
-
-        if (NEED_TRANSITION(CSSStyleValuePair::FontSize,
-                            CSSStyleValuePair::Font) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::FontSize);
-            if (found == false) {
-                auto task = new ActiveLengthAnimationTask(
-                    element, CSSStyleValuePair::FontSize,
-                    AnimatedValue(
-                        Length(Length::Fixed, oldStyle->fixedFontSize())),
-                    AnimatedValue(
-                        Length(Length::Fixed, newStyle->fixedFontSize())),
-                    duration, delay, timingFunction,
-                    Length(Length::Fixed, newStyle->fixedFontSize()));
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        // <- length series
-
-        if (NEED_TRANSITION(CSSStyleValuePair::Visibility) == true) {
-            bool found = executor->hasActiveTransition(
-                element, CSSStyleValuePair::Visibility);
-            if (found == false) {
-                auto task = new ActiveVisibilityAnimationTask(
-                    element, CSSStyleValuePair::Visibility,
-                    AnimatedValue(oldStyle->visibility()),
-                    AnimatedValue(newStyle->visibility()), duration, delay,
-                    timingFunction);
-                executor->registerTransition(task, newStyle);
-                gotTransition = true;
-            }
-        }
-
-        if (gotTransition == true) {
-            // TODO reduce animation duration here with
-            // canceledAnimationProgress
-            ret = true;
-        }
-    }
-
-    return ret;
+    TransitionApplier* transitionApplier = new TransitionApplier(
+        element, oldStyle, oldFrame, newStyle, damagedKeys);
+    return transitionApplier->apply();
 }
 
 static Length backgroundPositionToLength(const CSSStyleValuePair& property)
