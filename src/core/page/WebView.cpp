@@ -305,10 +305,11 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_idleModeCheckIntervalInMS(0)
     , m_idleCheckTimerID(TimerInvalidID)
     , m_needsDownloadWebFontsEarly(false)
-    , m_needsDownScaleImageResourceLargerThan(0)
     , m_scrollbarVisible(true)
     , m_useExternalPopup(false)
     , m_useSpatialNavigation(false)
+    , m_needsDownScaleImageResourceLargerThan(0)
+    , m_glCompsitorScale(1)
 {
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);
@@ -343,6 +344,11 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     // saidly.. few port layer needs this variable
     m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
         this;
+
+    // this is secret feature for testing(working on gl + efl webview)
+    if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
+        m_glCompsitorScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
+    }
 
     m_starfish->m_webViewInstanceCount++;
 

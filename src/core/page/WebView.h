@@ -417,6 +417,16 @@ public:
         return m_needsDownScaleImageResourceLargerThan;
     }
 
+    void setGLCompsitorScale(float glCompsitorScale)
+    {
+        m_glCompsitorScale = glCompsitorScale;
+    }
+
+    float glCompsitorScale()
+    {
+        return m_glCompsitorScale;
+    }
+
     void setScrollbarVisible(bool visible)
     {
         m_scrollbarVisible = visible;
@@ -640,10 +650,11 @@ private:
     uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
     size_t m_idleCheckTimerID;
     bool m_needsDownloadWebFontsEarly;
-    uint32_t m_needsDownScaleImageResourceLargerThan;
     bool m_scrollbarVisible;
     bool m_useExternalPopup;
     bool m_useSpatialNavigation;
+    uint32_t m_needsDownScaleImageResourceLargerThan;
+    float m_glCompsitorScale;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };
