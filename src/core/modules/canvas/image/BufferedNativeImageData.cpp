@@ -68,8 +68,9 @@ BufferedNativeImageData::everyNativeImageInstances()
     return v;
 }
 
-NativeImageData* BufferedNativeImageData::create(float devicePixelRatio,
-                                                 size_t width, size_t height)
+BufferedNativeImageData* BufferedNativeImageData::create(float devicePixelRatio,
+                                                         size_t width,
+                                                         size_t height)
 {
     size_t deviceImageWidth = ceil(width * devicePixelRatio);
     size_t deviceImageHeight = ceil(height * devicePixelRatio);

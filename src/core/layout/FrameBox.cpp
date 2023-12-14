@@ -1061,18 +1061,18 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     this, shadowRect, *shadow);
                 bool canUseFastPath = result.first;
                 float topLeftHorizontal = result.second;
+                WebView* wv = node()->webView();
                 bool shouldCacheBoxShadowImage =
-                    node() && node()->webView()->needsComposite();
+                    node() && wv->needsComposite();
 
                 if (canUseFastPath) {
                     canvas->save();
                     canvas->setNeedsNoneAntialias();
                     size_t bufImageSize = std::max((double)ceil(radiusOffset),
                                                    (double)topLeftHorizontal);
-                    NativeImageData* nativeImage = nullptr;
+                    BufferedNativeImageData* nativeImage = nullptr;
                     if (shouldCacheBoxShadowImage) {
-                        auto test =
-                            node()->webView()->isThereImageInBoxShadowCache(
+                        auto test = wv->isThereImageInBoxShadowCache(
                                 this, shadowIndex);
                         if (test) {
                             nativeImage = test.value();
@@ -1081,10 +1081,9 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     if (!nativeImage) {
                         nativeImage = BufferedNativeImageData::create(
-                            bufImageSize, bufImageSize);
+                            wv->screenInfo().devicePixelRatio, bufImageSize, bufImageSize);
                         Canvas* cv =
-                            Canvas::create(node()->webView(), nativeImage);
-                        cv->unsetDevicePixelRatio();
+                            Canvas::create(wv, nativeImage);
                         cv->setFillColor(shadowColor);
                         cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1251,12 +1250,10 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     }
                 } else {
                     canvas->save();
-                    NativeImageData* nativeImage =
-                        BufferedNativeImageData::create(
-                            ceil(shadowRect.width() + radiusOffset),
-                            ceil(shadowRect.height() + radiusOffset));
+                    BufferedNativeImageData* nativeImage =
+                        BufferedNativeImageData::create(wv->screenInfo().devicePixelRatio,
+                            ceil(shadowRect.width() + radiusOffset), ceil(shadowRect.height() + radiusOffset));
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
-                    cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                     if (shadow->hasColor()) {
@@ -1358,12 +1355,13 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect ImageRect(0, 0, exteriorRect.width() + margin,
                                      exteriorRect.height() + margin);
 
+                WebView* wv = node()->webView();
                 bool shouldCacheBoxShadowImage =
-                    node() && node()->webView()->needsComposite();
+                    node() && wv->needsComposite();
 
-                NativeImageData* nativeImage = nullptr;
+                BufferedNativeImageData* nativeImage = nullptr;
                 if (shouldCacheBoxShadowImage) {
-                    auto test = node()->webView()->isThereImageInBoxShadowCache(
+                    auto test = wv->isThereImageInBoxShadowCache(
                         this, shadowIndex);
                     if (test) {
                         nativeImage = test.value();
@@ -1371,10 +1369,9 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 }
 
                 if (!nativeImage) {
-                    nativeImage = BufferedNativeImageData::create(
-                        ceil(ImageRect.width()), ceil(ImageRect.height()));
+                    nativeImage = BufferedNativeImageData::create(wv->screenInfo().devicePixelRatio,
+                        ImageRect.width(), ImageRect.height());
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
-                    cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
                     cv->setFillColor(shadowColor);
 
@@ -1623,6 +1620,7 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
             }
         }
 
+        WebView* wv = box->node()->webView();
         float imageScale = 1;
 #if !defined(STARFISH_ENABLE_TEST)
 #define STARFISH_NATIVEGRADIENT_MAX_SIZE 512
@@ -1634,10 +1632,16 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
 #endif
 
         if (gradient->gradientImageDataCached() == nullptr) {
-            auto imageData = BufferedNativeImageData::create(
-                floor(imageWidth / imageScale),
-                floor(imageHeight / imageScale));
-            Canvas* cv = Canvas::create(box->node()->webView(), imageData);
+            float w = floor(imageWidth / imageScale * wv->screenInfo().devicePixelRatio);
+            if (!w) {
+                w = 1;
+            }
+            float h = floor(imageHeight / imageScale * wv->screenInfo().devicePixelRatio);
+            if (!h) {
+                h = 1;
+            }
+            auto imageData = BufferedNativeImageData::create(w, h);
+            Canvas* cv = Canvas::create(wv, imageData);
             cv->scale(1 / imageScale, 1 / imageScale);
 
             cv->clearColor(Unit::Color(0, 0, 0, 0));

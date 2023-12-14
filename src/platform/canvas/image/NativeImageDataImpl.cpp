@@ -146,7 +146,8 @@ protected:
 #endif
 };
 
-NativeImageData* BufferedNativeImageData::create(size_t width, size_t height)
+BufferedNativeImageData* BufferedNativeImageData::create(size_t width,
+                                                         size_t height)
 {
     return new BufferedNativeImageDataImpl(width, height);
 }
