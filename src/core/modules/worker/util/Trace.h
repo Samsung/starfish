@@ -35,6 +35,8 @@ public:
 #define TRACEF(id, ...)
 #define TRACEF0(id, ...)
 #define TRACE_SCOPE(id, ...)
+#define S0(x)
+#define KV(x)
 
 #else
 
@@ -51,5 +53,8 @@ public:
 #define TRACE_SCOPE(id, ...)      \
     IndentCounter __counter(#id); \
     TRACE(id, __VA_ARGS__)
+
+#define S0(x) #x
+#define KV(x) S0(x), x
 
 #endif

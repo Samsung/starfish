@@ -43,17 +43,17 @@ interface WebGLRenderingContextOverloads
     [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                             GLenum format, GLenum type, TexImageSource source); // May throw DOMException
 
-    [Unimplemented] undefined uniform1fv(WebGLUniformLocation? location, Float32List v);
-    [Unimplemented] undefined uniform2fv(WebGLUniformLocation? location, Float32List v);
-    [Unimplemented] undefined uniform3fv(WebGLUniformLocation? location, Float32List v);
-    [Unimplemented] undefined uniform4fv(WebGLUniformLocation? location, Float32List v);
+    undefined uniform1fv(WebGLUniformLocation? location, Float32List v);
+    undefined uniform2fv(WebGLUniformLocation? location, Float32List v);
+    undefined uniform3fv(WebGLUniformLocation? location, Float32List v);
+    undefined uniform4fv(WebGLUniformLocation? location, Float32List v);
 
-    [Unimplemented] undefined uniform1iv(WebGLUniformLocation? location, Int32List v);
-    [Unimplemented] undefined uniform2iv(WebGLUniformLocation? location, Int32List v);
-    [Unimplemented] undefined uniform3iv(WebGLUniformLocation? location, Int32List v);
-    [Unimplemented] undefined uniform4iv(WebGLUniformLocation? location, Int32List v);
+    undefined uniform1iv(WebGLUniformLocation? location, Int32List v);
+    undefined uniform2iv(WebGLUniformLocation? location, Int32List v);
+    undefined uniform3iv(WebGLUniformLocation? location, Int32List v);
+    undefined uniform4iv(WebGLUniformLocation? location, Int32List v);
 
-    [Unimplemented] undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
-    [Unimplemented] undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
-    [Unimplemented] undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
 };
