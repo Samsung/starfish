@@ -59,6 +59,9 @@ public:
 
     void initialize() override;
 
+    GLsizei drawingBufferWidth() const;
+    GLsizei drawingBufferHeight() const;
+
     // Implement WebGLRenderingContextBase
     Nullable<WebGLContextAttributes> getContextAttributes();
     Nullable<GCVector<String*>> getSupportedExtensions();
@@ -81,12 +84,15 @@ public:
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
     void deleteShader(WebGLShader* shader);
+    void depthMask(GLboolean flag);
     void depthFunc(GLenum func);
     void disable(GLenum cap);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
+    void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void frontFace(GLenum mode);
+    WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
     WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
     GLint getAttribLocation(WebGLProgram* program, String* name);
     ScriptValue getParameter(GLenum pname);
@@ -98,6 +104,7 @@ public:
     String* getShaderSource(WebGLShader* shader);
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
+    ScriptValue getVertexAttrib(GLuint index, GLenum pname);
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
     void texParameteri(GLenum target, GLenum pname, GLint param);

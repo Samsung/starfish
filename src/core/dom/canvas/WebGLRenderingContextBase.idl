@@ -494,8 +494,8 @@ interface WebGLRenderingContextBase
     // readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
     readonly attribute HTMLCanvasElement canvas;
 
-    [Unimplemented] readonly attribute GLsizei drawingBufferWidth;
-    [Unimplemented] readonly attribute GLsizei drawingBufferHeight;
+    readonly attribute GLsizei drawingBufferWidth;
+    readonly attribute GLsizei drawingBufferHeight;
     // [Unimplemented] attribute PredefinedColorSpace drawingBufferColorSpace = "srgb";
     // [Unimplemented] attribute PredefinedColorSpace unpackColorSpace = "srgb";
 
@@ -550,13 +550,13 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined deleteTexture(WebGLTexture? texture);
 
     undefined depthFunc(GLenum func);
-    [Unimplemented] undefined depthMask(GLboolean flag);
+    undefined depthMask(GLboolean flag);
     [Unimplemented] undefined depthRange(GLclampf zNear, GLclampf zFar);
     [Unimplemented] undefined detachShader(WebGLProgram program, WebGLShader shader);
     undefined disable(GLenum cap);
     [Unimplemented] undefined disableVertexAttribArray(GLuint index);
     undefined drawArrays(GLenum mode, GLint first, GLsizei count);
-    [Unimplemented] undefined drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
+    undefined drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
 
     undefined enable(GLenum cap);
     undefined enableVertexAttribArray(GLuint index);
@@ -571,7 +571,7 @@ interface WebGLRenderingContextBase
 
     [Unimplemented] undefined generateMipmap(GLenum target);
 
-    [Unimplemented] WebGLActiveInfo? getActiveAttrib(WebGLProgram program, GLuint index);
+    WebGLActiveInfo? getActiveAttrib(WebGLProgram program, GLuint index);
     WebGLActiveInfo? getActiveUniform(WebGLProgram program, GLuint index);
     [Unimplemented] sequence<WebGLShader>? getAttachedShaders(WebGLProgram program);
 
@@ -599,7 +599,7 @@ interface WebGLRenderingContextBase
 
     WebGLUniformLocation? getUniformLocation(WebGLProgram program, DOMString name);
 
-    [Unimplemented] any getVertexAttrib(GLuint index, GLenum pname);
+    any getVertexAttrib(GLuint index, GLenum pname);
 
     [Unimplemented,WebGLHandlesContextLoss]  GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
 

@@ -228,6 +228,16 @@ void WebGLRenderingContext::setGLError(GLenum code, const char* message)
     }
 }
 
+GLsizei WebGLRenderingContext::drawingBufferWidth() const
+{
+    return m_canvasSurface->bufferWidth();
+}
+
+GLsizei WebGLRenderingContext::drawingBufferHeight() const
+{
+    return m_canvasSurface->bufferHeight();
+}
+
 Nullable<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
 {
     ENTER_CONTEXT_SCOPE(Nullable<WebGLContextAttributes>());
@@ -453,6 +463,13 @@ void WebGLRenderingContext::deleteShader(WebGLShader* shader)
     shader->markDeleted();
 }
 
+void WebGLRenderingContext::depthMask(GLboolean flag)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDepthMask(flag);
+}
+
 void WebGLRenderingContext::depthFunc(GLenum func)
 {
     ENTER_CONTEXT_SCOPE();
@@ -484,10 +501,40 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         return;
     }
 
-    // TODO:If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
-    // generated.
+    if (!getCurrentProgram()) {
+        // If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
+        // generated.
+        setGLError(GL_INVALID_OPERATION);
+    }
 
     glDrawArrays(mode, first, count);
+}
+
+void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
+                                         GLenum type, GLintptr offset)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (count > 0) {
+        // TODO: verify a non-null WebGLBuffer is bound to the
+        // ELEMENT_ARRAY_BUFFER binding point if count is greater than zero. If
+        // not, an INVALID_OPERATION error will be generated.
+    }
+
+    if (offset < 0) {
+        // the offset must be non-negative or an INVALID_VALUE error will be
+        // generated.
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (!getCurrentProgram()) {
+        // If the CURRENT_PROGRAM is null, an INVALID_OPERATION error will be
+        // generated.
+        setGLError(GL_INVALID_OPERATION);
+    }
+
+    glDrawElements(mode, count, type, reinterpret_cast<void*>(offset));
 }
 
 void WebGLRenderingContext::enable(GLenum cap)
@@ -593,6 +640,35 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         return scriptNull();
     }
     return scriptNull();
+}
+
+WebGLActiveInfo* WebGLRenderingContext::getActiveAttrib(WebGLProgram* program,
+                                                        GLuint index)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLint maxNameLength;
+    glGetProgramiv(program->glObject(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,
+                   &maxNameLength);
+
+    GLint size;
+    GLenum type;
+    GLsizei length;
+
+    std::vector<char> name;
+    name.resize(maxNameLength, '\0');
+    glGetActiveAttrib(program->glObject(), index, maxNameLength, &length, &size,
+                      &type, &name[0]);
+
+    if (hasGLError()) {
+        // a) If the passed index is out of range, generates an INVALID_VALUE
+        // error and returns null. b) Returns null if any OpenGL errors are
+        // generated during the execution of this function.
+        return nullptr;
+    }
+
+    return new WebGLActiveInfo(scriptBindingInstance(), size, type,
+                               String::createASCIIString(name.data(), length));
 }
 
 WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
@@ -809,6 +885,30 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
     }
 
     return new WebGLUniformLocation(scriptBindingInstance(), program, location);
+}
+ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    switch (pname) {
+    case GL_CURRENT_VERTEX_ATTRIB: {
+        std::vector<float> values(4);
+        glGetVertexAttribfv(index, pname, &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+    case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+    case GL_VERTEX_ATTRIB_ARRAY_TYPE:
+    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+        STARFISH_UNIMPLEMENTED("pname: 0x%04X", pname);
+        break;
+    default:
+        break;
+    }
+    return scriptNull();
 }
 
 void WebGLRenderingContext::linkProgram(WebGLProgram* program)
