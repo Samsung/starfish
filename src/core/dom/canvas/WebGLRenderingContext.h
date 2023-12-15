@@ -38,10 +38,14 @@ class WebGLProgram;
 class WebGLShader;
 class WebGLTexture;
 class WebGLUniformLocation;
+class Float32ArrayOrSequenceOfGLfloat;
+class Int32ArrayOrSequenceOfGLint;
 class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 class
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 
+using Float32List = Float32ArrayOrSequenceOfGLfloat;
+using Int32List = Int32ArrayOrSequenceOfGLint;
 using AllowSharedBufferSource = ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 using TexImageSource =
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
@@ -111,6 +115,16 @@ public:
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
     void stencilMask(GLuint mask);
+    void vertexAttrib1f(GLuint index, GLfloat x);
+    void vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
+    void vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+    void vertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z,
+                        GLfloat w);
+
+    void vertexAttrib1fv(GLuint index, Float32List values);
+    void vertexAttrib2fv(GLuint index, Float32List values);
+    void vertexAttrib3fv(GLuint index, Float32List values);
+    void vertexAttrib4fv(GLuint index, Float32List values);
     void vertexAttribPointer(GLuint index, GLint size, GLenum type,
                              GLboolean normalized, GLsizei stride,
                              GLintptr offset);
@@ -125,6 +139,23 @@ public:
                     GLenum type, Nullable<ScriptArrayBufferView> pixels);
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLenum format, GLenum type, TexImageSource source);
+
+    void uniform1fv(WebGLUniformLocation* location, Float32List v);
+    void uniform2fv(WebGLUniformLocation* location, Float32List v);
+    void uniform3fv(WebGLUniformLocation* location, Float32List v);
+    void uniform4fv(WebGLUniformLocation* location, Float32List v);
+
+    void uniform1iv(WebGLUniformLocation* location, Int32List v);
+    void uniform2iv(WebGLUniformLocation* location, Int32List v);
+    void uniform3iv(WebGLUniformLocation* location, Int32List v);
+    void uniform4iv(WebGLUniformLocation* location, Int32List v);
+
+    void uniformMatrix2fv(WebGLUniformLocation* uniform, GLboolean transpose,
+                          Float32List value);
+    void uniformMatrix3fv(WebGLUniformLocation* uniform, GLboolean transpose,
+                          Float32List value);
+    void uniformMatrix4fv(WebGLUniformLocation* uniform, GLboolean transpose,
+                          Float32List value);
 
 private:
     bool checkWebGLObject(WebGLObject* object);

@@ -60,6 +60,11 @@ typedef (ImageBitmap or
 //          OffscreenCanvas or
 //          VideoFrame) TexImageSource;
 
+// typedef ([AllowShared] Float32Array or sequence<GLfloat>) Float32List;
+// typedef ([AllowShared] Int32Array or sequence<GLint>) Int32List;
+typedef (Float32Array or sequence<GLfloat>) Float32List;
+typedef (Int32Array or sequence<GLint>) Int32List;
+
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContextBase
 // mixin
 [STARFISH_ENABLE_WEBGL,
@@ -641,15 +646,15 @@ interface WebGLRenderingContextBase
     undefined useProgram(WebGLProgram? program);
     [Unimplemented] undefined validateProgram(WebGLProgram program);
 
-    [Unimplemented] undefined vertexAttrib1f(GLuint index, GLfloat x);
-    [Unimplemented] undefined vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
-    [Unimplemented] undefined vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-    [Unimplemented] undefined vertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    undefined vertexAttrib1f(GLuint index, GLfloat x);
+    undefined vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
+    undefined vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+    undefined vertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-    [Unimplemented] undefined vertexAttrib1fv(GLuint index, Float32List values);
-    [Unimplemented] undefined vertexAttrib2fv(GLuint index, Float32List values);
-    [Unimplemented] undefined vertexAttrib3fv(GLuint index, Float32List values);
-    [Unimplemented] undefined vertexAttrib4fv(GLuint index, Float32List values);
+    undefined vertexAttrib1fv(GLuint index, Float32List values);
+    undefined vertexAttrib2fv(GLuint index, Float32List values);
+    undefined vertexAttrib3fv(GLuint index, Float32List values);
+    undefined vertexAttrib4fv(GLuint index, Float32List values);
 
     undefined vertexAttribPointer(GLuint index, GLint size, GLenum type,
                                   GLboolean normalized, GLsizei stride, GLintptr offset);

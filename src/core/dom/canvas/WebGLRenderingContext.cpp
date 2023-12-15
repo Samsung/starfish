@@ -41,18 +41,16 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 #include "binding/ScriptBindingInstance.h"
+#include "binding/generated/Float32ArrayOrSequenceOfGLfloatUnion.h"
+#include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include <EscargotPublic.h>
 #include <sstream>
 #include <iomanip>
 
-#define S1(x) #x
-#define S2(x) S1(x)
-#define LOCATION " (" __FILE__ ":" S2(__LINE__) ")"
 #define kMaximumUniformAndAttributeLocationLengths 256
 #define kMaximumSupportedStride 255
-#define KV(x) S1(x), x
 
 /* WebGL-specific enums */
 static const GLenum kUNPACK_FLIP_Y_WEBGL = 0x9240;
@@ -66,6 +64,73 @@ namespace Starfish {
 inline static std::string hex(GLenum name)
 {
     return StringUtils::formatString("0x%04X", name);
+}
+
+static void copyFloat32List(ScriptBindingInstance* instance,
+                            const Float32List& variant,
+                            std::vector<float>& vector)
+{
+    Evaluator::EvaluatorResult evaluated = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, const Float32List* variant,
+           std::vector<float>* vector) -> ValueRef* {
+            if (variant->isFloat32ArrayValue()) {
+                Float32ArrayObjectRef* values = variant->getFloat32ArrayValue();
+                const size_t arrayLength = values->arrayLength();
+
+                for (size_t i = 0; i < arrayLength; ++i) {
+                    vector->push_back(values->get(state, ValueRef::create(i))
+                                          ->toNumber(state));
+                }
+            } else {
+                STARFISH_ASSERT(variant->isSequenceOfGLfloatValue());
+
+                for (const auto& value : variant->getSequenceOfGLfloatValue()) {
+                    vector->push_back(static_cast<float>(value));
+                }
+            }
+            return ValueRef::createUndefined();
+        },
+        &variant, &vector);
+
+    STARFISH_ASSERT(evaluated.isSuccessful());
+}
+
+static void copyInt32List(ScriptBindingInstance* instance,
+                          const Int32List& variant,
+                          std::vector<int32_t>& vector)
+{
+    Evaluator::EvaluatorResult evaluated = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, const Int32List* variant,
+           std::vector<int32_t>* vector) -> ValueRef* {
+            if (variant->isInt32ArrayValue()) {
+                Int32ArrayObjectRef* values = variant->getInt32ArrayValue();
+                const size_t arrayLength = values->arrayLength();
+
+                for (size_t i = 0; i < arrayLength; ++i) {
+                    vector->push_back(values->get(state, ValueRef::create(i))
+                                          ->toNumber(state));
+                }
+            } else {
+                STARFISH_ASSERT(variant->isSequenceOfGLintValue());
+
+                for (const auto& value : variant->getSequenceOfGLintValue()) {
+                    vector->push_back(static_cast<int32_t>(value));
+                }
+            }
+            return ValueRef::createUndefined();
+        },
+        &variant, &vector);
+
+    STARFISH_ASSERT(evaluated.isSuccessful());
+}
+
+static GLint getCurrentProgram()
+{
+    GLint program = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    return program;
 }
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
@@ -936,6 +1001,55 @@ void WebGLRenderingContext::useProgram(WebGLProgram* program)
     glUseProgram(program->glObject());
 }
 
+void WebGLRenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glVertexAttrib1f(index, x);
+}
+
+void WebGLRenderingContext::vertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glVertexAttrib2f(index, x, y);
+}
+
+void WebGLRenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
+                                           GLfloat z)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glVertexAttrib3f(index, x, y, z);
+}
+
+void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
+                                           GLfloat z, GLfloat w)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glVertexAttrib4f(index, x, y, z, w);
+}
+
+#define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                   \
+    void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,        \
+                                                    Float32List variant) \
+    {                                                                    \
+        ENTER_CONTEXT_SCOPE();                                           \
+        std::vector<float> vector;                                       \
+        copyFloat32List(scriptBindingInstance(), variant, vector);       \
+        if (!vector.empty()) {                                           \
+            glVertexAttrib##N##fv(index, vector.data());                 \
+        }                                                                \
+    }
+
+IMPLEMENT_VERTEX_ATTRIB_NFV(1)
+IMPLEMENT_VERTEX_ATTRIB_NFV(2)
+IMPLEMENT_VERTEX_ATTRIB_NFV(3)
+IMPLEMENT_VERTEX_ATTRIB_NFV(4)
+
+#undef IMPLEMENT_VERTEX_ATTRIB_NFV
+
 void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
                                                 GLenum type,
                                                 GLboolean normalized,
@@ -1290,6 +1404,64 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                  image.data());
 }
 
+#define IMPLEMENT_UNIFORM_NXV(PostFix, SrcType, DestType)           \
+    void WebGLRenderingContext::uniform##PostFix(                   \
+        WebGLUniformLocation* location, SrcType value)              \
+    {                                                               \
+        ENTER_CONTEXT_SCOPE();                                      \
+        if (location == nullptr) {                                  \
+            return;                                                 \
+        }                                                           \
+        if (!isFromCurrentProgram(location)) {                      \
+            setGLError(GL_INVALID_OPERATION);                       \
+            return;                                                 \
+        }                                                           \
+        std::vector<DestType> vector;                               \
+        copy##SrcType(scriptBindingInstance(), value, vector);      \
+        if (vector.empty()) {                                       \
+            glUniform##PostFix(location->location(), vector.size(), \
+                               vector.data());                      \
+        }                                                           \
+    }
+
+IMPLEMENT_UNIFORM_NXV(1fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(2fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(3fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(4fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(1iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(2iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(3iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(4iv, Int32List, int32_t)
+
+#undef IMPLEMENT_UNIFORM_NXV
+
+#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                 \
+    void WebGLRenderingContext::uniformMatrix##N##fv(                   \
+        WebGLUniformLocation* location, GLboolean transpose,            \
+        Float32List value)                                              \
+    {                                                                   \
+        ENTER_CONTEXT_SCOPE();                                          \
+        if (location == nullptr) {                                      \
+            return;                                                     \
+        }                                                               \
+        if (!isFromCurrentProgram(location)) {                          \
+            setGLError(GL_INVALID_OPERATION);                           \
+            return;                                                     \
+        }                                                               \
+        std::vector<float> vector;                                      \
+        copyFloat32List(scriptBindingInstance(), value, vector);        \
+        if (vector.empty()) {                                           \
+            glUniformMatrix##N##fv(location->location(), vector.size(), \
+                                   transpose, vector.data());           \
+        }                                                               \
+    }
+
+IMPLEMENT_UNIFORM_MATRIX_NFV(2)
+IMPLEMENT_UNIFORM_MATRIX_NFV(3)
+IMPLEMENT_UNIFORM_MATRIX_NFV(4)
+
+#undef IMPLEMENT_UNIFORM_MATRIX_NFV
+
 bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)
 {
     if (object->context() != this) {
@@ -1336,14 +1508,19 @@ bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
     return false;
 }
 
-bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* uniform)
+bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* location)
 {
     // Consider caching this program id when useProgram is called.
-    GLint program = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+    GLint program = getCurrentProgram();
+    if (program == 0) {
+        // no program object is active.
+        return false;
+    }
 
-    if (program == 0 ||
-        uniform->program()->glObject() != static_cast<GLuint>(program)) {
+    if (location->program()->context() != this ||
+        location->program()->glObject() != static_cast<GLuint>(program)) {
+        // If program were generated by a different WebGLRenderingContext than
+        // this one, and location were generated by a different program.
         return false;
     }
     return true;

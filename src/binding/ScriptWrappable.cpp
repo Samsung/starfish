@@ -1413,6 +1413,9 @@ unsigned arrayBufferViewSize(ScriptArrayBufferView buffer)
 template ScriptArrayBufferView createTypedArray<Int32ArrayObjectRef>(
     ScriptBindingInstance* instance, const std::vector<int>& vector);
 
+template ScriptArrayBufferView createTypedArray<Float32ArrayObjectRef>(
+    ScriptBindingInstance* instance, const std::vector<float>& vector);
+
 template <typename T, typename U>
 ScriptArrayBufferView createTypedArray(ScriptBindingInstance* instance,
                                        const std::vector<U>& vector)
@@ -1421,12 +1424,16 @@ ScriptArrayBufferView createTypedArray(ScriptBindingInstance* instance,
                instance->scriptContext(),
                [](ExecutionStateRef* state,
                   const std::vector<U>* vector) -> ValueRef* {
-                   const size_t byteLength = vector->size();
+                   const size_t arrayLength = vector->size();
+                   const size_t byteLength = arrayLength * sizeof(U);
+
                    auto arrayBuffer = ArrayBufferObjectRef::create(state);
                    arrayBuffer->allocateBuffer(state, byteLength);
+
                    T* view = T::create(state);
-                   view->setBuffer(arrayBuffer, 0, byteLength);
-                   for (size_t i = 0; i < byteLength; ++i) {
+                   view->setBuffer(arrayBuffer, 0, byteLength, arrayLength);
+
+                   for (size_t i = 0; i < arrayLength; ++i) {
                        view->set(state, ValueRef::create(i),
                                  ValueRef::create(vector->at(i)));
                    }
