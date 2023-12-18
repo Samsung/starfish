@@ -26,11 +26,18 @@ namespace Starfish {
 
 class AbstractWorker : public EventTarget {
 public:
+    AbstractWorker(ExecutionContext* executionContext);
+
+    ResourceURL* resolveURL(String* scriptURL);
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(error);
 #undef VIRTUAL
 #undef OVERRIDE
+
+protected:
+    ExecutionContext* m_executionContext;
 
 private:
 };

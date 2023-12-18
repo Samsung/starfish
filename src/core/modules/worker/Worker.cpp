@@ -28,10 +28,13 @@ namespace Starfish {
 
 Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
                const WorkerOptions& workerOptions)
-    : m_executionContext(executionContext)
+    : AbstractWorker(executionContext)
+    , m_url(resolveURL(scriptURL))
+    , m_options(workerOptions)
     , m_workerThread(new DedicatedWorkerThread(executionContext))
+    , m_wasTerminated(false)
 {
-    m_workerThread->start();
+    m_workerThread->start(this);
 }
 
 void Worker::postMessage(ScriptValue message,
@@ -48,7 +51,12 @@ void Worker::postMessage(ScriptValue message,
 
 void Worker::terminate()
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_wasTerminated) {
+        return;
+    }
+    m_wasTerminated = true;
+
+    m_workerThread->terminate();
 }
 
 ScriptBindingInstance* Worker::scriptBindingInstance()

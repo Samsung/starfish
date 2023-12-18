@@ -24,10 +24,15 @@
 
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/message_loop/RunLoop.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/worker/Worker.h"
+#include "core/modules/worker/host/WorkerHost.h"
 #include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/DedicatedWorkerThread.h"
+
 #include "core/modules/worker/WorkerThread.h"
 
 namespace Starfish {
@@ -35,13 +40,17 @@ namespace Starfish {
 WorkerThread::WorkerThread(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
     , m_mainThread(new Thread(nullptr))
+    , m_mutex(new Mutex())
+    , m_runLoop(nullptr)
+    , m_wasWorkerTerminated(false)
 {
 }
 
 void* WorkerThread::workerMainThreadWork(void* data,
                                          std::future<void>&& stopTask)
 {
-    auto* self = static_cast<WorkerThread*>(data);
+    Worker* workerObject = static_cast<Worker*>(data);
+    WorkerThread* self = workerObject->workerThread();
 
     TRACE(WORKER, "start worker thread", getCurrentThreadID());
 
@@ -49,10 +58,11 @@ void* WorkerThread::workerMainThreadWork(void* data,
     auto workerHostThreadFuture = workerHostThreadSignal.get_future();
     self->m_workerThread = std::thread(
         [](std::promise<void> signal, void* data) {
-            // TODO: run worker script
+            WorkerHost::run(data);
+
             signal.set_value();
         },
-        std::move(workerHostThreadSignal), self);
+        std::move(workerHostThreadSignal), workerObject);
     stopTask.wait();
 
     if (workerHostThreadFuture.wait_for(std::chrono::seconds(1)) ==
@@ -68,12 +78,28 @@ void* WorkerThread::workerMainThreadWork(void* data,
     return nullptr;
 }
 
-void WorkerThread::start()
+void WorkerThread::start(Worker* workerObject)
 {
+    Locker<Mutex> locker(*m_mutex);
+
     STARFISH_ASSERT(m_executionContext->isContextThread());
 
     m_mainThread->run(m_executionContext->webBase()->messageLoop(),
-                      workerMainThreadWork, this);
+                      workerMainThreadWork, workerObject);
+}
+
+void WorkerThread::terminate()
+{
+    Locker<Mutex> locker(*m_mutex);
+    TRACE(WORKER);
+
+    if (m_wasWorkerTerminated) {
+        return;
+    }
+    m_wasWorkerTerminated = true;
+
+    stopWorkerRunLoop();
+    m_mainThread->stop();
 }
 
 void WorkerThread::destroyWorkerThread()
@@ -83,6 +109,26 @@ void WorkerThread::destroyWorkerThread()
 #else
     STARFISH_UNIMPLEMENTED();
 #endif
+}
+
+void WorkerThread::onWorkerRunLoopStarted(RunLoop* runLoop)
+{
+    Locker<Mutex> locker(*m_mutex);
+
+    STARFISH_ASSERT(!m_runLoop);
+    m_runLoop = runLoop;
+}
+
+bool WorkerThread::stopWorkerRunLoop()
+{
+    if (!m_runLoop) {
+        return false;
+    }
+
+    m_runLoop->stop();
+    m_runLoop = nullptr;
+
+    return true;
 }
 
 } // namespace Starfish

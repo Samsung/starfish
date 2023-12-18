@@ -24,9 +24,12 @@ namespace Starfish {
 
 class ExecutionContext;
 class Thread;
+class Mutex;
 class ResourceURL;
+class RunLoop;
 class WebWorker;
 class WorkerGlobalScope;
+class Worker;
 
 class WorkerThread : public gc {
 public:
@@ -35,16 +38,28 @@ public:
     virtual WorkerGlobalScope* createWorkerGlobalScope(
         WebWorker* webWorker, ResourceURL* scriptURL) = 0;
 
-    void start();
+    void start(Worker* workerObject);
 
-    void destroyWorkerThread();
+    void terminate();
+
+    void onWorkerRunLoopStarted(RunLoop* runLoop);
+
+    DEFINE_GETTER(RunLoop*, runLoop);
+    DEFINE_GETTER(bool, wasWorkerTerminated);
 
 private:
     ExecutionContext* m_executionContext;
     Thread* m_mainThread;
     std::thread m_workerThread;
+    Mutex* m_mutex;
+    RunLoop* m_runLoop;
+    std::atomic_bool m_wasWorkerTerminated;
 
     static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
+
+    void destroyWorkerThread();
+
+    bool stopWorkerRunLoop();
 };
 
 } // namespace Starfish

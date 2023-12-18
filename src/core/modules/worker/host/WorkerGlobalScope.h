@@ -102,6 +102,7 @@ public:
     uint32_t setInterval(TimerHandler handler, int32_t delay, void* data);
     void clearInterval(int32_t id);
 
+    void importScript(ResourceURL* url);
     void importScripts(GCVector<String*>& urls);
 
     Promise* fetch(RequestInfo& input);
@@ -154,7 +155,6 @@ protected:
     void initGlobalScope(ResourceURL* url, String* charSet);
 
 private:
-    void importScript(ResourceURL* url);
 };
 } // namespace Starfish
 

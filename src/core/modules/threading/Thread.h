@@ -84,6 +84,8 @@ public:
     }
     void finishUnjoined();
 
+    bool stop();
+
 private:
     void run(MessageLoop* msgLoop, ThreadWorker fn,
              StoppableThreadWorker stoppableFn, void* data);
