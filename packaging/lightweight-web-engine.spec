@@ -163,6 +163,7 @@ BuildRequires: pkgconfig(cairo)
 BuildRequires: pkgconfig(harfbuzz)
 BuildRequires: pkgconfig(libcurl)
 BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 BuildRequires: pkgconfig(capi-media-sound-manager)
@@ -213,7 +214,6 @@ BuildRequires: pkgconfig(capi-system-device)
 %endif
 
 %if "%{rpm}" == "prod_tv"
-BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 BuildRequires: pkgconfig(capi-media-tool)
