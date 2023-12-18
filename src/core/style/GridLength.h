@@ -50,32 +50,12 @@ public:
         return m_length;
     }
 
-    Length& mutableLength()
-    {
-        return m_length;
-    }
-
     double flexibleLength() const
     {
         return m_flexibleLength;
     }
 
-    bool isPercentage() const
-    {
-        return m_type == GridLengthType::kLength && m_length.isPercent();
-    }
-
     bool operator==(const GridLength& o) const;
-
-    bool isFixed() const
-    {
-        return m_type == GridLengthType::kLength && m_length.isFixed();
-    }
-
-    bool isAuto() const
-    {
-        return m_type == GridLengthType::kLength && m_length.isAuto();
-    }
 
     GridLengthType type() const
     {
@@ -84,106 +64,15 @@ public:
 
     String* toString() const;
 
+    void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
+                       LayoutSize windowSize, ComputedStyle* cs);
+
 private:
     Length m_length;
     double m_flexibleLength = 0.0f;
     GridLengthType m_type;
 };
 
-// from parsing css properties
-
-enum class GridTrackSizeType {
-    kLength,
-    kFlexibleLength,
-    kMinMax,
-    kMinContent,
-    kMaxContent,
-};
-
-class GridTrackSize : public gc {
-public:
-    static String* toStringWithGridLengths(GCVector<GridTrackSize>* v);
-
-    GridTrackSize();
-
-    GridTrackSize(const GridLength& length, GridTrackSizeType type);
-
-    GridTrackSize(const GridLength& min, const GridLength& max,
-                  GridTrackSizeType type = GridTrackSizeType::kMinMax);
-
-    GridTrackSize(GridTrackSizeType type);
-
-    bool isLength() const
-    {
-        return m_type == GridTrackSizeType::kLength;
-    }
-
-    bool isFlexibleLength() const
-    {
-        return m_type == GridTrackSizeType::kFlexibleLength;
-    }
-
-    bool isMinMax() const
-    {
-        return m_type == GridTrackSizeType::kMinMax;
-    }
-
-    bool isMinContent() const
-    {
-        return m_type == GridTrackSizeType::kMinContent;
-    }
-
-    bool isMaxContent() const
-    {
-        return m_type == GridTrackSizeType::kMaxContent;
-    }
-
-    const Length& length() const
-    {
-        return m_data1.length();
-    }
-
-    Length& mutableLength()
-    {
-        return m_data1.mutableLength();
-    }
-
-    double flexibleLength() const
-    {
-        return m_data1.flexibleLength();
-    }
-
-    const GridLength& min() const
-    {
-        return m_data1;
-    }
-
-    const GridLength& max() const
-    {
-        return m_data2;
-    }
-
-    bool isPercentage() const
-    {
-        return m_type == GridTrackSizeType::kLength &&
-               m_data1.length().isPercent();
-    }
-
-    bool operator==(const GridTrackSize& o) const;
-
-    bool isAuto() const
-    {
-        return m_type == GridTrackSizeType::kLength &&
-               m_data1.length().isAuto();
-    }
-
-    String* toString() const;
-
-private:
-    GridLength m_data1;
-    GridLength m_data2;
-    GridTrackSizeType m_type;
-};
 } // namespace Starfish
 
 #endif

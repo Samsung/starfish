@@ -87,7 +87,9 @@ static bool compareCString(const char* keyword, const char* value)
 }
 
 static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
-                                            GCVector<GridTrackSize>* v);
+                                            GCVector<GridTrackSize*>* v,
+                                            bool allowRepeat,
+                                            bool allowFlexible);
 
 static FontWeightValue lighterWeight(FontWeightValue weight)
 {
@@ -12448,49 +12450,85 @@ static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)
     return true;
 }
 
-static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize>* v)
+static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
 {
     Nullable<CSSTokenValue> repeat =
         CSSPropertyParser::parseFunctionBlock((char*)str.data(), "repeat");
-    if (repeat.hasValue()) {
-        // split by comma, 1st = integer|auto-fill|auto-fit, 2nd = repeat
-        auto trimmed = repeat.getValue().trim();
-        CSSPropertyParser parser((char*)trimmed.data());
-        parser.consumeWhitespaces();
-        if (*(parser.curPos()) == 'a') {
-            // TODO: implement auto-fill and auto-fit
+    if (!repeat.hasValue()) {
+        return false;
+    }
+
+    CSSTokenValue trimmed = repeat.getValue().trim();
+    if (trimmed.startsWith("a")) {
+        std::vector<CSSTokenValue> tokenValues;
+        auto pos = trimmed.find(",");
+        if (pos == std::string::npos) {
+            return false;
+        }
+        auto repeatType = trimmed.substring(0, pos);
+        auto repeatData =
+            trimmed.substring(pos + 1, trimmed.length() - pos - 1);
+
+        AutoRepeatType autoRepeatType;
+        if (repeatType == "auto-fit") {
+            autoRepeatType = AutoRepeatType::kAutoFit;
+        } else if (repeatType == "auto-fill") {
+            STARFISH_UNIMPLEMENTED();
+            // autoRepeatType = AutoRepeatType::kAutoFill;
+            return false;
+        } else {
+            return false;
         }
 
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, repeatData.c_str(),
+                                              repeatData.length());
+        GCVector<GridTrackSize*> gridTrackSizes;
+        if (!parseGridTemplateRowsAndColumns(tokens, &gridTrackSizes, false,
+                                             false)) {
+            return false;
+        }
+        GridTrackSizeAutoRepeat* autoRepeat =
+            new GridTrackSizeAutoRepeat(gridTrackSizes, autoRepeatType);
+        v->push_back(autoRepeat);
+        return true;
+    } else {
+        CSSPropertyParser parser((char*)trimmed.data());
         int32_t count = 0;
         if (parser.consumeNumber()) {
             count = parser.parsedNumber();
             if (count < 0) {
                 return false;
             }
-        }
 
-        parser.consumeWhitespaces();
-        if (parser.consumeIfNext(',')) {
-            CSSTokenValue value = CSSTokenValue(
-                parser.m_curPos, parser.m_endPos - parser.m_curPos);
-            const char* data = value.data();
-            size_t len = std::strlen(data);
+            parser.consumeWhitespaces();
+            if (parser.consumeIfNext(',')) {
+                CSSTokenValue value = CSSTokenValue(
+                    parser.m_curPos, parser.m_endPos - parser.m_curPos);
+                const char* data = value.data();
+                size_t len = std::strlen(data);
 
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, data, len);
-            for (int32_t i = 0; i < count; ++i) {
-                if (!parseGridTemplateRowsAndColumns(tokens, v)) {
+                CSSTokenVector tokens;
+                CSSStyleDeclaration::tokenizeCSSValue(tokens, data, len);
+                GCVector<GridTrackSize*> gridTrackSizes;
+                if (!parseGridTemplateRowsAndColumns(tokens, &gridTrackSizes,
+                                                     false, true)) {
                     return false;
                 }
+                GridTrackSizeFixedRepeat* fixedRepeat =
+                    new GridTrackSizeFixedRepeat(gridTrackSizes, count);
+                v->push_back(fixedRepeat);
+                return true;
             }
-            return true;
         }
     }
     return false;
 }
 
 static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
-                                            GCVector<GridTrackSize>* v)
+                                            GCVector<GridTrackSize*>* v,
+                                            bool allowRepeat,
+                                            bool allowFlexible)
 {
     STARFISH_ASSERT(v != nullptr);
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -12508,14 +12546,13 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
             if (!maybeLength.hasValue()) {
                 return false;
             }
-            v->push_back(
-                GridTrackSize(maybeLength.value(), GridTrackSizeType::kLength));
+            v->push_back(new GridTrackSizeLength(maybeLength.value()));
         } else if (token == "min-content") {
             // Try to parse keyword: min-content.
-            v->push_back(GridTrackSize(GridTrackSizeType::kMinContent));
+            v->push_back(new GridTrackSizeMinContent());
         } else if (token == "max-content") {
             // Try to parse keyword: max-content.
-            v->push_back(GridTrackSize(GridTrackSizeType::kMaxContent));
+            v->push_back(new GridTrackSizeMaxContent());
         } else if (token.startsWith("minmax(") &&
                    token[token.length() - 1] == ')') {
             // Try to minmax().
@@ -12523,14 +12560,14 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
             if (!parseMinMax(token, min, max)) {
                 return false;
             }
-            v->push_back(GridTrackSize(min, max, GridTrackSizeType::kMinMax));
-        } else if (token.startsWith("repeat(") &&
+            v->push_back(new GridTrackSizeMinMax(min, max));
+        } else if (allowRepeat && token.startsWith("repeat(") &&
                    token[token.length() - 1] == ')') {
             // repeat().
             if (!parseRepeat(token, v)) {
                 return false;
             }
-        } else {
+        } else if (allowFlexible) {
             // fr.
             CSSPropertyParser parser(const_cast<char*>(token.c_str()),
                                      token.length());
@@ -12545,8 +12582,7 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
             if (unit != "fr") {
                 return false;
             }
-            v->push_back(GridTrackSize(GridLength(number),
-                                       GridTrackSizeType::kFlexibleLength));
+            v->push_back(new GridTrackSizeLength(GridLength(number)));
         }
     }
 
@@ -12568,9 +12604,9 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
         return true;
     }
 
-    GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
+    GCVector<GridTrackSize*>* v = new GCVector<GridTrackSize*>();
     ValueList* v1 = new ValueList(Separator::SpaceSeparator);
-    if (!parseGridTemplateRowsAndColumns(tokens, v)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v, true, true)) {
         return false;
     }
     setGridTemplateUnits(v);
@@ -12591,9 +12627,9 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
         return true;
     }
 
-    GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
+    GCVector<GridTrackSize*>* v = new GCVector<GridTrackSize*>();
 
-    if (!parseGridTemplateRowsAndColumns(tokens, v)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v, true, true)) {
         return false;
     }
 

@@ -1141,29 +1141,20 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
-    GCVector<GridTrackSize>* columns =
+    GCVector<GridTrackSize*>* columns =
         m_rareComputedStyleData.gridTemplateColumns();
-
     if (columns) {
-        for (size_t i = 0; i < columns->size(); i++) {
-            if ((*columns)[i].isLength() &&
-                !(*columns)[i].length().isComputed()) {
-                (*columns)[i].mutableLength().changeToFixedIfNeeded(
-                    curFontSize, rootFontSize, font, windowSize.width(),
-                    windowSize.height(), this);
-            }
+        for (auto* column : *columns) {
+            column->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  this);
         }
     }
 
-    GCVector<GridTrackSize>* rows = m_rareComputedStyleData.gridTemplateRows();
-
+    GCVector<GridTrackSize*>* rows = m_rareComputedStyleData.gridTemplateRows();
     if (rows) {
-        for (size_t i = 0; i < rows->size(); i++) {
-            if ((*rows)[i].isLength() && !(*rows)[i].length().isComputed()) {
-                (*rows)[i].mutableLength().changeToFixedIfNeeded(
-                    curFontSize, rootFontSize, font, windowSize.width(),
-                    windowSize.height(), this);
-            }
+        for (auto* row : *rows) {
+            row->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                               this);
         }
     }
 }
