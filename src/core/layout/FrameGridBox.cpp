@@ -192,6 +192,41 @@ GridArea* GridFormattingContext::getNamedGridArea(String* name)
 // https://drafts.csswg.org/css-grid/#grid-item-placement-algorithm
 void GridFormattingContext::placeGridItemsIntoCells()
 {
+    // Create areas from grid items.
+    GCVector<GridArea*> areas = createGridAreas();
+
+    // Initialize grid track from grid-template-columns and rows.
+    initializeGridTracksFromGridTemplateColumnsAndRows(areas);
+
+    GCVector<GridArea*> definiteAreas, autoAreas;
+    // Classify grid areas into definite areas and auto areas.
+    classifyGridAreas(areas, definiteAreas, autoAreas);
+
+    // 1. Position anything that’s not auto-positioned.
+    placeGridAreasWithDefinitePositions(definiteAreas);
+
+    // 2. Process the items locked to a given row.
+    placeGridAreasLockedToRows(autoAreas);
+
+    // 4. Position the remaining grid items.
+    placeRemainingGridAreas(autoAreas);
+
+    for (auto gridArea : definiteAreas) {
+        m_orderedGridArea.push_back(*gridArea);
+    }
+
+    for (auto gridArea : autoAreas) {
+        m_orderedGridArea.push_back(*gridArea);
+    }
+
+    std::stable_sort(m_orderedGridArea.begin(), m_orderedGridArea.end(),
+                     [](const GridArea& a, const GridArea& b) {
+                         return a.rowStart() < b.rowStart();
+                     });
+}
+
+GCVector<GridArea*> GridFormattingContext::createGridAreas()
+{
     GCVector<FrameBox*> orderedGridItems;
     for (Frame* c = m_container->firstChild(); c; c = c->next()) {
         if (c->isGridItem()) {
@@ -206,10 +241,8 @@ void GridFormattingContext::placeGridItemsIntoCells()
                          return a->style()->order() < b->style()->order();
                      });
 
-    // 1. Position anything that’s not auto-positioned.
-    GCVector<GridArea*> gridAreasDefinite;
-    GCVector<GridArea*> gridAreasAuto;
     size_t documentOrder = 0;
+    GCVector<GridArea*> gridAreas;
     for (auto gridItem : orderedGridItems) {
         if (gridItem->style()->position() == AbsolutePositionValue ||
             gridItem->style()->position() == FixedPositionValue) {
@@ -220,40 +253,29 @@ void GridFormattingContext::placeGridItemsIntoCells()
         GridArea* gridArea = new GridArea(gridItem, documentOrder);
         gridArea->parseGridRowAndColumnValues(*this);
         gridArea->resolveDefinitePositionValues();
+
+        gridAreas.push_back(gridArea);
+        documentOrder++;
+    }
+    return gridAreas;
+}
+
+void GridFormattingContext::classifyGridAreas(
+    const GCVector<GridArea*>& areas, GCVector<GridArea*>& definiteAreas,
+    GCVector<GridArea*>& autoAreas)
+{
+    for (auto gridArea : areas) {
         bool rowOk = addImplicitGridLineRows(gridArea);
         bool colOk = addImplicitGridLineColumns(gridArea);
 
         if (rowOk && colOk) {
             if (gridArea->isDefinite()) {
-                gridAreasDefinite.push_back(gridArea);
+                definiteAreas.push_back(gridArea);
             } else {
-                gridAreasAuto.push_back(gridArea);
+                autoAreas.push_back(gridArea);
             }
         }
-
-        documentOrder++;
     }
-
-    placeGridAreasWithDefinitePositions(gridAreasDefinite);
-
-    // 2. Process the items locked to a given row.
-    placeGridAreasLockedToRows(gridAreasAuto);
-
-    // 4. Position the remaining grid items.
-    placeRemainingGridAreas(gridAreasAuto);
-
-    for (auto gridArea : gridAreasDefinite) {
-        m_orderedGridArea.push_back(*gridArea);
-    }
-
-    for (auto gridArea : gridAreasAuto) {
-        m_orderedGridArea.push_back(*gridArea);
-    }
-
-    std::stable_sort(m_orderedGridArea.begin(), m_orderedGridArea.end(),
-                     [](const GridArea& a, const GridArea& b) {
-                         return a.rowStart() < b.rowStart();
-                     });
 }
 
 void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
@@ -723,6 +745,10 @@ std::string GridCellTable::toString()
 
 void GridFormattingContext::parseGridTemplateAreas()
 {
+    // FIXME: Unless the style changes, it is inefficient to continue parsing
+    // the style during layout stage. and most of this method is redundant with
+    // CSSStyleValuePair::updateValueGridTemplateAreas.
+    // Please fix it so that don't repeat parsing during layout stage.
     struct Area {
         size_t columnStart;
         size_t columnEnd;
@@ -924,98 +950,155 @@ void GridFormattingContext::parseGridTemplateAreas()
     }
 }
 
-void GridFormattingContext::initializeGridTrackColumns(
-    const GCVector<GridTrackSize>* gridTrackColumns)
+GridTrack GridFormattingContext::gridTrackSizeToGridTrack(
+    GridTrackSize* gridTrackSize, bool isColumnDirection)
 {
-    STARFISH_ASSERT(gridTrackColumns);
+    switch (gridTrackSize->type()) {
+    case GridTrackSizeType::kLength: {
+        GridTrackSizeLength* gridTrackSizeLength =
+            gridTrackSize->as<GridTrackSizeLength>();
+        GridLength gridLength = gridTrackSizeLength->gridLegnth();
+        if (gridLength.isFlexibleLength()) {
+            return GridTrack(gridLength.flexibleLength(), false);
+        }
 
-    for (auto& trackSize : *gridTrackColumns) {
-        GridLength gridLength = trackSize.min();
-        LayoutUnit baseSize = intMaxForLayoutUnit;
-
-        if (trackSize.isLength()) {
+        STARFISH_ASSERT(gridLength.isLength());
+        if (isColumnDirection) {
+            LayoutUnit baseSize = intMaxForLayoutUnit;
             // TODO: Apply other length types.
-            if (gridLength.isLength() &&
-                gridLength.length().isDefinite(m_availableWidth !=
-                                               intMaxForLayoutUnit)) {
-                baseSize = gridLength.length().specifiedValue(m_availableWidth,
-                                                              m_container);
-                if (m_availableWidth == 0 && gridLength.length().isPercent()) {
-                    m_gridTemplateColumns.push_back(
-                        GridTrack(GridTrackType::kAuto));
+            Length length = gridLength.length();
+            if (length.isDefinite(m_availableWidth != intMaxForLayoutUnit)) {
+                baseSize = length.specifiedValue(m_availableWidth, m_container);
+                if (m_availableWidth == 0 && length.isPercent()) {
+                    return GridTrack(GridTrackType::kAuto);
                 } else {
-                    m_gridTemplateColumns.push_back(GridTrack(baseSize));
+                    return GridTrack(baseSize);
                 }
-            } else if (gridLength.isAuto()) {
-                m_gridTemplateColumns.push_back(
-                    GridTrack(GridTrackType::kAuto));
+            } else if (length.isAuto()) {
+                return GridTrack(GridTrackType::kAuto);
             }
-        } else if (trackSize.isFlexibleLength()) {
-            GridTrack track = GridTrack(gridLength.flexibleLength(), false);
-            m_gridTemplateColumns.push_back(track);
-        } else if (trackSize.isMinMax()) {
-            // TODO: support values other than fixed
-            GridTrack track = GridTrack(trackSize.min(), trackSize.max());
-            m_gridTemplateColumns.push_back(track);
-        } else if (trackSize.isMinContent()) {
-            m_gridTemplateColumns.push_back(
-                GridTrack(GridTrackType::kMinContent));
-        } else if (trackSize.isMaxContent()) {
-            m_gridTemplateColumns.push_back(
-                GridTrack(GridTrackType::kMaxContent));
+
+        } else {
+            Length length = gridLength.length();
+            if (length.isFixed()) {
+                return GridTrack(length.numberData());
+            } else if (length.isAuto()) {
+                return GridTrack(GridTrackType::kAuto);
+            }
         }
+    } break;
+    case GridTrackSizeType::kMinMax: {
+        // TODO: support values other than fixed
+        GridTrackSizeMinMax* gridTrackSizeMinMax =
+            gridTrackSize->as<GridTrackSizeMinMax>();
+        return GridTrack(gridTrackSizeMinMax->min(),
+                         gridTrackSizeMinMax->max());
+    } break;
+    case GridTrackSizeType::kMinContent:
+        return GridTrack(GridTrackType::kMinContent);
+    case GridTrackSizeType::kMaxContent:
+        return GridTrack(GridTrackType::kMaxContent);
+    case GridTrackSizeType::kFixedRepeat:
+        STARFISH_ASSERT_NOT_REACHED();
+        break;
+    default:
+        STARFISH_LOG_WARN("Unknown GridTrackSizeType.");
+        return GridTrack();
     }
+    return GridTrack();
 }
 
-void GridFormattingContext::initializeGridTrackRows(
-    const GCVector<GridTrackSize>* gridTrackRows)
-{
-    STARFISH_ASSERT(gridTrackRows);
-
-    for (auto& trackSize : *gridTrackRows) {
-        GridLength gridLength = trackSize.min();
-
-        if (trackSize.isLength()) {
-            if (gridLength.isLength() && gridLength.length().isFixed()) {
-                Length length = gridLength.length();
-                GridTrack track = GridTrack(length.numberData());
-                m_gridTemplateRows.push_back(track);
-            } else if (gridLength.isAuto()) {
-                m_gridTemplateRows.push_back(GridTrack(GridTrackType::kAuto));
-            }
-        } else if (trackSize.isFlexibleLength()) {
-            GridTrack track = GridTrack(gridLength.flexibleLength(), false);
-            m_gridTemplateRows.push_back(track);
-        } else if (trackSize.isMinMax()) {
-            GridTrack track = GridTrack(trackSize.min(), trackSize.max());
-            m_gridTemplateRows.push_back(track);
-        } else if (trackSize.isMinContent()) {
-            m_gridTemplateRows.push_back(GridTrack(GridTrackType::kMinContent));
-        } else if (trackSize.isMaxContent()) {
-            m_gridTemplateRows.push_back(GridTrack(GridTrackType::kMaxContent));
-        }
-    }
-}
-
-void GridFormattingContext::buildGridTrackTemplate()
+void GridFormattingContext::initializeGridTracksFromGridTemplateColumnsAndRows(
+    const GCVector<GridArea*>& areas)
 {
     GridTrack dummyPlaceholder = GridTrack(0);
     m_gridTemplateColumns.push_back(dummyPlaceholder);
-    const GCVector<GridTrackSize>* columns =
+    const GCVector<GridTrackSize*>* columns =
         m_container->style()->gridTemplateColumns();
     if (columns) {
-        initializeGridTrackColumns(columns);
+        initializeGridTracks(m_gridTemplateColumns, columns, true, areas);
     } else {
         m_gridTemplateColumns.push_back(GridTrack());
     }
 
     m_gridTemplateRows.push_back(dummyPlaceholder);
-    const GCVector<GridTrackSize>* rows =
+    const GCVector<GridTrackSize*>* rows =
         m_container->style()->gridTemplateRows();
     if (rows) {
-        initializeGridTrackRows(rows);
+        initializeGridTracks(m_gridTemplateRows, rows, false, areas);
+    }
+}
+
+void GridFormattingContext::initializeGridTracks(
+    GCVector<GridTrack>& gridTracks,
+    const GCVector<GridTrackSize*>* gridTrackSizes, bool isColumnDirection,
+    const GCVector<GridArea*>& areas)
+{
+    for (auto* gridTrackSize : *gridTrackSizes) {
+        GridTrackSizeType type = gridTrackSize->type();
+        if (type == GridTrackSizeType::kFixedRepeat) {
+            GridTrackSizeFixedRepeat* fixedRepeat =
+                gridTrackSize->as<GridTrackSizeFixedRepeat>();
+            initializeGridTracksWithFixedRepeat(gridTracks, fixedRepeat,
+                                                isColumnDirection);
+        } else if (type == GridTrackSizeType::kAutoRepeat) {
+            GridTrackSizeAutoRepeat* autoRepeat =
+                gridTrackSize->as<GridTrackSizeAutoRepeat>();
+            initializeGridTracksWithAutoRepeat(gridTracks, autoRepeat,
+                                               isColumnDirection, areas);
+        } else {
+            GridTrack gridTrack =
+                gridTrackSizeToGridTrack(gridTrackSize, isColumnDirection);
+            gridTracks.push_back(gridTrack);
+        }
+    }
+}
+
+void GridFormattingContext::initializeGridTracksWithFixedRepeat(
+    GCVector<GridTrack>& gridTracks, GridTrackSizeFixedRepeat* fixedRepeat,
+    bool isColumnDirection)
+{
+    for (size_t i = 0; i < fixedRepeat->repeatCount(); i++) {
+        for (auto* repeatGridTrackSize : fixedRepeat->gridTrackSizes()) {
+            GridTrack gridTrack = gridTrackSizeToGridTrack(repeatGridTrackSize,
+                                                           isColumnDirection);
+            gridTracks.push_back(gridTrack);
+        }
+    }
+}
+
+void GridFormattingContext::initializeGridTracksWithAutoRepeat(
+    GCVector<GridTrack>& gridTracks, GridTrackSizeAutoRepeat* autoRepeat,
+    bool isColumnDirection, const GCVector<GridArea*>& areas)
+{
+    if (!isColumnDirection) {
+        // FIXME: This implementation supports only current grid template
+        // columns. and please remove this block when adding support for
+        // grid-template-rows.
+        return;
     }
 
+    AutoRepeatType autoRepeatType = autoRepeat->autoRepeatType();
+    if (autoRepeatType == AutoRepeatType::kAutoFit) {
+        // TODO: Consider remain area widths.
+        int remainArea =
+            areas.size() - (gridTracks.size() - 1) /* -1 means dummy */;
+        int repeatedTrakSize = autoRepeat->gridTrackSizes().size();
+        while (remainArea >= repeatedTrakSize) {
+            for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
+                GridTrack gridTrack = gridTrackSizeToGridTrack(
+                    repeatGridTrackSize, isColumnDirection);
+                gridTracks.push_back(gridTrack);
+            }
+            remainArea -= repeatedTrakSize;
+        }
+    } else if (autoRepeatType == AutoRepeatType::kAutoFill) {
+        STARFISH_UNIMPLEMENTED();
+    }
+}
+
+void GridFormattingContext::buildGridTrackTemplate()
+{
     parseGridTemplateAreas();
     placeGridItemsIntoCells();
 
@@ -1165,14 +1248,22 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
             track.setSize(maxContent);
         } else if (track.isMinMax()) {
             // TODO: min- and max-content
-            if (track.min().isFixed()) {
-                track.setSize(track.min().length().fixed());
-            } else if (track.min().isAuto()) {
-                track.setSize(minContent);
+            GridLength minGridLength = track.min();
+            if (minGridLength.isLength()) {
+                Length length = minGridLength.length();
+                if (length.isFixed()) {
+                    track.setSize(length.fixed());
+                } else if (length.isAuto()) {
+                    track.setSize(minContent);
+                }
             }
 
-            if (track.max().isFixed()) {
-                track.setGrowthLimit(track.max().length().fixed());
+            GridLength maxGridLength = track.max();
+            if (maxGridLength.isLength()) {
+                Length length = maxGridLength.length();
+                if (length.isFixed()) {
+                    track.setGrowthLimit(length.fixed());
+                }
             }
         } else if (track.isFlexibleLength()) {
             track.setSize(minContent);
@@ -1275,7 +1366,7 @@ void GridFormattingContext::maximizeColumnTracks()
         if (track.isAuto()) {
             growableTracks.push_back(&track);
         } else if (track.isMinMax()) {
-            if (track.max().isFixed()) {
+            if (track.max().isLength() && track.max().length().isFixed()) {
                 growableTracks.push_back(&track);
             }
         }
@@ -1403,7 +1494,7 @@ void GridFormattingContext::stretchAutoColumnTracks()
 
 void GridFormattingContext::applyImplicitTrackSizing()
 {
-    const GCVector<GridTrackSize>* rows =
+    const GCVector<GridTrackSize*>* rows =
         m_container->style()->gridTemplateRows();
 
     GCVector<GridTrack*> autoRows;

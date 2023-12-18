@@ -33,7 +33,7 @@
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
-#include "core/style/GridLength.h"
+#include "core/style/GridTrackSize.h"
 #include "core/style/RectData.h"
 #include "core/style/TextOverflowData.h"
 #include "core/style/MutablePropertyValue.h"
@@ -1734,7 +1734,7 @@ public:
         return m_value.m_resize;
     }
 
-    GCVector<GridTrackSize>* gridTemplateUnits() const
+    GCVector<GridTrackSize*>* gridTemplateUnits() const
     {
         STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
         return m_value.m_gridTemplateUnits;
@@ -1879,7 +1879,7 @@ public:
         WordBreakValue m_wordBreak;
         AppearanceValue m_appearance;
         RectData* m_rect;
-        GCVector<GridTrackSize>* m_gridTemplateUnits;
+        GCVector<GridTrackSize*>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
         TextOverflowData* m_textOverflowData;
         CSSGradientValue* m_gradientValue;
@@ -2181,7 +2181,7 @@ public:
         {
         }
 
-        ValueData(GCVector<GridTrackSize>* v)
+        ValueData(GCVector<GridTrackSize*>* v)
             : m_gridTemplateUnits(v)
         {
         }
@@ -2386,7 +2386,7 @@ public:
         m_value.m_rect = val;
     }
 
-    void setGridTemplateUnits(GCVector<GridTrackSize>* val)
+    void setGridTemplateUnits(GCVector<GridTrackSize*>* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateUnits;
         m_value.m_gridTemplateUnits = val;

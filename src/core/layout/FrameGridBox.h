@@ -343,7 +343,7 @@ public:
     {
         if (min.isLength() && min.length().isFixed()) {
             m_size = min.length().numberData();
-        } else if (min.isAuto()) {
+        } else if (min.isLength() && min.length().isAuto()) {
             m_size = 0;
         }
     }
@@ -403,8 +403,21 @@ private:
 
     void parseGridTemplateAreas();
 
-    void initializeGridTrackColumns(const GCVector<GridTrackSize>* columns);
-    void initializeGridTrackRows(const GCVector<GridTrackSize>* rows);
+    void initializeGridTracksFromGridTemplateColumnsAndRows(
+        const GCVector<GridArea*>& areas);
+    void initializeGridTracks(GCVector<GridTrack>& gridTracks,
+                              const GCVector<GridTrackSize*>* gridTrackSizes,
+                              bool isColumnDirection,
+                              const GCVector<GridArea*>& areas);
+    void initializeGridTracksWithFixedRepeat(
+        GCVector<GridTrack>& gridTracks, GridTrackSizeFixedRepeat* fixedRepeat,
+        bool isColumnDirection);
+    void initializeGridTracksWithAutoRepeat(GCVector<GridTrack>& gridTracks,
+                                            GridTrackSizeAutoRepeat* autoepeat,
+                                            bool isColumnDirection,
+                                            const GCVector<GridArea*>& areas);
+    GridTrack gridTrackSizeToGridTrack(GridTrackSize* gridTrackSize,
+                                       bool isColumnDirection);
 
     void placeGridItemsIntoCells();
     void placeGridAreasWithDefinitePositions(
@@ -448,6 +461,10 @@ private:
                                              ComputedStyle* style);
 
     void insertNamedGridArea(const std::pair<std::string, GridArea>& pair);
+    GCVector<GridArea*> createGridAreas();
+    void classifyGridAreas(const GCVector<GridArea*>& areas,
+                           GCVector<GridArea*>& definiteAreas,
+                           GCVector<GridArea*>& autoAreas);
 
     LayoutContext& m_layoutContext;
     FrameGridBox* m_container;
