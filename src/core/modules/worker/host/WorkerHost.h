@@ -17,30 +17,34 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishAbstractWorker__)
-#define __StarfishAbstractWorker__
-
-#include "core/dom/EventTarget.h"
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerHost__)
+#define __StarfishWorkerHost__
 
 namespace Starfish {
 
-class AbstractWorker : public EventTarget {
+class RunLoop;
+class WebWorker;
+class Worker;
+class WorkerGlobalScope;
+class WorkerThread;
+
+class WorkerHost : public gc {
 public:
-    AbstractWorker(ExecutionContext* executionContext);
+    WorkerHost(Worker* workerObject, WorkerThread* workerThread,
+               RunLoop* runLoop);
 
-    ResourceURL* resolveURL(String* scriptURL);
-
-#define VIRTUAL
-#define OVERRIDE
-    DECLARE_EVENT_LISTENER(error);
-#undef VIRTUAL
-#undef OVERRIDE
+    static void run(void* data);
 
 protected:
-    ExecutionContext* m_executionContext;
+    WebWorker* m_webWorker;
+    WorkerGlobalScope* m_globalScope;
+    bool m_wasDisposed;
 
-private:
+    bool loadMainScript();
+
+    void dispose();
 };
 
 } // namespace Starfish
+
 #endif

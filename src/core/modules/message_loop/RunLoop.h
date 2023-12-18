@@ -28,12 +28,13 @@ class RunLoop {
 public:
     static RunLoop* create();
 
+    virtual ~RunLoop() = default;
+
     virtual void run() = 0;
     virtual void stop() = 0;
 
 protected:
     RunLoop() = default;
-    virtual ~RunLoop() = default;
 };
 
 } // namespace Starfish

@@ -86,7 +86,7 @@ void WebWorker::destroy()
 
 void WebWorker::ensureScriptEngineInstance()
 {
-    STARFISH_ASSERT(isMainThread() == true);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
     if (!m_scriptEngineInstance) {
         m_scriptEngineInstance = new ScriptEngineInstance(
@@ -96,7 +96,7 @@ void WebWorker::ensureScriptEngineInstance()
 
 void WebWorker::removeScriptEngineInstance()
 {
-    STARFISH_ASSERT(isMainThread() == true);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
     if (m_scriptEngineInstance) {
         m_scriptEngineInstance->dispose();

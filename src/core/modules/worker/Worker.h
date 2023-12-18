@@ -48,6 +48,14 @@ public:
 
     void terminate();
 
+    const WorkerOptions& workerOptions() const
+    {
+        return m_options;
+    }
+
+    DEFINE_GETTER(ResourceURL*, url);
+    DEFINE_GETTER(DedicatedWorkerThread*, workerThread);
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(message);
@@ -56,8 +64,10 @@ public:
 #undef OVERRIDE
 
 private:
-    ExecutionContext* m_executionContext;
+    ResourceURL* m_url;
+    const WorkerOptions m_options;
     DedicatedWorkerThread* m_workerThread;
+    bool m_wasTerminated;
 };
 } // namespace Starfish
 #endif

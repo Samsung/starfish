@@ -225,4 +225,15 @@ void Thread::cleanupHandler(void* data)
     ThreadData* td = (ThreadData*)data;
     td->m_thread->joinIfNeeds();
 }
+
+bool Thread::stop()
+{
+    if (!m_alive || !m_threadData->m_stoppableFn) {
+        return false;
+    }
+
+    m_threadData->m_stopSignal.set_value();
+    return true;
+}
+
 } // namespace Starfish

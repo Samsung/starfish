@@ -7,7 +7,7 @@
   ConstructorCallWith=ExecutionContext,
 ]
 interface Worker : EventTarget {
-  [Unimplemented] void terminate();
+  void terminate();
 
   [Unimplemented, RaisesException] void postMessage(any message, sequence<object> transfer);
   [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options  /* = {} */);

@@ -21,9 +21,31 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
+#include "platform/loader/ResourceURL.h"
+#include "core/dom/DOMException.h"
+#include "core/dom/ExecutionContext.h"
+
 #include "core/modules/worker/AbstractWorker.h"
 
 namespace Starfish {
+
+AbstractWorker::AbstractWorker(ExecutionContext* executionContext)
+    : m_executionContext(executionContext)
+{
+}
+
+ResourceURL* AbstractWorker::resolveURL(String* scriptURL)
+{
+    String* baseURL = m_executionContext->baseURL()->urlString();
+    ResourceURL* url = new ResourceURL(scriptURL, baseURL);
+    if (!url->isValid()) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SYNTAX_ERR, "Invalid URL");
+    }
+
+    return url;
+}
 
 DEFINE_EVENT_LISTENER(AbstractWorker, error);
 
