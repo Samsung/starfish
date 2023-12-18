@@ -24,7 +24,7 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 
-#ifdef STARFISH_TIZEN_PROD_TV
+#ifdef STARFISH_TIZEN
 #include <app_common.h>
 #endif
 #include <EscargotPublic.h>
