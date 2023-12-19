@@ -30,7 +30,7 @@
 #include <unordered_set>
 #include <vector>
 
-class LoggerOption {
+class EXPORT LoggerOption {
 public:
     static LoggerOption* instance();
     bool isLogEnable(const char* location);

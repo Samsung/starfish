@@ -17,6 +17,7 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
 #include "core/modules/worker/util/Logger.h"
 #include "core/util/GlobalOptions.h"
 

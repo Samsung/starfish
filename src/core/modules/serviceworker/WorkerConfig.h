@@ -21,6 +21,7 @@
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
+#include "StarfishConfig.h"
 #include "core/util/GlobalOptions.h"
 #include "core/modules/worker/util/Trace.h"
 
