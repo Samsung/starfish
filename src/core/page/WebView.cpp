@@ -105,7 +105,6 @@ ANNOTATE_DEFINE;
 
 extern bool g_forceRendering;
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
-
 #endif
 
 namespace Starfish {

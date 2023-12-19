@@ -28,14 +28,14 @@
 
 namespace Starfish {
 
-struct ValueGroup {
+struct EXPORT ValueGroup {
     std::set<std::string> positives;
     std::set<std::string> negatives;
     bool includeAsteriskInPositives{ false };
     std::string raw;
 };
 
-class GlobalOptions {
+class EXPORT GlobalOptions {
 public:
     static GlobalOptions& instance();
     bool has(const char* key, const char* subKey = nullptr,

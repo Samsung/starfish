@@ -21,6 +21,11 @@
 #define __Starfish__
 
 #include "StaticStrings.h"
+
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
+#include <signal.h>
+#endif
+
 namespace Starfish {
 
 class Thread;
@@ -42,7 +47,7 @@ class HTTPCache;
 #endif
 
 // ctor of Starfish class is NOT THREAD-SAFE
-class Starfish : public gc {
+class EXPORT Starfish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
     friend class WebView;
@@ -139,6 +144,10 @@ private:
 
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
 extern bool g_fireOnloadEvent;
+#endif
+
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
+extern volatile sig_atomic_t g_doneFlag;
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE

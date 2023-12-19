@@ -17,8 +17,8 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
 #include "core/util/GlobalOptions.h"
-#include "StarfishBase.h" // STARFISH_ASSERT
 
 namespace Starfish {
 
