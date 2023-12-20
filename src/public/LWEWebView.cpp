@@ -21,6 +21,7 @@
 #include "LWEDelegate.h"
 #include "ResourceErrorDelegate.h"
 #include "SettingsDelegate.h"
+#include "CookieManagerDelegate.h"
 
 namespace LWE {
 
@@ -293,6 +294,53 @@ void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
 Settings WebView::GetSettings()
 {
     return FetchWebContainer()->GetSettings();
+}
+
+CookieManager::CookieManager()
+{
+}
+
+CookieManager::~CookieManager()
+{
+}
+
+std::string CookieManager::GetCookie(std::string url)
+{
+    return toImpl<LWEDelegate::CookieManager>(m_delegate)->GetCookie(url);
+}
+
+bool CookieManager::HasCookies()
+{
+    return toImpl<LWEDelegate::CookieManager>(m_delegate)->HasCookies();
+}
+
+void CookieManager::ClearCookies()
+{
+    toImpl<LWEDelegate::CookieManager>(m_delegate)->ClearCookies();
+}
+
+static CookieManager* g_instance = nullptr;
+CookieManager* CookieManager::GetInstance()
+{
+    g_instance = nullptr;
+    if (!g_instance) {
+        auto* delegate = LWEDelegate::CookieManager::GetInstance();
+        if (delegate) {
+            g_instance = new CookieManager();
+            g_instance->m_delegate = LWEDelegate::CookieManager::GetInstance();
+        }
+    }
+
+    return g_instance;
+}
+
+void CookieManager::Destroy()
+{
+    if (g_instance) {
+        LWEDelegate::CookieManager::Destroy();
+        delete g_instance;
+        g_instance = nullptr;
+    }
 }
 
 void WebView::LoadURL(const std::string& url)
