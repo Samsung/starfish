@@ -113,9 +113,15 @@ public:
     static CookieManager* GetInstance();
     static void Destroy();
 
+    CookieManager(const CookieManager& other) = delete;
+    CookieManager(CookieManager&& other) = delete;
+    CookieManager& operator=(const CookieManager& other) = delete;
+
 private:
     CookieManager();
     ~CookieManager();
+
+    void* m_delegate = nullptr;
 };
 
 class LWE_EXPORT Settings {
@@ -169,7 +175,7 @@ public:
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
-    void* m_delegate;
+    void* m_delegate = nullptr;
 };
 
 class LWE_EXPORT ResourceError {
@@ -183,7 +189,7 @@ public:
     std::string GetUrl();
 
 private:
-    void* m_delegate;
+    void* m_delegate = nullptr;
 };
 
 class LWE_EXPORT WebContainer {
