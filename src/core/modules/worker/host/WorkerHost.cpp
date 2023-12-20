@@ -30,8 +30,10 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerObjectProxy.h"
 #include "core/modules/worker/Worker.h"
-#include "core/modules/worker/DedicatedWorkerThread.h"
+#include "core/modules/worker/WorkerHostProxy.h"
+#include "core/modules/worker/WorkerThread.h"
 
 #include "core/modules/worker/host/WorkerHost.h"
 
@@ -45,9 +47,21 @@ void WorkerHost::run(void* data)
     RunLoop* runLoop = RunLoop::create();
     Worker* workerObject = static_cast<Worker*>(data);
     WorkerThread* workerThread = workerObject->workerThread();
+    WorkerHostProxy* hostProxy = workerObject->workerHostProxy();
 
-    WorkerHost host = WorkerHost(workerObject, workerThread, runLoop);
-    if (!host.loadMainScript()) {
+    WorkerHost host = WorkerHost(workerObject, runLoop);
+    hostProxy->workerHostCreated(&host);
+
+    WorkerObjectProxy* objectProxy = host.globalScope()->workerObjectProxy();
+
+    if (host.loadMainScript()) {
+        objectProxy->postTask(
+            [](void* data) {
+                auto* hostProxy = static_cast<WorkerHostProxy*>(data);
+                hostProxy->onScriptLoadFinished();
+            },
+            hostProxy);
+    } else {
         // TODO: terminate worker from another thread
     }
 
@@ -63,16 +77,19 @@ void WorkerHost::run(void* data)
     Escargot::Globals::finalizeThread();
 }
 
-WorkerHost::WorkerHost(Worker* workerObject, WorkerThread* workerThread,
-                       RunLoop* runLoop)
+WorkerHost::WorkerHost(Worker* workerObject, RunLoop* runLoop)
     : m_wasDisposed(false)
 {
     m_webWorker =
         new WebWorker(workerObject->executionContext()->webBase(), runLoop);
 
-    m_globalScope = workerThread->createWorkerGlobalScope(
-        m_webWorker, new ResourceURL(workerObject->url()->urlString(),
-                                     workerObject->url()->baseURI()));
+    m_globalScope = m_webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(
+        new ResourceURL(workerObject->url()->urlString(),
+                        workerObject->url()->baseURI()));
+
+    m_globalScope->initialize(
+        new WorkerObjectProxy(m_globalScope->executionContext(), workerObject,
+                              workerObject->workerThread()));
 }
 
 bool WorkerHost::loadMainScript()

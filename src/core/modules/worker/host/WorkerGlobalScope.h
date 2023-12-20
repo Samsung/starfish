@@ -95,7 +95,7 @@ public:
 
     void dispatchErrorEvent(ErrorEventInit& errorInfo);
 
-    void dispose();
+    virtual void dispose();
 
     uint32_t setTimeout(TimerHandler handler, int32_t delay, void* data);
     void clearTimeout(int32_t id);

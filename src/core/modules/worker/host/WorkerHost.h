@@ -25,19 +25,21 @@ namespace Starfish {
 class RunLoop;
 class WebWorker;
 class Worker;
-class WorkerGlobalScope;
+class DedicatedWorkerGlobalScope;
 class WorkerThread;
 
 class WorkerHost : public gc {
 public:
-    WorkerHost(Worker* workerObject, WorkerThread* workerThread,
-               RunLoop* runLoop);
+    WorkerHost(Worker* workerObject, RunLoop* runLoop);
 
     static void run(void* data);
 
+    DEFINE_GETTER(WebWorker*, webWorker);
+    DEFINE_GETTER(DedicatedWorkerGlobalScope*, globalScope);
+
 protected:
     WebWorker* m_webWorker;
-    WorkerGlobalScope* m_globalScope;
+    DedicatedWorkerGlobalScope* m_globalScope;
     bool m_wasDisposed;
 
     bool loadMainScript();

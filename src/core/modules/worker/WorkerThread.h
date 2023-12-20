@@ -35,9 +35,6 @@ class WorkerThread : public gc {
 public:
     WorkerThread(ExecutionContext* executionContext);
 
-    virtual WorkerGlobalScope* createWorkerGlobalScope(
-        WebWorker* webWorker, ResourceURL* scriptURL) = 0;
-
     void start(Worker* workerObject);
 
     void terminate();

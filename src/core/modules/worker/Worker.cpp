@@ -21,7 +21,8 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/worker/DedicatedWorkerThread.h"
+#include "core/modules/worker/WorkerThread.h"
+#include "core/modules/worker/WorkerHostProxy.h"
 #include "core/modules/worker/Worker.h"
 
 namespace Starfish {
@@ -31,7 +32,8 @@ Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
     : AbstractWorker(executionContext)
     , m_url(resolveURL(scriptURL))
     , m_options(workerOptions)
-    , m_workerThread(new DedicatedWorkerThread(executionContext))
+    , m_workerThread(new WorkerThread(executionContext))
+    , m_workerHostProxy(new WorkerHostProxy(executionContext, m_workerThread))
     , m_wasTerminated(false)
 {
     m_workerThread->start(this);
@@ -56,6 +58,7 @@ void Worker::terminate()
     }
     m_wasTerminated = true;
 
+    m_workerHostProxy->terminate();
     m_workerThread->terminate();
 }
 
