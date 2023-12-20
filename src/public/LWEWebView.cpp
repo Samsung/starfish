@@ -19,8 +19,15 @@
 
 #include "LWEWebView.h"
 #include "LWEDelegate.h"
+#include "ResourceErrorDelegate.h"
 
 namespace LWE {
+
+template <typename T>
+T* toImpl(void* ptr)
+{
+    return static_cast<T*>(ptr);
+}
 
 void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* cookieStoreDataFilePath,
@@ -49,6 +56,27 @@ unsigned char LWE::GetGCFrequency()
 void LWE::SetGCFrequency(unsigned char freq)
 {
     LWEDelegate::LWE::SetGCFrequency(freq);
+}
+
+ResourceError::ResourceError(int code, const std::string& description,
+                             const std::string& url)
+{
+    m_delegate = new LWEDelegate::ResourceError(code, description, url);
+}
+
+int ResourceError::GetErrorCode()
+{
+    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetErrorCode();
+}
+
+std::string ResourceError::GetDescription()
+{
+    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetDescription();
+}
+
+std::string ResourceError::GetUrl()
+{
+    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetUrl();
 }
 
 Settings WebView::GetSettings()

@@ -495,29 +495,6 @@ void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
     }
 }
 
-ResourceError::ResourceError(int code, const std::string& description,
-                             const std::string& url)
-    : m_errorCode(code)
-    , m_description(description)
-    , m_url(url)
-{
-}
-
-int ResourceError::GetErrorCode()
-{
-    return m_errorCode;
-}
-
-std::string ResourceError::GetDescription()
-{
-    return m_description;
-}
-
-std::string ResourceError::GetUrl()
-{
-    return m_url;
-}
-
 static int convertErrorCode(Starfish::RequestErrorType errortype)
 {
     return static_cast<int>(errortype);
