@@ -27,6 +27,8 @@ class ResourceError {
 public:
     ResourceError(int code, const std::string& description,
                   const std::string& url);
+    ResourceError(const ResourceError& other);
+
     int GetErrorCode();
     std::string GetDescription();
     std::string GetUrl();

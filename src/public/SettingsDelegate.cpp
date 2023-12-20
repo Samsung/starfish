@@ -55,6 +55,11 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     UpdateSetting("useSpatialNavigation", "False");
 }
 
+Settings::Settings(const Settings& other)
+{
+    m_settings = other.m_settings;
+}
+
 bool Settings::UpdateSetting(std::string key, std::string value)
 {
     m_settings[key] = value;

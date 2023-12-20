@@ -36,6 +36,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <sstream>
+#include <memory>
 
 namespace LWE {
 
@@ -121,13 +122,14 @@ private:
     CookieManager();
     ~CookieManager();
 
-    void* m_delegate = nullptr;
+    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
 };
 
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
     ~Settings();
+    Settings(const Settings& other);
 
     bool UpdateSetting(std::string key, std::string value);
     std::string GetSetting(std::string key) const;
@@ -175,13 +177,14 @@ public:
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
-    void* m_delegate = nullptr;
+    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
 };
 
 class LWE_EXPORT ResourceError {
 public:
     ResourceError(int code, const std::string& description,
                   const std::string& url);
+    ResourceError(const ResourceError& other);
     ~ResourceError();
 
     int GetErrorCode();
@@ -189,7 +192,7 @@ public:
     std::string GetUrl();
 
 private:
-    void* m_delegate = nullptr;
+    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
 };
 
 class LWE_EXPORT WebContainer {

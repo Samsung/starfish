@@ -63,231 +63,263 @@ void LWE::SetGCFrequency(unsigned char freq)
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
 {
-    m_delegate = new LWEDelegate::ResourceError(code, description, url);
+    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(
+            new LWEDelegate::ResourceError(code, description, url)),
+        [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
+    m_delegate = std::move(unique);
+}
+
+ResourceError::ResourceError(const ResourceError& other)
+{
+    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(new LWEDelegate::ResourceError(
+            *toImpl<LWEDelegate::ResourceError>(other.m_delegate.get()))),
+        [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
+    m_delegate = std::move(unique);
 }
 
 ResourceError::~ResourceError()
 {
-    delete toImpl<LWEDelegate::ResourceError>(m_delegate);
+    delete toImpl<LWEDelegate::ResourceError>(m_delegate.get());
 }
 
 int ResourceError::GetErrorCode()
 {
-    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetErrorCode();
+    return toImpl<LWEDelegate::ResourceError>(m_delegate.get())->GetErrorCode();
 }
 
 std::string ResourceError::GetDescription()
 {
-    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetDescription();
+    return toImpl<LWEDelegate::ResourceError>(m_delegate.get())
+        ->GetDescription();
 }
 
 std::string ResourceError::GetUrl()
 {
-    return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetUrl();
+    return toImpl<LWEDelegate::ResourceError>(m_delegate.get())->GetUrl();
 }
 
 Settings::Settings(const std::string& defaultUA, const std::string& ua)
 {
-    m_delegate = new LWEDelegate::Settings(defaultUA, ua);
+    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(new LWEDelegate::Settings(defaultUA, ua)),
+        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+    m_delegate = std::move(unique);
+}
+
+Settings::Settings(const Settings& other)
+{
+    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(new LWEDelegate::Settings(
+            *toImpl<LWEDelegate::Settings>(other.m_delegate.get()))),
+        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+    m_delegate = std::move(unique);
 }
 
 Settings::~Settings()
 {
-    delete toImpl<LWEDelegate::Settings>(m_delegate);
 }
 
 bool Settings::UpdateSetting(std::string key, std::string value)
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->UpdateSetting(key, value);
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->UpdateSetting(key, value);
 }
 
 std::string Settings::GetSetting(std::string key) const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetSetting(key);
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetSetting(key);
 }
 
 std::string Settings::GetDefaultUserAgent() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetDefaultUserAgent();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->GetDefaultUserAgent();
 }
 
 std::string Settings::GetUserAgentString() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetUserAgentString();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->GetUserAgentString();
 }
 
 std::string Settings::GetProxyURL() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetProxyURL();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetProxyURL();
 }
 
 int Settings::GetCacheMode() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetCacheMode();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetCacheMode();
 }
 
 TTSMode Settings::GetTTSMode() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetTTSMode();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetTTSMode();
 }
 
 std::string Settings::GetTTSLanguage() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetTTSLanguage();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetTTSLanguage();
 }
 
 WebSecurityMode Settings::GetWebSecurityMode() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetWebSecurityMode();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->GetWebSecurityMode();
 }
 
 IdleModeJob Settings::GetIdleModeJob() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->GetIdleModeJob();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->GetIdleModeJob();
 }
 
 uint32_t Settings::GetIdleModeCheckIntervalInMS() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->GetIdleModeCheckIntervalInMS();
 }
 
 void Settings::GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
                                       unsigned char& b, unsigned char& a) const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->GetBaseBackgroundColor(r, g, b, a);
 }
 
 void Settings::GetBaseForegroundColor(unsigned char& r, unsigned char& g,
                                       unsigned char& b, unsigned char& a) const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->GetBaseForegroundColor(r, g, b, a);
 }
 
 bool Settings::NeedsDownloadWebFontsEarly() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->NeedsDownloadWebFontsEarly();
 }
 
 bool Settings::UseHttp2() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->UseHttp2();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->UseHttp2();
 }
 
 uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->NeedsDownScaleImageResourceLargerThan();
 }
 
 bool Settings::ScrollbarVisible() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->ScrollbarVisible();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->ScrollbarVisible();
 }
 
 bool Settings::UseExternalPopup() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->UseExternalPopup();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())->UseExternalPopup();
 }
 
 bool Settings::UseSpatialNavigation() const
 {
-    return toImpl<LWEDelegate::Settings>(m_delegate)->UseSpatialNavigation();
+    return toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->UseSpatialNavigation();
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetUserAgentString(ua);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetUserAgentString(ua);
 }
 
 void Settings::SetCacheMode(int mode)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetCacheMode(mode);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetCacheMode(mode);
 }
 
 void Settings::SetProxyURL(const std::string& proxyURL)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetProxyURL(proxyURL);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetProxyURL(proxyURL);
 }
 
 void Settings::setDefaultFontSize(int size)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->setDefaultFontSize(size);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->setDefaultFontSize(size);
 }
 
 void Settings::SetTTSMode(TTSMode value)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetTTSMode(value);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetTTSMode(value);
 }
 
 void Settings::SetTTSLanguage(const std::string& language)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetTTSLanguage(language);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetTTSLanguage(language);
 }
 
 void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
                                       unsigned char b, unsigned char a)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetBaseBackgroundColor(r, g, b, a);
 }
 
 void Settings::SetBaseForegroundColor(unsigned char r, unsigned char g,
                                       unsigned char b, unsigned char a)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetBaseForegroundColor(r, g, b, a);
 }
 
 void Settings::SetWebSecurityMode(WebSecurityMode value)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetWebSecurityMode(value);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetWebSecurityMode(value);
 }
 
 void Settings::SetIdleModeJob(IdleModeJob j)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetIdleModeJob(j);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetIdleModeJob(j);
 }
 
 void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetIdleModeCheckIntervalInMS(intervalInMS);
 }
 
 void Settings::SetNeedsDownloadWebFontsEarly(bool b)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetNeedsDownloadWebFontsEarly(b);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->SetNeedsDownloadWebFontsEarly(b);
 }
 
 void Settings::SetUseHttp2(bool b)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetUseHttp2(b);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->SetUseHttp2(b);
 }
 
 void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetNeedsDownScaleImageResourceLargerThan(demention);
 }
 
 void Settings::SetScrollbarVisible(bool visible)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)->SetScrollbarVisible(visible);
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
+        ->SetScrollbarVisible(visible);
 }
 
 void Settings::SetUseExternalPopup(bool useExternalPopup)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetUseExternalPopup(useExternalPopup);
 }
 
 void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
 {
-    toImpl<LWEDelegate::Settings>(m_delegate)
+    toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->SetUseSpatialNavigation(useSpatialNavigation);
 }
 
@@ -306,20 +338,21 @@ CookieManager::~CookieManager()
 
 std::string CookieManager::GetCookie(std::string url)
 {
-    return toImpl<LWEDelegate::CookieManager>(m_delegate)->GetCookie(url);
+    return toImpl<LWEDelegate::CookieManager>(m_delegate.get())->GetCookie(url);
 }
 
 bool CookieManager::HasCookies()
 {
-    return toImpl<LWEDelegate::CookieManager>(m_delegate)->HasCookies();
+    return toImpl<LWEDelegate::CookieManager>(m_delegate.get())->HasCookies();
 }
 
 void CookieManager::ClearCookies()
 {
-    toImpl<LWEDelegate::CookieManager>(m_delegate)->ClearCookies();
+    toImpl<LWEDelegate::CookieManager>(m_delegate.get())->ClearCookies();
 }
 
 static CookieManager* g_instance = nullptr;
+
 CookieManager* CookieManager::GetInstance()
 {
     g_instance = nullptr;
@@ -327,7 +360,10 @@ CookieManager* CookieManager::GetInstance()
         auto* delegate = LWEDelegate::CookieManager::GetInstance();
         if (delegate) {
             g_instance = new CookieManager();
-            g_instance->m_delegate = LWEDelegate::CookieManager::GetInstance();
+            auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+                static_cast<void*>(delegate),
+                [](void* ptr) { LWEDelegate::CookieManager::Destroy(); });
+            g_instance->m_delegate = std::move(unique);
         }
     }
 
@@ -337,7 +373,6 @@ CookieManager* CookieManager::GetInstance()
 void CookieManager::Destroy()
 {
     if (g_instance) {
-        LWEDelegate::CookieManager::Destroy();
         delete g_instance;
         g_instance = nullptr;
     }
