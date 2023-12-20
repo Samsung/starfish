@@ -121,6 +121,8 @@ private:
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
+    ~Settings();
+
     bool UpdateSetting(std::string key, std::string value);
     std::string GetSetting(std::string key) const;
 
@@ -167,13 +169,15 @@ public:
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
-    std::unordered_map<std::string, std::string> m_settings;
+    void* m_delegate;
 };
 
 class LWE_EXPORT ResourceError {
 public:
     ResourceError(int code, const std::string& description,
                   const std::string& url);
+    ~ResourceError();
+
     int GetErrorCode();
     std::string GetDescription();
     std::string GetUrl();

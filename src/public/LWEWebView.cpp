@@ -20,6 +20,7 @@
 #include "LWEWebView.h"
 #include "LWEDelegate.h"
 #include "ResourceErrorDelegate.h"
+#include "SettingsDelegate.h"
 
 namespace LWE {
 
@@ -64,6 +65,11 @@ ResourceError::ResourceError(int code, const std::string& description,
     m_delegate = new LWEDelegate::ResourceError(code, description, url);
 }
 
+ResourceError::~ResourceError()
+{
+    delete toImpl<LWEDelegate::ResourceError>(m_delegate);
+}
+
 int ResourceError::GetErrorCode()
 {
     return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetErrorCode();
@@ -77,6 +83,211 @@ std::string ResourceError::GetDescription()
 std::string ResourceError::GetUrl()
 {
     return toImpl<LWEDelegate::ResourceError>(m_delegate)->GetUrl();
+}
+
+Settings::Settings(const std::string& defaultUA, const std::string& ua)
+{
+    m_delegate = new LWEDelegate::Settings(defaultUA, ua);
+}
+
+Settings::~Settings()
+{
+    delete toImpl<LWEDelegate::Settings>(m_delegate);
+}
+
+bool Settings::UpdateSetting(std::string key, std::string value)
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->UpdateSetting(key, value);
+}
+
+std::string Settings::GetSetting(std::string key) const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetSetting(key);
+}
+
+std::string Settings::GetDefaultUserAgent() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetDefaultUserAgent();
+}
+
+std::string Settings::GetUserAgentString() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetUserAgentString();
+}
+
+std::string Settings::GetProxyURL() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetProxyURL();
+}
+
+int Settings::GetCacheMode() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetCacheMode();
+}
+
+TTSMode Settings::GetTTSMode() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetTTSMode();
+}
+
+std::string Settings::GetTTSLanguage() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetTTSLanguage();
+}
+
+WebSecurityMode Settings::GetWebSecurityMode() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetWebSecurityMode();
+}
+
+IdleModeJob Settings::GetIdleModeJob() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->GetIdleModeJob();
+}
+
+uint32_t Settings::GetIdleModeCheckIntervalInMS() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)
+        ->GetIdleModeCheckIntervalInMS();
+}
+
+void Settings::GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
+                                      unsigned char& b, unsigned char& a) const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)
+        ->GetBaseBackgroundColor(r, g, b, a);
+}
+
+void Settings::GetBaseForegroundColor(unsigned char& r, unsigned char& g,
+                                      unsigned char& b, unsigned char& a) const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)
+        ->GetBaseForegroundColor(r, g, b, a);
+}
+
+bool Settings::NeedsDownloadWebFontsEarly() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)
+        ->NeedsDownloadWebFontsEarly();
+}
+
+bool Settings::UseHttp2() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->UseHttp2();
+}
+
+uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)
+        ->NeedsDownScaleImageResourceLargerThan();
+}
+
+bool Settings::ScrollbarVisible() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->ScrollbarVisible();
+}
+
+bool Settings::UseExternalPopup() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->UseExternalPopup();
+}
+
+bool Settings::UseSpatialNavigation() const
+{
+    return toImpl<LWEDelegate::Settings>(m_delegate)->UseSpatialNavigation();
+}
+
+void Settings::SetUserAgentString(const std::string& ua)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetUserAgentString(ua);
+}
+
+void Settings::SetCacheMode(int mode)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetCacheMode(mode);
+}
+
+void Settings::SetProxyURL(const std::string& proxyURL)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetProxyURL(proxyURL);
+}
+
+void Settings::setDefaultFontSize(int size)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->setDefaultFontSize(size);
+}
+
+void Settings::SetTTSMode(TTSMode value)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetTTSMode(value);
+}
+
+void Settings::SetTTSLanguage(const std::string& language)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetTTSLanguage(language);
+}
+
+void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetBaseBackgroundColor(r, g, b, a);
+}
+
+void Settings::SetBaseForegroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetBaseForegroundColor(r, g, b, a);
+}
+
+void Settings::SetWebSecurityMode(WebSecurityMode value)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetWebSecurityMode(value);
+}
+
+void Settings::SetIdleModeJob(IdleModeJob j)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetIdleModeJob(j);
+}
+
+void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetIdleModeCheckIntervalInMS(intervalInMS);
+}
+
+void Settings::SetNeedsDownloadWebFontsEarly(bool b)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetNeedsDownloadWebFontsEarly(b);
+}
+
+void Settings::SetUseHttp2(bool b)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetUseHttp2(b);
+}
+
+void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetNeedsDownScaleImageResourceLargerThan(demention);
+}
+
+void Settings::SetScrollbarVisible(bool visible)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)->SetScrollbarVisible(visible);
+}
+
+void Settings::SetUseExternalPopup(bool useExternalPopup)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetUseExternalPopup(useExternalPopup);
+}
+
+void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
+{
+    toImpl<LWEDelegate::Settings>(m_delegate)
+        ->SetUseSpatialNavigation(useSpatialNavigation);
 }
 
 Settings WebView::GetSettings()
