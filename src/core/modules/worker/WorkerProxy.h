@@ -17,27 +17,41 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && \
-    !defined(__StarfishDedicatedWorkerThread__)
-#define __StarfishDedicatedWorkerThread__
-
-#include "core/modules/worker/WorkerThread.h"
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerProxy__)
+#define __StarfishWorkerProxy__
 
 namespace Starfish {
 
 class ExecutionContext;
-class ResourceURL;
-class WorkerGlobalScope;
-class WebWorker;
+class GlobalScope;
+class MessageLoop;
+class SerializeWithTransferResult;
+class WorkerThread;
 
-class DedicatedWorkerThread : public WorkerThread {
+class WorkerProxy : public gc {
 public:
-    DedicatedWorkerThread(ExecutionContext* executionContext);
+    using PostTask = void (*)(void*);
 
-    WorkerGlobalScope* createWorkerGlobalScope(WebWorker* webWorker,
-                                               ResourceURL* scriptURL) override;
+    WorkerProxy(ExecutionContext* executionContext, WorkerThread* workerThread);
 
-private:
+    void terminate();
+
+    void postTask(PostTask task, void* data);
+
+    DEFINE_GETTER(bool, wasTerminate);
+    DEFINE_GETTER(WorkerThread*, workerThread);
+
+protected:
+    ExecutionContext* m_ownerExecutionContext;
+    WorkerThread* m_workerThread;
+    bool m_wasTerminate;
+
+    static GlobalScope* workerProxyGlobalScope();
+
+    virtual MessageLoop* targetMessageLoop() = 0;
+    virtual ExecutionContext* targetExecutionContext() = 0;
+
+    void clearPendingPostTask();
 };
 
 } // namespace Starfish

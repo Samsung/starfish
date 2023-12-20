@@ -25,6 +25,8 @@
 
 namespace Starfish {
 
+class WorkerObjectProxy;
+
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {
 public:
     DedicatedWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
@@ -35,6 +37,8 @@ public:
     void initJavaScriptGlobalBinding(
         ScriptExecutionState state,
         ScriptBindingInstance* scriptBindingInstance) override;
+
+    void initialize(WorkerObjectProxy* workerObjectProxy);
 
     String* name()
     {
@@ -47,6 +51,10 @@ public:
 
     void close();
 
+    void dispose() override;
+
+    DEFINE_GETTER(WorkerObjectProxy*, workerObjectProxy);
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(message);
@@ -55,6 +63,7 @@ public:
 #undef OVERRIDE
 
 private:
+    WorkerObjectProxy* m_workerObjectProxy;
     String* m_name{ String::emptyString };
 };
 

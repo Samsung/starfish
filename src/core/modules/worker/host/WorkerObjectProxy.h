@@ -17,28 +17,34 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_WORKER
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerObjectProxy__)
+#define __StarfishWorkerObjectProxy__
 
-#include "StarfishConfig.h"
-#include "Starfish.h"
-
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
-#include "core/modules/worker/DedicatedWorkerThread.h"
+#include "core/modules/worker/WorkerProxy.h"
 
 namespace Starfish {
 
-DedicatedWorkerThread::DedicatedWorkerThread(ExecutionContext* executionContext)
-    : WorkerThread(executionContext)
-{
-}
+class ExecutionContext;
+class WorkerThread;
+class MessageLoop;
+class Worker;
 
-WorkerGlobalScope* DedicatedWorkerThread::createWorkerGlobalScope(
-    WebWorker* webWorker, ResourceURL* scriptURL)
-{
-    return webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(scriptURL);
-}
+class WorkerObjectProxy : public WorkerProxy {
+public:
+    WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker,
+                      WorkerThread* workerThread);
+
+    String* workerName() const;
+
+    DEFINE_GETTER(Worker*, workerObject);
+
+private:
+    Worker* m_workerObject;
+
+    MessageLoop* targetMessageLoop() override;
+    ExecutionContext* targetExecutionContext() override;
+};
 
 } // namespace Starfish
 
-#endif /* STARFISH_ENABLE_WORKER */
+#endif

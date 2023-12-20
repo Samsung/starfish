@@ -26,7 +26,10 @@
 
 namespace Starfish {
 
-class DedicatedWorkerThread;
+class ExecutionContext;
+class ResourceURL;
+class WorkerThread;
+class WorkerHostProxy;
 
 class Worker : public AbstractWorker {
 public:
@@ -54,7 +57,8 @@ public:
     }
 
     DEFINE_GETTER(ResourceURL*, url);
-    DEFINE_GETTER(DedicatedWorkerThread*, workerThread);
+    DEFINE_GETTER(WorkerThread*, workerThread);
+    DEFINE_GETTER(WorkerHostProxy*, workerHostProxy);
 
 #define VIRTUAL
 #define OVERRIDE
@@ -66,7 +70,8 @@ public:
 private:
     ResourceURL* m_url;
     const WorkerOptions m_options;
-    DedicatedWorkerThread* m_workerThread;
+    WorkerThread* m_workerThread;
+    WorkerHostProxy* m_workerHostProxy;
     bool m_wasTerminated;
 };
 } // namespace Starfish

@@ -31,7 +31,6 @@
 #include "core/modules/worker/Worker.h"
 #include "core/modules/worker/host/WorkerHost.h"
 #include "core/modules/worker/util/Trace.h"
-#include "core/modules/worker/DedicatedWorkerThread.h"
 
 #include "core/modules/worker/WorkerThread.h"
 

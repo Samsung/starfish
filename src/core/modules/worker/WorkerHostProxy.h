@@ -17,46 +17,36 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerThread__)
-#define __StarfishWorkerThread__
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerHostProxy__)
+#define __StarfishWorkerHostProxy__
+
+#include "core/modules/worker/WorkerProxy.h"
 
 namespace Starfish {
 
 class ExecutionContext;
-class Thread;
-class Mutex;
-class ResourceURL;
-class RunLoop;
-class WebWorker;
-class WorkerGlobalScope;
-class Worker;
+class MessageLoop;
+class SerializeWithTransferResult;
+class WorkerThread;
+class WorkerHost;
 
-class WorkerThread : public gc {
+class WorkerHostProxy : public WorkerProxy {
 public:
-    WorkerThread(ExecutionContext* executionContext);
+    WorkerHostProxy(ExecutionContext* executionContext,
+                    WorkerThread* workerThread);
 
-    void start(Worker* workerObject);
+    void workerHostCreated(WorkerHost* workerHost);
 
-    void terminate();
+    void onScriptLoadFinished();
 
-    void onWorkerRunLoopStarted(RunLoop* runLoop);
-
-    DEFINE_GETTER(RunLoop*, runLoop);
-    DEFINE_GETTER(bool, wasWorkerTerminated);
+    DEFINE_GETTER(WorkerThread*, workerThread);
 
 private:
-    ExecutionContext* m_executionContext;
-    Thread* m_mainThread;
-    std::thread m_workerThread;
-    Mutex* m_mutex;
-    RunLoop* m_runLoop;
-    std::atomic_bool m_wasWorkerTerminated;
+    WorkerHost* m_workerHost;
+    bool m_wasWorkerScriptLoaded;
 
-    static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
-
-    void destroyWorkerThread();
-
-    bool stopWorkerRunLoop();
+    MessageLoop* targetMessageLoop() override;
+    ExecutionContext* targetExecutionContext() override;
 };
 
 } // namespace Starfish

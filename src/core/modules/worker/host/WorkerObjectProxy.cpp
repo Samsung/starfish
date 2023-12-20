@@ -17,35 +17,38 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerHost__)
-#define __StarfishWorkerHost__
+#if defined(STARFISH_ENABLE_WORKER)
+
+#include "StarfishConfig.h"
+
+#include "core/page/WebBase.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/worker/Worker.h"
+#include "core/modules/worker/host/WorkerObjectProxy.h"
 
 namespace Starfish {
 
-class RunLoop;
-class WebWorker;
-class Worker;
-class DedicatedWorkerGlobalScope;
-class WorkerThread;
+WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
+                                     Worker* worker, WorkerThread* workerThread)
+    : WorkerProxy(executionContext, workerThread)
+    , m_workerObject(worker)
+{
+}
 
-class WorkerHost : public gc {
-public:
-    WorkerHost(Worker* workerObject, RunLoop* runLoop);
+MessageLoop* WorkerObjectProxy::targetMessageLoop()
+{
+    return m_workerObject->executionContext()->webBase()->messageLoop();
+}
 
-    static void run(void* data);
+ExecutionContext* WorkerObjectProxy::targetExecutionContext()
+{
+    return m_workerObject->executionContext();
+}
 
-    DEFINE_GETTER(WebWorker*, webWorker);
-    DEFINE_GETTER(DedicatedWorkerGlobalScope*, globalScope);
-
-protected:
-    WebWorker* m_webWorker;
-    DedicatedWorkerGlobalScope* m_globalScope;
-    bool m_wasDisposed;
-
-    bool loadMainScript();
-
-    void dispose();
-};
+String* WorkerObjectProxy::workerName() const
+{
+    return m_workerObject->workerOptions().name();
+}
 
 } // namespace Starfish
 

@@ -25,6 +25,7 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerObjectProxy.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -33,11 +34,20 @@ DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WebWorker* webWorker,
                                                        ResourceURL* url,
                                                        String* charSet)
     : WorkerGlobalScope(webWorker)
+    , m_workerObjectProxy(nullptr)
 {
     m_scriptBindingInstance =
         new ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>(
             webWorker->scriptEngineInstance(), this);
     initGlobalScope(url, charSet);
+}
+
+void DedicatedWorkerGlobalScope::initialize(
+    WorkerObjectProxy* workerObjectProxy)
+{
+    STARFISH_ASSERT(!m_workerObjectProxy);
+    m_workerObjectProxy = workerObjectProxy;
+    m_name = m_workerObjectProxy->workerName();
 }
 
 void DedicatedWorkerGlobalScope::postMessage(ScriptValue message,
@@ -54,6 +64,16 @@ void DedicatedWorkerGlobalScope::dispatchMessageEvent(ScriptValue message)
 void DedicatedWorkerGlobalScope::close()
 {
     STARFISH_UNIMPLEMENTED();
+}
+
+void DedicatedWorkerGlobalScope::dispose()
+{
+    if (m_workerObjectProxy) {
+        m_workerObjectProxy->terminate();
+        m_workerObjectProxy = nullptr;
+    }
+
+    WorkerGlobalScope::dispose();
 }
 
 ScriptBindingInstance* DedicatedWorkerGlobalScope::scriptBindingInstance()
