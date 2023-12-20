@@ -28,6 +28,8 @@ namespace LWEDelegate {
 class Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
+    Settings(const Settings& other);
+
     bool UpdateSetting(std::string key, std::string value);
     std::string GetSetting(std::string key) const;
 

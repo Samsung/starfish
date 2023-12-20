@@ -29,6 +29,13 @@ ResourceError::ResourceError(int code, const std::string& description,
 {
 }
 
+ResourceError::ResourceError(const ResourceError& other)
+    : m_errorCode(other.m_errorCode)
+    , m_description(other.m_description)
+    , m_url(other.m_url)
+{
+}
+
 int ResourceError::GetErrorCode()
 {
     return m_errorCode;
