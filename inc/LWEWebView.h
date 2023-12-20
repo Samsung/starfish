@@ -179,9 +179,7 @@ public:
     std::string GetUrl();
 
 private:
-    int m_errorCode;
-    std::string m_description;
-    std::string m_url;
+    void* m_delegate;
 };
 
 class LWE_EXPORT WebContainer {
