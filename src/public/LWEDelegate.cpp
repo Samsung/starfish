@@ -20,6 +20,8 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "LWEDelegate.h"
+
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/ExecutionContext.h"
@@ -30,7 +32,6 @@
 
 #include "core/page/Window.h"
 
-#include "LWEWebView.h"
 #include <EscargotPublic.h>
 
 #if defined(STARFISH_WINDOWS)
@@ -42,7 +43,10 @@
 
 using namespace Escargot;
 
-namespace Starfish {
+namespace LWEDelegate {
+
+Starfish::Starfish* g_starfishInstance;
+
 class EscargotStarfishPlatform : public Escargot::PlatformRef {
 public:
     EscargotStarfishPlatform()
@@ -66,7 +70,7 @@ public:
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
-        auto executionContext = fetchExecutionContext(relatedContext);
+        auto executionContext = Starfish::fetchExecutionContext(relatedContext);
         executionContext->webBase()->messageLoop()->addMicroTask(
             executionContext->globalScope(),
             [](size_t handle, void* data) {
@@ -152,11 +156,6 @@ public:
     {
     }
 };
-} // namespace Starfish
-
-namespace LWE {
-
-Starfish::Starfish* g_starfishInstance;
 
 static void StarfishGCMemoryLogger(void* data)
 {
@@ -204,7 +203,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
 #if defined(STARFISH_WINDOWS)
         FcInitLoadConfigAndFonts();
 #endif
-        Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
+        Escargot::Globals::initialize(new EscargotStarfishPlatform());
         g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
             httpCacheDataDirectorypath);
@@ -301,4 +300,4 @@ unsigned char LWE::GetGCFrequency()
     STARFISH_RELEASE_ASSERT(IsInitialized());
     return g_starfishInstance->gcFrequency();
 }
-} // namespace LWE
+} // namespace LWEDelegate

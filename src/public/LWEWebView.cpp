@@ -18,8 +18,38 @@
  */
 
 #include "LWEWebView.h"
+#include "LWEDelegate.h"
 
 namespace LWE {
+
+void LWE::Initialize(const char* localStorageDataFilePath,
+                     const char* cookieStoreDataFilePath,
+                     const char* httpCacheDataDirectorypath)
+{
+    LWEDelegate::LWE::Initialize(localStorageDataFilePath,
+                                 cookieStoreDataFilePath,
+                                 httpCacheDataDirectorypath);
+}
+
+bool LWE::IsInitialized()
+{
+    return LWEDelegate::LWE::IsInitialized();
+}
+
+void LWE::Finalize()
+{
+    LWEDelegate::LWE::Finalize();
+}
+
+unsigned char LWE::GetGCFrequency()
+{
+    return LWEDelegate::LWE::GetGCFrequency();
+}
+
+void LWE::SetGCFrequency(unsigned char freq)
+{
+    LWEDelegate::LWE::SetGCFrequency(freq);
+}
 
 Settings WebView::GetSettings()
 {

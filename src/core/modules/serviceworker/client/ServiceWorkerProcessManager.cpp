@@ -50,7 +50,7 @@
 #if !defined(STARFISH_USE_WORKER_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-namespace LWE {
+namespace LWEDelegate {
 extern Starfish::Starfish* g_starfishInstance;
 }
 #endif

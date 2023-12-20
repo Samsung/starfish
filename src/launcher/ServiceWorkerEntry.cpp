@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-namespace LWE {
+namespace LWEDelegate {
 extern Starfish::Starfish* g_starfishInstance;
 }
 

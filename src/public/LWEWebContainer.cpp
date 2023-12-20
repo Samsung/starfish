@@ -22,6 +22,8 @@
 
 #include "LWEWebView.h"
 
+#include "LWEDelegate.h"
+
 #include "platform/window/PlatformWindow.h"
 #include "browser/history/HistoryManager.h"
 #include "core/page/BrowsingContext.h"
@@ -97,9 +99,12 @@
 #define STR_INDIR(x) #x
 #define TO_STR(x) STR_INDIR(x)
 
+namespace LWEDelegate {
+extern Starfish::Starfish* g_starfishInstance;
+}
+
 namespace LWE {
 
-extern Starfish::Starfish* g_starfishInstance;
 static CookieManager* g_cookieManager;
 
 Settings::Settings(const std::string& default_ua, const std::string& ua)
@@ -606,7 +611,7 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
                                                 const char* locale,
                                                 const char* timezoneID)
 {
-    if (!LWE::IsInitialized()) {
+    if (!LWEDelegate::LWE::IsInitialized()) {
         STARFISH_LOG_ERROR(
             "You must call LWE::Initialize function before using WebContainer "
             "or WebView");
@@ -631,7 +636,7 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
     ::Starfish::WebView* webView = ::Starfish::WebView::create(
-        g_starfishInstance, locale, timezoneID, width, height,
+        LWEDelegate::g_starfishInstance, locale, timezoneID, width, height,
         LWE_DEFAULT_FONT_SIZE,
         Starfish::String::createASCIIString(defaultFontName,
                                             strlen(defaultFontName)),
@@ -1983,7 +1988,7 @@ void CookieManager::ClearCookies()
 
 CookieManager* CookieManager::GetInstance()
 {
-    if (!LWE::IsInitialized()) {
+    if (!LWEDelegate::LWE::IsInitialized()) {
         STARFISH_LOG_ERROR(
             "You must call LWE::Initialize function before using "
             "CookieManager");
@@ -2000,7 +2005,7 @@ CookieManager* CookieManager::GetInstance()
 
 void CookieManager::Destroy()
 {
-    if (!LWE::IsInitialized()) {
+    if (!LWEDelegate::LWE::IsInitialized()) {
         return;
     }
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
