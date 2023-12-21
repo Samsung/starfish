@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "LWEWebView.h"
+#include "LWEWebContainerDelegate.h"
 
 #include "LWEDelegate.h"
 
@@ -96,11 +96,12 @@
 #define END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #endif
 
+#define LWE_DEFAULT_FONT_SIZE 16
+#define LWE_MIN_FONT_SIZE 1
+#define LWE_MAX_FONT_SIZE 72
+
 namespace LWEDelegate {
 extern Starfish::Starfish* g_starfishInstance;
-}
-
-namespace LWE {
 
 static int convertErrorCode(Starfish::RequestErrorType errortype)
 {
@@ -1542,4 +1543,4 @@ float WebContainer::GetDevicePixelRatio()
     return dpr;
 }
 
-} // namespace LWE
+} // namespace LWEDelegate
