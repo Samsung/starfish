@@ -22,15 +22,17 @@
 #include "PlatformIntegrationData.h"
 #include <string>
 #include <unordered_map>
+#include <functional>
 
 namespace LWEDelegate {
 
 class Settings {
 public:
+    Settings() = default;
     Settings(const std::string& defaultUA, const std::string& ua);
     Settings(const Settings& other);
 
-    bool UpdateSetting(std::string key, std::string value);
+    bool UpdateSetting(const std::string& key, const std::string& value);
     std::string GetSetting(std::string key) const;
 
     std::string GetDefaultUserAgent() const;
@@ -74,6 +76,10 @@ public:
     void SetScrollbarVisible(bool visible);
     void SetUseExternalPopup(bool useExternalPopup);
     void SetUseSpatialNavigation(bool useSpatialNavigation);
+
+    void IterateSettings(
+        std::function<void(const std::string&, const std::string&)> callback)
+        const;
 
 private:
     std::unordered_map<std::string, std::string> m_settings;

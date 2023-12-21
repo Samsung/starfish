@@ -18,10 +18,20 @@
  */
 
 #include "LWEWebView.h"
+
 #include "LWEDelegate.h"
 #include "ResourceErrorDelegate.h"
 #include "SettingsDelegate.h"
 #include "CookieManagerDelegate.h"
+#include "LWEWebContainerDelegate.h"
+
+#include <assert.h>
+
+#if defined(NDEBUG)
+#define LWE_ASSERT(assertion) ((void)0)
+#else
+#define LWE_ASSERT(assertion) assert(assertion);
+#endif
 
 namespace LWE {
 
@@ -63,20 +73,18 @@ void LWE::SetGCFrequency(unsigned char freq)
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
 {
-    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
         static_cast<void*>(
             new LWEDelegate::ResourceError(code, description, url)),
         [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
-    m_delegate = std::move(unique);
 }
 
 ResourceError::ResourceError(const ResourceError& other)
 {
-    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
         static_cast<void*>(new LWEDelegate::ResourceError(
             *toImpl<LWEDelegate::ResourceError>(other.m_delegate.get()))),
         [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
-    m_delegate = std::move(unique);
 }
 
 ResourceError::~ResourceError()
@@ -100,28 +108,33 @@ std::string ResourceError::GetUrl()
     return toImpl<LWEDelegate::ResourceError>(m_delegate.get())->GetUrl();
 }
 
+Settings::Settings()
+{
+    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(new LWEDelegate::Settings()),
+        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+}
+
 Settings::Settings(const std::string& defaultUA, const std::string& ua)
 {
-    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
         static_cast<void*>(new LWEDelegate::Settings(defaultUA, ua)),
         [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
-    m_delegate = std::move(unique);
 }
 
 Settings::Settings(const Settings& other)
 {
-    auto unique = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
         static_cast<void*>(new LWEDelegate::Settings(
             *toImpl<LWEDelegate::Settings>(other.m_delegate.get()))),
         [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
-    m_delegate = std::move(unique);
 }
 
 Settings::~Settings()
 {
 }
 
-bool Settings::UpdateSetting(std::string key, std::string value)
+bool Settings::UpdateSetting(const std::string& key, const std::string& value)
 {
     return toImpl<LWEDelegate::Settings>(m_delegate.get())
         ->UpdateSetting(key, value);
@@ -323,6 +336,12 @@ void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
         ->SetUseSpatialNavigation(useSpatialNavigation);
 }
 
+void Settings::IterateSettings(
+    std::function<void(const std::string&, const std::string&)> callback) const
+{
+    toImpl<LWEDelegate::Settings>(m_delegate.get())->IterateSettings(callback);
+}
+
 Settings WebView::GetSettings()
 {
     return FetchWebContainer()->GetSettings();
@@ -376,6 +395,710 @@ void CookieManager::Destroy()
         delete g_instance;
         g_instance = nullptr;
     }
+}
+
+WebContainer* WebContainer::CreateWithPlatformImage(
+    unsigned width, unsigned height,
+    const std::function<ExternalImageInfo(void)>& prepareImageCb,
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+    const auto prepareImageCbWrapper =
+        [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
+        return { prepareImageCb().imageAddress };
+    };
+    const auto flushCbWrapper = [instance,
+                                 flushCb](LWEDelegate::WebContainer* container,
+                                          bool needsFlush) {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        flushCb(instance, needsFlush);
+    };
+
+    auto delegate = LWEDelegate::WebContainer::CreateWithPlatformImage(
+        width, height, prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
+        defaultFontName, locale, timezoneID);
+    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(delegate),
+        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    return instance;
+}
+
+WebContainer* WebContainer::CreateGL(
+    unsigned width, unsigned height,
+    const std::function<void(WebContainer*)>& onGLMakeCurrent,
+    const std::function<void(WebContainer*, bool mayNeedsSync)>&
+        onGLSwapBuffers,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+    const auto onGLMakeCurrentWrapper =
+        [instance,
+         onGLMakeCurrent](LWEDelegate::WebContainer* container) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        onGLMakeCurrent(instance);
+    };
+    const auto onGLSwapBuffersWrapper =
+        [instance, onGLSwapBuffers](LWEDelegate::WebContainer* container,
+                                    bool mayNeedsSync) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        onGLSwapBuffers(instance, mayNeedsSync);
+    };
+
+    auto delegate = LWEDelegate::WebContainer::CreateGL(
+        width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
+        devicePixelRatio, defaultFontName, locale, timezoneID);
+    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(delegate),
+        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    return instance;
+}
+
+WebContainer* WebContainer::CreateGLWithPlatformImage(
+    unsigned width, unsigned height,
+    const std::function<void(WebContainer*)>& onGLMakeCurrent,
+    const std::function<void(WebContainer*, bool mayNeedsSync)>&
+        onGLSwapBuffers,
+    const std::function<ExternalImageInfo(void)>& prepareImageCb,
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+    const auto onGLMakeCurrentWrapper =
+        [instance,
+         onGLMakeCurrent](LWEDelegate::WebContainer* container) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        onGLMakeCurrent(instance);
+    };
+    const auto onGLSwapBuffersWrapper =
+        [instance, onGLSwapBuffers](LWEDelegate::WebContainer* container,
+                                    bool mayNeedsSync) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        onGLSwapBuffers(instance, mayNeedsSync);
+    };
+
+    const auto prepareImageCbWrapper =
+        [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
+        return { prepareImageCb().imageAddress };
+    };
+    const auto flushCbWrapper = [instance,
+                                 flushCb](LWEDelegate::WebContainer* container,
+                                          bool needsFlush) {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        flushCb(instance, needsFlush);
+    };
+
+    auto delegate = LWEDelegate::WebContainer::CreateGLWithPlatformImage(
+        width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
+        prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
+        defaultFontName, locale, timezoneID);
+    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(delegate),
+        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    return instance;
+}
+
+WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
+                                           float devicePixelRatio,
+                                           const char* defaultFontName,
+                                           const char* locale,
+                                           const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+    auto delegate = LWEDelegate::WebContainer::CreateHeadless(
+        width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
+    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+        static_cast<void*>(delegate),
+        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    return instance;
+}
+
+void WebContainer::RegisterPreRenderingHandler(
+    const std::function<RenderInfo(void)>& cb)
+{
+    const auto wrapper = [cb]() -> LWEDelegate::WebContainer::RenderInfo {
+        auto result = cb();
+        return { result.updatedBufferAddress, result.bufferStride };
+    };
+
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterPreRenderingHandler(wrapper);
+}
+
+void WebContainer::RegisterOnRenderedHandler(
+    const std::function<void(WebContainer*, const RenderResult& renderResult)>&
+        cb)
+{
+    const auto wrapper =
+        [this,
+         cb](LWEDelegate::WebContainer* container,
+             const LWEDelegate::WebContainer::RenderResult& renderResult) {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                       container);
+            cb(this, { renderResult.updatedX, renderResult.updatedY,
+                       renderResult.updatedWidth, renderResult.updatedHeight,
+                       renderResult.updatedBufferAddress,
+                       renderResult.bufferImageWidth,
+                       renderResult.bufferImageHeight });
+        };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnRenderedHandler(wrapper);
+}
+
+void WebContainer::AddIdleCallback(void (*callback)(void*), void* data)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->AddIdleCallback(callback, data);
+}
+
+size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
+                                size_t timeoutInMS)
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->AddTimeout(callback, data, timeoutInMS);
+}
+
+void WebContainer::ClearTimeout(size_t handle)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ClearTimeout(handle);
+}
+
+void WebContainer::RegisterCanRenderingHandler(
+    const std::function<bool(WebContainer*)>& cb)
+{
+    const auto wrapper = [this,
+                          cb](LWEDelegate::WebContainer* container) -> bool {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        return cb(this);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterCanRenderingHandler(wrapper);
+}
+
+Settings WebContainer::GetSettings()
+{
+    LWEDelegate::Settings delegate =
+        toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetSettings();
+
+    Settings settings;
+    delegate.IterateSettings(
+        [&settings](const std::string& key, const std::string& value) {
+            settings.UpdateSetting(key, value);
+        });
+
+    return settings;
+}
+
+void WebContainer::LoadURL(const std::string& url)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->LoadURL(url);
+}
+
+std::string WebContainer::GetURL()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetURL();
+}
+
+void WebContainer::LoadData(const std::string& data)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->LoadData(data);
+}
+
+void WebContainer::Reload()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Reload();
+}
+
+void WebContainer::StopLoading()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->StopLoading();
+}
+
+void WebContainer::GoBack()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GoBack();
+}
+
+void WebContainer::GoForward()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GoForward();
+}
+
+bool WebContainer::CanGoBack()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->CanGoBack();
+}
+
+bool WebContainer::CanGoForward()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->CanGoForward();
+}
+
+void WebContainer::AddJavaScriptInterface(
+    const std::string& exposedObjectName, const std::string& jsFunctionName,
+    std::function<std::string(const std::string&)> cb)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->AddJavaScriptInterface(exposedObjectName, jsFunctionName, cb);
+}
+
+std::string WebContainer::EvaluateJavaScript(const std::string& script)
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->EvaluateJavaScript(script);
+}
+
+void WebContainer::EvaluateJavaScript(
+    const std::string& script, std::function<void(const std::string&)> cb)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->EvaluateJavaScript(script, cb);
+}
+
+void WebContainer::ClearHistory()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ClearHistory();
+}
+
+void WebContainer::Destroy()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Destroy();
+}
+
+void WebContainer::Pause()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Pause();
+}
+
+void WebContainer::Resume()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Resume();
+}
+
+void WebContainer::ResizeTo(size_t width, size_t height)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->ResizeTo(width, height);
+}
+
+void WebContainer::Focus()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Focus();
+}
+
+void WebContainer::Blur()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Blur();
+}
+
+void WebContainer::SetSettings(const Settings& settings)
+{
+    LWEDelegate::Settings delegate;
+    settings.IterateSettings(
+        [&delegate](const std::string& key, const std::string& value) {
+            delegate.UpdateSetting(key, value);
+        });
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->SetSettings(delegate);
+}
+
+void WebContainer::RemoveJavascriptInterface(
+    const std::string& exposedObjectName, const std::string& jsFunctionName)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RemoveJavascriptInterface(exposedObjectName, jsFunctionName);
+}
+
+void WebContainer::ClearCache()
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ClearCache();
+}
+
+void WebContainer::RegisterOnReceivedErrorHandler(
+    const std::function<void(WebContainer*, ResourceError)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    LWEDelegate::ResourceError error) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this,
+           { error.GetErrorCode(), error.GetDescription(), error.GetUrl() });
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnReceivedErrorHandler(wrapper);
+}
+
+void WebContainer::RegisterOnPageParsedHandler(
+    std::function<void(WebContainer*, const std::string& data)> cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::string& url) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnPageParsedHandler(wrapper);
+}
+
+void WebContainer::RegisterOnPageLoadedHandler(
+    std::function<void(WebContainer*, const std::string&)> cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::string& url) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnPageLoadedHandler(wrapper);
+}
+
+void WebContainer::RegisterOnPageStartedHandler(
+    const std::function<void(WebContainer*, const std::string&)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::string& url) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnPageStartedHandler(wrapper);
+}
+
+void WebContainer::RegisterOnLoadResourceHandler(
+    const std::function<void(WebContainer*, const std::string&)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::string& url) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnLoadResourceHandler(wrapper);
+}
+
+void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
+    const std::function<bool(WebContainer*, const std::string&)>& cb)
+{
+    auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                              const std::string& url) -> bool {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        return cb(this, url);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterShouldOverrideUrlLoadingHandler(wrapper);
+}
+
+void WebContainer::RegisterOnProgressChangedHandler(
+    const std::function<void(WebContainer*, int progress)>& cb)
+{
+    auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                              int progress) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, progress);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnProgressChangedHandler(wrapper);
+}
+
+void WebContainer::RegisterOnDownloadStartHandler(
+    const std::function<void(WebContainer*, const std::string&,
+                             const std::string&, const std::string&,
+                             const std::string&, long)>& cb)
+{
+    const auto wrapper =
+        [this, cb](LWEDelegate::WebContainer* container, const std::string& url,
+                   const std::string& userAgent,
+                   const std::string& contentDisposition,
+                   const std::string& mimetype, long contentLength) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, url, userAgent, contentDisposition, mimetype, contentLength);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnDownloadStartHandler(wrapper);
+}
+
+void WebContainer::RegisterShowDropdownMenuHandler(
+    const std::function<void(WebContainer*, const std::vector<std::string>*,
+                             int)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::vector<std::string>* list,
+                                    int checkedPosition) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, list, checkedPosition);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterShowDropdownMenuHandler(wrapper);
+}
+
+void WebContainer::RegisterShowAlertHandler(
+    const std::function<void(WebContainer*, const std::string&,
+                             const std::string&)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
+                                    const std::string& title,
+                                    const std::string& message) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, title, message);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterShowAlertHandler(wrapper);
+}
+
+void WebContainer::RegisterCustomFileResourceRequestHandlers(
+    std::function<const char*(const char* path)> resolveFilePathCallback,
+    std::function<void*(const char* path)> fileOpenCallback,
+    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+        fileReadCallback,
+    std::function<long int(void* handle)> fileLengthCallback,
+    std::function<void(void* handle)> fileCloseCallback)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterCustomFileResourceRequestHandlers(
+            resolveFilePathCallback, fileOpenCallback, fileReadCallback,
+            fileLengthCallback, fileCloseCallback);
+}
+
+void WebContainer::RegisterDebuggerShouldInitHandler(
+    const std::function<void(const std::string& url, int port,
+                             bool& shouldInit)>& cb)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterDebuggerShouldInitHandler(cb);
+}
+
+void WebContainer::RegisterDebuggerShouldContinueWaitingHandler(
+    const std::function<void(const std::string& url, int port,
+                             bool& shouldWait)>& cb)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterDebuggerShouldContinueWaitingHandler(cb);
+}
+
+void WebContainer::CallHandler(const std::string& handler, void* param)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->CallHandler(handler, param);
+}
+
+void WebContainer::SetUserAgentString(const std::string& userAgent)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->SetUserAgentString(userAgent);
+}
+
+std::string WebContainer::GetUserAgentString()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->GetUserAgentString();
+}
+
+void WebContainer::SetCacheMode(int mode)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->SetCacheMode(mode);
+}
+
+int WebContainer::GetCacheMode()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetCacheMode();
+}
+
+void WebContainer::SetDefaultFontSize(uint32_t size)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->SetDefaultFontSize(size);
+}
+
+uint32_t WebContainer::GetDefaultFontSize()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->GetDefaultFontSize();
+}
+
+void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
+                                          MouseButtonsValue buttons, double x,
+                                          double y)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchMouseMoveEvent(button, buttons, x, y);
+}
+
+void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
+                                          MouseButtonsValue buttons, double x,
+                                          double y)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchMouseDownEvent(button, buttons, x, y);
+}
+
+void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
+                                        MouseButtonsValue buttons, double x,
+                                        double y)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchMouseUpEvent(button, buttons, x, y);
+}
+
+void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchMouseWheelEvent(x, y, delta);
+}
+
+void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchKeyDownEvent(keyCode);
+}
+
+void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchKeyPressEvent(keyCode);
+}
+
+void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchKeyUpEvent(keyCode);
+}
+
+void WebContainer::DispatchCompositionStartEvent(
+    const std::string& soFarCompositiedString)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchCompositionStartEvent(soFarCompositiedString);
+}
+
+void WebContainer::DispatchCompositionUpdateEvent(
+    const std::string& soFarCompositiedString)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchCompositionUpdateEvent(soFarCompositiedString);
+}
+
+void WebContainer::DispatchCompositionEndEvent(
+    const std::string& soFarCompositiedString)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->DispatchCompositionEndEvent(soFarCompositiedString);
+}
+
+void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+    const std::function<void(WebContainer*)>& cb)
+{
+    const auto wrapper = [this,
+                          cb](LWEDelegate::WebContainer* container) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnShowSoftwareKeyboardIfPossibleHandler(wrapper);
+}
+
+void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+    const std::function<void(WebContainer*)>& cb)
+{
+    const auto wrapper = [this,
+                          cb](LWEDelegate::WebContainer* container) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnHideSoftwareKeyboardIfPossibleHandler(wrapper);
+}
+
+void WebContainer::SetUserData(const std::string& key, void* data)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->SetUserData(key, data);
+}
+
+void* WebContainer::GetUserData(const std::string& key)
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->GetUserData(key);
+}
+
+std::string WebContainer::GetTitle()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetTitle();
+}
+
+void WebContainer::ScrollTo(int x, int y)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ScrollTo(x, y);
+}
+
+void WebContainer::ScrollBy(int x, int y)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ScrollBy(x, y);
+}
+
+int WebContainer::GetScrollX()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetScrollX();
+}
+
+int WebContainer::GetScrollY()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetScrollY();
+}
+
+size_t WebContainer::Width()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Width();
+}
+
+size_t WebContainer::Height()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Height();
+}
+
+void WebContainer::RegisterSetNeedsRenderingCallback(
+    const std::function<void(
+        WebContainer*, const std::function<void()>& doRenderingFunction)>& cb)
+{
+    const auto wrapper =
+        [this, cb](LWEDelegate::WebContainer* container,
+                   const std::function<void()>& doRenderingFunction) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this, doRenderingFunction);
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterSetNeedsRenderingCallback(wrapper);
+}
+
+void WebContainer::SetDevicePixelRatio(float dpr)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->SetDevicePixelRatio(dpr);
+}
+
+float WebContainer::GetDevicePixelRatio()
+{
+    return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->GetDevicePixelRatio();
 }
 
 void WebView::LoadURL(const std::string& url)

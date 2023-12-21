@@ -252,7 +252,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     FcInitLoadConfigAndFonts();
 #endif
 
-    Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
+    Escargot::Globals::initialize(new EscargotStarfishPlatform());
     g_starfishInstance = new (NoGC)
         Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
                            httpCacheDataDirectorypath);

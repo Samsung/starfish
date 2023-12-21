@@ -127,11 +127,12 @@ private:
 
 class LWE_EXPORT Settings {
 public:
+    Settings();
     Settings(const std::string& defaultUA, const std::string& ua);
     ~Settings();
     Settings(const Settings& other);
 
-    bool UpdateSetting(std::string key, std::string value);
+    bool UpdateSetting(const std::string& key, const std::string& value);
     std::string GetSetting(std::string key) const;
 
     std::string GetDefaultUserAgent() const;
@@ -176,6 +177,10 @@ public:
     void SetUseExternalPopup(bool useExternalPopup);
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
+    void IterateSettings(
+        std::function<void(const std::string&, const std::string&)> callback)
+        const;
+
 private:
     std::unique_ptr<void, std::function<void(void*)>> m_delegate;
 };
@@ -196,12 +201,6 @@ private:
 };
 
 class LWE_EXPORT WebContainer {
-private:
-    // use Destroy function instead of using delete operator
-    ~WebContainer()
-    {
-    }
-
 public:
     // Function set for render to buffer
     static WebContainer* Create(unsigned width, unsigned height,
@@ -398,11 +397,13 @@ public:
     void SetDevicePixelRatio(float dpr);
     float GetDevicePixelRatio();
 
-protected:
-    WebContainer(void* webView);
-
 private:
-    void* m_impl;
+    WebContainer() = default;
+
+    // use Destroy function instead of using delete operator
+    ~WebContainer() = default;
+
+    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
 };
 
 /**

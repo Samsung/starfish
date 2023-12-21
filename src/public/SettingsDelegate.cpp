@@ -24,6 +24,8 @@
 #define STR_INDIR(x) #x
 #define TO_STR(x) STR_INDIR(x)
 
+#define LWE_DEFAULT_FONT_SIZE 16
+
 namespace LWEDelegate {
 
 Settings::Settings(const std::string& default_ua, const std::string& ua)
@@ -60,7 +62,7 @@ Settings::Settings(const Settings& other)
     m_settings = other.m_settings;
 }
 
-bool Settings::UpdateSetting(std::string key, std::string value)
+bool Settings::UpdateSetting(const std::string& key, const std::string& value)
 {
     m_settings[key] = value;
     return true;
@@ -416,6 +418,14 @@ void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
         UpdateSetting("useSpatialNavigation", "True");
     } else {
         UpdateSetting("useSpatialNavigation", "False");
+    }
+}
+
+void Settings::IterateSettings(
+    std::function<void(const std::string&, const std::string&)> callback) const
+{
+    for (auto& setting : m_settings) {
+        callback(setting.first, setting.second);
     }
 }
 
