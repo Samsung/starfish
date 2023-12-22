@@ -523,6 +523,14 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
     return instance;
 }
 
+WebContainer::WebContainer()
+{
+}
+
+WebContainer::~WebContainer()
+{
+}
+
 void WebContainer::RegisterPreRenderingHandler(
     const std::function<RenderInfo(void)>& cb)
 {
@@ -1118,6 +1126,14 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
             // Do nothing, use Destroy to release delegate.
         });
     return instance;
+}
+
+WebView::WebView()
+{
+}
+
+WebView::~WebView()
+{
 }
 
 Settings WebView::GetSettings()
