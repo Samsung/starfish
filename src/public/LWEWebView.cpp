@@ -24,6 +24,7 @@
 #include "SettingsDelegate.h"
 #include "CookieManagerDelegate.h"
 #include "LWEWebContainerDelegate.h"
+#include "LWEWebViewDelegate.h"
 
 #include <assert.h>
 
@@ -73,7 +74,7 @@ void LWE::SetGCFrequency(unsigned char freq)
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
 {
-    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = LWEDelegateRef(
         static_cast<void*>(
             new LWEDelegate::ResourceError(code, description, url)),
         [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
@@ -81,7 +82,7 @@ ResourceError::ResourceError(int code, const std::string& description,
 
 ResourceError::ResourceError(const ResourceError& other)
 {
-    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = LWEDelegateRef(
         static_cast<void*>(new LWEDelegate::ResourceError(
             *toImpl<LWEDelegate::ResourceError>(other.m_delegate.get()))),
         [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
@@ -89,7 +90,6 @@ ResourceError::ResourceError(const ResourceError& other)
 
 ResourceError::~ResourceError()
 {
-    delete toImpl<LWEDelegate::ResourceError>(m_delegate.get());
 }
 
 int ResourceError::GetErrorCode()
@@ -110,21 +110,21 @@ std::string ResourceError::GetUrl()
 
 Settings::Settings()
 {
-    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = LWEDelegateRef(
         static_cast<void*>(new LWEDelegate::Settings()),
         [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
 }
 
 Settings::Settings(const std::string& defaultUA, const std::string& ua)
 {
-    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = LWEDelegateRef(
         static_cast<void*>(new LWEDelegate::Settings(defaultUA, ua)),
         [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
 }
 
 Settings::Settings(const Settings& other)
 {
-    m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
+    m_delegate = LWEDelegateRef(
         static_cast<void*>(new LWEDelegate::Settings(
             *toImpl<LWEDelegate::Settings>(other.m_delegate.get()))),
         [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
@@ -342,11 +342,6 @@ void Settings::IterateSettings(
     toImpl<LWEDelegate::Settings>(m_delegate.get())->IterateSettings(callback);
 }
 
-Settings WebView::GetSettings()
-{
-    return FetchWebContainer()->GetSettings();
-}
-
 CookieManager::CookieManager()
 {
 }
@@ -379,10 +374,10 @@ CookieManager* CookieManager::GetInstance()
         auto* delegate = LWEDelegate::CookieManager::GetInstance();
         if (delegate) {
             g_instance = new CookieManager();
-            auto unique = std::unique_ptr<void, std::function<void(void*)>>(
-                static_cast<void*>(delegate),
-                [](void* ptr) { LWEDelegate::CookieManager::Destroy(); });
-            g_instance->m_delegate = std::move(unique);
+            g_instance->m_delegate =
+                LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+                    // Do nothing, use Destroy to release delegate.
+                });
         }
     }
 
@@ -392,6 +387,8 @@ CookieManager* CookieManager::GetInstance()
 void CookieManager::Destroy()
 {
     if (g_instance) {
+        LWEDelegate::CookieManager::Destroy();
+        g_instance->m_delegate = nullptr;
         delete g_instance;
         g_instance = nullptr;
     }
@@ -420,9 +417,10 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     auto delegate = LWEDelegate::WebContainer::CreateWithPlatformImage(
         width, height, prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
         defaultFontName, locale, timezoneID);
-    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
-        static_cast<void*>(delegate),
-        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
     return instance;
 }
 
@@ -453,9 +451,10 @@ WebContainer* WebContainer::CreateGL(
     auto delegate = LWEDelegate::WebContainer::CreateGL(
         width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
         devicePixelRatio, defaultFontName, locale, timezoneID);
-    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
-        static_cast<void*>(delegate),
-        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
     return instance;
 }
 
@@ -501,9 +500,10 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
         width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
         prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
         defaultFontName, locale, timezoneID);
-    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
-        static_cast<void*>(delegate),
-        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
     return instance;
 }
 
@@ -516,9 +516,10 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
     WebContainer* instance = new WebContainer();
     auto delegate = LWEDelegate::WebContainer::CreateHeadless(
         width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
-    instance->m_delegate = std::unique_ptr<void, std::function<void(void*)>>(
-        static_cast<void*>(delegate),
-        [](void* ptr) { toImpl<LWEDelegate::WebContainer>(ptr)->Destroy(); });
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
     return instance;
 }
 
@@ -673,6 +674,8 @@ void WebContainer::ClearHistory()
 void WebContainer::Destroy()
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Destroy();
+    m_delegate = nullptr;
+    delete this;
 }
 
 void WebContainer::Pause()
@@ -1101,141 +1104,200 @@ float WebContainer::GetDevicePixelRatio()
         ->GetDevicePixelRatio();
 }
 
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
+{
+    auto delegate =
+        LWEDelegate::WebView::Create(win, x, y, width, height, devicePixelRatio,
+                                     defaultFontName, locale, timezoneID);
+    WebView* instance = new WebView();
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
+    return instance;
+}
+
+Settings WebView::GetSettings()
+{
+    LWEDelegate::Settings delegate =
+        toImpl<LWEDelegate::WebView>(m_delegate.get())->GetSettings();
+
+    Settings settings;
+    delegate.IterateSettings(
+        [&settings](const std::string& key, const std::string& value) {
+            settings.UpdateSetting(key, value);
+        });
+
+    return settings;
+}
+
 void WebView::LoadURL(const std::string& url)
 {
-    FetchWebContainer()->LoadURL(url);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->LoadURL(url);
 }
 
 std::string WebView::GetURL()
 {
-    return FetchWebContainer()->GetURL();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->GetURL();
 }
 
 void WebView::LoadData(const std::string& data)
 {
-    FetchWebContainer()->LoadData(data);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->LoadData(data);
 }
 
 void WebView::Reload()
 {
-    FetchWebContainer()->Reload();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Reload();
 }
 
 void WebView::StopLoading()
 {
-    FetchWebContainer()->StopLoading();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->StopLoading();
 }
 
 void WebView::GoBack()
 {
-    FetchWebContainer()->GoBack();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->GoBack();
 }
 
 void WebView::GoForward()
 {
-    FetchWebContainer()->GoForward();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->GoForward();
 }
 
 bool WebView::CanGoBack()
 {
-    return FetchWebContainer()->CanGoBack();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->CanGoBack();
 }
 
 bool WebView::CanGoForward()
 {
-    return FetchWebContainer()->CanGoForward();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->CanGoForward();
 }
 
 void WebView::AddJavaScriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName,
     std::function<std::string(const std::string&)> cb)
 {
-    FetchWebContainer()->AddJavaScriptInterface(exposedObjectName,
-                                                jsFunctionName, cb);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->AddJavaScriptInterface(exposedObjectName, jsFunctionName, cb);
 }
 
 std::string WebView::EvaluateJavaScript(const std::string& script)
 {
-    return FetchWebContainer()->EvaluateJavaScript(script);
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->EvaluateJavaScript(script);
 }
 
 void WebView::EvaluateJavaScript(const std::string& script,
                                  std::function<void(const std::string&)> cb)
 {
-    return FetchWebContainer()->EvaluateJavaScript(script, cb);
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->EvaluateJavaScript(script, cb);
 }
 
 void WebView::ClearHistory()
 {
-    FetchWebContainer()->ClearHistory();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->ClearHistory();
 }
 
 void WebView::Destroy()
 {
-    FetchWebContainer()->Destroy();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Destroy();
+    m_delegate = nullptr;
     delete this;
 }
 
 void WebView::SetSettings(const Settings& settings)
 {
-    FetchWebContainer()->SetSettings(settings);
+    LWEDelegate::Settings delegate;
+    settings.IterateSettings(
+        [&delegate](const std::string& key, const std::string& value) {
+            delegate.UpdateSetting(key, value);
+        });
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->SetSettings(delegate);
 }
 
 void WebView::RemoveJavascriptInterface(const std::string& exposedObjectName,
                                         const std::string& jsFunctionName)
 {
-    FetchWebContainer()->RemoveJavascriptInterface(exposedObjectName,
-                                                   jsFunctionName);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RemoveJavascriptInterface(exposedObjectName, jsFunctionName);
 }
 
 void WebView::ClearCache()
 {
-    FetchWebContainer()->ClearCache();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->ClearCache();
 }
 
 void WebView::RegisterOnReceivedErrorHandler(
     std::function<void(WebView*, ResourceError)> cb)
 {
-    FetchWebContainer()->RegisterOnReceivedErrorHandler(
-        [this, cb](WebContainer*, ResourceError err) { cb(this, err); });
+    const auto wrapper = [this, cb](LWEDelegate::WebView*,
+                                    LWEDelegate::ResourceError error) -> void {
+        cb(this,
+           { error.GetErrorCode(), error.GetDescription(), error.GetUrl() });
+    };
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterOnReceivedErrorHandler(wrapper);
 }
 
 void WebView::RegisterOnPageParsedHandler(
     std::function<void(WebView*, const std::string&)> cb)
 {
-    FetchWebContainer()->RegisterOnPageParsedHandler(
-        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
+    const auto wrapper = [this, cb](LWEDelegate::WebView*,
+                                    const std::string& url) -> void {
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterOnPageParsedHandler(wrapper);
 }
 
 void WebView::RegisterOnPageLoadedHandler(
     std::function<void(WebView*, const std::string&)> cb)
 {
-    FetchWebContainer()->RegisterOnPageLoadedHandler(
-        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
+    const auto wrapper = [this, cb](LWEDelegate::WebView*,
+                                    const std::string& url) -> void {
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterOnPageLoadedHandler(wrapper);
 }
 
 void WebView::RegisterOnPageStartedHandler(
     std::function<void(WebView*, const std::string&)> cb)
 {
-    FetchWebContainer()->RegisterOnPageStartedHandler(
-        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
+    const auto wrapper = [this, cb](LWEDelegate::WebView*,
+                                    const std::string& url) -> void {
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterOnPageStartedHandler(wrapper);
 }
 
 void WebView::RegisterOnLoadResourceHandler(
     std::function<void(WebView*, const std::string&)> cb)
 {
-    FetchWebContainer()->RegisterOnLoadResourceHandler(
-        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
+    const auto wrapper = [this, cb](LWEDelegate::WebView*,
+                                    const std::string& url) -> void {
+        cb(this, url);
+    };
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterOnLoadResourceHandler(wrapper);
 }
 
 void WebView::Pause()
 {
-    FetchWebContainer()->Pause();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Pause();
 }
 
 void WebView::Resume()
 {
-    FetchWebContainer()->Resume();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Resume();
 }
 
 void WebView::RegisterCustomFileResourceRequestHandlers(
@@ -1246,75 +1308,85 @@ void WebView::RegisterCustomFileResourceRequestHandlers(
     std::function<long int(void* handle)> fileLengthCallback,
     std::function<void(void* handle)> fileCloseCallback)
 {
-    FetchWebContainer()->RegisterCustomFileResourceRequestHandlers(
-        resolveFilePathCallback, fileOpenCallback, fileReadCallback,
-        fileLengthCallback, fileCloseCallback);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterCustomFileResourceRequestHandlers(
+            resolveFilePathCallback, fileOpenCallback, fileReadCallback,
+            fileLengthCallback, fileCloseCallback);
 }
 
 void WebView::RegisterDebuggerShouldInitHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
-    FetchWebContainer()->RegisterDebuggerShouldInitHandler(cb);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterDebuggerShouldInitHandler(cb);
 }
 
 void WebView::RegisterDebuggerShouldContinueWaitingHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
-    FetchWebContainer()->RegisterDebuggerShouldContinueWaitingHandler(cb);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->RegisterDebuggerShouldContinueWaitingHandler(cb);
 }
 
 void WebView::SetUserData(const std::string& key, void* data)
 {
-    FetchWebContainer()->SetUserData(key, data);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->SetUserData(key, data);
 }
 
 void* WebView::GetUserData(const std::string& key)
 {
-    return FetchWebContainer()->GetUserData(key);
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->GetUserData(key);
 }
 
 std::string WebView::GetTitle()
 {
-    return FetchWebContainer()->GetTitle();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->GetTitle();
 }
 
 void WebView::ScrollTo(int x, int y)
 {
-    FetchWebContainer()->ScrollTo(x, y);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->ScrollTo(x, y);
 }
 
 void WebView::ScrollBy(int x, int y)
 {
-    FetchWebContainer()->ScrollBy(x, y);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->ScrollBy(x, y);
 }
 
 int WebView::GetScrollX()
 {
-    return FetchWebContainer()->GetScrollX();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->GetScrollX();
 }
 
 int WebView::GetScrollY()
 {
-    return FetchWebContainer()->GetScrollY();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->GetScrollY();
+}
+
+void* WebView::Unwrap()
+{
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())->Unwrap();
 }
 
 void WebView::Focus()
 {
-    FetchWebContainer()->Focus();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Focus();
 }
 
 void WebView::Blur()
 {
-    FetchWebContainer()->Blur();
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->Blur();
 }
 
 void WebView::SetDevicePixelRatio(float dpr)
 {
-    FetchWebContainer()->SetDevicePixelRatio(dpr);
+    toImpl<LWEDelegate::WebView>(m_delegate.get())->SetDevicePixelRatio(dpr);
 }
 
 float WebView::GetDevicePixelRatio()
 {
-    return FetchWebContainer()->GetDevicePixelRatio();
+    return toImpl<LWEDelegate::WebView>(m_delegate.get())
+        ->GetDevicePixelRatio();
 }
+
 } // namespace LWE

@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#include "LWEWebView.h"
+#include "public/LWEWebViewDelegate.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -47,7 +47,9 @@ extern Evas_GL* g_evasGL;
 extern bool g_isEvasGLOnDirectMode;
 #endif
 
-namespace LWE {
+namespace LWEDelegate {
+
+using namespace LWE;
 
 const int g_arrowKeyDownMinimumDelayInMS = 150;
 static int g_arrowKeyDownTimestamp[4];
@@ -990,7 +992,7 @@ public:
             height = (unsigned)(height / glScale);
             devicePixelRatio = 1 / glScale;
         }
-        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
+        WebContainer* webContainer = WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
@@ -1041,7 +1043,7 @@ public:
         };
 #if !(defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TEST))
         webContainer->RegisterSetNeedsRenderingCallback(
-            [this](::LWE::WebContainer* wc,
+            [this](WebContainer* wc,
                    const std::function<void()>& doRenderingFunction) {
                 evas_object_image_pixels_dirty_set(m_graphicsAdapter,
                                                    EINA_TRUE);
@@ -1057,22 +1059,22 @@ public:
 #if defined(STARFISH_TIZEN_VERSION_5_0)
         auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
         evas_object_image_data_set(m_graphicsAdapter, buf);
-        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::Create(
+        WebContainer* webContainer = WebContainer::Create(
             buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
             devicePixelRatio, defaultFontName, locale, timezoneID);
 #else // Tizen >= 5.5
-        ::LWE::WebContainer* webContainer =
-            ::LWE::WebContainer::Create(width, height, devicePixelRatio,
-                                        defaultFontName, locale, timezoneID);
+        WebContainer* webContainer =
+            WebContainer::Create(width, height, devicePixelRatio,
+                                 defaultFontName, locale, timezoneID);
         webContainer->RegisterPreRenderingHandler(
-            [this]() -> ::LWE::WebContainer::RenderInfo {
+            [this]() -> WebContainer::RenderInfo {
                 int width, height;
                 evas_object_image_size_get(m_graphicsAdapter, &width, &height);
                 auto buf =
                     evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
                 evas_object_image_data_set(m_graphicsAdapter, buf);
 
-                ::LWE::WebContainer::RenderInfo result;
+                WebContainer::RenderInfo result;
                 result.updatedBufferAddress = buf;
                 result.bufferStride =
                     evas_object_image_stride_get(m_graphicsAdapter);
@@ -1082,8 +1084,7 @@ public:
 #endif
 
         webContainer->RegisterOnRenderedHandler(
-            [this](::LWE::WebContainer* c,
-                   ::LWE::WebContainer::RenderResult r) {
+            [this](WebContainer* c, WebContainer::RenderResult r) {
                 evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
                                                   r.updatedY, r.updatedWidth,
                                                   r.updatedHeight);
@@ -1305,9 +1306,9 @@ public:
     }
 
 protected:
-    virtual ::LWE::WebContainer* FetchWebContainer() override
+    virtual WebContainer* FetchWebContainer() override
     {
-        return (::LWE::WebContainer*)m_impl;
+        return (WebContainer*)m_impl;
     }
 
     Evas_Object* m_nonIMEKeyEventBox;
@@ -1443,6 +1444,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewEFL(win, x, y, width, height, devicePixelRatio,
                           defaultFontName, locale, timezoneID);
 }
-} // namespace LWE
+} // namespace LWEDelegate
 
 #endif
