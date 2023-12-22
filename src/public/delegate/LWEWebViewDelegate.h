@@ -19,6 +19,8 @@
 #ifndef __LWEWebViewDelegate__
 #define __LWEWebViewDelegate__
 
+#include "LWEDelegateConfig.h"
+
 #include <functional>
 #include <vector>
 
@@ -28,7 +30,7 @@
 
 namespace LWEDelegate {
 
-class WebView {
+class EXPORT_UNMANAGED_API WebView {
 protected:
     virtual ~WebView()
     {

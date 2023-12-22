@@ -19,6 +19,8 @@
 #ifndef __LWEWebContainerDelegate__
 #define __LWEWebContainerDelegate__
 
+#include "LWEDelegateConfig.h"
+
 #include <functional>
 #include <vector>
 
@@ -27,7 +29,7 @@
 
 namespace LWEDelegate {
 
-class WebContainer {
+class EXPORT_UNMANAGED_API WebContainer {
 private:
     // use Destroy function instead of using delete operator
     ~WebContainer()

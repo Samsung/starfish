@@ -19,8 +19,10 @@
 #ifndef __LWEDelegate__
 #define __LWEDelegate__
 
+#include "LWEDelegateConfig.h"
+
 namespace LWEDelegate {
-class LWE {
+class EXPORT_UNMANAGED_API LWE {
 public:
     static void Initialize(const char* localStorageDataFilePath,
                            const char* cookieStoreDataFilePath,

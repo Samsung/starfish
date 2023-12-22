@@ -19,17 +19,20 @@
 #ifndef __CookieManagerDelegate__
 #define __CookieManagerDelegate__
 
+#include "LWEDelegateConfig.h"
+
 #include <string>
 
 namespace LWEDelegate {
 
-class CookieManager {
+class EXPORT_UNMANAGED_API CookieManager {
 public:
+    static CookieManager* GetInstance();
+    static void Destroy();
+
     std::string GetCookie(std::string url);
     bool HasCookies();
     void ClearCookies();
-    static CookieManager* GetInstance();
-    static void Destroy();
 
     CookieManager(const CookieManager& other) = delete;
     CookieManager(CookieManager&& other) = delete;
