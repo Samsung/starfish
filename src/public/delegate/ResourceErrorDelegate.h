@@ -19,11 +19,13 @@
 #ifndef __ResourceErrorDelegate__
 #define __ResourceErrorDelegate__
 
+#include "LWEDelegateConfig.h"
+
 #include <string>
 
 namespace LWEDelegate {
 
-class ResourceError {
+class EXPORT_UNMANAGED_API ResourceError {
 public:
     ResourceError(int code, const std::string& description,
                   const std::string& url);

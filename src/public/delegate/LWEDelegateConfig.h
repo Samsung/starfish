@@ -16,33 +16,15 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#ifndef __CookieManagerDelegate__
-#define __CookieManagerDelegate__
+#ifndef __LWEDelegateConfig__
+#define __LWEDelegateConfig__
 
-#include "LWEDelegateConfig.h"
-
-#include <string>
-
-namespace LWEDelegate {
-
-class EXPORT_UNMANAGED_API CookieManager {
-public:
-    static CookieManager* GetInstance();
-    static void Destroy();
-
-    std::string GetCookie(std::string url);
-    bool HasCookies();
-    void ClearCookies();
-
-    CookieManager(const CookieManager& other) = delete;
-    CookieManager(CookieManager&& other) = delete;
-    CookieManager& operator=(const CookieManager& other) = delete;
-
-private:
-    CookieManager();
-    ~CookieManager();
-};
-
-} // namespace LWEDelegate
+#ifndef EXPORT_UNMANAGED_API
+#ifdef _MSC_VER
+#define EXPORT_UNMANAGED_API __declspec(dllexport)
+#else
+#define EXPORT_UNMANAGED_API __attribute__((visibility("default")))
+#endif
+#endif
 
 #endif

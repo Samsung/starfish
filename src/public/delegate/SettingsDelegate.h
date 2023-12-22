@@ -19,6 +19,8 @@
 #ifndef __SettingsDelegate__
 #define __SettingsDelegate__
 
+#include "LWEDelegateConfig.h"
+
 #include "PlatformIntegrationData.h"
 #include <string>
 #include <unordered_map>
@@ -26,7 +28,7 @@
 
 namespace LWEDelegate {
 
-class Settings {
+class EXPORT_UNMANAGED_API Settings {
 public:
     Settings() = default;
     Settings(const std::string& defaultUA, const std::string& ua);
