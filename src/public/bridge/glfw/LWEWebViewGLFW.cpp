@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#include "LWEWebView.h"
+#include "public/LWEWebViewDelegate.h"
 #include "platform/canvas/webgl/XGL.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 
@@ -31,7 +31,9 @@
 
 #include <signal.h>
 
-namespace LWE {
+namespace LWEDelegate {
+
+using namespace LWE;
 
 static void onCursorPosition(GLFWwindow* window, double xpos, double ypos);
 static void onMouseButton(GLFWwindow* window, int button, int action, int mods);
@@ -126,7 +128,7 @@ public:
 
         glfwMakeContextCurrent(nullptr);
 
-        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
+        WebContainer* webContainer = WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) { glfwMakeContextCurrent(m_glWindow); },
             [this](WebContainer* wc, bool mayNeedsSync) {
@@ -156,9 +158,9 @@ public:
     size_t m_pollTimer;
     GLFWwindow* m_glWindow;
 
-    virtual ::LWE::WebContainer* FetchWebContainer() override
+    virtual WebContainer* FetchWebContainer() override
     {
-        return (::LWE::WebContainer*)m_impl;
+        return (WebContainer*)m_impl;
     }
 };
 
@@ -361,6 +363,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewGLFW(win, x, y, width, height, devicePixelRatio,
                            defaultFontName, locale, timezoneID);
 }
-} // namespace LWE
+} // namespace LWEDelegate
 
 #endif

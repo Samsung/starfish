@@ -38,6 +38,8 @@
 #include <sstream>
 #include <memory>
 
+using LWEDelegateRef = std::unique_ptr<void, std::function<void(void*)>>;
+
 namespace LWE {
 
 /**
@@ -122,7 +124,7 @@ private:
     CookieManager();
     ~CookieManager();
 
-    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT Settings {
@@ -182,7 +184,7 @@ public:
         const;
 
 private:
-    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT ResourceError {
@@ -197,7 +199,7 @@ public:
     std::string GetUrl();
 
 private:
-    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT WebContainer {
@@ -403,18 +405,13 @@ private:
     // use Destroy function instead of using delete operator
     ~WebContainer() = default;
 
-    std::unique_ptr<void, std::function<void(void*)>> m_delegate;
+    LWEDelegateRef m_delegate;
 };
 
 /**
  * \brief WebView of lightweight web engine.
  */
 class LWE_EXPORT WebView {
-protected:
-    virtual ~WebView()
-    {
-    }
-
 public:
     /**
      * \brief Create a Webview instance.
@@ -468,7 +465,7 @@ public:
      *
      * \endcode
      */
-    virtual void Destroy();
+    void Destroy();
 
     /**
      * \brief Gets the settings used by the webview.
@@ -489,7 +486,7 @@ public:
      * \param url the URL of the resource to load.
      *
      */
-    virtual void LoadURL(const std::string& url);
+    void LoadURL(const std::string& url);
 
     /**
      * \brief Gets the URL for the current page.
@@ -908,22 +905,19 @@ public:
      *
      * \return platform native handle.
      */
-    virtual void* Unwrap()
-    {
-        return nullptr;
-    }
+    void* Unwrap();
 
     /**
      * \brief Give focus to current webview.
      *
      */
-    virtual void Focus();
+    void Focus();
 
     /**
      * \brief Blur the current webview.
      *
      */
-    virtual void Blur();
+    void Blur();
 
     /**
      * \brief Change DPR value at current webview.
@@ -941,15 +935,11 @@ public:
      */
     float GetDevicePixelRatio();
 
-protected:
-    WebView(void* impl)
-        : m_impl(impl)
-    {
-    }
+private:
+    WebView() = default;
+    ~WebView() = default;
 
-    virtual WebContainer* FetchWebContainer() = 0;
-
-    void* m_impl;
+    LWEDelegateRef m_delegate;
 };
 
 } // namespace LWE
