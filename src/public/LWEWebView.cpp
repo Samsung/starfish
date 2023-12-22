@@ -19,12 +19,12 @@
 
 #include "LWEWebView.h"
 
-#include "LWEDelegate.h"
-#include "ResourceErrorDelegate.h"
-#include "SettingsDelegate.h"
-#include "CookieManagerDelegate.h"
-#include "LWEWebContainerDelegate.h"
-#include "LWEWebViewDelegate.h"
+#include "public/delegate/LWEDelegate.h"
+#include "public/delegate/ResourceErrorDelegate.h"
+#include "public/delegate/SettingsDelegate.h"
+#include "public/delegate/CookieManagerDelegate.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
+#include "public/delegate/LWEWebViewDelegate.h"
 
 #include <assert.h>
 
