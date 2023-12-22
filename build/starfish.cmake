@@ -40,6 +40,10 @@ ADD_CUSTOM_TARGET (generate_binding
 #######################################################
 # SOURCE FILES
 #######################################################
+FILE (GLOB_RECURSE STARFISH_API_SRC
+    ${STARFISH_ROOT}/src/public/LWEWebView.cpp
+)
+
 FILE (GLOB_RECURSE STARFISH_SRC ${STARFISH_ROOT}/src/*.cpp)
 FILE (GLOB STARFISH_SRC_GENRATED_BINDING ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/*.cpp)
 
@@ -47,7 +51,9 @@ IF (${HOST} STREQUAL "tizen")
     FILE (GLOB STARFISH_SRC_EXTRA ${THIRD_PARTY_ROOT}/deviceapi/src/*.cpp)
 ENDIF()
 
-LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/shell/Shell.cpp)
+LIST (REMOVE_ITEM STARFISH_SRC
+    ${STARFISH_ROOT}/src/shell/Shell.cpp
+)
 
 FILE (GLOB_RECURSE SERVICE_WORKER_HOST_SRC ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC ${SERVICE_WORKER_HOST_SRC})
@@ -123,18 +129,25 @@ SET (STARFISH_LINK_LIBRARIES
 #######################################################
 # BUILD TARGET
 #######################################################
+
+# Implmentation layer
 SET (STARFISH_OBJECT_LIBRARY starfish_object_library)
 ADD_LIBRARY (${STARFISH_OBJECT_LIBRARY} OBJECT ${STARFISH_SRC_LIST})
+ADD_LIBRARY (starfish.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
+ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
 
-ADD_EXECUTABLE (starfish.executable $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}> ${STARFISH_ROOT}/src/shell/Shell.cpp)
+# API layer
+SET (STARFISH_API_OBJECT_LIBRARY starfish_api_object_library)
+ADD_LIBRARY (${STARFISH_API_OBJECT_LIBRARY} OBJECT ${STARFISH_API_SRC})
+ADD_LIBRARY (starfish_api.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_API_OBJECT_LIBRARY}>)
+ADD_LIBRARY (starfish_api.static_library STATIC $<TARGET_OBJECTS:${STARFISH_API_OBJECT_LIBRARY}>)
+
+ADD_EXECUTABLE (starfish.executable ${STARFISH_ROOT}/src/shell/Shell.cpp)
 IF (${HOST} STREQUAL "linux")
     ADD_CUSTOM_COMMAND (TARGET starfish.executable POST_BUILD
         COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${TARGETNAME} ${STARFISH_ROOT}/Starfish
     )
 ENDIF()
-
-ADD_LIBRARY (starfish.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
-ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
 
 SET (STARFISH_DEPENDENCIES_COMMON
     generate_binding
@@ -195,24 +208,52 @@ message (STATUS "DEFINITIONS: " ${LWE_DEFINITIONS})
 message (STATUS "LDFLAGS: " ${LWE_LDFLAGS})
 message (STATUS "INCLUDE_DIRS: " ${STARFISH_INCLUDE_DIRS})
 
+# Compile
+## Implementation layer
 TARGET_INCLUDE_DIRECTORIES (${STARFISH_OBJECT_LIBRARY} PUBLIC ${STARFISH_INCLUDE_DIRS})
 TARGET_COMPILE_DEFINITIONS (${STARFISH_OBJECT_LIBRARY} PUBLIC ${LWE_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (${STARFISH_OBJECT_LIBRARY} PUBLIC ${LWE_CXXFLAGS})
 
+## API layer
+TARGET_INCLUDE_DIRECTORIES (${STARFISH_API_OBJECT_LIBRARY} PUBLIC ${STARFISH_INCLUDE_DIRS})
+TARGET_COMPILE_DEFINITIONS (${STARFISH_API_OBJECT_LIBRARY} PUBLIC ${LWE_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (${STARFISH_API_OBJECT_LIBRARY} PUBLIC ${LWE_CXXFLAGS})
+
+## Executable
 TARGET_INCLUDE_DIRECTORIES (starfish.executable PUBLIC ${STARFISH_INCLUDE_DIRS})
 TARGET_COMPILE_DEFINITIONS (starfish.executable PUBLIC ${LWE_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (starfish.executable PUBLIC ${LWE_CXXFLAGS})
 
-TARGET_LINK_LIBRARIES (starfish.executable ${STARFISH_LINK_LIBRARIES} ${LWE_LDFLAGS})
+# Link
+## Implementation layer
 TARGET_LINK_LIBRARIES (starfish.shared_library ${STARFISH_LINK_LIBRARIES} ${LWE_LDFLAGS})
 TARGET_LINK_LIBRARIES (starfish.static_library ${STARFISH_LINK_LIBRARIES} ${LWE_LDFLAGS})
 
-SET_TARGET_PROPERTIES (starfish.executable PROPERTIES
-            OUTPUT_NAME ${TARGETNAME}
-        )
+## API layer
+TARGET_LINK_LIBRARIES (starfish_api.shared_library starfish.shared_library ${STARFISH_LINK_LIBRARIES} ${LWE_LDFLAGS})
+TARGET_LINK_LIBRARIES (starfish_api.static_library starfish.static_library ${STARFISH_LINK_LIBRARIES} ${LWE_LDFLAGS})
+
+## Executable
+TARGET_LINK_LIBRARIES (starfish.executable starfish_api.shared_library ${LWE_LDFLAGS})
+
+# Set output name
+## Implementation layer
 SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES
+        OUTPUT_NAME ${TARGETNAME}-impl
+    )
+SET_TARGET_PROPERTIES (starfish.static_library PROPERTIES
+        OUTPUT_NAME ${TARGETNAME}-impl
+    )
+
+## API layer
+SET_TARGET_PROPERTIES (starfish_api.shared_library PROPERTIES
             OUTPUT_NAME ${TARGETNAME}
         )
-SET_TARGET_PROPERTIES (starfish.static_library PROPERTIES
+SET_TARGET_PROPERTIES (starfish_api.static_library PROPERTIES
+            OUTPUT_NAME ${TARGETNAME}
+        )
+
+## Executable
+SET_TARGET_PROPERTIES (starfish.executable PROPERTIES
             OUTPUT_NAME ${TARGETNAME}
         )
