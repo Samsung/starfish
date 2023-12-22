@@ -400,10 +400,10 @@ public:
     float GetDevicePixelRatio();
 
 private:
-    WebContainer() = default;
+    WebContainer();
 
     // use Destroy function instead of using delete operator
-    ~WebContainer() = default;
+    ~WebContainer();
 
     LWEDelegateRef m_delegate;
 };
@@ -936,8 +936,8 @@ public:
     float GetDevicePixelRatio();
 
 private:
-    WebView() = default;
-    ~WebView() = default;
+    WebView();
+    ~WebView();
 
     LWEDelegateRef m_delegate;
 };
