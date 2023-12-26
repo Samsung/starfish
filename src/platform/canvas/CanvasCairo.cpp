@@ -321,7 +321,8 @@ std::shared_ptr<NativePattern> NativePattern::create(
 
 class CanvasCairo : public Canvas {
     friend class CanvasAttachableNativeImageCairo;
-    void initFromBuffer(void* buffer, int width, int height, int stride)
+    void initFromBuffer(void* buffer, int width, int height, int stride,
+                        float devicePixelRatio)
     {
         STARFISH_ASSERT(buffer != nullptr);
 
@@ -329,6 +330,7 @@ class CanvasCairo : public Canvas {
         m_renderTargetInfo.m_width = width;
         m_renderTargetInfo.m_height = height;
         m_renderTargetInfo.m_stride = stride;
+        m_renderTargetInfo.m_devicePixelRatio = devicePixelRatio;
 
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
@@ -450,21 +452,17 @@ class CanvasCairo : public Canvas {
     }
 
 public:
-    CanvasCairo(WebView* webView, void* buffer, int width, int height,
-                int stride)
+    CanvasCairo(void* buffer, int width, int height, int stride,
+                float devicePixelRatio)
     {
-        STARFISH_ASSERT(webView != nullptr);
         STARFISH_ASSERT(buffer != nullptr);
 
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
-        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
-        {
-            initFromBuffer(buffer, width, height, stride);
-        }
+        initFromBuffer(buffer, width, height, stride, devicePixelRatio);
 
         STARFISH_ASSERT(m_canvas != nullptr);
         STARFISH_ASSERT(m_surface != nullptr);
@@ -478,7 +476,6 @@ public:
         STARFISH_ASSERT(webView != nullptr);
         STARFISH_ASSERT(data != nullptr);
 
-        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
@@ -488,7 +485,8 @@ public:
         m_targetSurface = data;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
-                       data->bufferHeight(), data->bufferStride());
+                       data->bufferHeight(), data->bufferStride(),
+                       webView->screenInfo().devicePixelRatio);
 
         STARFISH_ASSERT(m_canvas != nullptr);
         STARFISH_ASSERT(m_surface != nullptr);
@@ -505,12 +503,11 @@ public:
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
-        m_webView = webView;
+        m_renderTargetInfo.m_devicePixelRatio =
+            webView->screenInfo().devicePixelRatio;
         m_canvas = nullptr;
         m_surface = nullptr;
-        {
-            initFromNativeImageData(data);
-        }
+        initFromNativeImageData(data);
 
         STARFISH_ASSERT(m_canvas != nullptr);
         STARFISH_ASSERT(m_surface != nullptr);
@@ -738,7 +735,7 @@ public:
 
     virtual void unsetDevicePixelRatio() override
     {
-        float dpr = m_webView->screenInfo().devicePixelRatio;
+        float dpr = m_renderTargetInfo.m_devicePixelRatio;
         if (m_targetSurface) {
             dpr *= m_targetSurface->additionalPixelRatio();
         }
@@ -748,7 +745,7 @@ public:
 
     void applyDevicePixelRatio()
     {
-        float dpr = m_webView->screenInfo().devicePixelRatio;
+        float dpr = m_renderTargetInfo.m_devicePixelRatio;
         if (m_targetSurface) {
             dpr *= m_targetSurface->additionalPixelRatio();
         }
@@ -2511,13 +2508,12 @@ Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
     return new CanvasCairo(webView, data, flag);
 }
 
-Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
-                       size_t stride)
+Canvas* Canvas::create(uint8_t* data, size_t w, size_t h, size_t stride,
+                       float devicePixelRatio)
 {
-    STARFISH_ASSERT(webView != nullptr);
     STARFISH_ASSERT(data != nullptr);
 
-    return new CanvasCairo(webView, data, w, h, w * 4);
+    return new CanvasCairo(data, w, h, stride, devicePixelRatio);
 }
 
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
@@ -2526,6 +2522,45 @@ Canvas* Canvas::create(WebView* webView, NativeImageData* data)
     STARFISH_ASSERT(data != nullptr);
 
     return new CanvasCairo(webView, data);
+}
+
+void Canvas::resizeImage(uint8_t* orgBuffer, size_t orgWidth, size_t orgHeight,
+                         size_t orgStride, uint8_t* newBuffer, size_t newWidth,
+                         size_t newHeight, size_t newStride)
+{
+    auto imageSurface = cairo_image_surface_create_for_data(
+        (unsigned char*)newBuffer, CAIRO_FORMAT, newWidth, newHeight,
+        newStride);
+    auto orgSurface = cairo_image_surface_create_for_data(
+        (unsigned char*)orgBuffer, CAIRO_FORMAT, orgWidth, orgHeight,
+        orgStride);
+    auto canvas = cairo_create(imageSurface);
+    cairo_set_antialias(canvas, CAIRO_ANTIALIAS_GOOD);
+
+    cairo_set_operator(canvas, CAIRO_OPERATOR_CLEAR);
+    cairo_set_source_rgba(canvas, 0, 0, 0, 0);
+    cairo_set_operator(canvas, CAIRO_OPERATOR_SOURCE);
+    cairo_paint(canvas);
+
+    cairo_pattern_t* resizePattern =
+        cairo_pattern_create_for_surface(orgSurface);
+    cairo_matrix_t matrix;
+    cairo_matrix_init_identity(&matrix);
+    cairo_matrix_scale(&matrix, orgWidth / (float)newWidth,
+                       orgHeight / (float)newHeight);
+    cairo_pattern_set_matrix(resizePattern, &matrix);
+    cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
+    cairo_set_source(canvas, resizePattern);
+
+    cairo_rectangle(canvas, 0, 0, newWidth, newHeight);
+    cairo_paint(canvas);
+
+    cairo_pattern_destroy(resizePattern);
+
+    cairo_destroy(canvas);
+    cairo_surface_flush(imageSurface);
+    cairo_surface_destroy(imageSurface);
+    cairo_surface_destroy(orgSurface);
 }
 
 class CanvasAttachableNativeImageCairo : public NativeImageData {

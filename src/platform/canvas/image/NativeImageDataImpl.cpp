@@ -82,6 +82,7 @@ public:
         }
 #endif
         free(m_image);
+        m_image = nullptr;
         BufferedNativeImageData::disposeNativeImageData();
     }
 

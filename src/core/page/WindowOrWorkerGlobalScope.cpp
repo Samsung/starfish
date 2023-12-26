@@ -231,14 +231,15 @@ namespace WindowOrWorkerGlobalScope {
 
     static NativeImageData* createNativeImageDataWithDecoding(
         const char* buffer, size_t buffer_size,
-        uint32_t needsDownScaleImageResourceLargerThan)
+        uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio)
     {
         NativeImageData* result = nullptr;
         ImageDecoder::DecodeResult decodeResult;
         ResponseBody internalBuffer;
         internalBuffer.insert(internalBuffer.begin(), buffer,
                               buffer + buffer_size);
-        ImageDecoder id(internalBuffer, needsDownScaleImageResourceLargerThan);
+        ImageDecoder id(internalBuffer, needsDownScaleImageResourceLargerThan,
+                        devicePixelRatio);
         decodeResult = id.decode();
 
         if (!decodeResult.m_isSuccessful) {
@@ -247,14 +248,16 @@ namespace WindowOrWorkerGlobalScope {
 
         result = CompressedNativeImageData::create(
             internalBuffer, UTF8StringDataNonGCStd(),
-            needsDownScaleImageResourceLargerThan, decodeResult.m_buffer,
-            decodeResult.m_width, decodeResult.m_height, decodeResult.m_stride);
+            needsDownScaleImageResourceLargerThan, devicePixelRatio,
+            decodeResult.m_buffer, decodeResult.m_width, decodeResult.m_height,
+            decodeResult.m_stride);
         return result;
     }
 
     static NativeImageData* createNativeImageDataWithoutDecoding(
         const char* buffer, size_t buffer_size, size_t width, size_t height,
-        size_t stride, uint32_t needsDownScaleImageResourceLargerThan)
+        size_t stride, uint32_t needsDownScaleImageResourceLargerThan,
+        float devicePixelRatio)
     {
         NativeImageData* result = nullptr;
         ResponseBody internalBuffer;
@@ -262,8 +265,9 @@ namespace WindowOrWorkerGlobalScope {
                               buffer + buffer_size);
         result = CompressedNativeImageData::create(
             internalBuffer, UTF8StringDataNonGCStd(),
-            needsDownScaleImageResourceLargerThan, (uint8_t*)buffer, width,
-            height, stride);
+            needsDownScaleImageResourceLargerThan, devicePixelRatio,
+            const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buffer)),
+            width, height, stride);
         return result;
     }
 
@@ -306,6 +310,10 @@ namespace WindowOrWorkerGlobalScope {
             executionContext->webBase()
                 ->asWebView()
                 ->needsDownScaleImageResourceLargerThan();
+        float devicePixelRatio = executionContext->webBase()
+                                     ->asWebView()
+                                     ->screenInfo()
+                                     .devicePixelRatio;
         if (context.m_image
                 .isHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
             auto canvasImageSource =
@@ -342,7 +350,7 @@ namespace WindowOrWorkerGlobalScope {
             }
             NativeImageData* srcImage = createNativeImageDataWithDecoding(
                 (const char*)blob->data(), (size_t)blob->size(),
-                needsDownScaleImageResourceLargerThan);
+                needsDownScaleImageResourceLargerThan, devicePixelRatio);
             NativeImageData* destImage = nullptr;
 
             // 3.If imageData is not in a supported image file format (e.g.,
@@ -403,7 +411,8 @@ namespace WindowOrWorkerGlobalScope {
 #endif
             srcImage = createNativeImageDataWithoutDecoding(
                 (char*)dstPtr, bufferLength, imagaDataWidth, imagaDataHeight,
-                stride, needsDownScaleImageResourceLargerThan);
+                stride, needsDownScaleImageResourceLargerThan,
+                devicePixelRatio);
 
         } else {
             STARFISH_UNIMPLEMENTED();

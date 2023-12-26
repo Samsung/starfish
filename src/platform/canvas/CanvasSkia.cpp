@@ -234,7 +234,7 @@ class CanvasSkia : public Canvas {
 
     void applyDevicePixelRatio(SkCanvas* canvas)
     {
-        float dpr = m_webView->screenInfo().devicePixelRatio;
+        float dpr = m_renderTargetInfo.m_devicePixelRatio;
         if (m_targetSurface) {
             dpr *= m_targetSurface->additionalPixelRatio();
         }
@@ -242,19 +242,18 @@ class CanvasSkia : public Canvas {
     }
 
 public:
-    CanvasSkia(WebView* webView, void* buffer, int width, int height,
-               int stride)
+    CanvasSkia(void* buffer, int width, int height, int stride,
+               float devicePixelRatio)
     {
-        STARFISH_ASSERT(webView != nullptr);
         STARFISH_ASSERT(buffer != nullptr);
 
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
-        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_renderTargetInfo.m_width = width;
         m_renderTargetInfo.m_height = height;
+        m_renderTargetInfo.m_devicePixelRatio = devicePixelRatio;
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
@@ -275,6 +274,8 @@ public:
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
         m_targetSurface = data;
+        m_renderTargetInfo.m_devicePixelRatio =
+            webView->screenInfo().devicePixelRatio;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -292,6 +293,8 @@ public:
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
+        m_renderTargetInfo.m_devicePixelRatio =
+            webView->screenInfo().devicePixelRatio;
 
         initFromNativeImageData(data);
         save();
@@ -489,7 +492,7 @@ public:
 
     virtual void unsetDevicePixelRatio()
     {
-        float dpr = m_webView->screenInfo().devicePixelRatio;
+        float dpr = m_renderTargetInfo.m_devicePixelRatio;
         if (m_targetSurface) {
             dpr *= m_targetSurface->additionalPixelRatio();
         }
@@ -1586,13 +1589,12 @@ Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
     return new CanvasSkia(webView, data);
 }
 
-Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
-                       size_t stride)
+Canvas* Canvas::create(uint8_t* data, size_t w, size_t h, size_t stride,
+                       float devicePixelRatio)
 {
-    STARFISH_ASSERT(webView != nullptr);
     STARFISH_ASSERT(data != nullptr);
 
-    return new CanvasSkia(webView, data, w, h, stride);
+    return new CanvasSkia(data, w, h, stride, devicePixelRatio);
 }
 
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
@@ -1601,6 +1603,13 @@ Canvas* Canvas::create(WebView* webView, NativeImageData* data)
     STARFISH_ASSERT(data != nullptr);
 
     return new CanvasSkia(webView, data);
+}
+
+void Canvas::resizeImage(uint8_t* orgBuffer, size_t orgWidth, size_t orgHeight,
+                         size_t orgStride, uint8_t* newBuffer, size_t newWidth,
+                         size_t newHeight, size_t newStride)
+{
+    STARFISH_UNIMPLEMENTED();
 }
 
 NativeImageData* NativeImageData::attach(Canvas* canvas)

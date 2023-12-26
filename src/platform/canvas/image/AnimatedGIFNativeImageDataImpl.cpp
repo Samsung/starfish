@@ -65,7 +65,7 @@ public:
                              compressedImageData.end());
 
         m_imageDecoder = new ImageDecoder(
-            m_inputBuffer, m_needsDownScaleImageResourceLargerThan);
+            m_inputBuffer, m_needsDownScaleImageResourceLargerThan, 1);
     }
 
     virtual ~AnimatedGIFNativeImageDataImpl()

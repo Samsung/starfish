@@ -88,14 +88,14 @@ public:
     static void Finalize();
 
     /**
-     * \brief Returns GC frequency. default value is 6
+     * \brief Returns GC frequency. default value is 12
      * If you want to cause more GC while running,
      * you can increase this value.
      */
     static unsigned char GetGCFrequency();
 
     /**
-     * \brief Set GC frequency. default value is 6
+     * \brief Set GC frequency. default value is 12
      * If you want to cause more GC while running,
      * you can increase this value.
      */

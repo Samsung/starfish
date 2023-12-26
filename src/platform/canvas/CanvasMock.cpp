@@ -110,11 +110,8 @@ std::shared_ptr<NativePattern> NativePattern::create(
 
 class CanvasMock : public Canvas {
 public:
-    CanvasMock(WebView* webView)
+    CanvasMock()
     {
-        STARFISH_ASSERT(webView != nullptr);
-
-        m_webView = webView;
     }
 
     virtual ~CanvasMock()
@@ -595,24 +592,24 @@ public:
 
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
 {
-    STARFISH_ASSERT(webView != nullptr);
-
-    return new CanvasMock(webView);
+    return new CanvasMock();
 }
 
-Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
-                       size_t stride)
+Canvas* Canvas::create(uint8_t* data, size_t w, size_t h, size_t stride,
+                       float devicePixelRatio)
 {
-    STARFISH_ASSERT(webView != nullptr);
-
-    return new CanvasMock(webView);
+    return new CanvasMock();
 }
 
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
-    STARFISH_ASSERT(webView != nullptr);
+    return new CanvasMock();
+}
 
-    return new CanvasMock(webView);
+void Canvas::resizeImage(uint8_t* orgBuffer, size_t orgWidth, size_t orgHeight,
+                         size_t orgStride, uint8_t* newBuffer, size_t newWidth,
+                         size_t newHeight, size_t newStride)
+{
 }
 
 NativeImageData* NativeImageData::attach(Canvas* canvas)

@@ -26,6 +26,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace Starfish {
@@ -146,9 +147,13 @@ public:
             BufferedNativeImageData::create(width(), height());
         rasterizedSVGImage->clear();
         Canvas* dummyCanvas = Canvas::create(
-            m_frameSVGSVGBox->document()->browsingContext()->webView(),
             rasterizedSVGImage->data(), rasterizedSVGImage->width(),
-            rasterizedSVGImage->height(), rasterizedSVGImage->stride());
+            rasterizedSVGImage->height(), rasterizedSVGImage->stride(),
+            m_frameSVGSVGBox->document()
+                ->browsingContext()
+                ->webView()
+                ->screenInfo()
+                .devicePixelRatio);
         m_frameSVGSVGBox->paintReplaced(dummyCanvas);
         delete dummyCanvas;
         return rasterizedSVGImage;

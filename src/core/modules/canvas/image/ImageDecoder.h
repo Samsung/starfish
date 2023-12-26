@@ -25,12 +25,14 @@ namespace Starfish {
 class ImageDecoder {
 public:
     ImageDecoder(const std::vector<char>& inputBuffer,
-                 uint32_t needsDownScaleImageResourceLargerThan)
+                 uint32_t needsDownScaleImageResourceLargerThan,
+                 float devicePixelRatio)
         : m_inputBuffer(inputBuffer)
         , m_gifFile(nullptr)
         , m_gifBuffer(nullptr)
         , m_needsDownScaleImageResourceLargerThan(
               needsDownScaleImageResourceLargerThan)
+        , m_devicePixelRatio(devicePixelRatio)
     {
     }
 
@@ -88,6 +90,7 @@ private:
     void* m_gifBuffer;
     GifReadData m_gifReadData;
     uint32_t m_needsDownScaleImageResourceLargerThan;
+    float m_devicePixelRatio;
     int m_loopCount = 1;
     bool m_hasLoopCount = false;
 };

@@ -149,6 +149,11 @@ void ImageResource::didLoadFinished()
             ->document()
             ->webView()
             ->needsDownScaleImageResourceLargerThan();
+    float devicePixelRatio = m_resourceRequest->executionContext()
+                                 ->document()
+                                 ->webView()
+                                 ->screenInfo()
+                                 .devicePixelRatio;
     if (!isSVG) {
         isSVG = url()->urlString()->endsWith(".svg", false);
     }
@@ -212,6 +217,7 @@ void ImageResource::didLoadFinished()
                 MessageLoop* messageLoop;
                 GlobalScope* globalScope;
                 uint32_t needsDownScaleImageResourceLargerThan;
+                float devicePixelRatio;
             };
 
             ImageDecodeData* d = new ImageDecodeData();
@@ -222,6 +228,7 @@ void ImageResource::didLoadFinished()
                 m_resourceRequest->executionContext()->globalScope();
             d->needsDownScaleImageResourceLargerThan =
                 needsDownScaleImageResourceLargerThan;
+            d->devicePixelRatio = devicePixelRatio;
 
             m_resourceRequest->executionContext()
                 ->document()
@@ -235,7 +242,8 @@ void ImageResource::didLoadFinished()
 
                         ImageDecoder id(
                             d->responseData,
-                            d->needsDownScaleImageResourceLargerThan);
+                            d->needsDownScaleImageResourceLargerThan,
+                            d->devicePixelRatio);
                         d->decodeResult = id.decode();
                         if (d->decodeResult.m_isAnimatedGIF) {
                             free(d->decodeResult.m_buffer);
@@ -268,6 +276,7 @@ void ImageResource::didLoadFinished()
                                                     ->urlString()
                                                     ->toUTF8NonGCString(),
                                                 d->needsDownScaleImageResourceLargerThan,
+                                                d->devicePixelRatio,
                                                 d->decodeResult.m_buffer,
                                                 d->decodeResult.m_width,
                                                 d->decodeResult.m_height,
@@ -282,7 +291,8 @@ void ImageResource::didLoadFinished()
                                             d->imageResource->url()
                                                 ->urlString()
                                                 ->toUTF8NonGCString(),
-                                            d->needsDownScaleImageResourceLargerThan);
+                                            d->needsDownScaleImageResourceLargerThan,
+                                            d->devicePixelRatio);
                                     if (!d->imageResource->m_imageData) {
                                         d->imageResource
                                             ->Resource::didLoadFailed();
@@ -304,10 +314,13 @@ void ImageResource::didLoadFinished()
         }
     }
 #endif
+
     if (m_resourceRequest->response().size() != 0) {
         if (ImageDecoder::isAnimatedGIF(m_resourceRequest->response())) {
+            // use devicePixelRatio 1 for AnimatedGIF
+            // since It may have a lots of frame what we have to decode
             ImageDecoder id(m_resourceRequest->response(),
-                            needsDownScaleImageResourceLargerThan);
+                            needsDownScaleImageResourceLargerThan, 1);
             auto result = id.decodeJustImageSize();
             m_imageData = AnimatedGIFNativeImageData::create(
                 m_resourceRequest->response(),
@@ -318,7 +331,7 @@ void ImageResource::didLoadFinished()
             m_imageData = CompressedNativeImageData::create(
                 m_resourceRequest->response(),
                 url()->urlString()->toUTF8NonGCString(),
-                needsDownScaleImageResourceLargerThan);
+                needsDownScaleImageResourceLargerThan, devicePixelRatio);
         }
     }
 

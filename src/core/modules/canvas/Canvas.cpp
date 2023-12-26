@@ -439,8 +439,9 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         size_t bufImageSize = (size_t)ceil(radiusOffset);
         NativeImageData* nativeImage =
             BufferedNativeImageData::create(bufImageSize, bufImageSize);
-        Canvas* cv = Canvas::create(m_webView, nativeImage);
-        cv->unsetDevicePixelRatio();
+        Canvas* cv =
+            Canvas::create(nativeImage->data(), nativeImage->width(),
+                           nativeImage->height(), nativeImage->stride());
         cv->clearColor(Unit::Color(0, 0, 0, 0));
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
         cv->setFillColor(shadowColor);
@@ -586,8 +587,9 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         NativeImageData* nativeImage = BufferedNativeImageData::create(
             ceil(shadowRect.width() + radiusOffset),
             ceil(shadowRect.height() + radiusOffset));
-        Canvas* cv = Canvas::create(m_webView, nativeImage);
-        cv->unsetDevicePixelRatio();
+        Canvas* cv =
+            Canvas::create(nativeImage->data(), nativeImage->width(),
+                           nativeImage->height(), nativeImage->stride());
         cv->clearColor(Unit::Color(0, 0, 0, 0));
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
         if (isFill) {
@@ -672,8 +674,8 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     auto imageHeight = height + ceil(radiusOffset);
     NativeImageData* nativeImage =
         BufferedNativeImageData::create(imageWidth, imageHeight);
-    Canvas* cv = Canvas::create(m_webView, nativeImage);
-    cv->unsetDevicePixelRatio();
+    Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
+                                nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
     cv->setFont(font);
     auto tdc = textDecorationData();
@@ -772,8 +774,8 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     auto imageHeight = height + ceil(radiusOffset);
     NativeImageData* nativeImage =
         BufferedNativeImageData::create(imageWidth, imageHeight);
-    Canvas* cv = Canvas::create(m_webView, nativeImage);
-    cv->unsetDevicePixelRatio();
+    Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
+                                nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
     if (isFill) {
@@ -823,8 +825,8 @@ void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
     NativeImageData* nativeImage = BufferedNativeImageData::create(
         ceil(shadowRect.width() + radiusOffset),
         ceil(shadowRect.height() + radiusOffset));
-    Canvas* cv = Canvas::create(m_webView, nativeImage);
-    cv->unsetDevicePixelRatio();
+    Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
+                                nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
     cv->setFillColor(shadowColor);
