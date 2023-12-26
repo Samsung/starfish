@@ -28,6 +28,7 @@
 #define PNG_SKIP_SETJMP_CHECK
 
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/Canvas.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
@@ -798,34 +799,78 @@ static ImageDecoder::DecodeResult decodeWebP(
 
 static ImageDecoder::DecodeResult decodeBuffer(
     const std::vector<char>& inputBuffer, bool full,
-    uint32_t needsDownScaleImageResourceLargerThan)
+    uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio)
 {
+    ImageDecoder::DecodeResult result;
     if (isPNGFormat(inputBuffer)) {
-        return decodePNG(inputBuffer, full);
+        result = decodePNG(inputBuffer, full);
     } else if (isJPGFormat(inputBuffer)) {
-        return decodeJPG(inputBuffer, full,
-                         needsDownScaleImageResourceLargerThan);
+        result =
+            decodeJPG(inputBuffer, full, needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
-        return decodeGIF(inputBuffer, full);
+        result = decodeGIF(inputBuffer, full);
 #if defined(STARFISH_ENABLE_WEBP)
     } else if (isWebPFormat(inputBuffer)) {
-        return decodeWebP(inputBuffer, full);
+        result = decodeWebP(inputBuffer, full);
 #endif
+    } else {
+        return ImageDecoder::DecodeResult();
     }
 
-    return ImageDecoder::DecodeResult();
+    uint64_t wh = result.m_width * result.m_height;
+    float newScale = 1;
+    if (needsDownScaleImageResourceLargerThan &&
+        wh >= needsDownScaleImageResourceLargerThan) {
+        if (wh > 7680 * 4320) {
+            newScale = 1 / 8.f;
+        } else if (wh > 3840 * 2160) {
+            newScale = 1 / 4.f;
+        } else if (wh > 1920 * 1080) {
+            newScale = 1 / 2.f;
+        }
+    } else if (devicePixelRatio < 1 && result.m_width > 128 &&
+               result.m_height > 128) {
+        newScale = devicePixelRatio;
+    }
+
+    if (newScale != 1) {
+        STARFISH_ASSERT(newScale < 1);
+        auto oldWidth = result.m_width;
+        auto oldHeight = result.m_height;
+        auto oldStride = result.m_stride;
+        auto oldBuffer = result.m_buffer;
+        result.m_width = result.m_width * newScale;
+        result.m_height = result.m_height * newScale;
+        result.m_stride = result.m_width * 4;
+
+        if (full) {
+            result.m_buffer =
+                (uint8_t*)malloc(result.m_stride * result.m_height);
+            Canvas::resizeImage(oldBuffer, oldWidth, oldHeight, oldStride,
+                                result.m_buffer, result.m_width,
+                                result.m_height, result.m_stride);
+            free(oldBuffer);
+        }
+
+        STARFISH_LOG_INFO("Downscale image(%zu,%zu -> %zu,%zu)", oldWidth,
+                          oldHeight, result.m_width, result.m_height);
+    }
+
+    return result;
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
 {
     return decodeBuffer(m_inputBuffer, false,
-                        m_needsDownScaleImageResourceLargerThan);
+                        m_needsDownScaleImageResourceLargerThan,
+                        m_devicePixelRatio);
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decode()
 {
     return decodeBuffer(m_inputBuffer, true,
-                        m_needsDownScaleImageResourceLargerThan);
+                        m_needsDownScaleImageResourceLargerThan,
+                        m_devicePixelRatio);
 }
 
 bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)

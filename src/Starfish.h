@@ -38,7 +38,7 @@ class HTTPCache;
 #endif
 
 #ifndef BDWGC_FREE_SPACE_DIVISOR
-#define BDWGC_FREE_SPACE_DIVISOR 6
+#define BDWGC_FREE_SPACE_DIVISOR 12
 #endif
 
 // ctor of Starfish class is NOT THREAD-SAFE

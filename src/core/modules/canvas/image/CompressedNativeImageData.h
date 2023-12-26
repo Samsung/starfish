@@ -28,10 +28,10 @@ class CompressedNativeImageData : public BufferedNativeImageData {
 public:
     static NativeImageData* create(
         const std::vector<char>& compressedImageData, std::string&& imageURL,
-        uint32_t needsDownScaleImageResourceLargerThan);
+        uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio);
     static NativeImageData* create(
         const std::vector<char>& compressedImageData, std::string&& imageURL,
-        uint32_t needsDownScaleImageResourceLargerThan,
+        uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio,
         uint8_t* decodedImageBuffer, size_t width, size_t height,
         size_t stride);
 

@@ -563,6 +563,11 @@ int main(int argc, char* argv[])
     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
                          "/tmp/Starfish_Cookies.txt", cacheDir.data());
 
+    const char* gcFrequency = getenv("GC_FREQUENCY");
+    if (gcFrequency && strlen(gcFrequency)) {
+        LWE::LWE::SetGCFrequency(std::atoi(gcFrequency));
+    }
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     LWE::WebView* webView =
         LWE::WebView::Create(wndObj, x, y, width, height, scaleFactor, "serif",

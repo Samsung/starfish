@@ -301,13 +301,16 @@ struct CanvasRenderTargetInfo {
     size_t m_width;
     size_t m_height;
     size_t m_stride;
+    float m_devicePixelRatio;
 
     CanvasRenderTargetInfo(uint8_t* buffer = nullptr, size_t width = 0,
-                           size_t height = 0, size_t stride = 0)
+                           size_t height = 0, size_t stride = 0,
+                           float devicePixelRatio = 1)
         : m_buffer(buffer)
         , m_width(width)
         , m_height(height)
         , m_stride(stride)
+        , m_devicePixelRatio(devicePixelRatio)
     {
     }
 };
@@ -325,9 +328,9 @@ public:
     };
     static Canvas* create(WebView* webView, CanvasSurface* data,
                           CanvasFlag flag = PlainElement);
-    static Canvas* create(WebView* webView, uint8_t* data, size_t w, size_t h,
-                          size_t stride);
     static Canvas* create(WebView* webView, NativeImageData* data);
+    static Canvas* create(uint8_t* data, size_t w, size_t h, size_t stride,
+                          float devicePixelRatio = 1);
 
     virtual ~Canvas()
     {
@@ -546,6 +549,14 @@ public:
     {
         STARFISH_UNIMPLEMENTED();
     }
+    void rect(const Unit::Rect& rt)
+    {
+        moveTo(rt.x(), rt.y());
+        lineTo(rt.maxX(), rt.y());
+        lineTo(rt.maxX(), rt.maxY());
+        lineTo(rt.x(), rt.maxY());
+        lineTo(rt.x(), rt.y());
+    }
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3)
     {
@@ -645,6 +656,12 @@ public:
         STARFISH_UNIMPLEMENTED();
     }
 #endif
+    // this function can be called from any thread
+    static void resizeImage(uint8_t* orgBuffer, size_t orgWidth,
+                            size_t orgHeight, size_t orgStride,
+                            uint8_t* newBuffer, size_t newWidth,
+                            size_t newHeight, size_t newStride);
+
 protected:
     void drawFillRectShadow(float x, float y, float w, float h);
     void drawStrokeRectShadow(float x, float y, float w, float h);
@@ -700,7 +717,6 @@ protected:
         return m_state[m_state.size() - 1];
     }
     CanvasRenderTargetInfo m_renderTargetInfo;
-    WebView* m_webView{ nullptr };
     Nullable<CanvasSurface*> m_targetSurface;
     GCVector<CanvasState*> m_state{};
     GCVector<CanvasState*> m_stateMemoryPool{};
