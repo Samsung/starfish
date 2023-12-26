@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "shell/testRunner.h"
+#include "core/modules/test/testRunner.h"
 
 #ifdef STARFISH_ENABLE_TEST
 namespace Starfish {
