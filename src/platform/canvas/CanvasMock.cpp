@@ -528,15 +528,7 @@ public:
     virtual Font* font()
     {
         STARFISH_UNIMPLEMENTED();
-        auto famliyName =
-            m_webView->initialFontFamilyDatas()[1].m_familyName.string();
-        return m_webView->mainBrowsingContext()
-            ->document()
-            ->fontSelector()
-            ->loadFont(&famliyName, 1, m_webView->defaultFontSize(),
-                       FontStyleValue::NormalFontStyleValue,
-                       FontWeightValue::NormalFontWeightValue, 0,
-                       FontKerningValue::FontKerningAutoValue);
+        return nullptr;
     }
 
     virtual String* originalFontStr()
