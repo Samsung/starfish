@@ -47,7 +47,7 @@ class HTTPCache;
 #endif
 
 // ctor of Starfish class is NOT THREAD-SAFE
-class EXPORT Starfish : public gc {
+class Starfish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
     friend class WebView;

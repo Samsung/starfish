@@ -45,7 +45,7 @@
 namespace Starfish {
 
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
-EXPORT bool g_fireOnloadEvent = false;
+bool g_fireOnloadEvent = false;
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE
