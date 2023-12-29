@@ -40,7 +40,6 @@ using namespace Escargot;
 
 #ifdef STARFISH_ENABLE_TEST
 #include <signal.h>
-extern int g_exitCode;
 void customExit(int returnCode)
 {
     fflush(stdout);
@@ -50,7 +49,8 @@ void customExit(int returnCode)
 // --hide-window + EFL window is not working correctly
 // because EFL throws error
 #ifdef PORT_WEBVIEW_BRIDGE_GLFW
-    g_exitCode = returnCode;
+    std::string exitCode = std::to_string(returnCode);
+    setenv("EXIT_CODE", exitCode.c_str(), 1);
     raise(SIGINT);
     exit(returnCode);
 #else

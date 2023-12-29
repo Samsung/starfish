@@ -414,7 +414,7 @@ LayoutUnit FontImplCairo::measureText(const StringView& str)
         return 0;
     }
 #ifdef STARFISH_ENABLE_TEST
-    if (g_enablePixelTest) {
+    if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
         size_t count = 0;
         for (size_t i = str.start(); i < str.end(); i++) {
             count += Font::spaceSizeNumerator((*str.originalString())[i]);

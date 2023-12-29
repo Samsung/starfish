@@ -44,21 +44,8 @@
 
 namespace Starfish {
 
-#ifdef STARFISH_ENABLE_TEST
-bool g_enablePixelTest = false;
-bool g_enableDumpAsText = false;
-bool g_DumpAsText_Async = false;
-int g_referenceTestState = 0;
-#endif
-
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
 bool g_fireOnloadEvent = false;
-#endif
-
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-bool g_starfishIgnoreSSLVerify = true;
-#else
-bool g_starfishIgnoreSSLVerify = false;
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE
@@ -69,9 +56,6 @@ Profiler g_profiler;
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
 #elif defined(STARFISH_EFL_CAIRO_GL)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_ECORE_WAYLAND2_CAIRO_GL)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_GLFW_CAIRO_GL)

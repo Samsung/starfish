@@ -44,12 +44,10 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL) &&            \
-    !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2) && \
-    !defined(PORT_WINDOW_BACKEND_HEADLESS) &&       \
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL) &&      \
+    !defined(PORT_WINDOW_BACKEND_HEADLESS) && \
     !defined(PORT_WEBVIEW_BRIDGE_FLUTTER)
-#error \
-    "You must need PORT_WEBVIEW_BRIDGE_EFL or PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2 to use this"
+#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
 #endif
 
 #if !defined(STARFISH_MM_OUTPUT_WITH_GL)

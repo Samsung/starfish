@@ -249,7 +249,7 @@ public:
         m_htmlSource =
             m_htmlSource->concat(String::createASCIIString("</div>"));
 #ifdef STARFISH_ENABLE_TEST
-        if (g_referenceTestState > 0) {
+        if (getenv("REF_TEST_STATE") && atoi(getenv("REF_TEST_STATE")) > 0) {
             m_htmlSource = m_htmlSource->concat(String::createASCIIString(
                 "<sfrtfailed>Reference test load fail</sfrtfailed>"));
         }

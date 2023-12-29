@@ -887,7 +887,7 @@ public:
         LayoutRect rt(x, y, sz.width(), sz.height());
 
 #ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
+        if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
             // drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
         } else {
             drawGlyphsSkia(m_canvas, rt, sv, rt.x(), rt.y());

@@ -22,7 +22,7 @@ ENDIF()
 #######################################################
 
 file(GLOB_RECURSE STARFISH_SRC "${STARFISH_ROOT_PATH}/src/*.cpp" )
-list(REMOVE_ITEM STARFISH_SRC "${STARFISH_ROOT_PATH}/src/shell/shell.cpp")
+list(REMOVE_ITEM STARFISH_SRC "${STARFISH_ROOT_PATH}/src/shell/Shell.cpp")
 
 file(GLOB CLIPPER_SRC "${STARFISH_ROOT_PATH}/third_party/clipper/cpp/clipper.cpp" )
 file(GLOB GCUTIL_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/*.cpp" )

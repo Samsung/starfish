@@ -46,13 +46,6 @@ enum StarfishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
-#ifdef STARFISH_ENABLE_TEST
-enum StarfishTestCompatibleMode {
-    Normal = 0,
-    ChromiumLayout,
-};
-#endif
-
 class Document;
 class BrowsingContext;
 class StorageNamespaceProvider;
@@ -297,18 +290,6 @@ public:
     {
         return m_builtinPolyfillPathString;
     }
-
-#ifdef STARFISH_ENABLE_TEST
-    void setTestCompatibleMode(StarfishTestCompatibleMode mode)
-    {
-        m_testCompatibleMode = mode;
-    }
-
-    StarfishTestCompatibleMode testCompatibleMode()
-    {
-        return (StarfishTestCompatibleMode)m_testCompatibleMode;
-    }
-#endif
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector() const override
@@ -640,9 +621,6 @@ private:
                         Escargot::ScriptNativeFunctionPointer>>
         m_jsInterfaceList;
 
-#ifdef STARFISH_ENABLE_TEST
-    unsigned int m_testCompatibleMode;
-#endif
     Unit::Color m_baseBackgroundColor;
     Unit::Color m_baseForegroundColor;
     LWE::IdleModeJob

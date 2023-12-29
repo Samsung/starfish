@@ -137,13 +137,6 @@ private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
 };
 
-#ifdef STARFISH_ENABLE_TEST
-extern bool g_enablePixelTest;
-extern bool g_enableDumpAsText;
-extern bool g_DumpAsText_Async;
-extern int g_referenceTestState; // 0:None, 1:RunningTC, 2:RunningReference
-#endif
-
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
 extern bool g_fireOnloadEvent;
 #endif
@@ -151,7 +144,6 @@ extern bool g_fireOnloadEvent;
 #ifdef STARFISH_ENABLE_PROFILE
 extern Profiler g_profiler;
 #endif
-extern bool g_starfishIgnoreSSLVerify;
 
 } // namespace Starfish
 

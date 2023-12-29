@@ -170,6 +170,7 @@ private:
     void printCurlRequestDump();
     bool m_enableLog;
 #endif
+    bool m_ignoreSSLVerify;
 };
 } // namespace Starfish
 
