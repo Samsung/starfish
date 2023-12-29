@@ -384,7 +384,7 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
 
 #ifdef STARFISH_ENABLE_TEST
     WebView* wv = consumer->webView();
-    if (g_enablePixelTest) {
+    if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
         String* str = String::fromUTF8("StarfishAhem");
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
                               fixedLetterSpacing);
@@ -484,7 +484,8 @@ void ComputedStyle::loadBackgroundImage(
                     wv->startUpFlag() &
                     StarfishStartUpFlag::enableRegressionTest;
                 reqData->m_syncLevel =
-                    (g_enablePixelTest || enableRegressionTest)
+                    ((getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) ||
+                     enableRegressionTest)
                         ? RequestSyncLevel::AlwaysSync
                         : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
@@ -542,9 +543,11 @@ void ComputedStyle::loadBorderImage(
             bool enableRegressionTest =
                 wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
 
-            reqData->m_syncLevel = (g_enablePixelTest || enableRegressionTest)
-                                       ? RequestSyncLevel::AlwaysSync
-                                       : RequestSyncLevel::SyncIfAlreadyLoaded;
+            reqData->m_syncLevel =
+                ((getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) ||
+                 enableRegressionTest)
+                    ? RequestSyncLevel::AlwaysSync
+                    : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
             reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
 #endif
@@ -592,9 +595,11 @@ void ComputedStyle::loadListStyleImage(
             WebView* wv = consumer->webView();
             bool enableRegressionTest =
                 wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
-            reqData->m_syncLevel = (g_enablePixelTest || enableRegressionTest)
-                                       ? RequestSyncLevel::AlwaysSync
-                                       : RequestSyncLevel::SyncIfAlreadyLoaded;
+            reqData->m_syncLevel =
+                ((getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) ||
+                 enableRegressionTest)
+                    ? RequestSyncLevel::AlwaysSync
+                    : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
             reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
 #endif

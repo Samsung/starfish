@@ -472,13 +472,6 @@ void ScriptBindingWindowInstance::initJavaScriptBinding(
     m_ownerWindow->init(this, m_ownerWindow);
 
     context->setVirtualIdentifierCallback(virtualIdentifierCallback);
-
-#ifdef STARFISH_ENABLE_TEST
-    if (ownerWindow()->webView()->testCompatibleMode() ==
-        StarfishTestCompatibleMode::Normal) {
-        evaluateString(this, String::fromUTF8("delete this.testRunner"));
-    }
-#endif /* STARFISH_ENABLE_TEST */
 }
 
 void ScriptBindingWindowInstance::destroy()

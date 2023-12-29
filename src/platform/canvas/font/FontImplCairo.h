@@ -131,7 +131,7 @@ public:
         met.m_xheightRate = (float)m_xHeight / (float)m_unitsPerEM;
 
 #ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
+        if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
             // Set the FontMetrics as if font is Ahem.
             met.m_ascender = size * 0.8;
             met.m_descender = met.m_ascender - size;

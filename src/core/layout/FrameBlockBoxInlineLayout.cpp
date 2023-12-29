@@ -2363,7 +2363,7 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
 
     insertAbsolutePositionedBoxes();
 #ifdef STARFISH_ENABLE_TEST
-    if (!g_enablePixelTest) {
+    if (!(getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST")))) {
         back->mergeInlineTextBoxes(this);
     }
 #else

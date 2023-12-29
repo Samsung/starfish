@@ -443,7 +443,7 @@ endif()
 #######################################################
 
 FILE (GLOB_RECURSE STARFISH_SRC ${STARFISH_ROOT}/src/*.cpp)
-LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/shell/shell.cpp ${STARFISH_ROOT}/src/shell/testRunner.cpp)
+LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/shell/Shell.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/platform/public/DeviceInfo.cpp)
 
 FILE (GLOB STARFISH_SRC_GENRATED_BINDING ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/*.cpp)

@@ -51,7 +51,15 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
 #ifdef STARFISH_ENABLE_TEST
     , m_enableLog(false)
 #endif
+#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
+    , m_ignoreSSLVerify(true)
+#else
+    , m_ignoreSSLVerify(false)
+#endif
 {
+    if (getenv("IGNORE_SSL_VERIFY") && strlen(getenv("IGNORE_SSL_VERIFY"))) {
+        m_ignoreSSLVerify = true;
+    }
 }
 
 HTTPTransaction::~HTTPTransaction()
@@ -79,7 +87,7 @@ void HTTPTransaction::preprocess()
     }
 #endif
 
-    if (g_starfishIgnoreSSLVerify) {
+    if (m_ignoreSSLVerify) {
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
     }
@@ -161,7 +169,7 @@ void HTTPTransaction::start()
 
     preprocess();
 
-    if (g_starfishIgnoreSSLVerify) {
+    if (m_ignoreSSLVerify) {
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
     }
@@ -233,7 +241,7 @@ void HTTPTransaction::start()
 
     startRequest();
 
-    if (g_starfishIgnoreSSLVerify) {
+    if (m_ignoreSSLVerify) {
         if (m_res == CURLE_RECV_ERROR) {
             // when gives CURLOPT_SSL_VERIFYHOST to curl,
             // we got CURLE_RECV_ERROR but connection was successful

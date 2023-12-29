@@ -106,9 +106,6 @@ ANNOTATE_DEFINE;
 extern bool g_forceRendering;
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
-int g_testCompatibleMode;
-int g_startUpFlag;
-int g_exitCode;
 #endif
 
 namespace Starfish {
@@ -163,8 +160,11 @@ static std::string rtCreatePngName(int id)
 static void rtScreenShot(WebView* wv)
 {
     STARFISH_ASSERT(wv != nullptr);
-
-    std::string capturePng = rtCreatePngName(g_referenceTestState);
+    int state = 0;
+    if (getenv("REF_TEST_STATE")) {
+        state = atoi(getenv("REF_TEST_STATE"));
+    }
+    std::string capturePng = rtCreatePngName(state);
     screenShotInRendering(wv, capturePng.c_str(), [capturePng]() {
         STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s", capturePng.c_str());
     });
@@ -195,7 +195,7 @@ static void rtDoTest(Document* document)
     STARFISH_ASSERT(document != nullptr);
 
     WebView* wv = document->webView();
-    if (g_referenceTestState == 1) {
+    if (getenv("REF_TEST_STATE") && atoi(getenv("REF_TEST_STATE")) == 1) {
         // Case1: Running TC
         rtShouldLoaded(document, "TC_LOAD_FAIL");
 
@@ -203,12 +203,13 @@ static void rtDoTest(Document* document)
         rtShouldTrue(url.hasValue(), wv, "WRONG_REF_URL");
 
         rtScreenShot(wv);
-        g_referenceTestState = 2;
+        setenv("REF_TEST_STATE", "2", 1);
         ResourceURL* resourceURL =
             new ResourceURL(url.getValue(), document->baseURL()->baseURI());
         wv->messageLoop()->invokeNavigate(wv, resourceURL, nullptr,
                                           HistoryManagerAction::Add);
-    } else if (g_referenceTestState == 2) {
+    } else if (getenv("REF_TEST_STATE") &&
+               atoi(getenv("REF_TEST_STATE")) == 2) {
         // Case2: Running Reference
         rtShouldLoaded(document, "REF_LOAD_FAIL");
         rtScreenShot(wv);
@@ -296,9 +297,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_defaultFontSize(defaultFontSize)
     , m_screenInfo(info)
     , m_builtinPolyfillPathString(builtinPolyfillPathString)
-#ifdef STARFISH_ENABLE_TEST
-    , m_testCompatibleMode(StarfishTestCompatibleMode::Normal)
-#endif
     , m_baseBackgroundColor(Unit::Color(255, 255, 255, 255))
     , m_baseForegroundColor(Unit::Color(0, 0, 0, 255))
     , m_idleModeJob(LWE::IdleModeJob::IdleModeDefault)
@@ -320,13 +318,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     m_platformWindow->setWebView(this);
     m_deviceKind = deviceKindUseTouchScreen;
-#ifdef STARFISH_ENABLE_TEST
-    m_testCompatibleMode = g_testCompatibleMode;
-    m_startUpFlag = g_startUpFlag;
-#else
     m_startUpFlag = 0;
+#ifdef STARFISH_ENABLE_TEST
+    if (getenv("START_UP_FLAG")) {
+        m_startUpFlag = atoi(getenv("START_UP_FLAG"));
+    }
 #endif
-
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
@@ -1617,30 +1614,7 @@ RenderResult WebView::rendering(bool force)
 #if defined(STARFISH_ENABLE_TEST)
     {
         if (g_fireOnloadEvent &&
-            testCompatibleMode() ==
-                StarfishTestCompatibleMode::ChromiumLayout) {
-            if (g_enableDumpAsText && !g_DumpAsText_Async) {
-                fprintf(stdout, "#READY\n");
-
-                StringBuilder outStr;
-                outStr.appendString(
-                    String::createASCIIString("Content-Type: text/plain\n"));
-                outStr.appendString(FrameTreeBuilder::dumpFrameTreeAsText(
-                    m_topLevelBrowsingContext->document(), 0));
-                fprintf(stdout, "%s\n",
-                        outStr.finalize()->toUTF8NonGCString().c_str());
-                fprintf(stdout, "#EOF\n");
-                fprintf(stdout, "#EOF\n");
-                fprintf(stdout, "#EOF\n");
-
-                fprintf(stderr, "#EOF\n");
-                g_enableDumpAsText = false;
-                ANNOTATE_CHANNEL_END(3001);
-                exit(0);
-            }
-        }
-
-        if (g_fireOnloadEvent && g_referenceTestState > 0) {
+            (getenv("REF_TEST_STATE") && atoi(getenv("REF_TEST_STATE")) > 0)) {
             rtDoTest(m_topLevelBrowsingContext->document());
             ANNOTATE_CHANNEL_END(3001);
             return renderResult;

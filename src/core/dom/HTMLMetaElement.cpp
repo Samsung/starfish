@@ -29,10 +29,6 @@
 
 namespace Starfish {
 
-#ifdef STARFISH_ENABLE_TEST
-extern bool g_enablePixelTest;
-#endif
-
 void* HTMLMetaElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLMetaElement));
@@ -101,7 +97,7 @@ void HTMLMetaElement::checkPlatformFlags()
     if (isInDocumentScopeAndDocumentParticipateInRendering()) {
 #ifdef STARFISH_ENABLE_TEST
         if (m_name->equalsIgnoreCase("pixel-test")) {
-            g_enablePixelTest = true;
+            setenv("PIXEL_TEST", "1", 1);
             document()->setStyle(
                 document()->styleResolver().resolveDocumentStyle(document()));
             window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();

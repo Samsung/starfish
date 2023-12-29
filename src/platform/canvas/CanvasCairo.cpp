@@ -71,8 +71,6 @@
 
 namespace Starfish {
 
-extern bool g_enablePixelTest;
-
 class FontFaceReferenceHolder {
 public:
     FontFaceReferenceHolder(FontFaceImplCairo* fontFace)
@@ -1190,7 +1188,7 @@ public:
 
         applyCanvasFillStrokeSourceIfNeeds();
 #ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest == true) {
+        if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
             drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
         } else {
             drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), false,
@@ -2029,7 +2027,7 @@ private:
     {
         STARFISH_ASSERT(canvas != nullptr);
 
-        if (g_enablePixelTest == true) {
+        if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST"))) {
             LayoutUnit x = rect.x();
             LayoutUnit y = rect.y();
 

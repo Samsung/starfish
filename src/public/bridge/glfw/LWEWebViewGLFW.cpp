@@ -31,8 +31,6 @@
 
 #include <signal.h>
 
-extern volatile sig_atomic_t g_doneFlag; // It is declared in shell.cpp.
-
 namespace LWE {
 
 static void onCursorPosition(GLFWwindow* window, double xpos, double ypos);
@@ -51,7 +49,7 @@ static void onError(int error, const char* description)
 
 static void onWindowClose(GLFWwindow* window)
 {
-    g_doneFlag = 1;
+    setenv("SHELL_DONE_FLAG", "1", 1);
 }
 
 class WebViewGLFW : public WebView {
