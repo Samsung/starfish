@@ -739,16 +739,19 @@ int main(int argc, char* argv[])
         "Asia/Seoul");
 #endif
 
+#if !defined(SHELL_ENABLE_HEADLESS)
     addMainBoxToWindowIfNeeds(wndObj, webView);
-
+#endif
     webView->LoadURL(std::string(argv[1]));
     webView->Focus();
 
+#if !defined(SHELL_ENABLE_HEADLESS)
     installFocusInHandlerIfNeeds(wndObj, webView);
 
     installConsoleThreadIfNeeds(webView, shellOptions);
     installCrashTesThreadIfNeeds(webView, shellOptions);
     installTimeoutThreadIfNeeds(webView, shellOptions);
+#endif
 
     int ret = runMainLoop();
     if (ret != 0) {
