@@ -40,6 +40,7 @@ public:
     static CookieManagerProcTable kCookieManagerProcTable;
     static LWEProcTable kLWEProcTable;
     static ResourceErrorProcTable kResourceErrorProcTable;
+    static SettingsProcTable kSettingsProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -60,6 +61,7 @@ private:
     bool loadCookieManagerProcTable();
     bool loadLWEProcTable();
     bool loadResourceErrorProcTable();
+    bool loadSettingsProcTable();
 
     void* m_handle = nullptr;
 };

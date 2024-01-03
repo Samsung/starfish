@@ -24,6 +24,7 @@ namespace LWE {
 CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
 LWEProcTable LWEDelegateLoader::kLWEProcTable;
 ResourceErrorProcTable LWEDelegateLoader::kResourceErrorProcTable;
+SettingsProcTable LWEDelegateLoader::kSettingsProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
@@ -43,7 +44,7 @@ bool LWEDelegateLoader::load(std::string path)
     }
 
     return loadCookieManagerProcTable() && loadLWEProcTable() &&
-           loadResourceErrorProcTable();
+           loadResourceErrorProcTable() && loadSettingsProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -89,6 +90,19 @@ bool LWEDelegateLoader::loadResourceErrorProcTable()
         reinterpret_cast<uintptr_t (*)(int, const char*, const char*)>(
             dlsym(m_handle, "LWEDelegate_ResourceError_Create"));
     return kResourceErrorProcTable.Create;
+}
+
+bool LWEDelegateLoader::loadSettingsProcTable()
+{
+    kSettingsProcTable.Create =
+        reinterpret_cast<uintptr_t (*)(const char* defaultUA, const char* ua)>(
+            dlsym(m_handle, "LWEDelegate_ResourceError_Create"));
+    kSettingsProcTable.CreateEmpty = reinterpret_cast<uintptr_t (*)()>(
+        dlsym(m_handle, "LWEDelegate_Settings_Create_Empty"));
+    kSettingsProcTable.CreateFromOther = reinterpret_cast<uintptr_t (*)(void*)>(
+        dlsym(m_handle, "LWEDelegate_Settings_Create_From_Other"));
+    return kSettingsProcTable.Create && kSettingsProcTable.CreateEmpty &&
+           kSettingsProcTable.CreateFromOther;
 }
 
 } // namespace LWE

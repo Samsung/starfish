@@ -669,39 +669,39 @@ void WebContainer::RegisterCanRenderingHandler(
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-Settings WebContainer::GetSettings()
+Settings* WebContainer::GetSettings()
 {
-    Settings result(USER_AGENT(STARFISH_NAME, VERSION), "");
+    Settings* result = Settings::Create(USER_AGENT(STARFISH_NAME, VERSION), "");
 
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    result.SetUserAgentString(
+    result->SetUserAgentString(
         TO_WEBVIEW(m_impl)->userAgent()->toUTF8NonGCString());
 #ifdef STARFISH_ENABLE_HTTPCACHE
     Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
     if (cache.hasValue()) {
-        result.SetCacheMode(cache->cacheMode());
+        result->SetCacheMode(cache->cacheMode());
     } else {
-        result.SetCacheMode(::Starfish::HTTPCache::LOAD_NO_CACHE);
+        result->SetCacheMode(::Starfish::HTTPCache::LOAD_NO_CACHE);
     }
 #endif
-    result.SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
+    result->SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
 #ifdef STARFISH_ENABLE_TTS
-    result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
-    result.SetTTSLanguage(TO_WEBVIEW(m_impl)->tts()->userLanguage());
+    result->SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
+    result->SetTTSLanguage(TO_WEBVIEW(m_impl)->tts()->userLanguage());
 #endif
-    result.SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
-    result.SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
-    result.SetIdleModeCheckIntervalInMS(
+    result->SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
+    result->SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
+    result->SetIdleModeCheckIntervalInMS(
         TO_WEBVIEW(m_impl)->idleModeCheckIntervalInMS());
-    result.SetNeedsDownloadWebFontsEarly(
+    result->SetNeedsDownloadWebFontsEarly(
         TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
-    result.SetNeedsDownScaleImageResourceLargerThan(
+    result->SetNeedsDownScaleImageResourceLargerThan(
         TO_WEBVIEW(m_impl)->needsDownScaleImageResourceLargerThan());
 #ifndef TIZEN_COMPAT_HEADER_5_0
-    result.SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
+    result->SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
 #endif
-    result.SetUseExternalPopup(TO_WEBVIEW(m_impl)->useExternalPopup());
-    result.SetUseSpatialNavigation(TO_WEBVIEW(m_impl)->useSpatialNavigation());
+    result->SetUseExternalPopup(TO_WEBVIEW(m_impl)->useExternalPopup());
+    result->SetUseSpatialNavigation(TO_WEBVIEW(m_impl)->useSpatialNavigation());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -917,50 +917,51 @@ void WebContainer::Blur()
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::SetSettings(const Settings& settings)
+void WebContainer::SetSettings(const Settings* settings)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->setCustomUserAgentString(
-        Starfish::String::fromUTF8(settings.GetUserAgentString().data(),
-                                   settings.GetUserAgentString().size()));
-    TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
+        Starfish::String::fromUTF8(settings->GetUserAgentString().data(),
+                                   settings->GetUserAgentString().size()));
+    TO_WEBVIEW(m_impl)->setProxyURL(settings->GetProxyURL());
 #ifdef STARFISH_ENABLE_TTS
-    TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
-    TO_WEBVIEW(m_impl)->tts()->setUserLanguage(settings.GetTTSLanguage());
+    TO_WEBVIEW(m_impl)->tts()->setMode(settings->GetTTSMode());
+    TO_WEBVIEW(m_impl)->tts()->setUserLanguage(settings->GetTTSLanguage());
 #endif
     unsigned char r, g, b, a;
-    settings.GetBaseBackgroundColor(r, g, b, a);
+    settings->GetBaseBackgroundColor(r, g, b, a);
     TO_WEBVIEW(m_impl)->setBaseBackgroundColor(
         Starfish::Unit::Color(r, g, b, a));
-    settings.GetBaseForegroundColor(r, g, b, a);
+    settings->GetBaseForegroundColor(r, g, b, a);
     TO_WEBVIEW(m_impl)->setBaseForegroundColor(
         Starfish::Unit::Color(r, g, b, a));
 #ifdef STARFISH_ENABLE_HTTPCACHE
     Nullable<::Starfish::HTTPCache*> cache = TO_STARFISH(m_impl)->httpCache();
     if (cache.hasValue()) {
-        cache->setCacheMode(settings.GetCacheMode());
+        cache->setCacheMode(settings->GetCacheMode());
     } else {
         STARFISH_LOG_ERROR(
             "Http Cache could not initialized. So Changing cache mode is no "
             "effect.. ");
     }
 #endif
-    TO_WEBVIEW(m_impl)->setWebSecurityMode(settings.GetWebSecurityMode());
-    TO_WEBVIEW(m_impl)->setIdleModeJob(settings.GetIdleModeJob());
+    TO_WEBVIEW(m_impl)->setWebSecurityMode(settings->GetWebSecurityMode());
+    TO_WEBVIEW(m_impl)->setIdleModeJob(settings->GetIdleModeJob());
     TO_WEBVIEW(m_impl)->setIdleModeCheckIntervalInMS(
-        settings.GetIdleModeCheckIntervalInMS());
+        settings->GetIdleModeCheckIntervalInMS());
     TO_WEBVIEW(m_impl)->setNeedsDownloadWebFontsEarly(
-        settings.NeedsDownloadWebFontsEarly());
-    TO_WEBVIEW(m_impl)->setUseHttp2(settings.UseHttp2());
+        settings->NeedsDownloadWebFontsEarly());
+    TO_WEBVIEW(m_impl)->setUseHttp2(settings->UseHttp2());
     TO_WEBVIEW(m_impl)->setNeedsDownScaleImageResourceLargerThan(
-        settings.NeedsDownScaleImageResourceLargerThan());
+        settings->NeedsDownScaleImageResourceLargerThan());
 #ifndef TIZEN_COMPAT_HEADER_5_0
-    TO_WEBVIEW(m_impl)->setScrollbarVisible(settings.ScrollbarVisible());
+    TO_WEBVIEW(m_impl)->setScrollbarVisible(settings->ScrollbarVisible());
 #endif
-    TO_WEBVIEW(m_impl)->setUseExternalPopup(settings.UseExternalPopup());
+    TO_WEBVIEW(m_impl)->setUseExternalPopup(settings->UseExternalPopup());
     TO_WEBVIEW(m_impl)->setUseSpatialNavigation(
-        settings.UseSpatialNavigation());
+        settings->UseSpatialNavigation());
 
+    delete settings;
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

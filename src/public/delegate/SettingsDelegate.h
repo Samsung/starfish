@@ -30,63 +30,84 @@ namespace LWEDelegate {
 
 class EXPORT_UNMANAGED_API Settings {
 public:
+    static Settings* Create();
+    static Settings* Create(const std::string& defaultUA,
+                            const std::string& ua);
+    static Settings* Create(Settings* other);
+
     Settings() = default;
-    Settings(const std::string& defaultUA, const std::string& ua);
-    Settings(const Settings& other);
+    virtual ~Settings() = default;
 
-    bool UpdateSetting(const std::string& key, const std::string& value);
-    std::string GetSetting(std::string key) const;
+    virtual bool UpdateSetting(const std::string& key,
+                               const std::string& value) = 0;
+    virtual std::string GetSetting(std::string key) const = 0;
 
-    std::string GetDefaultUserAgent() const;
-    std::string GetUserAgentString() const;
-    std::string GetProxyURL() const;
-    int GetCacheMode() const;
-    ::LWE::TTSMode GetTTSMode() const;
-    std::string GetTTSLanguage() const;
-    ::LWE::WebSecurityMode GetWebSecurityMode() const;
-    ::LWE::IdleModeJob GetIdleModeJob() const;
-    uint32_t GetIdleModeCheckIntervalInMS() const;
-    void GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
-                                unsigned char& b, unsigned char& a) const;
-    void GetBaseForegroundColor(unsigned char& r, unsigned char& g,
-                                unsigned char& b, unsigned char& a) const;
-    bool NeedsDownloadWebFontsEarly() const;
-    bool UseHttp2() const;
-    uint32_t NeedsDownScaleImageResourceLargerThan() const;
-    bool ScrollbarVisible() const;
-    bool UseExternalPopup() const;
-    bool UseSpatialNavigation() const;
+    virtual std::string GetDefaultUserAgent() const = 0;
+    virtual std::string GetUserAgentString() const = 0;
+    virtual std::string GetProxyURL() const = 0;
+    virtual int GetCacheMode() const = 0;
+    virtual ::LWE::TTSMode GetTTSMode() const = 0;
+    virtual std::string GetTTSLanguage() const = 0;
+    virtual ::LWE::WebSecurityMode GetWebSecurityMode() const = 0;
+    virtual ::LWE::IdleModeJob GetIdleModeJob() const = 0;
+    virtual uint32_t GetIdleModeCheckIntervalInMS() const = 0;
+    virtual void GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
+                                        unsigned char& b,
+                                        unsigned char& a) const = 0;
+    virtual void GetBaseForegroundColor(unsigned char& r, unsigned char& g,
+                                        unsigned char& b,
+                                        unsigned char& a) const = 0;
+    virtual bool NeedsDownloadWebFontsEarly() const = 0;
+    virtual bool UseHttp2() const = 0;
+    virtual uint32_t NeedsDownScaleImageResourceLargerThan() const = 0;
+    virtual bool ScrollbarVisible() const = 0;
+    virtual bool UseExternalPopup() const = 0;
+    virtual bool UseSpatialNavigation() const = 0;
 
-    void SetUserAgentString(const std::string& ua);
-    void SetCacheMode(int mode);
-    void SetProxyURL(const std::string& proxyURL);
-    void setDefaultFontSize(int size);
-    void SetTTSMode(::LWE::TTSMode value);
-    void SetTTSLanguage(const std::string& language);
-    void SetBaseBackgroundColor(unsigned char r, unsigned char g,
-                                unsigned char b, unsigned char a);
-    void SetBaseForegroundColor(unsigned char r, unsigned char g,
-                                unsigned char b, unsigned char a);
+    virtual void SetUserAgentString(const std::string& ua) = 0;
+    virtual void SetCacheMode(int mode) = 0;
+    virtual void SetProxyURL(const std::string& proxyURL) = 0;
+    virtual void setDefaultFontSize(int size) = 0;
+    virtual void SetTTSMode(::LWE::TTSMode value) = 0;
+    virtual void SetTTSLanguage(const std::string& language) = 0;
+    virtual void SetBaseBackgroundColor(unsigned char r, unsigned char g,
+                                        unsigned char b, unsigned char a) = 0;
+    virtual void SetBaseForegroundColor(unsigned char r, unsigned char g,
+                                        unsigned char b, unsigned char a) = 0;
 
-    void SetWebSecurityMode(::LWE::WebSecurityMode value);
-    void SetIdleModeJob(::LWE::IdleModeJob j);
-    void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS);
-    void SetNeedsDownloadWebFontsEarly(bool b);
-    void SetUseHttp2(bool b);
-    void SetNeedsDownScaleImageResourceLargerThan(
-        uint32_t demention); // Experimental
-    void SetScrollbarVisible(bool visible);
-    void SetUseExternalPopup(bool useExternalPopup);
-    void SetUseSpatialNavigation(bool useSpatialNavigation);
+    virtual void SetWebSecurityMode(::LWE::WebSecurityMode value) = 0;
+    virtual void SetIdleModeJob(::LWE::IdleModeJob j) = 0;
+    virtual void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS) = 0;
+    virtual void SetNeedsDownloadWebFontsEarly(bool b) = 0;
+    virtual void SetUseHttp2(bool b) = 0;
+    virtual void SetNeedsDownScaleImageResourceLargerThan(
+        uint32_t demention) = 0; // Experimental
+    virtual void SetScrollbarVisible(bool visible) = 0;
+    virtual void SetUseExternalPopup(bool useExternalPopup) = 0;
+    virtual void SetUseSpatialNavigation(bool useSpatialNavigation) = 0;
 
-    void IterateSettings(
+    virtual void IterateSettings(
         std::function<void(const std::string&, const std::string&)> callback)
-        const;
-
-private:
-    std::unordered_map<std::string, std::string> m_settings;
+        const = 0;
 };
 
 } // namespace LWEDelegate
+
+// C wrappers used for dlopen/dlsym.
+extern "C" {
+
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_Settings_Create(const char* defaultUA, const char* ua);
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_Settings_Create_Empty();
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_Settings_Create_From_Other(void* other);
+
+typedef struct {
+    uintptr_t (*Create)(const char* defaultUA, const char* ua);
+    uintptr_t (*CreateEmpty)();
+    uintptr_t (*CreateFromOther)(void* other);
+
+} SettingsProcTable;
+}
 
 #endif
