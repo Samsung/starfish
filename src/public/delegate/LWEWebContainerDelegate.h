@@ -110,7 +110,7 @@ public:
     void RegisterCanRenderingHandler(
         const std::function<bool(WebContainer*)>& cb);
 
-    Settings GetSettings();
+    Settings* GetSettings();
     void LoadURL(const std::string& url);
     std::string GetURL();
     void LoadData(const std::string& data);
@@ -136,7 +136,7 @@ public:
     void Focus();
     void Blur();
 
-    void SetSettings(const Settings& settings);
+    void SetSettings(const Settings* settings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);
     void ClearCache();

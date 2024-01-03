@@ -21,7 +21,7 @@
 
 namespace LWEDelegate {
 
-Settings WebView::GetSettings()
+Settings* WebView::GetSettings()
 {
     return FetchWebContainer()->GetSettings();
 }
@@ -101,7 +101,7 @@ void WebView::Destroy()
     delete this;
 }
 
-void WebView::SetSettings(const Settings& settings)
+void WebView::SetSettings(const Settings* settings)
 {
     FetchWebContainer()->SetSettings(settings);
 }

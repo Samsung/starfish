@@ -44,7 +44,7 @@ public:
 
     virtual void Destroy();
 
-    Settings GetSettings();
+    Settings* GetSettings();
 
     virtual void LoadURL(const std::string& url);
 
@@ -79,7 +79,7 @@ public:
 
     void ClearHistory();
 
-    void SetSettings(const Settings& settings);
+    void SetSettings(const Settings* settings);
 
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);

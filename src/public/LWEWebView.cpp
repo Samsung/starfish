@@ -151,24 +151,45 @@ std::string ResourceError::GetUrl() const
 
 Settings::Settings()
 {
-    m_delegate = LWEDelegateRef(
-        static_cast<void*>(new LWEDelegate::Settings()),
-        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
+        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+#else
+    LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
+#endif
+    m_delegate = LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+        delete toImpl<LWEDelegate::Settings>(ptr);
+    });
 }
 
 Settings::Settings(const std::string& defaultUA, const std::string& ua)
 {
-    m_delegate = LWEDelegateRef(
-        static_cast<void*>(new LWEDelegate::Settings(defaultUA, ua)),
-        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
+        LWEDelegateLoader::getInstance()->kSettingsProcTable.Create(
+            defaultUA.c_str(), ua.c_str()));
+#else
+    LWEDelegate::Settings* delegate =
+        LWEDelegate::Settings::Create(defaultUA, ua);
+#endif
+    m_delegate = LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+        delete toImpl<LWEDelegate::Settings>(ptr);
+    });
 }
 
 Settings::Settings(const Settings& other)
 {
-    m_delegate = LWEDelegateRef(
-        static_cast<void*>(new LWEDelegate::Settings(
-            *toImpl<LWEDelegate::Settings>(other.m_delegate.get()))),
-        [](void* ptr) { delete toImpl<LWEDelegate::Settings>(ptr); });
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
+        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateFromOther(
+            other.m_delegate.get()));
+#else
+    LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create(
+        toImpl<LWEDelegate::Settings>(other.m_delegate.get()));
+#endif
+    m_delegate = LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+        delete toImpl<LWEDelegate::Settings>(ptr);
+    });
 }
 
 Settings::~Settings()
@@ -649,14 +670,15 @@ void WebContainer::RegisterCanRenderingHandler(
 
 Settings WebContainer::GetSettings()
 {
-    LWEDelegate::Settings delegate =
+    LWEDelegate::Settings* delegate =
         toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GetSettings();
 
     Settings settings;
-    delegate.IterateSettings(
+    delegate->IterateSettings(
         [&settings](const std::string& key, const std::string& value) {
             settings.UpdateSetting(key, value);
         });
+    delete delegate;
 
     return settings;
 }
@@ -767,11 +789,17 @@ void WebContainer::Blur()
 
 void WebContainer::SetSettings(const Settings& settings)
 {
-    LWEDelegate::Settings delegate;
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
+        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+#else
+    LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
+#endif
     settings.IterateSettings(
-        [&delegate](const std::string& key, const std::string& value) {
-            delegate.UpdateSetting(key, value);
+        [delegate](const std::string& key, const std::string& value) {
+            delegate->UpdateSetting(key, value);
         });
+    // Delete delegate in LWEDelegate::WebContainer::SetSettings;
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->SetSettings(delegate);
 }
 
@@ -1191,14 +1219,15 @@ WebView::~WebView()
 
 Settings WebView::GetSettings()
 {
-    LWEDelegate::Settings delegate =
+    LWEDelegate::Settings* delegate =
         toImpl<LWEDelegate::WebView>(m_delegate.get())->GetSettings();
 
     Settings settings;
-    delegate.IterateSettings(
+    delegate->IterateSettings(
         [&settings](const std::string& key, const std::string& value) {
             settings.UpdateSetting(key, value);
         });
+    delete delegate;
 
     return settings;
 }
@@ -1283,11 +1312,17 @@ void WebView::Destroy()
 
 void WebView::SetSettings(const Settings& settings)
 {
-    LWEDelegate::Settings delegate;
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
+        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+#else
+    LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
+#endif
     settings.IterateSettings(
-        [&delegate](const std::string& key, const std::string& value) {
-            delegate.UpdateSetting(key, value);
+        [delegate](const std::string& key, const std::string& value) {
+            delegate->UpdateSetting(key, value);
         });
+    // Delete delegate in LWEDelegate::WebContainer::SetSettings;
     toImpl<LWEDelegate::WebView>(m_delegate.get())->SetSettings(delegate);
 }
 
