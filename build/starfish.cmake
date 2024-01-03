@@ -49,6 +49,7 @@ ENDIF()
 
 LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/public/LWEWebView.cpp
+    ${STARFISH_ROOT}/src/public/LWEDelegateLoader.cpp
     ${STARFISH_ROOT}/src/shell/Shell.cpp
 )
 
