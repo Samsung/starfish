@@ -18,15 +18,10 @@
  */
 
 #include "LWEWebView.h"
-
-#include "public/delegate/LWEDelegate.h"
-#include "public/delegate/ResourceErrorDelegate.h"
-#include "public/delegate/SettingsDelegate.h"
-#include "public/delegate/CookieManagerDelegate.h"
-#include "public/delegate/LWEWebContainerDelegate.h"
-#include "public/delegate/LWEWebViewDelegate.h"
+#include "LWEDelegateLoader.h"
 
 #include <assert.h>
+#include <iostream>
 
 #if defined(NDEBUG)
 #define LWE_ASSERT(assertion) ((void)0)
@@ -46,6 +41,12 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* cookieStoreDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegateLoader::getInstance()->load("libStarfish-impl.so");
+    if (!LWEDelegateLoader::getInstance()->isValid()) {
+        LWE_ASSERT(false);
+    }
+#endif
     LWEDelegate::LWE::Initialize(localStorageDataFilePath,
                                  cookieStoreDataFilePath,
                                  httpCacheDataDirectorypath);
