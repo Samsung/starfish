@@ -23,6 +23,7 @@ namespace LWE {
 
 CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
 LWEProcTable LWEDelegateLoader::kLWEProcTable;
+ResourceErrorProcTable LWEDelegateLoader::kResourceErrorProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
@@ -41,7 +42,8 @@ bool LWEDelegateLoader::load(std::string path)
         return false;
     }
 
-    return loadCookieManagerProcTable() && loadLWEProcTable();
+    return loadCookieManagerProcTable() && loadLWEProcTable() &&
+           loadResourceErrorProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -79,6 +81,14 @@ bool LWEDelegateLoader::loadLWEProcTable()
     return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
            kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
            kLWEProcTable.SetGCFrequency;
+}
+
+bool LWEDelegateLoader::loadResourceErrorProcTable()
+{
+    kResourceErrorProcTable.Create =
+        reinterpret_cast<uintptr_t (*)(int, const char*, const char*)>(
+            dlsym(m_handle, "LWEDelegate_ResourceError_Create"));
+    return kResourceErrorProcTable.Create;
 }
 
 } // namespace LWE

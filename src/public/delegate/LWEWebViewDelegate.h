@@ -87,7 +87,7 @@ public:
     void ClearCache();
 
     void RegisterOnReceivedErrorHandler(
-        std::function<void(WebView*, ResourceError)> cb);
+        std::function<void(WebView*, ResourceError*)> cb);
 
     void RegisterOnPageParsedHandler(
         std::function<void(WebView*, const std::string&)> cb);

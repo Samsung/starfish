@@ -94,36 +94,57 @@ void LWE::SetGCFrequency(unsigned char freq)
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
 {
-    m_delegate = LWEDelegateRef(
-        static_cast<void*>(
-            new LWEDelegate::ResourceError(code, description, url)),
-        [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::ResourceError* resourceError =
+        reinterpret_cast<LWEDelegate::ResourceError*>(
+            LWEDelegateLoader::getInstance()->kResourceErrorProcTable.Create(
+                code, description.c_str(), url.c_str()));
+#else
+    LWEDelegate::ResourceError* resourceError =
+        LWEDelegate::ResourceError::Create(code, description, url);
+#endif
+    m_delegate =
+        LWEDelegateRef(static_cast<void*>(resourceError), [](void* ptr) {
+            delete toImpl<LWEDelegate::ResourceError>(ptr);
+        });
 }
 
 ResourceError::ResourceError(const ResourceError& other)
 {
-    m_delegate = LWEDelegateRef(
-        static_cast<void*>(new LWEDelegate::ResourceError(
-            *toImpl<LWEDelegate::ResourceError>(other.m_delegate.get()))),
-        [](void* ptr) { delete toImpl<LWEDelegate::ResourceError>(ptr); });
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegate::ResourceError* resourceError =
+        reinterpret_cast<LWEDelegate::ResourceError*>(
+            LWEDelegateLoader::getInstance()->kResourceErrorProcTable.Create(
+                other.GetErrorCode(), other.GetDescription().c_str(),
+                other.GetUrl().c_str()));
+#else
+    LWEDelegate::ResourceError* resourceError =
+        LWEDelegate::ResourceError::Create(
+            other.GetErrorCode(), other.GetDescription(), other.GetUrl());
+
+#endif
+    m_delegate =
+        LWEDelegateRef(static_cast<void*>(resourceError), [](void* ptr) {
+            delete toImpl<LWEDelegate::ResourceError>(ptr);
+        });
 }
 
 ResourceError::~ResourceError()
 {
 }
 
-int ResourceError::GetErrorCode()
+int ResourceError::GetErrorCode() const
 {
     return toImpl<LWEDelegate::ResourceError>(m_delegate.get())->GetErrorCode();
 }
 
-std::string ResourceError::GetDescription()
+std::string ResourceError::GetDescription() const
 {
     return toImpl<LWEDelegate::ResourceError>(m_delegate.get())
         ->GetDescription();
 }
 
-std::string ResourceError::GetUrl()
+std::string ResourceError::GetUrl() const
 {
     return toImpl<LWEDelegate::ResourceError>(m_delegate.get())->GetUrl();
 }
@@ -770,11 +791,11 @@ void WebContainer::RegisterOnReceivedErrorHandler(
     const std::function<void(WebContainer*, ResourceError)>& cb)
 {
     const auto wrapper = [this, cb](LWEDelegate::WebContainer* container,
-                                    LWEDelegate::ResourceError error) -> void {
+                                    LWEDelegate::ResourceError* error) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
                    container);
         cb(this,
-           { error.GetErrorCode(), error.GetDescription(), error.GetUrl() });
+           { error->GetErrorCode(), error->GetDescription(), error->GetUrl() });
     };
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->RegisterOnReceivedErrorHandler(wrapper);
@@ -1286,9 +1307,9 @@ void WebView::RegisterOnReceivedErrorHandler(
     std::function<void(WebView*, ResourceError)> cb)
 {
     const auto wrapper = [this, cb](LWEDelegate::WebView*,
-                                    LWEDelegate::ResourceError error) -> void {
+                                    LWEDelegate::ResourceError* error) -> void {
         cb(this,
-           { error.GetErrorCode(), error.GetDescription(), error.GetUrl() });
+           { error->GetErrorCode(), error->GetDescription(), error->GetUrl() });
     };
     toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->RegisterOnReceivedErrorHandler(wrapper);

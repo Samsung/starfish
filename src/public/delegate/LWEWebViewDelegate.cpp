@@ -119,10 +119,10 @@ void WebView::ClearCache()
 }
 
 void WebView::RegisterOnReceivedErrorHandler(
-    std::function<void(WebView*, ResourceError)> cb)
+    std::function<void(WebView*, ResourceError*)> cb)
 {
     FetchWebContainer()->RegisterOnReceivedErrorHandler(
-        [this, cb](WebContainer*, ResourceError err) { cb(this, err); });
+        [this, cb](WebContainer*, ResourceError* err) { cb(this, err); });
 }
 
 void WebView::RegisterOnPageParsedHandler(

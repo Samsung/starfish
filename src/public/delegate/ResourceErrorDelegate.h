@@ -27,20 +27,26 @@ namespace LWEDelegate {
 
 class EXPORT_UNMANAGED_API ResourceError {
 public:
-    ResourceError(int code, const std::string& description,
-                  const std::string& url);
-    ResourceError(const ResourceError& other);
+    static ResourceError* Create(int code, const std::string& description,
+                                 const std::string& url);
 
-    int GetErrorCode();
-    std::string GetDescription();
-    std::string GetUrl();
+    ResourceError() = default;
+    virtual ~ResourceError() = default;
 
-private:
-    int m_errorCode;
-    std::string m_description;
-    std::string m_url;
+    virtual int GetErrorCode() = 0;
+    virtual std::string GetDescription() = 0;
+    virtual std::string GetUrl() = 0;
 };
 
 } // namespace LWEDelegate
 
+// C wrappers used for dlopen/dlsym.
+extern "C" {
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_ResourceError_Create(
+    int code, const char* description, const char* url);
+
+typedef struct {
+    uintptr_t (*Create)(int, const char*, const char*);
+} ResourceErrorProcTable;
+}
 #endif
