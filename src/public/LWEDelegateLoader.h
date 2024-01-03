@@ -37,6 +37,7 @@ namespace LWE {
 class LWEDelegateLoader {
 public:
     static LWEDelegateLoader* getInstance();
+    static CookieManagerProcTable kCookieManagerProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -44,10 +45,6 @@ public:
 
     bool load(std::string path);
     void unload();
-    bool isValid()
-    {
-        return m_handle != nullptr;
-    }
 
 private:
     LWEDelegateLoader()
@@ -57,6 +54,8 @@ private:
     ~LWEDelegateLoader()
     {
     }
+
+    bool loadCookieManagerProcTable();
 
     void* m_handle = nullptr;
 };

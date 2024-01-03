@@ -721,6 +721,11 @@ int main(int argc, char* argv[])
     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
                          "/tmp/Starfish_Cookies.txt", cacheDir().c_str());
 
+    if (LWE::CookieManager::GetInstance()->HasCookies()) {
+        // test for cookie manager.
+        printf("Cookie Manager has cookies.");
+    }
+
     const char* gcFrequency = getenv("GC_FREQUENCY");
     if (gcFrequency && strlen(gcFrequency)) {
         LWE::LWE::SetGCFrequency(std::atoi(gcFrequency));

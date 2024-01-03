@@ -21,6 +21,8 @@
 
 namespace LWE {
 
+CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
+
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
     static LWEDelegateLoader* instance = nullptr;
@@ -38,7 +40,7 @@ bool LWEDelegateLoader::load(std::string path)
         return false;
     }
 
-    return true;
+    return loadCookieManagerProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -47,6 +49,16 @@ void LWEDelegateLoader::unload()
         dlclose(m_handle);
         m_handle = nullptr;
     }
+}
+
+bool LWEDelegateLoader::loadCookieManagerProcTable()
+{
+    kCookieManagerProcTable.GetInstance = reinterpret_cast<uintptr_t (*)()>(
+        dlsym(m_handle, "LWEDelegate_CookieManager_GetInstance"));
+    kCookieManagerProcTable.Destroy = reinterpret_cast<void (*)()>(
+        dlsym(m_handle, "LWEDelegate_CookieManager_Destroy"));
+    return kCookieManagerProcTable.GetInstance &&
+           kCookieManagerProcTable.Destroy;
 }
 
 } // namespace LWE
