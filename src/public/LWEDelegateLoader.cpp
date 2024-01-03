@@ -22,6 +22,7 @@
 namespace LWE {
 
 CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
+LWEProcTable LWEDelegateLoader::kLWEProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
@@ -40,7 +41,7 @@ bool LWEDelegateLoader::load(std::string path)
         return false;
     }
 
-    return loadCookieManagerProcTable();
+    return loadCookieManagerProcTable() && loadLWEProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -59,6 +60,25 @@ bool LWEDelegateLoader::loadCookieManagerProcTable()
         dlsym(m_handle, "LWEDelegate_CookieManager_Destroy"));
     return kCookieManagerProcTable.GetInstance &&
            kCookieManagerProcTable.Destroy;
+}
+
+bool LWEDelegateLoader::loadLWEProcTable()
+{
+    kLWEProcTable.Initialize =
+        reinterpret_cast<void (*)(const char*, const char*, const char*)>(
+            dlsym(m_handle, "LWEDelegate_LWE_Initialize"));
+    kLWEProcTable.IsInitialized = reinterpret_cast<bool (*)()>(
+        dlsym(m_handle, "LWEDelegate_LWE_IsInitialized"));
+    kLWEProcTable.Finalize = reinterpret_cast<void (*)()>(
+        dlsym(m_handle, "LWEDelegate_LWE_Finalize"));
+    kLWEProcTable.GetGCFrequency = reinterpret_cast<unsigned char (*)()>(
+        dlsym(m_handle, "LWEDelegate_LWE_GetGCFrequency"));
+    kLWEProcTable.SetGCFrequency =
+        reinterpret_cast<void (*)(unsigned char freq)>(
+            dlsym(m_handle, "LWEDelegate_LWE_SetGCFrequency"));
+    return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
+           kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
+           kLWEProcTable.SetGCFrequency;
 }
 
 } // namespace LWE

@@ -45,30 +45,50 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     if (!LWEDelegateLoader::getInstance()->load("libStarfish-impl.so")) {
         LWE_ASSERT(false);
     }
-#endif
+    LWEDelegateLoader::getInstance()->kLWEProcTable.Initialize(
+        localStorageDataFilePath, cookieStoreDataFilePath,
+        httpCacheDataDirectorypath);
+#else
     LWEDelegate::LWE::Initialize(localStorageDataFilePath,
                                  cookieStoreDataFilePath,
                                  httpCacheDataDirectorypath);
+#endif
 }
 
 bool LWE::IsInitialized()
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEDelegateLoader::getInstance()->kLWEProcTable.IsInitialized();
+#else
     return LWEDelegate::LWE::IsInitialized();
+#endif
 }
 
 void LWE::Finalize()
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegateLoader::getInstance()->kLWEProcTable.Finalize();
+#else
     LWEDelegate::LWE::Finalize();
+#endif
 }
 
 unsigned char LWE::GetGCFrequency()
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEDelegateLoader::getInstance()->kLWEProcTable.GetGCFrequency();
+#else
     return LWEDelegate::LWE::GetGCFrequency();
+#endif
 }
 
 void LWE::SetGCFrequency(unsigned char freq)
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegateLoader::getInstance()->kLWEProcTable.SetGCFrequency(freq);
+#else
     LWEDelegate::LWE::SetGCFrequency(freq);
+#endif
 }
 
 ResourceError::ResourceError(int code, const std::string& description,

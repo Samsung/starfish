@@ -39,4 +39,22 @@ public:
 
 } // namespace LWEDelegate
 
+// C wrappers used for dlopen/dlsym.
+extern "C" {
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
+    const char* localStorageDataFilePath, const char* cookieStoreDataFilePath,
+    const char* httpCacheDataDirectorypath);
+bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized();
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_Finalize();
+unsigned char EXPORT_UNMANAGED_API LWEDelegate_LWE_GetGCFrequency();
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_SetGCFrequency(unsigned char freq);
+
+typedef struct {
+    void (*Initialize)(const char*, const char*, const char*);
+    bool (*IsInitialized)();
+    void (*Finalize)();
+    unsigned char (*GetGCFrequency)();
+    void (*SetGCFrequency)(unsigned char);
+} LWEProcTable;
+}
 #endif

@@ -38,6 +38,7 @@ class LWEDelegateLoader {
 public:
     static LWEDelegateLoader* getInstance();
     static CookieManagerProcTable kCookieManagerProcTable;
+    static LWEProcTable kLWEProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -56,6 +57,7 @@ private:
     }
 
     bool loadCookieManagerProcTable();
+    bool loadLWEProcTable();
 
     void* m_handle = nullptr;
 };
