@@ -98,7 +98,9 @@ extern "C" {
 
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_Settings_Create(const char* defaultUA, const char* ua);
+
 uintptr_t EXPORT_UNMANAGED_API LWEDelegate_Settings_Create_Empty();
+
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_Settings_Create_From_Other(void* other);
 

@@ -18,7 +18,9 @@
  */
 
 #include "StarfishConfig.h"
+#include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegate.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)

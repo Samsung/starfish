@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "public/delegate/LWEWebViewDelegate.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
 #include "platform/canvas/webgl/XGL.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 

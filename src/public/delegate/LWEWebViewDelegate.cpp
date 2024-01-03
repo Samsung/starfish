@@ -19,6 +19,10 @@
 
 #include "LWEWebViewDelegate.h"
 
+#include "SettingsDelegate.h"
+#include "ResourceErrorDelegate.h"
+#include "LWEWebContainerDelegate.h"
+
 namespace LWEDelegate {
 
 Settings* WebView::GetSettings()
