@@ -45,9 +45,19 @@
 
 namespace LWEDelegate {
 
-static CookieManager* g_cookieManager;
+class CookieManagerImpl : public CookieManager {
+public:
+    virtual std::string GetCookie(std::string url) override;
+    virtual bool HasCookies() override;
+    virtual void ClearCookies() override;
 
-std::string CookieManager::GetCookie(std::string url)
+    CookieManagerImpl() = default;
+    ~CookieManagerImpl() = default;
+};
+
+static CookieManagerImpl* g_cookieManager;
+
+std::string CookieManagerImpl::GetCookie(std::string url)
 {
     std::string result;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -58,7 +68,8 @@ std::string CookieManager::GetCookie(std::string url)
 
     return result;
 }
-bool CookieManager::HasCookies()
+
+bool CookieManagerImpl::HasCookies()
 {
     bool hasCookies;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -68,7 +79,7 @@ bool CookieManager::HasCookies()
 
     return hasCookies;
 }
-void CookieManager::ClearCookies()
+void CookieManagerImpl::ClearCookies()
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     Starfish::NetworkSharedResourceManager::getInstance()->clearCookies();
@@ -86,7 +97,7 @@ CookieManager* CookieManager::GetInstance()
     }
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     if (!g_cookieManager) {
-        g_cookieManager = new CookieManager();
+        g_cookieManager = new CookieManagerImpl();
     }
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return g_cookieManager;
@@ -104,13 +115,18 @@ void CookieManager::Destroy()
     }
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
-
-CookieManager::CookieManager()
-{
-}
-
-CookieManager::~CookieManager()
-{
-}
-
 } // namespace LWEDelegate
+
+extern "C" {
+
+uintptr_t LWEDelegate_CookieManager_GetInstance()
+{
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::CookieManager::GetInstance());
+}
+
+void LWEDelegate_CookieManager_Destroy()
+{
+    LWEDelegate::CookieManager::Destroy();
+}
+}

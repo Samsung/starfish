@@ -42,8 +42,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    LWEDelegateLoader::getInstance()->load("libStarfish-impl.so");
-    if (!LWEDelegateLoader::getInstance()->isValid()) {
+    if (!LWEDelegateLoader::getInstance()->load("libStarfish-impl.so")) {
         LWE_ASSERT(false);
     }
 #endif
@@ -372,7 +371,15 @@ CookieManager* CookieManager::GetInstance()
 {
     g_instance = nullptr;
     if (!g_instance) {
-        auto* delegate = LWEDelegate::CookieManager::GetInstance();
+#ifdef STARFISH_API_ENABLE_LOADER
+        LWEDelegate::CookieManager* delegate =
+            reinterpret_cast<LWEDelegate::CookieManager*>(
+                LWEDelegateLoader::getInstance()
+                    ->kCookieManagerProcTable.GetInstance());
+#else
+        LWEDelegate::CookieManager* delegate =
+            LWEDelegate::CookieManager::GetInstance();
+#endif
         if (delegate) {
             g_instance = new CookieManager();
             g_instance->m_delegate =
@@ -388,7 +395,11 @@ CookieManager* CookieManager::GetInstance()
 void CookieManager::Destroy()
 {
     if (g_instance) {
+#ifdef STARFISH_API_ENABLE_LOADER
+        LWEDelegateLoader::getInstance()->kCookieManagerProcTable.Destroy();
+#else
         LWEDelegate::CookieManager::Destroy();
+#endif
         g_instance->m_delegate = nullptr;
         delete g_instance;
         g_instance = nullptr;
