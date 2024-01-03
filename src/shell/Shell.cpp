@@ -739,6 +739,8 @@ int main(int argc, char* argv[])
         "Asia/Seoul");
 #endif
 
+    applyLWEOptions(lweOptions, webView);
+
 #if !defined(SHELL_ENABLE_HEADLESS)
     addMainBoxToWindowIfNeeds(wndObj, webView);
 #endif
