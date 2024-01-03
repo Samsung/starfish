@@ -301,3 +301,35 @@ unsigned char LWE::GetGCFrequency()
     return g_starfishInstance->gcFrequency();
 }
 } // namespace LWEDelegate
+
+extern "C" {
+void LWEDelegate_LWE_Initialize(const char* localStorageDataFilePath,
+                                const char* cookieStoreDataFilePath,
+                                const char* httpCacheDataDirectorypath)
+
+{
+    LWEDelegate::LWE::Initialize(localStorageDataFilePath,
+                                 cookieStoreDataFilePath,
+                                 httpCacheDataDirectorypath);
+}
+
+bool LWEDelegate_LWE_IsInitialized()
+{
+    return LWEDelegate::LWE::IsInitialized();
+}
+
+void LWEDelegate_LWE_Finalize()
+{
+    LWEDelegate::LWE::Finalize();
+}
+
+unsigned char LWEDelegate_LWE_GetGCFrequency()
+{
+    return LWEDelegate::LWE::GetGCFrequency();
+}
+
+void LWEDelegate_LWE_SetGCFrequency(unsigned char freq)
+{
+    LWEDelegate::LWE::SetGCFrequency(freq);
+}
+}
