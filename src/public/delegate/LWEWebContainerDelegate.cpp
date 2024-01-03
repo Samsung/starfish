@@ -998,7 +998,7 @@ void WebContainer::ClearCache()
 }
 
 void WebContainer::RegisterOnReceivedErrorHandler(
-    const std::function<void(WebContainer*, ResourceError)>& cb)
+    const std::function<void(WebContainer*, ResourceError*)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
@@ -1008,9 +1008,12 @@ void WebContainer::RegisterOnReceivedErrorHandler(
                 Starfish::String* url;
             };
             Param* p = (Param*)param;
-            cb(this, ResourceError(convertErrorCode(p->errorCode),
-                                   convertErrorDescriton(p->errorCode),
-                                   p->url->toUTF8NonGCString()));
+            ResourceError* error =
+                ResourceError::Create(convertErrorCode(p->errorCode),
+                                      convertErrorDescriton(p->errorCode),
+                                      p->url->toUTF8NonGCString());
+            cb(this, error);
+            delete error;
         });
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }

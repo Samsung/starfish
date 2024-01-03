@@ -194,9 +194,9 @@ public:
     ResourceError(const ResourceError& other);
     ~ResourceError();
 
-    int GetErrorCode();
-    std::string GetDescription();
-    std::string GetUrl();
+    int GetErrorCode() const;
+    std::string GetDescription() const;
+    std::string GetUrl() const;
 
 private:
     LWEDelegateRef m_delegate;

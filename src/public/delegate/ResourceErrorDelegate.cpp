@@ -21,34 +21,58 @@
 
 namespace LWEDelegate {
 
-ResourceError::ResourceError(int code, const std::string& description,
-                             const std::string& url)
+class ResourceErrorImpl : public ResourceError {
+public:
+    ResourceErrorImpl(int code, const std::string& description,
+                      const std::string& url);
+    ResourceErrorImpl(const ResourceError& other);
+
+    int GetErrorCode() override;
+    std::string GetDescription() override;
+    std::string GetUrl() override;
+
+private:
+    int m_errorCode;
+    std::string m_description;
+    std::string m_url;
+};
+
+ResourceErrorImpl::ResourceErrorImpl(int code, const std::string& description,
+                                     const std::string& url)
     : m_errorCode(code)
     , m_description(description)
     , m_url(url)
 {
 }
 
-ResourceError::ResourceError(const ResourceError& other)
-    : m_errorCode(other.m_errorCode)
-    , m_description(other.m_description)
-    , m_url(other.m_url)
-{
-}
-
-int ResourceError::GetErrorCode()
+int ResourceErrorImpl::GetErrorCode()
 {
     return m_errorCode;
 }
 
-std::string ResourceError::GetDescription()
+std::string ResourceErrorImpl::GetDescription()
 {
     return m_description;
 }
 
-std::string ResourceError::GetUrl()
+std::string ResourceErrorImpl::GetUrl()
 {
     return m_url;
 }
 
+ResourceError* ResourceError::Create(int code, const std::string& description,
+                                     const std::string& url)
+{
+    return new ResourceErrorImpl(code, description, url);
+}
+
 } // namespace LWEDelegate
+
+extern "C" {
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_ResourceError_Create(
+    int code, const char* description, const char* url)
+{
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::ResourceError::Create(code, description, url));
+}
+}

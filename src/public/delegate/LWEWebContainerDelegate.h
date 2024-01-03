@@ -142,7 +142,7 @@ public:
     void ClearCache();
 
     void RegisterOnReceivedErrorHandler(
-        const std::function<void(WebContainer*, ResourceError)>& cb);
+        const std::function<void(WebContainer*, ResourceError*)>& cb);
     void RegisterOnPageParsedHandler(
         std::function<void(WebContainer*, const std::string&)> cb);
     void RegisterOnPageLoadedHandler(

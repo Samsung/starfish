@@ -39,6 +39,7 @@ public:
     static LWEDelegateLoader* getInstance();
     static CookieManagerProcTable kCookieManagerProcTable;
     static LWEProcTable kLWEProcTable;
+    static ResourceErrorProcTable kResourceErrorProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -58,6 +59,7 @@ private:
 
     bool loadCookieManagerProcTable();
     bool loadLWEProcTable();
+    bool loadResourceErrorProcTable();
 
     void* m_handle = nullptr;
 };

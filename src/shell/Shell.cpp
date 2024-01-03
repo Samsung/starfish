@@ -721,10 +721,15 @@ int main(int argc, char* argv[])
     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
                          "/tmp/Starfish_Cookies.txt", cacheDir().c_str());
 
+    // TODO: remove test code.
     if (LWE::CookieManager::GetInstance()->HasCookies()) {
-        // test for cookie manager.
-        printf("Cookie Manager has cookies.");
+        // Test for cookie manager.
+        printf("Cookie Manager has cookies.\n");
     }
+
+    // Test for ResourceError.
+    LWE::ResourceError error(1, "testcode", "testurl\n");
+    printf("%s %s", error.GetDescription().c_str(), error.GetUrl().c_str());
 
     const char* gcFrequency = getenv("GC_FREQUENCY");
     if (gcFrequency && strlen(gcFrequency)) {
