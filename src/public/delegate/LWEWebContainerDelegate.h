@@ -21,13 +21,15 @@
 
 #include "LWEDelegateConfig.h"
 
+#include "PlatformIntegrationData.h"
+
 #include <functional>
 #include <vector>
 
-#include "SettingsDelegate.h"
-#include "ResourceErrorDelegate.h"
-
 namespace LWEDelegate {
+
+class Settings;
+class ResourceError;
 
 class EXPORT_UNMANAGED_API WebContainer {
 private:

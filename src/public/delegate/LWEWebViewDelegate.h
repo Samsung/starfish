@@ -24,11 +24,11 @@
 #include <functional>
 #include <vector>
 
-#include "SettingsDelegate.h"
-#include "ResourceErrorDelegate.h"
-#include "LWEWebContainerDelegate.h"
-
 namespace LWEDelegate {
+
+class Settings;
+class ResourceError;
+class WebContainer;
 
 class EXPORT_UNMANAGED_API WebView {
 protected:

@@ -23,6 +23,8 @@
 #include "LWEWebContainerDelegate.h"
 
 #include "LWEDelegate.h"
+#include "SettingsDelegate.h"
+#include "ResourceErrorDelegate.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "browser/history/HistoryManager.h"
