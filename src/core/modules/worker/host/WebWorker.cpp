@@ -132,7 +132,7 @@ GlobalScopeType* WebWorker::createGlobalScope(ResourceURL* scriptURL)
 
 template DedicatedWorkerGlobalScope* WebWorker::createGlobalScope(
     ResourceURL* scriptURL);
-#if defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 template ServiceWorkerGlobalScope* WebWorker::createGlobalScope(
     ResourceURL* scriptURL);
 #endif

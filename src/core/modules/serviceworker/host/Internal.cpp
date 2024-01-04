@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"

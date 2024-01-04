@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,30 +17,16 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
-#ifndef __StarfishServiceWorkerServerInterface__
-#define __StarfishServiceWorkerServerInterface__
+#if defined(STARFISH_ENABLE_SHARED_WORKER) && \
+    defined(STARFISH_USE_WORKER_PROCESS)
 
-namespace Starfish {
+#include "StarfishConfig.h"
 
-class IServiceWorkerClientConnection;
-class ServiceWorkerHostJobHandler;
+int main(int argc, char* argv[])
+{
+    STARFISH_UNIMPLEMENTED();
 
-class ServiceWorkerServerInterface {
-public:
-    virtual void getConnections(
-        GCVector<IServiceWorkerClientConnection*>& connections) = 0;
-    virtual ServiceWorkerHostJobHandler* jobHandler() = 0;
-    virtual bool tryTerminate() = 0;
-    virtual bool isTerminating() = 0;
-};
+    return -1;
+}
 
-class ServiceWorkerServerClient {
-public:
-    virtual void onSWServerTerminated() = 0;
-};
-
-} // namespace Starfish
-
-#endif
 #endif

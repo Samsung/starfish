@@ -108,7 +108,7 @@ private:
     GCVector<ServiceWorkerEnvironment*> m_settingsObjects;
     bool m_settingsObjectsNeedUpdated{ true };
 
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
     std::promise<void> m_promiseStopThreadSignal;
 #endif
 };

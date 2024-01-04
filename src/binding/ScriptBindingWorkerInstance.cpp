@@ -32,7 +32,7 @@ namespace Starfish {
 using namespace Escargot;
 
 template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
-#if defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 #endif
 
@@ -68,7 +68,7 @@ void DedicatedWorkerGlobalScope::initJavaScriptGlobalBinding(
     scriptBindingInstance->fnDedicatedWorkerGlobalScope();
 }
 
-#if defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 void ServiceWorkerGlobalScope::initJavaScriptGlobalBinding(
     ScriptExecutionState state, ScriptBindingInstance* scriptBindingInstance)
 {
@@ -135,19 +135,17 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
     m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);
 }
 
-#if defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 // TODO: Remove mockup function
-#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
-    defined(STARFISH_WEBWORKER_HOST)
 #define FOR_EACH_MOCKUP_INTERFACE(F) \
-    F(CSS)                                 \
-    F(EventSource)                         \
-    F(FormData)                            \
-    F(Option)                              \
-    F(Image)                               \
+    F(CSS)                           \
+    F(EventSource)                   \
+    F(FormData)                      \
+    F(Option)                        \
+    F(Image)                         \
     F(Worker)
 
-#define DEFINE_BINDING_FN(exportName)               \
+#define DEFINE_BINDING_FN(exportName)                 \
     Escargot::FunctionObjectRef* binding##exportName( \
         ScriptBindingInstance* scriptBindingInstance) \
     {                                                 \
@@ -158,7 +156,6 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 FOR_EACH_MOCKUP_INTERFACE(DEFINE_BINDING_FN)
 #undef DEFINE_BINDING_FN
 #undef FOR_EACH_MOCKUP_INTERFACE
-#endif
 #endif
 
 #undef DECLARE_WORKER_NAME_FOR_BINDING

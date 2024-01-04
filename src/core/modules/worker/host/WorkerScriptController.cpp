@@ -123,7 +123,7 @@ ScriptLoadResult WorkerScriptController::loadJavaScriptInternal(
 template ScriptLoadResult WorkerScriptController::loadJavaScriptInternal<
     WorkerScriptControllerClient, WorkerScriptController>(
     ResourceURL*, WorkerScriptController*);
-#if defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 template ScriptLoadResult WorkerScriptController::loadJavaScriptInternal<
     ServiceWorkerScriptControllerClient, ServiceWorkerScriptController>(
     ResourceURL*, ServiceWorkerScriptController*);

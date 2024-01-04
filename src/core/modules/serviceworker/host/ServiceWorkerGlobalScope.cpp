@@ -17,7 +17,8 @@
  *  USA
  */
 
-#ifdef STARFISH_SERVICE_WORKER_HOST
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+
 #include <EscargotPublic.h>
 
 #include "StarfishConfig.h"
@@ -205,4 +206,4 @@ void* ServiceWorkerGlobalScope::operator new(size_t size)
 }
 } // namespace Starfish
 
-#endif /* STARFISH_SERVICEWORKER_HOST */
+#endif /* STARFISH_WEBWORKER_HOST */

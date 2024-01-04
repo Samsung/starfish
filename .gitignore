@@ -2,6 +2,7 @@
 out
 Starfish
 Starfish-serviceworker
+Starfish-sharedworker
 core
 build/windows/StarFish/Debug
 build/windows/StarFish/Release

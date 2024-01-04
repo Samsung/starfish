@@ -17,7 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__FetchEvent__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __FetchEvent__
 #define __FetchEvent__
 
 #include "core/modules/serviceworker/host/ExtendableEvent.h"
@@ -103,4 +104,5 @@ private:
 
 } // namespace Starfish
 
+#endif
 #endif

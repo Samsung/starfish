@@ -16,7 +16,7 @@ jobs:
       matrix:
         mode: [release, debug]
         backend: [glfw_cairo_gl]
-        target: [executable, serviceworker.executable]
+        target: [executable, serviceworker.executable, sharedworker.executable]
         exclude:
           - mode: debug
             target: executable
@@ -36,6 +36,6 @@ jobs:
           cmake CMakeLists.txt -B${{ matrix.backend }}/${{ matrix.mode }} -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
             -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
-            -DENABLE_SERVICE_WORKER=1
+            -DSHARED_WORKER=1 -DSERVICE_WORKER=1
       - name: Build
         run: ninja -C ${{ matrix.backend }}/${{ matrix.mode }} starfish.${{ matrix.target }}

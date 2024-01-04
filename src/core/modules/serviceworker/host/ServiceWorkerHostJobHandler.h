@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__ServiceWorkerHostJobHandler__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __ServiceWorkerHostJobHandler__
 #define __ServiceWorkerHostJobHandler__
 
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
@@ -127,4 +127,5 @@ private:
 };
 } // namespace Starfish
 
+#endif
 #endif

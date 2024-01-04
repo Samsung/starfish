@@ -16,7 +16,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(STARFISH_WEBWORKER_HOST)
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "EscargotPublic.h"
 #include "StarfishConfig.h"
