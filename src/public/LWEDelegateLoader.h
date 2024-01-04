@@ -67,6 +67,13 @@ private:
     bool loadWebContainerProcTable();
     bool loadWebViewProcTable();
 
+    void unloadCookieManagerProcTable();
+    void unloadLWEProcTable();
+    void unloadResourceErrorProcTable();
+    void unloadSettingsProcTable();
+    void unloadWebContainerProcTable();
+    void unloadWebViewProcTable();
+
     void* m_handle = nullptr;
 };
 

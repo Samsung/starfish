@@ -68,6 +68,7 @@ void LWE::Finalize()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegateLoader::getInstance()->kLWEProcTable.Finalize();
+    LWEDelegateLoader::getInstance()->unload();
 #else
     LWEDelegate::LWE::Finalize();
 #endif

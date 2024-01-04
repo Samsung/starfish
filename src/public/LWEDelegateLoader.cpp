@@ -56,6 +56,13 @@ void LWEDelegateLoader::unload()
         dlclose(m_handle);
         m_handle = nullptr;
     }
+
+    unloadCookieManagerProcTable();
+    unloadLWEProcTable();
+    unloadResourceErrorProcTable();
+    unloadSettingsProcTable();
+    unloadWebContainerProcTable();
+    unloadWebViewProcTable();
 }
 
 bool LWEDelegateLoader::loadCookieManagerProcTable()
@@ -142,6 +149,36 @@ bool LWEDelegateLoader::loadWebViewProcTable()
         const char*, const char*)>(
         dlsym(m_handle, "LWEDelegate_WebView_Create"));
     return kWebViewProcTable.Create;
+}
+
+void LWEDelegateLoader::unloadCookieManagerProcTable()
+{
+    kCookieManagerProcTable = { nullptr, nullptr };
+}
+
+void LWEDelegateLoader::unloadLWEProcTable()
+{
+    kLWEProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr };
+}
+
+void LWEDelegateLoader::unloadResourceErrorProcTable()
+{
+    kResourceErrorProcTable = { nullptr };
+}
+
+void LWEDelegateLoader::unloadSettingsProcTable()
+{
+    kSettingsProcTable = { nullptr, nullptr, nullptr };
+}
+
+void LWEDelegateLoader::unloadWebContainerProcTable()
+{
+    kWebContainerProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr };
+}
+
+void LWEDelegateLoader::unloadWebViewProcTable()
+{
+    kWebViewProcTable = { nullptr };
 }
 
 } // namespace LWE
