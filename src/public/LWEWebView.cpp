@@ -18,7 +18,16 @@
  */
 
 #include "LWEWebView.h"
+#ifdef STARFISH_API_ENABLE_LOADER
 #include "LWEDelegateLoader.h"
+#else
+#include "public/delegate/LWEDelegate.h"
+#include "public/delegate/ResourceErrorDelegate.h"
+#include "public/delegate/SettingsDelegate.h"
+#include "public/delegate/CookieManagerDelegate.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
+#include "public/delegate/LWEWebViewDelegate.h"
+#endif
 
 #include <assert.h>
 #include <iostream>
@@ -42,7 +51,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    if (!LWEDelegateLoader::getInstance()->load("libStarfish-impl.so")) {
+    if (!LWEDelegateLoader::getInstance()->load(STARFISH_API_TARGET_NAME)) {
         LWE_ASSERT(false);
     }
     LWEDelegateLoader::getInstance()->kLWEProcTable.Initialize(

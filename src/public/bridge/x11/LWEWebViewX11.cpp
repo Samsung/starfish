@@ -18,7 +18,9 @@
  */
 
 #include "StarfishConfig.h"
-#include "LWEWebView.h"
+#include "PlatformIntegrationData.h"
+#include "public/delegate/LWEWebViewDelegateImpl.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
 #include "public/bridge/x11/XWindow.h"
 #include "public/bridge/x11/WindowEGL.h"
 #include "platform/canvas/webgl/XGL.h"
@@ -28,15 +30,17 @@
 
 using namespace Starfish;
 
-namespace LWE {
+namespace LWEDelegate {
 
-class WebViewX11 : public WebView {
+using namespace LWE;
+
+class WebViewX11 : public WebViewImpl {
 public:
     WebViewX11(void* winArg, unsigned x, unsigned y, unsigned width,
                unsigned height, float devicePixelRatio,
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
-        : WebView(nullptr)
+        : WebViewImpl(nullptr)
     {
         m_window = std::make_shared<XWindow>();
 
@@ -203,6 +207,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                           defaultFontName, locale, timezoneID);
 }
 
-} // namespace LWE
+} // namespace LWEDelegate
 
 #endif

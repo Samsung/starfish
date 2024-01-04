@@ -17,6 +17,8 @@
  *  USA
  */
 
+#ifdef STARFISH_API_ENABLE_LOADER
+
 #include "LWEDelegateLoader.h"
 
 namespace LWE {
@@ -182,3 +184,5 @@ void LWEDelegateLoader::unloadWebViewProcTable()
 }
 
 } // namespace LWE
+
+#endif

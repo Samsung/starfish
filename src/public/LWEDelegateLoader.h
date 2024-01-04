@@ -20,7 +20,7 @@
 #ifndef __LWEDelegateLoader__
 #define __LWEDelegateLoader__
 
-#define STARFISH_API_ENABLE_LOADER // only for test
+#ifdef STARFISH_API_ENABLE_LOADER
 
 #include "public/delegate/LWEDelegate.h"
 #include "public/delegate/ResourceErrorDelegate.h"
@@ -78,4 +78,6 @@ private:
 };
 
 } // namespace LWE
+
+#endif
 #endif
