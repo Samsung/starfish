@@ -3,8 +3,7 @@
 
 [Exposed=(Window,Worker,AudioWorklet), Transferable]
 interface MessagePort : EventTarget {
-  // NOTE transfer: sequence<object> -> sequence<any>
-  [RaisesException] void postMessage(any message, optional sequence<any> transfer);
+  [RaisesException] void postMessage(any message, optional sequence<object> transfer);
   [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options);
   void start();
   void close();

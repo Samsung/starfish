@@ -91,12 +91,12 @@ void MessagePort::disentangle()
 
 void MessagePort::postMessage(ScriptValue message)
 {
-    GCVector<ScriptValue> emptyTransfer;
+    GCAtomicVector<ScriptObject> emptyTransfer;
     postMessage(message, emptyTransfer);
 }
 
 void MessagePort::postMessage(ScriptValue message,
-                              GCVector<ScriptValue>& transfer)
+                              GCAtomicVector<ScriptObject>& transfer)
 {
     // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage
     // Let targetPort be the port with which this MessagePort is entangled,
@@ -143,33 +143,10 @@ void MessagePort::postMessage(ScriptValue message,
             MessagePort* self = (MessagePort*)data;
             SerializeWithTransferResult* serializedRecord =
                 (SerializeWithTransferResult*)data1;
-            DeserializeWithTransferResult deserializedRecord;
-            try {
-                Serializer::deserializeWithTransfer(self->executionContext(),
-                                                    *serializedRecord,
-                                                    deserializedRecord);
-            } catch (DOMException* exc) {
-                MessageEvent* e = new MessageEvent(
-                    self->executionContext(),
-                    self->staticStrings()->m_messageerror.localName());
-                self->entangledPort()->dispatchMessageEvent(e);
-                return;
-            }
-            GCVector<MessagePort*> newPorts;
-            for (size_t i = 0;
-                 i < deserializedRecord.m_deserializedTransfer.size(); i++) {
-                ScriptValue item = deserializedRecord.m_deserializedTransfer[i];
-                STARFISH_ASSERT(isObjectScriptValue(item));
-                ScriptWrappable* sw = toScriptWrappable(item);
-                if (sw && sw->isMessagePort()) {
-                    newPorts.push_back(sw->asMessagePort());
-                }
-            }
+
             MessageEvent* e =
-                new MessageEvent(self->executionContext(),
-                                 self->staticStrings()->m_message.localName());
-            e->setData(deserializedRecord.m_deserialized);
-            e->setPorts(newPorts);
+                new MessageEvent(self->executionContext(), serializedRecord);
+
             self->entangledPort()->dispatchMessageEvent(e);
         },
         this, serializedRecord);

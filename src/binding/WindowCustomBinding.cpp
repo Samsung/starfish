@@ -225,7 +225,7 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
     ValueRef* arg1 = argv[1];
     ValueRef* arg2 = (argc > 2) ? argv[2] : ValueRef::createUndefined();
     // Handle argument arg2
-    GCVector<ScriptValue> value2;
+    GCAtomicVector<ScriptObject> value2;
     if (arg2->isUndefined()) {
         validArgCount--;
     } else {
@@ -240,9 +240,9 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
         for (int i = 0; i < arg2Size; i++) {
             ValueRef* itemJS =
                 arg2->asObject()->get(state, ValueRef::create(i));
-            ScriptValue itemNV;
+            ScriptObject itemNV;
 
-            itemNV = itemJS;
+            itemNV = itemJS->toObject(state);
             value2.push_back(itemNV);
         }
     }
