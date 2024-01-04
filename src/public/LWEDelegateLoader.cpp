@@ -25,6 +25,7 @@ CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
 LWEProcTable LWEDelegateLoader::kLWEProcTable;
 ResourceErrorProcTable LWEDelegateLoader::kResourceErrorProcTable;
 SettingsProcTable LWEDelegateLoader::kSettingsProcTable;
+WebContainerProcTable LWEDelegateLoader::kWebContainerProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
@@ -44,7 +45,8 @@ bool LWEDelegateLoader::load(std::string path)
     }
 
     return loadCookieManagerProcTable() && loadLWEProcTable() &&
-           loadResourceErrorProcTable() && loadSettingsProcTable();
+           loadResourceErrorProcTable() && loadSettingsProcTable() &&
+           loadWebContainerProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -103,6 +105,34 @@ bool LWEDelegateLoader::loadSettingsProcTable()
         dlsym(m_handle, "LWEDelegate_Settings_Create_From_Other"));
     return kSettingsProcTable.Create && kSettingsProcTable.CreateEmpty &&
            kSettingsProcTable.CreateFromOther;
+}
+
+bool LWEDelegateLoader::loadWebContainerProcTable()
+{
+    kWebContainerProcTable.Create = reinterpret_cast<uintptr_t (*)(
+        unsigned, unsigned, float, const char*, const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
+    kWebContainerProcTable.CreateWithPlatformImage = reinterpret_cast<
+        uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, float,
+                      const char*, const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
+    kWebContainerProcTable.CreateGL = reinterpret_cast<uintptr_t (*)(
+        unsigned, unsigned, uintptr_t, uintptr_t, float, const char*,
+        const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_CreateGL"));
+    kWebContainerProcTable.CreateGLWithPlatformImage = reinterpret_cast<
+        uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, uintptr_t,
+                      uintptr_t, float, const char*, const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_CreateGLWithPlatformImage"));
+    kWebContainerProcTable.CreateHeadless = reinterpret_cast<uintptr_t (*)(
+        unsigned, unsigned, float, const char*, const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebContainer_CreateHeadless"));
+
+    return kWebContainerProcTable.Create &&
+           kWebContainerProcTable.CreateWithPlatformImage &&
+           kWebContainerProcTable.CreateGL &&
+           kWebContainerProcTable.CreateGLWithPlatformImage &&
+           kWebContainerProcTable.CreateHeadless;
 }
 
 } // namespace LWE

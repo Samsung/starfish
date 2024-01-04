@@ -235,6 +235,162 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     return webView;
 }
 
+class WebContainerImpl : public WebContainer {
+public:
+    virtual void RegisterPreRenderingHandler(
+        const std::function<RenderInfo(void)>& cb) override;
+    virtual void RegisterOnRenderedHandler(
+        const std::function<void(
+            WebContainer*, const RenderResult& renderResult)>& cb) override;
+
+    virtual void AddIdleCallback(void (*callback)(void*), void* data) override;
+    virtual size_t AddTimeout(void (*callback)(void*), void* data,
+                              size_t timeoutInMS) override;
+    void ClearTimeout(size_t handle) override;
+
+    void RegisterCanRenderingHandler(
+        const std::function<bool(WebContainer*)>& cb) override;
+
+    Settings* GetSettings() override;
+    void LoadURL(const std::string& url) override;
+    std::string GetURL() override;
+    void LoadData(const std::string& data) override;
+    void Reload() override;
+    void StopLoading() override;
+    void GoBack() override;
+    void GoForward() override;
+    bool CanGoBack() override;
+    bool CanGoForward() override;
+    void AddJavaScriptInterface(
+        const std::string& exposedObjectName, const std::string& jsFunctionName,
+        std::function<std::string(const std::string&)> cb) override;
+    std::string EvaluateJavaScript(const std::string& script) override;
+    void EvaluateJavaScript(
+        const std::string& script,
+        std::function<void(const std::string&)> cb) override;
+    void ClearHistory() override;
+    void Destroy() override;
+    void Pause() override;
+    void Resume() override;
+
+    void ResizeTo(size_t width, size_t height) override;
+
+    void Focus() override;
+    void Blur() override;
+
+    void SetSettings(const Settings* settings) override;
+    void RemoveJavascriptInterface(const std::string& exposedObjectName,
+                                   const std::string& jsFunctionName) override;
+    void ClearCache() override;
+
+    void RegisterOnReceivedErrorHandler(
+        const std::function<void(WebContainer*, ResourceError*)>& cb) override;
+    void RegisterOnPageParsedHandler(
+        std::function<void(WebContainer*, const std::string&)> cb) override;
+    void RegisterOnPageLoadedHandler(
+        std::function<void(WebContainer*, const std::string&)> cb) override;
+    void RegisterOnPageStartedHandler(
+        const std::function<void(WebContainer*, const std::string&)>& cb)
+        override;
+    void RegisterOnLoadResourceHandler(
+        const std::function<void(WebContainer*, const std::string&)>& cb)
+        override;
+    void RegisterShouldOverrideUrlLoadingHandler(
+        const std::function<bool(WebContainer*, const std::string&)>& cb)
+        override;
+    void RegisterOnProgressChangedHandler(
+        const std::function<void(WebContainer*, int progress)>& cb) override;
+    void RegisterOnDownloadStartHandler(
+        const std::function<void(WebContainer*, const std::string&,
+                                 const std::string&, const std::string&,
+                                 const std::string&, long)>& cb) override;
+
+    void RegisterShowDropdownMenuHandler(
+        const std::function<void(WebContainer*, const std::vector<std::string>*,
+                                 int)>& cb) override;
+    void RegisterShowAlertHandler(
+        const std::function<void(WebContainer*, const std::string&,
+                                 const std::string&)>& cb) override;
+
+    void RegisterCustomFileResourceRequestHandlers(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback) override;
+
+    void RegisterDebuggerShouldInitHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldInit)>& cb) override;
+    void RegisterDebuggerShouldContinueWaitingHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldWait)>& cb) override;
+
+    void CallHandler(const std::string& handler, void* param) override;
+
+    void SetUserAgentString(const std::string& userAgent) override;
+    std::string GetUserAgentString() override;
+    void SetCacheMode(int mode) override;
+    int GetCacheMode() override;
+    void SetDefaultFontSize(uint32_t size) override;
+    uint32_t GetDefaultFontSize() override;
+
+    void DispatchMouseMoveEvent(::LWE::MouseButtonValue button,
+                                ::LWE::MouseButtonsValue buttons, double x,
+                                double y) override;
+    void DispatchMouseDownEvent(::LWE::MouseButtonValue button,
+                                ::LWE::MouseButtonsValue buttons, double x,
+                                double y) override;
+    void DispatchMouseUpEvent(::LWE::MouseButtonValue button,
+                              ::LWE::MouseButtonsValue buttons, double x,
+                              double y) override;
+    void DispatchMouseWheelEvent(double x, double y, int delta) override;
+    void DispatchKeyDownEvent(::LWE::KeyValue keyCode) override;
+    void DispatchKeyPressEvent(::LWE::KeyValue keyCode) override;
+    void DispatchKeyUpEvent(::LWE::KeyValue keyCode) override;
+
+    void DispatchCompositionStartEvent(
+        const std::string& soFarCompositiedString) override;
+    void DispatchCompositionUpdateEvent(
+        const std::string& soFarCompositiedString) override;
+    void DispatchCompositionEndEvent(
+        const std::string& soFarCompositiedString) override;
+    void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(WebContainer*)>& cb) override;
+    void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(WebContainer*)>& cb) override;
+
+    void SetUserData(const std::string& key, void* data) override;
+    void* GetUserData(const std::string& key) override;
+
+    std::string GetTitle() override;
+    void ScrollTo(int x, int y) override;
+    void ScrollBy(int x, int y) override;
+    int GetScrollX() override;
+    int GetScrollY() override;
+
+    size_t Width() override;
+    size_t Height() override;
+
+    void RegisterSetNeedsRenderingCallback(
+        const std::function<void(
+            WebContainer*, const std::function<void()>& doRenderingFunction)>&
+            cb) override;
+    void SetDevicePixelRatio(float dpr) override;
+    float GetDevicePixelRatio() override;
+
+    WebContainerImpl(void* webView);
+
+private:
+    // use Destroy function instead of using delete operator
+    virtual ~WebContainerImpl()
+    {
+    }
+
+    void* m_impl;
+};
+
 #if defined(STARFISH_TIZEN_VERSION_5_0)
 WebContainer* WebContainer::Create(void* buffer, unsigned width,
                                    unsigned height, unsigned stride,
@@ -260,14 +416,15 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
                 createWebViewInstance(width, height, scaleFactor,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+            WebContainer* newWebContainer =
+                new (NoGC) WebContainerImpl(webView);
             newWebContainer->UpdateBuffer(buffer, width, height, stride);
             return (size_t)newWebContainer;
         });
 #else
     auto webView = createWebViewInstance(width, height, scaleFactor,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
     newWebContainer->UpdateBuffer(buffer, width, height, stride);
     return newWebContainer;
 #endif
@@ -300,14 +457,15 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
                 createWebViewInstance(width, height, scaleFactor,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+            WebContainer* newWebContainer =
+                new (NoGC) WebContainerImpl(webView);
 
             return (size_t)newWebContainer;
         });
 #else
     auto webView = createWebViewInstance(width, height, scaleFactor,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
     return newWebContainer;
 #endif
@@ -315,8 +473,8 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
 #endif
 
 #if defined(STARFISH_TIZEN_VERSION_5_0)
-void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
-                                unsigned stride)
+void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
+                                    unsigned height, unsigned stride)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ResizeTo(width, height);
@@ -327,7 +485,7 @@ void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
 #endif
 
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-void WebContainer::RegisterPreRenderingHandler(
+void WebContainerImpl::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
@@ -348,7 +506,7 @@ void WebContainer::RegisterPreRenderingHandler(
 }
 #endif
 
-void WebContainer::RegisterOnRenderedHandler(
+void WebContainerImpl::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
         cb)
 {
@@ -375,12 +533,12 @@ void WebContainer::RegisterOnRenderedHandler(
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-WebContainer* WebContainer::CreateGL(
-    unsigned width, unsigned height,
-    const std::function<void(WebContainer*)>& onGLMakeCurrent,
-    const std::function<void(WebContainer*, bool)>& onGLSwapBuffers,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
+WebContainer* WebContainer::CreateGL(unsigned width, unsigned height,
+                                     const OnGLMakeCurrent& onGLMakeCurrent,
+                                     const OnGLSwapBuffers& onGLSwapBuffers,
+                                     float devicePixelRatio,
+                                     const char* defaultFontName,
+                                     const char* locale, const char* timezoneID)
 {
 #if !defined(PORT_WINDOW_BACKEND_GL)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
@@ -394,7 +552,8 @@ WebContainer* WebContainer::CreateGL(
                 createWebViewInstance(width, height, devicePixelRatio,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+            WebContainer* newWebContainer =
+                new (NoGC) WebContainerImpl(webView);
 
             webView->platformWindow()->registerGLMakeCurrentCallback(
                 [onGLMakeCurrent,
@@ -414,7 +573,7 @@ WebContainer* WebContainer::CreateGL(
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
 
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
     webView->platformWindow()->registerGLMakeCurrentCallback(
         [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
@@ -436,52 +595,48 @@ WebContainer* WebContainer::CreateGL(
 #endif
 
 WebContainer* WebContainer::CreateWithPlatformImage(
-    unsigned width, unsigned height,
-    const std::function<ExternalImageInfo(void)>& prepareImageCb,
-    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
+    unsigned width, unsigned height, const OnPrepareImage& prepareImageCb,
+    const OnFlush& flushCb, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID)
 {
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
-    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
-        [=]() -> size_t {
-            auto webView =
-                createWebViewInstance(width, height, devicePixelRatio,
-                                      defaultFontName, locale, timezoneID);
+    return (
+        WebContainer*)Starfish::MessageLoop::runOnMainThreadSync([=]()
+                                                                     -> size_t {
+        auto webView =
+            createWebViewInstance(width, height, devicePixelRatio,
+                                  defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
-            webView->platformWindow()->registerRenderingPrepareCallback(
-                [prepareImageCb](void) -> Starfish::RenderInfo {
-                    WebContainer::ExternalImageInfo buffer = prepareImageCb();
-                    Starfish::RenderInfo result;
+        WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
+        webView->platformWindow()->registerRenderingPrepareCallback(
+            [prepareImageCb](void) -> Starfish::RenderInfo {
+                WebContainer::ExternalImageInfo buffer = prepareImageCb();
+                Starfish::RenderInfo result;
 #ifdef STARFISH_FLUTTER
-                    tbm_surface_info_s tbmSurfaceInfo;
-                    if (tbm_surface_map((tbm_surface_h)buffer.imageAddress,
-                                        TBM_SURF_OPTION_WRITE,
-                                        &tbmSurfaceInfo) ==
-                        TBM_SURFACE_ERROR_NONE) {
-                        result.updatedBufferAddress =
-                            tbmSurfaceInfo.planes[0].ptr;
-                        result.bufferStride = tbmSurfaceInfo.planes[0].stride;
-                    }
+                tbm_surface_info_s tbmSurfaceInfo;
+                if (tbm_surface_map((tbm_surface_h)buffer.imageAddress,
+                                    TBM_SURF_OPTION_WRITE, &tbmSurfaceInfo) ==
+                    TBM_SURFACE_ERROR_NONE) {
+                    result.updatedBufferAddress = tbmSurfaceInfo.planes[0].ptr;
+                    result.bufferStride = tbmSurfaceInfo.planes[0].stride;
+                }
 #endif
-                    return result;
-                });
+                return result;
+            });
 
-            webView->platformWindow()->registerRenderingFinishedCallback(
-                [newWebContainer,
-                 flushCb](const Starfish::RenderResult& renderResult) {
-                    flushCb(newWebContainer,
-                            renderResult.didPaintingOrCompositing);
-                });
+        webView->platformWindow()->registerRenderingFinishedCallback(
+            [newWebContainer,
+             flushCb](const Starfish::RenderResult& renderResult) {
+                flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
+            });
 
-            return (size_t)newWebContainer;
-        });
+        return (size_t)newWebContainer;
+    });
 #else
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
 
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
     webView->platformWindow()->registerRenderingPrepareCallback(
         [prepareImageCb](void) -> Starfish::RenderInfo {
             WebContainer::ExternalImageInfo tmp = prepareImageCb();
@@ -500,12 +655,9 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 }
 
 WebContainer* WebContainer::CreateGLWithPlatformImage(
-    unsigned width, unsigned height,
-    const std::function<void(WebContainer*)>& onGLMakeCurrent,
-    const std::function<void(WebContainer*, bool mayNeedsSync)>&
-        onGLSwapBuffers,
-    const std::function<ExternalImageInfo(void)>& prepareImageCb,
-    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+    unsigned width, unsigned height, const OnGLMakeCurrent& onGLMakeCurrent,
+    const OnGLSwapBuffers& onGLSwapBuffers,
+    const OnPrepareImage& prepareImageCb, const OnFlush& flushCb,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
@@ -521,7 +673,8 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
                 createWebViewInstance(width, height, devicePixelRatio,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+            WebContainer* newWebContainer =
+                new (NoGC) WebContainerImpl(webView);
 
             webView->platformWindow()->registerGLMakeCurrentCallback(
                 [onGLMakeCurrent,
@@ -555,7 +708,7 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
 
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
     webView->platformWindow()->registerGLMakeCurrentCallback(
         [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
@@ -593,24 +746,24 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
 {
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
     return newWebContainer;
 }
 
-void WebContainer::ResizeTo(size_t width, size_t height)
+void WebContainerImpl::ResizeTo(size_t width, size_t height)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->resizeTo((int)width, (int)height);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-WebContainer::WebContainer(void* impl)
+WebContainerImpl::WebContainerImpl(void* impl)
     : m_impl(impl)
 {
 }
 
-void WebContainer::AddIdleCallback(void (*callback)(void*), void* data)
+void WebContainerImpl::AddIdleCallback(void (*callback)(void*), void* data)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     struct Data : public gc {
@@ -631,8 +784,8 @@ void WebContainer::AddIdleCallback(void (*callback)(void*), void* data)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
-                                size_t timeoutInMS)
+size_t WebContainerImpl::AddTimeout(void (*callback)(void*), void* data,
+                                    size_t timeoutInMS)
 {
     size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -655,14 +808,14 @@ size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
     return ret;
 }
 
-void WebContainer::ClearTimeout(size_t handle)
+void WebContainerImpl::ClearTimeout(size_t handle)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->timer()->removeTimer(handle);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterCanRenderingHandler(
+void WebContainerImpl::RegisterCanRenderingHandler(
     const std::function<bool(WebContainer*)>& cb)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -671,7 +824,7 @@ void WebContainer::RegisterCanRenderingHandler(
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-Settings* WebContainer::GetSettings()
+Settings* WebContainerImpl::GetSettings()
 {
     Settings* result = Settings::Create(USER_AGENT(STARFISH_NAME, VERSION), "");
 
@@ -708,7 +861,7 @@ Settings* WebContainer::GetSettings()
     return result;
 }
 
-void WebContainer::LoadURL(const std::string& url)
+void WebContainerImpl::LoadURL(const std::string& url)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
@@ -718,7 +871,7 @@ void WebContainer::LoadURL(const std::string& url)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-std::string WebContainer::GetURL()
+std::string WebContainerImpl::GetURL()
 {
     std::string ret;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -727,7 +880,7 @@ std::string WebContainer::GetURL()
     return ret;
 }
 
-void WebContainer::LoadData(const std::string& data)
+void WebContainerImpl::LoadData(const std::string& data)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (data.size() > 0) {
@@ -741,14 +894,14 @@ void WebContainer::LoadData(const std::string& data)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Reload()
+void WebContainerImpl::Reload()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_LOCATION(m_impl)->reload();
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::StopLoading()
+void WebContainerImpl::StopLoading()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     STARFISH_ASSERT(m_impl);
@@ -756,21 +909,21 @@ void WebContainer::StopLoading()
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::GoBack()
+void WebContainerImpl::GoBack()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_HISTORY(m_impl)->back();
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::GoForward()
+void WebContainerImpl::GoForward()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_HISTORY(m_impl)->forward();
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-bool WebContainer::CanGoBack()
+bool WebContainerImpl::CanGoBack()
 {
     bool ret = false;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -779,7 +932,7 @@ bool WebContainer::CanGoBack()
     return ret;
 }
 
-bool WebContainer::CanGoForward()
+bool WebContainerImpl::CanGoForward()
 {
     bool ret = false;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -788,7 +941,7 @@ bool WebContainer::CanGoForward()
     return ret;
 }
 
-void WebContainer::AddJavaScriptInterface(
+void WebContainerImpl::AddJavaScriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName,
     std::function<std::string(const std::string&)> cb)
 {
@@ -816,7 +969,7 @@ void WebContainer::AddJavaScriptInterface(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-std::string WebContainer::EvaluateJavaScript(const std::string& script)
+std::string WebContainerImpl::EvaluateJavaScript(const std::string& script)
 {
     std::string ret;
 
@@ -830,7 +983,7 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
     return ret;
 }
 
-void WebContainer::EvaluateJavaScript(
+void WebContainerImpl::EvaluateJavaScript(
     const std::string& script, std::function<void(const std::string&)> cb)
 {
     struct Params {
@@ -873,14 +1026,14 @@ void WebContainer::EvaluateJavaScript(
     }
 }
 
-void WebContainer::ClearHistory()
+void WebContainerImpl::ClearHistory()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->historyManager()->clear();
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Destroy()
+void WebContainerImpl::Destroy()
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->destroy();
@@ -890,21 +1043,21 @@ void WebContainer::Destroy()
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Resume()
+void WebContainerImpl::Resume()
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->resume();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Pause()
+void WebContainerImpl::Pause()
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->pause();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Focus()
+void WebContainerImpl::Focus()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     // TODO
@@ -912,14 +1065,14 @@ void WebContainer::Focus()
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::Blur()
+void WebContainerImpl::Blur()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->webView()->blur();
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::SetSettings(const Settings* settings)
+void WebContainerImpl::SetSettings(const Settings* settings)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->setCustomUserAgentString(
@@ -967,7 +1120,7 @@ void WebContainer::SetSettings(const Settings* settings)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RemoveJavascriptInterface(
+void WebContainerImpl::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -988,7 +1141,7 @@ void WebContainer::RemoveJavascriptInterface(
     }
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
-void WebContainer::ClearCache()
+void WebContainerImpl::ClearCache()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -1000,7 +1153,7 @@ void WebContainer::ClearCache()
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnReceivedErrorHandler(
+void WebContainerImpl::RegisterOnReceivedErrorHandler(
     const std::function<void(WebContainer*, ResourceError*)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1021,7 +1174,7 @@ void WebContainer::RegisterOnReceivedErrorHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnPageParsedHandler(
+void WebContainerImpl::RegisterOnPageParsedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1036,7 +1189,7 @@ void WebContainer::RegisterOnPageParsedHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnPageLoadedHandler(
+void WebContainerImpl::RegisterOnPageLoadedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1051,7 +1204,7 @@ void WebContainer::RegisterOnPageLoadedHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnPageStartedHandler(
+void WebContainerImpl::RegisterOnPageStartedHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1066,7 +1219,7 @@ void WebContainer::RegisterOnPageStartedHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnLoadResourceHandler(
+void WebContainerImpl::RegisterOnLoadResourceHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1081,7 +1234,7 @@ void WebContainer::RegisterOnLoadResourceHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
+void WebContainerImpl::RegisterShouldOverrideUrlLoadingHandler(
     const std::function<bool(WebContainer*, const std::string&)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1106,7 +1259,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnDownloadStartHandler(
+void WebContainerImpl::RegisterOnDownloadStartHandler(
     const std::function<void(WebContainer*, const std::string&,
                              const std::string&, const std::string&,
                              const std::string&, long)>& cb)
@@ -1132,7 +1285,7 @@ void WebContainer::RegisterOnDownloadStartHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterShowDropdownMenuHandler(
+void WebContainerImpl::RegisterShowDropdownMenuHandler(
     const std::function<void(WebContainer*, const std::vector<std::string>*,
                              int)>& cb)
 {
@@ -1153,7 +1306,7 @@ void WebContainer::RegisterShowDropdownMenuHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterShowAlertHandler(
+void WebContainerImpl::RegisterShowAlertHandler(
     const std::function<void(WebContainer*, const std::string&,
                              const std::string&)>& cb)
 {
@@ -1172,7 +1325,7 @@ void WebContainer::RegisterShowAlertHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterCustomFileResourceRequestHandlers(
+void WebContainerImpl::RegisterCustomFileResourceRequestHandlers(
     std::function<const char*(const char* path)> resolveFilePathCallback,
     std::function<void*(const char* path)> fileOpenCallback,
     std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
@@ -1187,7 +1340,7 @@ void WebContainer::RegisterCustomFileResourceRequestHandlers(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::CallHandler(const std::string& handler, void* param)
+void WebContainerImpl::CallHandler(const std::string& handler, void* param)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (handler.compare("onDropdownMenuItemSelected") == 0) {
@@ -1197,7 +1350,7 @@ void WebContainer::CallHandler(const std::string& handler, void* param)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-size_t WebContainer::Width()
+size_t WebContainerImpl::Width()
 {
     size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1206,7 +1359,7 @@ size_t WebContainer::Width()
     return ret;
 }
 
-size_t WebContainer::Height()
+size_t WebContainerImpl::Height()
 {
     size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1215,7 +1368,7 @@ size_t WebContainer::Height()
     return ret;
 }
 
-void WebContainer::RegisterOnProgressChangedHandler(
+void WebContainerImpl::RegisterOnProgressChangedHandler(
     const std::function<void(WebContainer*, int)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1230,7 +1383,7 @@ void WebContainer::RegisterOnProgressChangedHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterDebuggerShouldInitHandler(
+void WebContainerImpl::RegisterDebuggerShouldInitHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1247,7 +1400,7 @@ void WebContainer::RegisterDebuggerShouldInitHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterDebuggerShouldContinueWaitingHandler(
+void WebContainerImpl::RegisterDebuggerShouldContinueWaitingHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1264,7 +1417,7 @@ void WebContainer::RegisterDebuggerShouldContinueWaitingHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::SetUserAgentString(const std::string& userAgent)
+void WebContainerImpl::SetUserAgentString(const std::string& userAgent)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->setCustomUserAgentString(
@@ -1273,7 +1426,7 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
 }
 
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-std::string WebContainer::GetUserAgentString()
+std::string WebContainerImpl::GetUserAgentString()
 {
     std::string ret;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1283,7 +1436,7 @@ std::string WebContainer::GetUserAgentString()
 }
 #endif
 
-void WebContainer::SetCacheMode(int mode)
+void WebContainerImpl::SetCacheMode(int mode)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -1296,7 +1449,7 @@ void WebContainer::SetCacheMode(int mode)
 }
 
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-int WebContainer::GetCacheMode()
+int WebContainerImpl::GetCacheMode()
 {
     int ret = 0;
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -1311,7 +1464,7 @@ int WebContainer::GetCacheMode()
 }
 #endif
 
-void WebContainer::SetDefaultFontSize(uint32_t size)
+void WebContainerImpl::SetDefaultFontSize(uint32_t size)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     if (LWE_MIN_FONT_SIZE <= size && size <= LWE_MAX_FONT_SIZE) {
@@ -1321,7 +1474,7 @@ void WebContainer::SetDefaultFontSize(uint32_t size)
 }
 
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-uint32_t WebContainer::GetDefaultFontSize()
+uint32_t WebContainerImpl::GetDefaultFontSize()
 {
     uint32_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1331,9 +1484,9 @@ uint32_t WebContainer::GetDefaultFontSize()
 }
 #endif
 
-void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
-                                          MouseButtonsValue buttons, double x,
-                                          double y)
+void WebContainerImpl::DispatchMouseMoveEvent(MouseButtonValue button,
+                                              MouseButtonsValue buttons,
+                                              double x, double y)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
@@ -1342,9 +1495,9 @@ void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
-                                          MouseButtonsValue buttons, double x,
-                                          double y)
+void WebContainerImpl::DispatchMouseDownEvent(MouseButtonValue button,
+                                              MouseButtonsValue buttons,
+                                              double x, double y)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
@@ -1353,9 +1506,9 @@ void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
-                                        MouseButtonsValue buttons, double x,
-                                        double y)
+void WebContainerImpl::DispatchMouseUpEvent(MouseButtonValue button,
+                                            MouseButtonsValue buttons, double x,
+                                            double y)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
@@ -1364,7 +1517,7 @@ void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
+void WebContainerImpl::DispatchMouseWheelEvent(double x, double y, int delta)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseWheelEvent(x, y, delta,
@@ -1372,7 +1525,7 @@ void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
+void WebContainerImpl::DispatchKeyDownEvent(KeyValue keyCode)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
@@ -1381,7 +1534,7 @@ void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
+void WebContainerImpl::DispatchKeyPressEvent(KeyValue keyCode)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
@@ -1390,7 +1543,7 @@ void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
+void WebContainerImpl::DispatchKeyUpEvent(KeyValue keyCode)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
@@ -1399,7 +1552,7 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchCompositionStartEvent(
+void WebContainerImpl::DispatchCompositionStartEvent(
     const std::string& soFarCompositiedString)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1411,7 +1564,7 @@ void WebContainer::DispatchCompositionStartEvent(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchCompositionUpdateEvent(
+void WebContainerImpl::DispatchCompositionUpdateEvent(
     const std::string& soFarCompositiedString)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1423,7 +1576,7 @@ void WebContainer::DispatchCompositionUpdateEvent(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::DispatchCompositionEndEvent(
+void WebContainerImpl::DispatchCompositionEndEvent(
     const std::string& soFarCompositiedString)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1434,7 +1587,7 @@ void WebContainer::DispatchCompositionEndEvent(
         nullptr);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
-void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+void WebContainerImpl::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1445,7 +1598,7 @@ void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+void WebContainerImpl::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1456,7 +1609,7 @@ void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::RegisterSetNeedsRenderingCallback(
+void WebContainerImpl::RegisterSetNeedsRenderingCallback(
     const std::function<void(
         WebContainer*, const std::function<void()>& doRenderingFunction)>& cb)
 {
@@ -1472,14 +1625,14 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::SetUserData(const std::string& key, void* data)
+void WebContainerImpl::SetUserData(const std::string& key, void* data)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->publicLayerUserDataMap()[key] = data;
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
-void* WebContainer::GetUserData(const std::string& key)
+void* WebContainerImpl::GetUserData(const std::string& key)
 {
     void* ret = nullptr;
 
@@ -1490,7 +1643,7 @@ void* WebContainer::GetUserData(const std::string& key)
     return ret;
 }
 
-std::string WebContainer::GetTitle()
+std::string WebContainerImpl::GetTitle()
 {
     Starfish::String* ret = Starfish::String::emptyString;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1499,7 +1652,7 @@ std::string WebContainer::GetTitle()
     return ret->toUTF8NonGCString();
 }
 
-void WebContainer::ScrollTo(int x, int y)
+void WebContainerImpl::ScrollTo(int x, int y)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollTo((double)x,
@@ -1507,7 +1660,7 @@ void WebContainer::ScrollTo(int x, int y)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-void WebContainer::ScrollBy(int x, int y)
+void WebContainerImpl::ScrollBy(int x, int y)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollBy((double)x,
@@ -1515,7 +1668,7 @@ void WebContainer::ScrollBy(int x, int y)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-int WebContainer::GetScrollX()
+int WebContainerImpl::GetScrollX()
 {
     int x = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1524,7 +1677,7 @@ int WebContainer::GetScrollX()
     return x;
 }
 
-int WebContainer::GetScrollY()
+int WebContainerImpl::GetScrollY()
 {
     int y = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1533,14 +1686,14 @@ int WebContainer::GetScrollY()
     return y;
 }
 
-void WebContainer::SetDevicePixelRatio(float dpr)
+void WebContainerImpl::SetDevicePixelRatio(float dpr)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->setDevicePixelRatio(dpr);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-float WebContainer::GetDevicePixelRatio()
+float WebContainerImpl::GetDevicePixelRatio()
 {
     float dpr = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1550,3 +1703,82 @@ float WebContainer::GetDevicePixelRatio()
 }
 
 } // namespace LWEDelegate
+
+extern "C" {
+
+uintptr_t LWEDelegate_WebContainer_Create(unsigned width, unsigned height,
+                                          float devicePixelRatio,
+                                          const char* defaultFontName,
+                                          const char* locale,
+                                          const char* timezoneID)
+{
+    return reinterpret_cast<uintptr_t>(LWEDelegate::WebContainer::Create(
+        width, height, devicePixelRatio, defaultFontName, locale, timezoneID));
+}
+
+uintptr_t LWEDelegate_WebContainer_Create_With_PlatformImage(
+    unsigned width, unsigned height, uintptr_t prepareImageCb,
+    uintptr_t flushCb, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID)
+{
+    auto* onPrepareImagePtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnPrepareImage*>(
+            prepareImageCb);
+    auto* onFlushPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnFlush*>(flushCb);
+
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::WebContainer::CreateWithPlatformImage(
+            width, height, *onPrepareImagePtr, *onFlushPtr, devicePixelRatio,
+            defaultFontName, locale, timezoneID));
+}
+
+uintptr_t LWEDelegate_WebContainer_CreateGL(
+    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
+    uintptr_t onGLSwapBuffers, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID)
+{
+    auto* onGLMakeCurrentPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnGLMakeCurrent*>(
+            onGLMakeCurrent);
+    auto* onGLSwapBuffersPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnGLSwapBuffers*>(
+            onGLSwapBuffers);
+    return reinterpret_cast<uintptr_t>(LWEDelegate::WebContainer::CreateGL(
+        width, height, *onGLMakeCurrentPtr, *onGLSwapBuffersPtr,
+        devicePixelRatio, defaultFontName, locale, timezoneID));
+}
+
+uintptr_t LWEDelegate_WebContainer_CreateGLWithPlatformImage(
+    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
+    uintptr_t onGLSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+    auto* onGLMakeCurrentPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnGLMakeCurrent*>(
+            onGLMakeCurrent);
+    auto* onGLSwapBuffersPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnGLSwapBuffers*>(
+            onGLSwapBuffers);
+    auto* onPrepareImagePtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnPrepareImage*>(
+            prepareImageCb);
+    auto* onFlushPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnFlush*>(flushCb);
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::WebContainer::CreateGLWithPlatformImage(
+            width, height, *onGLMakeCurrentPtr, *onGLSwapBuffersPtr,
+            *onPrepareImagePtr, *onFlushPtr, devicePixelRatio, defaultFontName,
+            locale, timezoneID));
+}
+uintptr_t LWEDelegate_WebContainer_CreateHeadless(
+    unsigned width, unsigned height, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID)
+{
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::WebContainer::CreateHeadless(
+            width, height, devicePixelRatio, defaultFontName, locale,
+            timezoneID));
+}
+}

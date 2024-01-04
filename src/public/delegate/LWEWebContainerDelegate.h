@@ -32,12 +32,6 @@ class Settings;
 class ResourceError;
 
 class EXPORT_UNMANAGED_API WebContainer {
-private:
-    // use Destroy function instead of using delete operator
-    ~WebContainer()
-    {
-    }
-
 public:
     // Function set for render to buffer
     static WebContainer* Create(unsigned width, unsigned height,
@@ -63,35 +57,37 @@ public:
         size_t bufferImageWidth;
         size_t bufferImageHeight;
     };
-    void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);
-    void RegisterOnRenderedHandler(
-        const std::function<void(WebContainer*,
-                                 const RenderResult& renderResult)>& cb);
 
+    virtual void RegisterPreRenderingHandler(
+        const std::function<RenderInfo(void)>& cb) = 0;
+    virtual void RegisterOnRenderedHandler(
+        const std::function<void(WebContainer*,
+                                 const RenderResult& renderResult)>& cb) = 0;
+
+    using OnPrepareImage = std::function<ExternalImageInfo(void)>;
+    using OnFlush = std::function<void(WebContainer*, bool needsFlush)>;
     static WebContainer* CreateWithPlatformImage(
-        unsigned width, unsigned height,
-        const std::function<ExternalImageInfo(void)>& prepareImageCb,
-        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        unsigned width, unsigned height, const OnPrepareImage& prepareImageCb,
+        const OnFlush& flushCb, float devicePixelRatio,
+        const char* defaultFontName, const char* locale,
         const char* timezoneID);
     // <--- end of function set for render to buffer
 
+    using OnGLMakeCurrent = std::function<void(WebContainer*)>;
+    using OnGLSwapBuffers =
+        std::function<void(WebContainer*, bool mayNeedsSync)>;
     // Function set for render with OpenGL
-    static WebContainer* CreateGL(
-        unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onGLMakeCurrent,
-        const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onGLSwapBuffers,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID);
+    static WebContainer* CreateGL(unsigned width, unsigned height,
+                                  const OnGLMakeCurrent& onGLMakeCurrent,
+                                  const OnGLSwapBuffers& onGLSwapBuffers,
+                                  float devicePixelRatio,
+                                  const char* defaultFontName,
+                                  const char* locale, const char* timezoneID);
 
     static WebContainer* CreateGLWithPlatformImage(
-        unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onGLMakeCurrent,
-        const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onGLSwapBuffers,
-        const std::function<ExternalImageInfo(void)>& prepareImageCb,
-        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+        unsigned width, unsigned height, const OnGLMakeCurrent& onGLMakeCurrent,
+        const OnGLSwapBuffers& onGLSwapBuffers,
+        const OnPrepareImage& prepareImageCb, const OnFlush& flushCb,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
 
@@ -105,145 +101,199 @@ public:
                                         const char* timezoneID);
     // <--- end of function set for headless
 
-    void AddIdleCallback(void (*callback)(void*), void* data);
-    size_t AddTimeout(void (*callback)(void*), void* data, size_t timeoutInMS);
-    void ClearTimeout(size_t handle);
+    virtual void AddIdleCallback(void (*callback)(void*), void* data) = 0;
+    virtual size_t AddTimeout(void (*callback)(void*), void* data,
+                              size_t timeoutInMS) = 0;
+    virtual void ClearTimeout(size_t handle) = 0;
 
-    void RegisterCanRenderingHandler(
-        const std::function<bool(WebContainer*)>& cb);
+    virtual void RegisterCanRenderingHandler(
+        const std::function<bool(WebContainer*)>& cb) = 0;
 
-    Settings* GetSettings();
-    void LoadURL(const std::string& url);
-    std::string GetURL();
-    void LoadData(const std::string& data);
-    void Reload();
-    void StopLoading();
-    void GoBack();
-    void GoForward();
-    bool CanGoBack();
-    bool CanGoForward();
-    void AddJavaScriptInterface(
+    virtual Settings* GetSettings() = 0;
+    virtual void LoadURL(const std::string& url) = 0;
+    virtual std::string GetURL() = 0;
+    virtual void LoadData(const std::string& data) = 0;
+    virtual void Reload() = 0;
+    virtual void StopLoading() = 0;
+    virtual void GoBack() = 0;
+    virtual void GoForward() = 0;
+    virtual bool CanGoBack() = 0;
+    virtual bool CanGoForward() = 0;
+    virtual void AddJavaScriptInterface(
         const std::string& exposedObjectName, const std::string& jsFunctionName,
-        std::function<std::string(const std::string&)> cb);
-    std::string EvaluateJavaScript(const std::string& script);
-    void EvaluateJavaScript(const std::string& script,
-                            std::function<void(const std::string&)> cb);
-    void ClearHistory();
-    void Destroy();
-    void Pause();
-    void Resume();
+        std::function<std::string(const std::string&)> cb) = 0;
+    virtual std::string EvaluateJavaScript(const std::string& script) = 0;
+    virtual void EvaluateJavaScript(
+        const std::string& script,
+        std::function<void(const std::string&)> cb) = 0;
+    virtual void ClearHistory() = 0;
+    virtual void Destroy() = 0;
+    virtual void Pause() = 0;
+    virtual void Resume() = 0;
 
-    void ResizeTo(size_t width, size_t height);
+    virtual void ResizeTo(size_t width, size_t height) = 0;
 
-    void Focus();
-    void Blur();
+    virtual void Focus() = 0;
+    virtual void Blur() = 0;
 
-    void SetSettings(const Settings* settings);
-    void RemoveJavascriptInterface(const std::string& exposedObjectName,
-                                   const std::string& jsFunctionName);
-    void ClearCache();
+    virtual void SetSettings(const Settings* settings) = 0;
+    virtual void RemoveJavascriptInterface(
+        const std::string& exposedObjectName,
+        const std::string& jsFunctionName) = 0;
+    virtual void ClearCache() = 0;
 
-    void RegisterOnReceivedErrorHandler(
-        const std::function<void(WebContainer*, ResourceError*)>& cb);
-    void RegisterOnPageParsedHandler(
-        std::function<void(WebContainer*, const std::string&)> cb);
-    void RegisterOnPageLoadedHandler(
-        std::function<void(WebContainer*, const std::string&)> cb);
-    void RegisterOnPageStartedHandler(
-        const std::function<void(WebContainer*, const std::string&)>& cb);
-    void RegisterOnLoadResourceHandler(
-        const std::function<void(WebContainer*, const std::string&)>& cb);
-    void RegisterShouldOverrideUrlLoadingHandler(
-        const std::function<bool(WebContainer*, const std::string&)>& cb);
-    void RegisterOnProgressChangedHandler(
-        const std::function<void(WebContainer*, int progress)>& cb);
-    void RegisterOnDownloadStartHandler(
+    virtual void RegisterOnReceivedErrorHandler(
+        const std::function<void(WebContainer*, ResourceError*)>& cb) = 0;
+    virtual void RegisterOnPageParsedHandler(
+        std::function<void(WebContainer*, const std::string&)> cb) = 0;
+    virtual void RegisterOnPageLoadedHandler(
+        std::function<void(WebContainer*, const std::string&)> cb) = 0;
+    virtual void RegisterOnPageStartedHandler(
+        const std::function<void(WebContainer*, const std::string&)>& cb) = 0;
+    virtual void RegisterOnLoadResourceHandler(
+        const std::function<void(WebContainer*, const std::string&)>& cb) = 0;
+    virtual void RegisterShouldOverrideUrlLoadingHandler(
+        const std::function<bool(WebContainer*, const std::string&)>& cb) = 0;
+    virtual void RegisterOnProgressChangedHandler(
+        const std::function<void(WebContainer*, int progress)>& cb) = 0;
+    virtual void RegisterOnDownloadStartHandler(
         const std::function<void(WebContainer*, const std::string&,
                                  const std::string&, const std::string&,
-                                 const std::string&, long)>& cb);
+                                 const std::string&, long)>& cb) = 0;
 
-    void RegisterShowDropdownMenuHandler(
+    virtual void RegisterShowDropdownMenuHandler(
         const std::function<void(WebContainer*, const std::vector<std::string>*,
-                                 int)>& cb);
-    void RegisterShowAlertHandler(
+                                 int)>& cb) = 0;
+    virtual void RegisterShowAlertHandler(
         const std::function<void(WebContainer*, const std::string&,
-                                 const std::string&)>& cb);
+                                 const std::string&)>& cb) = 0;
 
-    void RegisterCustomFileResourceRequestHandlers(
+    virtual void RegisterCustomFileResourceRequestHandlers(
         std::function<const char*(const char* path)> resolveFilePathCallback,
         std::function<void*(const char* path)> fileOpenCallback,
         std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
             fileReadCallback,
         std::function<long int(void* handle)> fileLengthCallback,
-        std::function<void(void* handle)> fileCloseCallback);
+        std::function<void(void* handle)> fileCloseCallback) = 0;
 
-    void RegisterDebuggerShouldInitHandler(
+    virtual void RegisterDebuggerShouldInitHandler(
         const std::function<void(const std::string& url, int port,
-                                 bool& shouldInit)>& cb);
-    void RegisterDebuggerShouldContinueWaitingHandler(
+                                 bool& shouldInit)>& cb) = 0;
+    virtual void RegisterDebuggerShouldContinueWaitingHandler(
         const std::function<void(const std::string& url, int port,
-                                 bool& shouldWait)>& cb);
+                                 bool& shouldWait)>& cb) = 0;
 
-    void CallHandler(const std::string& handler, void* param);
+    virtual void CallHandler(const std::string& handler, void* param) = 0;
 
-    void SetUserAgentString(const std::string& userAgent);
-    std::string GetUserAgentString();
-    void SetCacheMode(int mode);
-    int GetCacheMode();
-    void SetDefaultFontSize(uint32_t size);
-    uint32_t GetDefaultFontSize();
+    virtual void SetUserAgentString(const std::string& userAgent) = 0;
+    virtual std::string GetUserAgentString() = 0;
+    virtual void SetCacheMode(int mode) = 0;
+    virtual int GetCacheMode() = 0;
+    virtual void SetDefaultFontSize(uint32_t size) = 0;
+    virtual uint32_t GetDefaultFontSize() = 0;
 
-    void DispatchMouseMoveEvent(::LWE::MouseButtonValue button,
-                                ::LWE::MouseButtonsValue buttons, double x,
-                                double y);
-    void DispatchMouseDownEvent(::LWE::MouseButtonValue button,
-                                ::LWE::MouseButtonsValue buttons, double x,
-                                double y);
-    void DispatchMouseUpEvent(::LWE::MouseButtonValue button,
-                              ::LWE::MouseButtonsValue buttons, double x,
-                              double y);
-    void DispatchMouseWheelEvent(double x, double y, int delta);
-    void DispatchKeyDownEvent(::LWE::KeyValue keyCode);
-    void DispatchKeyPressEvent(::LWE::KeyValue keyCode);
-    void DispatchKeyUpEvent(::LWE::KeyValue keyCode);
+    virtual void DispatchMouseMoveEvent(::LWE::MouseButtonValue button,
+                                        ::LWE::MouseButtonsValue buttons,
+                                        double x, double y) = 0;
+    virtual void DispatchMouseDownEvent(::LWE::MouseButtonValue button,
+                                        ::LWE::MouseButtonsValue buttons,
+                                        double x, double y) = 0;
+    virtual void DispatchMouseUpEvent(::LWE::MouseButtonValue button,
+                                      ::LWE::MouseButtonsValue buttons,
+                                      double x, double y) = 0;
+    virtual void DispatchMouseWheelEvent(double x, double y, int delta) = 0;
+    virtual void DispatchKeyDownEvent(::LWE::KeyValue keyCode) = 0;
+    virtual void DispatchKeyPressEvent(::LWE::KeyValue keyCode) = 0;
+    virtual void DispatchKeyUpEvent(::LWE::KeyValue keyCode) = 0;
 
-    void DispatchCompositionStartEvent(
-        const std::string& soFarCompositiedString);
-    void DispatchCompositionUpdateEvent(
-        const std::string& soFarCompositiedString);
-    void DispatchCompositionEndEvent(const std::string& soFarCompositiedString);
-    void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-        const std::function<void(WebContainer*)>& cb);
-    void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-        const std::function<void(WebContainer*)>& cb);
+    virtual void DispatchCompositionStartEvent(
+        const std::string& soFarCompositiedString) = 0;
+    virtual void DispatchCompositionUpdateEvent(
+        const std::string& soFarCompositiedString) = 0;
+    virtual void DispatchCompositionEndEvent(
+        const std::string& soFarCompositiedString) = 0;
+    virtual void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(WebContainer*)>& cb) = 0;
+    virtual void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(WebContainer*)>& cb) = 0;
 
-    void SetUserData(const std::string& key, void* data);
-    void* GetUserData(const std::string& key);
+    virtual void SetUserData(const std::string& key, void* data) = 0;
+    virtual void* GetUserData(const std::string& key) = 0;
 
-    std::string GetTitle();
-    void ScrollTo(int x, int y);
-    void ScrollBy(int x, int y);
-    int GetScrollX();
-    int GetScrollY();
+    virtual std::string GetTitle() = 0;
+    virtual void ScrollTo(int x, int y) = 0;
+    virtual void ScrollBy(int x, int y) = 0;
+    virtual int GetScrollX() = 0;
+    virtual int GetScrollY() = 0;
 
-    size_t Width();
-    size_t Height();
+    virtual size_t Width() = 0;
+    virtual size_t Height() = 0;
 
     // You can control rendering flow through this function
     // If you got callback, you must call `doRenderingFunction` after
-    void RegisterSetNeedsRenderingCallback(
-        const std::function<void(WebContainer*, const std::function<void()>&
-                                                    doRenderingFunction)>& cb);
-    void SetDevicePixelRatio(float dpr);
-    float GetDevicePixelRatio();
+    virtual void RegisterSetNeedsRenderingCallback(
+        const std::function<void(
+            WebContainer*, const std::function<void()>& doRenderingFunction)>&
+            cb) = 0;
+    virtual void SetDevicePixelRatio(float dpr) = 0;
+    virtual float GetDevicePixelRatio() = 0;
 
 protected:
-    WebContainer(void* webView);
-
-private:
-    void* m_impl;
+    WebContainer() = default;
+    // use Destroy function instead of using delete operator
+    virtual ~WebContainer() = default;
 };
 
 } // namespace LWEDelegate
+
+// C wrappers used for dlopen/dlsym.
+extern "C" {
+
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_Create(
+    unsigned width, unsigned height, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID);
+
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_WebContainer_Create_With_PlatformImage(
+    unsigned width, unsigned height, uintptr_t prepareImageCb,
+    uintptr_t flushCb, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID);
+
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
+    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
+    uintptr_t onGLSwapBuffers, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID);
+
+uintptr_t EXPORT_UNMANAGED_API
+LWEDelegate_WebContainer_CreateGLWithPlatformImage(
+    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
+    uintptr_t onGLSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID);
+
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateHeadless(
+    unsigned width, unsigned height, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID);
+
+typedef struct {
+    uintptr_t (*Create)(unsigned, unsigned, float, const char*, const char*,
+                        const char*);
+    uintptr_t (*CreateWithPlatformImage)(unsigned, unsigned, uintptr_t,
+                                         uintptr_t, float, const char*,
+                                         const char*, const char*);
+    uintptr_t (*CreateGL)(unsigned, unsigned, uintptr_t, uintptr_t, float,
+                          const char*, const char*, const char*);
+    uintptr_t (*CreateGLWithPlatformImage)(unsigned, unsigned, uintptr_t,
+                                           uintptr_t, uintptr_t, uintptr_t,
+                                           float, const char*, const char*,
+                                           const char*);
+
+    uintptr_t (*CreateHeadless)(unsigned width, unsigned height,
+                                float devicePixelRatio,
+                                const char* defaultFontName, const char* locale,
+                                const char* timezoneID);
+
+} WebContainerProcTable;
+}
 
 #endif
