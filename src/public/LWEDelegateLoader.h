@@ -41,6 +41,7 @@ public:
     static LWEProcTable kLWEProcTable;
     static ResourceErrorProcTable kResourceErrorProcTable;
     static SettingsProcTable kSettingsProcTable;
+    static WebContainerProcTable kWebContainerProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -62,6 +63,7 @@ private:
     bool loadLWEProcTable();
     bool loadResourceErrorProcTable();
     bool loadSettingsProcTable();
+    bool loadWebContainerProcTable();
 
     void* m_handle = nullptr;
 };

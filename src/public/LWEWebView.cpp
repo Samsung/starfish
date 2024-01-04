@@ -468,6 +468,28 @@ void CookieManager::Destroy()
     }
 }
 
+WebContainer* WebContainer::Create(unsigned width, unsigned height,
+                                   float devicePixelRatio,
+                                   const char* defaultFontName,
+                                   const char* locale, const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()->kWebContainerProcTable.Create(
+            width, height, devicePixelRatio, defaultFontName, locale,
+            timezoneID));
+#else
+    auto delegate = LWEDelegate::WebContainer::Create(
+        width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
+#endif
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
+    return instance;
+}
+
 WebContainer* WebContainer::CreateWithPlatformImage(
     unsigned width, unsigned height,
     const std::function<ExternalImageInfo(void)>& prepareImageCb,
@@ -476,21 +498,31 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     const char* timezoneID)
 {
     WebContainer* instance = new WebContainer();
-    const auto prepareImageCbWrapper =
+    const LWEDelegate::WebContainer::OnPrepareImage prepareImageCbWrapper =
         [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
         return { prepareImageCb().imageAddress };
     };
-    const auto flushCbWrapper = [instance,
-                                 flushCb](LWEDelegate::WebContainer* container,
-                                          bool needsFlush) {
-        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
-                       instance->m_delegate.get()) == container);
-        flushCb(instance, needsFlush);
-    };
+    const LWEDelegate::WebContainer::OnFlush flushCbWrapper =
+        [instance, flushCb](LWEDelegate::WebContainer* container,
+                            bool needsFlush) {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            flushCb(instance, needsFlush);
+        };
 
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()
+            ->kWebContainerProcTable.CreateWithPlatformImage(
+                width, height,
+                reinterpret_cast<uintptr_t>(&prepareImageCbWrapper),
+                reinterpret_cast<uintptr_t>(&flushCbWrapper), devicePixelRatio,
+                defaultFontName, locale, timezoneID));
+#else
     auto delegate = LWEDelegate::WebContainer::CreateWithPlatformImage(
         width, height, prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
         defaultFontName, locale, timezoneID);
+#endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
             // Do nothing, use Destroy to release delegate.
@@ -507,14 +539,14 @@ WebContainer* WebContainer::CreateGL(
     const char* timezoneID)
 {
     WebContainer* instance = new WebContainer();
-    const auto onGLMakeCurrentWrapper =
+    const LWEDelegate::WebContainer::OnGLMakeCurrent onGLMakeCurrentWrapper =
         [instance,
          onGLMakeCurrent](LWEDelegate::WebContainer* container) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
                        instance->m_delegate.get()) == container);
         onGLMakeCurrent(instance);
     };
-    const auto onGLSwapBuffersWrapper =
+    const LWEDelegate::WebContainer::OnGLSwapBuffers onGLSwapBuffersWrapper =
         [instance, onGLSwapBuffers](LWEDelegate::WebContainer* container,
                                     bool mayNeedsSync) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
@@ -522,9 +554,17 @@ WebContainer* WebContainer::CreateGL(
         onGLSwapBuffers(instance, mayNeedsSync);
     };
 
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateGL(
+            width, height, reinterpret_cast<uintptr_t>(&onGLMakeCurrentWrapper),
+            reinterpret_cast<uintptr_t>(&onGLSwapBuffersWrapper),
+            devicePixelRatio, defaultFontName, locale, timezoneID));
+#else
     auto delegate = LWEDelegate::WebContainer::CreateGL(
         width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
         devicePixelRatio, defaultFontName, locale, timezoneID);
+#endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
             // Do nothing, use Destroy to release delegate.
@@ -543,14 +583,15 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     const char* timezoneID)
 {
     WebContainer* instance = new WebContainer();
-    const auto onGLMakeCurrentWrapper =
+    const LWEDelegate::WebContainer::OnGLMakeCurrent onGLMakeCurrentWrapper =
         [instance,
          onGLMakeCurrent](LWEDelegate::WebContainer* container) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
                        instance->m_delegate.get()) == container);
         onGLMakeCurrent(instance);
     };
-    const auto onGLSwapBuffersWrapper =
+
+    const LWEDelegate::WebContainer::OnGLSwapBuffers onGLSwapBuffersWrapper =
         [instance, onGLSwapBuffers](LWEDelegate::WebContainer* container,
                                     bool mayNeedsSync) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
@@ -558,22 +599,35 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
         onGLSwapBuffers(instance, mayNeedsSync);
     };
 
-    const auto prepareImageCbWrapper =
+    const LWEDelegate::WebContainer::OnPrepareImage prepareImageCbWrapper =
         [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
         return { prepareImageCb().imageAddress };
     };
-    const auto flushCbWrapper = [instance,
-                                 flushCb](LWEDelegate::WebContainer* container,
-                                          bool needsFlush) {
-        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
-                       instance->m_delegate.get()) == container);
-        flushCb(instance, needsFlush);
-    };
 
+    const LWEDelegate::WebContainer::OnFlush flushCbWrapper =
+        [instance, flushCb](LWEDelegate::WebContainer* container,
+                            bool needsFlush) {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            flushCb(instance, needsFlush);
+        };
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()
+            ->kWebContainerProcTable.CreateGLWithPlatformImage(
+                width, height,
+                reinterpret_cast<uintptr_t>(&onGLMakeCurrentWrapper),
+                reinterpret_cast<uintptr_t>(&onGLSwapBuffersWrapper),
+                reinterpret_cast<uintptr_t>(&prepareImageCbWrapper),
+                reinterpret_cast<uintptr_t>(&flushCbWrapper), devicePixelRatio,
+                defaultFontName, locale, timezoneID));
+#else
     auto delegate = LWEDelegate::WebContainer::CreateGLWithPlatformImage(
         width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
         prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
         defaultFontName, locale, timezoneID);
+#endif
+
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
             // Do nothing, use Destroy to release delegate.
@@ -588,8 +642,15 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
                                            const char* timezoneID)
 {
     WebContainer* instance = new WebContainer();
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateHeadless(
+            width, height, devicePixelRatio, defaultFontName, locale,
+            timezoneID));
+#else
     auto delegate = LWEDelegate::WebContainer::CreateHeadless(
         width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
+#endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
             // Do nothing, use Destroy to release delegate.
