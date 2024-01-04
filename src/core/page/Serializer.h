@@ -657,10 +657,10 @@ public:
                                    DeserializingMap& memory);
     static ScriptValue deserialize(ExecutionContext* executionContext,
                                    SerializedTypedData* value);
-    static void serializeWithTransfer(ExecutionContext* executionContext,
-                                      ScriptValue value,
-                                      GCVector<ScriptValue>& transferValues,
-                                      SerializeWithTransferResult& result);
+    static void serializeWithTransfer(
+        ExecutionContext* executionContext, ScriptValue value,
+        GCAtomicVector<ScriptObject>& transferValues,
+        SerializeWithTransferResult& result);
     static void deserializeWithTransfer(ExecutionContext* executionContext,
                                         SerializeWithTransferResult& serialized,
                                         DeserializeWithTransferResult& result);

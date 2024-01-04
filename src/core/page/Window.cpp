@@ -277,12 +277,13 @@ Storage* Window::sessionStorage()
 void Window::postMessage(Window* source, ScriptValue message,
                          String* targetOrigin)
 {
-    GCVector<ScriptValue> emptyList;
+    GCAtomicVector<ScriptObject> emptyList;
     postMessage(source, message, targetOrigin, emptyList);
 }
 
 void Window::postMessage(Window* source, ScriptValue message,
-                         String* targetOrigin, GCVector<ScriptValue>& transfer)
+                         String* targetOrigin,
+                         GCAtomicVector<ScriptObject>& transfer)
 {
     String* origin = source->location()->origin();
     if (targetOrigin->equals("/")) {
@@ -321,48 +322,15 @@ void Window::postMessage(Window* source, ScriptValue message,
                 Window* window = (Window*)data;
                 SerializeWithTransferResult* serializedRecord =
                     (SerializeWithTransferResult*)data1;
-                DeserializeWithTransferResult deserializedRecord;
-                bool fail = false;
-                try {
-                    Serializer::deserializeWithTransfer(
-                        window->document()->executionContext(),
-                        *serializedRecord, deserializedRecord);
-                } catch (DOMException* e) {
-                    fail = true;
-                }
-                MessageEvent* e;
-                String* eventType;
-                if (fail == false) {
-                    eventType = window->staticStrings()->m_message.localName();
-                    e = new MessageEvent(window->document()->executionContext(),
-                                         eventType);
-                    e->setData(deserializedRecord.m_deserialized);
 
-                    GCVector<MessagePort*> newPorts;
-                    for (size_t i = 0;
-                         i < deserializedRecord.m_deserializedTransfer.size();
-                         i++) {
-                        ScriptValue item =
-                            deserializedRecord.m_deserializedTransfer[i];
-                        STARFISH_ASSERT(isObjectScriptValue(item));
-                        ScriptWrappable* sw = toScriptWrappable(item);
-                        if (sw && sw->isMessagePort()) {
-                            newPorts.push_back(sw->asMessagePort());
-                        }
-                    }
-                    e->setPorts(newPorts);
+                MessageEvent* event = new MessageEvent(
+                    window->document()->executionContext(), serializedRecord);
 
-                } else {
-                    eventType =
-                        window->staticStrings()->m_messageerror.localName();
-                    e = new MessageEvent(window->document()->executionContext(),
-                                         eventType);
-                }
                 Window* source = (Window*)data2;
 
-                e->setSource(MessageEventSource::createWindow(source));
-                e->setOrigin(source->location()->origin());
-                window->dispatchEventByUA(e);
+                event->setSource(MessageEventSource::createWindow(source));
+                event->setOrigin(source->location()->origin());
+                window->dispatchEventByUA(event);
             },
             this, serializedRecord, source);
     }

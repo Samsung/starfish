@@ -27,6 +27,7 @@ namespace Starfish {
 
 typedef WindowOrServiceWorker MessageEventSource;
 
+class SerializeWithTransferResult;
 class MessagePort;
 
 // https://html.spec.whatwg.org/multipage/comms.html#messageeventinit
@@ -130,6 +131,9 @@ public:
         , m_source(nullptr)
     {
     }
+
+    MessageEvent(ExecutionContext* executionContext,
+                 SerializeWithTransferResult* serializedRecord);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

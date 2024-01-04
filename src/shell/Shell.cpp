@@ -737,9 +737,8 @@ int main(int argc, char* argv[])
         wndObj, creationOption.x, creationOption.y, creationOption.width,
         creationOption.height, creationOption.scaleFactor, "serif", "ko-KR",
         "Asia/Seoul");
-#endif
-
     applyLWEOptions(lweOptions, webView);
+#endif
 
 #if !defined(SHELL_ENABLE_HEADLESS)
     addMainBoxToWindowIfNeeds(wndObj, webView);

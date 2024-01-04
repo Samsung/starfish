@@ -78,7 +78,8 @@ public:
     virtual ExecutionContext* executionContext() const override;
 
     void postMessage(ScriptValue message);
-    void postMessage(ScriptValue message, GCVector<ScriptValue>& transfer);
+    void postMessage(ScriptValue message,
+                     GCAtomicVector<ScriptObject>& transfer);
     void start();
     void close();
 
