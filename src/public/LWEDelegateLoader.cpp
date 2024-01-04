@@ -26,6 +26,7 @@ LWEProcTable LWEDelegateLoader::kLWEProcTable;
 ResourceErrorProcTable LWEDelegateLoader::kResourceErrorProcTable;
 SettingsProcTable LWEDelegateLoader::kSettingsProcTable;
 WebContainerProcTable LWEDelegateLoader::kWebContainerProcTable;
+WebViewProcTable LWEDelegateLoader::kWebViewProcTable;
 
 LWEDelegateLoader* LWEDelegateLoader::getInstance()
 {
@@ -46,7 +47,7 @@ bool LWEDelegateLoader::load(std::string path)
 
     return loadCookieManagerProcTable() && loadLWEProcTable() &&
            loadResourceErrorProcTable() && loadSettingsProcTable() &&
-           loadWebContainerProcTable();
+           loadWebContainerProcTable() && loadWebViewProcTable();
 }
 
 void LWEDelegateLoader::unload()
@@ -133,6 +134,14 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
            kWebContainerProcTable.CreateGL &&
            kWebContainerProcTable.CreateGLWithPlatformImage &&
            kWebContainerProcTable.CreateHeadless;
+}
+bool LWEDelegateLoader::loadWebViewProcTable()
+{
+    kWebViewProcTable.Create = reinterpret_cast<uintptr_t (*)(
+        void*, unsigned, unsigned, unsigned, unsigned, float, const char*,
+        const char*, const char*)>(
+        dlsym(m_handle, "LWEDelegate_WebView_Create"));
+    return kWebViewProcTable.Create;
 }
 
 } // namespace LWE

@@ -42,6 +42,7 @@ public:
     static ResourceErrorProcTable kResourceErrorProcTable;
     static SettingsProcTable kSettingsProcTable;
     static WebContainerProcTable kWebContainerProcTable;
+    static WebViewProcTable kWebViewProcTable;
 
     LWEDelegateLoader(const LWEDelegateLoader& other) = delete;
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
@@ -64,6 +65,7 @@ private:
     bool loadResourceErrorProcTable();
     bool loadSettingsProcTable();
     bool loadWebContainerProcTable();
+    bool loadWebViewProcTable();
 
     void* m_handle = nullptr;
 };
