@@ -81,7 +81,7 @@ public:
             prepareImageCb,
         const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
         bool useSWBackend = false)
-        : WebView(nullptr)
+        : WebViewImpl(nullptr)
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
         , m_hasFocus(true)

@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#include "public/delegate/LWEWebViewDelegate.h"
+#include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/delegate/LWEWebContainerDelegate.h"
 #include "platform/canvas/webgl/XGL.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
@@ -55,13 +55,13 @@ static void onWindowClose(GLFWwindow* window)
     setenv("SHELL_DONE_FLAG", "1", 1);
 }
 
-class WebViewGLFW : public WebView {
+class WebViewGLFW : public WebViewImpl {
 public:
     WebViewGLFW(void* winArg, unsigned x, unsigned y, unsigned width,
                 unsigned height, float devicePixelRatio,
                 const char* defaultFontName, const char* locale,
                 const char* timezoneID)
-        : WebView(nullptr)
+        : WebViewImpl(nullptr)
     {
         glfwSetErrorCallback(onError);
         if (!glfwInit())

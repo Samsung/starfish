@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "PlatformIntegrationData.h"
-#include "public/delegate/LWEWebViewDelegate.h"
+#include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/delegate/LWEWebContainerDelegate.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 
@@ -285,7 +285,7 @@ static void elm_box_layout_cb(Evas_Object* o, Evas_Object_Box_Data* priv,
     }
 }
 
-class WebViewEFL : public WebView {
+class WebViewEFL : public WebViewImpl {
 public:
     WebViewEFL(void* winArg, unsigned x, unsigned y, unsigned width,
                unsigned height, float devicePixelRatio,

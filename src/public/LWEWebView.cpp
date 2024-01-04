@@ -1259,9 +1259,16 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          const char* defaultFontName, const char* locale,
                          const char* timezoneID)
 {
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebView*>(
+        LWEDelegateLoader::getInstance()->kWebViewProcTable.Create(
+            win, x, y, width, height, devicePixelRatio, defaultFontName, locale,
+            timezoneID));
+#else
     auto delegate =
         LWEDelegate::WebView::Create(win, x, y, width, height, devicePixelRatio,
                                      defaultFontName, locale, timezoneID);
+#endif
     WebView* instance = new WebView();
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {

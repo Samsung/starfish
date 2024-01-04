@@ -31,128 +31,132 @@ class ResourceError;
 class WebContainer;
 
 class EXPORT_UNMANAGED_API WebView {
-protected:
-    virtual ~WebView()
-    {
-    }
-
 public:
     static WebView* Create(void* win, unsigned x, unsigned y, unsigned width,
                            unsigned height, float devicePixelRatio,
                            const char* defaultFontName, const char* locale,
                            const char* timezoneID);
 
-    virtual void Destroy();
+    virtual void Destroy() = 0;
 
-    Settings* GetSettings();
+    virtual Settings* GetSettings() = 0;
 
-    virtual void LoadURL(const std::string& url);
+    virtual void LoadURL(const std::string& url) = 0;
 
-    std::string GetURL();
+    virtual std::string GetURL() = 0;
 
-    void LoadData(const std::string& data);
+    virtual void LoadData(const std::string& data) = 0;
 
-    void Reload();
+    virtual void Reload() = 0;
 
-    void StopLoading();
+    virtual void StopLoading() = 0;
 
-    void GoBack();
+    virtual void GoBack() = 0;
 
-    void GoForward();
+    virtual void GoForward() = 0;
 
-    bool CanGoBack();
+    virtual bool CanGoBack() = 0;
 
-    bool CanGoForward();
+    virtual bool CanGoForward() = 0;
 
-    void Pause();
+    virtual void Pause() = 0;
 
-    void Resume();
+    virtual void Resume() = 0;
 
-    void AddJavaScriptInterface(
+    virtual void AddJavaScriptInterface(
         const std::string& exposedObjectName, const std::string& jsFunctionName,
-        std::function<std::string(const std::string&)> cb);
+        std::function<std::string(const std::string&)> cb) = 0;
 
-    std::string EvaluateJavaScript(const std::string& script);
+    virtual std::string EvaluateJavaScript(const std::string& script) = 0;
 
-    void EvaluateJavaScript(const std::string& script,
-                            std::function<void(const std::string&)> cb);
+    virtual void EvaluateJavaScript(
+        const std::string& script,
+        std::function<void(const std::string&)> cb) = 0;
 
-    void ClearHistory();
+    virtual void ClearHistory() = 0;
 
-    void SetSettings(const Settings* settings);
+    virtual void SetSettings(const Settings* settings) = 0;
 
-    void RemoveJavascriptInterface(const std::string& exposedObjectName,
-                                   const std::string& jsFunctionName);
+    virtual void RemoveJavascriptInterface(
+        const std::string& exposedObjectName,
+        const std::string& jsFunctionName) = 0;
 
-    void ClearCache();
+    virtual void ClearCache() = 0;
 
-    void RegisterOnReceivedErrorHandler(
-        std::function<void(WebView*, ResourceError*)> cb);
+    virtual void RegisterOnReceivedErrorHandler(
+        std::function<void(WebView*, ResourceError*)> cb) = 0;
 
-    void RegisterOnPageParsedHandler(
-        std::function<void(WebView*, const std::string&)> cb);
+    virtual void RegisterOnPageParsedHandler(
+        std::function<void(WebView*, const std::string&)> cb) = 0;
 
-    void RegisterOnPageLoadedHandler(
-        std::function<void(WebView*, const std::string&)> cb);
+    virtual void RegisterOnPageLoadedHandler(
+        std::function<void(WebView*, const std::string&)> cb) = 0;
 
-    void RegisterOnPageStartedHandler(
-        std::function<void(WebView*, const std::string&)> cb);
+    virtual void RegisterOnPageStartedHandler(
+        std::function<void(WebView*, const std::string&)> cb) = 0;
 
-    void RegisterOnLoadResourceHandler(
-        std::function<void(WebView*, const std::string&)> cb);
+    virtual void RegisterOnLoadResourceHandler(
+        std::function<void(WebView*, const std::string&)> cb) = 0;
 
-    void RegisterCustomFileResourceRequestHandlers(
+    virtual void RegisterCustomFileResourceRequestHandlers(
         std::function<const char*(const char* path)> resolveFilePathCallback,
         std::function<void*(const char* path)> fileOpenCallback,
         std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
             fileReadCallback,
         std::function<long int(void* handle)> fileLengthCallback,
-        std::function<void(void* handle)> fileCloseCallback);
-    void RegisterDebuggerShouldInitHandler(
+        std::function<void(void* handle)> fileCloseCallback) = 0;
+    virtual void RegisterDebuggerShouldInitHandler(
         const std::function<void(const std::string& url, int port,
-                                 bool& shouldInit)>& cb);
-    void RegisterDebuggerShouldContinueWaitingHandler(
+                                 bool& shouldInit)>& cb) = 0;
+    virtual void RegisterDebuggerShouldContinueWaitingHandler(
         const std::function<void(const std::string& url, int port,
-                                 bool& shouldWait)>& cb);
+                                 bool& shouldWait)>& cb) = 0;
 
-    void SetUserData(const std::string& key, void* data);
+    virtual void SetUserData(const std::string& key, void* data) = 0;
 
-    void* GetUserData(const std::string& key);
+    virtual void* GetUserData(const std::string& key) = 0;
 
-    std::string GetTitle();
+    virtual std::string GetTitle() = 0;
 
-    void ScrollTo(int x, int y);
+    virtual void ScrollTo(int x, int y) = 0;
 
-    void ScrollBy(int x, int y);
+    virtual void ScrollBy(int x, int y) = 0;
 
-    int GetScrollX();
+    virtual int GetScrollX() = 0;
 
-    int GetScrollY();
+    virtual int GetScrollY() = 0;
 
-    virtual void* Unwrap()
-    {
-        return nullptr;
-    }
+    virtual void* Unwrap() = 0;
 
-    virtual void Focus();
+    virtual void Focus() = 0;
 
-    virtual void Blur();
+    virtual void Blur() = 0;
 
-    void SetDevicePixelRatio(float dpr);
+    virtual void SetDevicePixelRatio(float dpr) = 0;
 
-    float GetDevicePixelRatio();
+    virtual float GetDevicePixelRatio() = 0;
 
     virtual WebContainer* FetchWebContainer() = 0;
 
 protected:
-    WebView(void* impl)
-        : m_impl(impl)
-    {
-    }
-
-    void* m_impl;
+    WebView() = default;
+    virtual ~WebView() = default;
 };
 
 } // namespace LWEDelegate
+
+// C wrappers used for dlopen/dlsym.
+extern "C" {
+
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebView_Create(
+    void* win, unsigned x, unsigned y, unsigned width, unsigned height,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID);
+
+typedef struct {
+    uintptr_t (*Create)(void*, unsigned, unsigned, unsigned, unsigned, float,
+                        const char*, const char*, const char*);
+} WebViewProcTable;
+}
 
 #endif
