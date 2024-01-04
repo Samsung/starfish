@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_SERVICE_WORKER_HOST) && \
-    !defined(__StarfishServiceWorkerScriptController__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishServiceWorkerScriptController__
 #define __StarfishServiceWorkerScriptController__
 
 #include "core/modules/worker/host/WorkerScriptController.h"
@@ -71,4 +71,5 @@ private:
 };
 } // namespace Starfish
 
+#endif
 #endif

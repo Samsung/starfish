@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishServiceWorkerHostConnection__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishServiceWorkerHostConnection__
 #define __StarfishServiceWorkerHostConnection__
 
 #include "core/modules/serviceworker/Connection.h"
@@ -72,4 +72,5 @@ private:
 
 } // namespace Starfish
 
+#endif
 #endif

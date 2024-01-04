@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishServiceWorkerHostProcess__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishServiceWorkerHostProcess__
 #define __StarfishServiceWorkerHostProcess__
 
 #include "binding/StarfishHoldable.h"
@@ -79,4 +79,6 @@ private:
 };
 
 } // namespace Starfish
+
+#endif
 #endif

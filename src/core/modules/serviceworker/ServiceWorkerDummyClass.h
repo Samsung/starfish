@@ -25,8 +25,7 @@
 
 namespace Starfish {
 
-#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
-    defined(STARFISH_SERVICE_WORKER_HOST)
+#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
 
 class Element;
 class String;

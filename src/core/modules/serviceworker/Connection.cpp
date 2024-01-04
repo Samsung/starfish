@@ -126,7 +126,7 @@ std::string Connection::Config::createAddress(const std::string& last)
 {
     std::stringstream ss;
 
-#ifdef SERVICE_WORKER_USE_SEPARATE_PROCESS
+#ifdef STARFISH_USE_WORKER_PROCESS
     // For Inter-Process Communication
     ss << "ipc://" << getHandlePath(last);
 #else

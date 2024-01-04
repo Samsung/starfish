@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_SERVICE_WORKER_HOST
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
@@ -108,4 +108,4 @@ ScriptLoadResult ServiceWorkerScriptController::loadJavaScriptFromCache(
 
 } // namespace Starfish
 
-#endif /* STARFISH_SERVICE_WORKER_HOST */
+#endif /* STARFISH_WEBWORKER_HOST */

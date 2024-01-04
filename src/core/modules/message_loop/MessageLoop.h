@@ -22,8 +22,7 @@
 
 #include "core/modules/message_loop/MessageLoopInterface.h"
 
-#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
-    defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
 #define BASE_CLASS gc, public IMessageLoop
 #else
 #include "core/modules/message_loop/MessageLoopMixin.h"

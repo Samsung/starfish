@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishServiceWorkerServerInterface__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishServiceWorkerServerInterface__
 #define __StarfishServiceWorkerServerInterface__
 
 namespace Starfish {
@@ -41,4 +41,6 @@ public:
 };
 
 } // namespace Starfish
+
+#endif
 #endif

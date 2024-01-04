@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishServiceWorkerGlobalScope__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishServiceWorkerGlobalScope__
 #define __StarfishServiceWorkerGlobalScope__
 
 #include "core/modules/worker/host/WorkerGlobalScope.h"
@@ -84,4 +84,5 @@ private:
 };
 } // namespace Starfish
 
+#endif
 #endif

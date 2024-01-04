@@ -17,7 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__ExtendableEvent__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __ExtendableEvent__
 #define __ExtendableEvent__
 
 #include "core/dom/Event.h"
@@ -71,4 +72,6 @@ private:
 };
 
 } // namespace Starfish
+
+#endif
 #endif

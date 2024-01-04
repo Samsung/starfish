@@ -47,7 +47,7 @@
 
 #include "core/modules/serviceworker/PerProcess.h"
 
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 namespace LWE {
@@ -103,7 +103,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess,
 void ServiceWorkerProcessManager::destroy()
 {
     TRACE_SCOPE(SVCWORKER);
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
     m_promiseStopThreadSignal.set_value();
 #endif
 }
@@ -115,7 +115,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(Globals::supportsThreading());
 
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
     // TODO: create a Runnable for this thread once verified.
     std::thread(
         [](PerProcess* perProcess, std::future<void>&& stopTask) {
@@ -165,7 +165,7 @@ static bool isFile(const std::string& name)
 
 bool ServiceWorkerProcessManager::processExist(const std::string identifier)
 {
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
     STARFISH_ASSERT_NOT_REACHED();
 #endif
     // Here we use the socket handle promised exists.
@@ -197,7 +197,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         processData = std::make_shared<ProcessData>();
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
-#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if !defined(STARFISH_USE_WORKER_PROCESS)
         startWorkerOnThread("");
 #else
         auto swProcessExecutor = m_option->serviceWorkerProcessExecutor();

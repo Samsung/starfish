@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
@@ -116,5 +116,6 @@ private:
 #endif
 };
 } // namespace Starfish
+
 #endif
-#endif /* STARFISH_ENABLE_SERVICE_WORKER */
+#endif
