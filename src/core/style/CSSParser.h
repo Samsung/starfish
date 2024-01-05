@@ -1704,6 +1704,41 @@ class StyleRuleKeyframes;
 #define CSSTOKEN_POOL_INITIAL_SIZE 24
 #endif
 
+struct CSSSelectorPoolKey {
+    CSSSelector::Type m_type : 4;
+    CSSSelector::RelationType m_relation : 3;
+    CSSSelector::PseudoType m_pseudotype : 6;
+    CSSSelector::AttributeMatchType m_attributeMatch : 1;
+    bool m_relationIsAffectedByPseudoContent : 1;
+    AtomicString m_selectorText;
+};
+
+} // namespace Starfish
+
+namespace std {
+template <>
+struct hash<Starfish::CSSSelectorPoolKey> {
+    size_t operator()(Starfish::CSSSelectorPoolKey const& x) const
+    {
+        return reinterpret_cast<size_t>(x.m_selectorText.string());
+    }
+};
+
+template <>
+struct equal_to<Starfish::CSSSelectorPoolKey> {
+    bool operator()(Starfish::CSSSelectorPoolKey const& a,
+                    Starfish::CSSSelectorPoolKey const& b) const
+    {
+        return memcmp(&a, &b, sizeof(Starfish::CSSSelectorPoolKey)) == 0;
+    }
+};
+
+} // namespace std
+
+namespace Starfish {
+
+using CSSSelectorPool = GCUnorderedMap<CSSSelectorPoolKey, CSSSelector*>;
+
 class CSSParser : public DocumentHoldable {
     friend class CSSToken;
 
@@ -1785,7 +1820,7 @@ public:
 
     bool parseSupportsCondition(); // for supports rule
 
-protected:
+private:
     RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
                               bool isURL = false);
     RefPtr<CSSToken> currentToken();
@@ -1891,7 +1926,6 @@ protected:
     char m_tokenInnerPool[CSSTOKEN_POOL_INITIAL_SIZE * sizeof(CSSToken)];
     unsigned m_blockLevel;
 
-private:
     // for supports rule
     bool parseSupportsNegation();
     bool parseSupportsConnectives(String* conjoiner);
@@ -1903,6 +1937,13 @@ private:
     bool doLogicOperation();
     GCVector<TruthOp> m_supportOperandStack;
     GCVector<LogicOp> m_supportOperatorStack;
+
+    CSSSelector* getSelector(const CSSSelectorPoolKey& key);
+    CSSSelector* updateSelectorRelation(CSSSelector* selector,
+                                        CSSSelector::RelationType relationType);
+    CSSSelector* setSelectorRelationIsAffectedByPseudoContent(
+        CSSSelector* selector);
+    CSSSelectorPool m_selectorPool;
 };
 
 struct MediaQueryExpValue {

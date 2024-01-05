@@ -2903,14 +2903,22 @@ public:
         CaseSensitive,
     };
 
-    CSSSelector(Type type, RelationType relation, AtomicString text)
+    CSSSelector(Type type, RelationType relation, AtomicString text,
+                PseudoType pseudoType = PseudoNone,
+                AttributeMatchType attributeMatch = CaseInsensitive,
+                bool relationIsAffectedByPseudoContent = false)
         : m_type(type)
         , m_relation(relation)
-        , m_pseudotype(PseudoNone)
-        , m_attributeMatch(CaseInsensitive)
-        , m_relationIsAffectedByPseudoContent(false)
+        , m_pseudotype(pseudoType)
+        , m_attributeMatch(attributeMatch)
+        , m_relationIsAffectedByPseudoContent(relationIsAffectedByPseudoContent)
         , m_selectorText(text)
     {
+    }
+
+    bool hasImmutableData() const
+    {
+        return m_type < PseudoElement;
     }
 
     bool isAttributeSelector() const
@@ -2963,16 +2971,18 @@ public:
 
     void updateRelation(RelationType rel)
     {
+        STARFISH_ASSERT(!hasImmutableData());
         m_relation = rel;
     }
 
-    bool relationIsAffectedByPseudoContent()
+    bool relationIsAffectedByPseudoContent() const
     {
         return m_relationIsAffectedByPseudoContent;
     }
 
     void setRelationIsAffectedByPseudoContent()
     {
+        STARFISH_ASSERT(!hasImmutableData());
         m_relationIsAffectedByPseudoContent = true;
     }
 
