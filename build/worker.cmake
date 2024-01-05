@@ -119,7 +119,7 @@ FOREACH (IDL_FILE ${STARFISH_IDL})
 ENDFOREACH()
 
 FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
-    ${STARFISH_ROOT}/src/public/LWE.cpp
+    ${STARFISH_ROOT}/src/public/delegate/LWEDelegate.cpp
     ${STARFISH_ROOT}/src/StaticStrings.cpp
     ${STARFISH_ROOT}/src/Starfish.cpp
     ${STARFISH_ROOT}/src/platform/loader/ResourceURL.cpp
@@ -128,7 +128,6 @@ FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/platform/network/http/*.cpp
     ${STARFISH_ROOT}/src/platform/file/*.cpp
     ${STARFISH_ROOT}/src/platform/process/base/*.cpp
-    ${STARFISH_ROOT}/src/platform/public/*.cpp
 )
 
 FILE (GLOB STARFISH_WORKER_CORE_SRC

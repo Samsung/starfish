@@ -19,9 +19,11 @@
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 
-#include "LWEServiceWorker.h"
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
+#include "LWEServiceWorker.h"
+#include "public/delegate/LWEDelegate.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
@@ -30,9 +32,11 @@
 
 using namespace Starfish;
 
-namespace LWE {
-
+namespace LWEDelegate {
 extern Starfish::Starfish *g_starfishInstance;
+}
+
+namespace LWE {
 
 #if defined(STARFISH_WEBWORKER_HOST)
 
@@ -54,7 +58,7 @@ void ServiceWorker::Initialize(const std::string &dataDirectoryPath)
             Starfish::ServiceWorkerOption::getDefaultDataDirectoryPath();
     }
 
-    LWE::Initialize(
+    LWEDelegate::LWE::Initialize(
         (swDataDirPath + "/starfish-serviceworker-local-storage.txt").c_str(),
         (swDataDirPath + "/starfish-serviceworker-cookie.txt").c_str(),
         (swDataDirPath + "/starfish-serviceworker-http-cache.txt").c_str());
@@ -62,23 +66,25 @@ void ServiceWorker::Initialize(const std::string &dataDirectoryPath)
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([swDataDirPath]() -> size_t {
         if (ServiceWorkerAgent::isCreated() == false) {
-            g_starfishInstance->serviceWorkerOption()->setDataDirectoryPath(
-                swDataDirPath);
+            LWEDelegate::g_starfishInstance->serviceWorkerOption()
+                ->setDataDirectoryPath(swDataDirPath);
 
-            ServiceWorkerAgent::create(g_starfishInstance,
-                                       g_starfishInstance->perProcess());
+            ServiceWorkerAgent::create(
+                LWEDelegate::g_starfishInstance,
+                LWEDelegate::g_starfishInstance->perProcess());
         }
         return 0;
     });
 #else
     if (Starfish::ServiceWorkerAgent::isCreated() == false) {
-        g_starfishInstance->serviceWorkerOption()->setDataDirectoryPath(
-            swDataDirPath);
+        LWEDelegate::g_starfishInstance->serviceWorkerOption()
+            ->setDataDirectoryPath(swDataDirPath);
 
         // TODO: Pass `starfish` only here. Do this now since `nullptr` is
         // passed when SW runs on a single process.
-        ServiceWorkerAgent::create(g_starfishInstance,
-                                   g_starfishInstance->perProcess());
+        ServiceWorkerAgent::create(
+            LWEDelegate::g_starfishInstance,
+            LWEDelegate::g_starfishInstance->perProcess());
     }
 #endif
 }
@@ -119,41 +125,41 @@ void ServiceWorker::Finalize()
     }
 #endif
 
-    LWE::LWE::Finalize();
+    LWEDelegate::LWE::Finalize();
 }
 
 #else // !defined(STARFISH_WEBWORKER_HOST)
 void ServiceWorkerClient::RegisterDataDirectoryPath(
     const std::string &dataDirectoryPath)
 {
-    STARFISH_RELEASE_ASSERT(LWE::IsInitialized());
+    STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
 
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([dataDirectoryPath]() -> size_t {
-        g_starfishInstance->serviceWorkerOption()->setDataDirectoryPath(
-            dataDirectoryPath);
+        LWEDelegate::g_starfishInstance->serviceWorkerOption()
+            ->setDataDirectoryPath(dataDirectoryPath);
         return 0;
     });
 #else
-    g_starfishInstance->serviceWorkerOption()->setDataDirectoryPath(
-        dataDirectoryPath);
+    LWEDelegate::g_starfishInstance->serviceWorkerOption()
+        ->setDataDirectoryPath(dataDirectoryPath);
 #endif
 }
 
 void ServiceWorkerClient::RegisterServiceWorkerProcessExecutor(
     const std::function<bool()> &fn)
 {
-    STARFISH_RELEASE_ASSERT(LWE::IsInitialized());
+    STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
 
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        g_starfishInstance->serviceWorkerOption()
+        LWEDelegate::g_starfishInstance->serviceWorkerOption()
             ->setServiceWorkerProcessExecutor(fn);
         return 0;
     });
 #else
-    g_starfishInstance->serviceWorkerOption()->setServiceWorkerProcessExecutor(
-        fn);
+    LWEDelegate::g_starfishInstance->serviceWorkerOption()
+        ->setServiceWorkerProcessExecutor(fn);
 #endif
 }
 
