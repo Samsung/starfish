@@ -77,7 +77,7 @@ static volatile sig_atomic_t doneFlag = 0;
 
 static void updateDoneFlagFromENV()
 {
-    if (getenv("SHELL_DONE_FLAG")) {
+    if (getenv("SHELL_DONE_FLAG") && (atoi(getenv("SHELL_DONE_FLAG")) == 1)) {
         doneFlag = 1;
     }
 }
@@ -696,7 +696,7 @@ static void applyEnvironmentVariable(const LWEOptions& lweOptions)
 
     std::string startUpFlag = std::to_string(lweOptions.envOptions.flag);
     setenv("START_UP_FLAG", startUpFlag.c_str(), 1);
-
+    setenv("SHELL_DONE_FLAG", "0", 1);
     setenv("EXIT_CODE", "0", 1);
 #endif
 }
