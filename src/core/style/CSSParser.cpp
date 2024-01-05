@@ -1293,9 +1293,10 @@ CSSSelector* CSSParser::getClassSelector()
         return nullptr;
     }
 
-    CSSSelector* selector = new (PointerFreeGC)
-        CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector,
-                    token->value()->toAtomicString(starfish()));
+    CSSSelector* selector =
+        getSelector({ CSSSelector::Type::Class, CSSSelector::SubSelector,
+                      CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
+                      false, token->value()->toAtomicString(starfish()) });
     getToken(false, true);
 
     return selector;
@@ -1308,9 +1309,10 @@ CSSSelector* CSSParser::getIdSelector()
         return nullptr;
     }
 
-    CSSSelector* selector = new (PointerFreeGC)
-        CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector,
-                    token->value()->toAtomicString(starfish()));
+    CSSSelector* selector =
+        getSelector({ CSSSelector::Type::Id, CSSSelector::SubSelector,
+                      CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
+                      false, token->value()->toAtomicString(starfish()) });
     getToken(false, true);
 
     return selector;
@@ -1405,8 +1407,8 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
     }
 
     if (selectorList->size() > 0) {
-        (*selectorList)[selectorList->size() - 1]->updateRelation(
-            CSSSelector::None);
+        selectorList->back() =
+            updateSelectorRelation(selectorList->back(), CSSSelector::None);
     }
 
     if (elementName.length()) {
@@ -1415,13 +1417,12 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             return;
         }
 
-        CSSSelector* selector = new CSSSelector(
-            isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
-            CSSSelector::RelationType::SubSelector,
-            elementName.toAttrAtomicString(starfish()));
-        if (selectorList->size() == 0) {
-            selector->updateRelation(CSSSelector::None);
-        }
+        CSSSelector* selector = getSelector(
+            { isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
+              selectorList->size() == 0 ? CSSSelector::None
+                                        : CSSSelector::SubSelector,
+              CSSSelector::PseudoNone, CSSSelector::CaseInsensitive, false,
+              elementName.toAttrAtomicString(starfish()) });
 
         selectorList->push_front(selector);
     }
@@ -1491,10 +1492,12 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
             end = secondSelectorList[i];
             compoundFlags |= extractCompoundFlags(end);
         }
-        end->updateRelation(combinator);
+
+        end = updateSelectorRelation(end, combinator);
+        secondSelectorList.back() = end;
 
         if (previousCompoundFlags & HasContentPseudoElement) {
-            end->setRelationIsAffectedByPseudoContent();
+            setSelectorRelationIsAffectedByPseudoContent(end);
         }
         previousCompoundFlags = compoundFlags;
         selectorList->insert(selectorList->begin(), secondSelectorList.begin(),
@@ -3021,6 +3024,49 @@ void CSSParser::skipUntilBlockEnd(RefPtr<CSSToken> token)
 
 void CSSParser::done(RefPtr<CSSToken> token)
 {
+}
+
+CSSSelector* CSSParser::getSelector(const CSSSelectorPoolKey& key)
+{
+    auto iter = m_selectorPool.find(key);
+    if (iter != m_selectorPool.end()) {
+        STARFISH_ASSERT(iter->second->hasImmutableData());
+        return iter->second;
+    }
+
+    CSSSelector* selector = new (PointerFreeGC) CSSSelector(
+        key.m_type, key.m_relation, key.m_selectorText, key.m_pseudotype,
+        key.m_attributeMatch, key.m_relationIsAffectedByPseudoContent);
+    m_selectorPool.insert(std::make_pair(key, selector));
+    STARFISH_ASSERT(selector->hasImmutableData());
+    return selector;
+}
+
+CSSSelector* CSSParser::updateSelectorRelation(
+    CSSSelector* selector, CSSSelector::RelationType relationType)
+{
+    if (!selector->hasImmutableData()) {
+        selector->updateRelation(relationType);
+        return selector;
+    }
+
+    return getSelector({ selector->type(), relationType, selector->pseudotype(),
+                         selector->attributeMatch(),
+                         selector->relationIsAffectedByPseudoContent(),
+                         selector->selectorText() });
+}
+
+CSSSelector* CSSParser::setSelectorRelationIsAffectedByPseudoContent(
+    CSSSelector* selector)
+{
+    if (!selector->hasImmutableData()) {
+        selector->setRelationIsAffectedByPseudoContent();
+        return selector;
+    }
+
+    return getSelector({ selector->type(), selector->relation(),
+                         selector->pseudotype(), selector->attributeMatch(),
+                         true, selector->selectorText() });
 }
 
 MediaQueryData::MediaQueryData()
