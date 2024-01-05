@@ -18,9 +18,11 @@
  */
 
 #include "StarfishConfig.h"
-#include "LWEWebView.h"
-
 #include "Starfish.h"
+
+#include "PlatformIntegrationData.h"
+#include "public/delegate/LWEWebViewDelegateImpl.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_FLUTTER)
 #define STARFISH_ENABLE_PROFILE_TIMER
@@ -66,12 +68,14 @@ static PFNEGLCLIENTWAITSYNCKHRPROC g_eglClientWaitSyncKHRProc;
 const int g_arrowKeyDownMinimumDelayInMS = 150;
 static int g_arrowKeyDownTimestamp[4];
 
-namespace LWE {
+namespace LWEDelegate {
+
+using namespace LWE;
 
 enum class PORT_WINDOW_BACKEND : int { GB, GL, HEADLESS };
 enum class PORT_COMPOSITOR_BACKEND : int { CAIRO, GL, MOCK, SKIA };
 
-class WebViewFlutter : public WebView {
+class WebViewFlutter : public WebViewImpl {
 public:
     WebViewFlutter(
         unsigned x, unsigned y, unsigned width, unsigned height,
@@ -344,14 +348,14 @@ public:
 
     virtual void Focus() override
     {
-        WebView::Focus();
+        WebViewImpl::Focus();
 
         m_hasFocus = true;
     }
 
     virtual void Blur() override
     {
-        WebView::Blur();
+        WebViewImpl::Blur();
 
         m_hasFocus = false;
     }
@@ -396,7 +400,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
         },
         [](WebContainer* c, bool needsFlush) {});
 }
-} // namespace LWE
+} // namespace LWEDelegate
 
 extern "C" size_t LWE_EXPORT createWebViewInstance(
     unsigned x, unsigned y, unsigned width, unsigned height,

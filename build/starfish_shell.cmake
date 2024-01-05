@@ -17,7 +17,7 @@ ELSEIF (
     OR ${BACKEND} STREQUAL "efl_skia_gl"
     OR ${BACKEND} STREQUAL "efl_skia_gb"
 )
-    SET(STARFISH_SHELL_LIBRARIES elementary)
+    SET(STARFISH_SHELL_LIBRARIES elementary evas ecore)
 ENDIF()
 
 IF(STARFISH_SHELL_LIBRARIES)

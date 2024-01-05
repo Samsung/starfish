@@ -291,7 +291,7 @@ public:
                unsigned height, float devicePixelRatio,
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
-        : WebView(nullptr)
+        : WebViewImpl(nullptr)
         , m_resizeHandler(nullptr)
         , m_shownHandler(nullptr)
         , m_mouseDownEventHandler(nullptr)
@@ -1252,7 +1252,7 @@ public:
 
     virtual void Focus() override
     {
-        WebView::Focus();
+        WebViewImpl::Focus();
 
         evas_object_focus_set(m_mainBox, EINA_FALSE);
         evas_object_focus_set(m_nonIMEKeyEventBox, EINA_TRUE);
@@ -1260,7 +1260,7 @@ public:
 
     virtual void Blur() override
     {
-        WebView::Blur();
+        WebViewImpl::Blur();
 
         evas_object_focus_set(m_mainBox, EINA_FALSE);
         evas_object_focus_set(m_nonIMEKeyEventBox, EINA_FALSE);

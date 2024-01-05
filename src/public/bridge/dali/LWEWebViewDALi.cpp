@@ -18,7 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-#include "LWEWebView.h"
+
+#include "PlatformIntegrationData.h"
+#include "public/delegate/LWEWebViewDelegateImpl.h"
+#include "public/delegate/LWEWebContainerDelegate.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_DALI)
 #if defined(STARFISH_ENABLE_SHELL)
@@ -1070,15 +1073,17 @@ static void* startMainThread(void* data)
     return NULL;
 }
 
-namespace LWE {
+namespace LWEDelegate {
 
-class WebViewDALi : public WebView {
+using namespace LWE;
+
+class WebViewDALi : public WebViewImpl {
 public:
-    WebViewDALi(void* winArg, unsigned x, unsigned y, unsigned width,
+    WebViewImpl(void* winArg, unsigned x, unsigned y, unsigned width,
                 unsigned height, float devicePixelRatio,
                 const char* defaultFontName, const char* locale,
                 const char* timezoneID)
-        : WebView(nullptr)
+        : WebViewImpl(nullptr)
         , m_mainThreadHandle(0)
         , m_controller(nullptr)
         , m_width(width)
@@ -1129,7 +1134,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewDALi(win, x, y, width, height, devicePixelRatio,
                            defaultFontName, locale, timezoneID);
 }
-} // namespace LWE
+} // namespace LWEDelegate
 #else // !defined(STARFISH_ENABLE_SHELL)
 namespace LWE {
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
