@@ -20,7 +20,13 @@
 #ifndef __LWE_SERVICE_WORKER__
 #define __LWE_SERVICE_WORKER__
 
-#include "LWEWebView.h"
+#ifndef LWE_EXPORT
+#ifdef _MSC_VER
+#define LWE_EXPORT __declspec(dllexport)
+#else
+#define LWE_EXPORT __attribute__((visibility("default")))
+#endif
+#endif
 
 namespace LWE {
 
