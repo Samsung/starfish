@@ -855,26 +855,26 @@ void CSSParser::parseSelector(GCVector<CSSSelectorList*>& list,
     }
 }
 
-CSSSelector::RelationType CSSParser::parseCombinator()
+CSSSelectorListItem::RelationType CSSParser::parseCombinator()
 {
-    CSSSelector::RelationType fallbackResult =
-        CSSSelector::RelationType::SubSelector;
+    CSSSelectorListItem::RelationType fallbackResult =
+        CSSSelectorListItem::RelationType::SubSelector;
 
     RefPtr<CSSToken> token = currentToken();
     while (token->isWhiteSpace()) {
         token = getToken(true, true);
-        fallbackResult = CSSSelector::RelationType::Descendant;
+        fallbackResult = CSSSelectorListItem::RelationType::Descendant;
     }
 
     if (token->isSymbol('+')) {
         token = getToken(true, true);
-        return CSSSelector::RelationType::AdjacentSibling;
+        return CSSSelectorListItem::RelationType::AdjacentSibling;
     } else if (token->isSymbol('~')) {
         token = getToken(true, true);
-        return CSSSelector::RelationType::GeneralSibling;
+        return CSSSelectorListItem::RelationType::GeneralSibling;
     } else if (token->isSymbol('>')) {
         token = getToken(true, true);
-        return CSSSelector::RelationType::Child;
+        return CSSSelectorListItem::RelationType::Child;
     } else {
         return fallbackResult;
     }
@@ -923,8 +923,7 @@ CSSSelector* CSSParser::getPseudoSelector()
 
     auto type = colons == 1 ? CSSSelector::Type::PseudoClass
                             : CSSSelector::Type::PseudoElement;
-    auto relType = CSSSelector::RelationType::SubSelector;
-    CSSPseudoSelector* selector = new CSSPseudoSelector(type, relType);
+    CSSPseudoSelector* selector = new CSSPseudoSelector(type);
 
     char32_t* buf =
         ALLOCA(token->value()->length() * sizeof(char32_t), char32_t);
@@ -959,7 +958,7 @@ CSSSelector* CSSParser::getPseudoSelector()
             return nullptr;
         }
 
-        CSSSelector* innerSelector = selectorList[0];
+        CSSSelector* innerSelector = selectorList[0].m_selector;
         if ((innerSelector->isPseudoSelector() &&
              innerSelector->asCSSPseudoSelector()
                  ->pseudoSelectorList()
@@ -968,7 +967,7 @@ CSSSelector* CSSParser::getPseudoSelector()
             return nullptr;
         }
 
-        selector->setPseudoSelectorList(innerSelector);
+        selector->addToPseudoSelectorList(innerSelector);
         getToken(false, true);
 
         return selector;
@@ -1260,8 +1259,8 @@ CSSSelector* CSSParser::getAttributeSelector()
         getToken(false, false);
         return new CSSAttributeSelector(
             CSSSelector::Type::AttributeSet, attrQualifiedName,
-            String::emptyString, CSSSelector::AttributeMatchType::CaseSensitive,
-            CSSSelector::RelationType::SubSelector);
+            String::emptyString,
+            CSSSelector::AttributeMatchType::CaseSensitive);
     }
 
     auto type = getAttributeMatch(currentToken());
@@ -1282,8 +1281,7 @@ CSSSelector* CSSParser::getAttributeSelector()
 
     return new CSSAttributeSelector(
         type, attrQualifiedName,
-        getStringWithoutQuotationMarks(*attributeValue->value()), flag,
-        CSSSelector::RelationType::SubSelector);
+        getStringWithoutQuotationMarks(*attributeValue->value()), flag);
 }
 
 CSSSelector* CSSParser::getClassSelector()
@@ -1294,9 +1292,9 @@ CSSSelector* CSSParser::getClassSelector()
     }
 
     CSSSelector* selector =
-        getSelector({ CSSSelector::Type::Class, CSSSelector::SubSelector,
-                      CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
-                      false, token->value()->toAtomicString(starfish()) });
+        getSelector({ CSSSelector::Type::Class, CSSSelector::PseudoNone,
+                      CSSSelector::CaseInsensitive,
+                      token->value()->toAtomicString(starfish()) });
     getToken(false, true);
 
     return selector;
@@ -1310,9 +1308,9 @@ CSSSelector* CSSParser::getIdSelector()
     }
 
     CSSSelector* selector =
-        getSelector({ CSSSelector::Type::Id, CSSSelector::SubSelector,
-                      CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
-                      false, token->value()->toAtomicString(starfish()) });
+        getSelector({ CSSSelector::Type::Id, CSSSelector::PseudoNone,
+                      CSSSelector::CaseInsensitive,
+                      token->value()->toAtomicString(starfish()) });
     getToken(false, true);
 
     return selector;
@@ -1390,7 +1388,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
                 compoundSelector->asCSSPseudoSelector()->pseudoType();
         }
 
-        selectorList->push_back(compoundSelector);
+        selectorList->push_back(CSSSelectorListItem(compoundSelector));
     }
 
     while (CSSSelector* simpleSelector = getSimpleSelector()) {
@@ -1403,12 +1401,11 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             compoundPseudoElement =
                 simpleSelector->asCSSPseudoSelector()->pseudoType();
         }
-        selectorList->push_back(simpleSelector);
+        selectorList->push_back(CSSSelectorListItem(simpleSelector));
     }
 
     if (selectorList->size() > 0) {
-        selectorList->back() =
-            updateSelectorRelation(selectorList->back(), CSSSelector::None);
+        selectorList->back().m_relation = CSSSelectorListItem::None;
     }
 
     if (elementName.length()) {
@@ -1417,14 +1414,16 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             return;
         }
 
+        auto rt = selectorList->size() == 0 ? CSSSelectorListItem::None
+                                            : CSSSelectorListItem::SubSelector;
         CSSSelector* selector = getSelector(
             { isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
-              selectorList->size() == 0 ? CSSSelector::None
-                                        : CSSSelector::SubSelector,
-              CSSSelector::PseudoNone, CSSSelector::CaseInsensitive, false,
+              CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
               elementName.toAttrAtomicString(starfish()) });
 
-        selectorList->push_front(selector);
+        selectorList->insert(selectorList->begin(),
+                             CSSSelectorListItem(selector));
+        selectorList->front().m_relation = rt;
     }
 }
 
@@ -1456,8 +1455,9 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
     }
 
     unsigned previousCompoundFlags = 0;
-    for (unsigned i = 0; i < selectorSize; i++) {
-        previousCompoundFlags |= extractCompoundFlags((*selectorList)[i]);
+    for (size_t i = 0; i < selectorSize; i++) {
+        previousCompoundFlags |=
+            extractCompoundFlags((*selectorList)[i].m_selector);
         if (previousCompoundFlags) {
             break;
         }
@@ -1467,7 +1467,7 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         return;
     }
 
-    while (CSSSelector::RelationType combinator = parseCombinator()) {
+    while (CSSSelectorListItem::RelationType combinator = parseCombinator()) {
         CSSSelectorList secondSelectorList;
 
         parseCompoundSelector(&secondSelectorList);
@@ -1484,20 +1484,20 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         }
 
         unsigned i = 0;
-        CSSSelector* end = secondSelectorList[i];
+        CSSSelector* end = secondSelectorList[i].m_selector;
         unsigned compoundFlags = extractCompoundFlags(end);
         selectorSize = secondSelectorList.size();
 
         while (++i < selectorSize) {
-            end = secondSelectorList[i];
+            end = secondSelectorList[i].m_selector;
             compoundFlags |= extractCompoundFlags(end);
         }
 
-        end = updateSelectorRelation(end, combinator);
-        secondSelectorList.back() = end;
+        secondSelectorList.back().m_relation = combinator;
 
         if (previousCompoundFlags & HasContentPseudoElement) {
-            setSelectorRelationIsAffectedByPseudoContent(end);
+            secondSelectorList.back().m_relationIsAffectedByPseudoContent =
+                true;
         }
         previousCompoundFlags = compoundFlags;
         selectorList->insert(selectorList->begin(), secondSelectorList.begin(),
@@ -3035,38 +3035,10 @@ CSSSelector* CSSParser::getSelector(const CSSSelectorPoolKey& key)
     }
 
     CSSSelector* selector = new (PointerFreeGC) CSSSelector(
-        key.m_type, key.m_relation, key.m_selectorText, key.m_pseudotype,
-        key.m_attributeMatch, key.m_relationIsAffectedByPseudoContent);
+        key.m_type, key.m_selectorText, key.m_pseudotype, key.m_attributeMatch);
     m_selectorPool.insert(std::make_pair(key, selector));
     STARFISH_ASSERT(selector->hasImmutableData());
     return selector;
-}
-
-CSSSelector* CSSParser::updateSelectorRelation(
-    CSSSelector* selector, CSSSelector::RelationType relationType)
-{
-    if (!selector->hasImmutableData()) {
-        selector->updateRelation(relationType);
-        return selector;
-    }
-
-    return getSelector({ selector->type(), relationType, selector->pseudotype(),
-                         selector->attributeMatch(),
-                         selector->relationIsAffectedByPseudoContent(),
-                         selector->selectorText() });
-}
-
-CSSSelector* CSSParser::setSelectorRelationIsAffectedByPseudoContent(
-    CSSSelector* selector)
-{
-    if (!selector->hasImmutableData()) {
-        selector->setRelationIsAffectedByPseudoContent();
-        return selector;
-    }
-
-    return getSelector({ selector->type(), selector->relation(),
-                         selector->pseudotype(), selector->attributeMatch(),
-                         true, selector->selectorText() });
 }
 
 MediaQueryData::MediaQueryData()

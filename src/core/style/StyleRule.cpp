@@ -109,11 +109,11 @@ void StyleRule::initFlagsRelatedWithSelectorList()
 
     unsigned size = m_selectorList.size();
     if (size == 1) {
-        if (m_selectorList[0]->type() == CSSSelector::Id) {
+        if (m_selectorList[0].m_selector->type() == CSSSelector::Id) {
             m_isSimpleIDSelector = true;
-        } else if (m_selectorList[0]->type() == CSSSelector::Class) {
+        } else if (m_selectorList[0].m_selector->type() == CSSSelector::Class) {
             m_isSimpleClassSelector = true;
-        } else if (m_selectorList[0]->type() == CSSSelector::Tag) {
+        } else if (m_selectorList[0].m_selector->type() == CSSSelector::Tag) {
             m_isSimpleTagSelector = true;
         }
     }
