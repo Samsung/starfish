@@ -19,6 +19,23 @@
 
 #include "LWEWebViewDelegate.h"
 
+#ifdef _MSC_VER
+namespace LWEDelegate {
+
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
+{
+    // Dummy implementation.
+    // Please implement this properly when implementing a windows bridge to
+    // support public API of Webview.
+    return nullptr;
+}
+
+} // namespace LWEDelegate
+#endif
+
 extern "C" {
 
 uintptr_t LWEDelegate_WebView_Create(void* win, unsigned x, unsigned y,
