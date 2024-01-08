@@ -384,7 +384,7 @@ SET (LWE_LDFLAGS_DEFAULT -Wl,--gc-sections -Wl,-rpath=/usr/local/lib -Wl,-rpath=
 IF (${HOST} STREQUAL "linux")
     SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
 ELSEIF (${HOST} STREQUAL "tizen")
-    SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=/usr/lib/lwe)
+    SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=${LIBDIR}/lwe)
 ENDIF()
 
 SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_CUSTOM} ${LWE_LDFLAGS_HOST} ${LWE_LDFLAGS_LTO} ${LWE_LDFLAGS_ASAN} ${LDFLAGS_FROM_ENV} ${LWE_LDFLAGS_COVERAGE})
@@ -579,11 +579,6 @@ IF (${HOST} STREQUAL "tizen")
         dl
         capi-location-manager
     )
-    IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
-        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine.so.1)
-    ELSEIF (${BACKEND} STREQUAL "dali")
-        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
-    ENDIF()
 ENDIF()
 
 IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
