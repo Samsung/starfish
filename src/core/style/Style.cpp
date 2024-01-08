@@ -708,7 +708,7 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
     STARFISH_ASSERT(rightSide != nullptr);
 
     StringBuilder str;
-    CSSSelector* cs = list->at(idx);
+    CSSSelector* cs = list->at(idx).m_selector;
     STARFISH_ASSERT(cs != nullptr);
 
     if (cs->type() == CSSSelector::Tag ||
@@ -817,29 +817,29 @@ String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
             }
         }
 
-        if (cs->relation() != CSSSelector::SubSelector ||
+        if (list->at(idx).m_relation != CSSSelectorListItem::SubSelector ||
             list->size() == (idx + 1)) {
             break;
         }
-        cs = list->at(++idx);
+        cs = list->at(++idx).m_selector;
     }
 
     if (list->size() > (idx + 1)) {
         StringBuilder desc;
-        switch (cs->relation()) {
-        case CSSSelector::Descendant:
+        switch (list->at(idx).m_relation) {
+        case CSSSelectorListItem::Descendant:
             desc.appendString(" ");
             break;
-        case CSSSelector::Child:
+        case CSSSelectorListItem::Child:
             desc.appendString(" > ");
             break;
-        case CSSSelector::AdjacentSibling:
+        case CSSSelectorListItem::AdjacentSibling:
             desc.appendString(" + ");
             break;
-        case CSSSelector::GeneralSibling:
+        case CSSSelectorListItem::GeneralSibling:
             desc.appendString(" ~ ");
             break;
-        case CSSSelector::SubSelector:
+        case CSSSelectorListItem::SubSelector:
             STARFISH_ASSERT_NOT_REACHED();
             break;
         default:
@@ -7575,10 +7575,11 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
             const CSSSelectorList& selectorList = rule->selectorList();
 
             for (size_t i = 1; i < selectorList.size(); i++) {
-                if (selectorList[i]->type() == CSSSelector::Class) {
+                if (selectorList[i].m_selector->type() == CSSSelector::Class) {
                     ret->setStyleDamageSource(
                         StyleResolver::StyleDamageSource::StyleDamageFromClass);
-                } else if (selectorList[i]->type() == CSSSelector::Id) {
+                } else if (selectorList[i].m_selector->type() ==
+                           CSSSelector::Id) {
                     ret->setStyleDamageSource(
                         StyleResolver::StyleDamageSource::StyleDamageFromID);
                 }
@@ -7848,25 +7849,26 @@ StyleResolver::Match StyleResolver::matchSelector(
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(idx < selectorList.size());
 
-    CSSSelector* selector = selectorList[idx];
+    CSSSelector* selector = selectorList[idx].m_selector;
     if (!checkOne(element, elementName, elementId, elementClasses, selector,
                   result, isQueryingSelector)) {
         return Match::SelectorFailsLocally;
     }
 
-    if (selector->isLastInTagHistory()) {
+    auto relation = selectorList[idx].m_relation;
+    if (selectorList[idx].m_relation == CSSSelectorListItem::None) {
         return Match::SelectorMatches;
     }
 
     Match match;
-    if (selector->relation() == CSSSelector::RelationType::SubSelector) {
+    if (relation == CSSSelectorListItem::RelationType::SubSelector) {
         match = matchSelector(element, elementName, elementId, elementClasses,
                               selectorList, ++idx, result, isQueryingSelector);
     } else {
         result.seenCombinator = true;
         match =
             matchForRelation(element, elementName, elementId, elementClasses,
-                             selectorList, selector->relation(), ++idx, result);
+                             selectorList, relation, ++idx, result);
     }
     return match;
 }
@@ -7874,16 +7876,17 @@ StyleResolver::Match StyleResolver::matchSelector(
 StyleResolver::Match StyleResolver::matchForRelation(
     Element* element, AtomicString elementName, AtomicString elementId,
     const GCAtomicTightVector<AtomicString>& elementClasses,
-    const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
-    unsigned idx, MatchResult& result)
+    const CSSSelectorList& selectorList,
+    CSSSelectorListItem::RelationType relation, unsigned idx,
+    MatchResult& result)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(idx < selectorList.size());
 
-    CSSSelector* selector = selectorList[idx];
+    CSSSelector* selector = selectorList[idx].m_selector;
     STARFISH_ASSERT(selector != nullptr);
     switch (relation) {
-    case CSSSelector::RelationType::Descendant: {
+    case CSSSelectorListItem::RelationType::Descendant: {
         Element* parent = element->parentElement();
         while (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
@@ -7900,7 +7903,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
 
         return Match::SelectorFailsCompletely;
     }
-    case CSSSelector::RelationType::Child: {
+    case CSSSelectorListItem::RelationType::Child: {
         Element* parent = element->parentElement();
         if (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
@@ -7917,7 +7920,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
             return Match::SelectorFailsCompletely;
         }
     }
-    case CSSSelector::RelationType::AdjacentSibling: {
+    case CSSSelectorListItem::RelationType::AdjacentSibling: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         Element* previousSibling = element->previousElementSibling();
@@ -7938,7 +7941,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
             return Match::SelectorFailsCompletely;
         }
     }
-    case CSSSelector::RelationType::GeneralSibling: {
+    case CSSSelectorListItem::RelationType::GeneralSibling: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         Element* previousSibling = element->previousElementSibling();
@@ -8348,7 +8351,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         const GCAtomicTightVector<AtomicString>& elementClasses =
             element->classNames();
         return !checkOne(element, elementName, elementId, elementClasses,
-                         selector->pseudoSelectorList()[0], result);
+                         selector->pseudoSelectorList()[0].m_selector, result);
     }
     case CSSSelector::PseudoType::PseudoEnabled: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
@@ -9645,27 +9648,31 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
     AtomicString className;
     AtomicString tagName;
 
-    unsigned size = selectorList.size();
+    size_t size = selectorList.size();
 
-    auto relation = selectorList[0]->relation();
-    extractValuesforSelector(selectorList[0], id, className, tagName);
+    auto relation = selectorList[0].m_relation;
+    extractValuesforSelector(selectorList[0].m_selector, id, className,
+                             tagName);
 
-    unsigned i = 1;
-    for (; i < size && relation == CSSSelector::SubSelector; i++) {
-        relation = selectorList[i]->relation();
-        extractValuesforSelector(selectorList[i], id, className, tagName);
+    for (size_t i = 0; i < size && relation == CSSSelectorListItem::SubSelector;
+         i++) {
+        relation = selectorList[i].m_relation;
+        extractValuesforSelector(selectorList[i].m_selector, id, className,
+                                 tagName);
     }
 
-    for (i = 0; i < size; i++) {
-        if (selectorList[i]->isAttributeSelector()) {
-            if (!mayHaveAttrSelectorWithName(selectorList[i]
-                                                 ->asCSSAttributeSelector()
-                                                 ->attribute()
-                                                 .localNameAtomic())) {
-                m_ruleSetAttrFilter.push_back(selectorList[i]
-                                                  ->asCSSAttributeSelector()
-                                                  ->attribute()
-                                                  .localNameAtomic());
+    for (size_t i = 0; i < size; i++) {
+        if (selectorList[i].m_selector->isAttributeSelector()) {
+            if (!mayHaveAttrSelectorWithName(
+                    selectorList[i]
+                        .m_selector->asCSSAttributeSelector()
+                        ->attribute()
+                        .localNameAtomic())) {
+                m_ruleSetAttrFilter.push_back(
+                    selectorList[i]
+                        .m_selector->asCSSAttributeSelector()
+                        ->attribute()
+                        .localNameAtomic());
             }
         }
     }

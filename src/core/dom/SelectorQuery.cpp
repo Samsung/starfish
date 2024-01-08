@@ -157,14 +157,15 @@ inline bool ancestorHasClassName(Node& rootNode, const AtomicString& className)
     return false;
 }
 
-CSSSelector* SelectorQuery::selectorForIdLookup(CSSSelectorList& selectors)
+CSSSelector* SelectorQuery::selectorForIdLookup(
+    const CSSSelectorList& selectors)
 {
     int i = 0;
     for (auto it = selectors.begin(); it != selectors.end(); ++it) {
-        if ((*it)->type() == CSSSelector::Id) {
-            return *it;
+        if (it->m_selector->type() == CSSSelector::Id) {
+            return it->m_selector;
         }
-        if ((*it)->relation() != CSSSelector::SubSelector) {
+        if (it->m_relation != CSSSelectorListItem::SubSelector) {
             break;
         }
     }
@@ -227,16 +228,16 @@ void SelectorQuery::collectElementsByTagName(Node& rootNode,
         &collection, shouldOnlyMatchFirstElement);
 }
 
-void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
+void SelectorQuery::traverseDescendants(const CSSSelectorList& selectors,
                                         Node* traverseRoot, Node& rootNode,
                                         std::vector<Element*>& collection,
                                         bool shouldOnlyMatchFirstElement)
 {
     struct Data {
         SelectorQuery* selectorQuery;
-        CSSSelectorList& selectors;
+        const CSSSelectorList& selectors;
         Node& rootNode;
-        Data(SelectorQuery* q, CSSSelectorList& a, Node& b)
+        Data(SelectorQuery* q, const CSSSelectorList& a, Node& b)
             : selectorQuery(q)
             , selectors(a)
             , rootNode(b)
@@ -259,7 +260,8 @@ void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
         &collection, shouldOnlyMatchFirstElement);
 }
 
-bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element)
+bool SelectorQuery::selectorMatches(const CSSSelectorList& selector,
+                                    Element* element)
 {
     StyleResolver& resolver = element->document()->styleResolver();
     StyleResolver::MatchResult result;
@@ -274,7 +276,7 @@ bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element)
 }
 
 void SelectorQuery::executeForTraverseRoot(
-    CSSSelectorList& selectors, Node* traverseRoot,
+    const CSSSelectorList& selectors, Node* traverseRoot,
     MatchTraverseRootState matchTraverseRoot, Node& rootNode,
     std::vector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
@@ -298,7 +300,7 @@ void SelectorQuery::executeForTraverseRoot(
 
 template <typename SimpleElementListType>
 void SelectorQuery::executeForTraverseRoots(
-    CSSSelectorList& selectors, SimpleElementListType& traverseRoots,
+    const CSSSelectorList& selectors, SimpleElementListType& traverseRoots,
     MatchTraverseRootState matchTraverseRoots, Node& rootNode,
     std::vector<Element*>& output, bool shouldOnlyMatchFirstElement)
 {
@@ -338,14 +340,14 @@ void SelectorQuery::findTraverseRootsAndExecute(
     bool isRightmostSelector = true;
     bool startFromParent = false;
 
-    CSSSelectorList selectors = *m_selectorListContainer[0];
+    const CSSSelectorList& selectors = *m_selectorListContainer[0];
     for (auto it = selectors.begin(); it != selectors.end(); ++it) {
         std::vector<Element*> elements;
-        collectElementsById(rootNode, (*it)->selectorText(), elements,
+        collectElementsById(rootNode, it->m_selector->selectorText(), elements,
                             shouldOnlyMatchFirstElement);
-        if ((*it)->type() == CSSSelector::Id && elements.size() == 1) {
-            Element* element =
-                rootNode.document()->getElementById((*it)->selectorText());
+        if (it->m_selector->type() == CSSSelector::Id && elements.size() == 1) {
+            Element* element = rootNode.document()->getElementById(
+                it->m_selector->selectorText());
 
             Node* adjustedNode = &rootNode;
             if (element &&
@@ -376,10 +378,10 @@ void SelectorQuery::findTraverseRootsAndExecute(
         // time, we should use Id
         // to find traverse root.
         if (!shouldOnlyMatchFirstElement && !startFromParent &&
-            (*it)->type() == CSSSelector::Class) {
+            it->m_selector->type() == CSSSelector::Class) {
             if (isRightmostSelector) {
                 ClassElementList<AllElements> traverseRoots(
-                    rootNode, (*it)->selectorText());
+                    rootNode, it->m_selector->selectorText());
                 executeForTraverseRoots(selectors, traverseRoots,
                                         MatchesTraverseRoots, rootNode, output,
                                         shouldOnlyMatchFirstElement);
@@ -387,27 +389,30 @@ void SelectorQuery::findTraverseRootsAndExecute(
             }
             // Since there exists some ancestor element which has the class
             // name, we need to see all children of rootNode.
-            if (ancestorHasClassName(rootNode, (*it)->selectorText())) {
+            if (ancestorHasClassName(rootNode,
+                                     it->m_selector->selectorText())) {
                 executeForTraverseRoot(selectors, &rootNode,
                                        DoesNotMatchTraverseRoots, rootNode,
                                        output, shouldOnlyMatchFirstElement);
                 return;
             }
 
-            ClassElementList<OnlyRoots> traverseRoots(rootNode,
-                                                      (*it)->selectorText());
+            ClassElementList<OnlyRoots> traverseRoots(
+                rootNode, it->m_selector->selectorText());
             executeForTraverseRoots(selectors, traverseRoots,
                                     DoesNotMatchTraverseRoots, rootNode, output,
                                     shouldOnlyMatchFirstElement);
             return;
         }
 
-        if ((*it)->relation() == CSSSelector::RelationType::SubSelector) {
+        if (it->m_relation == CSSSelectorListItem::RelationType::SubSelector) {
             continue;
         }
         isRightmostSelector = false;
-        if ((*it)->relation() == CSSSelector::RelationType::AdjacentSibling ||
-            (*it)->relation() == CSSSelector::RelationType::GeneralSibling) {
+        if (it->m_relation ==
+                CSSSelectorListItem::RelationType::AdjacentSibling ||
+            it->m_relation ==
+                CSSSelectorListItem::RelationType::GeneralSibling) {
             startFromParent = true;
         } else {
             startFromParent = false;
@@ -492,7 +497,9 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
     STARFISH_ASSERT(m_selectorListContainer.size() == 1);
 
     CSSSelectorList selectors = *m_selectorListContainer[0];
-    CSSSelector* firstSelector = selectors[0];
+    CSSSelector* firstSelector = selectors[0].m_selector;
+    CSSSelectorListItem::RelationType firstSelectorRelation =
+        selectors[0].m_relation;
 
     // Fast path for querySelector*('#id'), querySelector*('tag#id').
     if (CSSSelector* idSelector = selectorForIdLookup(selectors)) {
@@ -531,7 +538,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
     }
 
     // Fast path for querySelector*('.foo'), and querySelector*('div').
-    if (firstSelector->isLastInTagHistory() &&
+    if (firstSelectorRelation == CSSSelectorListItem::None &&
         (!firstSelector->isPseudoSelector() ||
          firstSelector->asCSSPseudoSelector()->pseudoType() ==
              CSSSelector::PseudoNone)) {

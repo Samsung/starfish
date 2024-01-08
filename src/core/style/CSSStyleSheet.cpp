@@ -144,7 +144,7 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
     unsigned temp = 0;
 
     for (unsigned i = 0; i < selectorList.size(); i++) {
-        CSSSelector* selector = selectorList[i];
+        CSSSelector* selector = selectorList[i].m_selector;
 
         // The negation pseudo-class has another simple selector in own data
         // structure.
@@ -153,7 +153,7 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
                 CSSSelector::PseudoType::PseudoNot) {
             temp = total + selector->asCSSPseudoSelector()
                                ->pseudoSelectorList()[0]
-                               ->specificityForOneSelector();
+                               .m_selector->specificityForOneSelector();
         } else {
             temp = total + selector->specificityForOneSelector();
         }

@@ -113,28 +113,28 @@ void AncestorSelectorFilter::computeIdentifierHash(StyleRule* rule)
     unsigned* end = identifierHashes + StyleRule::maximumIdentifierCount;
     auto& selectorList = rule->selectorList();
     size_t selectorListSize = selectorList.size();
-    CSSSelector* selector = selectorList[0];
-    CSSSelector::RelationType relation = selector->relation();
+    CSSSelector* selector = selectorList[0].m_selector;
+    CSSSelectorListItem::RelationType relation = selectorList[0].m_relation;
     bool relationIsAffectedByPseudoContent =
-        selector->relationIsAffectedByPseudoContent();
+        selectorList[0].m_relationIsAffectedByPseudoContent;
 
     // Skip the topmost selector. It is handled quickly by the rule hashes.
     bool skipOverSubselectors = true;
     for (size_t i = 1; i < selectorListSize; i++) {
-        selector = selectorList[i];
+        selector = selectorList[i].m_selector;
 
         // Only collect identifiers that match ancestors.
         switch (relation) {
-        case CSSSelector::SubSelector:
+        case CSSSelectorListItem::SubSelector:
             if (!skipOverSubselectors)
                 collectDescendantSelectorIdentifierHashes(selector, hash);
             break;
-        case CSSSelector::AdjacentSibling:
-        case CSSSelector::GeneralSibling:
+        case CSSSelectorListItem::AdjacentSibling:
+        case CSSSelectorListItem::GeneralSibling:
             skipOverSubselectors = true;
             break;
-        case CSSSelector::Descendant:
-        case CSSSelector::Child:
+        case CSSSelectorListItem::Descendant:
+        case CSSSelectorListItem::Child:
             if (relationIsAffectedByPseudoContent) {
                 // Disable fastRejectSelector.
                 *identifierHashes = 0;
@@ -148,9 +148,9 @@ void AncestorSelectorFilter::computeIdentifierHash(StyleRule* rule)
         }
         if (hash == end)
             break;
-        relation = selector->relation();
+        relation = selectorList[i].m_relation;
         relationIsAffectedByPseudoContent =
-            selector->relationIsAffectedByPseudoContent();
+            selectorList[i].m_relationIsAffectedByPseudoContent;
     }
 }
 } // namespace Starfish

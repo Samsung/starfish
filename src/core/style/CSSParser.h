@@ -1706,10 +1706,8 @@ class StyleRuleKeyframes;
 
 struct CSSSelectorPoolKey {
     CSSSelector::Type m_type : 4;
-    CSSSelector::RelationType m_relation : 3;
     CSSSelector::PseudoType m_pseudotype : 6;
     CSSSelector::AttributeMatchType m_attributeMatch : 1;
-    bool m_relationIsAffectedByPseudoContent : 1;
     AtomicString m_selectorText;
 };
 
@@ -1833,7 +1831,7 @@ private:
     bool parseComplexSelectorList(GCVector<CSSSelectorList*>& sList);
     void parseComplexSelector(CSSSelectorList* selectorList);
     void parseCompoundSelector(CSSSelectorList* selectorList);
-    CSSSelector::RelationType parseCombinator();
+    CSSSelectorListItem::RelationType parseCombinator();
     bool parseName(CSSTokenString& name);
     CSSSelector* getSimpleSelector();
     CSSSelector* getIdSelector();
@@ -1939,8 +1937,6 @@ private:
     GCVector<LogicOp> m_supportOperatorStack;
 
     CSSSelector* getSelector(const CSSSelectorPoolKey& key);
-    CSSSelector* updateSelectorRelation(CSSSelector* selector,
-                                        CSSSelector::RelationType relationType);
     CSSSelector* setSelectorRelationIsAffectedByPseudoContent(
         CSSSelector* selector);
     CSSSelectorPool m_selectorPool;

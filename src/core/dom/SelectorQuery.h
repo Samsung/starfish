@@ -44,15 +44,17 @@ public:
 
 private:
     bool canUseFastQuery(const Node& rootNode);
-    void traverseDescendants(CSSSelectorList& selectors, Node* traverseRoot,
-                             Node& rootNode, std::vector<Element*>& collection,
+    void traverseDescendants(const CSSSelectorList& selectors,
+                             Node* traverseRoot, Node& rootNode,
+                             std::vector<Element*>& collection,
                              bool shouldOnlyMatchFirstElement);
-    void executeForTraverseRoot(CSSSelectorList& selector, Node* traverseRoot,
+    void executeForTraverseRoot(const CSSSelectorList& selector,
+                                Node* traverseRoot,
                                 MatchTraverseRootState matchTraverseRoot,
                                 Node& rootNode, std::vector<Element*>& output,
                                 bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
-    void executeForTraverseRoots(CSSSelectorList& selector,
+    void executeForTraverseRoots(const CSSSelectorList& selector,
                                  SimpleElementListType& traverseRoots,
                                  MatchTraverseRootState matchTraverseRoots,
                                  Node& rootNode, std::vector<Element*>& output,
@@ -75,8 +77,8 @@ private:
     void collectElementsByTagName(Node& rootNode, const AtomicString& tagName,
                                   std::vector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(CSSSelectorList& selector, Element* element);
-    CSSSelector* selectorForIdLookup(CSSSelectorList& firstSelector);
+    bool selectorMatches(const CSSSelectorList& selector, Element* element);
+    CSSSelector* selectorForIdLookup(const CSSSelectorList& firstSelector);
 
     GCVector<CSSSelectorList*>& m_selectorListContainer;
 };

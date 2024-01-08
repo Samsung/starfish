@@ -2840,16 +2840,33 @@ class CSSSelector;
 class CSSAttributeSelector;
 class CSSPseudoSelector;
 
-class CSSSelectorList : public GCVector<CSSSelector*> {
+struct CSSSelectorListItem {
+    enum RelationType ENSURE_ENUM_UNSIGNED {
+        None,
+        SubSelector,     // No combinator
+        Descendant,      // "Space" combinator
+        Child,           // > combinator
+        AdjacentSibling, // + combinator
+        GeneralSibling   // ~ combinator
+    };
+
+    bool m_relationIsAffectedByPseudoContent : 1;
+    RelationType m_relation : 3;
+    CSSSelector* m_selector;
+
+    explicit CSSSelectorListItem(CSSSelector* selector)
+        : m_relationIsAffectedByPseudoContent(false)
+        , m_relation(RelationType::SubSelector)
+        , m_selector(selector)
+    {
+    }
+};
+
+class CSSSelectorList : public GCVector<CSSSelectorListItem> {
 public:
     CSSSelectorList()
         : m_specificity(0)
     {
-    }
-
-    void push_front(CSSSelector* s)
-    {
-        GCVector<CSSSelector*>::insert(begin(), s);
     }
 
     unsigned specificity();
@@ -2881,15 +2898,6 @@ public:
         FirstAttributeSelectorMatch = AttributeExact,
     };
 
-    enum RelationType ENSURE_ENUM_UNSIGNED {
-        None,
-        SubSelector,     // No combinator
-        Descendant,      // "Space" combinator
-        Child,           // > combinator
-        AdjacentSibling, // + combinator
-        GeneralSibling   // ~ combinator
-    };
-
     enum PseudoType ENSURE_ENUM_UNSIGNED {
         PseudoNone,
 #define ADD_PSEUDO_TYPE(name, nameLower, selectorName) Pseudo##name,
@@ -2903,15 +2911,12 @@ public:
         CaseSensitive,
     };
 
-    CSSSelector(Type type, RelationType relation, AtomicString text,
+    CSSSelector(Type type, AtomicString text,
                 PseudoType pseudoType = PseudoNone,
-                AttributeMatchType attributeMatch = CaseInsensitive,
-                bool relationIsAffectedByPseudoContent = false)
+                AttributeMatchType attributeMatch = CaseInsensitive)
         : m_type(type)
-        , m_relation(relation)
         , m_pseudotype(pseudoType)
         , m_attributeMatch(attributeMatch)
-        , m_relationIsAffectedByPseudoContent(relationIsAffectedByPseudoContent)
         , m_selectorText(text)
     {
     }
@@ -2954,11 +2959,6 @@ public:
         return m_type;
     }
 
-    RelationType relation() const
-    {
-        return m_relation;
-    }
-
     PseudoType pseudotype() const
     {
         return m_pseudotype;
@@ -2967,23 +2967,6 @@ public:
     AttributeMatchType attributeMatch() const
     {
         return m_attributeMatch;
-    }
-
-    void updateRelation(RelationType rel)
-    {
-        STARFISH_ASSERT(!hasImmutableData());
-        m_relation = rel;
-    }
-
-    bool relationIsAffectedByPseudoContent() const
-    {
-        return m_relationIsAffectedByPseudoContent;
-    }
-
-    void setRelationIsAffectedByPseudoContent()
-    {
-        STARFISH_ASSERT(!hasImmutableData());
-        m_relationIsAffectedByPseudoContent = true;
     }
 
     const AtomicString& selectorText() const
@@ -2996,18 +2979,10 @@ public:
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
 
-    bool isLastInTagHistory() const
-    {
-        return relation() == RelationType::None;
-    }
-
 protected:
     Type m_type : 4;
-    RelationType m_relation : 3;
     PseudoType m_pseudotype : 6;
     AttributeMatchType m_attributeMatch : 1;
-    bool m_relationIsAffectedByPseudoContent : 1;
-
     AtomicString m_selectorText;
 };
 
@@ -3020,9 +2995,8 @@ class CSSAttributeSelector : public CSSSelector {
 public:
     CSSAttributeSelector(CSSSelector::Type type, const QualifiedName& attr,
                          String* value,
-                         CSSSelector::AttributeMatchType matchType,
-                         CSSSelector::RelationType relType)
-        : CSSSelector(type, relType, AtomicString())
+                         CSSSelector::AttributeMatchType matchType)
+        : CSSSelector(type, AtomicString())
         , m_value(value)
         , m_attribute(attr)
     {
@@ -3052,8 +3026,8 @@ protected:
 
 class CSSPseudoSelector : public CSSSelector {
 public:
-    CSSPseudoSelector(CSSSelector::Type type, CSSSelector::RelationType relType)
-        : CSSSelector(type, relType, AtomicString())
+    CSSPseudoSelector(CSSSelector::Type type)
+        : CSSSelector(type, AtomicString())
         , m_argument(String::emptyString)
     {
         m_pseudotype = PseudoNone;
@@ -3070,10 +3044,10 @@ public:
         return m_pseudoSelectorList;
     }
 
-    void setPseudoSelectorList(CSSSelector* selector)
+    void addToPseudoSelectorList(CSSSelector* selector)
     {
         STARFISH_ASSERT(m_type != Tag);
-        m_pseudoSelectorList.push_back(selector);
+        m_pseudoSelectorList.push_back(CSSSelectorListItem(selector));
     }
 
     String* argument()
@@ -3336,8 +3310,9 @@ protected:
     Match matchForRelation(
         Element* element, AtomicString elementName, AtomicString elementId,
         const GCAtomicTightVector<AtomicString>& elementClasses,
-        const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
-        unsigned idx, MatchResult& result);
+        const CSSSelectorList& selectorList,
+        CSSSelectorListItem::RelationType relation, unsigned idx,
+        MatchResult& result);
 
     ALWAYS_INLINE bool checkOne(
         Element* element, AtomicString elementName, AtomicString elementId,
