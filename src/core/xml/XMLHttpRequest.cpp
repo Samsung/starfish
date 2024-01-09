@@ -198,13 +198,7 @@ public:
                                 .shrink_to_fit();
                         }
                     } else if (m_xhr->m_responseType ==
-                                   XMLHttpRequestResponseType::Json ||
-                               (mimeType.subtype()->contains("json") &&
-                                m_xhr->m_responseType ==
-                                    XMLHttpRequestResponseType::Empty)) {
-                        m_xhr->m_responseType =
-                            XMLHttpRequestResponseType::Json;
-
+                               XMLHttpRequestResponseType::Json) {
                         TextConverter cvt(
                             mimeString, String::fromUTF8("UTF-8"),
                             m_xhr->m_resourceRequest->response().data(),
