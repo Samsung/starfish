@@ -17,9 +17,11 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+
 #include "LWEWebViewDelegate.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(STARFISH_EFL_HEADLESS)
 namespace LWEDelegate {
 
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
