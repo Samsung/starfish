@@ -122,6 +122,9 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
     kWebContainerProcTable.Create = reinterpret_cast<uintptr_t (*)(
         unsigned, unsigned, float, const char*, const char*, const char*)>(
         dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
+    kWebContainerProcTable.CreateWithBuffer = reinterpret_cast<uintptr_t (*)(
+        void*, unsigned, unsigned, unsigned, float, const char*, const char*,
+        const char*)>(dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
     kWebContainerProcTable.CreateWithPlatformImage = reinterpret_cast<
         uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, float,
                       const char*, const char*, const char*)>(
@@ -139,6 +142,7 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
         dlsym(m_handle, "LWEDelegate_WebContainer_CreateHeadless"));
 
     return kWebContainerProcTable.Create &&
+           kWebContainerProcTable.CreateWithBuffer &&
            kWebContainerProcTable.CreateWithPlatformImage &&
            kWebContainerProcTable.CreateGL &&
            kWebContainerProcTable.CreateGLWithPlatformImage &&
@@ -175,7 +179,8 @@ void LWEDelegateLoader::unloadSettingsProcTable()
 
 void LWEDelegateLoader::unloadWebContainerProcTable()
 {
-    kWebContainerProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr };
+    kWebContainerProcTable = { nullptr, nullptr, nullptr,
+                               nullptr, nullptr, nullptr };
 }
 
 void LWEDelegateLoader::unloadWebViewProcTable()

@@ -34,10 +34,20 @@ class ResourceError;
 class EXPORT_UNMANAGED_API WebContainer {
 public:
     // Function set for render to buffer
+    // For Tizen 5.5 and above.
     static WebContainer* Create(unsigned width, unsigned height,
                                 float devicePixelRatio,
                                 const char* defaultFontName, const char* locale,
                                 const char* timezoneID);
+    // For Tizen 5.0.
+    static WebContainer* CreateWithBuffer(void* buffer, unsigned bufferWidth,
+                                          unsigned bufferHeight,
+                                          unsigned bufferStride,
+                                          float devicePixelRatio,
+                                          const char* defaultFontName,
+                                          const char* locale,
+                                          const char* timezoneID);
+    // For Tizen 5.5 and above.
     struct RenderInfo {
         void* updatedBufferAddress;
         size_t bufferStride;
@@ -58,11 +68,16 @@ public:
         size_t bufferImageHeight;
     };
 
+    // For Tizen 5.5 and above.
     virtual void RegisterPreRenderingHandler(
         const std::function<RenderInfo(void)>& cb) = 0;
+
     virtual void RegisterOnRenderedHandler(
         const std::function<void(WebContainer*,
                                  const RenderResult& renderResult)>& cb) = 0;
+    // For Tizen 5.0
+    virtual void UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                              unsigned stride) = 0;
 
     using OnPrepareImage = std::function<ExternalImageInfo(void)>;
     using OnFlush = std::function<void(WebContainer*, bool needsFlush)>;
@@ -253,6 +268,11 @@ uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_Create(
     unsigned width, unsigned height, float devicePixelRatio,
     const char* defaultFontName, const char* locale, const char* timezoneID);
 
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateWithBuffer(
+    void* buffer, unsigned bufferWidth, unsigned bufferHeight,
+    unsigned bufferStride, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID);
+
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_WebContainer_Create_With_PlatformImage(
     unsigned width, unsigned height, uintptr_t prepareImageCb,
@@ -278,6 +298,8 @@ uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateHeadless(
 typedef struct {
     uintptr_t (*Create)(unsigned, unsigned, float, const char*, const char*,
                         const char*);
+    uintptr_t (*CreateWithBuffer)(void*, unsigned, unsigned, unsigned, float,
+                                  const char*, const char*, const char*);
     uintptr_t (*CreateWithPlatformImage)(unsigned, unsigned, uintptr_t,
                                          uintptr_t, float, const char*,
                                          const char*, const char*);
@@ -287,11 +309,8 @@ typedef struct {
                                            uintptr_t, uintptr_t, uintptr_t,
                                            float, const char*, const char*,
                                            const char*);
-
-    uintptr_t (*CreateHeadless)(unsigned width, unsigned height,
-                                float devicePixelRatio,
-                                const char* defaultFontName, const char* locale,
-                                const char* timezoneID);
+    uintptr_t (*CreateHeadless)(unsigned, unsigned, float, const char*,
+                                const char*, const char*);
 
 } WebContainerProcTable;
 }

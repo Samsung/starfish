@@ -38,6 +38,14 @@
 #define LWE_ASSERT(assertion) assert(assertion);
 #endif
 
+#if defined(STARFISH_TIZEN_VERSION_5_0) && !defined(TIZEN_COMPAT_HEADER_5_0)
+#error "Version Mismatch: You must build LWE on Tizen 5.5 Environment"
+#endif
+
+#if defined(STARFISH_TIZEN_VERSION_5_5) && defined(TIZEN_COMPAT_HEADER_5_0)
+#error "Version Mismatch: You must build LWE on Tizen 5.0 Environment"
+#endif
+
 namespace LWE {
 
 template <typename T>
@@ -477,7 +485,32 @@ void CookieManager::Destroy()
         g_instance = nullptr;
     }
 }
-
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+WebContainer* WebContainer::Create(void* buffer, unsigned bufferWidth,
+                                   unsigned bufferHeight, unsigned bufferStride,
+                                   float devicePixelRatio,
+                                   const char* defaultFontName,
+                                   const char* locale, const char* timezoneID)
+{
+    WebContainer* instance = new WebContainer();
+#ifdef STARFISH_API_ENABLE_LOADER
+    auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
+        LWEDelegateLoader::getInstance()
+            ->kWebContainerProcTable.CreateWithBuffer(
+                buffer, bufferWidth, bufferHeight, bufferStride,
+                devicePixelRatio, defaultFontName, locale, timezoneID));
+#else
+    auto delegate = LWEDelegate::WebContainer::CreateWithBuffer(
+        buffer, bufferWidth, bufferHeight, bufferStride, devicePixelRatio,
+        defaultFontName, locale, timezoneID);
+#endif
+    instance->m_delegate =
+        LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
+            // Do nothing, use Destroy to release delegate.
+        });
+    return instance;
+}
+#else
 WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    float devicePixelRatio,
                                    const char* defaultFontName,
@@ -499,6 +532,7 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
         });
     return instance;
 }
+#endif
 
 WebContainer* WebContainer::CreateWithPlatformImage(
     unsigned width, unsigned height,
@@ -676,6 +710,16 @@ WebContainer::~WebContainer()
 {
 }
 
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                                unsigned stride)
+{
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->UpdateBuffer(buffer, width, height, stride);
+}
+#endif
+
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
 void WebContainer::RegisterPreRenderingHandler(
     const std::function<RenderInfo(void)>& cb)
 {
@@ -687,6 +731,7 @@ void WebContainer::RegisterPreRenderingHandler(
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->RegisterPreRenderingHandler(wrapper);
 }
+#endif
 
 void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const RenderResult& renderResult)>&
