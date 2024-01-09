@@ -20,7 +20,6 @@
 #if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishCastConfig__)
 #define __StarfishCastConfig__
 
-#include "StarfishConfig.h"
 #include "core/util/GlobalOptions.h"
 
 namespace Starfish {
