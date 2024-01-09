@@ -51,14 +51,6 @@
 
 #include <EscargotPublic.h>
 
-#if defined(STARFISH_TIZEN_VERSION_5_0) && !defined(TIZEN_COMPAT_HEADER_5_0)
-#error "Version Mismatch: You must build LWE on Tizen 5.5 Environment"
-#endif
-
-#if defined(STARFISH_TIZEN_VERSION_5_5) && defined(TIZEN_COMPAT_HEADER_5_0)
-#error "Version Mismatch: You must build LWE on Tizen 5.0 Environment"
-#endif
-
 #define TO_STARFISH(ptr) (((Starfish::WebView*)ptr)->starfish())
 #define TO_WEBVIEW(ptr) (((Starfish::WebView*)ptr))
 #define TO_HISTORY(ptr) \
@@ -242,6 +234,8 @@ public:
     virtual void RegisterOnRenderedHandler(
         const std::function<void(
             WebContainer*, const RenderResult& renderResult)>& cb) override;
+    virtual void UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                              unsigned stride);
 
     virtual void AddIdleCallback(void (*callback)(void*), void* data) override;
     virtual size_t AddTimeout(void (*callback)(void*), void* data,
@@ -391,12 +385,12 @@ private:
     void* m_impl;
 };
 
-#if defined(STARFISH_TIZEN_VERSION_5_0)
-WebContainer* WebContainer::Create(void* buffer, unsigned width,
-                                   unsigned height, unsigned stride,
-                                   float scaleFactor,
-                                   const char* defaultFontName,
-                                   const char* locale, const char* timezoneID)
+WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
+                                             unsigned height, unsigned stride,
+                                             float scaleFactor,
+                                             const char* defaultFontName,
+                                             const char* locale,
+                                             const char* timezoneID)
 {
 #if defined(STARFISH_DALI)
 #if !defined(PORT_WINDOW_BACKEND_GB)
@@ -434,7 +428,7 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
     return nullptr;
 #endif
 }
-#else
+
 WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    float scaleFactor,
                                    const char* defaultFontName,
@@ -470,9 +464,7 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
     return newWebContainer;
 #endif
 }
-#endif
 
-#if defined(STARFISH_TIZEN_VERSION_5_0)
 void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
                                     unsigned height, unsigned stride)
 {
@@ -482,9 +474,7 @@ void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
                                                                      stride);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
-#endif
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
 void WebContainerImpl::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
@@ -504,7 +494,6 @@ void WebContainerImpl::RegisterPreRenderingHandler(
         });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
-#endif
 
 void WebContainerImpl::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
@@ -1425,7 +1414,6 @@ void WebContainerImpl::SetUserAgentString(const std::string& userAgent)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
 std::string WebContainerImpl::GetUserAgentString()
 {
     std::string ret;
@@ -1434,7 +1422,6 @@ std::string WebContainerImpl::GetUserAgentString()
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return ret;
 }
-#endif
 
 void WebContainerImpl::SetCacheMode(int mode)
 {
@@ -1448,7 +1435,6 @@ void WebContainerImpl::SetCacheMode(int mode)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
 int WebContainerImpl::GetCacheMode()
 {
     int ret = 0;
@@ -1462,7 +1448,6 @@ int WebContainerImpl::GetCacheMode()
 #endif
     return ret;
 }
-#endif
 
 void WebContainerImpl::SetDefaultFontSize(uint32_t size)
 {
@@ -1473,7 +1458,6 @@ void WebContainerImpl::SetDefaultFontSize(uint32_t size)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
 uint32_t WebContainerImpl::GetDefaultFontSize()
 {
     uint32_t ret = 0;
@@ -1482,7 +1466,6 @@ uint32_t WebContainerImpl::GetDefaultFontSize()
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return ret;
 }
-#endif
 
 void WebContainerImpl::DispatchMouseMoveEvent(MouseButtonValue button,
                                               MouseButtonsValue buttons,
@@ -1714,6 +1697,17 @@ uintptr_t LWEDelegate_WebContainer_Create(unsigned width, unsigned height,
 {
     return reinterpret_cast<uintptr_t>(LWEDelegate::WebContainer::Create(
         width, height, devicePixelRatio, defaultFontName, locale, timezoneID));
+}
+
+uintptr_t LWEDelegate_WebContainer_CreateWithBuffer(
+    void* buffer, unsigned bufferWidth, unsigned bufferHeight,
+    unsigned bufferStride, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID)
+{
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::WebContainer::CreateWithBuffer(
+            buffer, bufferWidth, bufferHeight, bufferStride, devicePixelRatio,
+            defaultFontName, locale, timezoneID));
 }
 
 uintptr_t LWEDelegate_WebContainer_Create_With_PlatformImage(

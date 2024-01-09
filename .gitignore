@@ -1,5 +1,6 @@
 # Build generated
 out
+out_tizen
 Starfish
 Starfish-serviceworker
 Starfish-sharedworker

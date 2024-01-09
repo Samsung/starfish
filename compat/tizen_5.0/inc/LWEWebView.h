@@ -36,6 +36,9 @@
 #include <cstdint>
 #include <unordered_map>
 #include <sstream>
+#include <memory>
+
+using LWEDelegateRef = std::unique_ptr<void, std::function<void(void*)>>;
 
 namespace LWE {
 
@@ -116,15 +119,25 @@ public:
     static CookieManager* GetInstance();
     static void Destroy();
 
+    CookieManager(const CookieManager& other) = delete;
+    CookieManager(CookieManager&& other) = delete;
+    CookieManager& operator=(const CookieManager& other) = delete;
+
 private:
     CookieManager();
     ~CookieManager();
+
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT Settings {
 public:
+    Settings();
     Settings(const std::string& defaultUA, const std::string& ua);
-    bool UpdateSetting(std::string key, std::string value);
+    ~Settings();
+    Settings(const Settings& other);
+
+    bool UpdateSetting(const std::string& key, const std::string& value);
     std::string GetSetting(std::string key) const;
 
     std::string GetDefaultUserAgent() const;
@@ -169,31 +182,30 @@ public:
     void SetUseExternalPopup(bool useExternalPopup);
     void SetUseSpatialNavigation(bool useSpatialNavigation);
 
+    void IterateSettings(
+        std::function<void(const std::string&, const std::string&)> callback)
+        const;
+
 private:
-    std::unordered_map<std::string, std::string> m_settings;
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT ResourceError {
 public:
     ResourceError(int code, const std::string& description,
                   const std::string& url);
-    int GetErrorCode();
-    std::string GetDescription();
-    std::string GetUrl();
+    ResourceError(const ResourceError& other);
+    ~ResourceError();
+
+    int GetErrorCode() const;
+    std::string GetDescription() const;
+    std::string GetUrl() const;
 
 private:
-    int m_errorCode;
-    std::string m_description;
-    std::string m_url;
+    LWEDelegateRef m_delegate;
 };
 
 class LWE_EXPORT WebContainer {
-private:
-    // use Destroy function instead of using delete operator
-    ~WebContainer()
-    {
-    }
-
 public:
     // Function set for render to buffer
     static WebContainer* Create(void* buffer, unsigned bufferWidth,
@@ -388,22 +400,19 @@ public:
     void SetDevicePixelRatio(float dpr);
     float GetDevicePixelRatio();
 
-protected:
-    WebContainer(void* webView);
-
 private:
-    void* m_impl;
+    WebContainer();
+
+    // use Destroy function instead of using delete operator
+    ~WebContainer();
+
+    LWEDelegateRef m_delegate;
 };
 
 /**
  * \brief WebView of lightweight web engine.
  */
 class LWE_EXPORT WebView {
-protected:
-    virtual ~WebView()
-    {
-    }
-
 public:
     /**
      * \brief Create a Webview instance.
@@ -457,7 +466,7 @@ public:
      *
      * \endcode
      */
-    virtual void Destroy();
+    void Destroy();
 
     /**
      * \brief Gets the settings used by the webview.
@@ -478,7 +487,7 @@ public:
      * \param url the URL of the resource to load.
      *
      */
-    virtual void LoadURL(const std::string& url);
+    void LoadURL(const std::string& url);
 
     /**
      * \brief Gets the URL for the current page.
@@ -897,22 +906,19 @@ public:
      *
      * \return platform native handle.
      */
-    virtual void* Unwrap()
-    {
-        return nullptr;
-    }
+    void* Unwrap();
 
     /**
      * \brief Give focus to current webview.
      *
      */
-    virtual void Focus();
+    void Focus();
 
     /**
      * \brief Blur the current webview.
      *
      */
-    virtual void Blur();
+    void Blur();
 
     /**
      * \brief Change DPR value at current webview.
@@ -930,15 +936,11 @@ public:
      */
     float GetDevicePixelRatio();
 
-protected:
-    WebView(void* impl)
-        : m_impl(impl)
-    {
-    }
+private:
+    WebView();
+    ~WebView();
 
-    virtual WebContainer* FetchWebContainer() = 0;
-
-    void* m_impl;
+    LWEDelegateRef m_delegate;
 };
 
 } // namespace LWE
