@@ -35,6 +35,8 @@ DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WebWorker* webWorker,
                                                        String* charSet)
     : WorkerGlobalScope(webWorker)
     , m_workerObjectProxy(nullptr)
+    , m_name(String::emptyString)
+    , m_wasTerminated(false)
 {
     m_scriptBindingInstance =
         new ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>(
@@ -50,24 +52,43 @@ void DedicatedWorkerGlobalScope::initialize(
     m_name = m_workerObjectProxy->workerName();
 }
 
-void DedicatedWorkerGlobalScope::postMessage(ScriptValue message,
-                                             GCVector<ScriptValue>& transfer)
+void DedicatedWorkerGlobalScope::postMessage(
+    ScriptValue message, const GCAtomicVector<ScriptObject>& transfer)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_wasTerminated) {
+        return;
+    }
+
+    STARFISH_ASSERT(m_workerObjectProxy);
+    m_workerObjectProxy->postMessage(message, transfer);
 }
 
-void DedicatedWorkerGlobalScope::dispatchMessageEvent(ScriptValue message)
+void DedicatedWorkerGlobalScope::postMessage(
+    ScriptValue message, const StructuredSerializeOptions& options)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_wasTerminated) {
+        return;
+    }
+
+    STARFISH_ASSERT(m_workerObjectProxy);
+    m_workerObjectProxy->postMessage(message, options.transfer());
 }
 
 void DedicatedWorkerGlobalScope::close()
 {
+    if (m_wasTerminated) {
+        return;
+    }
+
+    m_wasTerminated = true;
+
     STARFISH_UNIMPLEMENTED();
 }
 
 void DedicatedWorkerGlobalScope::dispose()
 {
+    m_wasTerminated = true;
+
     if (m_workerObjectProxy) {
         m_workerObjectProxy->terminate();
         m_workerObjectProxy = nullptr;

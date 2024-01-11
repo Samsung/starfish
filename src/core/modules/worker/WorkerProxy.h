@@ -20,9 +20,12 @@
 #if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerProxy__)
 #define __StarfishWorkerProxy__
 
+#include "binding/ScriptWrappable.h"
+
 namespace Starfish {
 
 class ExecutionContext;
+class EventTarget;
 class GlobalScope;
 class MessageLoop;
 class SerializeWithTransferResult;
@@ -32,26 +35,50 @@ class WorkerProxy : public gc {
 public:
     using PostTask = void (*)(void*);
 
+    static void onPostMessageDone(
+        WorkerProxy* WorkerProxy,
+        SerializeWithTransferResult* serializedMessage);
+
     WorkerProxy(ExecutionContext* executionContext, WorkerThread* workerThread);
 
     void terminate();
 
     void postTask(PostTask task, void* data);
 
+    void postMessage(ScriptValue message,
+                     const GCAtomicVector<ScriptObject>& transfer);
+
     DEFINE_GETTER(bool, wasTerminate);
+    DEFINE_GETTER(ExecutionContext*, ownerExecutionContext);
     DEFINE_GETTER(WorkerThread*, workerThread);
 
 protected:
     ExecutionContext* m_ownerExecutionContext;
     WorkerThread* m_workerThread;
+    EventTarget* m_entangledEventTarget;
     bool m_wasTerminate;
+    std::vector<SerializeWithTransferResult*> m_serializedMessages;
 
     static GlobalScope* workerProxyGlobalScope();
 
     virtual MessageLoop* targetMessageLoop() = 0;
     virtual ExecutionContext* targetExecutionContext() = 0;
 
+    virtual void postSerializedMessage(
+        SerializeWithTransferResult* serializedMessage) = 0;
+
+    void postMessageToEntangledEventTarget(
+        SerializeWithTransferResult* serializedMessage);
+
+    SerializeWithTransferResult* createSerializedMessage();
+    void removeSerializedMessage(
+        SerializeWithTransferResult* serializedMessage);
+    void clearSerializedMessages();
+
     void clearPendingPostTask();
+
+    DEFINE_GETTER_SETTER(EventTarget*, entangledEventTarget,
+                         EntangledEventTarget);
 };
 
 } // namespace Starfish

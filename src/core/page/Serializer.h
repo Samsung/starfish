@@ -20,6 +20,8 @@
 #ifndef __StarfishSerializer__
 #define __StarfishSerializer__
 
+#include "binding/ScriptWrappable.h"
+
 // https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data
 
 namespace Starfish {
@@ -39,7 +41,6 @@ class SerializedArrayBufferData;
 class SerializedArrayBufferViewData;
 class TransferedPlatformObjectData;
 class TransferedTypedData;
-class ScriptWrappable;
 
 typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
 typedef GCUnorderedMap<void*, ScriptValue> DeserializingMap;
@@ -228,7 +229,7 @@ private:
 
 class SerializedStringData : public SerializedData {
 public:
-    SerializedStringData(StringRef* data)
+    SerializedStringData(ScriptString data)
         : m_data(data)
     {
     }
@@ -659,7 +660,7 @@ public:
                                    SerializedTypedData* value);
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,
-        GCAtomicVector<ScriptObject>& transferValues,
+        const GCAtomicVector<ScriptObject>& transferValues,
         SerializeWithTransferResult& result);
     static void deserializeWithTransfer(ExecutionContext* executionContext,
                                         SerializeWithTransferResult& serialized,

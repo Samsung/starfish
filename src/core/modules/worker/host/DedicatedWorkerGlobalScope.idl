@@ -10,9 +10,8 @@
 interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   [Replaceable] readonly attribute DOMString name;
 
-  // NOTE transfer: sequence<object> -> sequence<any>
-  [RaisesException] void postMessage(any message, sequence<any> transfer);
-  [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options /* = {} */);
+  [RaisesException] void postMessage(any message, sequence<object> transfer);
+  [RaisesException] void postMessage(any message, optional StructuredSerializeOptions options /* = {} */);
 
   void close();
 

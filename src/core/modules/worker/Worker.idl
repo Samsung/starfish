@@ -9,11 +9,11 @@
 interface Worker : EventTarget {
   void terminate();
 
-  [Unimplemented, RaisesException] void postMessage(any message, sequence<object> transfer);
-  [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options  /* = {} */);
+  [RaisesException] void postMessage(any message, sequence<object> transfer);
+  [RaisesException] void postMessage(any message, optional StructuredSerializeOptions options  /* = {} */);
 
-  [Unimplemented] attribute EventHandler onmessage;
-  [Unimplemented] attribute EventHandler onmessageerror;
+  attribute EventHandler onmessage;
+  attribute EventHandler onmessageerror;
 };
 
 [STARFISH_ENABLE_WORKER]

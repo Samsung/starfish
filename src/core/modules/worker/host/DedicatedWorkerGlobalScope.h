@@ -21,6 +21,7 @@
     !defined(__StarfishDedicatedWorkerGlobalScope__)
 #define __StarfishDedicatedWorkerGlobalScope__
 
+#include "core/dom/StructuredSerializeOptions.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 
 namespace Starfish {
@@ -45,9 +46,12 @@ public:
         return m_name;
     }
 
-    void postMessage(ScriptValue message, GCVector<ScriptValue>& transfer);
+    void postMessage(ScriptValue message,
+                     const GCAtomicVector<ScriptObject>& transfer);
 
-    void dispatchMessageEvent(ScriptValue message);
+    void postMessage(ScriptValue message,
+                     const StructuredSerializeOptions& options =
+                         StructuredSerializeOptions());
 
     void close();
 
@@ -64,7 +68,8 @@ public:
 
 private:
     WorkerObjectProxy* m_workerObjectProxy;
-    String* m_name{ String::emptyString };
+    String* m_name;
+    bool m_wasTerminated;
 };
 
 } // namespace Starfish

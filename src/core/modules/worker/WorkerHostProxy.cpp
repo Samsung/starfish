@@ -39,6 +39,8 @@ void WorkerHostProxy::workerHostCreated(WorkerHost* workerHost)
 {
     STARFISH_ASSERT(!m_workerHost);
     m_workerHost = workerHost;
+
+    setEntangledEventTarget(m_workerHost->globalScope());
 }
 
 MessageLoop* WorkerHostProxy::targetMessageLoop()
@@ -63,7 +65,37 @@ void WorkerHostProxy::onScriptLoadFinished()
 
     m_wasWorkerScriptLoaded = true;
 
-    // TODO: start send message to WorkerHost.
+    handleQueuedEarlyMessages();
+}
+
+void WorkerHostProxy::handleQueuedEarlyMessages()
+{
+    STARFISH_ASSERT(m_wasWorkerScriptLoaded);
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    GCVector<SerializeWithTransferResult*> messages;
+    m_queuedEarlyMessages.swap(messages);
+
+    for (SerializeWithTransferResult* message : messages) {
+        postMessageToEntangledEventTarget(message);
+    }
+
+    m_queuedEarlyMessages.clear();
+    m_queuedEarlyMessages.shrink_to_fit();
+}
+
+void WorkerHostProxy::postSerializedMessage(
+    SerializeWithTransferResult* serializedMessage)
+{
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    // After the worker's script is loaded, a message is sent to the worker.
+    if (!m_wasWorkerScriptLoaded) {
+        m_queuedEarlyMessages.push_back(serializedMessage);
+        return;
+    }
+
+    postMessageToEntangledEventTarget(serializedMessage);
 }
 
 } // namespace Starfish
