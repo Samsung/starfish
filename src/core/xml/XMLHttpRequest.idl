@@ -61,7 +61,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   ByteString? getResponseHeader(ByteString name);
   ByteString getAllResponseHeaders();
   void overrideMimeType(DOMString mime);
-  attribute XMLHttpRequestResponseType responseType;
+  [RaisesException] attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
   [RaisesException] readonly attribute DOMString responseText;
   // TODO: Expose only to window

@@ -48,7 +48,7 @@ http://web-platform.test:8000/xhr/send-redirect.htm
 http://web-platform.test:8000/xhr/send-response-upload-event-progress.htm
 #http://web-platform.test:8000/xhr/setrequestheader-allow-empty-value.htm
 #http://web-platform.test:8000/xhr/responsedocument-decoding.htm
-#http://web-platform.test:8000/xhr/responsetype.html
+http://web-platform.test:8000/xhr/responsetype.html
 #http://web-platform.test:8000/xhr/send-data-arraybuffer.htm
 #http://web-platform.test:8000/xhr/header-user-agent-async.htm
 #http://web-platform.test:8000/xhr/responsexml-non-well-formed.htm // Replace modified test because rapidxml has some bugs
