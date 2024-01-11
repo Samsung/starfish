@@ -43,6 +43,7 @@ public:
 
     DEFINE_GETTER(RunLoop*, runLoop);
     DEFINE_GETTER(bool, wasWorkerTerminated);
+    DEFINE_GETTER(GlobalScope*, workerMessageLoopGlobalScope);
 
 private:
     ExecutionContext* m_executionContext;
@@ -51,6 +52,7 @@ private:
     Mutex* m_mutex;
     RunLoop* m_runLoop;
     std::atomic_bool m_wasWorkerTerminated;
+    GlobalScope* m_workerMessageLoopGlobalScope;
 
     static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
 

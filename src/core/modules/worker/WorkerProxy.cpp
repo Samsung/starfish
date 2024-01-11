@@ -19,7 +19,6 @@
 
 #if defined(STARFISH_ENABLE_WORKER)
 #include "StarfishConfig.h"
-#include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -27,22 +26,6 @@
 #include "core/modules/worker/WorkerProxy.h"
 
 namespace Starfish {
-
-// This class is used as a key to clear pending idlers in the message loop
-// when a worker terminates.
-class WorkerProxyGlobalScope : public GlobalScope {
-public:
-    WorkerProxyGlobalScope()
-        : GlobalScope(nullptr)
-    {
-    }
-
-    ExecutionContext* executionContext() const
-    {
-        STARFISH_ASSERT_NOT_REACHED();
-        return nullptr;
-    }
-};
 
 WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
                          WorkerThread* workerThread)
@@ -52,15 +35,9 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
 {
 }
 
-GlobalScope* WorkerProxy::workerProxyGlobalScope()
-{
-    static WorkerProxyGlobalScope globalScope;
-    return &globalScope;
-}
-
 void WorkerProxy::postTask(PostTask task, void* data)
 {
-    if (workerThread()->wasWorkerTerminated()) {
+    if (m_workerThread->wasWorkerTerminated()) {
         return;
     }
 
@@ -68,7 +45,7 @@ void WorkerProxy::postTask(PostTask task, void* data)
 
     STARFISH_ASSERT(!messageLoop->calledOnValidThread());
     messageLoop->addIdlerWithNoGCRootingInOtherThread(
-        workerProxyGlobalScope(),
+        m_workerThread->workerMessageLoopGlobalScope(),
         [](size_t handle, void* data, void* data1) {
             reinterpret_cast<PostTask>(data)(data1);
         },
@@ -91,7 +68,7 @@ void WorkerProxy::terminate()
 void WorkerProxy::clearPendingPostTask()
 {
     m_ownerExecutionContext->webBase()->messageLoop()->clearPendingIdlers(
-        workerProxyGlobalScope());
+        m_workerThread->workerMessageLoopGlobalScope());
 }
 
 } // namespace Starfish

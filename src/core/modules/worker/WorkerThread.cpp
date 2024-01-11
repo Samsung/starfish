@@ -23,6 +23,7 @@
 #include "Starfish.h"
 
 #include "core/page/WebBase.h"
+#include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/RunLoop.h"
 #include "core/modules/threading/Locker.h"
@@ -36,12 +37,29 @@
 
 namespace Starfish {
 
+// This class is used as a key to clear pending idlers in the message loop
+// when a worker terminates.
+class WorkerProxyGlobalScope : public GlobalScope {
+public:
+    WorkerProxyGlobalScope()
+        : GlobalScope(nullptr)
+    {
+    }
+
+    ExecutionContext* executionContext() const
+    {
+        STARFISH_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+};
+
 WorkerThread::WorkerThread(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
     , m_mainThread(new Thread(nullptr))
     , m_mutex(new Mutex())
     , m_runLoop(nullptr)
     , m_wasWorkerTerminated(false)
+    , m_workerMessageLoopGlobalScope(new WorkerProxyGlobalScope())
 {
 }
 
