@@ -24,6 +24,7 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <cstdint>
 
 namespace LWEDelegate {
 
