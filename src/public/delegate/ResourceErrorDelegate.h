@@ -22,6 +22,7 @@
 #include "LWEDelegateConfig.h"
 
 #include <string>
+#include <cstdint>
 
 namespace LWEDelegate {
 
