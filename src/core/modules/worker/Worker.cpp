@@ -42,13 +42,21 @@ Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
 void Worker::postMessage(ScriptValue message,
                          GCAtomicVector<ScriptObject>& transfer)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_wasTerminated) {
+        return;
+    }
+
+    m_workerHostProxy->postMessage(message, transfer);
 }
 
 void Worker::postMessage(ScriptValue message,
                          const StructuredSerializeOptions& options)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_wasTerminated) {
+        return;
+    }
+
+    m_workerHostProxy->postMessage(message, options.transfer());
 }
 
 void Worker::terminate()

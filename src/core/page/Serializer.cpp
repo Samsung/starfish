@@ -623,7 +623,7 @@ ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
 
 void Serializer::serializeWithTransfer(
     ExecutionContext* executionContext, ScriptValue value,
-    GCAtomicVector<ScriptObject>& transferValues,
+    const GCAtomicVector<ScriptObject>& transferValues,
     SerializeWithTransferResult& result)
 {
     STARFISH_ASSERT(result.m_serializedTransfer.size() == 0);

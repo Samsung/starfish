@@ -30,7 +30,7 @@ class SerializeWithTransferResult;
 class WorkerThread;
 class WorkerHost;
 
-class WorkerHostProxy : public WorkerProxy {
+class WorkerHostProxy final : public WorkerProxy {
 public:
     WorkerHostProxy(ExecutionContext* executionContext,
                     WorkerThread* workerThread);
@@ -44,9 +44,15 @@ public:
 private:
     WorkerHost* m_workerHost;
     bool m_wasWorkerScriptLoaded;
+    GCVector<SerializeWithTransferResult*> m_queuedEarlyMessages;
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;
+
+    void postSerializedMessage(
+        SerializeWithTransferResult* serializedMessage) override;
+
+    void handleQueuedEarlyMessages();
 };
 
 } // namespace Starfish

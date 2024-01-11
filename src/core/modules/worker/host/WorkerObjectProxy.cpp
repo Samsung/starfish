@@ -33,6 +33,7 @@ WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
     : WorkerProxy(executionContext, workerThread)
     , m_workerObject(worker)
 {
+    setEntangledEventTarget(m_workerObject);
 }
 
 MessageLoop* WorkerObjectProxy::targetMessageLoop()
@@ -48,6 +49,12 @@ ExecutionContext* WorkerObjectProxy::targetExecutionContext()
 String* WorkerObjectProxy::workerName() const
 {
     return m_workerObject->workerOptions().name();
+}
+
+void WorkerObjectProxy::postSerializedMessage(
+    SerializeWithTransferResult* serializedMessage)
+{
+    postMessageToEntangledEventTarget(serializedMessage);
 }
 
 } // namespace Starfish

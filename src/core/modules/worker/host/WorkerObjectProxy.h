@@ -29,7 +29,7 @@ class WorkerThread;
 class MessageLoop;
 class Worker;
 
-class WorkerObjectProxy : public WorkerProxy {
+class WorkerObjectProxy final : public WorkerProxy {
 public:
     WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker,
                       WorkerThread* workerThread);
@@ -43,6 +43,9 @@ private:
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;
+
+    void postSerializedMessage(
+        SerializeWithTransferResult* serializedMessage) override;
 };
 
 } // namespace Starfish

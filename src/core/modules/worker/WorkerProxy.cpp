@@ -19,8 +19,12 @@
 
 #if defined(STARFISH_ENABLE_WORKER)
 #include "StarfishConfig.h"
+#include "binding/ScriptWrappable.h"
 #include "core/page/WebBase.h"
+#include "core/page/Serializer.h"
+#include "core/dom/EventTarget.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/MessageEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/WorkerThread.h"
 #include "core/modules/worker/WorkerProxy.h"
@@ -33,6 +37,12 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
     , m_workerThread(workerThread)
     , m_wasTerminate(false)
 {
+}
+
+void WorkerProxy::onPostMessageDone(
+    WorkerProxy* WorkerProxy, SerializeWithTransferResult* serializedMessage)
+{
+    WorkerProxy->removeSerializedMessage(serializedMessage);
 }
 
 void WorkerProxy::postTask(PostTask task, void* data)
@@ -52,6 +62,101 @@ void WorkerProxy::postTask(PostTask task, void* data)
         reinterpret_cast<void*>(task), data);
 }
 
+void WorkerProxy::postMessage(ScriptValue message,
+                              const GCAtomicVector<ScriptObject>& transfer)
+{
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    SerializeWithTransferResult* serializedMessage = createSerializedMessage();
+
+    Serializer::serializeWithTransfer(m_ownerExecutionContext, message,
+                                      transfer, *serializedMessage);
+
+    postSerializedMessage(serializedMessage);
+}
+
+void WorkerProxy::postMessageToEntangledEventTarget(
+    SerializeWithTransferResult* serializedMessage)
+{
+    STARFISH_ASSERT(m_entangledEventTarget);
+
+    if (m_workerThread->wasWorkerTerminated()) {
+        return;
+    }
+
+    targetMessageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        m_workerThread->workerMessageLoopGlobalScope(),
+        [](size_t handle, void* data, void* data1) {
+            auto* proxy = static_cast<WorkerProxy*>(data);
+            if (proxy->workerThread()->wasWorkerTerminated()) {
+                return;
+            }
+
+            auto* serializedMessage =
+                static_cast<SerializeWithTransferResult*>(data1);
+
+            STARFISH_ASSERT(proxy->targetExecutionContext()->isContextThread());
+
+            MessageEvent* event = new MessageEvent(
+                proxy->targetExecutionContext(), serializedMessage);
+
+            proxy->entangledEventTarget()->dispatchEventByUA(event);
+
+            // Free serializedMessage in thread where this variable was created.
+            proxy->ownerExecutionContext()
+                ->webBase()
+                ->messageLoop()
+                ->addIdlerWithNoGCRootingInOtherThread(
+                    proxy->ownerExecutionContext()->globalScope(),
+                    [](size_t handle, void* data, void* data1) {
+                        WorkerProxy::onPostMessageDone(
+                            static_cast<WorkerProxy*>(data),
+                            static_cast<SerializeWithTransferResult*>(data1));
+                    },
+                    proxy, serializedMessage);
+        },
+        this, serializedMessage);
+}
+
+SerializeWithTransferResult* WorkerProxy::createSerializedMessage()
+{
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    SerializeWithTransferResult* serializedMessage =
+        new (NoGC) SerializeWithTransferResult();
+    m_serializedMessages.push_back(serializedMessage);
+
+    return serializedMessage;
+}
+
+void WorkerProxy::removeSerializedMessage(
+    SerializeWithTransferResult* serializedMessage)
+{
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    auto iter = std::find(m_serializedMessages.begin(),
+                          m_serializedMessages.end(), serializedMessage);
+    if (iter != m_serializedMessages.end()) {
+        GC_FREE(serializedMessage);
+        m_serializedMessages.erase(iter);
+    }
+}
+
+void WorkerProxy::clearSerializedMessages()
+{
+    STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
+
+    // If the worker terminates unexpectedly, serializedMessage is not
+    // freed and remains in the vector.
+    for (SerializeWithTransferResult* serializedMessage :
+         m_serializedMessages) {
+        GC_FREE(serializedMessage);
+    }
+
+    m_serializedMessages.clear();
+    m_serializedMessages.shrink_to_fit();
+}
+
 void WorkerProxy::terminate()
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
@@ -63,6 +168,8 @@ void WorkerProxy::terminate()
     m_wasTerminate = true;
 
     clearPendingPostTask();
+
+    clearSerializedMessages();
 }
 
 void WorkerProxy::clearPendingPostTask()

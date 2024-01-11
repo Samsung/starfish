@@ -212,6 +212,7 @@ def wpt_others():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/cors.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/cookies.res", "cairo"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/worker.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/serviceworker.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fileAPI.res", "cairo"])
 
