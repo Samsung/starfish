@@ -1301,6 +1301,26 @@ ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
                               1, ValueRef::create(ctx->globalObject()->json()));
 }
 
+ScriptValue parseJSONStringToScriptValueOrNull(ScriptBindingInstance* instance,
+                                               String* jsonData)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ScriptValue jsonArg[1] = { ValueRef::create(createScriptString(jsonData)) };
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptValue fn, ScriptValue* argv,
+           size_t argc, ScriptValue thisValue) -> ValueRef* {
+            return fn->asObject()->call(state, thisValue, argc, argv);
+        },
+        ValueRef::create(ctx->globalObject()->jsonParse()), jsonArg,
+        static_cast<size_t>(1), ValueRef::create(ctx->globalObject()->json()));
+
+    if (!sbresult.error.hasValue()) {
+        return sbresult.result;
+    }
+    return scriptNull();
+}
+
 double parseDate(ScriptBindingInstance* instance, String* date)
 {
     ContextRef* ctx = instance->scriptContext();

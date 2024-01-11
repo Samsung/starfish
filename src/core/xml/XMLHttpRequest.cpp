@@ -208,8 +208,8 @@ public:
                             m_xhr->m_resourceRequest->response().size(), true);
 
                         m_xhr->m_responseJsonObject =
-                            parseJSON(m_xhr->scriptBindingInstance(), text);
-
+                            parseJSONStringToScriptValueOrNull(
+                                m_xhr->scriptBindingInstance(), text);
                     } else if (m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Empty ||
                                m_xhr->m_responseType ==
