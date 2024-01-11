@@ -173,14 +173,18 @@ public:
 
     bool isRedirected() const
     {
-        STARFISH_ASSERT(m_responseData);
-        return m_responseData->m_redirected;
+        if (m_responseData) {
+            return m_responseData->m_redirected;
+        }
+        return false;
     }
 
     bool isSync() const
     {
-        STARFISH_ASSERT(m_requestData);
-        return m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync;
+        if (m_requestData) {
+            return m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync;
+        }
+        return false;
     }
 
     const HeaderMap& resquestHeaderMap()
