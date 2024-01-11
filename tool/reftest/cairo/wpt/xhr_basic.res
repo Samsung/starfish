@@ -4,7 +4,7 @@ http://web-platform.test:8000/xhr/access-control-basic-allow-access-control-orig
 #http://web-platform.test:8000/xhr/access-control-and-redirects-async-same-origin.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-preflight-cache-invalidation-by-method.htm
 http://web-platform.test:8000/xhr/open-url-base.htm
-#http://web-platform.test:8000/xhr/no-utf16-json.htm
+http://web-platform.test:8000/xhr/no-utf16-json.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-timeout-worker-overrides.html
 #http://web-platform.test:8000/xhr/xmlhttprequest-network-error.htm
 http://web-platform.test:8000/xhr/send-redirect-infinite.htm
@@ -60,7 +60,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-defer-scripts.html
 #http://web-platform.test:8000/xhr/open-url-multi-window-2.htm
 http://web-platform.test:8000/xhr/access-control-preflight-request-header-sorted.htm
 http://web-platform.test:8000/xhr/overridemimetype-open-state-force-utf-8.htm
-#http://web-platform.test:8000/xhr/response-json.htm
+http://web-platform.test:8000/xhr/response-json.htm
 #http://web-platform.test:8000/xhr/send-response-event-order.htm
 #http://web-platform.test:8000/xhr/responsetext-decoding.htm
 #http://web-platform.test:8000/xhr/send-sync-response-event-order.htm

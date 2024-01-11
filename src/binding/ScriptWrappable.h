@@ -222,6 +222,8 @@ void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
                                          String* exposedObjectName);
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData);
+ScriptValue parseJSONStringToScriptValueOrNull(ScriptBindingInstance* instance,
+                                               String* jsonData);
 double parseDate(ScriptBindingInstance* instance, String* date);
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);
 
