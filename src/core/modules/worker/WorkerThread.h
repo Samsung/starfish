@@ -56,6 +56,8 @@ private:
 
     static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
 
+    void initializeWorkerThread();
+
     void destroyWorkerThread();
 
     bool stopWorkerRunLoop();

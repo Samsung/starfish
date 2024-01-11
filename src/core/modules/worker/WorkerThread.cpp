@@ -75,6 +75,9 @@ void* WorkerThread::workerMainThreadWork(void* data,
     auto workerHostThreadFuture = workerHostThreadSignal.get_future();
     self->m_workerThread = std::thread(
         [](std::promise<void> signal, void* data) {
+            auto* workerObject = static_cast<Worker*>(data);
+            workerObject->workerThread()->initializeWorkerThread();
+
             WorkerHost::run(data);
 
             signal.set_value();
@@ -117,6 +120,16 @@ void WorkerThread::terminate()
 
     stopWorkerRunLoop();
     m_mainThread->stop();
+}
+
+void WorkerThread::initializeWorkerThread()
+{
+#if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+#else
+    STARFISH_UNIMPLEMENTED();
+#endif
 }
 
 void WorkerThread::destroyWorkerThread()
