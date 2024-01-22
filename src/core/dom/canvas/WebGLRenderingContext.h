@@ -142,6 +142,9 @@ public:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, Nullable<AllowSharedBufferSource> data,
                     GLenum usage);
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                    GLenum format, GLenum type,
+                    Nullable<ScriptArrayBufferView> pixels);
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
                     GLenum type, Nullable<ScriptArrayBufferView> pixels);
