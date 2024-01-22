@@ -26,6 +26,7 @@
 #include "platform/canvas/webgl/GLESTypes.h"
 #include "core/dom/canvas/WebGLUtils.h"
 #include "core/dom/canvas/WebGLContextAttributes.h"
+#include "core/dom/canvas/WebGLRenderingContextState.h"
 #include <unordered_set>
 #include <unordered_map>
 
@@ -164,14 +165,19 @@ public:
     void uniformMatrix4fv(WebGLUniformLocation* uniform, GLboolean transpose,
                           Float32List value);
 
+    // NOTE: GLError can only be set on WebGLRenderingContext and GLExtensions.
+    void setGLError(GLenum code, const char* message = nullptr);
+    bool executeInContextScope(std::function<void()> callback);
+    WebGLRenderingContextState* getState();
+
 private:
     bool checkWebGLObject(WebGLObject* object);
     bool checkAttribOrUniformName(String* name);
     bool hasGLError();
-    void setGLError(GLenum code, const char* message = nullptr);
     void updateGLError();
     bool isBoundCubeMapTexture(GLenum target);
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
+    bool isExtensionEnabled(const char* requestedName);
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
@@ -181,6 +187,7 @@ private:
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
     WebGLContextAttributes m_attributes;
+    WebGLRenderingContextState m_state;
 };
 } // namespace Starfish
 

@@ -1195,6 +1195,34 @@ ScriptObject createEmptyScriptObject(ScriptBindingInstance* instance)
         .result->asObject();
 }
 
+ScriptObject createScriptObject(ScriptBindingInstance* instance,
+                                FunctionObjectRef* constructor,
+                                const std::string& name, void* extraData)
+{
+    return Evaluator::execute(
+               instance->scriptContext(),
+               [](ExecutionStateRef* state, FunctionObjectRef* constructor,
+                  StringRef* name, void* extraData) -> ValueRef* {
+                   ObjectRef* object = ObjectRef::create(state);
+                   if (constructor) {
+                       object->defineDataProperty(
+                           state,
+                           state->context()->vmInstance()->toStringTagSymbol(),
+                           name, false, false, true);
+                       object->setPrototype(
+                           state, constructor->getFunctionPrototype(state));
+                   }
+                   if (extraData) {
+                       object->setExtraData(extraData);
+                   }
+                   return object;
+               },
+               constructor,
+               StringRef::createFromASCII(name.c_str(), name.length()),
+               extraData)
+        .result->asObject();
+}
+
 void registerJavaScriptNativeInterface(
     ScriptBindingInstance* instance, String* exposedObjectName,
     String* jsFunctionName, void* scriptObject,

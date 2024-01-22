@@ -210,6 +210,9 @@ ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance);
 ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance);
 ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance);
 ScriptObject createEmptyScriptObject(ScriptBindingInstance* instance);
+ScriptObject createScriptObject(ScriptBindingInstance* instance,
+                                Escargot::FunctionObjectRef* constructor,
+                                const std::string& name, void* extraData);
 
 void registerJavaScriptNativeInterface(
     ScriptBindingInstance* instance, String* exposedObjectName,

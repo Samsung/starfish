@@ -17,27 +17,17 @@
  *  USA
  */
 
-#ifndef __StarfishGLESTypes__
-#define __StarfishGLESTypes__
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#ifndef GLint
-typedef int GLint;
-#endif
+#include "StarfishConfig.h"
+#include "WebGLRenderingContextState.h"
 
-#ifndef GLuint
-typedef unsigned int GLuint;
-#endif
+namespace Starfish {
 
-#ifndef GLenum
-typedef unsigned int GLenum;
-#endif
+WebGLRenderingContextState::WebGLRenderingContextState()
+{
+}
 
-#ifndef GLboolean
-typedef unsigned char GLboolean;
-#endif
-
-#ifndef GL_NONE
-#define GL_NONE 0
-#endif
+} // namespace Starfish
 
 #endif

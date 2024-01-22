@@ -45,6 +45,7 @@
 #include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
+#include "core/dom/canvas/WebGLOES_VertexArrayObject.h"
 #include <EscargotPublic.h>
 #include <sstream>
 #include <iomanip>
@@ -252,6 +253,15 @@ Nullable<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
     return WebGLExtensionRegistry::instance().getSupportedExtensions();
 }
 
+bool WebGLRenderingContext::isExtensionEnabled(const char* name)
+{
+    const auto& iter = m_enabledExtensions.find(name);
+    if (iter != m_enabledExtensions.end()) {
+        return true;
+    }
+    return false;
+}
+
 Nullable<ScriptObject> WebGLRenderingContext::getExtension(
     String* requestedName)
 {
@@ -277,7 +287,7 @@ Nullable<ScriptObject> WebGLRenderingContext::getExtension(
         return Nullable<ScriptObject>();
     }
 
-    ScriptObject object = maybeGenerator.value()(scriptBindingInstance());
+    ScriptObject object = maybeGenerator.value()(scriptBindingInstance(), this);
     m_enabledExtensions.insert({ name, object });
     return object;
 }
@@ -613,6 +623,29 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         glGetIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    case GL_VERTEX_ARRAY_BINDING: {
+        // GL_VERTEX_ARRAY_BINDING_OES
+        if (!isExtensionEnabled("OES_vertex_array_object")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        GLint value = -1;
+        glGetIntegerv(pname, &value);
+        if (value == 0) {
+            return scriptNull();
+        }
+
+        Nullable<WebGLVertexArrayObjectOES*> maybe =
+            m_state.webGLVertexArrayObjectOES();
+
+        if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+            return scriptNull();
+        }
+
+        STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
+        return maybe.value()->scriptValue();
+    }
+
 
     case GL_RENDERER:
     case GL_SHADING_LANGUAGE_VERSION:
@@ -1561,6 +1594,19 @@ IMPLEMENT_UNIFORM_MATRIX_NFV(3)
 IMPLEMENT_UNIFORM_MATRIX_NFV(4)
 
 #undef IMPLEMENT_UNIFORM_MATRIX_NFV
+
+bool WebGLRenderingContext::executeInContextScope(
+    std::function<void()> callback)
+{
+    ENTER_CONTEXT_SCOPE(false);
+    callback();
+    return true;
+}
+
+WebGLRenderingContextState* WebGLRenderingContext::getState()
+{
+    return &m_state;
+}
 
 bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)
 {

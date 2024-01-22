@@ -27,16 +27,17 @@
 #include "StarfishBase.h" // Optional, GCVector
 
 namespace Escargot {
-class FunctionObjectRef;
-};
+class ObjectRef;
+}; // namespace Escargot
 
 namespace Starfish {
 
 class ScriptBindingInstance;
 class String;
+class WebGLRenderingContext;
 
-using ExtensionGenerator =
-    std::function<Escargot::FunctionObjectRef*(ScriptBindingInstance*)>;
+using ExtensionGenerator = std::function<Escargot::ObjectRef*(
+    ScriptBindingInstance*, WebGLRenderingContext*)>;
 
 class WebGLExtensionRegistry {
 public:
