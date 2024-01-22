@@ -512,11 +512,11 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
     [Unimplemented] undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
     undefined bindTexture(GLenum target, WebGLTexture? texture);
-    [Unimplemented] undefined blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-    [Unimplemented] undefined blendEquation(GLenum mode);
-    [Unimplemented] undefined blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
-    [Unimplemented] undefined blendFunc(GLenum sfactor, GLenum dfactor);
-    [Unimplemented] undefined blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
+    undefined blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    undefined blendEquation(GLenum mode);
+    undefined blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
+    undefined blendFunc(GLenum sfactor, GLenum dfactor);
+    undefined blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                                 GLenum srcAlpha, GLenum dstAlpha);
 
     [Unimplemented,WebGLHandlesContextLoss]  GLenum checkFramebufferStatus(GLenum target);
@@ -554,7 +554,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined depthRange(GLclampf zNear, GLclampf zFar);
     [Unimplemented] undefined detachShader(WebGLProgram program, WebGLShader shader);
     undefined disable(GLenum cap);
-    [Unimplemented] undefined disableVertexAttribArray(GLuint index);
+    undefined disableVertexAttribArray(GLuint index);
     undefined drawArrays(GLenum mode, GLint first, GLsizei count);
     undefined drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
 
@@ -569,7 +569,7 @@ interface WebGLRenderingContextBase
                                    WebGLTexture? texture, GLint level);
     undefined frontFace(GLenum mode);
 
-    [Unimplemented] undefined generateMipmap(GLenum target);
+    undefined generateMipmap(GLenum target);
 
     WebGLActiveInfo? getActiveAttrib(WebGLProgram program, GLuint index);
     WebGLActiveInfo? getActiveUniform(WebGLProgram program, GLuint index);
@@ -595,7 +595,7 @@ interface WebGLRenderingContextBase
 
     [Unimplemented] any getTexParameter(GLenum target, GLenum pname);
 
-    [Unimplemented] any getUniform(WebGLProgram program, WebGLUniformLocation location);
+    any getUniform(WebGLProgram program, WebGLUniformLocation location);
 
     WebGLUniformLocation? getUniformLocation(WebGLProgram program, DOMString name);
 

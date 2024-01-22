@@ -59,6 +59,8 @@ static const GLenum kUNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
 static const GLenum kCONTEXT_LOST_WEBGL = 0x9242;
 static const GLenum kUNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
 static const GLenum kBROWSER_DEFAULT_WEBGL = 0x9244;
+static const GLenum kIMPLEMENTATION_COLOR_READ_TYPE = 0x8B9A;
+static const GLenum kIMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
 
 namespace Starfish {
 
@@ -372,19 +374,73 @@ void WebGLRenderingContext::bindTexture(GLenum target,
             return;
         }
 
-        TRACE(WEBGL, "target", hex(target), "ON");
         glBindTexture(target, texture->glObject());
         m_boundTextures[target] = texture->glObject();
     } else {
-        TRACE(WEBGL, "target", hex(target), "OFF");
         glBindTexture(target, 0);
         m_boundTextures.erase(target);
     }
 }
 
+void WebGLRenderingContext::blendColor(GLclampf red, GLclampf green,
+                                       GLclampf blue, GLclampf alpha)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glBlendColor(red, green, blue, alpha);
+}
+
+void WebGLRenderingContext::blendEquation(GLenum mode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glBlendEquation(mode);
+}
+
+void WebGLRenderingContext::blendEquationSeparate(GLenum modeRGB,
+                                                  GLenum modeAlpha)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glBlendEquationSeparate(modeRGB, modeAlpha);
+}
+
+void WebGLRenderingContext::blendFunc(GLenum sfactor, GLenum dfactor)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glBlendFunc(sfactor, dfactor);
+}
+
+void WebGLRenderingContext::blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
+                                              GLenum srcAlpha, GLenum dstAlpha)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+}
+
 void WebGLRenderingContext::clear(uint32_t mask)
 {
     ENTER_CONTEXT_SCOPE();
+
+    static uint32_t maskHistory = 0;
+
+    // NOTE: Seeing the spec (2.2 The Drawing Buffer) and the behavior of
+    // examples, it seems like that both color and depth of the drawing buffer
+    // should be cleared by default. This behavior seems different from native
+    // opengl, which is confusing.
+
+    if ((maskHistory & GL_COLOR_BUFFER_BIT) == 0 &&
+        (mask & GL_COLOR_BUFFER_BIT) == 0) {
+        mask |= GL_COLOR_BUFFER_BIT;
+    }
+    if ((maskHistory & GL_DEPTH_BUFFER_BIT) == 0 &&
+        (mask & GL_DEPTH_BUFFER_BIT) == 0) {
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    maskHistory |= mask;
 
     glClear(mask);
 }
@@ -501,6 +557,13 @@ void WebGLRenderingContext::cullFace(GLenum mode)
     glCullFace(mode);
 }
 
+void WebGLRenderingContext::disableVertexAttribArray(GLuint index)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDisableVertexAttribArray(index);
+}
+
 void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
     ENTER_CONTEXT_SCOPE();
@@ -571,6 +634,13 @@ void WebGLRenderingContext::frontFace(GLenum mode)
     ENTER_CONTEXT_SCOPE();
 
     glFrontFace(mode);
+}
+
+void WebGLRenderingContext::generateMipmap(GLenum target)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glGenerateMipmap(target);
 }
 
 void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
@@ -645,8 +715,13 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
         return maybe.value()->scriptValue();
     }
-
-
+    case kIMPLEMENTATION_COLOR_READ_TYPE: {
+        // Our implementation-chosen is a combination of RGBA and UNSIGNED_BYTE.
+        return ValueRef::create(GL_UNSIGNED_BYTE);
+    }
+    case kIMPLEMENTATION_COLOR_READ_FORMAT: {
+        return ValueRef::create(GL_RGBA);
+    }
     case GL_RENDERER:
     case GL_SHADING_LANGUAGE_VERSION:
     case GL_VERSION:
@@ -885,6 +960,29 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     return String::fromUTF8(buffer.data(), length);
 }
 
+ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
+                                              WebGLUniformLocation* location)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    // TODO: rename checkWebGLObject to isFromCurrentContext
+    // TODO: move setting error from checkWebGLObject
+    if (!checkWebGLObject(program)) {
+        return nullptr;
+    }
+
+    if (location->program()->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+
+    STARFISH_UNIMPLEMENTED(
+        "TODO: Return the uniform value at the passed location in the passed "
+        "program.");
+
+    return nullptr;
+}
+
 WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
     WebGLProgram* program, String* name)
 {
@@ -1014,9 +1112,16 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
     glTexParameteri(target, pname, param);
 }
 
-void WebGLRenderingContext::uniform1f(WebGLUniformLocation* uniform, GLfloat x)
+void WebGLRenderingContext::uniform1f(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     // Each of the uniform* functions sets the specified uniform or uniforms to
     // the values provided.
@@ -1033,10 +1138,16 @@ void WebGLRenderingContext::uniform1f(WebGLUniformLocation* uniform, GLfloat x)
     glUniform1f(uniform->location(), x);
 }
 
-void WebGLRenderingContext::uniform2f(WebGLUniformLocation* uniform, GLfloat x,
-                                      GLfloat y)
+void WebGLRenderingContext::uniform2f(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1046,10 +1157,17 @@ void WebGLRenderingContext::uniform2f(WebGLUniformLocation* uniform, GLfloat x,
     glUniform2f(uniform->location(), x, y);
 }
 
-void WebGLRenderingContext::uniform3f(WebGLUniformLocation* uniform, GLfloat x,
-                                      GLfloat y, GLfloat z)
+void WebGLRenderingContext::uniform3f(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
+    GLfloat z)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1059,10 +1177,17 @@ void WebGLRenderingContext::uniform3f(WebGLUniformLocation* uniform, GLfloat x,
     glUniform3f(uniform->location(), x, y, z);
 }
 
-void WebGLRenderingContext::uniform4f(WebGLUniformLocation* uniform, GLfloat x,
-                                      GLfloat y, GLfloat z, GLfloat w)
+void WebGLRenderingContext::uniform4f(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
+    GLfloat z, GLfloat w)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1072,9 +1197,16 @@ void WebGLRenderingContext::uniform4f(WebGLUniformLocation* uniform, GLfloat x,
     glUniform4f(uniform->location(), x, y, z, w);
 }
 
-void WebGLRenderingContext::uniform1i(WebGLUniformLocation* uniform, GLint x)
+void WebGLRenderingContext::uniform1i(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLint x)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1084,10 +1216,16 @@ void WebGLRenderingContext::uniform1i(WebGLUniformLocation* uniform, GLint x)
     glUniform1i(uniform->location(), x);
 }
 
-void WebGLRenderingContext::uniform2i(WebGLUniformLocation* uniform, GLint x,
-                                      GLint y)
+void WebGLRenderingContext::uniform2i(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1097,10 +1235,16 @@ void WebGLRenderingContext::uniform2i(WebGLUniformLocation* uniform, GLint x,
     glUniform2i(uniform->location(), x, y);
 }
 
-void WebGLRenderingContext::uniform3i(WebGLUniformLocation* uniform, GLint x,
-                                      GLint y, GLint z)
+void WebGLRenderingContext::uniform3i(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1110,10 +1254,17 @@ void WebGLRenderingContext::uniform3i(WebGLUniformLocation* uniform, GLint x,
     glUniform3i(uniform->location(), x, y, z);
 }
 
-void WebGLRenderingContext::uniform4i(WebGLUniformLocation* uniform, GLint x,
-                                      GLint y, GLint z, GLint w)
+void WebGLRenderingContext::uniform4i(
+    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z,
+    GLint w)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (!maybeUniform.hasValue()) {
+        return;
+    }
+
+    WebGLUniformLocation* uniform = maybeUniform.value();
 
     if (!isFromCurrentProgram(uniform)) {
         setGLError(GL_INVALID_OPERATION);
@@ -1453,9 +1604,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         glTexImage2D(target, level, internalFormat, width, height, 0, format,
                      type, image.data());
     } else {
-        // TODO: If pixels is null, a buffer of sufficient size initialized to 0
-        // is passed.
-        STARFISH_UNIMPLEMENTED();
+        glTexImage2D(target, level, internalFormat, width, height, 0, format,
+                     type, nullptr);
     }
 }
 
@@ -1664,56 +1814,59 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                  image.data());
 }
 
-#define IMPLEMENT_UNIFORM_NXV(PostFix, SrcType, DestType)           \
-    void WebGLRenderingContext::uniform##PostFix(                   \
-        WebGLUniformLocation* location, SrcType value)              \
-    {                                                               \
-        ENTER_CONTEXT_SCOPE();                                      \
-        if (location == nullptr) {                                  \
-            return;                                                 \
-        }                                                           \
-        if (!isFromCurrentProgram(location)) {                      \
-            setGLError(GL_INVALID_OPERATION);                       \
-            return;                                                 \
-        }                                                           \
-        std::vector<DestType> vector;                               \
-        copy##SrcType(scriptBindingInstance(), value, vector);      \
-        if (vector.empty()) {                                       \
-            glUniform##PostFix(location->location(), vector.size(), \
-                               vector.data());                      \
-        }                                                           \
+#define IMPLEMENT_UNIFORM_NXV(N, Suffix, SrcType, DestType)               \
+    void WebGLRenderingContext::uniform##N##Suffix(                       \
+        WebGLUniformLocation* location, SrcType value)                    \
+    {                                                                     \
+        ENTER_CONTEXT_SCOPE();                                            \
+        if (location == nullptr) {                                        \
+            return;                                                       \
+        }                                                                 \
+        if (!isFromCurrentProgram(location)) {                            \
+            setGLError(GL_INVALID_OPERATION);                             \
+            return;                                                       \
+        }                                                                 \
+        std::vector<DestType> vector;                                     \
+        copy##SrcType(scriptBindingInstance(), value, vector);            \
+        if (!vector.empty()) {                                            \
+            glUniform##N##Suffix(location->location(), vector.size() / N, \
+                                 vector.data());                          \
+        }                                                                 \
     }
 
-IMPLEMENT_UNIFORM_NXV(1fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(2fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(3fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(4fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(1iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(2iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(3iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(4iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(1, fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(2, fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(3, fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(4, fv, Float32List, float)
+IMPLEMENT_UNIFORM_NXV(1, iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(2, iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(3, iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NXV(4, iv, Int32List, int32_t)
 
 #undef IMPLEMENT_UNIFORM_NXV
 
-#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                 \
-    void WebGLRenderingContext::uniformMatrix##N##fv(                   \
-        WebGLUniformLocation* location, GLboolean transpose,            \
-        Float32List value)                                              \
-    {                                                                   \
-        ENTER_CONTEXT_SCOPE();                                          \
-        if (location == nullptr) {                                      \
-            return;                                                     \
-        }                                                               \
-        if (!isFromCurrentProgram(location)) {                          \
-            setGLError(GL_INVALID_OPERATION);                           \
-            return;                                                     \
-        }                                                               \
-        std::vector<float> vector;                                      \
-        copyFloat32List(scriptBindingInstance(), value, vector);        \
-        if (vector.empty()) {                                           \
-            glUniformMatrix##N##fv(location->location(), vector.size(), \
-                                   transpose, vector.data());           \
-        }                                                               \
+#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                \
+    void WebGLRenderingContext::uniformMatrix##N##fv(                  \
+        WebGLUniformLocation* location, GLboolean transpose,           \
+        Float32List value)                                             \
+    {                                                                  \
+        ENTER_CONTEXT_SCOPE();                                         \
+        /* location is nullable. */                                    \
+        if (location == nullptr) {                                     \
+            return;                                                    \
+        }                                                              \
+        if (!isFromCurrentProgram(location)) {                         \
+            setGLError(GL_INVALID_OPERATION);                          \
+            return;                                                    \
+        }                                                              \
+        std::vector<float> vector;                                     \
+        copyFloat32List(scriptBindingInstance(), value, vector);       \
+        if (!vector.empty()) {                                         \
+            /* count specifies the number of matrices. */              \
+            glUniformMatrix##N##fv(location->location(),               \
+                                   vector.size() / (N * N), transpose, \
+                                   vector.data());                     \
+        }                                                              \
     }
 
 IMPLEMENT_UNIFORM_MATRIX_NFV(2)

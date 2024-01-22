@@ -1525,6 +1525,59 @@ std::string StringUtils::formatString(const char* format, ...)
     return std::string(buffer.get(), buffer.get() + size);
 }
 
+std::string StringUtils::formatVector(const std::vector<float>& vec,
+                                      int precision)
+{
+    std::ostringstream oss;
+
+    for (auto it = vec.begin(); it != vec.end(); ++it) {
+        if (it != vec.begin()) {
+            oss << ", ";
+        }
+
+        float value = *it;
+        if (value - static_cast<int>(value) != 0) {
+            oss << std::fixed << std::setprecision(precision) << value;
+        } else {
+            oss << static_cast<int>(value);
+        }
+    }
+
+    return oss.str();
+}
+
+std::string StringUtils::formatMatrix(const std::vector<float>& vec,
+                                      int precision)
+{
+    if (vec.size() < 16) {
+        return "Insufficient elements for a 4x4 matrix.";
+    }
+
+    std::ostringstream oss;
+
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (j != 0) {
+                oss << ", ";
+            }
+
+            float value = vec[i * 4 + j];
+            if (value - static_cast<int>(value) != 0) {
+                oss << std::setw(precision + 3) << std::fixed
+                    << std::setprecision(precision) << value;
+            } else {
+                oss << std::setw(precision + 3) << std::fixed
+                    << std::setprecision(precision) << static_cast<int>(value);
+            }
+        }
+        if (i != 3) {
+            oss << "\n";
+        }
+    }
+
+    return oss.str();
+}
+
 size_t utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {

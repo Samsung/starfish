@@ -72,6 +72,13 @@ public:
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
     void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
     void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
+    void blendColor(GLclampf red, GLclampf green, GLclampf blue,
+                    GLclampf alpha);
+    void blendEquation(GLenum mode);
+    void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
+    void blendFunc(GLenum sfactor, GLenum dfactor);
+    void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha,
+                           GLenum dstAlpha);
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
     void clearDepth(GLclampf depth);
@@ -88,11 +95,13 @@ public:
     void depthMask(GLboolean flag);
     void depthFunc(GLenum func);
     void disable(GLenum cap);
+    void disableVertexAttribArray(GLuint index);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
     void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
     void frontFace(GLenum mode);
+    void generateMipmap(GLenum target);
     WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
     WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
     GLint getAttribLocation(WebGLProgram* program, String* name);
@@ -103,23 +112,27 @@ public:
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
     String* getShaderInfoLog(WebGLShader* shader);
     String* getShaderSource(WebGLShader* shader);
+    ScriptValue getUniform(WebGLProgram* program,
+                           WebGLUniformLocation* location);
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
-    void uniform1f(WebGLUniformLocation* uniform, GLfloat x);
-    void uniform2f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y);
-    void uniform3f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y,
-                   GLfloat z);
-    void uniform4f(WebGLUniformLocation* uniform, GLfloat x, GLfloat y,
-                   GLfloat z, GLfloat w);
-    void uniform1i(WebGLUniformLocation* uniform, GLint x);
-    void uniform2i(WebGLUniformLocation* uniform, GLint x, GLint y);
-    void uniform3i(WebGLUniformLocation* uniform, GLint x, GLint y, GLint z);
-    void uniform4i(WebGLUniformLocation* uniform, GLint x, GLint y, GLint z,
-                   GLint w);
+    void uniform1f(Nullable<WebGLUniformLocation*> uniform, GLfloat x);
+    void uniform2f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+                   GLfloat y);
+    void uniform3f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+                   GLfloat y, GLfloat z);
+    void uniform4f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+                   GLfloat y, GLfloat z, GLfloat w);
+    void uniform1i(Nullable<WebGLUniformLocation*> uniform, GLint x);
+    void uniform2i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y);
+    void uniform3i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y,
+                   GLint z);
+    void uniform4i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y,
+                   GLint z, GLint w);
     void useProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
     void stencilMask(GLuint mask);

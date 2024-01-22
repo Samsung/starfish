@@ -66,7 +66,7 @@ static bool createEGLDisplay(EGLDisplay& display, EGLConfig& config)
             EGL_BLUE_SIZE,
             8,
             EGL_ALPHA_SIZE,
-            0,
+            8,
             EGL_DEPTH_SIZE,
             16,
             EGL_STENCIL_SIZE,

@@ -1575,6 +1575,10 @@ public:
     static std::string createAlignedString(
         const std::vector<std::string>& strings, const size_t numColumns);
     static std::string formatString(const char* format, ...);
+    static std::string formatVector(const std::vector<float>& vec,
+                                    int precision = 16);
+    static std::string formatMatrix(const std::vector<float>& vec,
+                                    int precision = 16);
     template <typename Key, typename Value>
     static std::string createTableString(const int padding, const Key& key,
                                          const Value& value)
