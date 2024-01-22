@@ -21,60 +21,92 @@
 
 #include "WebGLExtensions.h"
 #include "core/util/String.h"
-#include "core/util/String.h"
 #include <unordered_set>
 #include "platform/canvas/webgl/GLES.h" // glGetString
+#include "core/modules/worker/util/Trace.h"
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <EscargotPublic.h>
+#include "binding/ScriptBindingInstance.h"
+#include "core/dom/canvas/WebGLOES_VertexArrayObject.h"
 
 namespace Starfish {
 
-#define SUPPORTED_GL_EXTENSIONS(V) \
-    V(OES_texture_float)           \
-    V(OES_texture_half_float)
-
-#define V(name)                                 \
-    Escargot::FunctionObjectRef* binding##name( \
-        ScriptBindingInstance* scriptBindingInstance);
-
-SUPPORTED_GL_EXTENSIONS(V);
-#undef V
-
-WebGLExtensionRegistry& WebGLExtensionRegistry::instance()
-{
-    static WebGLExtensionRegistry instance;
-    return instance;
-}
-
 WebGLExtensionRegistry::WebGLExtensionRegistry()
 {
-    // 1. Get a list of extensions supported by this device
+    // 1. Get a list of extensions supported on this device
     const std::string rawString =
         reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
 
-    std::vector<std::string> tokens = StringUtils::split(rawString, ' ');
-    STARFISH_LOG_DEBUG("GL_EXTENSIONS =\n%s",
-                       StringUtils::createAlignedString(tokens, 3).c_str());
+    // WebGL uses extension names without the 'GL_' prefix.
+    std::vector<std::string> tokens;
+    std::stringstream ss(rawString);
+    std::string token;
+    while (getline(ss, token, ' ')) {
+        if (token.substr(0, 3) == "GL_") {
+            tokens.push_back(token.substr(3));
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+
+    TRACEF(WEBGL, "GL_EXTENSIONS =\n%s",
+           StringUtils::createAlignedString(tokens, 3));
 
     std::unordered_set<std::string> glExtensions;
     for (const std::string& token : tokens) {
         glExtensions.emplace(token);
     }
 
-    // 2. Register only extensions that have the interface binding implemented.
-#define V(name)                                                      \
-    if (glExtensions.find("GL_" #name) != glExtensions.end()) {      \
-        m_interfaceGenerators[#name] = binding##name;                \
-    } else {                                                         \
-        STARFISH_LOG_WARN(#name " is not supported by this device"); \
+    // 2. Add generators for extensions not requiring binding to native objects
+
+#define SUPPORTED_GL_EXTENSIONS(V) \
+    V(OES_texture_float)           \
+    V(OES_texture_half_float)      \
+    V(EXT_blend_minmax)
+
+#define V(name)                                                              \
+    if (glExtensions.find(#name) != glExtensions.end()) {                    \
+        m_interfaceGenerators[#name] =                                       \
+            [](ScriptBindingInstance* instance,                              \
+               WebGLRenderingContext*) -> Escargot::ObjectRef* {             \
+            return createScriptObject(instance, instance->fn##name(), #name, \
+                                      nullptr);                              \
+        };                                                                   \
+    } else {                                                                 \
+        STARFISH_LOG_WARN(#name " is not supported on this device");         \
     }
     SUPPORTED_GL_EXTENSIONS(V);
 #undef V
+#undef SUPPORTED_GL_EXTENSIONS
+
+    // 3. Add generators for extensions bound with native objects
+
+#define SUPPORTED_GL_EXTENSIONS(V) V(OES_vertex_array_object)
+
+#define V(name)                                                                \
+    if (glExtensions.find(#name) != glExtensions.end()) {                      \
+        m_interfaceGenerators[#name] =                                         \
+            [](ScriptBindingInstance* instance,                                \
+               WebGLRenderingContext* glContext) -> Escargot::ObjectRef* {     \
+            return (new name(instance, glContext))->scriptValue()->asObject(); \
+        };                                                                     \
+    } else {                                                                   \
+        STARFISH_LOG_WARN(#name " is not supported on this device");           \
+    }
+    SUPPORTED_GL_EXTENSIONS(V);
+#undef V
+#undef SUPPORTED_GL_EXTENSIONS
 }
 
-#undef SUPPORTED_GL_EXTENSIONS
+WebGLExtensionRegistry& WebGLExtensionRegistry::instance()
+{
+    static WebGLExtensionRegistry instance;
+    return instance;
+}
 
 GCVector<String*> WebGLExtensionRegistry::getSupportedExtensions()
 {

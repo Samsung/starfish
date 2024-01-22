@@ -32,6 +32,10 @@ typedef unsigned int GLuint;
 typedef unsigned int GLenum;
 #endif
 
+#ifndef GLboolean
+typedef unsigned char GLboolean;
+#endif
+
 #ifndef GL_NONE
 #define GL_NONE 0
 #endif

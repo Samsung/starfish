@@ -1,0 +1,14 @@
+// 5. OES_vertex_array_object
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface WebGLVertexArrayObjectOES : WebGLObject {
+};
+
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_vertex_array_object {
+    const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
+
+    WebGLVertexArrayObjectOES? createVertexArrayOES();
+    undefined deleteVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+    undefined bindVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+};
