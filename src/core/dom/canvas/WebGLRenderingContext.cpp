@@ -1459,6 +1459,133 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     }
 }
 
+void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
+                                       GLsizei height, GLenum format,
+                                       GLenum type,
+                                       Nullable<ScriptArrayBufferView> pixels)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (pixels.hasValue()) {
+        ArrayBufferViewRef* pixelsView = pixels.getValue();
+
+        // 1. If the types don't match, an INVALID_OPERATION error is generated.
+        if (type == GL_UNSIGNED_BYTE &&
+            (!pixelsView->isUint8ArrayObject() &&
+             !pixelsView->isUint8ClampedArrayObject())) {
+            // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
+            // must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        } else if ((type == GL_UNSIGNED_SHORT_5_6_5 ||
+                    type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+                    type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+                   !pixelsView->isUint16ArrayObject()) {
+            // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
+            // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        } else if ((type == GL_FLOAT) && !pixelsView->isFloat32ArrayObject()) {
+            // if it is FLOAT, a Float32Array must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        // 2. Only two combinations of format and type are accepted. The first
+        //    is format RGBA and type UNSIGNED_BYTE. The second is an
+        //    implementation-chosen format.
+
+        // As for webgl/1.0.3/conformance/reading/read-pixels-test.html:162,
+        // GL_INVALID_ENUM needs to be set for the luminance.
+        if ((format == GL_LUMINANCE || format == GL_LUMINANCE_ALPHA) &&
+            type == GL_UNSIGNED_BYTE) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+
+        // NOTE: Our implementation-chosen is a combination of RGBA and
+        // UNSIGNED_BYTE. See kIMPLEMENTATION_COLOR_READ_TYPE and
+        // kIMPLEMENTATION_COLOR_READ_FORMAT.
+        if (format != GL_RGBA && type != GL_UNSIGNED_BYTE) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
+        size_t byteLengthOfPixels = width * height * bytesPerPixel;
+        size_t byteLengthOfView = pixels->byteLength();
+
+        TRACEF(WEBGL, "\n%s",
+               StringUtils::createTableString(
+                   20, KV(width), KV(height), KV(bytesPerPixel),
+                   KV(byteLengthOfView), KV(byteLengthOfPixels)));
+
+        if (byteLengthOfView < byteLengthOfPixels) {
+            // If pixels is non-null, but is not large enough to retrieve all of
+            // the pixels in the specified rectangle taking into account pixel
+            // store modes, an INVALID_OPERATION error is generated.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        /*
+            For any pixel lying outside the frame buffer, the corresponding
+            destination buffer range remains untouched; see Reading Pixels
+            Outside the Framebuffer.
+
+            TODO: 6.11 Reading Pixels Outside the Framebuffer
+
+            For [Read Operations], reads from out-of-bounds pixels sub-areas do
+            not touch their corresponding destination sub-areas.
+
+            WebGL (behaves as if it) pre-initializes resources to zeros.
+            Therefore for example copyTexImage2D will have zeros in sub-areas
+            that correspond to out-of-bounds framebuffer reads.
+        */
+
+        if (x != 0 || y != 0) {
+            STARFISH_UNIMPLEMENTED("Reading Pixels Outside the Framebuffer");
+        }
+
+        /*
+            TODO: 6.28 Reading From a Missing Attachment
+
+            In the OpenGL ES 2.0 API, it is not specified what happens when a
+            command tries to source data from a missing attachment, such as
+            ReadPixels of color data from a complete framebuffer that does not
+            have a color attachment.
+
+            In the WebGL API, any [Read Operations] that require data from an
+            attachment that is missing will generate an INVALID_OPERATION error.
+        */
+
+        /*
+            TODO: 6.29 Drawing To a Missing Attachment
+
+            If this function attempts to read from a complete framebuffer with a
+            missing color attachment, an INVALID_OPERATION error is generated
+            per Reading from a Missing Attachment.
+
+            In the OpenGL ES 2.0 API, it is not specified what happens when a
+            command tries to draw to a missing attachment, such as clearing a
+            draw buffer from a complete framebuffer that does not have a color
+            attachment.
+
+            In the WebGL API, any [Draw Operations] that draw to an attachment
+            that is missing will draw nothing to that attachment. No error is
+            generated.
+        */
+
+        GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
+
+        glReadPixels(x, y, width, height, format, type, data);
+
+    } else {
+        // If pixels is null, an INVALID_VALUE error is generated.
+        setGLError(GL_INVALID_VALUE);
+    }
+}
+
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        GLint internalFormat, GLenum format,
                                        GLenum type, TexImageSource source)

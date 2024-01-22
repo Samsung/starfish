@@ -24,7 +24,7 @@ interface WebGLRenderingContextOverloads
                                       GLsizei width, GLsizei height, GLenum format,
                                       [AllowShared] ArrayBufferView data);
 
-    [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+    undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                          GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
 
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
