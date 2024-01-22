@@ -23,6 +23,7 @@
 #include "WebGLRenderingContextBaseMixIn.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/canvas/webgl/GLES.h"
@@ -62,6 +63,7 @@ void WebGLRenderingContextBaseMixIn::initialize()
 
     // Create a surface for this rendering context
     {
+        TRACE(WEBGL, KV(width), KV(height));
         GLContextScope scope(m_context);
         SurfaceCreationScope surfaceScope(m_framebufferTexture);
         m_canvasSurface = CanvasSurface::create(
