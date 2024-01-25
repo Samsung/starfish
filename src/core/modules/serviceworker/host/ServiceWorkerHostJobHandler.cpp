@@ -25,19 +25,19 @@
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "platform/loader/ResourceURL.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/threading/IRunnable.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "platform/loader/ResourceURL.h"
 #include "platform/network/http/HTTPStatus.h"
-
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/JobQueue.h"
@@ -54,6 +54,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+
 namespace Starfish {
 
 class FetchClient : public ResourceRequestClient {
@@ -207,7 +208,7 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
     : m_messageLoop(messageLoop)
     , m_SWServer(swserver)
     , m_registrationStore(new RegistrationStoreLocalStorage(
-          starfish->serviceWorkerOption()->dataDirectoryPath()))
+          starfish->workerManager()->workerSettings()->dataDirectoryPath()))
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(swserver != nullptr);

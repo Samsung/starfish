@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,30 +17,15 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishRegistrationManager__)
-#define __StarfishRegistrationManager__
+#pragma once
 
-namespace Starfish {
+#ifdef STARFISH_ENABLE_WORKER
 
-class WorkerSettings;
-class RegistrationStore;
+#include "core/util/GlobalOptions.h"
+#include "core/modules/worker/util/Trace.h"
 
-class RegistrationManager : public gc {
-public:
-    RegistrationManager(WorkerSettings* settings);
-
-    void refreshRegistrationList(const std::string path = "");
-
-    bool isActivatedRegistration(String* scope);
-    void startRegisteredServiceWorkerContext(
-        ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
-        String* scope);
-
-private:
-    RegistrationStore* m_registrationStore;
-};
-
-} // namespace Starfish
+// PATHS
+#define PATH_TMP_DIR "/tmp"
+#define PATH_IPC_DIR "/.ipc"
 
 #endif

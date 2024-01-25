@@ -29,14 +29,13 @@
 #include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/Message.h"
 #include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
+#include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
-
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"

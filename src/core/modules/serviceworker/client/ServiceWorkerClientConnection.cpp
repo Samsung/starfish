@@ -34,8 +34,8 @@
 #include "core/dom/DOMException.h"
 #include "core/page/GlobalScope.h"
 
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"

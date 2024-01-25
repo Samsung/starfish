@@ -28,9 +28,9 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/util/Trace.h"
-#include "core/modules/serviceworker/PerProcess.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
-#include "core/modules/serviceworker/util/LocalStorageHelper.h"
+#include "core/modules/worker/util/LocalStorageHelper.h"
+#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/notification/NotificationService.h"
@@ -263,7 +263,7 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
 void ServiceWorkerAgent::createLocalStorageRootDir()
 {
     LocalStorageHelper::File::mkdirIfNotExists(
-        m_starfish->serviceWorkerOption()->dataDirectoryPath());
+        m_starfish->workerManager()->workerSettings()->dataDirectoryPath());
 }
 
 } // namespace Starfish

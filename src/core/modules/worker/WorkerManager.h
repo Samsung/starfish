@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,30 +17,48 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishRegistrationManager__)
-#define __StarfishRegistrationManager__
+#if defined(STARFISH_USE_WORKER_PROCESS)
+
+#ifndef __StarfishWorkerManager__
+#define __StarfishWorkerManager__
 
 namespace Starfish {
 
+class WorkerHostManager;
+class WorkerClientManager;
 class WorkerSettings;
-class RegistrationStore;
+class PerProcess;
 
-class RegistrationManager : public gc {
+class WorkerManager : public gc {
 public:
-    RegistrationManager(WorkerSettings* settings);
+    static WorkerManager* create();
 
-    void refreshRegistrationList(const std::string path = "");
+    virtual bool isWorkerHostManager() const
+    {
+        return false;
+    }
 
-    bool isActivatedRegistration(String* scope);
-    void startRegisteredServiceWorkerContext(
-        ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
-        String* scope);
+    virtual bool isWorkerClientManager() const
+    {
+        return false;
+    }
 
-private:
-    RegistrationStore* m_registrationStore;
+    virtual void destroy();
+
+    WorkerHostManager* asWorkerHostManager();
+    WorkerClientManager* asWorkerClientManager();
+
+    DEFINE_GETTER(WorkerSettings*, workerSettings);
+    DEFINE_GETTER(PerProcess*, perProcess);
+
+protected:
+    WorkerManager();
+
+    WorkerSettings* m_workerSettings{ nullptr };
+    PerProcess* m_perProcess{ nullptr };
 };
 
 } // namespace Starfish
 
+#endif
 #endif

@@ -17,23 +17,23 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_USE_WORKER_PROCESS)
 
-#include "PerProcess.h"
 #include "StarfishConfig.h"
-#include "core/modules/threading/ThreadPool.h"
-#include "core/modules/threading/AdaptedThread.h"
-#include "core/modules/threading/IRunnable.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/modules/worker/util/Trace.h"
-#include "core/modules/serviceworker/util/LocalStorageHelper.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
-
-#include "core/util/String.h"
 #include "platform/file/PlatformDirectory.h"
-#include "core/modules/serviceworker/Connection.h"
+#include "core/util/String.h"
+
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
+#include "core/modules/worker/util/LocalStorageHelper.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/message_loop/MessageLoop.h"
+
+#include "core/modules/worker/PerProcess.h"
 
 namespace Starfish {
 
@@ -69,7 +69,7 @@ public:
     }
 };
 
-PerProcess::PerProcess()
+PerProcess::PerProcess(WorkerSettings* settings)
 {
     LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
         if (GlobalOptions::instance().has("TRACE", id.c_str())) {
@@ -82,29 +82,42 @@ PerProcess::PerProcess()
     static bool isOnceCreated = false;
     STARFISH_ASSERT(!isOnceCreated);
     isOnceCreated = true;
+
+    m_workerSettings = settings;
 }
 
-void PerProcess::initialize(size_t threadPoolSize, ServiceWorkerOption* option)
+void PerProcess::initialize()
 {
     TRACE_SCOPE(PERPROC);
+    if (m_isInitialized) {
+        return;
+    }
 
-    ProcessResource::acquire(option->dataDirectoryPath());
-    option->addOnChangeDataDirectoryPathCallback([](const std::string& path) {
-        ProcessResource::release();
-        ProcessResource::acquire(path);
-    });
+    ProcessResource::acquire(m_workerSettings->dataDirectoryPath());
+    m_workerSettings->addOnChangeDataDirectoryPathCallback(
+        [](const std::string& path) {
+            ProcessResource::release();
+            ProcessResource::acquire(path);
+        });
 
     m_messageLoop = MessageLoop::create();
 
-    m_threadPool = new ThreadPool(threadPoolSize, m_messageLoop);
+    m_threadPool =
+        new ThreadPool(m_workerSettings->threadPoolSize(), m_messageLoop);
     m_ioRunnable = new IORunnable(m_messageLoop, IO_EVENT_POLLING_TIMEOUT_MS);
     m_ioThread = new AdaptedThread(m_threadPool);
 
     m_ioThread->start(m_ioRunnable);
+
+    m_isInitialized = true;
 }
 
 void PerProcess::destroy()
 {
+    if (!m_isInitialized) {
+        return;
+    }
+
     TRACE_SCOPE(PERPROC);
     STARFISH_ASSERT(m_ioThread);
     STARFISH_ASSERT(m_threadPool);
@@ -119,6 +132,18 @@ void PerProcess::destroy()
     m_messageLoop->destroy();
 
     ProcessResource::release();
+}
+
+Nullable<WorkerSettings::ProcessExecutorCallback>
+PerProcess::workerProcessExecutor()
+{
+    WorkerSettings::ProcessExecutorCallback executor =
+        m_workerSettings->workerProcessExecutor();
+    if (!executor) {
+        return Nullable<WorkerSettings::ProcessExecutorCallback>();
+    }
+
+    return Nullable<WorkerSettings::ProcessExecutorCallback>(executor);
 }
 
 } // namespace Starfish

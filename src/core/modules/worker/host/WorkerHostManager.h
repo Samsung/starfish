@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,30 +17,33 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishRegistrationManager__)
-#define __StarfishRegistrationManager__
+#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
+
+#ifndef __StarfishWorkerHostManager__
+#define __StarfishWorkerHostManager__
+
+#include "core/modules/worker/WorkerManager.h"
 
 namespace Starfish {
 
-class WorkerSettings;
-class RegistrationStore;
+class ServiceWorkerProcessManager;
 
-class RegistrationManager : public gc {
+class WorkerHostManager : public WorkerManager {
+    friend class WorkerManager;
+
 public:
-    RegistrationManager(WorkerSettings* settings);
-
-    void refreshRegistrationList(const std::string path = "");
-
-    bool isActivatedRegistration(String* scope);
-    void startRegisteredServiceWorkerContext(
-        ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
-        String* scope);
+    bool isWorkerHostManager() const override
+    {
+        return true;
+    }
 
 private:
-    RegistrationStore* m_registrationStore;
+    WorkerHostManager();
+
+    static const size_t s_threadPoolSize = 5;
 };
 
 } // namespace Starfish
 
+#endif
 #endif

@@ -33,10 +33,12 @@
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
 
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
+#include "core/modules/worker/PerProcess.h"
+
 #include "core/dom/ExecutionContext.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
@@ -50,8 +52,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-
-#include "core/modules/serviceworker/PerProcess.h"
 
 namespace Starfish {
 

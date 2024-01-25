@@ -17,13 +17,12 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerOption__)
-#define __StarfishServiceWorkerOption__
+#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(__StarfishWorkerSettings__)
+#define __StarfishWorkerSettings__
 
 namespace Starfish {
 
-class ServiceWorkerOption : public gc {
+class WorkerSettings : public gc {
 public:
     using ProcessExecutorCallback = std::function<bool()>;
     using OnChangeDataDirectoryPathCallback =
@@ -31,7 +30,8 @@ public:
 
     static std::string getDefaultDataDirectoryPath();
 
-    ServiceWorkerOption(const std::string& dataDirectoryPath);
+    WorkerSettings();
+    WorkerSettings(const std::string& dataDirectoryPath);
 
     void setDataDirectoryPath(const std::string& path);
     const std::string dataDirectoryPath()
@@ -39,22 +39,34 @@ public:
         return m_dataDirectoryPath;
     }
 
-    void setServiceWorkerProcessExecutor(
-        const ProcessExecutorCallback& swExecutor)
+    void setWorkerProcessExecutor(const ProcessExecutorCallback& executor)
     {
-        m_swExecutor = swExecutor;
+        m_processExecutor = executor;
     }
-    ProcessExecutorCallback serviceWorkerProcessExecutor()
+    ProcessExecutorCallback workerProcessExecutor()
     {
-        return m_swExecutor;
+        return m_processExecutor;
     }
 
     void addOnChangeDataDirectoryPathCallback(
         OnChangeDataDirectoryPathCallback callback);
 
+    void setProcessName(const std::string& name)
+    {
+        m_processName = name;
+    }
+    std::string processName()
+    {
+        return m_processName;
+    }
+
+    DEFINE_GETTER_SETTER(size_t, threadPoolSize, ThreadPoolSize);
+
 private:
     std::string m_dataDirectoryPath;
-    ProcessExecutorCallback m_swExecutor{ nullptr };
+    std::string m_processName;
+    ProcessExecutorCallback m_processExecutor{ nullptr };
+    size_t m_threadPoolSize = 1;
 
     std::vector<OnChangeDataDirectoryPathCallback>
         m_onChangeDataDirectoryPathCallbacks;

@@ -17,30 +17,46 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishRegistrationManager__)
-#define __StarfishRegistrationManager__
+#if defined(STARFISH_USE_WORKER_PROCESS)
+
+#ifndef __StarfishPerProcess__
+#define __StarfishPerProcess__
+
+#include "core/modules/worker/WorkerSettings.h"
 
 namespace Starfish {
 
+class IThread;
+class ThreadPool;
+class IORunnable;
+class MessageLoop;
 class WorkerSettings;
-class RegistrationStore;
 
-class RegistrationManager : public gc {
+class PerProcess : public gc {
 public:
-    RegistrationManager(WorkerSettings* settings);
+    PerProcess(WorkerSettings *settings);
+    ~PerProcess() = default;
 
-    void refreshRegistrationList(const std::string path = "");
+    DEFINE_GETTER(IORunnable *, ioRunnable);
+    DEFINE_GETTER(ThreadPool *, threadPool);
+    DEFINE_GETTER(MessageLoop *, messageLoop);
+    DEFINE_GETTER(WorkerSettings *, workerSettings);
 
-    bool isActivatedRegistration(String* scope);
-    void startRegisteredServiceWorkerContext(
-        ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
-        String* scope);
+    void initialize();
+    void destroy();
+
+    Nullable<WorkerSettings::ProcessExecutorCallback> workerProcessExecutor();
 
 private:
-    RegistrationStore* m_registrationStore;
+    MessageLoop *m_messageLoop{ nullptr };
+    ThreadPool *m_threadPool{ nullptr };
+    IThread *m_ioThread{ nullptr };
+    IORunnable *m_ioRunnable{ nullptr };
+    WorkerSettings *m_workerSettings{ nullptr };
+    bool m_isInitialized{ false };
 };
 
 } // namespace Starfish
 
+#endif
 #endif

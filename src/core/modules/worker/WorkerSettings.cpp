@@ -17,17 +17,15 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_USE_WORKER_PROCESS
 
 #include "StarfishConfig.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/modules/threading/Thread.h"
-#include "core/util/GlobalOptions.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/WorkerSettings.h"
 
 namespace Starfish {
 
-std::string ServiceWorkerOption::getDefaultDataDirectoryPath()
+std::string WorkerSettings::getDefaultDataDirectoryPath()
 {
     std::string dataDirectoryPath;
 
@@ -37,14 +35,19 @@ std::string ServiceWorkerOption::getDefaultDataDirectoryPath()
     } else {
         dataDirectoryPath = homeDirectoryPath;
     }
-    dataDirectoryPath += "/starfish-sw-data";
+    dataDirectoryPath += "/starfish-worker-data";
 
     TRACE(SVCWORKER, dataDirectoryPath.data());
 
     return dataDirectoryPath;
 }
 
-ServiceWorkerOption::ServiceWorkerOption(const std::string &dataDirectoryPath)
+WorkerSettings::WorkerSettings()
+    : m_dataDirectoryPath(getDefaultDataDirectoryPath())
+{
+}
+
+WorkerSettings::WorkerSettings(const std::string &dataDirectoryPath)
     : m_dataDirectoryPath(dataDirectoryPath)
 {
     if (m_dataDirectoryPath.empty()) {
@@ -52,13 +55,13 @@ ServiceWorkerOption::ServiceWorkerOption(const std::string &dataDirectoryPath)
     }
 }
 
-void ServiceWorkerOption::setDataDirectoryPath(const std::string &path)
+void WorkerSettings::setDataDirectoryPath(const std::string &path)
 {
     if (m_dataDirectoryPath == path) {
         return;
     }
 
-    TRACEF(SVCWORKER, "Change service worker working dir: %s -> %s",
+    TRACEF(SVCWORKER, "Change worker working dir: %s -> %s",
            m_dataDirectoryPath.data(), path.data());
     m_dataDirectoryPath = path;
 
@@ -67,7 +70,7 @@ void ServiceWorkerOption::setDataDirectoryPath(const std::string &path)
     }
 }
 
-void ServiceWorkerOption::addOnChangeDataDirectoryPathCallback(
+void WorkerSettings::addOnChangeDataDirectoryPathCallback(
     OnChangeDataDirectoryPathCallback callback)
 {
     m_onChangeDataDirectoryPathCallbacks.push_back(callback);
@@ -75,4 +78,4 @@ void ServiceWorkerOption::addOnChangeDataDirectoryPathCallback(
 
 } // namespace Starfish
 
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif // #ifdef STARFISH_ENABLE_WORKER

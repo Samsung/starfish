@@ -17,15 +17,14 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_USE_WORKER_PROCESS
 
 #include "StarfishConfig.h"
-
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
 
 #include "core/modules/threading/IRunnable.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
 
 #include <nanomsg/nn.h>
 #include <nanomsg/pair.h>
@@ -33,7 +32,7 @@
 #include <nanomsg/pubsub.h>
 #include <nanomsg/reqrep.h>
 
-#include "core/modules/serviceworker/SocketNN.h"
+#include "core/modules/worker/util/network/SocketNN.h"
 
 namespace Starfish {
 

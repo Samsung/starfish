@@ -25,7 +25,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/WebOrigin.h"
 
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"

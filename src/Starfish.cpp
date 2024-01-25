@@ -26,20 +26,15 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/util/LineBreakerIteratorPool.h"
 #include "core/modules/profiling/Profiling.h"
+#include "core/modules/worker/WorkerManager.h"
 
 #include "LWEWebView.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/http/HTTPCache.h"
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-#include "core/modules/serviceworker/PerProcess.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
-#endif
-
 #include "core/util/Id.h"
 #include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {
@@ -147,20 +142,8 @@ Starfish::Starfish(const char* localStorageFilePath,
     }
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-#if !defined(STARFISH_WEBWORKER_HOST)
-    size_t threadPoolSize = 1;
-#else
-    size_t threadPoolSize = 5;
-#endif
-
-    m_perProcess = new PerProcess;
-    m_serviceWorkerOption = new ServiceWorkerOption("");
-    m_perProcess->initialize(threadPoolSize, m_serviceWorkerOption);
-#if !defined(STARFISH_WEBWORKER_HOST)
-    m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
-    m_serviceWorkerProcessManager->init(m_perProcess, m_serviceWorkerOption);
-#endif
+#if defined(STARFISH_USE_WORKER_PROCESS)
+    m_workerManager = WorkerManager::create();
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE
@@ -184,17 +167,11 @@ void Starfish::destroy()
     }
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-    if (m_perProcess) {
-        m_perProcess->destroy();
-        m_perProcess = nullptr;
+#if defined(STARFISH_USE_WORKER_PROCESS)
+    if (m_workerManager) {
+        m_workerManager->destroy();
+        m_workerManager = nullptr;
     }
-#if !defined(STARFISH_WEBWORKER_HOST)
-    if (m_serviceWorkerProcessManager) {
-        m_serviceWorkerProcessManager->destroy();
-        m_serviceWorkerProcessManager = nullptr;
-    }
-#endif
 #endif
 
     delete m_lineBreakIteratorPool;
