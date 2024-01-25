@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,36 +17,40 @@
  *  USA
  */
 
-#pragma once
+#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(STARFISH_WEBWORKER_HOST)
 
-#include <GCUtil.h>
-#include <StarfishBase.h>
+#ifndef __StarfishWorkerClientManager__
+#define __StarfishWorkerClientManager__
+
+#include "core/modules/worker/WorkerManager.h"
 
 namespace Starfish {
 
-class IThread;
-class ThreadPool;
-class IORunnable;
-class MessageLoop;
-class ServiceWorkerOption;
+class ServiceWorkerProcessManager;
+class SharedWorkerProcessManager;
 
-class PerProcess : public gc {
+class WorkerClientManager : public WorkerManager {
+    friend class WorkerManager;
+
 public:
-    PerProcess();
-    ~PerProcess() = default;
+    bool isWorkerClientManager() const override
+    {
+        return true;
+    }
 
-    DEFINE_GETTER(IORunnable *, ioRunnable);
-    DEFINE_GETTER(ThreadPool *, threadPool);
-    DEFINE_GETTER(MessageLoop *, messageLoop);
-
-    void initialize(size_t threadPoolSize, ServiceWorkerOption *option);
-    void destroy();
+    virtual void destroy() override;
 
 private:
-    MessageLoop *m_messageLoop{ nullptr };
-    ThreadPool *m_threadPool{ nullptr };
-    IThread *m_ioThread{ nullptr };
-    IORunnable *m_ioRunnable{ nullptr };
+    static const size_t s_threadPoolSize = 2;
+
+    WorkerClientManager();
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
+#endif
 };
 
 } // namespace Starfish
+
+#endif
+#endif

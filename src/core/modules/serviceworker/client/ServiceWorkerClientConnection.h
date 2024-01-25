@@ -21,7 +21,7 @@
     !defined(__StarfishServiceWorkerClientConnection__)
 #define __StarfishServiceWorkerClientConnection__
 
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 

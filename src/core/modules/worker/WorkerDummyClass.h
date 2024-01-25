@@ -20,8 +20,7 @@
 #if !defined(__StarfishWorkerDummyClass__)
 #define __StarfishWorkerDummyClass__
 
-// These dummy classes are only needed for the process version of the service
-// worker.
+// These dummy classes are only needed for the process version of the worker.
 
 namespace Starfish {
 

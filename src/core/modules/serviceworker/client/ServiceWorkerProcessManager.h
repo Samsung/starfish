@@ -39,8 +39,8 @@ class PushServiceAgent;
 class ServiceWorkerFetchTask;
 class FetchEventHandler;
 class String;
-class ServiceWorkerOption;
 class RegistrationManager;
+class WorkerSettings;
 
 struct ProcessData {
     ProcessData()
@@ -59,7 +59,7 @@ public:
     static ServiceWorkerProcessManager* instance();
     static std::string createAddress(const std::string& lastAddress = "");
 
-    void init(PerProcess* perProcess, ServiceWorkerOption* option);
+    void init(PerProcess* perProcess);
     void destroy();
 
     ServiceWorkerClientConnection* getConnection(String* originSerialized);
@@ -92,7 +92,6 @@ private:
     static ServiceWorkerProcessManager* m_instance;
 
     PerProcess* m_perProcess{ nullptr };
-    ServiceWorkerOption* m_option{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
     RegistrationManager* m_registrationManager{ nullptr };

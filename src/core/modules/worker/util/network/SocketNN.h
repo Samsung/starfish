@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifndef __StarfishSocketNN__
+#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(__StarfishSocketNN__)
 #define __StarfishSocketNN__
 #include "core/modules/networking/Socket.h"
 

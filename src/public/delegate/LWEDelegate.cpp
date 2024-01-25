@@ -26,10 +26,6 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/ExecutionContext.h"
 
-#if defined(STARFISH_WEBWORKER_HOST)
-#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#endif
-
 #include "core/page/Window.h"
 
 #include <EscargotPublic.h>

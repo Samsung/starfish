@@ -21,24 +21,24 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
-#include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/RegistrationManager.h"
 
 namespace Starfish {
 
-RegistrationManager::RegistrationManager(ServiceWorkerOption* option)
+RegistrationManager::RegistrationManager(WorkerSettings* settings)
     : m_registrationStore(
-          new RegistrationStoreLocalStorage(option->dataDirectoryPath()))
+          new RegistrationStoreLocalStorage(settings->dataDirectoryPath()))
 {
     refreshRegistrationList();
 
-    option->addOnChangeDataDirectoryPathCallback(
+    settings->addOnChangeDataDirectoryPathCallback(
         [this](const std::string& path) { refreshRegistrationList(path); });
 }
 

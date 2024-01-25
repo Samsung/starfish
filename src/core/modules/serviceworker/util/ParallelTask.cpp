@@ -25,7 +25,7 @@
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/PerProcess.h"
+#include "core/modules/worker/PerProcess.h"
 #include "core/modules/threading/ThreadPool.h"
 
 namespace Starfish {

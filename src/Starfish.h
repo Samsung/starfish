@@ -33,9 +33,7 @@ class PlatformWindow;
 class NativeImageData;
 class LineBreakIteratorPool;
 class Mutex;
-class PerProcess;
-class ServiceWorkerProcessManager;
-class ServiceWorkerOption;
+class WorkerManager;
 class Profiler;
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
@@ -113,26 +111,15 @@ protected:
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;
 #endif
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_USE_WORKER_PROCESS)
 public:
-    PerProcess* perProcess()
+    WorkerManager* workerManager()
     {
-        return m_perProcess;
-    }
-
-    ServiceWorkerOption* serviceWorkerOption()
-    {
-        return m_serviceWorkerOption;
+        return m_workerManager;
     }
 
 protected:
-    PerProcess* m_perProcess{ nullptr };
-
-#if !defined(STARFISH_WEBWORKER_HOST)
-    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
-#endif
-    ServiceWorkerOption* m_serviceWorkerOption;
-
+    WorkerManager* m_workerManager{ nullptr };
 #endif // STARFISH_ENABLE_SERVICE_WORKER
 
     size_t m_webViewInstanceCount;

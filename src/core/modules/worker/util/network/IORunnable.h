@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_USE_WORKER_PROCESS)
 #ifndef __StarfishIORunnable__
 #define __StarfishIORunnable__
 

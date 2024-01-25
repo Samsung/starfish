@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_USE_WORKER_PROCESS)
 
 #include <fstream>
 #include <sstream>
@@ -25,8 +25,8 @@
 #include "StarfishConfig.h"
 
 #include "platform/file/PlatformDirectory.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/modules/serviceworker/util/LocalStorageHelper.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/util/LocalStorageHelper.h"
 
 #include <iostream>
 #include <vector>

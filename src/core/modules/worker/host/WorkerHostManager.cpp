@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,15 +17,23 @@
  *  USA
  */
 
-#pragma once
+#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#include "StarfishConfig.h"
 
-#include "core/util/GlobalOptions.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/PerProcess.h"
+#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/host/WorkerHostManager.h"
 
-// PATHS
-#define PATH_TMP_DIR "/tmp"
-#define PATH_IPC_DIR "/.ipc"
+namespace Starfish {
 
-#endif
+WorkerHostManager::WorkerHostManager()
+    : WorkerManager()
+{
+    m_workerSettings->setThreadPoolSize(s_threadPoolSize);
+    m_perProcess->initialize();
+}
+
+} // namespace Starfish
+
+#endif /* STARFISH_USE_WORKER_PROCESS */

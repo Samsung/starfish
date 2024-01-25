@@ -33,19 +33,18 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/WebOrigin.h"
 
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/PerProcess.h"
+#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/util/network/IORunnable.h"
+#include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/Message.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
-
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/FetchEventHandler.h"
-
-#include "core/modules/serviceworker/PerProcess.h"
 
 #if !defined(STARFISH_USE_WORKER_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
@@ -59,12 +58,10 @@ extern Starfish::Starfish* g_starfishInstance;
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
 #include <EscargotPublic.h>
 
 #include "core/modules/serviceworker/util/MessageQueue/MessageQueue.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
 
 #include <sys/stat.h>
 
@@ -86,8 +83,7 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
     return m_instance;
 }
 
-void ServiceWorkerProcessManager::init(PerProcess* perProcess,
-                                       ServiceWorkerOption* option)
+void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
@@ -95,9 +91,10 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess,
     Message::init();
 
     m_perProcess = perProcess;
-    m_option = option;
+    m_perProcess->initialize();
     m_pushServiceAgent = new PushServiceAgent();
-    m_registrationManager = new RegistrationManager(option);
+    m_registrationManager =
+        new RegistrationManager(perProcess->workerSettings());
 }
 
 void ServiceWorkerProcessManager::destroy()
@@ -200,9 +197,11 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 #if !defined(STARFISH_USE_WORKER_PROCESS)
         startWorkerOnThread("");
 #else
-        auto swProcessExecutor = m_option->serviceWorkerProcessExecutor();
-        if (swProcessExecutor) {
-            if (!swProcessExecutor()) {
+        auto swProcessExecutor = m_perProcess->workerProcessExecutor();
+        if (swProcessExecutor.hasValue()) {
+            WorkerSettings::ProcessExecutorCallback callback =
+                swProcessExecutor.value();
+            if (!callback()) {
                 STARFISH_LOG_ERROR("Fail to launch Service Worker process");
             }
         } else {

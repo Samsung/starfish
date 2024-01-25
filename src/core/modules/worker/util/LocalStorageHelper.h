@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+#if defined(STARFISH_USE_WORKER_PROCESS) && \
     !defined(__StarfishLocalStorageHelper__)
 #define __StarfishLocalStorageHelper__
 

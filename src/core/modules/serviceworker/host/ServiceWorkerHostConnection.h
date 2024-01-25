@@ -21,7 +21,7 @@
 #ifndef __StarfishServiceWorkerHostConnection__
 #define __StarfishServiceWorkerHostConnection__
 
-#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 
 namespace Starfish {

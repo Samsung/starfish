@@ -17,11 +17,11 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_USE_WORKER_PROCESS)
 #ifndef __StarfishConnection__
 #define __StarfishConnection__
 
-#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/worker/util/network/IORunnable.h"
 #include <string>
 
 namespace Starfish {

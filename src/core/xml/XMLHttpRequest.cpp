@@ -37,7 +37,7 @@
 #include "core/csp/SecurityPolicyViolationEvent.h"
 #include "platform/network/http/HTTPStatus.h"
 #include "platform/loader/ResourceLoader.h"
-#include "core/modules/serviceworker/ServiceWorkerDummyClass.h"
+#include "core/modules/worker/WorkerDummyClass.h"
 
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/dom/Document.h"

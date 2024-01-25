@@ -24,7 +24,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/host/WebWorker.h"
@@ -33,7 +33,8 @@
 #include "core/fetch/stream/ReadableStreamBuffer.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
+#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/WorkerManager.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/FetchCacheStream.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
@@ -205,7 +206,8 @@ void ServiceWorkerFetchJob::successJob()
         data->isCached = false;
         auto stream = new FetchCacheStream(ServiceWorkerAgent::instance()
                                                ->starfish()
-                                               ->serviceWorkerOption()
+                                               ->workerManager()
+                                               ->workerSettings()
                                                ->dataDirectoryPath(),
                                            true);
         stream->open("temp");

@@ -23,12 +23,12 @@
 
 namespace Starfish {
 
-class ServiceWorkerOption;
+class WorkerSettings;
 class RegistrationStore;
 
 class RegistrationManager : public gc {
 public:
-    RegistrationManager(ServiceWorkerOption* option);
+    RegistrationManager(WorkerSettings* settings);
 
     void refreshRegistrationList(const std::string path = "");
 
