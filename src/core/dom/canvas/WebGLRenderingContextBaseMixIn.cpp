@@ -49,12 +49,7 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
 void WebGLRenderingContextBaseMixIn::initialize()
 {
     STARFISH_ASSERT(m_canvasSurface == nullptr);
-
-    m_framebufferTexture = std::make_shared<FramebufferTexture>();
-
-    uint32_t width, height;
-    calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
-                       m_ownerHTMLCanvasElement->height());
+    STARFISH_ASSERT(!m_context.isValid());
 
     // Create a GL context for this rendering context
     if (!m_context.create(true)) {
@@ -62,21 +57,7 @@ void WebGLRenderingContextBaseMixIn::initialize()
     }
 
     // Create a surface for this rendering context
-    {
-        TRACE(WEBGL, KV(width), KV(height));
-        GLContextScope scope(m_context);
-        SurfaceCreationScope surfaceScope(m_framebufferTexture);
-        m_canvasSurface = CanvasSurface::create(
-            m_ownerHTMLCanvasElement->webView()->platformWindow(), width,
-            height, 1, CanvasSurface::CanvasElement);
-
-        // Seeing CompositorGL::initCompositorContextGl, by default a surface is
-        // mapped to u,v coordinates that are set to the opposite of the y-axis
-        // of the screen coordinates. This results in that m_canvasSurface is
-        // rendered upside down. We here set "FlipY is Needed" so that the
-        // compositor can flip the surface to render it correctly.
-        m_canvasSurface->setFlipYNeeded(true);
-    }
+    resetSurface();
 
     // NOTE: Register a disposer to ensure that it's invoked also when a
     // document, which owns this element, is disposed. We should not only rely
@@ -87,6 +68,55 @@ void WebGLRenderingContextBaseMixIn::initialize()
         this, [this]() { finalize(); });
 }
 
+void WebGLRenderingContextBaseMixIn::resetSurface()
+{
+    STARFISH_ASSERT(m_context.isValid());
+
+    uint32_t bufferWidth, bufferHeight;
+    bufferWidth = bufferHeight = 0;
+
+    // In terms of Surface, a canvas element has two dimensions: the size of the
+    // drawing buffer (the number of pixels on the canvas) and the display size
+    // of the canvas. The display size is affected by CSS. The value we need to
+    // set for FramebufferTexture here is the drawing buffer size.
+
+    // TODO: check that the value returned by calculateDimension is fit for
+    // the above requirement.
+
+    // calculateDimension also handles that HTMLCanvasElement.width and .height
+    // values less than 1 are treated as 1. A 0x0 canvas will yield a 1x1
+    // drawingBufferWidth/Height. (Refs: 2.2 The Drawing Buffer)
+    calculateDimension(bufferWidth, bufferHeight,
+                       m_ownerHTMLCanvasElement->width(),
+                       m_ownerHTMLCanvasElement->height());
+
+    TRACE_SCOPE(WEBGL, KV(bufferWidth), KV(bufferHeight));
+
+    {
+        GLContextScope scope(m_context);
+
+        // Ensure that the framebufferTexture is destroyed and a new one
+        // created when invoked in the resize event.
+        m_framebufferTexture.reset();
+        m_framebufferTexture = std::make_shared<FramebufferTexture>();
+
+        // Set the SurfaceCreationScope with a framebufferTexture. When
+        // CanvasSurface::create detects that a SurfaceCreationScope is
+        // specified, it sets the required information to framebufferTexture.
+        SurfaceCreationScope surfaceScope(m_framebufferTexture);
+        m_canvasSurface = CanvasSurface::create(
+            m_ownerHTMLCanvasElement->webView()->platformWindow(), bufferWidth,
+            bufferHeight, 1, CanvasSurface::CanvasElement);
+
+        // Seeing CompositorGL::initCompositorContextGl, by default a surface is
+        // mapped to u,v coordinates that are set to the opposite of the y-axis
+        // of the screen coordinates. This results in that m_canvasSurface is
+        // rendered upside down. We here set "FlipY is Needed" so that the
+        // compositor can flip the surface to render it correctly.
+        m_canvasSurface->setFlipYNeeded(true);
+    }
+}
+
 void WebGLRenderingContextBaseMixIn::finalize()
 {
     if (m_context.isValid()) {
@@ -95,6 +125,7 @@ void WebGLRenderingContextBaseMixIn::finalize()
         m_framebufferTexture.reset();
         m_context.destory();
     }
+    m_canvasSurface = nullptr;
 }
 
 void WebGLRenderingContextBaseMixIn::flush()
@@ -103,7 +134,10 @@ void WebGLRenderingContextBaseMixIn::flush()
 
 void WebGLRenderingContextBaseMixIn::onResize()
 {
-    STARFISH_UNIMPLEMENTED();
+    TRACE_SCOPE(WEBGL);
+
+    resetSurface();
+
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
