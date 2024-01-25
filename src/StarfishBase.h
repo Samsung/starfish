@@ -602,6 +602,22 @@ public:
         return m_value;
     }
 
+    T valueOr(T defaultValue)
+    {
+        if (m_hasValue) {
+            return m_value;
+        }
+        return defaultValue;
+    }
+
+    const T valueOr(T defaultValue) const
+    {
+        if (m_hasValue) {
+            return m_value;
+        }
+        return defaultValue;
+    }
+
     T getValue()
     {
         STARFISH_ASSERT(m_hasValue);

@@ -29,6 +29,7 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <algorithm>
 #include <EscargotPublic.h>
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/canvas/WebGLOES_VertexArrayObject.h"
@@ -52,7 +53,12 @@ WebGLExtensionRegistry::WebGLExtensionRegistry()
             STARFISH_ASSERT_NOT_REACHED();
         }
     }
-
+#ifndef NDEBUG
+    std::sort(tokens.begin(), tokens.end(),
+              [](const std::string& a, const std::string& b) -> bool {
+                  return a < b;
+              });
+#endif
     TRACEF(WEBGL, "GL_EXTENSIONS =\n%s",
            StringUtils::createAlignedString(tokens, 3));
 
@@ -100,6 +106,9 @@ WebGLExtensionRegistry::WebGLExtensionRegistry()
     SUPPORTED_GL_EXTENSIONS(V);
 #undef V
 #undef SUPPORTED_GL_EXTENSIONS
+
+    m_hasEXT_texture_format_BGRA8888 =
+        (rawString.find("GL_EXT_texture_format_BGRA8888") != std::string::npos);
 }
 
 WebGLExtensionRegistry& WebGLExtensionRegistry::instance()

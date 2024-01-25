@@ -143,15 +143,18 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
     // Refs: Table 3.4: Valid pixel format and type combinations.
     // https://registry.khronos.org/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
 
-    if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
+    if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
+        type == GL_UNSIGNED_BYTE) {
         return 4;
     } else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
         return 3;
-    } else if (format == GL_RGBA && type == GL_UNSIGNED_SHORT_4_4_4_4) {
+    } else if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
+               type == GL_UNSIGNED_SHORT_4_4_4_4) {
         return 2;
-    } else if (format == GL_RGBA && type == GL_UNSIGNED_SHORT_5_5_5_1) {
+    } else if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
+               type == GL_UNSIGNED_SHORT_5_5_5_1) {
         return 2;
-    } else if (format == GL_RGB && type == GL_UNSIGNED_SHORT_5_6_5) {
+    } else if ((format == GL_RGB) && type == GL_UNSIGNED_SHORT_5_6_5) {
         return 2;
     } else if (format == GL_LUMINANCE_ALPHA && type == GL_UNSIGNED_BYTE) {
         return 2;
@@ -162,6 +165,7 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
     }
 
     STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
+    STARFISH_ASSERT_NOT_REACHED();
     return 0;
 }
 
