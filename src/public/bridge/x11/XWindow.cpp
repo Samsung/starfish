@@ -152,6 +152,18 @@ void XWindow::pollEvent()
                                              ? INPUT::PRESS
                                              : INPUT::RELEASE);
                 }
+                // As an alternative for wheel events, we may use XInput2
+                // extension.
+                else if (event.xbutton.button == Button4 ||
+                         event.xbutton.button == Button5) {
+                    if (m_scrollEventHandler) {
+                        double xpos, ypos;
+                        getCursorPos(xpos, ypos);
+                        m_scrollEventHandler(
+                            xpos, ypos,
+                            event.xbutton.button == Button4 ? -1 : 1);
+                    }
+                }
             }
             break;
 

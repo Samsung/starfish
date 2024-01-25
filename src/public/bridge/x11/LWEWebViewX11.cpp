@@ -117,6 +117,10 @@ public:
             }
         });
 
+        m_window->setScrollEventHandler([this](double x, double y, int delta) {
+            FetchWebContainer()->DispatchMouseWheelEvent(x, y, delta);
+        });
+
         m_window->setKeyEventHandler(
             [this](unsigned long code, INPUT action, unsigned mods) {
                 KeyValue keyValue = ConvertKeyCode(code, action, mods);

@@ -32,7 +32,8 @@ class WindowBase {
 public:
     using MotionEventHandler = std::function<void(int xpos, int ypos)>;
     using WindowSizeEventHandler = std::function<void(int width, int height)>;
-    using ScrollEventHandler = std::function<void(double xmove, double ymove)>;
+    using ScrollEventHandler =
+        std::function<void(double x, double y, int delta)>;
     using ButtonEventHandler = std::function<void(INPUT type, INPUT action)>;
     using ExitEventHandler = std::function<void()>;
     using KeyEventHandler =
