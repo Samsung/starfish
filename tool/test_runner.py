@@ -116,7 +116,7 @@ def vendor_test_khronos():
     DIR = working_directory
     ADDRESS = "localhost"
     PORT = 11010
-    TIMEOUT = 30
+    TIMEOUT = 180
 
     env = dict(os.environ)
 

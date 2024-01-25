@@ -59,6 +59,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGLRenderingContext);
 
     void initialize() override;
+    void flush() override;
 
     GLsizei drawingBufferWidth() const;
     GLsizei drawingBufferHeight() const;
@@ -91,9 +92,11 @@ public:
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
+    void deleteProgram(Nullable<WebGLProgram*> program);
     void deleteShader(WebGLShader* shader);
-    void depthMask(GLboolean flag);
     void depthFunc(GLenum func);
+    void depthMask(GLboolean flag);
+    void detachShader(WebGLProgram* program, WebGLShader* shader);
     void disable(GLenum cap);
     void disableVertexAttribArray(GLuint index);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
@@ -133,7 +136,8 @@ public:
                    GLint z);
     void uniform4i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y,
                    GLint z, GLint w);
-    void useProgram(WebGLProgram* program);
+    void useProgram(Nullable<WebGLProgram*> program);
+    void validateProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
     void stencilMask(GLuint mask);
     void vertexAttrib1f(GLuint index, GLfloat x);
