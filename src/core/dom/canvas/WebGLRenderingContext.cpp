@@ -1443,6 +1443,7 @@ public:
         m_sourceImage.height = height;
         m_sourceImage.stride = stride;
         m_sourceImage.data = static_cast<unsigned char*>(data);
+        m_isNativeImageDataUsed = false;
     }
 
     TexImageHelper(NativeImageData* imageData)
@@ -1453,6 +1454,7 @@ public:
         m_sourceImage.height = imageData->height();
         m_sourceImage.stride = imageData->stride();
         m_sourceImage.data = static_cast<unsigned char*>(imageData->data());
+        m_isNativeImageDataUsed = true;
     }
 
     ~TexImageHelper()
@@ -1460,7 +1462,7 @@ public:
     }
 
     void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
-              const bool colorConversion)
+              const bool useDefaultColorConversion)
     {
         const size_t width = m_sourceImage.width;
         const size_t height = m_sourceImage.height;
@@ -1469,17 +1471,31 @@ public:
 
         size_t offset = 0, newOffset = 0, srcOffset = 0, destOffset = 0;
 
+        bool needsColorConversion = false;
+
+        if (m_isNativeImageDataUsed) {
+#if !defined(PORT_PIXEL_ORDER_RGBA) && !defined(PORT_PIXEL_ORDER_BGRA)
+            STARFISH_ASSERT_NOT_REACHED();
+#endif
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+            if (useDefaultColorConversion) {
+                if (WebGLExtensionRegistry::instance()
+                        .hasEXT_texture_format_BGRA8888()) {
+                    m_dataFormat = GL_BGRA_EXT;
+                } else {
+                    needsColorConversion = true;
+                }
+            }
+#endif
+        }
+
+        if (!needsFlipY && !needsPremultiplyAlpha && !needsColorConversion) {
+            return;
+        }
+
         m_data.resize(height * stride);
 
-        bool needsColorConversion = true;
-
-#if defined(PORT_PIXEL_ORDER_RGBA)
-        needsColorConversion = false;
-#elif defined(PORT_PIXEL_ORDER_BGRA)
-        needsColorConversion = colorConversion;
-#else
-        STARFISH_ASSERT_NOT_REACHED();
-#endif
         std::vector<uint8_t> order;
 
         if (needsColorConversion) {
@@ -1492,34 +1508,32 @@ public:
             // Calculate the memory offset for the current row
             newOffset = offset = row * stride;
 
-            if (needsFlipY || needsPremultiplyAlpha || needsColorConversion) {
-                if (needsFlipY) {
-                    newOffset = (height - row - 1) * stride;
-                }
+            // NOTE: For increasing more performance of this feature, we may
+            // consider using fragment shader.
+            if (needsFlipY) {
+                newOffset = (height - row - 1) * stride;
+            }
 
-                for (size_t column = 0; column < width; column++) {
-                    // Calculate the memory offset for the current pixel
-                    srcOffset = offset + column * 4;
-                    destOffset = newOffset + column * 4;
+            for (size_t column = 0; column < width; column++) {
+                // Calculate the memory offset for the current pixel
+                srcOffset = offset + column * 4;
+                destOffset = newOffset + column * 4;
 
-                    if (needsPremultiplyAlpha) {
-                        float alpha = image[srcOffset + order[3]] / 255.f;
-                        m_data[destOffset + 0] =
-                            multiplyAlpha(image[srcOffset + order[0]], alpha);
-                        m_data[destOffset + 1] =
-                            multiplyAlpha(image[srcOffset + order[1]], alpha);
-                        m_data[destOffset + 2] =
-                            multiplyAlpha(image[srcOffset + order[2]], alpha);
-                        m_data[destOffset + 3] = image[srcOffset + order[3]];
-                    } else {
-                        m_data[destOffset + 0] = image[srcOffset + order[0]];
-                        m_data[destOffset + 1] = image[srcOffset + order[1]];
-                        m_data[destOffset + 2] = image[srcOffset + order[2]];
-                        m_data[destOffset + 3] = image[srcOffset + order[3]];
-                    }
+                if (needsPremultiplyAlpha) {
+                    float alpha = image[srcOffset + order[3]] / 255.f;
+                    m_data[destOffset + 0] =
+                        multiplyAlpha(image[srcOffset + order[0]], alpha);
+                    m_data[destOffset + 1] =
+                        multiplyAlpha(image[srcOffset + order[1]], alpha);
+                    m_data[destOffset + 2] =
+                        multiplyAlpha(image[srcOffset + order[2]], alpha);
+                    m_data[destOffset + 3] = image[srcOffset + order[3]];
+                } else {
+                    m_data[destOffset + 0] = image[srcOffset + order[0]];
+                    m_data[destOffset + 1] = image[srcOffset + order[1]];
+                    m_data[destOffset + 2] = image[srcOffset + order[2]];
+                    m_data[destOffset + 3] = image[srcOffset + order[3]];
                 }
-            } else {
-                std::memcpy(&m_data[newOffset], &image[offset], stride);
             }
         }
     }
@@ -1527,6 +1541,11 @@ public:
     const void* data()
     {
         return m_data.empty() ? m_sourceImage.data : m_data.data();
+    }
+
+    Optional<GLenum> dataFormat()
+    {
+        return m_dataFormat;
     }
 
 private:
@@ -1537,6 +1556,8 @@ private:
 
     ImageData m_sourceImage;
     std::vector<unsigned char> m_data;
+    bool m_isNativeImageDataUsed;
+    Optional<GLenum> m_dataFormat;
 };
 
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
@@ -1810,8 +1831,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
 
     // Uploads the given image data to the currently bound texture.
-    glTexImage2D(target, level, internalFormat, width, height, 0, format, type,
-                 image.data());
+    glTexImage2D(target, level, internalFormat, width, height, 0,
+                 image.dataFormat().valueOr(format), type, image.data());
 }
 
 #define IMPLEMENT_UNIFORM_NXV(N, Suffix, SrcType, DestType)               \

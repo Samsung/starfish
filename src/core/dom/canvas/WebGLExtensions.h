@@ -51,12 +51,19 @@ public:
     WebGLExtensionRegistry& operator=(const WebGLExtensionRegistry&) = delete;
     WebGLExtensionRegistry& operator=(const WebGLExtensionRegistry&&) = delete;
 
+    bool hasEXT_texture_format_BGRA8888()
+    {
+        return m_hasEXT_texture_format_BGRA8888;
+    }
+
 private:
     WebGLExtensionRegistry();
 
     std::unordered_map<std::string, ExtensionGenerator, CaseInsensitiveHash,
                        CaseInsensitiveEqual>
         m_interfaceGenerators;
+
+    bool m_hasEXT_texture_format_BGRA8888;
 };
 
 } // namespace Starfish
