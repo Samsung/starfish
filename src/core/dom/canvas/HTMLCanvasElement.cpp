@@ -108,10 +108,16 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
     } else if (contextId->equals("webgl") ||
                contextId->equals("experimental-webgl")) {
 #if defined(STARFISH_ENABLE_WEBGL)
-        m_canvasRenderingContext = new WebGLRenderingContext(this);
-        m_canvasRenderingContext->initialize();
-        return RenderingContextBindindingUnion::createWebGLRenderingContext(
-            static_cast<WebGLRenderingContext*>(m_canvasRenderingContext));
+        if (m_contextMode == CanvasContextModeNone) {
+            m_contextMode = CanvasContextModeWebGL;
+            m_canvasRenderingContext = new WebGLRenderingContext(this);
+            m_canvasRenderingContext->initialize();
+            m_canvasRenderingContext->setOriginCleanFlag(true);
+        }
+        if (m_contextMode == CanvasContextModeWebGL) {
+            return RenderingContextBindindingUnion::createWebGLRenderingContext(
+                static_cast<WebGLRenderingContext*>(m_canvasRenderingContext));
+        }
 #endif
     }
     return nullptr;

@@ -544,7 +544,7 @@ interface WebGLRenderingContextBase
 
     [Unimplemented] undefined deleteBuffer(WebGLBuffer? buffer);
     [Unimplemented] undefined deleteFramebuffer(WebGLFramebuffer? framebuffer);
-    [Unimplemented] undefined deleteProgram(WebGLProgram? program);
+    undefined deleteProgram(WebGLProgram? program);
     [Unimplemented] undefined deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
     undefined deleteShader(WebGLShader? shader);
     [Unimplemented] undefined deleteTexture(WebGLTexture? texture);
@@ -552,7 +552,7 @@ interface WebGLRenderingContextBase
     undefined depthFunc(GLenum func);
     undefined depthMask(GLboolean flag);
     [Unimplemented] undefined depthRange(GLclampf zNear, GLclampf zFar);
-    [Unimplemented] undefined detachShader(WebGLProgram program, WebGLShader shader);
+    undefined detachShader(WebGLProgram program, WebGLShader shader);
     undefined disable(GLenum cap);
     undefined disableVertexAttribArray(GLuint index);
     undefined drawArrays(GLenum mode, GLint first, GLsizei count);
@@ -644,7 +644,7 @@ interface WebGLRenderingContextBase
     undefined uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
 
     undefined useProgram(WebGLProgram? program);
-    [Unimplemented] undefined validateProgram(WebGLProgram program);
+    undefined validateProgram(WebGLProgram program);
 
     undefined vertexAttrib1f(GLuint index, GLfloat x);
     undefined vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);

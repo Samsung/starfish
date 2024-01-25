@@ -157,7 +157,45 @@ void WebGLRenderingContext::initialize()
 {
     WebGLRenderingContextBaseMixIn::initialize();
 
-    viewport(0, 0, m_canvasSurface->width(), m_canvasSurface->height());
+    STARFISH_ASSERT(m_canvasSurface != nullptr);
+
+    // 2.3 The WebGL Viewport
+    //
+    // Upon creation of WebGL context context, the viewport is initialized to a
+    // rectangle with origin at (0, 0) and width and height equal to
+    // (context.drawingBufferWidth, context.drawingBufferHeight).
+
+    viewport(0, 0, drawingBufferWidth(), drawingBufferHeight());
+}
+
+void WebGLRenderingContext::flush()
+{
+    // Before the drawing buffer is presented for compositing the implementation
+    // shall ensure that all rendering operations have been flushed to the
+    // drawing buffer.
+
+    WebGLRenderingContextBaseMixIn::flush();
+
+    /*
+    +---------+--------------+----------------------+---------------------+
+    | Buffer  | Clear value  | Minimum size         | Defined by default? |
+    +---------+--------------+----------------------+---------------------+
+    | Color   | (0, 0, 0, 0) | 8 bits per component | yes                 |
+    | Depth   | 1.0          | 16 bit integer       | yes                 |
+    | Stencil | 0            | 8 bits               | no                  |
+    +---------+--------------+----------------------+---------------------+
+    */
+
+    // TODO: According to the specification, by default, after compositing the
+    // contents of the drawing buffer shall be cleared to their default values,
+    // as shown in the table above.
+    //
+    // Once a TC for the above is found, test if the code uncommented below is
+    // valid. We may need to handle this without using gl APIs. The code is as
+    // of now intentionally commented out to avoid unintended side effects.
+    //
+    // glClearColor(0, 0, 0, 0); // In EGL, the initial values are all 0.
+    // glClearDepthf(1.0);       // In EGL, the initial value is 1.
 }
 
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)                         \
@@ -169,6 +207,18 @@ void WebGLRenderingContext::initialize()
     m_ownerHTMLCanvasElement                                                \
         ->setNeedsComposite(); // TODO: Use CanvasElement::setNeedsComposite
                                // only when really necessary.
+
+/*
+TODO: As for the CanvasElement::setNeedsComposite use case above, WebGL presents
+its drawing buffer to the HTML page compositor immediately before a compositing
+operation, but only if at least one of the following have been called since the
+previous compositing operation:
+
+  - Context creation
+  - Canvas resize
+  - Any of the [Draw Operations], called while the drawing buffer is the
+    currently bound (draw) framebuffer.
+*/
 
 #ifdef NDEBUG
 #define ENTER_CONTEXT_SCOPE(bailoutValue, ...) \
@@ -517,6 +567,23 @@ WebGLTexture* WebGLRenderingContext::createTexture()
     return new WebGLTexture(scriptBindingInstance(), this, textureId);
 }
 
+void WebGLRenderingContext::cullFace(GLenum mode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glCullFace(mode);
+}
+
+void WebGLRenderingContext::deleteProgram(Nullable<WebGLProgram*> maybeProgram)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeProgram.hasValue()) {
+        WebGLProgram* program = maybeProgram.value();
+        glDeleteProgram(program->glObject());
+    }
+}
+
 void WebGLRenderingContext::deleteShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
@@ -529,13 +596,6 @@ void WebGLRenderingContext::deleteShader(WebGLShader* shader)
     shader->markDeleted();
 }
 
-void WebGLRenderingContext::depthMask(GLboolean flag)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    glDepthMask(flag);
-}
-
 void WebGLRenderingContext::depthFunc(GLenum func)
 {
     ENTER_CONTEXT_SCOPE();
@@ -543,18 +603,29 @@ void WebGLRenderingContext::depthFunc(GLenum func)
     glDepthFunc(func);
 }
 
+void WebGLRenderingContext::depthMask(GLboolean flag)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDepthMask(flag);
+}
+
+void WebGLRenderingContext::detachShader(WebGLProgram* program,
+                                         WebGLShader* shader)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    STARFISH_ASSERT(program != nullptr);
+    STARFISH_ASSERT(shader != nullptr);
+
+    glDetachShader(program->glObject(), shader->glObject());
+}
+
 void WebGLRenderingContext::disable(GLenum cap)
 {
     ENTER_CONTEXT_SCOPE();
 
     glDisable(cap);
-}
-
-void WebGLRenderingContext::cullFace(GLenum mode)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    glCullFace(mode);
 }
 
 void WebGLRenderingContext::disableVertexAttribArray(GLuint index)
@@ -1274,15 +1345,30 @@ void WebGLRenderingContext::uniform4i(
     glUniform4i(uniform->location(), x, y, z, w);
 }
 
-void WebGLRenderingContext::useProgram(WebGLProgram* program)
+void WebGLRenderingContext::useProgram(Nullable<WebGLProgram*> maybeProgram)
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!checkWebGLObject(program)) {
-        return;
+    if (maybeProgram.hasValue()) {
+        WebGLProgram* program = maybeProgram.value();
+        if (!checkWebGLObject(program)) {
+            return;
+        }
+        glUseProgram(program->glObject());
+    } else {
+        glUseProgram(0);
     }
+}
 
-    glUseProgram(program->glObject());
+void WebGLRenderingContext::validateProgram(WebGLProgram* program)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    STARFISH_ASSERT(program != nullptr);
+
+    // If program was generated by a different WebGLRenderingContext than this
+    // one, generates an INVALID_OPERATION error.
+    glValidateProgram(program->glObject());
 }
 
 void WebGLRenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
@@ -1697,25 +1783,6 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
             // store modes, an INVALID_OPERATION error is generated.
             setGLError(GL_INVALID_OPERATION);
             return;
-        }
-
-        /*
-            For any pixel lying outside the frame buffer, the corresponding
-            destination buffer range remains untouched; see Reading Pixels
-            Outside the Framebuffer.
-
-            TODO: 6.11 Reading Pixels Outside the Framebuffer
-
-            For [Read Operations], reads from out-of-bounds pixels sub-areas do
-            not touch their corresponding destination sub-areas.
-
-            WebGL (behaves as if it) pre-initializes resources to zeros.
-            Therefore for example copyTexImage2D will have zeros in sub-areas
-            that correspond to out-of-bounds framebuffer reads.
-        */
-
-        if (x != 0 || y != 0) {
-            STARFISH_UNIMPLEMENTED("Reading Pixels Outside the Framebuffer");
         }
 
         /*

@@ -31,7 +31,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/drawingbuffer-t
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/rapid-resizing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/to-data-url-test.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/constants-and-properties.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
@@ -98,58 +98,58 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/fragcoord-li
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/modulo-arithmetic-accuracy.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/multiplication-assignment.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/nested-functions-should-not-crash.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/sampler-array-using-loop-index.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/sampler-array-using-loop-index.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/temp-expressions-should-not-crash.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/bugs/uniforms-should-not-lose-values.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec2.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec3.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec4.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec2.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec3.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec4.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat2.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat3.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat4.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec2.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec3.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec4.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec2.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec3.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-bvec4.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec2.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec3.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-ivec4.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat2.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat3.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-mat4.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec2.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec3.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec4.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec-mat-corner-cases.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-abs.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-acos.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-asin.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-atan.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-atan-xy.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-ceil.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-clamp-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-clamp-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-cos.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-cross.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-distance.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-dot.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-faceforward.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-floor.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-fract.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-length.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-abs.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-acos.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-asin.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-atan.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-atan-xy.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-ceil.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-clamp-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-clamp-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-cos.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-cross.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-distance.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-dot.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-faceforward.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-floor.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-fract.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-length.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-lessThan.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-max-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-max-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-min-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-min-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mix-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mix-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mod-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mod-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-normalize.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-reflect.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-max-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-max-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-min-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-min-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mix-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mix-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mod-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-mod-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-normalize.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-reflect.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-refract.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-sign.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-sin.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-smoothstep-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-smoothstep-gentype.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-step-float.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-step-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-sign.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-sin.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-smoothstep-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-smoothstep-gentype.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-step-float.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/functions/glsl-function-step-gentype.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/implicit/add_int_float.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/implicit/add_int_mat2.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/implicit/add_int_mat3.vert.html
@@ -218,13 +218,13 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/implicit/ternary_
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/literals/float_literal.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/literals/literal_precision.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/literals/overflow_leak.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat3-construction.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat4-to-mat3.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat3-construction.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat4-to-mat3.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/attrib-location-length-limits.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/boolean_precision.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/empty_main.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/expression-list-in-declarator-initializer.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/expression-list-in-declarator-initializer.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/gl_position_unset.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/glsl-2types-of-textures-on-same-unit.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/glsl-function-nodes.html
@@ -238,7 +238,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/re-compile-r
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-struct-scope.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-invariance.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html
@@ -251,13 +251,13 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-257-character-identifier.frag.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-attrib-array.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-attrib-struct.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-clipvertex.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-comma-assignment.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-comma-conditional-assignment.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-comma-assignment.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-comma-conditional-assignment.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-conditional-scoping.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-conditional-scoping-negative.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-default-precision.frag.html
@@ -298,7 +298,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-preprocessor-whitespace.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-quoted-error.frag.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-reserved-words.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-short-circuiting-operators.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-short-circuiting-operators.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-similar-uniform-array-names.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-too-many-uniforms.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-undefined-preprocessor-symbol.frag.html
@@ -315,15 +315,15 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-webgl-identifier.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-while-loop.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shared.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-equals.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-mixed-array-declarators.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-equals.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-mixed-array-declarators.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-nesting-exceeds-maximum.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-nesting-of-variable-names.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-nesting-under-maximum.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-specifiers-in-uniforms.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-specifiers-in-uniforms.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/struct-unary-operators.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-global-initializers.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-initializers.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-global-initializers.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/ternary-operators-in-initializers.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/uniform-location-length-limits.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/_webgl_field.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/webgl_field.vert.html
@@ -333,8 +333,8 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/uniform-loca
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/webgl_struct.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/_webgl_variable.vert.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/reserved/webgl_variable.vert.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2d-bias.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2dlod.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2d-bias.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2dlod.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2dproj.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/samplers/glsl-function-texture2dprojlod.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/variables/gl-fragcoord.html
@@ -343,9 +343,9 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/variables/gl-frag
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/variables/gl-frontfacing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/variables/gl-pointcoord.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/variables/glsl-built-ins.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-max-texture-dimensions.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-max-texture-dimensions.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-min-attribs.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-min-textures.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-min-textures.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/limits/gl-min-uniforms.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/angle-instanced-arrays-state-leakage.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/canvas-clear-on-zero-count-draw.html
@@ -354,7 +354,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/angle-instanced
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/framebuffers-keep-contents-exiting-fullscreen-mode.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/bad-arguments-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/boolean-argument-conversion.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/delayed-drawing.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/delayed-drawing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/error-reporting.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/functions-returning-strings.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/instanceof-test.html
@@ -436,16 +436,16 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/functions-returni
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/performance/jsGCPause.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/performance/jsMatrixMult.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/performance/jsToGLOverhead.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/abs/abs_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/acos/acos_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/all/all_001_to_004.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/any/any_001_to_004.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/array/array_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/asin/asin_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/atan/atan_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/abs/abs_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/acos/acos_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/all/all_001_to_004.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/any/any_001_to_004.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/array/array_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/asin/asin_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/atan/atan_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/atan/atan_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biConstants/biConstants_009_to_016.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/biuDepthRange/biuDepthRange_001_to_002.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_001_to_008.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_009_to_016.html
@@ -471,92 +471,92 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_1
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_169_to_176.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_177_to_178.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/built_in_varying_array_out_of_bounds/built_in_varying_array_out_of_bounds_001_to_001.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/ceil/ceil_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/clamp/clamp_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/control_flow/control_flow_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/control_flow/control_flow_009_to_010.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/cos/cos_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/cross/cross_001_to_002.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/default/default_001_to_001.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/degrees/degrees_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/discard/discard_001_to_002.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/distance/distance_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/dot/dot_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/ceil/ceil_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/clamp/clamp_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/control_flow/control_flow_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/control_flow/control_flow_009_to_010.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/cos/cos_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/cross/cross_001_to_002.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/default/default_001_to_001.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/degrees/degrees_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/discard/discard_001_to_002.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/distance/distance_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/dot/dot_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/equal/equal_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/equal/equal_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp2/exp2_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/equal/equal_009_to_012.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp2/exp2_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp2/exp2_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp/exp_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp/exp_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/exp/exp_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/faceforward/faceforward_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/floor/floor_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/fract/fract_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_017_to_024.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_025_to_032.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_033_to_040.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_041_to_048.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_049_to_056.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_057_to_064.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_065_to_072.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_073_to_080.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_081_to_088.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_089_to_096.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_097_to_104.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_105_to_112.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_113_to_120.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_121_to_126.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/gl_FragCoord/gl_FragCoord_001_to_003.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/gl_FrontFacing/gl_FrontFacing_001_to_001.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/faceforward/faceforward_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/floor/floor_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/fract/fract_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_017_to_024.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_025_to_032.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_033_to_040.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_041_to_048.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_049_to_056.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_057_to_064.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_065_to_072.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_073_to_080.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_081_to_088.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_089_to_096.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_097_to_104.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_105_to_112.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_113_to_120.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/functions/functions_121_to_126.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/gl_FragCoord/gl_FragCoord_001_to_003.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/gl_FrontFacing/gl_FrontFacing_001_to_001.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/greaterThanEqual/greaterThanEqual_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/greaterThan/greaterThan_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/inversesqrt/inversesqrt_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/length/length_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/length/length_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/lessThanEqual/lessThanEqual_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/lessThan/lessThan_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log2/log2_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log2/log2_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log2/log2_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log/log_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log/log_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/log/log_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat3/mat3_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_017_to_024.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat3/mat3_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_017_to_024.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_025_to_032.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_033_to_040.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_041_to_046.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/matrixCompMult/matrixCompMult_001_to_004.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/max/max_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/min/min_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_033_to_040.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mat/mat_041_to_046.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/matrixCompMult/matrixCompMult_001_to_004.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/max/max_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/min/min_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mix/mix_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/mod/mod_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/normalize/normalize_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/normalize/normalize_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/notEqual/notEqual_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/notEqual/notEqual_009_to_012.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/not/not_001_to_004.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_017_to_024.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_025_to_026.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/pow/pow_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/notEqual/notEqual_009_to_012.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/not/not_001_to_004.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_017_to_024.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/operators/operators_025_to_026.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/pow/pow_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/pow/pow_009_to_016.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/pow/pow_017_to_024.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/radians/radians_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/reflect/reflect_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/refract/refract_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sign/sign_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sin/sin_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/smoothstep/smoothstep_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sqrt/sqrt_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/radians/radians_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/reflect/reflect_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/refract/refract_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sign/sign_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sin/sin_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/smoothstep/smoothstep_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/sqrt/sqrt_001_to_006.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/step/step_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_017_to_024.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_025_to_032.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_033_to_040.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_041_to_048.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_049_to_056.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_017_to_024.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_025_to_032.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_033_to_040.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_041_to_048.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/struct/struct_049_to_056.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_001_to_008.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_009_to_016.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_017_to_024.html
@@ -572,11 +572,11 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/built_in_vary
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_097_to_104.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_105_to_112.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_113_to_120.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/tan/tan_001_to_006.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec3/vec3_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_009_to_016.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_017_to_018.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/tan/tan_001_to_006.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec3/vec3_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_001_to_008.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_009_to_016.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_017_to_018.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/get-active-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-long-names-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-test.html
@@ -588,13 +588,13 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/invalid-UTF-1
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/program-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/reading/read-pixels-pack-alignment.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/reading/read-pixels-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/reading/read-pixels-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/renderbuffers/feedback-loop.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/renderbuffers/framebuffer-object-attachment.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/renderbuffers/framebuffer-state-restoration.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/renderbuffers/framebuffer-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/renderbuffers/renderbuffer-initialization.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/culling.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/culling.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/draw-arrays-out-of-bounds.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/draw-elements-out-of-bounds.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/framebuffer-switch.html
@@ -617,7 +617,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/point-no-att
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/polygon-offset.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/simple.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/triangle.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/vertex-texture-fetch.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/rendering/vertex-texture-fetch.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/gl-enable-enum-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/gl-enum-tests.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/gl-get-calls.html
@@ -675,14 +675,14 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-draw-
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-fakeblack.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-formats-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-hd-dpi.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-mips.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-mips.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-npot.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-npot-video.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-size-cube-maps.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-size.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-size-limit.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-sub-image-cube-maps.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-transparent-pixels-initialized.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-transparent-pixels-initialized.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-upload-cube-maps.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-upload-size.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-buffer-crash.html
@@ -703,7 +703,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/null-uniform-
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-default-values.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-location.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-samplers-test.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-values-per-program.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/uniform-values-per-program.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/extra/big-fbos-example.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/extra/buffer-gc-stress.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/extra/buffer-sizes.html
