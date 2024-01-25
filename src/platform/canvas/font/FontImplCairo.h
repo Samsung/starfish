@@ -191,8 +191,8 @@ public:
                     && false
 #endif
                 ) {
-                    width = roundf(((float)iter->second.second * intSize) /
-                                   m_unitsPerEM);
+                    width = ceilf(((float)iter->second.second * intSize) /
+                                  m_unitsPerEM);
                 } else {
                     width = LayoutUnit((int)(iter->second.second * intSize)) /
                             LayoutUnit((int)(m_unitsPerEM));
@@ -217,8 +217,8 @@ public:
                     && false
 #endif
                 ) {
-                    width = roundf((float)face->glyph->metrics.horiAdvance *
-                                   intSize / m_unitsPerEM);
+                    width = ceilf((float)face->glyph->metrics.horiAdvance *
+                                  intSize / m_unitsPerEM);
                 } else {
                     width = LayoutUnit((int)(face->glyph->metrics.horiAdvance *
                                              intSize)) /
