@@ -45,6 +45,10 @@ void customExit(int returnCode)
     fflush(stdout);
     fflush(stderr);
 
+    if (getenv("DISABLE_TEST_EXIT")) {
+        return;
+    }
+
 // TODO enable this every port
 // --hide-window + EFL window is not working correctly
 // because EFL throws error
