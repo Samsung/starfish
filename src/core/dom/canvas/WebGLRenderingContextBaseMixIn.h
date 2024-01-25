@@ -44,6 +44,7 @@ public:
     void onResize() override;
     CanvasSurface* surface() override;
 
+    void resetSurface();
     void finalize();
 
     void* operator new(size_t size)
