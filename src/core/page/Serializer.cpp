@@ -268,8 +268,11 @@ static bool deserializingDeep(ExecutionContext* executionContext,
             if (!deserialized) {
                 return false;
             }
-            obj->defineDataProperty(state, propertyAndValue.first, deserialized,
-                                    true, true, true);
+            const std::string& propertyString = propertyAndValue.first;
+            ScriptString property = createScriptString(propertyString.data(),
+                                                       propertyString.length());
+            obj->defineDataProperty(state, property, deserialized, true, true,
+                                    true);
         }
     } else if (src->isPlatformObject()) {
         ScriptWrappable* sw = (ScriptWrappable*)(dst->asObject()->extraData());
@@ -314,7 +317,8 @@ static bool serializingDeep(ExecutionContext* executionContext,
                 if (!serialized) {
                     return false;
                 }
-                serializedObject->setKeyAndValue(key, serialized);
+                serializedObject->setKeyAndValue(
+                    key->asString()->toStdUTF8String(), serialized);
             }
         }
     } else if (dst->isPlatformObject()) {
