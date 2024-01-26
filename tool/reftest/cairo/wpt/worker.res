@@ -51,7 +51,7 @@ http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/post
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/members.html
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/redirect.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/returns-same-object.html
-#http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/setting-members.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/setting-members.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/worker-separate-file.html
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/onerror/exception-in-onerror.html
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/onerror/handled.html
@@ -177,7 +177,7 @@ http://web-platform.test:8000/workers/WorkerLocation_href.htm
 http://web-platform.test:8000/workers/WorkerLocation_pathname.htm
 http://web-platform.test:8000/workers/WorkerLocation_port.htm
 http://web-platform.test:8000/workers/WorkerLocation_protocol.htm
-#http://web-platform.test:8000/workers/WorkerLocation_search_empty.htm
+http://web-platform.test:8000/workers/WorkerLocation_search_empty.htm
 http://web-platform.test:8000/workers/WorkerLocation_search_fragment.htm
 http://web-platform.test:8000/workers/WorkerLocation_search_nonexist.htm
 http://web-platform.test:8000/workers/WorkerLocation_search.htm

@@ -77,12 +77,15 @@ String* WorkerLocation::pathname()
 
 String* WorkerLocation::search()
 {
-    return m_url->search();
+    // If the search is '?', returns an empty string.
+    return m_url->search()->length() == 1 ? String::emptyString
+                                          : m_url->search();
 }
 
 String* WorkerLocation::hash()
 {
-    return m_url->hash();
+    // If the hash is '#', returns an empty string.
+    return m_url->hash()->length() == 1 ? String::emptyString : m_url->hash();
 }
 } // namespace Starfish
 
