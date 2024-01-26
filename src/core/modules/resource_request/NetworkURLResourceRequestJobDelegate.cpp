@@ -296,29 +296,34 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         nwd->request->handleError(ProgressState::InError, errorType);
     }
 
-    if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
-        TimerInvalidID) {
-        if (nwd->request->webBase()->timer()) {
-            nwd->request->webBase()->timer()->removeTimer(
-                NetworkSharedResourceManager::getInstance()
-                    ->cacheClearTimerID());
+    if (isMainThread()) {
+        // Only clear SharedResource from the main thread. If multiple worker
+        // threads each store their cacheClearTimerID, the invalid idler
+        // will be removed.
+        if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
+            TimerInvalidID) {
+            if (nwd->request->webBase()->timer()) {
+                nwd->request->webBase()->timer()->removeTimer(
+                    NetworkSharedResourceManager::getInstance()
+                        ->cacheClearTimerID());
+            }
         }
-    }
 
-    if (nwd->request->webBase()->timer()) {
-        size_t timerID = nwd->request->webBase()->timer()->addTimer(
-            STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
-            nwd->request->globalScope(),
-            [](void* data) {
-                NetworkSharedResourceManager::getInstance()
-                    ->clearAllCurlHandleDataCache();
-                NetworkSharedResourceManager::getInstance()
-                    ->setCacheClearTimerID(TimerInvalidID);
-            },
-            nullptr, false);
+        if (nwd->request->webBase()->timer()) {
+            size_t timerID = nwd->request->webBase()->timer()->addTimer(
+                STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
+                nwd->request->globalScope(),
+                [](void* data) {
+                    NetworkSharedResourceManager::getInstance()
+                        ->clearAllCurlHandleDataCache();
+                    NetworkSharedResourceManager::getInstance()
+                        ->setCacheClearTimerID(TimerInvalidID);
+                },
+                nullptr, false);
 
-        NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
-            timerID);
+            NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
+                timerID);
+        }
     }
 
     nwd->request->m_activeNetworkURLWorkerData = nullptr;
