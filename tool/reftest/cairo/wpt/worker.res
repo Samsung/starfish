@@ -135,11 +135,11 @@ http://web-platform.test:8000/workers/semantics/run-a-worker/001.html
 #http://web-platform.test:8000/workers/semantics/run-a-worker/003.html
 #http://web-platform.test:8000/workers/semantics/structured-clone/dedicated.html
 #http://web-platform.test:8000/workers/semantics/structured-clone/shared.html
-#http://web-platform.test:8000/workers/semantics/xhr/001.html
-#http://web-platform.test:8000/workers/semantics/xhr/002.html
+http://web-platform.test:8000/workers/semantics/xhr/001.html
+http://web-platform.test:8000/workers/semantics/xhr/002.html
 #http://web-platform.test:8000/workers/semantics/xhr/003.html
 #http://web-platform.test:8000/workers/semantics/xhr/004.html
-#http://web-platform.test:8000/workers/semantics/xhr/005.html
+http://web-platform.test:8000/workers/semantics/xhr/005.html
 #http://web-platform.test:8000/workers/semantics/xhr/006.html
 #http://web-platform.test:8000/workers/shared-worker-name-via-options.html
 #http://web-platform.test:8000/workers/SharedWorker_blobUrl.html

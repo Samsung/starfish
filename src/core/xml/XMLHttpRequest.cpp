@@ -152,50 +152,57 @@ public:
                              XMLHttpRequestResponseType::Empty)) {
                         if (m_xhr->executionContext()->hasWorkerGlobalScope()) {
                             m_xhr->m_responseXML = nullptr;
-                            STARFISH_LOG_WARN(
-                                "The document type only supports Window "
-                                "object.");
-                            return;
-                        }
-                        void* buffer =
-                            malloc(m_xhr->m_resourceRequest->response().size());
-                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
-                        memcpy(buffer,
-                               m_xhr->m_resourceRequest->response().data(),
-                               m_xhr->m_resourceRequest->response().size());
-                        DOMParser* parser = new DOMParser(
-                            m_xhr->executionContext()->document());
-                        String* mimeTypeString =
-                            mimeType.stringWithoutParameter();
-                        try {
-                            m_xhr->m_responseXML = parser->parseFromString(
-                                String::fromUTF8(
-                                    static_cast<const char*>(buffer),
-                                    m_xhr->m_resourceRequest->response()
-                                        .size()),
-                                mimeTypeString);
-                        } catch (DOMException* e) {
-                            StringBuilder b;
-                            b.appendString("Unsupported type ");
-                            b.appendString(mimeTypeString);
-                            String* errorMessage = b.finalize();
+                            const char* data =
+                                m_xhr->m_resourceRequest->response().data();
+                            const size_t size =
+                                m_xhr->m_resourceRequest->response().size();
+                            TextConverter textConverter(
+                                mimeString, String::fromUTF8("UTF-8"), data,
+                                size);
+                            m_xhr->m_responseText =
+                                textConverter.convert(data, size, true);
+                        } else {
+                            void* buffer = malloc(
+                                m_xhr->m_resourceRequest->response().size());
+                            STARFISH_RELEASE_ASSERT(buffer != nullptr);
+                            memcpy(buffer,
+                                   m_xhr->m_resourceRequest->response().data(),
+                                   m_xhr->m_resourceRequest->response().size());
+                            DOMParser* parser = new DOMParser(
+                                m_xhr->executionContext()->document());
+                            String* mimeTypeString =
+                                mimeType.stringWithoutParameter();
+                            try {
+                                m_xhr->m_responseXML = parser->parseFromString(
+                                    String::fromUTF8(
+                                        static_cast<const char*>(buffer),
+                                        m_xhr->m_resourceRequest->response()
+                                            .size()),
+                                    mimeTypeString);
+                            } catch (DOMException* e) {
+                                StringBuilder b;
+                                b.appendString("Unsupported type ");
+                                b.appendString(mimeTypeString);
+                                String* errorMessage = b.finalize();
 
-                            STARFISH_LOG_ERROR(
-                                "failed to parse resonse on "
-                                "XMLHttpRequest(%s)",
-                                errorMessage->toUTF8NonGCString().data());
+                                STARFISH_LOG_ERROR(
+                                    "failed to parse resonse on "
+                                    "XMLHttpRequest(%s)",
+                                    errorMessage->toUTF8NonGCString().data());
 
-                            m_xhr->m_responseXML = parser->parseFromString(
-                                errorMessage, String::fromUTF8("text/html"));
-                        }
-                        free(buffer);
-                        if (!m_xhr->m_responseXML->isXMLDocument()) {
-                            m_xhr->m_responseXML = nullptr;
-                        }
-                        if (request->readyState() == ReadyState::Done) {
-                            m_xhr->m_resourceRequest->response().clear();
-                            m_xhr->m_resourceRequest->response()
-                                .shrink_to_fit();
+                                m_xhr->m_responseXML = parser->parseFromString(
+                                    errorMessage,
+                                    String::fromUTF8("text/html"));
+                            }
+                            free(buffer);
+                            if (!m_xhr->m_responseXML->isXMLDocument()) {
+                                m_xhr->m_responseXML = nullptr;
+                            }
+                            if (request->readyState() == ReadyState::Done) {
+                                m_xhr->m_resourceRequest->response().clear();
+                                m_xhr->m_resourceRequest->response()
+                                    .shrink_to_fit();
+                            }
                         }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Json) {
