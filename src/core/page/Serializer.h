@@ -319,12 +319,12 @@ public:
         return true;
     }
 
-    void setKeyAndValue(ScriptValue key, SerializedTypedData* value)
+    void setKeyAndValue(std::string&& key, SerializedTypedData* value)
     {
-        m_data.emplace_back(key, value);
+        m_data.emplace_back(std::move(key), value);
     }
 
-    const std::pair<ScriptValue, SerializedTypedData*>& keyAndValue(
+    const std::pair<std::string, SerializedTypedData*>& keyAndValue(
         size_t idx) const
     {
         return m_data[idx];
@@ -336,7 +336,7 @@ public:
     }
 
 private:
-    GCVector<std::pair<ScriptValue, SerializedTypedData*>> m_data;
+    GCVector<std::pair<std::string, SerializedTypedData*>> m_data;
 };
 
 class SerializedArrayBufferData : public SerializedData {
