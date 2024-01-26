@@ -57,8 +57,8 @@ class __BasicTestOpts():
 def open_subprocess(command, timeout=None):
     process = Popen(command, stdout=PIPE, stderr=PIPE)
 
+    start_time = time.time()
     if timeout:
-        start_time = time.time()
         while process.poll() is None:
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
@@ -69,7 +69,7 @@ def open_subprocess(command, timeout=None):
 
     # Use timeout of communicate if v3.3 is available.
     stdout, stderr = process.communicate()
-    return stdout, stderr
+    return stdout, stderr, time.time() - start_time
 
 
 def case_runner(tc):
@@ -86,7 +86,7 @@ def case_runner(tc):
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
     try:
-        starfish_output, starfish_err = open_subprocess(starfish_command, timeout)
+        starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, timeout)
         starfish_output = str(starfish_output, 'utf-8')
         starfish_err = str(starfish_err, 'utf-8')
         if "[STARFISH_TEST] Got signal" in starfish_output :
@@ -101,7 +101,7 @@ def case_runner(tc):
         print("stderr=>")
         print(starfish_err)
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
-    return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress)
+    return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress, elapsed_time=elapsed_time)
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
@@ -124,12 +124,21 @@ if os.environ.get(ENVOPTS.TEST_RESULT_FILE):
     with open(TEST_RESULT_FILE, 'w'):
         pass
 
-def default_tc_handler(tc_file, output, err, show_progress=True):
+def time_string(raw):
+    if raw is None:
+        return ""
+    m, s = divmod(int(raw), 60)
+    h, m = divmod(m, 60)
+    return " ".join(f"{t}{u}" for t, u in zip([h, m, s], ["h", "m", "s"]) if t > 0 or u == "s")
+
+def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
+    elapsed_time = kwargs.get('elapsed_time', None)
+
     word_pass = len(RE_PASS.findall(output))
     word_fail = len(RE_FAIL.findall(output))
     if word_pass != 0 and word_fail == 0:
         if show_progress:
-            print(utils.Strings.PASS_SIGN + tc_file)
+            print(f"{utils.Strings.PASS_SIGN}{tc_file} {time_string(elapsed_time)}")
         if TEST_RESULT_FILE:
             with open(TEST_RESULT_FILE, 'a') as file:
                 fcntl.flock(file, fcntl.LOCK_EX)
