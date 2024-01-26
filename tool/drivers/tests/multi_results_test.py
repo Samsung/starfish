@@ -4,7 +4,7 @@ import sys
 import re
 from basics.utils import PColors
 
-def tc_handler(tc_file, output, err, show_progress=True):
+def tc_handler(tc_file, output, err, show_progress=True, **kwargs):
     is_pass = False
     result = ""
     word_pass = len(re.findall(r"PASS", output))
