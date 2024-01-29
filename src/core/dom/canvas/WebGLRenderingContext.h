@@ -38,6 +38,7 @@ class WebGLObject;
 class WebGLProgram;
 class WebGLShader;
 class WebGLTexture;
+class WebGLFramebuffer;
 class WebGLUniformLocation;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
@@ -66,12 +67,14 @@ public:
 
     // Implement WebGLRenderingContextBase
     Nullable<WebGLContextAttributes> getContextAttributes();
+    bool isContextLost();
     Nullable<GCVector<String*>> getSupportedExtensions();
     Nullable<ScriptObject> getExtension(String* name);
     void activeTexture(GLenum texture);
     void attachShader(WebGLProgram* program, WebGLShader* shader);
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
     void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
+    void bindFramebuffer(GLenum target, Nullable<WebGLFramebuffer*> buffer);
     void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue,
                     GLclampf alpha);
@@ -80,6 +83,8 @@ public:
     void blendFunc(GLenum sfactor, GLenum dfactor);
     void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha,
                            GLenum dstAlpha);
+
+    GLenum checkFramebufferStatus(GLenum target);
     void clear(uint32_t mask);
     void clearColor(float red, float green, float blue, float alpha);
     void clearDepth(GLclampf depth);
@@ -88,6 +93,7 @@ public:
                    GLboolean alpha);
     void compileShader(WebGLShader* shader);
     WebGLBuffer* createBuffer();
+    WebGLFramebuffer* createFramebuffer();
     WebGLProgram* createProgram();
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
@@ -103,6 +109,11 @@ public:
     void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
     void enable(GLenum cap);
     void enableVertexAttribArray(GLuint index);
+    void finish();
+    void flushWebGL();
+    void framebufferTexture2D(GLenum target, GLenum attachment,
+                              GLenum textarget, Nullable<WebGLTexture*> texture,
+                              GLint level);
     void frontFace(GLenum mode);
     void generateMipmap(GLenum target);
     WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
@@ -198,6 +209,8 @@ private:
     bool isBoundCubeMapTexture(GLenum target);
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     bool isExtensionEnabled(const char* requestedName);
+    bool isDefaultFramebufferBound();
+    GLuint getCurrentFBO();
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
@@ -208,6 +221,7 @@ private:
     GLenum m_unpackColorspaceConversion;
     WebGLContextAttributes m_attributes;
     WebGLRenderingContextState m_state;
+    bool m_isContextLost;
 };
 } // namespace Starfish
 

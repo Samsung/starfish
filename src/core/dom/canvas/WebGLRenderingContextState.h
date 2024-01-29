@@ -28,7 +28,8 @@ namespace Starfish {
 
 #define STATEFUL_VALUES(V)                                             \
     V(WebGLVertexArrayObjectOES, Nullable<WebGLVertexArrayObjectOES*>, \
-      webGLVertexArrayObjectOES)
+      webGLVertexArrayObjectOES)                                       \
+    V(WebGLFramebuffer, Nullable<WebGLFramebuffer*>, webGLFramebuffer)
 
 // Forward declarations
 #define V(Constructor, _, __) class Constructor;
@@ -40,9 +41,14 @@ public:
     WebGLRenderingContextState();
 
 // Define functions
-#define V(Constructor, Type, MemberName) \
-    DEFINE_GETTER(Type, MemberName);     \
-    DEFINE_SETTER(Type, MemberName, Constructor);
+#define V(Constructor, Type, MemberName)          \
+    DEFINE_GETTER(Type, MemberName);              \
+    DEFINE_SETTER(Type, MemberName, Constructor); \
+    bool has##Constructor()                       \
+    {                                             \
+        return m_##MemberName.hasValue();         \
+    }
+
     STATEFUL_VALUES(V);
 #undef V
 

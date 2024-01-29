@@ -500,7 +500,7 @@ interface WebGLRenderingContextBase
     // [Unimplemented] attribute PredefinedColorSpace unpackColorSpace = "srgb";
 
     [WebGLHandlesContextLoss] WebGLContextAttributes? getContextAttributes();
-    [Unimplemented,WebGLHandlesContextLoss] boolean isContextLost();
+    [WebGLHandlesContextLoss] boolean isContextLost();
 
     sequence<DOMString>? getSupportedExtensions();
     object? getExtension(DOMString name);
@@ -509,7 +509,7 @@ interface WebGLRenderingContextBase
     undefined attachShader(WebGLProgram program, WebGLShader shader);
     undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
     undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
-    [Unimplemented] undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
+    undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
     [Unimplemented] undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
     undefined bindTexture(GLenum target, WebGLTexture? texture);
     undefined blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
@@ -519,7 +519,7 @@ interface WebGLRenderingContextBase
     undefined blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                                 GLenum srcAlpha, GLenum dstAlpha);
 
-    [Unimplemented,WebGLHandlesContextLoss]  GLenum checkFramebufferStatus(GLenum target);
+    [WebGLHandlesContextLoss]  GLenum checkFramebufferStatus(GLenum target);
     undefined clear(GLbitfield mask);
     undefined clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     undefined clearDepth(GLclampf depth);
@@ -534,7 +534,7 @@ interface WebGLRenderingContextBase
                                 GLint x, GLint y, GLsizei width, GLsizei height);
 
     WebGLBuffer? createBuffer();
-    [Unimplemented] WebGLFramebuffer? createFramebuffer();
+    WebGLFramebuffer? createFramebuffer();
     WebGLProgram? createProgram();
     [Unimplemented] WebGLRenderbuffer? createRenderbuffer();
     WebGLShader? createShader(GLenum type);
@@ -560,12 +560,12 @@ interface WebGLRenderingContextBase
 
     undefined enable(GLenum cap);
     undefined enableVertexAttribArray(GLuint index);
-    [Unimplemented] undefined finish();
-    [Unimplemented] undefined flush();
+    undefined finish();
+    [Rename=flushWebGL] undefined flush();
     [Unimplemented] undefined framebufferRenderbuffer(GLenum target, GLenum attachment,
                                       GLenum renderbuffertarget,
                                       WebGLRenderbuffer? renderbuffer);
-    [Unimplemented] undefined framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+    undefined framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
                                    WebGLTexture? texture, GLint level);
     undefined frontFace(GLenum mode);
 
