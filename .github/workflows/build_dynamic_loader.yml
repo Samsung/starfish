@@ -1,0 +1,39 @@
+name: Build Starfish (dynamic loader)
+
+on: [pull_request_target]
+
+jobs:
+  build_x64:
+    runs-on: [ legacy-rat6 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    strategy:
+      matrix:
+        mode: [debug]
+        backend: [glfw_cairo_gl]
+        target: [executable]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: "recursive"
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
+      - name: Configuration
+        run: |
+          cmake CMakeLists.txt -B${{ matrix.backend }}/${{ matrix.mode }} -G Ninja -DTARGETNAME=Starfish \
+            -DHOST=linux -DARCH=x64 -DDOCKER=1 \
+            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
+            -DENABLE_DYNAMIC_LOADER=1
+      - name: Build
+        run: ninja -C ${{ matrix.backend }}/${{ matrix.mode }} starfish.${{ matrix.target }}
+      - name: Execution test
+        run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/execution_test.py
