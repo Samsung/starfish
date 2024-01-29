@@ -93,7 +93,7 @@ thread_local GLContext GLContextScope::currentContext;
 
 GLContextScope::GLContextScope(GLContext context)
 {
-    context.setCurrent();
+    m_result = context.setCurrent();
 
     STARFISH_ASSERT(currentContext.isValid() == false);
     currentContext = context;
@@ -101,7 +101,9 @@ GLContextScope::GLContextScope(GLContext context)
 
 GLContextScope::~GLContextScope()
 {
-    XGLUtil::resetCurrentXGLContext();
+    if (m_result) {
+        XGLUtil::resetCurrentXGLContext();
+    }
     currentContext.reset();
 }
 
@@ -124,25 +126,6 @@ GLRevertableContextScope::~GLRevertableContextScope()
     // unified API to know the current context unless we unify the API to change
     // context across the codebase.
     XGLUtil::makeCurrentXGLContext(XGLPlatform::ref().context);
-}
-
-// WebGLContextScope
-
-WebGLContextScope::WebGLContextScope(GLContext context, GLuint fbo)
-{
-    if ((m_result = context.setCurrent())) {
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    }
-}
-
-WebGLContextScope::~WebGLContextScope()
-{
-    if (m_result) {
-        // TODO: making a context current may be expensive upon the vendor GL
-        // driver. So, it could be better not to reset it here.
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        XGLUtil::resetCurrentXGLContext();
-    }
 }
 
 } // namespace Starfish

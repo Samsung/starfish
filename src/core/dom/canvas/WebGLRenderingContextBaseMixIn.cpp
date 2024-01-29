@@ -66,6 +66,8 @@ void WebGLRenderingContextBaseMixIn::initialize()
     // using any GL APIs inside will result in an error at the time.
     m_ownerHTMLCanvasElement->window()->registerDisposer(
         this, [this]() { finalize(); });
+
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContextBaseMixIn::resetSurface()
