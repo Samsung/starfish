@@ -200,27 +200,12 @@ void WebGLRenderingContext::flush()
     // glClearDepthf(1.0);       // In EGL, the initial value is 1.
 }
 
-#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)              \
-    WebGLContextScope contextScope_(m_context, getCurrentFBO()); \
-    if (contextScope_.hasError()) {                              \
-        TRACE(WEBGL, "GL Context error detected.");              \
-        return bailoutValue;                                     \
-    }                                                            \
-    m_ownerHTMLCanvasElement                                     \
-        ->setNeedsComposite(); // TODO: Use CanvasElement::setNeedsComposite
-                               // only when really necessary.
-
-/*
-TODO: As for the CanvasElement::setNeedsComposite use case above, WebGL presents
-its drawing buffer to the HTML page compositor immediately before a compositing
-operation, but only if at least one of the following have been called since the
-previous compositing operation:
-
-  - Context creation
-  - Canvas resize
-  - Any of the [Draw Operations], called while the drawing buffer is the
-    currently bound (draw) framebuffer.
-*/
+#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...) \
+    GLContextScope contextScope_(m_context);        \
+    if (contextScope_.hasError()) {                 \
+        TRACE(WEBGL, "GL Context error detected."); \
+        return bailoutValue;                        \
+    }
 
 #ifdef NDEBUG
 #define ENTER_CONTEXT_SCOPE(bailoutValue, ...) \
@@ -263,7 +248,7 @@ void WebGLRenderingContext::updateGLError()
 
 GLenum WebGLRenderingContext::getError()
 {
-    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
+    GLContextScope contextScope(m_context);
 
     updateGLError();
 
@@ -560,7 +545,9 @@ void WebGLRenderingContext::clear(uint32_t mask)
 
     maskHistory |= mask;
 
+    FBOScope fboScope(getCurrentFBO());
     glClear(mask);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::clearColor(float red, float green, float blue,
@@ -728,7 +715,9 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         setGLError(GL_INVALID_OPERATION);
     }
 
+    FBOScope fboScope(getCurrentFBO());
     glDrawArrays(mode, first, count);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
@@ -755,7 +744,9 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         setGLError(GL_INVALID_OPERATION);
     }
 
+    FBOScope fboScope(getCurrentFBO());
     glDrawElements(mode, count, type, reinterpret_cast<void*>(offset));
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::enable(GLenum cap)
@@ -781,14 +772,18 @@ void WebGLRenderingContext::finish()
 {
     ENTER_CONTEXT_SCOPE();
 
+    FBOScope fboScope(getCurrentFBO());
     glFinish();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::flushWebGL()
 {
     ENTER_CONTEXT_SCOPE();
 
+    FBOScope fboScope(getCurrentFBO());
     glFlush();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::framebufferTexture2D(
@@ -885,8 +880,6 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         glGetIntegerv(pname, &value);
 
         if (isDefaultFramebufferBound()) {
-            STARFISH_ASSERT(value ==
-                            static_cast<GLint>(m_framebufferTexture->fbo()));
             return scriptNull();
         }
 
@@ -1950,8 +1943,8 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 
         GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
 
+        FBOScope fboScope(getCurrentFBO());
         glReadPixels(x, y, width, height, format, type, data);
-
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.
         setGLError(GL_INVALID_VALUE);

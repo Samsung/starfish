@@ -53,10 +53,16 @@ public:
     GLContextScope& operator=(const GLContextScope& other) = delete;
     GLContextScope(GLContextScope&& other) = delete;
 
+    bool hasError()
+    {
+        return m_result == false;
+    }
+
     static GLContext getCurrentXGLContext();
 
 private:
     static thread_local GLContext currentContext;
+    bool m_result{ false };
 };
 
 class GLRevertableContextScope final {
@@ -68,24 +74,6 @@ public:
     GLRevertableContextScope& operator=(const GLRevertableContextScope& other) =
         delete;
     GLRevertableContextScope(GLRevertableContextScope&& other) = delete;
-};
-
-class WebGLContextScope final {
-public:
-    explicit WebGLContextScope(GLContext context, GLuint fbo);
-    ~WebGLContextScope();
-
-    WebGLContextScope(const WebGLContextScope& other) = delete;
-    WebGLContextScope& operator=(const WebGLContextScope& other) = delete;
-    WebGLContextScope(WebGLContextScope&& other) = delete;
-
-    bool hasError()
-    {
-        return m_result == false;
-    }
-
-private:
-    bool m_result{ false };
 };
 
 } // namespace Starfish
