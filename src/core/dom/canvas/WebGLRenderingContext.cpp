@@ -36,6 +36,7 @@
 #include "core/dom/canvas/WebGLShader.h"
 #include "core/dom/canvas/WebGLProgram.h"
 #include "core/dom/canvas/WebGLTexture.h"
+#include "core/dom/canvas/WebGLFramebuffer.h"
 #include "core/dom/canvas/WebGLUniformLocation.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
@@ -142,6 +143,7 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_unpackFlipY = false;
     m_unpackPremultiplyAlpha = false;
     m_unpackColorspaceConversion = kBROWSER_DEFAULT_WEBGL;
+    m_isContextLost = false;
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
@@ -198,13 +200,13 @@ void WebGLRenderingContext::flush()
     // glClearDepthf(1.0);       // In EGL, the initial value is 1.
 }
 
-#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)                         \
-    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo()); \
-    if (contextScope.hasError()) {                                          \
-        TRACE(WEBGL, "GL Context error detected.");                         \
-        return bailoutValue;                                                \
-    }                                                                       \
-    m_ownerHTMLCanvasElement                                                \
+#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...)              \
+    WebGLContextScope contextScope_(m_context, getCurrentFBO()); \
+    if (contextScope_.hasError()) {                              \
+        TRACE(WEBGL, "GL Context error detected.");              \
+        return bailoutValue;                                     \
+    }                                                            \
+    m_ownerHTMLCanvasElement                                     \
         ->setNeedsComposite(); // TODO: Use CanvasElement::setNeedsComposite
                                // only when really necessary.
 
@@ -305,6 +307,11 @@ Nullable<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
     return WebGLExtensionRegistry::instance().getSupportedExtensions();
 }
 
+bool WebGLRenderingContext::isContextLost()
+{
+    return m_isContextLost;
+}
+
 bool WebGLRenderingContext::isExtensionEnabled(const char* name)
 {
     const auto& iter = m_enabledExtensions.find(name);
@@ -312,6 +319,18 @@ bool WebGLRenderingContext::isExtensionEnabled(const char* name)
         return true;
     }
     return false;
+}
+
+bool WebGLRenderingContext::isDefaultFramebufferBound()
+{
+    return !m_state.hasWebGLFramebuffer();
+}
+
+GLuint WebGLRenderingContext::getCurrentFBO()
+{
+    return m_state.hasWebGLFramebuffer()
+               ? m_state.webGLFramebuffer()->glObject()
+               : m_framebufferTexture->fbo();
 }
 
 Nullable<ScriptObject> WebGLRenderingContext::getExtension(
@@ -407,6 +426,44 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
     }
 }
 
+void WebGLRenderingContext::bindFramebuffer(
+    GLenum target, Nullable<WebGLFramebuffer*> maybeFramebuffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeFramebuffer.hasValue()) {
+        WebGLFramebuffer* frameBuffer = maybeFramebuffer.value();
+
+        if (!checkWebGLObject(frameBuffer)) {
+            return;
+        }
+
+        if (frameBuffer->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (target != GL_FRAMEBUFFER) {
+            // NOTE: how to handle this case is not found in the specification.
+            return;
+        }
+
+        glBindFramebuffer(target, frameBuffer->glObject());
+
+        m_state.setWebGLFramebuffer(frameBuffer);
+    } else {
+        // NOTE: the spec. says that "if framebuffer is null, the default
+        // framebuffer provided by the context is bound and attempts to modify
+        // or query state on target FRAMEBUFFER will generate an
+        // INVALID_OPERATION error." The default framebuffer we use would not be
+        // exposed to users, so I think that we don't need to worry about this.
+        // However, it's worth checking with TCs to see if this is the case.
+        glBindFramebuffer(target, 0);
+
+        m_state.setWebGLFramebuffer(nullptr);
+    }
+}
+
 void WebGLRenderingContext::bindTexture(GLenum target,
                                         Nullable<WebGLTexture*> maybeTexture)
 {
@@ -468,6 +525,17 @@ void WebGLRenderingContext::blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
     ENTER_CONTEXT_SCOPE();
 
     glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+}
+
+GLenum WebGLRenderingContext::checkFramebufferStatus(GLenum target)
+{
+    ENTER_CONTEXT_SCOPE(GL_FRAMEBUFFER_UNSUPPORTED);
+
+    if (m_isContextLost) {
+        return GL_FRAMEBUFFER_UNSUPPORTED;
+    }
+
+    return glCheckFramebufferStatus(target);
 }
 
 void WebGLRenderingContext::clear(uint32_t mask)
@@ -543,6 +611,15 @@ WebGLBuffer* WebGLRenderingContext::createBuffer()
     GLuint buffer = 0;
     glGenBuffers(1, &buffer);
     return new WebGLBuffer(scriptBindingInstance(), this, buffer);
+}
+
+WebGLFramebuffer* WebGLRenderingContext::createFramebuffer()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint fbo = 0;
+    glGenFramebuffers(1, &fbo);
+    return new WebGLFramebuffer(scriptBindingInstance(), this, fbo);
 }
 
 WebGLProgram* WebGLRenderingContext::createProgram()
@@ -700,6 +777,45 @@ void WebGLRenderingContext::enableVertexAttribArray(GLuint index)
     glEnableVertexAttribArray(index);
 }
 
+void WebGLRenderingContext::finish()
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glFinish();
+}
+
+void WebGLRenderingContext::flushWebGL()
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glFlush();
+}
+
+void WebGLRenderingContext::framebufferTexture2D(
+    GLenum target, GLenum attachment, GLenum textarget,
+    Nullable<WebGLTexture*> maybeTexture, GLint level)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeTexture.hasValue()) {
+        WebGLTexture* texture = maybeTexture.value();
+
+        if (!checkWebGLObject(texture)) {
+            return;
+        }
+
+        if (texture->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        GLuint textureId = texture->glObject();
+        glFramebufferTexture2D(target, attachment, textarget, textureId, level);
+    } else {
+        glFramebufferTexture2D(target, attachment, textarget, 0, level);
+    }
+}
+
 void WebGLRenderingContext::frontFace(GLenum mode)
 {
     ENTER_CONTEXT_SCOPE();
@@ -763,6 +879,24 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         std::vector<int> values(1);
         glGetIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
+    }
+    case GL_FRAMEBUFFER_BINDING: {
+        GLint value = -1;
+        glGetIntegerv(pname, &value);
+
+        if (isDefaultFramebufferBound()) {
+            STARFISH_ASSERT(value ==
+                            static_cast<GLint>(m_framebufferTexture->fbo()));
+            return scriptNull();
+        }
+
+        Nullable<WebGLFramebuffer*> maybe = m_state.webGLFramebuffer();
+        if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+            return scriptNull();
+        }
+
+        STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
+        return maybe.value()->scriptValue();
     }
     case GL_VERTEX_ARRAY_BINDING: {
         // GL_VERTEX_ARRAY_BINDING_OES

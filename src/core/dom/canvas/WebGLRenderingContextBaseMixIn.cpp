@@ -114,6 +114,9 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         // rendered upside down. We here set "FlipY is Needed" so that the
         // compositor can flip the surface to render it correctly.
         m_canvasSurface->setFlipYNeeded(true);
+
+        TRACE(WEBGL, "context", &m_context, "FBO (CanvasSurface)",
+              m_framebufferTexture->fbo());
     }
 }
 
