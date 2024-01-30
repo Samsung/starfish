@@ -132,6 +132,9 @@ public:
                 }
             });
 
+        m_window->setExitEventHandler(
+            []() { setenv("SHELL_DONE_FLAG", "1", 1); });
+
         return true;
     }
 
