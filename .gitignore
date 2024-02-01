@@ -20,6 +20,14 @@ rules.ninja
 lightweight-web-engine.pc
 lightweight-web-engine-dali-plugin.pc
 lightweight-web-engine-serviceworker.pc
+debugfiles.list
+debuglinks.list
+debugsourcefiles.list
+debugsources.list
+documentation.list
+elfbins.list
+lightweight-web-engine-debuginfo.manifest
+lightweight-web-engine-debugsource.manifest
 
 build/android/**/build/
 build/android/**/jniLibs/
