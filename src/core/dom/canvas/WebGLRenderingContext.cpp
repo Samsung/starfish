@@ -37,6 +37,7 @@
 #include "core/dom/canvas/WebGLProgram.h"
 #include "core/dom/canvas/WebGLTexture.h"
 #include "core/dom/canvas/WebGLFramebuffer.h"
+#include "core/dom/canvas/WebGLRenderbuffer.h"
 #include "core/dom/canvas/WebGLUniformLocation.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
@@ -449,6 +450,34 @@ void WebGLRenderingContext::bindFramebuffer(
     }
 }
 
+void WebGLRenderingContext::bindRenderbuffer(
+    GLenum target, Nullable<WebGLRenderbuffer*> maybeRenderbuffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeRenderbuffer.hasValue()) {
+        WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
+
+        if (!checkWebGLObject(renderBuffer)) {
+            return;
+        }
+
+        if (renderBuffer->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (target != GL_RENDERBUFFER) {
+            // NOTE: how to handle this case is not found in the specification.
+            return;
+        }
+
+        glBindRenderbuffer(target, renderBuffer->glObject());
+    } else {
+        glBindRenderbuffer(target, 0);
+    }
+}
+
 void WebGLRenderingContext::bindTexture(GLenum target,
                                         Nullable<WebGLTexture*> maybeTexture)
 {
@@ -613,6 +642,15 @@ WebGLProgram* WebGLRenderingContext::createProgram()
 {
     ENTER_CONTEXT_SCOPE(nullptr);
     return new WebGLProgram(scriptBindingInstance(), this, glCreateProgram());
+}
+
+WebGLRenderbuffer* WebGLRenderingContext::createRenderbuffer()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint rbo = 0;
+    glGenRenderbuffers(1, &rbo);
+    return new WebGLRenderbuffer(scriptBindingInstance(), this, rbo);
 }
 
 WebGLShader* WebGLRenderingContext::createShader(unsigned long type)
@@ -784,6 +822,26 @@ void WebGLRenderingContext::flushWebGL()
     FBOScope fboScope(getCurrentFBO());
     glFlush();
     m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
+void WebGLRenderingContext::framebufferRenderbuffer(
+    GLenum target, GLenum attachment, GLenum renderbuffertarget,
+    Nullable<WebGLRenderbuffer*> maybeRenderbuffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (maybeRenderbuffer.hasValue()) {
+        WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
+
+        if (!checkWebGLObject(renderBuffer)) {
+            return;
+        }
+
+        glFramebufferRenderbuffer(target, attachment, renderbuffertarget,
+                                  renderBuffer->glObject());
+    } else {
+        glFramebufferRenderbuffer(target, attachment, renderbuffertarget, 0);
+    }
 }
 
 void WebGLRenderingContext::framebufferTexture2D(
@@ -1293,6 +1351,15 @@ void WebGLRenderingContext::pixelStorei(GLenum pname, GLint param)
         glPixelStorei(pname, param);
         break;
     }
+}
+
+void WebGLRenderingContext::renderbufferStorage(GLenum target,
+                                                GLenum internalformat,
+                                                GLsizei width, GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glRenderbufferStorage(target, internalformat, width, height);
 }
 
 void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,

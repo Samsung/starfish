@@ -39,6 +39,7 @@ class WebGLProgram;
 class WebGLShader;
 class WebGLTexture;
 class WebGLFramebuffer;
+class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
@@ -75,6 +76,7 @@ public:
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
     void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
     void bindFramebuffer(GLenum target, Nullable<WebGLFramebuffer*> buffer);
+    void bindRenderbuffer(GLenum target, Nullable<WebGLRenderbuffer*> buffer);
     void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue,
                     GLclampf alpha);
@@ -95,6 +97,7 @@ public:
     WebGLBuffer* createBuffer();
     WebGLFramebuffer* createFramebuffer();
     WebGLProgram* createProgram();
+    WebGLRenderbuffer* createRenderbuffer();
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
@@ -111,6 +114,9 @@ public:
     void enableVertexAttribArray(GLuint index);
     void finish();
     void flushWebGL();
+    void framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                 GLenum renderbuffertarget,
+                                 Nullable<WebGLRenderbuffer*> renderbuffer);
     void framebufferTexture2D(GLenum target, GLenum attachment,
                               GLenum textarget, Nullable<WebGLTexture*> texture,
                               GLint level);
@@ -133,6 +139,8 @@ public:
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
+    void renderbufferStorage(GLenum target, GLenum internalformat,
+                             GLsizei width, GLsizei height);
     void texParameteri(GLenum target, GLenum pname, GLint param);
     void uniform1f(Nullable<WebGLUniformLocation*> uniform, GLfloat x);
     void uniform2f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,

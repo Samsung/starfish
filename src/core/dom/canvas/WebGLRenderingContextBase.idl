@@ -510,7 +510,7 @@ interface WebGLRenderingContextBase
     undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
     undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
     undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
-    [Unimplemented] undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
+    undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
     undefined bindTexture(GLenum target, WebGLTexture? texture);
     undefined blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     undefined blendEquation(GLenum mode);
@@ -536,7 +536,7 @@ interface WebGLRenderingContextBase
     WebGLBuffer? createBuffer();
     WebGLFramebuffer? createFramebuffer();
     WebGLProgram? createProgram();
-    [Unimplemented] WebGLRenderbuffer? createRenderbuffer();
+    WebGLRenderbuffer? createRenderbuffer();
     WebGLShader? createShader(GLenum type);
     WebGLTexture? createTexture();
 
@@ -562,7 +562,7 @@ interface WebGLRenderingContextBase
     undefined enableVertexAttribArray(GLuint index);
     undefined finish();
     [Rename=flushWebGL] undefined flush();
-    [Unimplemented] undefined framebufferRenderbuffer(GLenum target, GLenum attachment,
+    undefined framebufferRenderbuffer(GLenum target, GLenum attachment,
                                       GLenum renderbuffertarget,
                                       WebGLRenderbuffer? renderbuffer);
     undefined framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
@@ -616,7 +616,7 @@ interface WebGLRenderingContextBase
     undefined pixelStorei(GLenum pname, GLint param);
     [Unimplemented] undefined polygonOffset(GLfloat factor, GLfloat units);
 
-    [Unimplemented] undefined renderbufferStorage(GLenum target, GLenum internalformat,
+    undefined renderbufferStorage(GLenum target, GLenum internalformat,
                                   GLsizei width, GLsizei height);
     [Unimplemented] undefined sampleCoverage(GLclampf value, GLboolean invert);
     [Unimplemented] undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
