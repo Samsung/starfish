@@ -676,27 +676,44 @@ void WebGLRenderingContext::cullFace(GLenum mode)
     glCullFace(mode);
 }
 
-void WebGLRenderingContext::deleteProgram(Nullable<WebGLProgram*> maybeProgram)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (maybeProgram.hasValue()) {
-        WebGLProgram* program = maybeProgram.value();
-        glDeleteProgram(program->glObject());
-    }
-}
-
-void WebGLRenderingContext::deleteShader(WebGLShader* shader)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (!checkWebGLObject(shader) || shader->isDeleted()) {
-        return;
+#define IMPLEMENT_DELETE_BUFFERS(Name, Deleter)                            \
+    void WebGLRenderingContext::delete##Name(Nullable<WebGL##Name*> maybe) \
+    {                                                                      \
+        ENTER_CONTEXT_SCOPE();                                             \
+        if (maybe.hasValue()) {                                            \
+            WebGL##Name* value = maybe.value();                            \
+            if (!checkWebGLObject(value) || value->isDeleted()) {          \
+                return;                                                    \
+            }                                                              \
+            GLuint buffer = value->glObject();                             \
+            Deleter(1, &buffer);                                           \
+            value->markDeleted();                                          \
+        }                                                                  \
     }
 
-    glDeleteShader(shader->glObject());
-    shader->markDeleted();
-}
+IMPLEMENT_DELETE_BUFFERS(Buffer, glDeleteBuffers);
+IMPLEMENT_DELETE_BUFFERS(Framebuffer, glDeleteFramebuffers);
+IMPLEMENT_DELETE_BUFFERS(Renderbuffer, glDeleteRenderbuffers);
+IMPLEMENT_DELETE_BUFFERS(Texture, glDeleteTextures);
+#undef IMPLEMENT_DELETE_BUFFERS
+
+#define IMPLEMENT_DELETE_OBJECT(Name, Deleter)                             \
+    void WebGLRenderingContext::delete##Name(Nullable<WebGL##Name*> maybe) \
+    {                                                                      \
+        ENTER_CONTEXT_SCOPE();                                             \
+        if (maybe.hasValue()) {                                            \
+            WebGL##Name* value = maybe.value();                            \
+            if (!checkWebGLObject(value) || value->isDeleted()) {          \
+                return;                                                    \
+            }                                                              \
+            Deleter(value->glObject());                                    \
+            value->markDeleted();                                          \
+        }                                                                  \
+    }
+
+IMPLEMENT_DELETE_OBJECT(Program, glDeleteProgram);
+IMPLEMENT_DELETE_OBJECT(Shader, glDeleteShader);
+#undef IMPLEMENT_DELETE_OBJECT
 
 void WebGLRenderingContext::depthFunc(GLenum func)
 {

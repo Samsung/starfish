@@ -542,12 +542,12 @@ interface WebGLRenderingContextBase
 
     undefined cullFace(GLenum mode);
 
-    [Unimplemented] undefined deleteBuffer(WebGLBuffer? buffer);
-    [Unimplemented] undefined deleteFramebuffer(WebGLFramebuffer? framebuffer);
+    undefined deleteBuffer(WebGLBuffer? buffer);
+    undefined deleteFramebuffer(WebGLFramebuffer? framebuffer);
     undefined deleteProgram(WebGLProgram? program);
-    [Unimplemented] undefined deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
+    undefined deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
     undefined deleteShader(WebGLShader? shader);
-    [Unimplemented] undefined deleteTexture(WebGLTexture? texture);
+    undefined deleteTexture(WebGLTexture? texture);
 
     undefined depthFunc(GLenum func);
     undefined depthMask(GLboolean flag);
