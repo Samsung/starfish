@@ -116,14 +116,11 @@ def vendor_test_khronos():
     DIR = working_directory
     ADDRESS = "localhost"
     PORT = 11010
-    TIMEOUT = 240
 
     env = dict(os.environ)
 
     if not env.get(ENVOPTS.REPLACE_STR):
         env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
-    if not env.get(ENVOPTS.TIMEOUT):
-        env[ENVOPTS.TIMEOUT] = str(TIMEOUT)
 
     with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
         run_test(["basic", "tool/reftest/cairo/khronos_webgl.res", "common"], env)

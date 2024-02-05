@@ -101,8 +101,12 @@ public:
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
+    void deleteBuffer(Nullable<WebGLBuffer*> buffer);
+    void deleteFramebuffer(Nullable<WebGLFramebuffer*> framebuffer);
     void deleteProgram(Nullable<WebGLProgram*> program);
-    void deleteShader(WebGLShader* shader);
+    void deleteRenderbuffer(Nullable<WebGLRenderbuffer*> renderbuffer);
+    void deleteShader(Nullable<WebGLShader*> shader);
+    void deleteTexture(Nullable<WebGLTexture*> texture);
     void depthFunc(GLenum func);
     void depthMask(GLboolean flag);
     void detachShader(WebGLProgram* program, WebGLShader* shader);
