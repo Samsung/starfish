@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __LWE_SERVICE_WORKER__
-#define __LWE_SERVICE_WORKER__
+#ifndef __LWE_WORKER__
+#define __LWE_WORKER__
 
 #ifndef LWE_EXPORT
 #ifdef _MSC_VER
@@ -28,16 +28,19 @@
 #endif
 #endif
 
+#include <string>
+#include <functional>
+
 namespace LWE {
 
-class LWE_EXPORT ServiceWorkerClient {
+class LWE_EXPORT WorkerClient {
 public:
     /*
-     * Register service worker data directory path.
+     * Register worker data directory path.
      *
-     * Be sure to set the same data path as the service worker server.
+     * Be sure to set the same data path as the shared or service worker server.
      * If you do not register data directory, the data directory path is
-     * set to '${HOME}/starfish-sw-data' or /tmp/starfish-sw-data.
+     * set to '${HOME}/starfish-worker-data' or /tmp/starfish-worker-data.
      *
      * This method must be invoked after LWE::Initialize() is invoked.
      */
@@ -54,24 +57,41 @@ public:
         const std::function<bool()> &fn);
 };
 
+enum class LWE_EXPORT WorkerProcessState {
+    None,
+    Terminated,
+};
+
 class LWE_EXPORT ServiceWorker {
 public:
-    enum class State {
-        None,
-        Terminated,
-    };
-
     /*
      * Initialize service worker server.
      *
-     * Be sure to set the same data path as the service worker client.
+     * Be sure to set the same data path as the worker client.
      * If you set data directory path to an empty path, it is set to
-     * '${HOME}/starfish-sw-data' or /tmp/starfish-sw-data.
+     * '${HOME}/starfish-worker-data' or /tmp/starfish-worker-data.
      */
     static void Initialize(const std::string &dataDirectoryPath);
 
     static void RegisterOnStatusChangedHandler(
-        const std::function<void(State)> &cb);
+        const std::function<void(WorkerProcessState)> &cb);
+
+    static void Finalize();
+};
+
+class LWE_EXPORT SharedWorker {
+public:
+    /*
+     * Initialize shared worker server.
+     *
+     * Be sure to set the same data path as the worker client.
+     * If you set data directory path to an empty path, it is set to
+     * '${HOME}/starfish-worker-data' or /tmp/starfish-worker-data.
+     */
+    static void Initialize(const std::string &dataDirectoryPath);
+
+    static void RegisterOnStatusChangedHandler(
+        const std::function<void(WorkerProcessState)> &cb);
 
     static void Finalize();
 };

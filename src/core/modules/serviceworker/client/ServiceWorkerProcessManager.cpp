@@ -197,7 +197,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 #if !defined(STARFISH_USE_WORKER_PROCESS)
         startWorkerOnThread("");
 #else
-        auto swProcessExecutor = m_perProcess->workerProcessExecutor();
+        auto swProcessExecutor = m_perProcess->serviceWorkerProcessExecutor();
         if (swProcessExecutor.hasValue()) {
             WorkerSettings::ProcessExecutorCallback callback =
                 swProcessExecutor.value();

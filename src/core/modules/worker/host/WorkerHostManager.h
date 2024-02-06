@@ -39,6 +39,7 @@ public:
 
 private:
     WorkerHostManager();
+    void createLocalStorageRootDir();
 
     static const size_t s_threadPoolSize = 5;
 };

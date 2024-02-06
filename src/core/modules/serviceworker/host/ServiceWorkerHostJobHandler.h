@@ -26,7 +26,7 @@
 
 namespace Starfish {
 
-class Starfish;
+class PerProcess;
 class MessageLoop;
 class ServiceWorker;
 class ServiceWorkerJob;
@@ -49,7 +49,7 @@ struct RegistrationIdentifier : public gc {
 
 class ServiceWorkerHostJobHandler : public gc {
 public:
-    ServiceWorkerHostJobHandler(Starfish* starfish, MessageLoop* messageLoop,
+    ServiceWorkerHostJobHandler(PerProcess* perProcess,
                                 ServiceWorkerServerInterface* server);
 
     void scheduleJob(ServiceWorkerJob* job);

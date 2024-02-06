@@ -163,6 +163,11 @@ FILE (GLOB STARFISH_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/storage/WebStorage*.cpp
 )
 
+FILE (GLOB STARFISH_SHARED_WORKER_CORE_SRC
+    ${STARFISH_ROOT}/src/core/modules/sharedworker/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/sharedworker/host/*.cpp
+)
+
 FILE (GLOB STARFISH_SERVICE_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/cache/*.cpp
@@ -213,8 +218,8 @@ FILE (GLOB STARFISH_WORKER_BINDING_SRC
     ${STARFISH_BINDING_GENERATED_DIR}/FilePropertyBagBinding.cpp
 )
 
-FILE (GLOB STARFISH_SERVICE_WORKER_PUBLIC_SRC
-    ${STARFISH_ROOT}/src/public/LWEServiceWorker.cpp
+FILE (GLOB STARFISH_WORKER_PUBLIC_SRC
+    ${STARFISH_ROOT}/src/public/LWEWorker.cpp
 )
 
 SET (STARFISH_WORKER_SRC_LIST
@@ -226,12 +231,14 @@ SET (STARFISH_WORKER_SRC_LIST
 
 SET (STARFISH_SHARED_WORKER_SRC_LIST
     ${STARFISH_WORKER_SRC_LIST}
+    ${STARFISH_SHARED_WORKER_CORE_SRC}
+    ${STARFISH_WORKER_PUBLIC_SRC}
 )
 
 SET (STARFISH_SERVICE_WORKER_SRC_LIST
     ${STARFISH_WORKER_SRC_LIST}
     ${STARFISH_SERVICE_WORKER_CORE_SRC}
-    ${STARFISH_SERVICE_WORKER_PUBLIC_SRC}
+    ${STARFISH_WORKER_PUBLIC_SRC}
 )
 
 #######################################################
@@ -273,10 +280,10 @@ SET (STARFISH_SERVICE_WORKER_LINK_LIBRARIES
 #######################################################
 # CUSTOM TARGET JS2C
 #######################################################
-MACRO (add_js2c_target name output source license fname)
+MACRO (add_js2c_target name output source license)
     ADD_CUSTOM_COMMAND (OUTPUT ${output}
                        COMMENT "Js2c (${name})"
-                       COMMAND ${CMAKE_SOURCE_DIR}/tool/js2c.py -s${source} -l${license} -o${fname}
+                       COMMAND ${CMAKE_SOURCE_DIR}/tool/js2c.py -s${source} -l${license} -o${output}
                        DEPENDS ${source}
     )
     ADD_CUSTOM_TARGET (${name} DEPENDS ${output})
@@ -287,7 +294,6 @@ add_js2c_target (CacheStorage
     "${STARFISH_BINDING_GENERATED_DIR}/Js2c_CacheStorage.h"
     "${CMAKE_SOURCE_DIR}/src/core/modules/serviceworker/cache/deps/cache-storage/dist/cache.min.js"
     "${CMAKE_SOURCE_DIR}/src/core/modules/serviceworker/cache/deps/cache-storage/LICENSE"
-    "CacheStorage.h"
 )
 
 SET (STARFISH_SERVICE_WORKER_DEPENDENCIES ${STARFISH_SERVICE_WORKER_DEPENDENCIES} ${JS2C_DEPENDENCIES})
@@ -320,7 +326,7 @@ MACRO (add_worker_target file_name variable_name)
 
     MESSAGE (STATUS ${variable_name})
     MESSAGE (STATUS "FLAGS: " "${STARFISH_WORKER_CXXFLAGS}")
-    MESSAGE (STATUS "LIBRARIES: " "${STARFISH_${variable_name}_LIBRARIES}")
+    MESSAGE (STATUS "LIBRARIES: " "${STARFISH_${variable_name}_LINK_LIBRARIES}")
     MESSAGE (STATUS "DEFINITIONS: " "${STARFISH_${variable_name}_DEFINITIONS}")
     MESSAGE (STATUS "LDFLAGS: " "${STARFISH_WORKER_LDFLAGS}")
     MESSAGE ("")

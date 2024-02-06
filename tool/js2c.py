@@ -68,7 +68,6 @@ def read_lincese_file(filename):
 # constants
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-GEN_DIR = os.path.join(ROOT_DIR, "src", "binding", "generated")
 OUTPUT_FILE_PREFIX = "Js2c_"
 
 LICENSE = """/*
@@ -110,9 +109,7 @@ namespace Starfish {{
 def main(opts):
     # prepare meta
     source_path = opts.source
-    output_path = os.path.join(
-        GEN_DIR, OUTPUT_FILE_PREFIX + os.path.basename(opts.output)
-    )
+    output_path = opts.output
     license_path = opts.license
     source_basename = os.path.basename(opts.source)
     source_license = (
@@ -128,7 +125,6 @@ def main(opts):
             License=LICENSE,
             SourceLicense=source_license,
         )
-        mkdir_p(GEN_DIR)
         with open(output_path, "w") as output_file:
             output_file.write(rendered)
 
@@ -153,7 +149,7 @@ def setupCLIOptions(parser):
         type="string",
         dest="output",
         default="",
-        help="set filename to be written in " + os.path.relpath(GEN_DIR, ROOT_DIR),
+        help="set output file path",
     )
 
     optgroup.add_option(
@@ -175,7 +171,7 @@ Example:
   %prog \\
     -s src/core/modules/serviceworker/cache/deps/cache-storage/dist/cache.min.js \\
     -l src/core/modules/serviceworker/cache/deps/cache-storage/LICENSE \\
-    -o CacheStorage.h"""
+    -o out/debug/starfish_generated/CacheStorage.h"""
 
 if __name__ == "__main__":
     parser = setupCLIOptions(optparse.OptionParser(USAGE))

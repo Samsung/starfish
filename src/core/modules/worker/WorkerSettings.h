@@ -39,13 +39,14 @@ public:
         return m_dataDirectoryPath;
     }
 
-    void setWorkerProcessExecutor(const ProcessExecutorCallback& executor)
+    void setServiceWorkerProcessExecutor(
+        const ProcessExecutorCallback& executor)
     {
-        m_processExecutor = executor;
+        m_serviceWorkerProcessExecutor = executor;
     }
-    ProcessExecutorCallback workerProcessExecutor()
+    ProcessExecutorCallback serviceWorkerProcessExecutor()
     {
-        return m_processExecutor;
+        return m_serviceWorkerProcessExecutor;
     }
 
     void addOnChangeDataDirectoryPathCallback(
@@ -65,7 +66,7 @@ public:
 private:
     std::string m_dataDirectoryPath;
     std::string m_processName;
-    ProcessExecutorCallback m_processExecutor{ nullptr };
+    ProcessExecutorCallback m_serviceWorkerProcessExecutor{ nullptr };
     size_t m_threadPoolSize = 1;
 
     std::vector<OnChangeDataDirectoryPathCallback>

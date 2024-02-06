@@ -18,10 +18,9 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
-#ifndef __StarfishServiceWorkerHostProcess__
-#define __StarfishServiceWorkerHostProcess__
+#ifndef __StarfishServiceWorkerServer__
+#define __StarfishServiceWorkerServer__
 
-#include "binding/StarfishHoldable.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 
 namespace Starfish {
@@ -42,17 +41,14 @@ class ServiceWorkerRegistrationData;
 class IServiceWorkerClientConnection;
 class ServiceWorkerContextManager;
 
-class ServiceWorkerServer : public gc,
-                            public ServiceWorkerServerInterface,
-                            StarfishHoldable {
+class ServiceWorkerServer : public gc, public ServiceWorkerServerInterface {
 public:
-    ServiceWorkerServer(Starfish* starfish);
+    ServiceWorkerServer(PerProcess* perProcess);
     virtual ~ServiceWorkerServer();
 
     ServiceWorkerServer(ServiceWorkerServer const&) = delete;
     void operator=(ServiceWorkerServer const&) = delete;
 
-    void init(PerProcess* perProcess);
     void destroy();
     void start();
     void start(std::shared_ptr<ProgramOptions> programOptions);
