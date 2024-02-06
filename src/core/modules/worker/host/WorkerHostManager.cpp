@@ -23,6 +23,7 @@
 
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/worker/host/WorkerHostManager.h"
 
 namespace Starfish {
@@ -32,6 +33,14 @@ WorkerHostManager::WorkerHostManager()
 {
     m_workerSettings->setThreadPoolSize(s_threadPoolSize);
     m_perProcess->initialize();
+
+    createLocalStorageRootDir();
+}
+
+void WorkerHostManager::createLocalStorageRootDir()
+{
+    LocalStorageHelper::File::mkdirIfNotExists(
+        m_workerSettings->dataDirectoryPath());
 }
 
 } // namespace Starfish

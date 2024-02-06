@@ -17,31 +17,44 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
-#ifndef __StarfishWorkerHostManager__
-#define __StarfishWorkerHostManager__
-
-#include "core/modules/worker/WorkerManager.h"
+#ifndef __StarfishWorkerAgent__
+#define __StarfishWorkerAgent__
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
+class PerProcess;
+class Starfish;
+class WorkerHostManager;
 
-class WorkerHostManager : public WorkerManager {
-    friend class WorkerManager;
+enum class WorkerAgentState {
+    None,
+    Terminated,
+};
 
+using WorkerAgentStateHandler = std::function<void(WorkerAgentState)>;
+
+class WorkerAgent : public gc {
 public:
-    bool isWorkerHostManager() const override
-    {
-        return true;
-    }
+    static WorkerAgent* create(Starfish* starfish);
+    static WorkerAgent* instance();
+    static bool isCreated();
 
-private:
-    WorkerHostManager();
-    void createLocalStorageRootDir();
+    virtual void destroy();
 
-    static const size_t s_threadPoolSize = 5;
+    void registerOnStatusChangedHandler(WorkerAgentStateHandler cb);
+
+    PerProcess* perProcess() const;
+
+protected:
+    WorkerAgent(Starfish* starfish);
+
+    static WorkerAgent* g_workerAgentInstance;
+
+    WorkerAgentStateHandler m_clientFunc;
+    Starfish* m_starfish;
+    WorkerHostManager* m_workerHostManager;
 };
 
 } // namespace Starfish

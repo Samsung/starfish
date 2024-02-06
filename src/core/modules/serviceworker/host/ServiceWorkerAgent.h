@@ -21,11 +21,13 @@
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
+#include "core/modules/worker/host/WorkerAgent.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
 class WebWorker;
+class WorkerHostManager;
 class PerProcess;
 class ServiceWorkerData;
 class NotificationService;
@@ -33,25 +35,15 @@ class ServiceWorkerServer;
 class CastServer;
 class ServiceWorkerGlobalScope;
 
-enum class ServiceWorkerAgentState {
-    None,
-    Terminated,
-};
+class ServiceWorkerAgent final : public WorkerAgent {
+    friend class WorkerAgent;
 
-using ServiceWorkerAgentStateHandler =
-    std::function<void(ServiceWorkerAgentState)>;
-
-class ServiceWorkerAgent : public gc {
 public:
-    static ServiceWorkerAgent* create(Starfish* starfish,
-                                      PerProcess* perProcess);
-    static bool isCreated();
     static ServiceWorkerAgent* instance();
 
-    void destroy();
+    void destroy() override;
 
     void onWebWorkerTerminated(WebWorker* worker);
-    void registerOnStatusChangedHandler(ServiceWorkerAgentStateHandler cb);
 
     void runServiceWorker(ServiceWorkerData* serviceWorker,
                           bool forceBypassCache = false);
@@ -83,27 +75,21 @@ public:
     Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
-    PerProcess* perProcess()
+    WorkerHostManager* workerHostManager() const
     {
-        return m_perProcess;
+        return m_workerHostManager;
     }
 
-    Starfish* starfish()
+    Starfish* starfish() const
     {
         return m_starfish;
     }
 
 private:
-    ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
-    virtual ~ServiceWorkerAgent();
-
-    void createLocalStorageRootDir();
+    ServiceWorkerAgent(Starfish* starfish);
 
     static ServiceWorkerAgent* m_instance;
-    Starfish* m_starfish;
-    PerProcess* m_perProcess;
     ServiceWorkerServer* m_SWServer;
-    NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
 #if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     NotificationService* m_notificationService;
 #endif

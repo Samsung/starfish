@@ -19,22 +19,13 @@
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
-#include "StarfishConfig.h"
-#include "LWEWebView.h"
-#include "Starfish.h"
-#include "LWEServiceWorker.h"
-#include <functional>
 #include <cstdio>
+#include <thread>
+#include <chrono>
 #include <signal.h>
-#ifdef OS_POSIX
-#include <unistd.h>
-#endif
-
 #include <string.h>
 
-namespace LWEDelegate {
-extern Starfish::Starfish* g_starfishInstance;
-}
+#include "LWEWorker.h"
 
 static volatile sig_atomic_t g_workerDoneFlag = 0;
 
@@ -52,11 +43,6 @@ static inline bool startsWith(const std::string& string,
 
 int main(int argc, char* argv[])
 {
-    LoggerOption::instance()->parseEnv();
-
-    STARFISH_ASSERT(argv != nullptr);
-    STARFISH_LOG_INFO("WORKER STARTS");
-
     std::string scriptURL;
     std::string dataDir;
 
@@ -75,8 +61,8 @@ int main(int argc, char* argv[])
     LWE::ServiceWorker::Initialize(dataDir);
 
     LWE::ServiceWorker::RegisterOnStatusChangedHandler(
-        [](LWE::ServiceWorker::State state) {
-            if (state == LWE::ServiceWorker::State::Terminated) {
+        [](LWE::WorkerProcessState state) {
+            if (state == LWE::WorkerProcessState::Terminated) {
                 g_workerDoneFlag = 1;
             }
         });
@@ -92,12 +78,11 @@ int main(int argc, char* argv[])
     }
 
     while (g_workerDoneFlag == 0) {
-        usleep(100);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     LWE::ServiceWorker::Finalize();
 
-    STARFISH_LOG_INFO("WORKER ENDS");
     return 0;
 }
 

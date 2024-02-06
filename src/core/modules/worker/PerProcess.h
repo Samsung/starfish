@@ -45,7 +45,8 @@ public:
     void initialize();
     void destroy();
 
-    Nullable<WorkerSettings::ProcessExecutorCallback> workerProcessExecutor();
+    Nullable<WorkerSettings::ProcessExecutorCallback>
+    serviceWorkerProcessExecutor();
 
 private:
     MessageLoop *m_messageLoop{ nullptr };

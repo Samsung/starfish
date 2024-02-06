@@ -20,7 +20,6 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
-#include "Starfish.h"
 
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
@@ -33,7 +32,7 @@
 #include "platform/network/http/HTTPStatus.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/WorkerSettings.h"
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
@@ -203,14 +202,12 @@ private:
 };
 
 ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
-    Starfish* starfish, MessageLoop* messageLoop,
-    ServiceWorkerServerInterface* swserver)
-    : m_messageLoop(messageLoop)
+    PerProcess* perProcess, ServiceWorkerServerInterface* swserver)
+    : m_messageLoop(perProcess->messageLoop())
     , m_SWServer(swserver)
     , m_registrationStore(new RegistrationStoreLocalStorage(
-          starfish->workerManager()->workerSettings()->dataDirectoryPath()))
+          perProcess->workerSettings()->dataDirectoryPath()))
 {
-    STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(swserver != nullptr);
 
     m_registrationStore->load(m_scopeToRegistrationMap);

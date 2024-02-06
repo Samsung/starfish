@@ -63,25 +63,16 @@ void ServiceWorkerServer::destroy()
     }
 }
 
-ServiceWorkerServer::ServiceWorkerServer(Starfish* starfish)
-    : StarfishHoldable(starfish)
+ServiceWorkerServer::ServiceWorkerServer(PerProcess* perProcess)
+    : m_perProcess(perProcess)
 {
+    Message::init();
+
+    m_jobHandler = new ServiceWorkerHostJobHandler(perProcess, this);
 }
 
 ServiceWorkerServer::~ServiceWorkerServer()
 {
-}
-
-void ServiceWorkerServer::init(PerProcess* perProcess)
-{
-    TRACE_SCOPE(HOST);
-    STARFISH_ASSERT(perProcess != nullptr);
-
-    Message::init();
-
-    m_perProcess = perProcess;
-    m_jobHandler = new ServiceWorkerHostJobHandler(
-        starfish(), m_perProcess->messageLoop(), this);
 }
 
 // TODO: maybe we can merge start() and start(...)

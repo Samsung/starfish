@@ -135,10 +135,10 @@ void PerProcess::destroy()
 }
 
 Nullable<WorkerSettings::ProcessExecutorCallback>
-PerProcess::workerProcessExecutor()
+PerProcess::serviceWorkerProcessExecutor()
 {
     WorkerSettings::ProcessExecutorCallback executor =
-        m_workerSettings->workerProcessExecutor();
+        m_workerSettings->serviceWorkerProcessExecutor();
     if (!executor) {
         return Nullable<WorkerSettings::ProcessExecutorCallback>();
     }

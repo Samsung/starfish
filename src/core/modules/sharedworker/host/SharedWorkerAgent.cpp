@@ -17,34 +17,42 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
-#ifndef __StarfishWorkerHostManager__
-#define __StarfishWorkerHostManager__
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/worker/util/Trace.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
+WorkerAgent* WorkerAgent::create(Starfish* starfish)
+{
+    TRACE(SHAREDWORKER);
 
-class WorkerHostManager : public WorkerManager {
-    friend class WorkerManager;
-
-public:
-    bool isWorkerHostManager() const override
-    {
-        return true;
+    if (!WorkerAgent::g_workerAgentInstance) {
+        WorkerAgent::g_workerAgentInstance =
+            new (NoGC) SharedWorkerAgent(starfish);
     }
 
-private:
-    WorkerHostManager();
-    void createLocalStorageRootDir();
+    return WorkerAgent::g_workerAgentInstance;
+}
 
-    static const size_t s_threadPoolSize = 5;
-};
+SharedWorkerAgent* SharedWorkerAgent::instance()
+{
+    STARFISH_ASSERT(WorkerAgent::g_workerAgentInstance != nullptr);
+
+    return reinterpret_cast<SharedWorkerAgent*>(
+        WorkerAgent::g_workerAgentInstance);
+}
+
+SharedWorkerAgent::SharedWorkerAgent(Starfish* starfish)
+    : WorkerAgent(starfish)
+{
+}
 
 } // namespace Starfish
 
-#endif
 #endif

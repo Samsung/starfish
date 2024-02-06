@@ -27,8 +27,8 @@
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerHostManager.h"
 #include "core/modules/worker/util/Trace.h"
-#include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
@@ -46,74 +46,53 @@
 
 namespace Starfish {
 
-ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
-
-ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
-                                               PerProcess* perProcess)
+WorkerAgent* WorkerAgent::create(Starfish* starfish)
 {
     TRACE_SCOPE(SVCWORKER);
-    // TODO: remove this instantiation after checking service worker
-    // host running on another process. (host/ServiceWorkerExecutor)
 
-    STARFISH_ASSERT(m_instance == nullptr);
+    if (!WorkerAgent::g_workerAgentInstance) {
+        WorkerAgent::g_workerAgentInstance =
+            new (NoGC) ServiceWorkerAgent(starfish);
+    }
 
-    m_instance = new (NoGC) ServiceWorkerAgent(starfish, perProcess);
-
-    return m_instance;
+    return WorkerAgent::g_workerAgentInstance;
 }
 
 ServiceWorkerAgent* ServiceWorkerAgent::instance()
 {
-    STARFISH_ASSERT(m_instance != nullptr);
+    STARFISH_ASSERT(WorkerAgent::g_workerAgentInstance != nullptr);
 
-    return m_instance;
+    return reinterpret_cast<ServiceWorkerAgent*>(
+        WorkerAgent::g_workerAgentInstance);
 }
 
-ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
-                                       PerProcess* perProcess)
-    : m_starfish(starfish)
-    , m_perProcess(perProcess)
+ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
+    : WorkerAgent(starfish)
 #if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     , m_notificationService(new NotificationService())
 #endif
 {
     TRACE_SCOPE(SVCWORKER);
-    STARFISH_ASSERT(perProcess);
 
-#if defined(STARFISH_WEBWORKER_HOST)
-    m_SWServer = new ServiceWorkerServer(m_starfish);
-    m_SWServer->init(m_perProcess);
+    m_SWServer = new ServiceWorkerServer(perProcess());
     m_SWServer->start();
-#endif
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     m_castServer = CastServer::instance();
     m_castServer->start();
 #endif
-    createLocalStorageRootDir();
-}
-
-ServiceWorkerAgent::~ServiceWorkerAgent()
-{
-}
-
-bool ServiceWorkerAgent::isCreated()
-{
-    return (m_instance != nullptr);
 }
 
 void ServiceWorkerAgent::destroy()
 {
     TRACE_SCOPE(SVCWORKER);
-    STARFISH_ASSERT(m_instance != nullptr);
+    STARFISH_ASSERT(WorkerAgent::g_workerAgentInstance != nullptr);
     if (m_clientFunc) {
-        m_clientFunc(ServiceWorkerAgentState::Terminated);
+        m_clientFunc(WorkerAgentState::Terminated);
     }
 
     if (m_SWServer != nullptr) {
-#if defined(STARFISH_WEBWORKER_HOST)
         m_SWServer->destroy();
-#endif
         m_SWServer = nullptr;
     }
 
@@ -124,16 +103,12 @@ void ServiceWorkerAgent::destroy()
     }
 #endif
 
-#if defined(STARFISH_WEBWORKER_HOST)
     for (const auto& webWorker : m_webWorkerList) {
         webWorker->destroy();
     }
     m_webWorkerList.clear();
-#endif
 
-    m_instance->ServiceWorkerAgent::~ServiceWorkerAgent();
-    GC_FREE(m_instance);
-    m_instance = nullptr;
+    WorkerAgent::destroy();
 }
 
 void ServiceWorkerAgent::onWebWorkerTerminated(WebWorker* worker)
@@ -141,18 +116,10 @@ void ServiceWorkerAgent::onWebWorkerTerminated(WebWorker* worker)
     STARFISH_ASSERT(worker != nullptr);
 }
 
-void ServiceWorkerAgent::registerOnStatusChangedHandler(
-    ServiceWorkerAgentStateHandler func)
-{
-    STARFISH_ASSERT(func != nullptr);
-    m_clientFunc = func;
-}
-
 void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
                                           bool forceBypassCache)
 {
     TRACE_SCOPE(SVCWORKER);
-#if defined(STARFISH_WEBWORKER_HOST)
     STARFISH_ASSERT(serviceWorker != nullptr);
     // https://w3c.github.io/ServiceWorker/#run-service-worker
 
@@ -216,8 +183,7 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
     // 4.15. Run the responsible event loop specified by settingsObject until
     // it is destroyed.
 
-// 4.16. Empty workerGlobalScope’s list of active timers.
-#endif /* STARFISH_WEBWORKER_HOST */
+    // 4.16. Empty workerGlobalScope’s list of active timers.
 }
 
 void ServiceWorkerAgent::addGlobalScope(ServiceWorkerContextId id,
@@ -260,11 +226,6 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
 
-void ServiceWorkerAgent::createLocalStorageRootDir()
-{
-    LocalStorageHelper::File::mkdirIfNotExists(
-        m_starfish->workerManager()->workerSettings()->dataDirectoryPath());
-}
-
 } // namespace Starfish
+
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

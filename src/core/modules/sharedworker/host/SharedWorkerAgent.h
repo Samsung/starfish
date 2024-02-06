@@ -17,33 +17,29 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
-#ifndef __StarfishWorkerHostManager__
-#define __StarfishWorkerHostManager__
+#ifndef __StarfishSharedWorkerAgent__
+#define __StarfishSharedWorkerAgent__
 
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/worker/host/WorkerAgent.h"
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
+class SharedWorkerAgent;
+class Starfish;
 
-class WorkerHostManager : public WorkerManager {
-    friend class WorkerManager;
+class SharedWorkerAgent final : public WorkerAgent {
+    friend class WorkerAgent;
 
 public:
-    bool isWorkerHostManager() const override
-    {
-        return true;
-    }
+    static SharedWorkerAgent* instance();
 
 private:
-    WorkerHostManager();
-    void createLocalStorageRootDir();
+    SharedWorkerAgent(Starfish* starfish);
 
-    static const size_t s_threadPoolSize = 5;
+    static SharedWorkerAgent* m_instance;
 };
-
 } // namespace Starfish
 
 #endif
