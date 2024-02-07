@@ -29,9 +29,9 @@ TARGET_INCLUDE_DIRECTORIES (${STARFISH_API_OBJECT_LIBRARY} PUBLIC ${STARFISH_API
 # The spec file will also need to be modified.
 IF (${HOST} STREQUAL "tizen")
     IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
-        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine.so.1)
+        SET (STARFISH_API_LDFLAGS ${STARFISH_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine.so.1)
     ELSEIF (${BACKEND} STREQUAL "dali")
-        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
+        SET (STARFISH_API_LDFLAGS ${STARFISH_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
     ENDIF()
 ENDIF()
 
