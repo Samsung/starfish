@@ -1136,7 +1136,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
 }
 } // namespace LWEDelegate
 #else // !defined(STARFISH_ENABLE_SHELL)
-namespace LWE {
+namespace LWEDelegate {
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          unsigned height, float devicePixelRatio,
                          const char* defaultFontName, const char* locale,
@@ -1146,7 +1146,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
-} // namespace LWE
+} // namespace LWEDelegate
 #endif
 
 #endif
