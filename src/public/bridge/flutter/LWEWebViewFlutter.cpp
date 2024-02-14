@@ -93,7 +93,7 @@ public:
         , m_useSWBackend(useSWBackend)
         , m_lastInputTime(0)
     {
-        ::LWE::WebContainer* webContainer;
+        ::LWEDelegate::WebContainer* webContainer;
         if (m_useSWBackend) {
             Starfish::g_portWindowBackend =
                 static_cast<int>(PORT_WINDOW_BACKEND::GB);
@@ -110,77 +110,80 @@ public:
 
             eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                            EGL_NO_CONTEXT);
-            webContainer = ::LWE::WebContainer::CreateGLWithPlatformImage(
-                width, height,
-                [this](WebContainer* wc) {
-                    if (m_isBufferSwapped) {
-                        if (m_fence) {
-                            Starfish::LongTaskFinder p(
-                                "WebViewFlutter - eglClientWaitSyncKHRProc", 1);
-                            EGLint result = g_eglClientWaitSyncKHRProc(
-                                m_display, m_fence,
-                                EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
-                                EGL_FOREVER_KHR);
-                            if (result == EGL_FALSE) {
-                                STARFISH_LOG_INFO(
-                                    "EGL FENCE: error waiting for fence: "
-                                    "%d",
-                                    (int)eglGetError());
+            webContainer =
+                ::LWEDelegate::WebContainer::CreateGLWithPlatformImage(
+                    width, height,
+                    [this](WebContainer* wc) {
+                        if (m_isBufferSwapped) {
+                            if (m_fence) {
+                                Starfish::LongTaskFinder p(
+                                    "WebViewFlutter - eglClientWaitSyncKHRProc",
+                                    1);
+                                EGLint result = g_eglClientWaitSyncKHRProc(
+                                    m_display, m_fence,
+                                    EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
+                                    EGL_FOREVER_KHR);
+                                if (result == EGL_FALSE) {
+                                    STARFISH_LOG_INFO(
+                                        "EGL FENCE: error waiting for fence: "
+                                        "%d",
+                                        (int)eglGetError());
+                                }
+                                g_eglDestroySyncKHRProc(m_display, m_fence);
+                                m_fence = nullptr;
                             }
-                            g_eglDestroySyncKHRProc(m_display, m_fence);
-                            m_fence = nullptr;
+                            m_isBufferSwapped = false;
                         }
-                        m_isBufferSwapped = false;
-                    }
-                    {
-                        Starfish::LongTaskFinder p(
-                            "WebViewFlutter - eglMakeCurrent", 1);
-                        if (!eglMakeCurrent(m_display, m_surface, m_surface,
-                                            m_context)) {
-                            auto eglError = eglGetError();
-                            STARFISH_LOG_ERROR(
-                                "Made current failed error -> %d",
-                                (int)eglError);
+                        {
+                            Starfish::LongTaskFinder p(
+                                "WebViewFlutter - eglMakeCurrent", 1);
+                            if (!eglMakeCurrent(m_display, m_surface, m_surface,
+                                                m_context)) {
+                                auto eglError = eglGetError();
+                                STARFISH_LOG_ERROR(
+                                    "Made current failed error -> %d",
+                                    (int)eglError);
+                            }
                         }
-                    }
-                },
-                [this](WebContainer* wc, bool mayNeedsSync) {
-                    {
-                        Starfish::LongTaskFinder p(
-                            "WebViewFlutter - eglSwapBuffers", 2);
-                        if (!eglSwapBuffers(m_display, m_surface)) {
-                            auto eglError = eglGetError();
-                            STARFISH_LOG_ERROR(
-                                "Made current failed error -> %d",
-                                (int)eglError);
+                    },
+                    [this](WebContainer* wc, bool mayNeedsSync) {
+                        {
+                            Starfish::LongTaskFinder p(
+                                "WebViewFlutter - eglSwapBuffers", 2);
+                            if (!eglSwapBuffers(m_display, m_surface)) {
+                                auto eglError = eglGetError();
+                                STARFISH_LOG_ERROR(
+                                    "Made current failed error -> %d",
+                                    (int)eglError);
+                            }
                         }
-                    }
-                    if (m_lastInputTime) {
-                        ANNOTATE_SETUP;
-                        ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
-                                               "response time");
+                        if (m_lastInputTime) {
+                            ANNOTATE_SETUP;
+                            ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                                   "response time");
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
-                        uint64_t end = Starfish::longTickCount();
-                        float time = (float)((end - m_lastInputTime) / 1000.f);
-                        STARFISH_LOG_INFO("response time is %f ms", time);
+                            uint64_t end = Starfish::longTickCount();
+                            float time =
+                                (float)((end - m_lastInputTime) / 1000.f);
+                            STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
-                        m_lastInputTime = 0;
-                        ANNOTATE_CHANNEL_END(3002);
-                    }
-                    if (mayNeedsSync) {
-                        m_fence = g_eglCreateSyncKHRProc(
-                            m_display, EGL_SYNC_FENCE_KHR, NULL);
-                        if (!m_fence) {
-                            STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
-                                              (int)eglGetError());
+                            m_lastInputTime = 0;
+                            ANNOTATE_CHANNEL_END(3002);
                         }
-                    }
-                    m_isBufferSwapped = true;
-                },
-                prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
-                locale, timezoneID);
+                        if (mayNeedsSync) {
+                            m_fence = g_eglCreateSyncKHRProc(
+                                m_display, EGL_SYNC_FENCE_KHR, NULL);
+                            if (!m_fence) {
+                                STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
+                                                  (int)eglGetError());
+                            }
+                        }
+                        m_isBufferSwapped = true;
+                    },
+                    prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
+                    locale, timezoneID);
         } else {
-            webContainer = ::LWE::WebContainer::CreateWithPlatformImage(
+            webContainer = ::LWEDelegate::WebContainer::CreateWithPlatformImage(
                 width, height, prepareImageCb, flushCb, devicePixelRatio,
                 defaultFontName, locale, timezoneID);
         }
@@ -373,9 +376,9 @@ public:
     EGLSyncKHR m_fence;
     static Ecore_Wl2_Display* m_ecoreWlDisplay;
 
-    virtual ::LWE::WebContainer* FetchWebContainer() override
+    virtual ::LWEDelegate::WebContainer* FetchWebContainer() override
     {
-        return (::LWE::WebContainer*)m_impl;
+        return (::LWEDelegate::WebContainer*)m_impl;
     }
 };
 
@@ -402,18 +405,4 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
 }
 } // namespace LWEDelegate
 
-extern "C" size_t LWE_EXPORT createWebViewInstance(
-    unsigned x, unsigned y, unsigned width, unsigned height,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID,
-    const std::function<::LWE::WebContainer::ExternalImageInfo(void)>&
-        prepareImageCb,
-    const std::function<void(::LWE::WebContainer*, bool needsFlush)>& flushCb,
-    bool useSWBackend)
-{
-    ::LWE::WebViewFlutter* wv = new ::LWE::WebViewFlutter(
-        x, y, width, height, devicePixelRatio, defaultFontName, locale,
-        timezoneID, prepareImageCb, flushCb, useSWBackend);
-    return (size_t)wv->FetchWebContainer();
-}
 #endif
