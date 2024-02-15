@@ -1240,9 +1240,9 @@ void WebContainerImpl::RegisterShouldOverrideUrlLoadingHandler(
                 cb(this, p->url->urlString()->toUTF8NonGCString().data());
             if ((ret == false) && p->canNavigate) {
                 // continue loading
-                TO_WEBVIEW(m_impl)->messageLoop()->invokeNavigate(
-                    TO_WEBVIEW(m_impl), p->url, p->referrerURL,
-                    Starfish::HistoryManagerAction::Add, true);
+                TO_WEBVIEW(m_impl)->navigateAsync(
+                    p->url, Starfish::HistoryManagerAction::Add,
+                    p->referrerURL);
             }
         });
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER

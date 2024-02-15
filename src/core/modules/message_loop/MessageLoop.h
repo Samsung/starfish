@@ -21,15 +21,10 @@
 #define __StarfishMessageLoop__
 
 #include "core/modules/message_loop/MessageLoopInterface.h"
-
-#if defined(STARFISH_USE_WORKER_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
-#define BASE_CLASS gc, public IMessageLoop
-#else
-#include "core/modules/message_loop/MessageLoopMixin.h"
-#define BASE_CLASS gc, public MessageLoopMixin, public IMessageLoop
-#endif
-
 #include "core/modules/threading/Thread.h"
+
+#include <unordered_set>
+#include <functional>
 
 namespace Starfish {
 class GlobalScope;
@@ -38,7 +33,7 @@ class RunLoop;
 
 constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 
-class MessageLoop : public BASE_CLASS {
+class MessageLoop : public gc, public IMessageLoop {
     friend class MessageLoopImpl;
     friend class MessageLoopMixin;
     friend class TimerEFL;

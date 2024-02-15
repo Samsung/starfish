@@ -178,8 +178,7 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
                          ReferrerURL* referrerURL, HistoryManagerAction action)
 {
     if (ctx->isTopLevelBrowsingContext()) {
-        ctx->webView()->messageLoop()->invokeNavigate(ctx->webView(), url,
-                                                      referrerURL, action);
+        ctx->webView()->navigateAsync(url, action, referrerURL);
     } else {
         struct Param : public gc {
             BrowsingContext* ctx;
