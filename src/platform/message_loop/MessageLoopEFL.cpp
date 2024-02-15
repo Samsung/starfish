@@ -47,10 +47,6 @@ void MessageLoopEFL::destroy()
 {
     m_inClosingState = true;
 
-#ifndef STARFISH_WEBWORKER_HOST
-    onDestroyed();
-#endif
-
     while (true) {
         {
             Locker<Mutex> l(*m_idlersFromOtherThreadMutex);

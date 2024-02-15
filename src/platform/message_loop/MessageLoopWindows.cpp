@@ -118,7 +118,7 @@ public:
             }
         }
         default:
-            MessageLoopMixin::processMessage(self, message);
+            STARFISH_LOG_WARN("Unhandled message.");
             break;
         }
     }
@@ -132,10 +132,6 @@ void processMessage(MessageLoop* self, const MSG& message)
 void MessageLoopWindows::destroy()
 {
     m_inClosingState = true;
-
-#ifndef STARFISH_WEBWORKER_HOST
-    onDestroyed();
-#endif
 
     if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
         MSG message;

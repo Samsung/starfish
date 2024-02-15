@@ -292,10 +292,6 @@ void MessageLoopLibUV::destroy()
 {
     m_inClosingState = true;
 
-#ifndef STARFISH_WEBWORKER_HOST
-    onDestroyed();
-#endif
-
     while (true) {
         while (!m_idlersFromOtherThreadForUV.empty()) {
             IdlerData* id = nullptr;

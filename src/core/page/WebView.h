@@ -136,6 +136,8 @@ public:
     void loadHTMLDocument(String* filePath); // navigate function helper
     void navigate(ResourceURL* url, HistoryManagerAction type,
                   ReferrerURL* referrerURL);
+    void navigateAsync(ResourceURL* url, HistoryManagerAction type,
+                       ReferrerURL* referrerURL);
 
     ScriptEngineInstance* scriptEngineInstance()
     {

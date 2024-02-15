@@ -205,8 +205,7 @@ static void rtDoTest(Document* document)
         setenv("REF_TEST_STATE", "2", 1);
         ResourceURL* resourceURL =
             new ResourceURL(url.getValue(), document->baseURL()->baseURI());
-        wv->messageLoop()->invokeNavigate(wv, resourceURL, nullptr,
-                                          HistoryManagerAction::Add);
+        wv->navigateAsync(resourceURL, HistoryManagerAction::Add, nullptr);
     } else if (getenv("REF_TEST_STATE") &&
                atoi(getenv("REF_TEST_STATE")) == 2) {
         // Case2: Running Reference
@@ -678,6 +677,32 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     } else {
         navigateCrossDocument(url, type, referrerURL);
     }
+}
+
+void WebView::navigateAsync(ResourceURL* url, HistoryManagerAction type,
+                            ReferrerURL* referrerURL)
+{
+    struct Params : public gc {
+        WebView* webview;
+        ResourceURL* url;
+        HistoryManagerAction type;
+        ReferrerURL* referrerURL;
+    };
+
+    Params* params = new Params();
+    params->webview = this;
+    params->url = url;
+    params->type = type;
+    params->referrerURL = referrerURL;
+
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t handle, void* data) {
+            Params* params = static_cast<Params*>(data);
+            params->webview->navigate(params->url, params->type,
+                                      params->referrerURL);
+        },
+        params);
 }
 
 void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,

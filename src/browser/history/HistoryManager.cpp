@@ -127,12 +127,11 @@ bool HistoryManager::go(int delta)
     if (checkHistoryEntry(delta, true)) {
         switch (m_owner) {
         case OwnerIsWebView:
-            m_webView->messageLoop()->invokeNavigate(
-                m_webView, currentEntry()->url(),
+            m_webView->navigateAsync(
+                currentEntry()->url(), HistoryManagerAction::Intact,
                 new ReferrerURL(m_webView->mainBrowsingContext()
                                     ->document()
-                                    ->documentURI()),
-                HistoryManagerAction::Intact);
+                                    ->documentURI()));
             break;
         case OwnerIsHTMLIFrame:
             m_iframe->navigate(
