@@ -31,7 +31,7 @@ using namespace Escargot;
 namespace Starfish {
 
 struct TimeOutData : public gc {
-    TimeOutData(GlobalScope* globalScope)
+    TimeOutData(WorkerGlobalScope* globalScope)
         : listener(nullptr)
         , globalScope(globalScope)
     {
@@ -39,13 +39,18 @@ struct TimeOutData : public gc {
     }
     void* listener;
     GCVector<ScriptValue> argVector;
-    GlobalScope* globalScope;
+    WorkerGlobalScope* globalScope;
 };
 
 static void timeoutHandler(void* data)
 {
     STARFISH_ASSERT(data != nullptr);
     TimeOutData* td = (TimeOutData*)data;
+
+    if (td->globalScope->isClosing()) {
+        return;
+    }
+
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
     ScriptBindingInstance* instance =
         td->globalScope->executionContext()->scriptBindingInstance();

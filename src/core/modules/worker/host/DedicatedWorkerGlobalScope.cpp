@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerObjectProxy.h"
@@ -76,17 +77,27 @@ void DedicatedWorkerGlobalScope::postMessage(
 
 void DedicatedWorkerGlobalScope::close()
 {
-    if (m_wasTerminated) {
+    if (!terminate()) {
         return;
     }
 
-    m_wasTerminated = true;
-
-    STARFISH_UNIMPLEMENTED();
+    // The closing worker is postponed to the next to process all currently
+    // loaded scripts.
+    m_webWorker->messageLoop()->addIdler(
+        this,
+        [](size_t handle, void* data) {
+            auto* self = static_cast<DedicatedWorkerGlobalScope*>(data);
+            self->workerObjectProxy()->terminateWorker();
+        },
+        this);
 }
 
 void DedicatedWorkerGlobalScope::dispose()
 {
+    if (m_wasTerminated) {
+        return;
+    }
+
     m_wasTerminated = true;
 
     if (m_workerObjectProxy) {

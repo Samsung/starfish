@@ -58,8 +58,9 @@ WorkerThread::WorkerThread(ExecutionContext* executionContext)
     , m_mainThread(new Thread(nullptr))
     , m_mutex(new Mutex())
     , m_runLoop(nullptr)
-    , m_wasWorkerTerminated(false)
+    , m_wasTerminated(false)
     , m_workerMessageLoopGlobalScope(new WorkerProxyGlobalScope())
+    , m_childThreadDataLock(new Mutex())
 {
 }
 
@@ -90,6 +91,8 @@ void* WorkerThread::workerMainThreadWork(void* data,
         self->destroyWorkerThread();
     }
 
+    self->terminateChildThreads();
+
     if (self->m_workerThread.joinable()) {
         self->m_workerThread.join();
     }
@@ -113,10 +116,10 @@ void WorkerThread::terminate()
     Locker<Mutex> locker(*m_mutex);
     TRACE(WORKER);
 
-    if (m_wasWorkerTerminated) {
+    if (m_wasTerminated) {
         return;
     }
-    m_wasWorkerTerminated = true;
+    m_wasTerminated = true;
 
     stopWorkerRunLoop();
     m_mainThread->stop();
@@ -159,6 +162,39 @@ bool WorkerThread::stopWorkerRunLoop()
     m_runLoop = nullptr;
 
     return true;
+}
+
+void WorkerThread::addChildThread(WorkerThread* thread)
+{
+    Locker<Mutex> lock(*m_childThreadDataLock);
+
+    m_childThreads.push_back(thread);
+}
+
+void WorkerThread::removeChildThread(WorkerThread* thread)
+{
+    Locker<Mutex> lock(*m_childThreadDataLock);
+
+    auto iter = std::find(m_childThreads.begin(), m_childThreads.end(), thread);
+    if (iter != m_childThreads.end()) {
+        m_childThreads.erase(iter);
+    }
+}
+
+void WorkerThread::terminateChildThreads()
+{
+    Locker<Mutex> lock(*m_childThreadDataLock);
+
+    if (m_childThreads.empty()) {
+        return;
+    }
+
+    for (WorkerThread* thread : m_childThreads) {
+        thread->terminate();
+    }
+
+    m_childThreads.clear();
+    m_childThreads.shrink_to_fit();
 }
 
 } // namespace Starfish

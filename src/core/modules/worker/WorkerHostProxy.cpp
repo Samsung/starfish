@@ -55,6 +55,12 @@ ExecutionContext* WorkerHostProxy::targetExecutionContext()
     return m_workerHost->globalScope()->executionContext();
 }
 
+bool WorkerHostProxy::isTargetClosed()
+{
+    STARFISH_ASSERT(m_workerHost);
+    return m_workerHost->globalScope()->isClosing();
+}
+
 void WorkerHostProxy::onScriptLoadFinished()
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
@@ -66,6 +72,17 @@ void WorkerHostProxy::onScriptLoadFinished()
     m_wasWorkerScriptLoaded = true;
 
     handleQueuedEarlyMessages();
+}
+
+void WorkerHostProxy::terminateWorkerGlobalScope()
+{
+    STARFISH_ASSERT(m_workerHost);
+    postTask(
+        [](void* data) {
+            WorkerHost* workerHost = static_cast<WorkerHost*>(data);
+            workerHost->globalScope()->terminate();
+        },
+        m_workerHost);
 }
 
 void WorkerHostProxy::handleQueuedEarlyMessages()

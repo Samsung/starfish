@@ -39,6 +39,8 @@ public:
 
     void onScriptLoadFinished();
 
+    void terminateWorkerGlobalScope();
+
     DEFINE_GETTER(WorkerThread*, workerThread);
 
 private:
@@ -48,6 +50,7 @@ private:
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;
+    bool isTargetClosed() override;
 
     void postSerializedMessage(
         SerializeWithTransferResult* serializedMessage) override;

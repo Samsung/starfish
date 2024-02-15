@@ -50,6 +50,8 @@ public:
         ScriptExecutionState state,
         ScriptBindingInstance* scriptBindingInstance) = 0;
 
+    DedicatedWorkerGlobalScope* asDedicatedWorkerGlobalScope();
+
     ExecutionContext* executionContext() const override
     {
         return m_executionContext;
@@ -88,12 +90,19 @@ public:
         return m_crypto;
     }
 
+    bool isClosing() const
+    {
+        return m_closing;
+    }
+
     ScriptBindingInstance* scriptBindingInstance()
     {
         return m_scriptBindingInstance;
     }
 
     void dispatchErrorEvent(ErrorEventInit& errorInfo);
+
+    bool terminate();
 
     virtual void dispose();
 
@@ -139,6 +148,7 @@ protected:
     WorkerLocation* m_workerLocation;
     WorkerNavigator* m_workerNavigator;
     Crypto* m_crypto;
+    std::atomic_bool m_closing;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -150,6 +160,7 @@ protected:
                    GC_WORD_OFFSET(WorkerGlobalScope, m_workerScriptController));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_crypto));
     }
 
     void initGlobalScope(ResourceURL* url, String* charSet);

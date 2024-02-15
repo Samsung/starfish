@@ -62,10 +62,10 @@ void WorkerHost::run(void* data)
             },
             hostProxy);
     } else {
-        // TODO: terminate worker from another thread
+        objectProxy->terminateWorker();
     }
 
-    if (!workerThread->wasWorkerTerminated()) {
+    if (!workerThread->wasTerminated()) {
         workerThread->onWorkerRunLoopStarted(runLoop);
         runLoop->run();
     }

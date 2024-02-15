@@ -24,6 +24,7 @@
 
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
@@ -46,6 +47,7 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
     , m_crypto(nullptr)
+    , m_closing(false)
 {
     STARFISH_ASSERT(webWorker != nullptr);
 }
@@ -56,6 +58,7 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
     , m_crypto(nullptr)
+    , m_closing(false)
 {
     TRACE_SCOPE(HOST);
 
@@ -93,11 +96,33 @@ void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
     m_scriptBindingInstance->initBinding();
 }
 
+DedicatedWorkerGlobalScope* WorkerGlobalScope::asDedicatedWorkerGlobalScope()
+{
+    STARFISH_ASSERT(isDedicatedWorkerGlobalScope());
+
+    return reinterpret_cast<DedicatedWorkerGlobalScope*>(this);
+}
+
 void WorkerGlobalScope::dispatchErrorEvent(ErrorEventInit& errorInfo)
 {
     Event* errorEvent = new ErrorEvent(
         m_executionContext, staticStrings()->m_error.localName(), errorInfo);
     dispatchEventByUA(errorEvent);
+}
+
+bool WorkerGlobalScope::terminate()
+{
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+
+    if (m_closing) {
+        return false;
+    }
+
+    m_closing = true;
+
+    m_webWorker->messageLoop()->clearPendingIdlers(nullptr);
+
+    return true;
 }
 
 void WorkerGlobalScope::dispose()
