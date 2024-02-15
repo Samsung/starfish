@@ -582,7 +582,7 @@ IF (${HOST} STREQUAL "tizen")
 ENDIF()
 
 IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
-    SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets)
+    SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets_lwe)
 ENDIF()
 
 IF (${HOST} STREQUAL "linux")
@@ -599,6 +599,7 @@ SET (STARFISH_INCLUDE_DIRS_DEFAULT
    ${STARFISH_ROOT}/src
    ${STARFISH_ROOT}/inc
    ${ESCARGOT_THIRD_PARTY_ROOT}/rapidjson/include
+   ${OUTPUT_DIRECTORY}/libwebsockets/include
 )
 
 IF (${BACKEND} STREQUAL "dali")
