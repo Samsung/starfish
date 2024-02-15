@@ -35,7 +35,7 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
                          WorkerThread* workerThread)
     : m_ownerExecutionContext(executionContext)
     , m_workerThread(workerThread)
-    , m_wasTerminate(false)
+    , m_wasTerminated(false)
 {
 }
 
@@ -47,7 +47,7 @@ void WorkerProxy::onPostMessageDone(
 
 void WorkerProxy::postTask(PostTask task, void* data)
 {
-    if (m_workerThread->wasWorkerTerminated()) {
+    if (isTargetClosed()) {
         return;
     }
 
@@ -80,7 +80,7 @@ void WorkerProxy::postMessageToEntangledEventTarget(
 {
     STARFISH_ASSERT(m_entangledEventTarget);
 
-    if (m_workerThread->wasWorkerTerminated()) {
+    if (isTargetClosed()) {
         return;
     }
 
@@ -88,7 +88,7 @@ void WorkerProxy::postMessageToEntangledEventTarget(
         m_workerThread->workerMessageLoopGlobalScope(),
         [](size_t handle, void* data, void* data1) {
             auto* proxy = static_cast<WorkerProxy*>(data);
-            if (proxy->workerThread()->wasWorkerTerminated()) {
+            if (proxy->isTargetClosed()) {
                 return;
             }
 
@@ -161,11 +161,11 @@ void WorkerProxy::terminate()
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
 
-    if (m_wasTerminate) {
+    if (m_wasTerminated) {
         return;
     }
 
-    m_wasTerminate = true;
+    m_wasTerminated = true;
 
     clearPendingPostTask();
 

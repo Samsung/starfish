@@ -59,6 +59,7 @@ public:
     DEFINE_GETTER(ResourceURL*, url);
     DEFINE_GETTER(WorkerThread*, workerThread);
     DEFINE_GETTER(WorkerHostProxy*, workerHostProxy);
+    DEFINE_GETTER(bool, wasTerminated);
 
 #define VIRTUAL
 #define OVERRIDE
@@ -72,7 +73,7 @@ private:
     const WorkerOptions m_options;
     WorkerThread* m_workerThread;
     WorkerHostProxy* m_workerHostProxy;
-    bool m_wasTerminated;
+    std::atomic_bool m_wasTerminated;
 };
 } // namespace Starfish
 #endif

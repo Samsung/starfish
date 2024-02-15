@@ -34,7 +34,15 @@ public:
     WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker,
                       WorkerThread* workerThread);
 
+    void terminate() override;
+
     String* workerName() const;
+
+    void terminateWorker();
+
+    Nullable<WorkerGlobalScope*> parentWorkerGlobalScope();
+    void addChildWorker();
+    void removeChildWorker();
 
     DEFINE_GETTER(Worker*, workerObject);
 
@@ -43,6 +51,7 @@ private:
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;
+    bool isTargetClosed() override;
 
     void postSerializedMessage(
         SerializeWithTransferResult* serializedMessage) override;

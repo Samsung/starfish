@@ -24,6 +24,8 @@
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/Worker.h"
+#include "core/modules/worker/WorkerThread.h"
+#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerObjectProxy.h"
 
 namespace Starfish {
@@ -34,6 +36,8 @@ WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
     , m_workerObject(worker)
 {
     setEntangledEventTarget(m_workerObject);
+
+    addChildWorker();
 }
 
 MessageLoop* WorkerObjectProxy::targetMessageLoop()
@@ -46,6 +50,11 @@ ExecutionContext* WorkerObjectProxy::targetExecutionContext()
     return m_workerObject->executionContext();
 }
 
+bool WorkerObjectProxy::isTargetClosed()
+{
+    return m_workerObject->wasTerminated();
+}
+
 String* WorkerObjectProxy::workerName() const
 {
     return m_workerObject->workerOptions().name();
@@ -55,6 +64,55 @@ void WorkerObjectProxy::postSerializedMessage(
     SerializeWithTransferResult* serializedMessage)
 {
     postMessageToEntangledEventTarget(serializedMessage);
+}
+
+void WorkerObjectProxy::terminateWorker()
+{
+    postTask(
+        [](void* data) {
+            auto* workerObjectProxy = static_cast<WorkerObjectProxy*>(data);
+            workerObjectProxy->workerObject()->terminate();
+        },
+        this);
+}
+
+Nullable<WorkerGlobalScope*> WorkerObjectProxy::parentWorkerGlobalScope()
+{
+    ExecutionContext* parentExecutionContext = targetExecutionContext();
+    if (parentExecutionContext->hasWorkerGlobalScope()) {
+        return parentExecutionContext->workerGlobalScope();
+    }
+
+    return Nullable<WorkerGlobalScope*>();
+}
+
+void WorkerObjectProxy::addChildWorker()
+{
+    Nullable<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
+    if (parent.hasValue()) {
+        parent->asDedicatedWorkerGlobalScope()
+            ->workerObjectProxy()
+            ->workerThread()
+            ->addChildThread(workerThread());
+    }
+}
+
+void WorkerObjectProxy::removeChildWorker()
+{
+    Nullable<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
+    if (parent.hasValue()) {
+        parent->asDedicatedWorkerGlobalScope()
+            ->workerObjectProxy()
+            ->workerThread()
+            ->removeChildThread(workerThread());
+    }
+}
+
+void WorkerObjectProxy::terminate()
+{
+    removeChildWorker();
+
+    WorkerProxy::terminate();
 }
 
 } // namespace Starfish

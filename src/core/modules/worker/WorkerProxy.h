@@ -41,14 +41,14 @@ public:
 
     WorkerProxy(ExecutionContext* executionContext, WorkerThread* workerThread);
 
-    void terminate();
+    virtual void terminate();
 
     void postTask(PostTask task, void* data);
 
     void postMessage(ScriptValue message,
                      const GCAtomicVector<ScriptObject>& transfer);
 
-    DEFINE_GETTER(bool, wasTerminate);
+    DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(ExecutionContext*, ownerExecutionContext);
     DEFINE_GETTER(WorkerThread*, workerThread);
 
@@ -56,13 +56,14 @@ protected:
     ExecutionContext* m_ownerExecutionContext;
     WorkerThread* m_workerThread;
     EventTarget* m_entangledEventTarget;
-    bool m_wasTerminate;
+    bool m_wasTerminated;
     std::vector<SerializeWithTransferResult*> m_serializedMessages;
 
     static GlobalScope* workerProxyGlobalScope();
 
     virtual MessageLoop* targetMessageLoop() = 0;
     virtual ExecutionContext* targetExecutionContext() = 0;
+    virtual bool isTargetClosed() = 0;
 
     virtual void postSerializedMessage(
         SerializeWithTransferResult* serializedMessage) = 0;

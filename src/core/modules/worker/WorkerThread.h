@@ -41,8 +41,11 @@ public:
 
     void onWorkerRunLoopStarted(RunLoop* runLoop);
 
+    void addChildThread(WorkerThread* thread);
+    void removeChildThread(WorkerThread* thread);
+
     DEFINE_GETTER(RunLoop*, runLoop);
-    DEFINE_GETTER(bool, wasWorkerTerminated);
+    DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(GlobalScope*, workerMessageLoopGlobalScope);
 
 private:
@@ -51,8 +54,10 @@ private:
     std::thread m_workerThread;
     Mutex* m_mutex;
     RunLoop* m_runLoop;
-    std::atomic_bool m_wasWorkerTerminated;
+    std::atomic_bool m_wasTerminated;
     GlobalScope* m_workerMessageLoopGlobalScope;
+    Mutex* m_childThreadDataLock;
+    std::vector<WorkerThread*> m_childThreads;
 
     static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
 
@@ -61,6 +66,8 @@ private:
     void destroyWorkerThread();
 
     bool stopWorkerRunLoop();
+
+    void terminateChildThreads();
 };
 
 } // namespace Starfish

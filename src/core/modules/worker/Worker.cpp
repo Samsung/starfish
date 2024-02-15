@@ -66,6 +66,7 @@ void Worker::terminate()
     }
     m_wasTerminated = true;
 
+    m_workerHostProxy->terminateWorkerGlobalScope();
     m_workerHostProxy->terminate();
     m_workerThread->terminate();
 }

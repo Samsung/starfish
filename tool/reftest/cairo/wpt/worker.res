@@ -44,10 +44,10 @@ http://web-platform.test:8000/workers/interfaces/DedicatedWorkerGlobalScope/post
 #http://web-platform.test:8000/workers/interfaces/SharedWorkerGlobalScope/name/getting.html
 #http://web-platform.test:8000/workers/interfaces/SharedWorkerGlobalScope/name/setting.html
 #http://web-platform.test:8000/workers/interfaces/SharedWorkerGlobalScope/onconnect.html
-#http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/incoming-message.html
-#http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/sending-messages.html
-#http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setInterval.html
-#http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setTimeout.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/incoming-message.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/sending-messages.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setInterval.html
+http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/close/setTimeout.html
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/members.html
 #http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/redirect.html
 http://web-platform.test:8000/workers/interfaces/WorkerGlobalScope/location/returns-same-object.html
@@ -157,7 +157,7 @@ http://web-platform.test:8000/workers/Worker_dispatchEvent_ErrorEvent.htm
 #http://web-platform.test:8000/workers/Worker_NosniffErr.htm
 #http://web-platform.test:8000/workers/Worker_script_mimetype.htm
 #http://web-platform.test:8000/workers/Worker_terminate_event_queue.htm
-#http://web-platform.test:8000/workers/WorkerGlobalScope_close.htm
+http://web-platform.test:8000/workers/WorkerGlobalScope_close.htm
 #http://web-platform.test:8000/workers/WorkerGlobalScope_ErrorEvent_colno.htm
 #http://web-platform.test:8000/workers/WorkerGlobalScope_ErrorEvent_filename.htm
 #http://web-platform.test:8000/workers/WorkerGlobalScope_ErrorEvent_lineno.htm
