@@ -245,6 +245,10 @@ ELSEIF (${BACKEND} STREQUAL "flutter")
     ENDIF()
 ENDIF()
 
+SET (LWE_DEFINES_BACKEND ${LWE_DEFINES_BACKEND}
+    -DSTARFISH_BACKEND_STR="${BACKEND}"
+)
+
 # Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
 IF (${HOST} STREQUAL "linux")
     # SET (WEBRTC "1")

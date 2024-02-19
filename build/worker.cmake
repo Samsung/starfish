@@ -35,6 +35,7 @@ SET (STARFISH_WORKER_DEFINITIONS
     -DSTARFISH_ENABLE_WORKER
     -DSTARFISH_WEBWORKER_HOST
     -DSTARFISH_USE_WORKER_PROCESS
+    -DSTARFISH_BACKEND_STR="${BACKEND}"
 )
 
 SET (STARFISH_SHARED_WORKER_DEFINITIONS
@@ -120,6 +121,7 @@ ENDFOREACH()
 
 FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/public/delegate/LWEDelegate.cpp
+    ${STARFISH_ROOT}/src/public/delegate/ThreadedCallHelper.cpp
     ${STARFISH_ROOT}/src/StaticStrings.cpp
     ${STARFISH_ROOT}/src/Starfish.cpp
     ${STARFISH_ROOT}/src/platform/loader/ResourceURL.cpp

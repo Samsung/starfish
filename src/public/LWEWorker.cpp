@@ -25,6 +25,8 @@
 
 #include "LWEWorker.h"
 #include "public/delegate/LWEDelegate.h"
+#include "public/delegate/ThreadedCallHelper.h"
+
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/worker/WorkerSettings.h"
@@ -69,28 +71,17 @@ static void initializeWorkerProcess(const std::string &dataDirectoryPath,
         (workerResourceDirPath + "/starfish-cookie.txt").c_str(),
         (workerResourceDirPath + "/starfish-http-cache").c_str());
 
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    MessageLoop::runOnMainThreadSync([workerDataDirPath]() -> size_t {
-        if (WorkerAgent::isCreated() == false) {
-            LWEDelegate::g_starfishInstance->workerManager()
-                ->workerSettings()
-                ->setDataDirectoryPath(workerDataDirPath);
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [workerDataDirPath]() -> size_t {
+            if (WorkerAgent::isCreated() == false) {
+                LWEDelegate::g_starfishInstance->workerManager()
+                    ->workerSettings()
+                    ->setDataDirectoryPath(workerDataDirPath);
 
-            WorkerAgent::create(LWEDelegate::g_starfishInstance);
-        }
-        return 0;
-    });
-#else
-    if (Starfish::WorkerAgent::isCreated() == false) {
-        LWEDelegate::g_starfishInstance->workerManager()
-            ->workerSettings()
-            ->setDataDirectoryPath(workerDataDirPath);
-
-        // TODO: Pass `starfish` only here. Do this now since `nullptr` is
-        // passed when SW runs on a single process.
-        WorkerAgent::create(LWEDelegate::g_starfishInstance);
-    }
-#endif
+                WorkerAgent::create(LWEDelegate::g_starfishInstance);
+            }
+            return 0;
+        });
 }
 
 static void registerOnStatusChangedHandler(
@@ -101,33 +92,24 @@ static void registerOnStatusChangedHandler(
         cb(ToWorkerState(state));
     };
 
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        STARFISH_ASSERT(cb != nullptr);
-        WorkerAgent::instance()->registerOnStatusChangedHandler(
-            onStateChangedCallback);
-        return 0;
-    });
-#else
-    WorkerAgent::instance()->registerOnStatusChangedHandler(
-        onStateChangedCallback);
-#endif
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
+            STARFISH_ASSERT(cb != nullptr);
+            WorkerAgent::instance()->registerOnStatusChangedHandler(
+                onStateChangedCallback);
+            return 0;
+        });
 }
 
 static void finalizeWorkerProcess()
 {
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    MessageLoop::runOnMainThreadSync([]() -> size_t {
-        if (WorkerAgent::isCreated() == true) {
-            WorkerAgent::instance()->destroy();
-        }
-        return 0;
-    });
-#else
-    if (WorkerAgent::isCreated() == true) {
-        WorkerAgent::instance()->destroy();
-    }
-#endif
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        []() -> size_t {
+            if (WorkerAgent::isCreated() == true) {
+                WorkerAgent::instance()->destroy();
+            }
+            return 0;
+        });
 
     LWEDelegate::LWE::Finalize();
 
@@ -173,38 +155,26 @@ void WorkerClient::RegisterDataDirectoryPath(
     const std::string &dataDirectoryPath)
 {
     STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
-
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    MessageLoop::runOnMainThreadSync([dataDirectoryPath]() -> size_t {
-        LWEDelegate::g_starfishInstance->workerManager()
-            ->workerSettings()
-            ->setDataDirectoryPath(dataDirectoryPath);
-        return 0;
-    });
-#else
-    LWEDelegate::g_starfishInstance->workerManager()
-        ->workerSettings()
-        ->setDataDirectoryPath(dataDirectoryPath);
-#endif
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [dataDirectoryPath]() -> size_t {
+            LWEDelegate::g_starfishInstance->workerManager()
+                ->workerSettings()
+                ->setDataDirectoryPath(dataDirectoryPath);
+            return 0;
+        });
 }
 
 void WorkerClient::RegisterServiceWorkerProcessExecutor(
     const std::function<bool()> &fn)
 {
     STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
-
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        LWEDelegate::g_starfishInstance->workerManager()
-            ->workerSettings()
-            ->setServiceWorkerProcessExecutor(fn);
-        return 0;
-    });
-#else
-    LWEDelegate::g_starfishInstance->workerManager()
-        ->workerSettings()
-        ->setServiceWorkerProcessExecutor(fn);
-#endif
+    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
+            LWEDelegate::g_starfishInstance->workerManager()
+                ->workerSettings()
+                ->setServiceWorkerProcessExecutor(fn);
+            return 0;
+        });
 }
 
 #endif // defined(STARFISH_WEBWORKER_HOST)

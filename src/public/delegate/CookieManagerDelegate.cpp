@@ -20,28 +20,10 @@
 #include "StarfishConfig.h"
 
 #include "CookieManagerDelegate.h"
+
 #include "LWEDelegate.h"
+#include "ThreadedCallHelper.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
-#include "core/modules/message_loop/MessageLoop.h"
-
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-#define START_SIMPLE_THREADED_PUBLIC_API_WRAPPER Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
-#define END_SIMPLE_THREADED_PUBLIC_API_WRAPPER \
-    return 0;                                  \
-    });
-#else
-#define START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-#define END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-#endif
-
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-#define START_ASYNC_THREADED_PUBLIC_API_WRAPPER TO_WEBVIEW(m_impl)->messageLoop()->runOnMainThreadAsync([=]() -> void {
-#define END_ASYNC_THREADED_PUBLIC_API_WRAPPER \
-    });
-#else
-#define START_ASYNC_THREADED_PUBLIC_API_WRAPPER
-#define END_ASYNC_THREADED_PUBLIC_API_WRAPPER
-#endif
 
 namespace LWEDelegate {
 
@@ -60,30 +42,35 @@ static CookieManagerImpl* g_cookieManager;
 std::string CookieManagerImpl::GetCookie(std::string url)
 {
     std::string result;
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    result = Starfish::NetworkSharedResourceManager::getInstance()
-                 ->cookies(new Starfish::ResourceURL(url.c_str(), url.size()))
-                 ->toUTF8NonGCString();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
+            result = Starfish::NetworkSharedResourceManager::getInstance()
+                         ->cookies(
+                             new Starfish::ResourceURL(url.c_str(), url.size()))
+                         ->toUTF8NonGCString();
+            return 0;
+        });
     return result;
 }
 
 bool CookieManagerImpl::HasCookies()
 {
     bool hasCookies;
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    hasCookies =
-        Starfish::NetworkSharedResourceManager::getInstance()->hasCookies();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]()
+                                                                    -> size_t {
+        hasCookies =
+            Starfish::NetworkSharedResourceManager::getInstance()->hasCookies();
+        return 0;
+    });
     return hasCookies;
 }
 void CookieManagerImpl::ClearCookies()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    Starfish::NetworkSharedResourceManager::getInstance()->clearCookies();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]()
+                                                                    -> size_t {
+        Starfish::NetworkSharedResourceManager::getInstance()->clearCookies();
+        return 0;
+    });
 }
 
 CookieManager* CookieManager::GetInstance()
@@ -95,11 +82,14 @@ CookieManager* CookieManager::GetInstance()
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return nullptr;
     }
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    if (!g_cookieManager) {
-        g_cookieManager = new CookieManagerImpl();
-    }
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
+            if (!g_cookieManager) {
+                g_cookieManager = new CookieManagerImpl();
+            }
+            return 0;
+        });
     return g_cookieManager;
 }
 
@@ -108,12 +98,15 @@ void CookieManager::Destroy()
     if (!LWEDelegate::LWE::IsInitialized()) {
         return;
     }
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    if (g_cookieManager) {
-        delete g_cookieManager;
-        g_cookieManager = nullptr;
-    }
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
+            if (g_cookieManager) {
+                delete g_cookieManager;
+                g_cookieManager = nullptr;
+            }
+            return 0;
+        });
 }
 } // namespace LWEDelegate
 
