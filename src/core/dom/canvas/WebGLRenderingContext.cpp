@@ -24,6 +24,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/dom/ImageBitmap.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/WebGLExtensions.h"
 #include "core/modules/canvas/image/NativeImageData.h"
@@ -729,6 +730,13 @@ void WebGLRenderingContext::depthMask(GLboolean flag)
     glDepthMask(flag);
 }
 
+void WebGLRenderingContext::depthRange(GLclampf zNear, GLclampf zFar)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glDepthRangef(zNear, zFar);
+}
+
 void WebGLRenderingContext::detachShader(WebGLProgram* program,
                                          WebGLShader* shader)
 {
@@ -910,11 +918,48 @@ void WebGLRenderingContext::shaderSource(WebGLShader* shader, String* source)
     glShaderSource(shader->glObject(), 1, sourceArray, nullptr);
 }
 
+void WebGLRenderingContext::stencilFunc(GLenum func, GLint ref, GLuint mask)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilFunc(func, ref, mask);
+}
+
+void WebGLRenderingContext::stencilFuncSeparate(GLenum face, GLenum func,
+                                                GLint ref, GLuint mask)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilFuncSeparate(face, func, ref, mask);
+}
+
 void WebGLRenderingContext::stencilMask(GLuint mask)
 {
     ENTER_CONTEXT_SCOPE();
 
     glStencilMask(mask);
+}
+
+void WebGLRenderingContext::stencilMaskSeparate(GLenum face, GLuint mask)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilMaskSeparate(face, mask);
+}
+
+void WebGLRenderingContext::stencilOp(GLenum fail, GLenum zfail, GLenum zpass)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilOp(fail, zfail, zpass);
+}
+
+void WebGLRenderingContext::stencilOpSeparate(GLenum face, GLenum fail,
+                                              GLenum zfail, GLenum zpass)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glStencilOpSeparate(face, fail, zfail, zpass);
 }
 
 ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
@@ -950,6 +995,17 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         glGetIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    case GL_CURRENT_PROGRAM: {
+        GLint value = -1;
+        glGetIntegerv(pname, &value);
+
+        Nullable<WebGLProgram*> maybe = m_state.webGLProgram();
+        if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+            return scriptNull();
+        }
+        STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
+        return maybe.value()->scriptValue();
+    }
     case GL_FRAMEBUFFER_BINDING: {
         GLint value = -1;
         glGetIntegerv(pname, &value);
@@ -962,7 +1018,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
         }
-
+        TRACE(WEBGL, KV(maybe.value()->glObject()), KV(value));
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
         return maybe.value()->scriptValue();
     }
@@ -1290,6 +1346,7 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
 
     return new WebGLUniformLocation(scriptBindingInstance(), program, location);
 }
+
 ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
@@ -1313,6 +1370,116 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
         break;
     }
     return scriptNull();
+}
+
+GLintptr WebGLRenderingContext::getVertexAttribOffset(GLuint index,
+                                                      GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(0);
+
+    GLvoid* pointer = nullptr;
+    glGetVertexAttribPointerv(index, pname, &pointer);
+    return reinterpret_cast<GLintptr>(pointer);
+}
+
+void WebGLRenderingContext::hint(GLenum target, GLenum mode)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glHint(target, mode);
+}
+
+bool WebGLRenderingContext::isBuffer(Nullable<WebGLBuffer*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    // The generated bindings do CHECK_TYPEOF the value before calling this
+    // function, so we don't have to do any type checking. Other `isXXXX`
+    // functions do the same.
+    return true;
+}
+
+bool WebGLRenderingContext::isEnabled(GLenum cap)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (m_isContextLost) {
+        return false;
+    }
+
+    return glIsEnabled(cap);
+}
+
+bool WebGLRenderingContext::isFramebuffer(Nullable<WebGLFramebuffer*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool WebGLRenderingContext::isProgram(Nullable<WebGLProgram*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool WebGLRenderingContext::isRenderbuffer(Nullable<WebGLRenderbuffer*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool WebGLRenderingContext::isShader(Nullable<WebGLShader*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool WebGLRenderingContext::isTexture(Nullable<WebGLTexture*> maybe)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!maybe.hasValue() || !isFromCurrentContext(maybe.value()) ||
+        maybe.value()->invalidated()) {
+        return false;
+    }
+
+    return true;
+}
+
+void WebGLRenderingContext::lineWidth(GLfloat width)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glLineWidth(width);
 }
 
 void WebGLRenderingContext::linkProgram(WebGLProgram* program)
@@ -1370,6 +1537,13 @@ void WebGLRenderingContext::pixelStorei(GLenum pname, GLint param)
     }
 }
 
+void WebGLRenderingContext::polygonOffset(GLfloat factor, GLfloat units)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glPolygonOffset(factor, units);
+}
+
 void WebGLRenderingContext::renderbufferStorage(GLenum target,
                                                 GLenum internalformat,
                                                 GLsizei width, GLsizei height)
@@ -1377,6 +1551,36 @@ void WebGLRenderingContext::renderbufferStorage(GLenum target,
     ENTER_CONTEXT_SCOPE();
 
     glRenderbufferStorage(target, internalformat, width, height);
+}
+
+void WebGLRenderingContext::sampleCoverage(GLclampf value, GLboolean invert)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glSampleCoverage(value, invert);
+}
+
+void WebGLRenderingContext::scissor(GLint x, GLint y, GLsizei width,
+                                    GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    glScissor(x, y, width, height);
+}
+
+void WebGLRenderingContext::texParameterf(GLenum target, GLenum pname,
+                                          GLfloat param)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        // If an attempt is made to call this function with no WebGLTexture
+        // bound, an INVALID_OPERATION error is generated.
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    glTexParameterf(target, pname, param);
 }
 
 void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
@@ -1566,8 +1770,10 @@ void WebGLRenderingContext::useProgram(Nullable<WebGLProgram*> maybeProgram)
             return;
         }
         glUseProgram(program->glObject());
+        m_state.setWebGLProgram(program);
     } else {
         glUseProgram(0);
+        m_state.setWebGLProgram(nullptr);
     }
 }
 
@@ -1688,7 +1894,11 @@ void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
 void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
                                        GLenum usage)
 {
-    STARFISH_UNIMPLEMENTED();
+    ENTER_CONTEXT_SCOPE();
+
+    // Set the size of the currently bound WebGLBuffer object for the passed
+    // target. The buffer is initialized to 0.
+    glBufferData(target, size, nullptr, usage);
 }
 
 void WebGLRenderingContext::bufferData(GLenum target,
@@ -2066,7 +2276,10 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         setGLError(GL_INVALID_VALUE);
         return;
     } else if (source.isImageBitmapValue()) {
-        STARFISH_UNIMPLEMENTED("ImageBitmap");
+        ImageBitmap* imageBitmap = source.getImageBitmapValue();
+        imageData = imageBitmap->nativeImageData();
+        width = imageData->width();
+        height = imageData->height();
     } else if (source.isImageDataValue()) {
         STARFISH_UNIMPLEMENTED("ImageData");
     } else if (source.isHTMLImageElementValue()) {
@@ -2196,6 +2409,13 @@ bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)
         return false;
     }
     return true;
+}
+
+bool WebGLRenderingContext::isFromCurrentContext(WebGLObject* object)
+{
+    STARFISH_ASSERT(object != nullptr);
+
+    return object->context() == this;
 }
 
 bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
