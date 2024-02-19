@@ -551,7 +551,7 @@ interface WebGLRenderingContextBase
 
     undefined depthFunc(GLenum func);
     undefined depthMask(GLboolean flag);
-    [Unimplemented] undefined depthRange(GLclampf zNear, GLclampf zFar);
+    undefined depthRange(GLclampf zNear, GLclampf zFar);
     undefined detachShader(WebGLProgram program, WebGLShader shader);
     undefined disable(GLenum cap);
     undefined disableVertexAttribArray(GLuint index);
@@ -601,36 +601,36 @@ interface WebGLRenderingContextBase
 
     any getVertexAttrib(GLuint index, GLenum pname);
 
-    [Unimplemented,WebGLHandlesContextLoss]  GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
+    [WebGLHandlesContextLoss]  GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
 
-    [Unimplemented] undefined hint(GLenum target, GLenum mode);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isBuffer(WebGLBuffer? buffer);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isEnabled(GLenum cap);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isFramebuffer(WebGLFramebuffer? framebuffer);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isProgram(WebGLProgram? program);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isRenderbuffer(WebGLRenderbuffer? renderbuffer);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isShader(WebGLShader? shader);
-    [Unimplemented,WebGLHandlesContextLoss]  GLboolean isTexture(WebGLTexture? texture);
-    [Unimplemented] undefined lineWidth(GLfloat width);
+    undefined hint(GLenum target, GLenum mode);
+    [WebGLHandlesContextLoss]  GLboolean isBuffer(WebGLBuffer? buffer);
+    [WebGLHandlesContextLoss]  GLboolean isEnabled(GLenum cap);
+    [WebGLHandlesContextLoss]  GLboolean isFramebuffer(WebGLFramebuffer? framebuffer);
+    [WebGLHandlesContextLoss]  GLboolean isProgram(WebGLProgram? program);
+    [WebGLHandlesContextLoss]  GLboolean isRenderbuffer(WebGLRenderbuffer? renderbuffer);
+    [WebGLHandlesContextLoss]  GLboolean isShader(WebGLShader? shader);
+    [WebGLHandlesContextLoss]  GLboolean isTexture(WebGLTexture? texture);
+    undefined lineWidth(GLfloat width);
     undefined linkProgram(WebGLProgram program);
     undefined pixelStorei(GLenum pname, GLint param);
-    [Unimplemented] undefined polygonOffset(GLfloat factor, GLfloat units);
+    undefined polygonOffset(GLfloat factor, GLfloat units);
 
     undefined renderbufferStorage(GLenum target, GLenum internalformat,
                                   GLsizei width, GLsizei height);
-    [Unimplemented] undefined sampleCoverage(GLclampf value, GLboolean invert);
-    [Unimplemented] undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined sampleCoverage(GLclampf value, GLboolean invert);
+    undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
     undefined shaderSource(WebGLShader shader, DOMString source);
 
-    [Unimplemented] undefined stencilFunc(GLenum func, GLint ref, GLuint mask);
-    [Unimplemented] undefined stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+    undefined stencilFunc(GLenum func, GLint ref, GLuint mask);
+    undefined stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
     undefined stencilMask(GLuint mask);
-    [Unimplemented] undefined stencilMaskSeparate(GLenum face, GLuint mask);
-    [Unimplemented] undefined stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
-    [Unimplemented] undefined stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+    undefined stencilMaskSeparate(GLenum face, GLuint mask);
+    undefined stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    undefined stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
-    [Unimplemented] undefined texParameterf(GLenum target, GLenum pname, GLfloat param);
+    undefined texParameterf(GLenum target, GLenum pname, GLfloat param);
     undefined texParameteri(GLenum target, GLenum pname, GLint param);
 
     undefined uniform1f(WebGLUniformLocation? location, GLfloat x);

@@ -109,6 +109,7 @@ public:
     void deleteTexture(Nullable<WebGLTexture*> texture);
     void depthFunc(GLenum func);
     void depthMask(GLboolean flag);
+    void depthRange(GLclampf zNear, GLclampf zFar);
     void detachShader(WebGLProgram* program, WebGLShader* shader);
     void disable(GLenum cap);
     void disableVertexAttribArray(GLuint index);
@@ -141,10 +142,25 @@ public:
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,
                                              String* name);
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
+    GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
+
+    void hint(GLenum target, GLenum mode);
+    bool isBuffer(Nullable<WebGLBuffer*> buffer);
+    bool isEnabled(GLenum cap);
+    bool isFramebuffer(Nullable<WebGLFramebuffer*> framebuffer);
+    bool isProgram(Nullable<WebGLProgram*> program);
+    bool isRenderbuffer(Nullable<WebGLRenderbuffer*> renderbuffer);
+    bool isShader(Nullable<WebGLShader*> shader);
+    bool isTexture(Nullable<WebGLTexture*> texture);
+    void lineWidth(GLfloat width);
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
+    void polygonOffset(GLfloat factor, GLfloat units);
     void renderbufferStorage(GLenum target, GLenum internalformat,
                              GLsizei width, GLsizei height);
+    void sampleCoverage(GLclampf value, GLboolean invert);
+    void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+    void texParameterf(GLenum target, GLenum pname, GLfloat param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
     void uniform1f(Nullable<WebGLUniformLocation*> uniform, GLfloat x);
     void uniform2f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
@@ -162,7 +178,15 @@ public:
     void useProgram(Nullable<WebGLProgram*> program);
     void validateProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
+
+    void stencilFunc(GLenum func, GLint ref, GLuint mask);
+    void stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
     void stencilMask(GLuint mask);
+    void stencilMaskSeparate(GLenum face, GLuint mask);
+    void stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    void stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail,
+                           GLenum zpass);
+
     void vertexAttrib1f(GLuint index, GLfloat x);
     void vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
     void vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
@@ -215,6 +239,7 @@ public:
 
 private:
     bool checkWebGLObject(WebGLObject* object);
+    bool isFromCurrentContext(WebGLObject* object);
     bool checkAttribOrUniformName(String* name);
     bool hasGLError();
     void updateGLError();
