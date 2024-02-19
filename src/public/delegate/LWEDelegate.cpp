@@ -21,6 +21,7 @@
 #include "Starfish.h"
 
 #include "LWEDelegate.h"
+#include "ThreadedCallHelper.h"
 
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -33,9 +34,6 @@
 #if defined(STARFISH_WINDOWS)
 #include <fontconfig/fontconfig.h>
 #endif
-
-#define THREAD_MINIMUM_STACK_SIZE \
-    4 * 1024 * 1024 // we need at least 4MB for stack
 
 using namespace Escargot;
 
@@ -160,63 +158,38 @@ static void StarfishGCMemoryLogger(void* data)
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
 
-#if defined(PORT_NEEDS_THREADED_PUBLIC_API)
-
-static bool g_isLWEThreadStarted;
-static pthread_mutex_t g_mainThreadInitLocker;
-
-void* LWEMainThread(void*)
-{
-    Starfish::MessageLoop::init();
-    pthread_mutex_unlock(&g_mainThreadInitLocker);
-    STARFISH_LOG_INFO("Worker thread started!");
-    Starfish::MessageLoop::run();
-    return nullptr;
-}
-
 void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* cookieStoreDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
-    if (!g_isLWEThreadStarted) {
-        pthread_mutex_init(&g_mainThreadInitLocker, NULL);
-        pthread_mutex_lock(&g_mainThreadInitLocker);
 
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_setstacksize(&attr, THREAD_MINIMUM_STACK_SIZE);
-        pthread_t tid;
-        pthread_create(&tid, &attr, LWEMainThread, NULL);
+    // TODO: Replace STARFISH_BACKEND_STR with public API argument.
+    ThreadedCallHelper::Instance()->Initialize(STARFISH_BACKEND_STR);
 
-        pthread_mutex_lock(&g_mainThreadInitLocker);
-        pthread_mutex_unlock(&g_mainThreadInitLocker);
-        pthread_mutex_destroy(&g_mainThreadInitLocker);
-        g_isLWEThreadStarted = true;
-    }
-
-    Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> size_t {
 #if defined(STARFISH_WINDOWS)
-        FcInitLoadConfigAndFonts();
+            FcInitLoadConfigAndFonts();
 #endif
-        Escargot::Globals::initialize(new EscargotStarfishPlatform());
-        g_starfishInstance = new (NoGC) Starfish::Starfish(
-            localStorageDataFilePath, cookieStoreDataFilePath,
-            httpCacheDataDirectorypath);
-        // add gc event listener
-        Escargot::Memory::removeGCEventListener(
-            Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
-        Escargot::Memory::addGCEventListener(Escargot::Memory::RECLAIM_END,
-                                             StarfishGCMemoryLogger, nullptr);
-        return 0;
-    });
+            Escargot::Globals::initialize(new EscargotStarfishPlatform());
+            g_starfishInstance = new (NoGC) Starfish::Starfish(
+                localStorageDataFilePath, cookieStoreDataFilePath,
+                httpCacheDataDirectorypath);
+            // add gc event listener
+            Escargot::Memory::removeGCEventListener(
+                Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
+            Escargot::Memory::addGCEventListener(
+                Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
+            return 0;
+        });
 }
 
 void LWE::Finalize()
 {
     STARFISH_RELEASE_ASSERT(IsInitialized());
 
-    Starfish::MessageLoop::runOnMainThreadSync([]() -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([]() -> size_t {
         STARFISH_RELEASE_ASSERT(g_starfishInstance->webViewInstanceCount() ==
                                 0);
 
@@ -236,49 +209,6 @@ void LWE::Finalize()
         return 0;
     });
 }
-
-#else
-void LWE::Initialize(const char* localStorageDataFilePath,
-                     const char* cookieStoreDataFilePath,
-                     const char* httpCacheDataDirectorypath)
-{
-    STARFISH_RELEASE_ASSERT(!IsInitialized());
-
-#if defined(STARFISH_WINDOWS)
-    FcInitLoadConfigAndFonts();
-#endif
-
-    Escargot::Globals::initialize(new EscargotStarfishPlatform());
-    g_starfishInstance = new (NoGC)
-        Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
-                           httpCacheDataDirectorypath);
-    // add gc event listener
-    Escargot::Memory::removeGCEventListener(Escargot::Memory::RECLAIM_END,
-                                            StarfishGCMemoryLogger, nullptr);
-    Escargot::Memory::addGCEventListener(Escargot::Memory::RECLAIM_END,
-                                         StarfishGCMemoryLogger, nullptr);
-}
-
-void LWE::Finalize()
-{
-    STARFISH_RELEASE_ASSERT(IsInitialized());
-    STARFISH_RELEASE_ASSERT(g_starfishInstance->webViewInstanceCount() == 0);
-
-    g_starfishInstance->destroy();
-    g_starfishInstance = nullptr;
-
-    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
-
-    // do implicit calling GC funciton takes a lots time
-    // we should remove this if possible
-    Starfish::Starfish::doFullGCWithoutSeeingStack();
-    Starfish::Starfish::doFullGCWithoutSeeingStack();
-    Starfish::Starfish::doFullGCWithoutSeeingStack();
-
-    // Escargot::Globals::finalize should be invoked after full gc
-    Escargot::Globals::finalize();
-}
-#endif
 
 bool LWE::IsInitialized()
 {
