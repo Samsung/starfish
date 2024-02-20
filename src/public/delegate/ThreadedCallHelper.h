@@ -46,20 +46,18 @@ public:
     ThreadedCallHelper& operator=(const ThreadedCallHelper&) = delete;
     ThreadedCallHelper(ThreadedCallHelper&&) = delete;
 
-    void Initialize(const std::string& backend);
+    void Initialize(bool isThreadMode);
 
     void PostTaskToLWEMainThreadSync(const std::function<void()>& functor);
     void PostTaskToLWEMainThreadAsync(Starfish::MessageLoop* messageLoop,
                                       const std::function<void()>& functor);
 
 private:
-    ThreadedCallHelper();
-
-    void CreateLWEMainThread();
-
     static ThreadedCallHelper* m_instance;
 
-    bool m_isThreadMode = false;
+    ThreadedCallHelper();
+    void CreateLWEMainThread();
+
     bool m_isLWEThreadStarted = false;
     pthread_mutex_t m_mainThreadInitLocker;
 
