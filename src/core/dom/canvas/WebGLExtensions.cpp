@@ -72,6 +72,7 @@ WebGLExtensionRegistry::WebGLExtensionRegistry()
 #define SUPPORTED_GL_EXTENSIONS(V) \
     V(OES_texture_float)           \
     V(OES_texture_half_float)      \
+    V(OES_texture_float_linear)    \
     V(EXT_blend_minmax)
 
 #define V(name)                                                              \

@@ -402,14 +402,18 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
             return;
         }
 
+        TRACE(WEBGL, KV(hex(target)), value->glObject());
         glBindBuffer(target, value->glObject());
+        m_state.setBoundBuffer(target, value);
 
         // A given WebGLBuffer object may only be bound to one of the
         // ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its lifetime.
         value->setTargetOnce(target);
     } else {
         // If the buffer is null then any buffer currently bound is unbound.
+        TRACE(WEBGL, KV(hex(target)), 0);
         glBindBuffer(target, 0);
+        m_state.setBoundBuffer(target, nullptr);
     }
 }
 
@@ -497,6 +501,7 @@ void WebGLRenderingContext::bindTexture(GLenum target,
         }
 
         glBindTexture(target, texture->glObject());
+        TRACE(WEBGL, KV(hex(target)), KV(texture->glObject()));
         m_boundTextures[target] = texture->glObject();
     } else {
         glBindTexture(target, 0);
@@ -1044,6 +1049,14 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
         return maybe.value()->scriptValue();
     }
+    case GL_ARRAY_BUFFER_BINDING:
+    case GL_ELEMENT_ARRAY_BUFFER_BINDING: {
+        GLuint target = (pname == GL_ARRAY_BUFFER_BINDING)
+                            ? GL_ARRAY_BUFFER
+                            : GL_ELEMENT_ARRAY_BUFFER_BINDING;
+        WebGLBuffer* buffer = m_state.getBoundBuffer(target).valueOr(nullptr);
+        return buffer ? buffer->scriptValue() : scriptNull();
+    }
     case kIMPLEMENTATION_COLOR_READ_TYPE: {
         // Our implementation-chosen is a combination of RGBA and UNSIGNED_BYTE.
         return ValueRef::create(GL_UNSIGNED_BYTE);
@@ -1358,15 +1371,59 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
         return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
                                                        values);
     }
-    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
-    case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-    case GL_VERTEX_ATTRIB_ARRAY_TYPE:
-    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        STARFISH_UNIMPLEMENTED("pname: 0x%04X", pname);
-        break;
+    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: {
+        GLint value = 0;
+        glGetVertexAttribiv(index, pname, &value);
+
+        TRACE(WEBGL, KV(index), KV(value));
+
+        Nullable<WebGLVertexArrayObjectOES*> maybe =
+            m_state.webGLVertexArrayObjectOES();
+
+        if (!maybe.hasValue()) {
+            return scriptNull(); // No mention found for this in the spec.
+        }
+
+        Nullable<WebGLBuffer*> maybeBuffer =
+            m_state.getBufferBoundToVertexAttributes(index);
+
+        if (!maybeBuffer.hasValue()) {
+            return scriptNull(); // No mention found for this in the spec.
+        }
+
+        TRACE(WEBGL, KV(index), KV(maybeBuffer.value()->glObject()));
+
+        STARFISH_ASSERT(index == maybeBuffer.value()->glObject());
+
+        return maybeBuffer.value()->scriptValue();
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_ENABLED: {
+        GLint value = 0;
+        glGetVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value == 1 ? true : false);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_SIZE: {
+        GLint value = 4;
+        glGetVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_STRIDE: {
+        GLint value = 0;
+        glGetVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_TYPE: {
+        GLint value = GL_FLOAT;
+        glGetVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value);
+    }
+    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED: {
+        GLint value = 0;
+        glGetVertexAttribiv(index, pname, &value);
+        return ValueRef::create(value == 1 ? true : false);
+    }
     default:
+        setGLError(GL_INVALID_ENUM);
         break;
     }
     return scriptNull();
@@ -1844,11 +1901,8 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
 {
     ENTER_CONTEXT_SCOPE();
 
-    const uint8_t* zeroOffset = nullptr;
-
     if (stride > kMaximumSupportedStride) {
-        // In WebGL, the maximum supported stride is 255; see Vertex Attribute
-        // Data Stride.
+        // In WebGL, the maximum supported stride is 255
         setGLError(GL_INVALID_VALUE);
         return;
     }
@@ -1860,14 +1914,13 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
         return;
     }
 
-    glVertexAttribPointer(index, size, type, normalized, stride,
-                          zeroOffset + offset);
+    m_state.setBufferBoundToVertexAttributes(
+        index, m_state.getBoundBuffer(GL_ARRAY_BUFFER));
 
     /*
         The following errors are handled in GLES3.
         (https://docs.gl/es3/glVertexAttribPointer)
         We don't do any additional validation for them:
-
         - GL_INVALID_VALUE if size is not 1, 2, 3 or 4.
         - GL_INVALID_ENUM if type is not an accepted value.
         - GL_INVALID_VALUE if stride is negative.
@@ -1879,6 +1932,8 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
             bound to the GL_ARRAY_BUFFER buffer object binding point and the
             pointer argument is not NULL.
     */
+    glVertexAttribPointer(index, size, type, normalized, stride,
+                          reinterpret_cast<void*>(offset));
 }
 
 void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
@@ -2101,6 +2156,11 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
             // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
             // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
             setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if ((type == GL_FLOAT) && !isExtensionEnabled("OES_texture_float")) {
+            setGLError(GL_INVALID_ENUM);
             return;
         }
 

@@ -23,13 +23,17 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "StarfishBase.h"
+#include "platform/canvas/webgl/GLESTypes.h"
 
 namespace Starfish {
+
+class WebGLBuffer;
 
 #define STATEFUL_VALUES(V)                                             \
     V(WebGLVertexArrayObjectOES, Nullable<WebGLVertexArrayObjectOES*>, \
       webGLVertexArrayObjectOES)                                       \
-    V(WebGLFramebuffer, Nullable<WebGLFramebuffer*>, webGLFramebuffer)
+    V(WebGLFramebuffer, Nullable<WebGLFramebuffer*>, webGLFramebuffer) \
+    V(WebGLProgram, Nullable<WebGLProgram*>, webGLProgram)
 
 // Forward declarations
 #define V(Constructor, _, __) class Constructor;
@@ -52,11 +56,21 @@ public:
     STATEFUL_VALUES(V);
 #undef V
 
+    Nullable<WebGLBuffer*> getBoundBuffer(GLuint target);
+    void setBoundBuffer(GLenum target, Nullable<WebGLBuffer*> maybe);
+
+    Nullable<WebGLBuffer*> getBufferBoundToVertexAttributes(GLuint index);
+    void setBufferBoundToVertexAttributes(GLuint index,
+                                          Nullable<WebGLBuffer*> maybe);
+
 private:
     // Define variables
 #define V(Constructor, Type, MemberName) Type m_##MemberName;
     STATEFUL_VALUES(V);
 #undef V
+
+    GCUnorderedMap<GLuint, WebGLBuffer*> m_buffersBound;
+    GCUnorderedMap<GLuint, WebGLBuffer*> m_buffersBoundToVertexAttributes;
 };
 } // namespace Starfish
 

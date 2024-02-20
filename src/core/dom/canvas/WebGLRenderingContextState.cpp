@@ -28,6 +28,49 @@ WebGLRenderingContextState::WebGLRenderingContextState()
 {
 }
 
+Nullable<WebGLBuffer*>
+WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
+{
+    const auto& iter = m_buffersBoundToVertexAttributes.find(index);
+    if (iter == m_buffersBoundToVertexAttributes.end()) {
+        return nullptr;
+    }
+
+    STARFISH_ASSERT(iter->second != nullptr);
+    return iter->second;
+}
+
+void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
+    GLuint index, Nullable<WebGLBuffer*> maybe)
+{
+    if (maybe.hasValue()) {
+        m_buffersBoundToVertexAttributes.insert({ index, maybe.value() });
+    } else {
+        m_buffersBoundToVertexAttributes.erase(index);
+    }
+}
+
+Nullable<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
+{
+    const auto& iter = m_buffersBound.find(target);
+    if (iter == m_buffersBound.end()) {
+        return nullptr;
+    }
+
+    STARFISH_ASSERT(iter->second != nullptr);
+    return iter->second;
+}
+
+void WebGLRenderingContextState::setBoundBuffer(GLenum target,
+                                                Nullable<WebGLBuffer*> maybe)
+{
+    if (maybe.hasValue()) {
+        m_buffersBound.insert({ target, maybe.value() });
+    } else {
+        m_buffersBound.erase(target);
+    }
+}
+
 } // namespace Starfish
 
 #endif
