@@ -394,10 +394,9 @@ void MessageLoopLibUV::init()
         uv_async_init(uv_default_loop(), &g_idlerThreadSyncHandle,
                       [](uv_async_t* handle) {
                           {
-                              const std::function<size_t()>* pFunctor =
-                                  (const std::function<size_t()>*)handle->data;
-                              size_t ret = (*pFunctor)();
-                              handle->data = (void*)ret;
+                              const std::function<void()>* pFunctor =
+                                  (const std::function<void()>*)handle->data;
+                              (*pFunctor)();
                               pthread_mutex_unlock(&g_threadSyncFlowControler);
                           }
                       });
@@ -414,11 +413,11 @@ void MessageLoopLibUV::stop()
     g_defaultRunLoop.stop();
 }
 
-size_t MessageLoopLibUV::runOnMainThreadSync(
-    const std::function<size_t()>& functor)
+void MessageLoopLibUV::runOnMainThreadSync(const std::function<void()>& functor)
 {
     if (isMainThread()) {
-        return functor();
+        functor();
+        return;
     }
     pthread_mutex_lock(&g_threadSyncExecuteGuard);
     g_idlerThreadSyncHandle.data = (void*)&functor;
@@ -427,11 +426,7 @@ size_t MessageLoopLibUV::runOnMainThreadSync(
     uv_async_send(&g_idlerThreadSyncHandle);
     pthread_mutex_lock(&g_threadSyncFlowControler);
     pthread_mutex_unlock(&g_threadSyncFlowControler);
-    size_t ret = (size_t)g_idlerThreadSyncHandle.data;
-
     pthread_mutex_unlock(&g_threadSyncExecuteGuard);
-
-    return ret;
 }
 
 #endif

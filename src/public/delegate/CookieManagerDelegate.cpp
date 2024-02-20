@@ -42,34 +42,28 @@ static CookieManagerImpl* g_cookieManager;
 std::string CookieManagerImpl::GetCookie(std::string url)
 {
     std::string result;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
-            result = Starfish::NetworkSharedResourceManager::getInstance()
-                         ->cookies(
-                             new Starfish::ResourceURL(url.c_str(), url.size()))
-                         ->toUTF8NonGCString();
-            return 0;
-        });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        result =
+            Starfish::NetworkSharedResourceManager::getInstance()
+                ->cookies(new Starfish::ResourceURL(url.c_str(), url.size()))
+                ->toUTF8NonGCString();
+    });
     return result;
 }
 
 bool CookieManagerImpl::HasCookies()
 {
     bool hasCookies;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]()
-                                                                    -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         hasCookies =
             Starfish::NetworkSharedResourceManager::getInstance()->hasCookies();
-        return 0;
     });
     return hasCookies;
 }
 void CookieManagerImpl::ClearCookies()
 {
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]()
-                                                                    -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         Starfish::NetworkSharedResourceManager::getInstance()->clearCookies();
-        return 0;
     });
 }
 
@@ -83,13 +77,11 @@ CookieManager* CookieManager::GetInstance()
         return nullptr;
     }
 
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
-            if (!g_cookieManager) {
-                g_cookieManager = new CookieManagerImpl();
-            }
-            return 0;
-        });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        if (!g_cookieManager) {
+            g_cookieManager = new CookieManagerImpl();
+        }
+    });
     return g_cookieManager;
 }
 
@@ -99,14 +91,12 @@ void CookieManager::Destroy()
         return;
     }
 
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
-            if (g_cookieManager) {
-                delete g_cookieManager;
-                g_cookieManager = nullptr;
-            }
-            return 0;
-        });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        if (g_cookieManager) {
+            delete g_cookieManager;
+            g_cookieManager = nullptr;
+        }
+    });
 }
 } // namespace LWEDelegate
 

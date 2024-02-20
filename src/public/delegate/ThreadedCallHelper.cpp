@@ -31,7 +31,7 @@ namespace LWEDelegate {
 
 class SimpleCaller : public Caller {
 public:
-    virtual size_t SyncCall(const std::function<size_t()>& functor) override
+    virtual void SyncCall(const std::function<void()>& functor) override
     {
         return functor();
     }
@@ -45,9 +45,9 @@ public:
 
 class ThreadedCaller : public Caller {
 public:
-    virtual size_t SyncCall(const std::function<size_t()>& functor) override
+    virtual void SyncCall(const std::function<void()>& functor) override
     {
-        return Starfish::MessageLoop::runOnMainThreadSync(functor);
+        Starfish::MessageLoop::runOnMainThreadSync(functor);
     }
 
     virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
@@ -90,16 +90,16 @@ void ThreadedCallHelper::Initialize(const std::string& backend)
     }
 }
 
-size_t ThreadedCallHelper::PostTaskToLWEMainThreadSync(
-    const std::function<size_t()>& functor)
+void ThreadedCallHelper::PostTaskToLWEMainThreadSync(
+    const std::function<void()>& functor)
 {
-    return m_caller->SyncCall(functor);
+    m_caller->SyncCall(functor);
 }
 
 void ThreadedCallHelper::PostTaskToLWEMainThreadAsync(
     Starfish::MessageLoop* messageLoop, const std::function<void()>& functor)
 {
-    return m_caller->AsyncCall(messageLoop, functor);
+    m_caller->AsyncCall(messageLoop, functor);
 }
 
 void ThreadedCallHelper::CreateLWEMainThread()
