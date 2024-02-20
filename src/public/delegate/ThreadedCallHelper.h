@@ -33,7 +33,7 @@ class Caller {
 public:
     virtual ~Caller() = default;
 
-    virtual size_t SyncCall(const std::function<size_t()>& functor) = 0;
+    virtual void SyncCall(const std::function<void()>& functor) = 0;
     virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
                            const std::function<void()>& functor) = 0;
 };
@@ -48,7 +48,7 @@ public:
 
     void Initialize(const std::string& backend);
 
-    size_t PostTaskToLWEMainThreadSync(const std::function<size_t()>& functor);
+    void PostTaskToLWEMainThreadSync(const std::function<void()>& functor);
     void PostTaskToLWEMainThreadAsync(Starfish::MessageLoop* messageLoop,
                                       const std::function<void()>& functor);
 

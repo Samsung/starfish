@@ -89,14 +89,14 @@ void MessageLoop::stop()
 #endif
 }
 
-size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
 {
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    return MessageLoopEFL::runOnMainThreadSync(functor);
+    MessageLoopEFL::runOnMainThreadSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
-    return MessageLoopLibUV::runOnMainThreadSync(functor);
+    MessageLoopLibUV::runOnMainThreadSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    return MessageLoopWindows::runOnMainThreadSync(functor);
+    MessageLoopWindows::runOnMainThreadSync(functor);
 #else
 #error "Unknown EventLoop back-end"
 #endif

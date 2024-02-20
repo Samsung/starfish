@@ -167,29 +167,27 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     // TODO: Replace STARFISH_BACKEND_STR with public API argument.
     ThreadedCallHelper::Instance()->Initialize(STARFISH_BACKEND_STR);
 
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #if defined(STARFISH_WINDOWS)
-            FcInitLoadConfigAndFonts();
+        FcInitLoadConfigAndFonts();
 #endif
-            Escargot::Globals::initialize(new EscargotStarfishPlatform());
-            g_starfishInstance = new (NoGC) Starfish::Starfish(
-                localStorageDataFilePath, cookieStoreDataFilePath,
-                httpCacheDataDirectorypath);
-            // add gc event listener
-            Escargot::Memory::removeGCEventListener(
-                Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
-            Escargot::Memory::addGCEventListener(
-                Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
-            return 0;
-        });
+        Escargot::Globals::initialize(new EscargotStarfishPlatform());
+        g_starfishInstance = new (NoGC) Starfish::Starfish(
+            localStorageDataFilePath, cookieStoreDataFilePath,
+            httpCacheDataDirectorypath);
+        // add gc event listener
+        Escargot::Memory::removeGCEventListener(
+            Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
+        Escargot::Memory::addGCEventListener(Escargot::Memory::RECLAIM_END,
+                                             StarfishGCMemoryLogger, nullptr);
+    });
 }
 
 void LWE::Finalize()
 {
     STARFISH_RELEASE_ASSERT(IsInitialized());
 
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([]() -> size_t {
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([]() -> void {
         STARFISH_RELEASE_ASSERT(g_starfishInstance->webViewInstanceCount() ==
                                 0);
 
@@ -206,7 +204,6 @@ void LWE::Finalize()
 
         // Escargot::Globals::finalize should be invoked after full gc
         Escargot::Globals::finalize();
-        return 0;
     });
 }
 

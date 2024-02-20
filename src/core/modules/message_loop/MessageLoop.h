@@ -49,7 +49,7 @@ public:
     static void init();
     static void run();
     static void stop();
-    static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
+    static void runOnMainThreadSync(const std::function<void()>& functor);
 
     virtual size_t addIdler(GlobalScope* globalScope,
                             void (*fn)(size_t handle, void*), void* data) = 0;

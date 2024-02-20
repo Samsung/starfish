@@ -72,7 +72,7 @@ static void initializeWorkerProcess(const std::string &dataDirectoryPath,
         (workerResourceDirPath + "/starfish-http-cache").c_str());
 
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [workerDataDirPath]() -> size_t {
+        [workerDataDirPath]() -> void {
             if (WorkerAgent::isCreated() == false) {
                 LWEDelegate::g_starfishInstance->workerManager()
                     ->workerSettings()
@@ -80,7 +80,6 @@ static void initializeWorkerProcess(const std::string &dataDirectoryPath,
 
                 WorkerAgent::create(LWEDelegate::g_starfishInstance);
             }
-            return 0;
         });
 }
 
@@ -93,22 +92,20 @@ static void registerOnStatusChangedHandler(
     };
 
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
+        [&]() -> void {
             STARFISH_ASSERT(cb != nullptr);
             WorkerAgent::instance()->registerOnStatusChangedHandler(
                 onStateChangedCallback);
-            return 0;
         });
 }
 
 static void finalizeWorkerProcess()
 {
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        []() -> size_t {
+        []() -> void {
             if (WorkerAgent::isCreated() == true) {
                 WorkerAgent::instance()->destroy();
             }
-            return 0;
         });
 
     LWEDelegate::LWE::Finalize();
@@ -156,11 +153,10 @@ void WorkerClient::RegisterDataDirectoryPath(
 {
     STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [dataDirectoryPath]() -> size_t {
+        [dataDirectoryPath]() -> void {
             LWEDelegate::g_starfishInstance->workerManager()
                 ->workerSettings()
                 ->setDataDirectoryPath(dataDirectoryPath);
-            return 0;
         });
 }
 
@@ -169,11 +165,10 @@ void WorkerClient::RegisterServiceWorkerProcessExecutor(
 {
     STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> size_t {
+        [&]() -> void {
             LWEDelegate::g_starfishInstance->workerManager()
                 ->workerSettings()
                 ->setServiceWorkerProcessExecutor(fn);
-            return 0;
         });
 }
 

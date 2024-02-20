@@ -303,11 +303,10 @@ void MessageLoopWindows::stop()
     STARFISH_UNIMPLEMENTED();
 }
 
-size_t MessageLoopWindows::runOnMainThreadSync(
-    const std::function<size_t()>& functor)
+void MessageLoopWindows::runOnMainThreadSync(
+    const std::function<void()>& functor)
 {
     STARFISH_UNIMPLEMENTED();
-    return 0;
 }
 
 } // namespace Starfish
