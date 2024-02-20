@@ -36,7 +36,7 @@ public:
         return functor();
     }
 
-    virtual void AsyncCall(Starfish::WebView*,
+    virtual void AsyncCall(Starfish::MessageLoop*,
                            const std::function<void()>& functor) override
     {
         functor();
@@ -50,10 +50,10 @@ public:
         return Starfish::MessageLoop::runOnMainThreadSync(functor);
     }
 
-    virtual void AsyncCall(Starfish::WebView* webview,
+    virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
                            const std::function<void()>& functor) override
     {
-        webview->messageLoop()->runOnMainThreadAsync(functor);
+        messageLoop->runOnMainThreadAsync(functor);
     }
 };
 
@@ -97,9 +97,9 @@ size_t ThreadedCallHelper::PostTaskToLWEMainThreadSync(
 }
 
 void ThreadedCallHelper::PostTaskToLWEMainThreadAsync(
-    Starfish::WebView* webview, const std::function<void()>& functor)
+    Starfish::MessageLoop* messageLoop, const std::function<void()>& functor)
 {
-    return m_caller->AsyncCall(webview, functor);
+    return m_caller->AsyncCall(messageLoop, functor);
 }
 
 void ThreadedCallHelper::CreateLWEMainThread()

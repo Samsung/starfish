@@ -24,7 +24,7 @@
 #include <memory>
 
 namespace Starfish {
-class WebView;
+class MessageLoop;
 }
 
 namespace LWEDelegate {
@@ -34,7 +34,7 @@ public:
     virtual ~Caller() = default;
 
     virtual size_t SyncCall(const std::function<size_t()>& functor) = 0;
-    virtual void AsyncCall(Starfish::WebView* webview,
+    virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
                            const std::function<void()>& functor) = 0;
 };
 
@@ -49,7 +49,7 @@ public:
     void Initialize(const std::string& backend);
 
     size_t PostTaskToLWEMainThreadSync(const std::function<size_t()>& functor);
-    void PostTaskToLWEMainThreadAsync(Starfish::WebView* webview,
+    void PostTaskToLWEMainThreadAsync(Starfish::MessageLoop* messageLoop,
                                       const std::function<void()>& functor);
 
 private:
