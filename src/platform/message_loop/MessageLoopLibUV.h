@@ -34,6 +34,11 @@ class MessageLoopLibUV : public MessageLoop {
     friend class MessageLoop;
 
 public:
+    static void init();
+    static void run();
+    static void stop();
+    static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
+
     size_t addIdler(GlobalScope* globalScope, void (*fn)(size_t handle, void*),
                     void* data) override;
     size_t addIdler(GlobalScope* globalScope,

@@ -288,5 +288,27 @@ void MessageLoopWindows::runOnMainThreadAsync(
     STARFISH_UNIMPLEMENTED();
 }
 
+void MessageLoopWindows::init()
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void MessageLoopWindows::run()
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void MessageLoopWindows::stop()
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+size_t MessageLoopWindows::runOnMainThreadSync(
+    const std::function<size_t()>& functor)
+{
+    STARFISH_UNIMPLEMENTED();
+    return 0;
+}
+
 } // namespace Starfish
 #endif

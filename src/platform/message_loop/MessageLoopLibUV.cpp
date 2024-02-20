@@ -383,7 +383,7 @@ uv_loop_t* MessageLoopLibUV::uvLoop()
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-void MessageLoop::init()
+void MessageLoopLibUV::init()
 {
     static bool needsInit = true;
     if (UNLIKELY(needsInit)) {
@@ -404,17 +404,18 @@ void MessageLoop::init()
     }
 }
 
-void MessageLoop::run()
+void MessageLoopLibUV::run()
 {
     g_defaultRunLoop.run();
 }
 
-void MessageLoop::stop()
+void MessageLoopLibUV::stop()
 {
     g_defaultRunLoop.stop();
 }
 
-size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+size_t MessageLoopLibUV::runOnMainThreadSync(
+    const std::function<size_t()>& functor)
 {
     if (isMainThread()) {
         return functor();

@@ -50,6 +50,58 @@ MessageLoop* MessageLoop::createForWorker(RunLoop* runLoop)
 }
 #endif
 
+void MessageLoop::init()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    MessageLoopEFL::init();
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    MessageLoopLibUV::init();
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    MessageLoopWindows::init();
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+void MessageLoop::run()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    MessageLoopEFL::run();
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    MessageLoopLibUV::run();
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    MessageLoopWindows::run();
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+void MessageLoop::stop()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    MessageLoopEFL::stop();
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    MessageLoopLibUV::stop();
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    MessageLoopWindows::stop();
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    return MessageLoopEFL::runOnMainThreadSync(functor);
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    return MessageLoopLibUV::runOnMainThreadSync(functor);
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    return MessageLoopWindows::runOnMainThreadSync(functor);
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
