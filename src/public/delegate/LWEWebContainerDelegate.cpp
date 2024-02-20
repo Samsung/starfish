@@ -50,26 +50,6 @@
 
 #include <EscargotPublic.h>
 
-#define TO_STARFISH(ptr) (((Starfish::WebView*)ptr)->starfish())
-#define TO_WEBVIEW(ptr) (((Starfish::WebView*)ptr))
-#define TO_HISTORY(ptr) \
-    ((Starfish::WebView*)ptr)->mainBrowsingContext()->window()->history()
-
-#define TO_LOCATION(ptr) \
-    ((Starfish::WebView*)ptr)->mainBrowsingContext()->window()->location()
-
-#define TO_RESOURCE_LOADER(ptr) \
-    ((Starfish::WebView*)ptr)   \
-        ->mainBrowsingContext() \
-        ->document()            \
-        ->resourceLoader()
-
-#define TO_SCRIPT_BINDING_INSTANCE(ptr) \
-    ((Starfish::WebView*)ptr)           \
-        ->mainBrowsingContext()         \
-        ->window()                      \
-        ->scriptBindingInstance()
-
 #define LWE_DEFAULT_FONT_SIZE 16
 #define LWE_MIN_FONT_SIZE 1
 #define LWE_MAX_FONT_SIZE 72
@@ -354,7 +334,7 @@ public:
     void SetDevicePixelRatio(float dpr) override;
     float GetDevicePixelRatio() override;
 
-    WebContainerImpl(void* webView);
+    WebContainerImpl(Starfish::WebView* webView);
 
 private:
     // use Destroy function instead of using delete operator
@@ -362,7 +342,7 @@ private:
     {
     }
 
-    void* m_impl;
+    Starfish::WebView* m_webView;
 };
 
 WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
@@ -427,8 +407,7 @@ void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         ResizeTo(width, height);
-        TO_WEBVIEW(m_impl)->platformWindow()->updateDrawingBufferAddress(
-            buffer, stride);
+        m_webView->platformWindow()->updateDrawingBufferAddress(buffer, stride);
     });
 }
 
@@ -440,7 +419,7 @@ void WebContainerImpl::RegisterPreRenderingHandler(
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->platformWindow()->registerRenderingPrepareCallback(
+        m_webView->platformWindow()->registerRenderingPrepareCallback(
             [cb](void) -> Starfish::RenderInfo {
                 WebContainer::RenderInfo tmp = cb();
                 Starfish::RenderInfo result;
@@ -461,20 +440,18 @@ void WebContainerImpl::RegisterOnRenderedHandler(
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->platformWindow()->registerRenderingFinishedCallback(
+        m_webView->platformWindow()->registerRenderingFinishedCallback(
             [this, cb](const Starfish::RenderResult& renderResult) {
                 WebContainer::RenderResult result;
                 result.updatedX = (int)renderResult.updateRect.x();
                 result.updatedY = (int)renderResult.updateRect.y();
                 result.updatedWidth = (int)renderResult.updateRect.width();
                 result.updatedHeight = (int)renderResult.updateRect.height();
-                result.updatedBufferAddress = TO_WEBVIEW(m_impl)
-                                                  ->platformWindow()
-                                                  ->drawingBufferAddress();
-                result.bufferImageWidth =
-                    TO_WEBVIEW(m_impl)->platformWindow()->width();
+                result.updatedBufferAddress =
+                    m_webView->platformWindow()->drawingBufferAddress();
+                result.bufferImageWidth = m_webView->platformWindow()->width();
                 result.bufferImageHeight =
-                    TO_WEBVIEW(m_impl)->platformWindow()->height();
+                    m_webView->platformWindow()->height();
                 cb(this, result);
             });
     });
@@ -607,8 +584,8 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
                                            const char* locale,
                                            const char* timezoneID)
 {
-    auto webView = createWebViewInstance(width, height, devicePixelRatio,
-                                         defaultFontName, locale, timezoneID);
+    Starfish::WebView* webView = createWebViewInstance(
+        width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
     WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
     return newWebContainer;
@@ -617,12 +594,12 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
 void WebContainerImpl::ResizeTo(size_t width, size_t height)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->platformWindow()->resizeTo((int)width, (int)height);
+        m_webView->platformWindow()->resizeTo((int)width, (int)height);
     });
 }
 
-WebContainerImpl::WebContainerImpl(void* impl)
-    : m_impl(impl)
+WebContainerImpl::WebContainerImpl(Starfish::WebView* webView)
+    : m_webView(webView)
 {
 }
 
@@ -637,7 +614,7 @@ void WebContainerImpl::AddIdleCallback(void (*callback)(void*), void* data)
         Data* d = new Data();
         d->callback = callback;
         d->data = data;
-        TO_WEBVIEW(m_impl)->messageLoop()->addIdler(
+        m_webView->messageLoop()->addIdler(
             nullptr,
             [](size_t, void* data) {
                 Data* d = (Data*)data;
@@ -660,7 +637,7 @@ size_t WebContainerImpl::AddTimeout(void (*callback)(void*), void* data,
         Data* d = new Data();
         d->callback = callback;
         d->data = data;
-        ret = TO_WEBVIEW(m_impl)->timer()->addTimer(
+        ret = m_webView->timer()->addTimer(
             timeoutInMS, nullptr,
             [](void* data) {
                 Data* d = (Data*)data;
@@ -674,15 +651,15 @@ size_t WebContainerImpl::AddTimeout(void (*callback)(void*), void* data,
 void WebContainerImpl::ClearTimeout(size_t handle)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(),
-        [=]() -> void { TO_WEBVIEW(m_impl)->timer()->removeTimer(handle); });
+        m_webView->messageLoop(),
+        [=]() -> void { m_webView->timer()->removeTimer(handle); });
 }
 
 void WebContainerImpl::RegisterCanRenderingHandler(
     const std::function<bool(WebContainer*)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->platformWindow()->registerCanRenderingCallback(
+        m_webView->platformWindow()->registerCanRenderingCallback(
             [this, cb](Starfish::PlatformWindow* wnd) -> bool {
                 return cb(this);
             });
@@ -693,36 +670,34 @@ Settings* WebContainerImpl::GetSettings()
 {
     Settings* result = Settings::Create(USER_AGENT(STARFISH_NAME, VERSION), "");
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        result->SetUserAgentString(
-            TO_WEBVIEW(m_impl)->userAgent()->toUTF8NonGCString());
+        result->SetUserAgentString(m_webView->userAgent()->toUTF8NonGCString());
 #ifdef STARFISH_ENABLE_HTTPCACHE
         Nullable<::Starfish::HTTPCache*> cache =
-            TO_STARFISH(m_impl)->httpCache();
+            m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             result->SetCacheMode(cache->cacheMode());
         } else {
             result->SetCacheMode(::Starfish::HTTPCache::LOAD_NO_CACHE);
         }
 #endif
-        result->SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
+        result->SetProxyURL(m_webView->proxyURL());
 #ifdef STARFISH_ENABLE_TTS
-        result->SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
-        result->SetTTSLanguage(TO_WEBVIEW(m_impl)->tts()->userLanguage());
+        result->SetTTSMode(m_webView->tts()->mode());
+        result->SetTTSLanguage(m_webView->tts()->userLanguage());
 #endif
-        result->SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
-        result->SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
+        result->SetWebSecurityMode(m_webView->getWebSecurityMode());
+        result->SetIdleModeJob(m_webView->idleModeJob());
         result->SetIdleModeCheckIntervalInMS(
-            TO_WEBVIEW(m_impl)->idleModeCheckIntervalInMS());
+            m_webView->idleModeCheckIntervalInMS());
         result->SetNeedsDownloadWebFontsEarly(
-            TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
+            m_webView->needsDownloadWebFontsEarly());
         result->SetNeedsDownScaleImageResourceLargerThan(
-            TO_WEBVIEW(m_impl)->needsDownScaleImageResourceLargerThan());
+            m_webView->needsDownScaleImageResourceLargerThan());
 #ifndef TIZEN_COMPAT_HEADER_5_0
-        result->SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
+        result->SetScrollbarVisible(m_webView->scrollbarVisible());
 #endif
-        result->SetUseExternalPopup(TO_WEBVIEW(m_impl)->useExternalPopup());
-        result->SetUseSpatialNavigation(
-            TO_WEBVIEW(m_impl)->useSpatialNavigation());
+        result->SetUseExternalPopup(m_webView->useExternalPopup());
+        result->SetUseSpatialNavigation(m_webView->useSpatialNavigation());
     });
     return result;
 }
@@ -730,8 +705,8 @@ Settings* WebContainerImpl::GetSettings()
 void WebContainerImpl::LoadURL(const std::string& url)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->loadHTMLDocument(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->loadHTMLDocument(
                 Starfish::String::fromUTF8(url.data(), url.size()));
         });
 }
@@ -740,7 +715,12 @@ std::string WebContainerImpl::GetURL()
 {
     std::string ret;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_LOCATION(m_impl)->url()->urlString()->toUTF8NonGCString();
+        ret = m_webView->mainBrowsingContext()
+                  ->window()
+                  ->location()
+                  ->url()
+                  ->urlString()
+                  ->toUTF8NonGCString();
     });
     return ret;
 }
@@ -748,14 +728,14 @@ std::string WebContainerImpl::GetURL()
 void WebContainerImpl::LoadData(const std::string& data)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
             if (data.size() > 0) {
                 auto dataURI =
                     Starfish::Base64Utils::encodeBase64HTMLDataURI(data);
-                TO_WEBVIEW(m_impl)->loadHTMLDocument(
+                m_webView->loadHTMLDocument(
                     Starfish::String::fromUTF8(dataURI.data(), dataURI.size()));
             } else {
-                TO_WEBVIEW(m_impl)->loadHTMLDocument(
+                m_webView->loadHTMLDocument(
                     Starfish::String::fromUTF8("about:blank"));
             }
         });
@@ -764,46 +744,58 @@ void WebContainerImpl::LoadData(const std::string& data)
 void WebContainerImpl::Reload()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(),
-        [=]() -> void { TO_LOCATION(m_impl)->reload(); });
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->mainBrowsingContext()->window()->location()->reload();
+        });
 }
 
 void WebContainerImpl::StopLoading()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            STARFISH_ASSERT(m_impl);
-            TO_RESOURCE_LOADER(m_impl).clear();
+        m_webView->messageLoop(), [=]() -> void {
+            STARFISH_ASSERT(m_webView);
+            m_webView->mainBrowsingContext()
+                ->document()
+                ->resourceLoader()
+                .clear();
         });
 }
 
 void WebContainerImpl::GoBack()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(),
-        [=]() -> void { TO_HISTORY(m_impl)->back(); });
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->mainBrowsingContext()->window()->history()->back();
+        });
 }
 
 void WebContainerImpl::GoForward()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(),
-        [=]() -> void { TO_HISTORY(m_impl)->forward(); });
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->mainBrowsingContext()->window()->history()->forward();
+        });
 }
 
 bool WebContainerImpl::CanGoBack()
 {
     bool ret = false;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = TO_HISTORY(m_impl)->canGoBack(); });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        ret =
+            m_webView->mainBrowsingContext()->window()->history()->canGoBack();
+    });
     return ret;
 }
 
 bool WebContainerImpl::CanGoForward()
 {
     bool ret = false;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = TO_HISTORY(m_impl)->canGoForward(); });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        ret = m_webView->mainBrowsingContext()
+                  ->window()
+                  ->history()
+                  ->canGoForward();
+    });
     return ret;
 }
 
@@ -812,23 +804,25 @@ void WebContainerImpl::AddJavaScriptInterface(
     std::function<std::string(const std::string&)> cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
             Starfish::String* objectName = Starfish::String::fromUTF8(
                 exposedObjectName.data(), exposedObjectName.size());
             Starfish::String* functionName = Starfish::String::fromUTF8(
                 jsFunctionName.data(), jsFunctionName.size());
 
-            TO_WEBVIEW(m_impl)->addJavaScriptNativeInterface(
+            m_webView->addJavaScriptNativeInterface(
                 objectName, functionName,
-                new Starfish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl),
-                                                      functionName, cb),
+                new Starfish::JavaScriptNativeHandler(m_webView, functionName,
+                                                      cb),
                 nativeCallbackFunction);
 
-            if (TO_WEBVIEW(m_impl)->mainBrowsingContext()) {
+            if (m_webView->mainBrowsingContext()) {
                 Starfish::registerJavaScriptNativeInterface(
-                    TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName,
-                    functionName,
-                    new Starfish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl),
+                    m_webView->mainBrowsingContext()
+                        ->window()
+                        ->scriptBindingInstance(),
+                    objectName, functionName,
+                    new Starfish::JavaScriptNativeHandler(m_webView,
                                                           functionName, cb),
                     nativeCallbackFunction);
             }
@@ -839,7 +833,7 @@ std::string WebContainerImpl::EvaluateJavaScript(const std::string& script)
 {
     std::string ret;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_WEBVIEW(m_impl)
+        ret = m_webView
                   ->evaluateJavaScript(
                       Starfish::String::fromUTF8(script.data(), script.size()))
                   ->toUTF8NonGCString();
@@ -856,7 +850,7 @@ void WebContainerImpl::EvaluateJavaScript(
         std::function<void(const std::string&)> cb;
     };
     Params* p = new Params;
-    p->webview = TO_WEBVIEW(m_impl);
+    p->webview = m_webView;
     p->script = script;
     p->cb = cb;
 
@@ -893,15 +887,15 @@ void WebContainerImpl::EvaluateJavaScript(
 void WebContainerImpl::ClearHistory()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(),
-        [=]() -> void { TO_WEBVIEW(m_impl)->historyManager()->clear(); });
+        m_webView->messageLoop(),
+        [=]() -> void { m_webView->historyManager()->clear(); });
 }
 
 void WebContainerImpl::Destroy()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->destroy();
-        m_impl = nullptr;
+        m_webView->destroy();
+        m_webView = nullptr;
         GC_FREE(this);
     });
 }
@@ -909,19 +903,19 @@ void WebContainerImpl::Destroy()
 void WebContainerImpl::Resume()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { TO_WEBVIEW(m_impl)->platformWindow()->resume(); });
+        [&]() -> void { m_webView->platformWindow()->resume(); });
 }
 
 void WebContainerImpl::Pause()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { TO_WEBVIEW(m_impl)->platformWindow()->pause(); });
+        [&]() -> void { m_webView->platformWindow()->pause(); });
 }
 
 void WebContainerImpl::Focus()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
             // TODO
             STARFISH_UNIMPLEMENTED();
         });
@@ -930,35 +924,32 @@ void WebContainerImpl::Focus()
 void WebContainerImpl::Blur()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->webView()->blur();
-        });
+        m_webView->messageLoop(),
+        [=]() -> void { m_webView->platformWindow()->webView()->blur(); });
 }
 
 void WebContainerImpl::SetSettings(const Settings* settings)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->setCustomUserAgentString(
-                Starfish::String::fromUTF8(
-                    settings->GetUserAgentString().data(),
-                    settings->GetUserAgentString().size()));
-            TO_WEBVIEW(m_impl)->setProxyURL(settings->GetProxyURL());
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->setCustomUserAgentString(Starfish::String::fromUTF8(
+                settings->GetUserAgentString().data(),
+                settings->GetUserAgentString().size()));
+            m_webView->setProxyURL(settings->GetProxyURL());
 #ifdef STARFISH_ENABLE_TTS
-            TO_WEBVIEW(m_impl)->tts()->setMode(settings->GetTTSMode());
-            TO_WEBVIEW(m_impl)->tts()->setUserLanguage(
-                settings->GetTTSLanguage());
+            m_webView->tts()->setMode(settings->GetTTSMode());
+            m_webView->tts()->setUserLanguage(settings->GetTTSLanguage());
 #endif
             unsigned char r, g, b, a;
             settings->GetBaseBackgroundColor(r, g, b, a);
-            TO_WEBVIEW(m_impl)->setBaseBackgroundColor(
+            m_webView->setBaseBackgroundColor(
                 Starfish::Unit::Color(r, g, b, a));
             settings->GetBaseForegroundColor(r, g, b, a);
-            TO_WEBVIEW(m_impl)->setBaseForegroundColor(
+            m_webView->setBaseForegroundColor(
                 Starfish::Unit::Color(r, g, b, a));
 #ifdef STARFISH_ENABLE_HTTPCACHE
             Nullable<::Starfish::HTTPCache*> cache =
-                TO_STARFISH(m_impl)->httpCache();
+                m_webView->starfish()->httpCache();
             if (cache.hasValue()) {
                 cache->setCacheMode(settings->GetCacheMode());
             } else {
@@ -968,23 +959,20 @@ void WebContainerImpl::SetSettings(const Settings* settings)
                     "effect.. ");
             }
 #endif
-            TO_WEBVIEW(m_impl)->setWebSecurityMode(
-                settings->GetWebSecurityMode());
-            TO_WEBVIEW(m_impl)->setIdleModeJob(settings->GetIdleModeJob());
-            TO_WEBVIEW(m_impl)->setIdleModeCheckIntervalInMS(
+            m_webView->setWebSecurityMode(settings->GetWebSecurityMode());
+            m_webView->setIdleModeJob(settings->GetIdleModeJob());
+            m_webView->setIdleModeCheckIntervalInMS(
                 settings->GetIdleModeCheckIntervalInMS());
-            TO_WEBVIEW(m_impl)->setNeedsDownloadWebFontsEarly(
+            m_webView->setNeedsDownloadWebFontsEarly(
                 settings->NeedsDownloadWebFontsEarly());
-            TO_WEBVIEW(m_impl)->setUseHttp2(settings->UseHttp2());
-            TO_WEBVIEW(m_impl)->setNeedsDownScaleImageResourceLargerThan(
+            m_webView->setUseHttp2(settings->UseHttp2());
+            m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
 #ifndef TIZEN_COMPAT_HEADER_5_0
-            TO_WEBVIEW(m_impl)->setScrollbarVisible(
-                settings->ScrollbarVisible());
+            m_webView->setScrollbarVisible(settings->ScrollbarVisible());
 #endif
-            TO_WEBVIEW(m_impl)->setUseExternalPopup(
-                settings->UseExternalPopup());
-            TO_WEBVIEW(m_impl)->setUseSpatialNavigation(
+            m_webView->setUseExternalPopup(settings->UseExternalPopup());
+            m_webView->setUseSpatialNavigation(
                 settings->UseSpatialNavigation());
 
             delete settings;
@@ -995,32 +983,37 @@ void WebContainerImpl::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
             Starfish::String* objectName = Starfish::String::fromUTF8(
                 exposedObjectName.data(), exposedObjectName.size());
             Starfish::String* functionName = Starfish::String::fromUTF8(
                 jsFunctionName.data(), jsFunctionName.size());
 
-            TO_WEBVIEW(m_impl)->removeJavaScriptNativeInterface(objectName,
-                                                                functionName);
+            m_webView->removeJavaScriptNativeInterface(objectName,
+                                                       functionName);
 
             if (!jsFunctionName.empty()) {
                 Starfish::unregisterJavaScriptNativeInterface(
-                    TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName,
-                    functionName);
+                    m_webView->mainBrowsingContext()
+                        ->window()
+                        ->scriptBindingInstance(),
+                    objectName, functionName);
             } else {
                 Starfish::unregisterJavaScriptNativeInterface(
-                    TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName);
+                    m_webView->mainBrowsingContext()
+                        ->window()
+                        ->scriptBindingInstance(),
+                    objectName);
             }
         });
 }
 void WebContainerImpl::ClearCache()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
 #ifdef STARFISH_ENABLE_HTTPCACHE
             Nullable<::Starfish::HTTPCache*> cache =
-                TO_STARFISH(m_impl)->httpCache();
+                m_webView->starfish()->httpCache();
             if (cache.hasValue()) {
                 cache->clear();
             }
@@ -1032,8 +1025,8 @@ void WebContainerImpl::RegisterOnReceivedErrorHandler(
     const std::function<void(WebContainer*, ResourceError*)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnReceivedError, [this, cb](void* param) -> void {
                     struct Param {
                         Starfish::RequestErrorType errorCode;
@@ -1054,8 +1047,8 @@ void WebContainerImpl::RegisterOnPageParsedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnPageParsed, [this, cb](void* param) -> void {
                     struct Param {
                         Starfish::String* url;
@@ -1070,8 +1063,8 @@ void WebContainerImpl::RegisterOnPageLoadedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnPageLoaded, [this, cb](void* param) -> void {
                     struct Param {
                         Starfish::String* url;
@@ -1086,8 +1079,8 @@ void WebContainerImpl::RegisterOnPageStartedHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnPageStarted, [this, cb](void* param) -> void {
                     struct Param {
                         Starfish::String* url;
@@ -1102,8 +1095,8 @@ void WebContainerImpl::RegisterOnLoadResourceHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnLoadResource, [this, cb](void* param) -> void {
                     struct Param {
                         Starfish::String* url;
@@ -1118,8 +1111,8 @@ void WebContainerImpl::RegisterShouldOverrideUrlLoadingHandler(
     const std::function<bool(WebContainer*, const std::string&)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::ShouldOverrideUrlLoading,
                 [this, cb](void* param) -> void {
                     struct Param {
@@ -1133,7 +1126,7 @@ void WebContainerImpl::RegisterShouldOverrideUrlLoadingHandler(
                         this, p->url->urlString()->toUTF8NonGCString().data());
                     if ((ret == false) && p->canNavigate) {
                         // continue loading
-                        TO_WEBVIEW(m_impl)->navigateAsync(
+                        m_webView->navigateAsync(
                             p->url, Starfish::HistoryManagerAction::Add,
                             p->referrerURL);
                     }
@@ -1147,8 +1140,8 @@ void WebContainerImpl::RegisterOnDownloadStartHandler(
                              const std::string&, long)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnDownloadStart, [this, cb](void* param) -> void {
                     struct Param {
                         std::string url;
@@ -1173,8 +1166,8 @@ void WebContainerImpl::RegisterShowDropdownMenuHandler(
                              int)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->registerCallbackHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->registerCallbackHandler(
                 Starfish::WindowHandlerShowDropdownMenu,
                 [this, cb](void* param) -> void {
                     struct Param {
@@ -1195,8 +1188,8 @@ void WebContainerImpl::RegisterShowAlertHandler(
                              const std::string&)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->registerCallbackHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->registerCallbackHandler(
                 Starfish::WindowHandlerShowAlert,
                 [this, cb](void* param) -> void {
                     struct Param {
@@ -1220,8 +1213,8 @@ void WebContainerImpl::RegisterCustomFileResourceRequestHandlers(
     std::function<void(void* handle)> fileCloseCallback)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerCustomFileResourceRequestCallbacks(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerCustomFileResourceRequestCallbacks(
                 resolveFilePathCallback, fileOpenCallback, fileReadCallback,
                 fileLengthCallback, fileCloseCallback);
         });
@@ -1230,9 +1223,9 @@ void WebContainerImpl::RegisterCustomFileResourceRequestHandlers(
 void WebContainerImpl::CallHandler(const std::string& handler, void* param)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [=]() -> void {
             if (handler.compare("onDropdownMenuItemSelected") == 0) {
-                TO_WEBVIEW(m_impl)->platformWindow()->callHandler(
+                m_webView->platformWindow()->callHandler(
                     Starfish::WindowHandlerOnDropdownMenuItemSelected, param);
             }
         });
@@ -1242,16 +1235,15 @@ size_t WebContainerImpl::Width()
 {
     size_t ret = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = TO_WEBVIEW(m_impl)->platformWindow()->width(); });
+        [&]() -> void { ret = m_webView->platformWindow()->width(); });
     return ret;
 }
 
 size_t WebContainerImpl::Height()
 {
     size_t ret = 0;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_WEBVIEW(m_impl)->platformWindow()->height();
-    });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { ret = m_webView->platformWindow()->height(); });
     return ret;
 }
 
@@ -1259,8 +1251,8 @@ void WebContainerImpl::RegisterOnProgressChangedHandler(
     const std::function<void(WebContainer*, int)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::OnProgressChanged, [this, cb](void* param) -> void {
                     struct Param {
                         int newProgress;
@@ -1275,8 +1267,8 @@ void WebContainerImpl::RegisterDebuggerShouldInitHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::DebuggerShouldInit, [cb](void* param) -> void {
                     struct Param {
                         std::string url;
@@ -1293,8 +1285,8 @@ void WebContainerImpl::RegisterDebuggerShouldContinueWaitingHandler(
     const std::function<void(const std::string& url, int port, bool& ret)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->registerPublicWebViewHandler(
                 Starfish::DebuggerShouldContinueWaiting,
                 [cb](void* param) -> void {
                     struct Param {
@@ -1311,7 +1303,7 @@ void WebContainerImpl::RegisterDebuggerShouldContinueWaitingHandler(
 void WebContainerImpl::SetUserAgentString(const std::string& userAgent)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->setCustomUserAgentString(
+        m_webView->setCustomUserAgentString(
             Starfish::String::fromUTF8(userAgent.data(), userAgent.size()));
     });
 }
@@ -1319,9 +1311,8 @@ void WebContainerImpl::SetUserAgentString(const std::string& userAgent)
 std::string WebContainerImpl::GetUserAgentString()
 {
     std::string ret;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_WEBVIEW(m_impl)->userAgent()->toUTF8NonGCString();
-    });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { ret = m_webView->userAgent()->toUTF8NonGCString(); });
     return ret;
 }
 
@@ -1330,7 +1321,7 @@ void WebContainerImpl::SetCacheMode(int mode)
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #ifdef STARFISH_ENABLE_HTTPCACHE
         Nullable<::Starfish::HTTPCache*> cache =
-            TO_STARFISH(m_impl)->httpCache();
+            m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             cache->setCacheMode(mode);
         }
@@ -1344,7 +1335,7 @@ int WebContainerImpl::GetCacheMode()
 #ifdef STARFISH_ENABLE_HTTPCACHE
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         Nullable<::Starfish::HTTPCache*> cache =
-            TO_STARFISH(m_impl)->httpCache();
+            m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             ret = cache->cacheMode();
         }
@@ -1357,7 +1348,7 @@ void WebContainerImpl::SetDefaultFontSize(uint32_t size)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         if (LWE_MIN_FONT_SIZE <= size && size <= LWE_MAX_FONT_SIZE) {
-            TO_WEBVIEW(m_impl)->setDefaultFontSize(size);
+            m_webView->setDefaultFontSize(size);
         }
     });
 }
@@ -1366,7 +1357,7 @@ uint32_t WebContainerImpl::GetDefaultFontSize()
 {
     uint32_t ret = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = TO_WEBVIEW(m_impl)->defaultFontSize(); });
+        [&]() -> void { ret = m_webView->defaultFontSize(); });
     return ret;
 }
 
@@ -1375,8 +1366,8 @@ void WebContainerImpl::DispatchMouseMoveEvent(MouseButtonValue button,
                                               double x, double y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventMove,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1388,8 +1379,8 @@ void WebContainerImpl::DispatchMouseDownEvent(MouseButtonValue button,
                                               double x, double y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventDown,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1401,8 +1392,8 @@ void WebContainerImpl::DispatchMouseUpEvent(MouseButtonValue button,
                                             double y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventUp,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1412,17 +1403,17 @@ void WebContainerImpl::DispatchMouseUpEvent(MouseButtonValue button,
 void WebContainerImpl::DispatchMouseWheelEvent(double x, double y, int delta)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchMouseWheelEvent(
-                x, y, delta, true);
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchMouseWheelEvent(x, y, delta,
+                                                                 true);
         });
 }
 
 void WebContainerImpl::DispatchKeyDownEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventDown,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1431,8 +1422,8 @@ void WebContainerImpl::DispatchKeyDownEvent(KeyValue keyCode)
 void WebContainerImpl::DispatchKeyPressEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventPress,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1441,8 +1432,8 @@ void WebContainerImpl::DispatchKeyPressEvent(KeyValue keyCode)
 void WebContainerImpl::DispatchKeyUpEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchKeyEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventUp,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1452,8 +1443,8 @@ void WebContainerImpl::DispatchCompositionStartEvent(
     const std::string& soFarCompositiedString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventStart,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1465,8 +1456,8 @@ void WebContainerImpl::DispatchCompositionUpdateEvent(
     const std::string& soFarCompositiedString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventUpdate,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1478,8 +1469,8 @@ void WebContainerImpl::DispatchCompositionEndEvent(
     const std::string& soFarCompositiedString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventEnd,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1490,9 +1481,8 @@ void WebContainerImpl::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)
-                ->platformWindow()
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()
                 ->registerShowSoftwareKeyboardIfPossibleCallback(
                     [this, cb]() { cb(this); });
         });
@@ -1502,9 +1492,8 @@ void WebContainerImpl::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)
-                ->platformWindow()
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()
                 ->registerHideSoftwareKeyboardIfPossibleCallback(
                     [this, cb]() { cb(this); });
         });
@@ -1515,34 +1504,30 @@ void WebContainerImpl::RegisterSetNeedsRenderingCallback(
         WebContainer*, const std::function<void()>& doRenderingFunction)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)
-                ->platformWindow()
-                ->registerSetNeedsRenderingCallback(
-                    [this, cb](Starfish::PlatformWindow* wnd) {
-                        std::function<void()> fn = [wnd]() {
-                            auto p = wnd;
-                            p->rendering();
-                        };
-                        cb(this, fn);
-                    });
+        m_webView->messageLoop(), [=]() -> void {
+            m_webView->platformWindow()->registerSetNeedsRenderingCallback(
+                [this, cb](Starfish::PlatformWindow* wnd) {
+                    std::function<void()> fn = [wnd]() {
+                        auto p = wnd;
+                        p->rendering();
+                    };
+                    cb(this, fn);
+                });
         });
 }
 
 void WebContainerImpl::SetUserData(const std::string& key, void* data)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        static_cast<Starfish::WebView*>(m_impl)->messageLoop(), [=]() -> void {
-            TO_WEBVIEW(m_impl)->publicLayerUserDataMap()[key] = data;
-        });
+        m_webView->messageLoop(),
+        [=]() -> void { m_webView->publicLayerUserDataMap()[key] = data; });
 }
 
 void* WebContainerImpl::GetUserData(const std::string& key)
 {
     void* ret = nullptr;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_WEBVIEW(m_impl)->publicLayerUserDataMap()[key];
-    });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { ret = m_webView->publicLayerUserDataMap()[key]; });
     return ret;
 }
 
@@ -1550,7 +1535,7 @@ std::string WebContainerImpl::GetTitle()
 {
     Starfish::String* ret = Starfish::String::emptyString;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = TO_WEBVIEW(m_impl)->mainBrowsingContext()->document()->title();
+        ret = m_webView->mainBrowsingContext()->document()->title();
     });
     return ret->toUTF8NonGCString();
 }
@@ -1558,16 +1543,16 @@ std::string WebContainerImpl::GetTitle()
 void WebContainerImpl::ScrollTo(int x, int y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollTo(
-            (double)x, (double)y);
+        m_webView->mainBrowsingContext()->window()->scrollTo((double)x,
+                                                             (double)y);
     });
 }
 
 void WebContainerImpl::ScrollBy(int x, int y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollBy(
-            (double)x, (double)y);
+        m_webView->mainBrowsingContext()->window()->scrollBy((double)x,
+                                                             (double)y);
     });
 }
 
@@ -1575,7 +1560,7 @@ int WebContainerImpl::GetScrollX()
 {
     int x = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        x = (int)TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollX();
+        x = (int)m_webView->mainBrowsingContext()->window()->scrollX();
     });
     return x;
 }
@@ -1584,7 +1569,7 @@ int WebContainerImpl::GetScrollY()
 {
     int y = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        y = (int)TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollY();
+        y = (int)m_webView->mainBrowsingContext()->window()->scrollY();
     });
     return y;
 }
@@ -1592,7 +1577,7 @@ int WebContainerImpl::GetScrollY()
 void WebContainerImpl::SetDevicePixelRatio(float dpr)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        TO_WEBVIEW(m_impl)->platformWindow()->setDevicePixelRatio(dpr);
+        m_webView->platformWindow()->setDevicePixelRatio(dpr);
     });
 }
 
@@ -1600,7 +1585,7 @@ float WebContainerImpl::GetDevicePixelRatio()
 {
     float dpr = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        dpr = TO_WEBVIEW(m_impl)->platformWindow()->getDevicePixelRatio();
+        dpr = m_webView->platformWindow()->getDevicePixelRatio();
     });
     return dpr;
 }
