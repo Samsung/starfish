@@ -68,19 +68,13 @@ ThreadedCallHelper* ThreadedCallHelper::Instance()
 }
 
 ThreadedCallHelper::ThreadedCallHelper()
-    : m_isThreadMode(false)
-    , m_isLWEThreadStarted(false)
+    : m_isLWEThreadStarted(false)
 {
 }
 
-void ThreadedCallHelper::Initialize(const std::string& backend)
+void ThreadedCallHelper::Initialize(bool isThreadMode)
 {
-    if (backend == "glfw_cairo_gl" || backend == "x11_cairo_gl" ||
-        backend == "dali" || backend == "flutter") {
-        m_isThreadMode = true;
-    }
-
-    if (m_isThreadMode) {
+    if (isThreadMode) {
         m_caller = std::make_unique<ThreadedCaller>();
         if (!m_isLWEThreadStarted) {
             CreateLWEMainThread();

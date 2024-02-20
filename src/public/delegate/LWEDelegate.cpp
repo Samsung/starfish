@@ -164,8 +164,14 @@ void LWE::Initialize(const char* localStorageDataFilePath,
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
 
-    // TODO: Replace STARFISH_BACKEND_STR with public API argument.
-    ThreadedCallHelper::Instance()->Initialize(STARFISH_BACKEND_STR);
+    // TODO: Provide API to determine whether to use threaded call or not.
+    std::string backend = STARFISH_BACKEND_STR;
+    bool isThreadMode = false;
+    if (backend == "glfw_cairo_gl" || backend == "x11_cairo_gl" ||
+        backend == "dali" || backend == "flutter") {
+        isThreadMode = true;
+    }
+    ThreadedCallHelper::Instance()->Initialize(isThreadMode);
 
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #if defined(STARFISH_WINDOWS)
