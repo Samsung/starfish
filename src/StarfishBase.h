@@ -710,6 +710,22 @@ public:
         return m_value;
     }
 
+    T* valueOrNull() const
+    {
+        if (hasValue()) {
+            return m_value;
+        }
+        return nullptr;
+    }
+
+    T* valueOr(T* defaultValue) const
+    {
+        if (hasValue()) {
+            return m_value;
+        }
+        return defaultValue;
+    }
+
     T* getValue() const
     {
         STARFISH_ASSERT(hasValue());

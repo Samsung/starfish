@@ -13,6 +13,10 @@ interface OES_texture_half_float {
   const GLenum HALF_FLOAT_OES = 0x8D61;
 };
 
+// 20. OES_texture_float_linear
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_texture_float_linear { };
+
 // 25. EXT_blend_minmax
 [STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface EXT_blend_minmax {

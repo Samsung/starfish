@@ -128,7 +128,7 @@ void OES_vertex_array_object::bindVertexArrayOES(
             return value->context()->setGLError(GL_INVALID_OPERATION);
         }
     } else {
-        glBindVertexArray(0);
+        m_context->executeInContextScope([]() { glBindVertexArray(0); });
         m_context->getState()->setWebGLVertexArrayObjectOES(nullptr);
     }
 }

@@ -143,25 +143,28 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
     // Refs: Table 3.4: Valid pixel format and type combinations.
     // https://registry.khronos.org/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
 
-    if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
-        type == GL_UNSIGNED_BYTE) {
-        return 4;
-    } else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
-        return 3;
-    } else if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
-               type == GL_UNSIGNED_SHORT_4_4_4_4) {
-        return 2;
-    } else if ((format == GL_RGBA || format == GL_BGRA_EXT) &&
-               type == GL_UNSIGNED_SHORT_5_5_5_1) {
-        return 2;
-    } else if ((format == GL_RGB) && type == GL_UNSIGNED_SHORT_5_6_5) {
-        return 2;
-    } else if (format == GL_LUMINANCE_ALPHA && type == GL_UNSIGNED_BYTE) {
-        return 2;
-    } else if (format == GL_LUMINANCE && type == GL_UNSIGNED_BYTE) {
-        return 1;
-    } else if (format == GL_ALPHA && type == GL_UNSIGNED_BYTE) {
-        return 1;
+    if (type == GL_UNSIGNED_BYTE || type == GL_FLOAT) {
+        if (format == GL_RGBA || format == GL_BGRA_EXT) {
+            return 4;
+        } else if (format == GL_RGB) {
+            return 3;
+        } else if (format == GL_LUMINANCE_ALPHA) {
+            return 2;
+        } else if (format == GL_LUMINANCE || format == GL_ALPHA) {
+            return 1;
+        }
+    } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
+        if (format == GL_RGBA || format == GL_BGRA_EXT) {
+            return 2;
+        }
+    } else if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
+        if (format == GL_RGBA || format == GL_BGRA_EXT) {
+            return 2;
+        }
+    } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
+        if (format == GL_RGB) {
+            return 2;
+        }
     }
 
     STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
