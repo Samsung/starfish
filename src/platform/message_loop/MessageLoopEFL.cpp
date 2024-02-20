@@ -336,21 +336,22 @@ void MessageLoopEFL::runOnMainThreadAsync(const std::function<void()>& functor)
     return;
 }
 
-void MessageLoop::init()
+void MessageLoopEFL::init()
 {
 }
 
-void MessageLoop::run()
+void MessageLoopEFL::run()
 {
     ecore_main_loop_begin();
 }
 
-void MessageLoop::stop()
+void MessageLoopEFL::stop()
 {
     ecore_main_loop_quit();
 }
 
-size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+size_t MessageLoopEFL::runOnMainThreadSync(
+    const std::function<size_t()>& functor)
 {
     STARFISH_ASSERT((bool)functor == true);
 
