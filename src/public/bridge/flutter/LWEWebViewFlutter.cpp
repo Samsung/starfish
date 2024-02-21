@@ -85,8 +85,7 @@ public:
             prepareImageCb,
         const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
         bool useSWBackend = false)
-        : WebViewImpl(nullptr)
-        , m_isMouseLbuttonDown(false)
+        : m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
         , m_hasFocus(true)
         , m_isShowing(false)
@@ -187,7 +186,7 @@ public:
                 width, height, prepareImageCb, flushCb, devicePixelRatio,
                 defaultFontName, locale, timezoneID);
         }
-        m_impl = webContainer;
+        SetWebContainer(webContainer);
     }
     void initEGL()
     {
@@ -375,11 +374,6 @@ public:
     static EGLContext m_context;
     EGLSyncKHR m_fence;
     static Ecore_Wl2_Display* m_ecoreWlDisplay;
-
-    virtual ::LWEDelegate::WebContainer* FetchWebContainer() override
-    {
-        return (::LWEDelegate::WebContainer*)m_impl;
-    }
 };
 
 EGLDisplay WebViewFlutter::m_display = nullptr;

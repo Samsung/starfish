@@ -291,8 +291,7 @@ public:
                unsigned height, float devicePixelRatio,
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
-        : WebViewImpl(nullptr)
-        , m_resizeHandler(nullptr)
+        : m_resizeHandler(nullptr)
         , m_shownHandler(nullptr)
         , m_mouseDownEventHandler(nullptr)
         , m_mouseMoveEventHandler(nullptr)
@@ -1099,7 +1098,7 @@ public:
             [this](WebContainer* t) { HideSoftwareKeyboardIfPossible(); });
 
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
-        m_impl = webContainer;
+        SetWebContainer(webContainer);
 
         webContainer->SetUserData(
             "__internalLWEWebViewEFLNativeWindowEvasObject", win);
@@ -1308,11 +1307,6 @@ public:
     }
 
 protected:
-    virtual WebContainer* FetchWebContainer() override
-    {
-        return (WebContainer*)m_impl;
-    }
-
     Evas_Object* m_nonIMEKeyEventBox;
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,

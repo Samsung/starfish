@@ -17,6 +17,8 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+
 #include "LWEWebViewDelegateImpl.h"
 
 #include "SettingsDelegate.h"
@@ -24,6 +26,15 @@
 #include "LWEWebContainerDelegate.h"
 
 namespace LWEDelegate {
+
+WebViewImpl::WebViewImpl()
+    : m_webContainer(nullptr)
+{
+}
+
+WebViewImpl::~WebViewImpl()
+{
+}
 
 Settings* WebViewImpl::GetSettings()
 {
@@ -246,4 +257,16 @@ float WebViewImpl::GetDevicePixelRatio()
 {
     return FetchWebContainer()->GetDevicePixelRatio();
 }
+
+WebContainer* WebViewImpl::FetchWebContainer()
+{
+    STARFISH_RELEASE_ASSERT(m_webContainer);
+    return m_webContainer;
+}
+
+void WebViewImpl::SetWebContainer(WebContainer* webContainer)
+{
+    m_webContainer = webContainer;
+}
+
 } // namespace LWEDelegate

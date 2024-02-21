@@ -127,19 +127,16 @@ public:
 
     virtual float GetDevicePixelRatio() override;
 
-    virtual WebContainer* FetchWebContainer() = 0;
+    virtual WebContainer* FetchWebContainer() override;
 
 protected:
-    WebViewImpl(void* impl)
-        : m_impl(impl)
-    {
-    }
+    WebViewImpl();
 
-    virtual ~WebViewImpl()
-    {
-    }
+    virtual ~WebViewImpl();
 
-    void* m_impl;
+    void SetWebContainer(WebContainer* webContainer);
+
+    WebContainer* m_webContainer = nullptr;
 };
 
 } // namespace LWEDelegate
