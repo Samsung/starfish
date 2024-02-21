@@ -1079,12 +1079,11 @@ using namespace LWE;
 
 class WebViewDALi : public WebViewImpl {
 public:
-    WebViewImpl(void* winArg, unsigned x, unsigned y, unsigned width,
+    WebViewDALi(void* winArg, unsigned x, unsigned y, unsigned width,
                 unsigned height, float devicePixelRatio,
                 const char* defaultFontName, const char* locale,
                 const char* timezoneID)
-        : WebViewImpl(nullptr)
-        , m_mainThreadHandle(0)
+        : m_mainThreadHandle(0)
         , m_controller(nullptr)
         , m_width(width)
         , m_height(height)
@@ -1117,10 +1116,6 @@ protected:
     Application m_application;
     pthread_t m_mainThreadHandle;
     std::string m_url;
-    virtual ::LWE::WebContainer* FetchWebContainer() override
-    {
-        return (::LWE::WebContainer*)m_impl;
-    }
 
     DALiShellController* m_controller;
     int m_width, m_height;

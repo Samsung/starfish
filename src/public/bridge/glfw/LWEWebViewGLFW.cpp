@@ -61,7 +61,6 @@ public:
                 unsigned height, float devicePixelRatio,
                 const char* defaultFontName, const char* locale,
                 const char* timezoneID)
-        : WebViewImpl(nullptr)
     {
         glfwSetErrorCallback(onError);
         if (!glfwInit())
@@ -137,7 +136,7 @@ public:
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
-        m_impl = webContainer;
+        SetWebContainer(webContainer);
 
         m_pollTimer = webContainer->AddTimeout(poller, this, 10);
     }
@@ -158,11 +157,6 @@ public:
     bool m_isMouseLbuttonDown;
     size_t m_pollTimer;
     GLFWwindow* m_glWindow;
-
-    virtual WebContainer* FetchWebContainer() override
-    {
-        return (WebContainer*)m_impl;
-    }
 };
 
 static void poller(void* data)

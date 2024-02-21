@@ -40,7 +40,6 @@ public:
                unsigned height, float devicePixelRatio,
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
-        : WebViewImpl(nullptr)
     {
         m_window = std::make_shared<XWindow>();
 
@@ -67,7 +66,7 @@ public:
         XGLUtil::resetCurrentXGLContext();
 #endif
 
-        m_impl = WebContainer::CreateGL(
+        WebContainer* webContainer = WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
                 XGLUtil::makeCurrentXGLContext(m_glPlatform.context);
@@ -77,6 +76,7 @@ public:
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
+        SetWebContainer(webContainer);
         RequestPollEvent(10);
     }
 
@@ -166,11 +166,6 @@ public:
 
         m_window->terminate();
         delete this;
-    }
-
-    WebContainer* FetchWebContainer() override
-    {
-        return reinterpret_cast<WebContainer*>(m_impl);
     }
 
     KeyValue ConvertKeyCode(const unsigned long code, INPUT action,
