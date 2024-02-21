@@ -803,7 +803,7 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     restore();
 }
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 #define NEEDS_UNPREMULTIPLIED
 #endif
 void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)

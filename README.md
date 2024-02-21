@@ -68,8 +68,8 @@ Default values are in **bold**.
   Compile Starfish for either Linux or Tizen platform
 * -DMODE=[ debug | **release** ]<br>
   Compile Starfish for either release or debug mode
-* -DBACKEND=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali | glfw_cairo_gl | ecore_wayland2_cairo_gl | x11_cairo_gl ]<br>
-  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
+* -DBACKEND=[ efl_cairo | **efl_cairo_gl**  | dali | glfw_cairo_gl | ecore_wayland2_cairo_gl | x11_cairo_gl ]<br>
+  Use either cairo, cairo_gl, or dali as the backend graphics library
 * -DARCH=[ **x64** | arm ]
   Compile Starfish for either x64 or arm target
 * -DLTO=[ **0** | 1 ]<br>
@@ -238,8 +238,8 @@ Default values are in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>
   Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
-  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
+* -Dbackend=[ efl_cairo | **efl_cairo_gl** | dali ]<br>
+  Use either cairo, cairo_gl, or dali as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
   Compile Starfish for either Linux or Tizen platform
 * -DtouchUi=[ 0 | **1** ]<br>

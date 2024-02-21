@@ -66,17 +66,6 @@ namespace CompositorFactory {
     bool supportsFilterEffectMock(size_t textureWidth, size_t textureHeight);
 #endif
 
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    Compositor* create3dSkia(WebView* starfish, CompositorContext* ctx);
-    Compositor* create2dSkia(WebView* starfish, CompositorContext* ctx,
-                             CanvasSurface* surface);
-    CompositorContext* initCompositorContextSkia(PlatformWindow* wnd);
-    void destroyCompositorContextSkia(PlatformWindow* wnd,
-                                      CompositorContext* ctx);
-    uint32_t maximumTextureSizeSkia();
-    bool supportsFilterEffectSkia(size_t textureWidth, size_t textureHeight);
-#endif
-
 }; // namespace CompositorFactory
 } // namespace Starfish
 

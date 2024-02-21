@@ -73,7 +73,7 @@ namespace LWEDelegate {
 using namespace LWE;
 
 enum class PORT_WINDOW_BACKEND : int { GB, GL, HEADLESS };
-enum class PORT_COMPOSITOR_BACKEND : int { CAIRO, GL, MOCK, SKIA };
+enum class PORT_COMPOSITOR_BACKEND : int { CAIRO, GL, MOCK };
 
 class WebViewFlutter : public WebViewImpl {
 public:

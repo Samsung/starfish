@@ -3979,11 +3979,6 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
     delete[] buffer;
     callback();
 }
-#elif defined(PORT_CANVAS_BACKEND_SKIA)
-void screenShotImpl(PlatformWindow* wnd, const char* path,
-                    std::function<void()> callback)
-{
-}
 #endif
 #endif
 

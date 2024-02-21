@@ -14,8 +14,6 @@ IF(${BACKEND} STREQUAL "efl_headless" )
 ELSEIF (
     ${BACKEND} STREQUAL "efl_cairo"
     OR ${BACKEND} STREQUAL "efl_cairo_gl"
-    OR ${BACKEND} STREQUAL "efl_skia_gl"
-    OR ${BACKEND} STREQUAL "efl_skia_gb"
 )
     SET(STARFISH_SHELL_LIBRARIES elementary evas ecore)
 ENDIF()

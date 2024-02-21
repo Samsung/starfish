@@ -255,9 +255,7 @@ protected:
 
 class PlatformFontCache : public gc {
     friend class FontSelector;
-#ifdef PORT_CANVAS_BACKEND_SKIA
-    friend class FontSelectorImplSkia;
-#endif
+
 public:
     static PlatformFontCache* create(WebView* wv);
     virtual ~PlatformFontCache()

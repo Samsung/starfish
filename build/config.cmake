@@ -218,14 +218,6 @@ ELSEIF (${BACKEND} STREQUAL "efl_headless")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_HEADLESS)
 ELSEIF (${BACKEND} STREQUAL "dali")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_DALI)
-ELSEIF (${BACKEND} STREQUAL "efl_skia_gl")
-    IF (${HOST} STREQUAL "linux")
-        SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_SKIA_GL)
-    ENDIF()
-ELSEIF (${BACKEND} STREQUAL "efl_skia_gb")
-    IF (${HOST} STREQUAL "linux")
-        SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_SKIA_GB)
-    ENDIF()
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl")
     IF (${HOST} STREQUAL "linux")
         SET (LWE_DEFINES_BACKEND -DSTARFISH_GLFW_CAIRO_GL)
@@ -443,11 +435,6 @@ ELSEIF (${BACKEND} STREQUAL "dali" AND ${HOST} STREQUAL "tizen")
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
-ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
-    IF (${BUILD_CAIRO} STREQUAL "0")
-        pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
-    ENDIF()
 ELSEIF ((${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "x11_cairo_gl") AND ${ARCH} STREQUAL "x64")
     SET (DEFAULT_PACKAGES freetype2 fontconfig harfbuzz glfw3)
     IF (${WEBGL} STREQUAL "1")
@@ -526,7 +513,7 @@ IF (${COMPILER} STREQUAL "clang")
     SET (STARFISH_LIBRARIES_COMPILER -stdlib=libc++)
 ENDIF()
 
-IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter")
+IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter")
     IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
         SET (STARFISH_LIBRARIES_BACKEND png_lwe jpeg_lwe gif_lwe z)
     ELSE()
@@ -542,10 +529,6 @@ IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BAC
     ENDIF()
 
     IF (${BACKEND} MATCHES "efl_cairo")
-        IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "0")
-            SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg)
-        ENDIF()
-    ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
         IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "0")
             SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg)
         ENDIF()
@@ -610,16 +593,6 @@ IF (${BACKEND} STREQUAL "dali")
     SET (STARFISH_DALI_ADDITIONAL_INCLUDE_DIRS
         /usr/include/dali
     )
-ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
-    SET (STARFISH_SKIA_ADDITIONAL_INCLUDE_DIRS
-        ${THIRD_PARTY_ROOT}/android/skia/include
-        ${THIRD_PARTY_ROOT}/android/skia/include/effects
-        ${THIRD_PARTY_ROOT}/android/skia/include/config
-        ${THIRD_PARTY_ROOT}/android/skia/include/core
-        ${THIRD_PARTY_ROOT}/android/skia/include/image
-        ${THIRD_PARTY_ROOT}/android/skia/include/gpu
-        ${THIRD_PARTY_ROOT}/android/skia/include/ports
-    )
 ELSEIF ((${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "x11_cairo_gl") AND ${ARCH} STREQUAL "x64")
     SET (STARFISH_GLFW_ADDITIONAL_INCLUDE_DIRS)
 ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tizen")
@@ -678,7 +651,6 @@ SET (LWE_DEFINITIONS
 
 SET (STARFISH_INCLUDE_ADDITIONAL_DIRS
     ${STARFISH_DALI_ADDITIONAL_INCLUDE_DIRS}
-    ${STARFISH_SKIA_ADDITIONAL_INCLUDE_DIRS}
     ${STARFISH_GLFW_ADDITIONAL_INCLUDE_DIRS}
     ${STARFISH_WAYLAND_ADDITIONAL_INCLUDE_DIRS}
     ${STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS}

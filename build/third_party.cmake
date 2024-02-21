@@ -11,14 +11,12 @@ SET (THIRD_PARTY_DEFINITIONS ${LWE_DEFINES_MODE})
 #######################################################
 # SKIA_MATRIX
 #######################################################
-IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
-    FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
-    FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
-    ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
-    TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
-    TARGET_COMPILE_DEFINITIONS (skia_matrix PUBLIC ${THIRD_PARTY_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
-ENDIF()
+FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
+FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
+ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
+TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
+TARGET_COMPILE_DEFINITIONS (skia_matrix PUBLIC ${THIRD_PARTY_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 
 #######################################################
@@ -248,51 +246,6 @@ IF (${BUILD_CAIRO} STREQUAL "1")
 ENDIF()
 
 #######################################################
-# LIBSKIA
-#######################################################
-IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
-    SET (SKIA_DIR ${THIRD_PARTY_ROOT}/android/skia/)
-    SET (SKIA_BUILD_ARGS "is_component_build=true" "target_cpu=\\\"x64\\\"")
-    SET (SKIA_BUILD_TYPE "Release")
-    IF (${MODE} STREQUAL "debug")
-        SET (SKIA_BUILD_TYPE "Debug")
-        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=true")
-    ELSE()
-        SET (SKIA_BUILD_TYPE "Release")
-        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=false")
-    ENDIF()
-
-    IF (${BACKEND} STREQUAL "efl_skia_gl")
-        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_rgba=true")
-    ELSEIF(${BACKEND} STREQUAL "efl_skia_gb")
-        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_rgba=false")
-    ENDIF()
-
-    SET(SKIA_LOCAL_TARGET ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared/libskia.so)
-    SET(SKIA_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libskia.so)
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_LOCAL_TARGET}
-                        WORKING_DIRECTORY ${SKIA_DIR}
-                        COMMENT "BUILD SKIA"
-                        COMMAND bin/gn gen ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared --args="${SKIA_BUILD_ARGS}"
-                        COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared -t clean
-                        COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared
-    )
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_TARGET}
-                        WORKING_DIRECTORY ${SKIA_DIR}
-                        DEPENDS ${SKIA_LOCAL_TARGET}
-                        COMMENT "COPY SKIA"
-                        COMMAND cp ${SKIA_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
-    )
-
-    ADD_CUSTOM_TARGET (skia
-                       DEPENDS ${SKIA_TARGET}
-                       COMMENT "SKIA TARGET"
-    )
-ENDIF()
-
-#######################################################
 # ESCARGOT
 #######################################################
 SET (ESCARGOT_MODE ${MODE})
@@ -501,19 +454,11 @@ ENDIF()
 #######################################################
 # LINK THIRD PARTY LIBRARIES
 #######################################################
-SET (STARFISH_LIBRARIES_THIRD_PARTY ${GC_TARGET} clipper escargot)
+SET (STARFISH_LIBRARIES_THIRD_PARTY ${GC_TARGET} skia_matrix clipper escargot)
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse webm)
 
 IF (${BUILD_CAIRO} STREQUAL "1")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${CAIRO_TARGET} -lpixman-1)
-ENDIF()
-
-IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} skia_matrix)
-ENDIF()
-
-IF (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${SKIA_TARGET})
 ENDIF()
 
 IF (${ARCH} STREQUAL "x64" OR ${SHARED_WORKER} STREQUAL "1" OR ${SERVICE_WORKER} STREQUAL "1")

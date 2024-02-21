@@ -18,8 +18,7 @@
  */
 
 // Define the SHELL macros using define given from CMAKE.
-#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL) || \
-    defined(STARFISH_EFL_SKIA_GL) || defined(STARFISH_EFL_SKIA_GB)
+#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
 #define SHELL_ENABLE_ELEMENTARY
 #endif
 
