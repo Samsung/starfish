@@ -1578,13 +1578,17 @@ void WebGLRenderingContext::pixelStorei(GLenum pname, GLint param)
 
     switch (pname) {
     case kUNPACK_FLIP_Y_WEBGL:
+        TRACE(WEBGL, "UNPACK_FLIP_Y_WEBGL", param);
         m_unpackFlipY = static_cast<bool>(param);
         break;
     case kUNPACK_PREMULTIPLY_ALPHA_WEBGL:
+        TRACE(WEBGL, "UNPACK_PREMULTIPLY_ALPHA_WEBGL", param);
         m_unpackPremultiplyAlpha = static_cast<bool>(param);
         break;
     case kUNPACK_COLORSPACE_CONVERSION_WEBGL:
+        TRACE(WEBGL, "UNPACK_COLORSPACE_CONVERSION_WEBGL", param);
         if (param == kBROWSER_DEFAULT_WEBGL || param == GL_NONE) {
+            // NOTE: we don't do nothing for this as default.
             m_unpackColorspaceConversion = param;
         }
         break;
@@ -1994,27 +1998,31 @@ public:
         size_t width = 0;
         size_t height = 0;
         size_t stride = 0;
+        GLenum format = 0;
         unsigned char* data = nullptr;
     };
 
-    TexImageHelper(size_t width, size_t height, size_t stride, void* data)
+    TexImageHelper(size_t width, size_t height, size_t stride, GLenum format,
+                   void* data)
     {
         STARFISH_ASSERT(data != nullptr);
 
         m_sourceImage.width = width;
         m_sourceImage.height = height;
         m_sourceImage.stride = stride;
+        m_sourceImage.format = format;
         m_sourceImage.data = static_cast<unsigned char*>(data);
         m_isNativeImageDataUsed = false;
     }
 
-    TexImageHelper(NativeImageData* imageData)
+    TexImageHelper(NativeImageData* imageData, GLenum format)
     {
         STARFISH_ASSERT(imageData != nullptr);
 
         m_sourceImage.width = imageData->width();
         m_sourceImage.height = imageData->height();
         m_sourceImage.stride = imageData->stride();
+        m_sourceImage.format = format;
         m_sourceImage.data = static_cast<unsigned char*>(imageData->data());
         m_isNativeImageDataUsed = true;
     }
@@ -2023,8 +2031,7 @@ public:
     {
     }
 
-    void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
-              const bool useDefaultColorConversion)
+    void draw(const bool needsFlipY, const bool needsPremultiplyAlpha)
     {
         const size_t width = m_sourceImage.width;
         const size_t height = m_sourceImage.height;
@@ -2033,25 +2040,28 @@ public:
 
         size_t offset = 0, newOffset = 0, srcOffset = 0, destOffset = 0;
 
-        bool needsColorConversion = false;
-
-        if (m_isNativeImageDataUsed) {
-#if !defined(PORT_PIXEL_ORDER_RGBA) && !defined(PORT_PIXEL_ORDER_BGRA)
-            STARFISH_ASSERT_NOT_REACHED();
-#endif
-
-#if defined(PORT_PIXEL_ORDER_BGRA)
-            if (useDefaultColorConversion) {
-                if (WebGLExtensionRegistry::instance()
-                        .hasEXT_texture_format_BGRA8888()) {
-                    m_dataFormat = GL_BGRA_EXT;
-                } else {
-                    needsColorConversion = true;
-                }
-            }
-#endif
+        if (m_sourceImage.format != GL_RGB && m_sourceImage.format != GL_RGBA) {
+            return;
         }
 
+#if !defined(PORT_PIXEL_ORDER_RGBA) && !defined(PORT_PIXEL_ORDER_BGRA)
+        STARFISH_ASSERT_NOT_REACHED();
+#endif
+
+        bool needsColorConversion = false;
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        if (m_isNativeImageDataUsed) {
+            // NativeImageData is formatted as BGRA.
+            if (WebGLExtensionRegistry::instance()
+                    .hasEXT_texture_format_BGRA8888()) {
+                m_dataFormat = GL_BGRA_EXT;
+                needsColorConversion = false;
+            } else {
+                needsColorConversion = true;
+            }
+        }
+#endif
         if (!needsFlipY && !needsPremultiplyAlpha && !needsColorConversion) {
             return;
         }
@@ -2139,6 +2149,16 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (static_cast<GLenum>(internalFormat) != format) {
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString(
+                       "The given parameters, internal format (0x%0fX) and "
+                       "format (0x%04X) are not same.",
+                       internalFormat, format)
+                       .c_str());
+        return;
+    }
+
     if (pixels.hasValue()) {
         ArrayBufferViewRef* pixelsView = pixels.getValue();
 
@@ -2185,9 +2205,9 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
         // Handle WebGL-specific pixel storage parameters that affect the
         // behavior of this function.
-        TexImageHelper image(width, height, width * bytesPerPixel, data);
-        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha,
-                   m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
+        TexImageHelper image(width, height, width * bytesPerPixel, format,
+                             data);
+        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha);
 
         glTexImage2D(target, level, internalFormat, width, height, 0, format,
                      type, image.data());
@@ -2327,6 +2347,19 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
+    if (static_cast<GLenum>(internalFormat) != format) {
+        // The format, in WebGL 1, must be the same as internalformat. See:
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+        // TODO: add an identifier for WebGL version and use it.
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString(
+                       "The given parameters, internal format (0x%0fX) and "
+                       "format (0x%04X) are not same.",
+                       internalFormat, format)
+                       .c_str());
+        return;
+    }
+
     GLsizei width = 0;
     GLsizei height = 0;
     GLsizei stride = 0;
@@ -2336,6 +2369,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         setGLError(GL_INVALID_VALUE);
         return;
     } else if (source.isImageBitmapValue()) {
+        TRACE(WEBGL, "source.isImageBitmapValue");
         ImageBitmap* imageBitmap = source.getImageBitmapValue();
         imageData = imageBitmap->nativeImageData();
         width = imageData->width();
@@ -2343,6 +2377,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     } else if (source.isImageDataValue()) {
         STARFISH_UNIMPLEMENTED("ImageData");
     } else if (source.isHTMLImageElementValue()) {
+        TRACE(WEBGL, "source.isHTMLImageElementValue");
         HTMLImageElement* element = source.getHTMLImageElementValue();
         imageData = element->imageData();
         if (imageData->isSVGNativeImageData()) {
@@ -2354,6 +2389,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
             height = imageData->height();
         }
     } else if (source.isHTMLCanvasElementValue()) {
+        TRACE(WEBGL, "source.isHTMLCanvasElementValue");
         // TODO: Consider using CanvasImageSourceUtils::toNativeImageData
         HTMLCanvasElement* element = source.getHTMLCanvasElementValue();
         CanvasRenderingContext* context = element->canvasRenderingContext();
@@ -2377,9 +2413,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 
     // Handle WebGL-specific pixel storage parameters that affect the behavior
     // of this function.
-    TexImageHelper image(imageData);
-    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha,
-               m_unpackColorspaceConversion == kBROWSER_DEFAULT_WEBGL);
+    TexImageHelper image(imageData, format);
+    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha);
 
     // Uploads the given image data to the currently bound texture.
     glTexImage2D(target, level, internalFormat, width, height, 0,
