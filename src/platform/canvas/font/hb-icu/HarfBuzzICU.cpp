@@ -29,7 +29,7 @@
 
 #include "StarfishBase.h"
 
-#if defined(PORT_CANVAS_BACKEND_SKIA) || defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #if !defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
 #if defined(STARFISH_WINDOWS)

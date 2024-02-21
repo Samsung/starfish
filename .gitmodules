@@ -86,10 +86,6 @@
 	path = third_party/windows/zlib
 	url = git@github.sec.samsung.net:lws-submodules/zlib.git
 	ignore = untracked
-[submodule "third_party/android/skia"]
-	path = third_party/android/skia
-	url = git@github.sec.samsung.net:lws-submodules/skia.git
-	ignore = untracked
 [submodule "third_party/earcut.hpp"]
 	path = third_party/earcut.hpp
 	url = git@github.sec.samsung.net:lws-submodules/earcut.hpp.git

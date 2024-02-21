@@ -101,8 +101,6 @@ public:
     {
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         return m_imageSurface;
-#elif defined(PORT_CANVAS_BACKEND_SKIA)
-        return nullptr;
 #elif defined(PORT_CANVAS_BACKEND_MOCK)
         return nullptr;
 #else

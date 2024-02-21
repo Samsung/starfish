@@ -63,7 +63,7 @@
 #endif
 #include "../third_party/escargot/third_party/checked_arithmetic/CheckedArithmetic.h"
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 #define NEEDS_UNPREMULTIPLIED
 #endif
 

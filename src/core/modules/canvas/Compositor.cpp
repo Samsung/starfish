@@ -50,10 +50,6 @@ Compositor* Compositor::create3D(WebView* starfish, CompositorContext* ctx)
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::create3dMock(starfish, ctx);
 #endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::create3dSkia(starfish, ctx);
-#endif
     default:
         break;
     }
@@ -77,10 +73,6 @@ Compositor* Compositor::create2D(WebView* starfish, CompositorContext* ctx,
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::create2dMock(starfish, ctx, surface);
 #endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::create2dSkia(starfish, ctx, surface);
-#endif
     default:
         break;
     }
@@ -102,10 +94,6 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 #ifdef PORT_COMPOSITOR_BACKEND_MOCK
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::initCompositorContextMock(wnd);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::initCompositorContextSkia(wnd);
 #endif
     default:
         break;
@@ -130,10 +118,6 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::destroyCompositorContextMock(wnd, ctx);
 #endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::destroyCompositorContextSkia(wnd, ctx);
-#endif
     default:
         break;
     }
@@ -154,10 +138,6 @@ uint32_t Compositor::maximumTextureSize()
 #ifdef PORT_COMPOSITOR_BACKEND_MOCK
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::maximumTextureSizeMock();
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::maximumTextureSizeSkia();
 #endif
     default:
         break;
@@ -182,11 +162,6 @@ bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
 #ifdef PORT_COMPOSITOR_BACKEND_MOCK
     case PORT_COMPOSITOR_BACKEND::MOCK:
         return CompositorFactory::supportsFilterEffectMock(textureWidth,
-                                                           textureHeight);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_SKIA
-    case PORT_COMPOSITOR_BACKEND::SKIA:
-        return CompositorFactory::supportsFilterEffectSkia(textureWidth,
                                                            textureHeight);
 #endif
     default:
