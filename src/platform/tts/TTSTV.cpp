@@ -18,7 +18,7 @@
  */
 
 #if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS) && \
-    defined(STARFISH_TIZEN_PROD_TV)
+    defined(STARFISH_TIZEN_PROD_TV) && defined(PORT_WEBVIEW_BRIDGE_EFL)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
