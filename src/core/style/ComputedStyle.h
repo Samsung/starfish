@@ -2852,7 +2852,7 @@ public:
     String* animationName(size_t index = 0)
     {
         StyleAnimationData* a = animation();
-        if (a != nullptr) {
+        if (a && index < a->animationNameSize()) {
             return a->animationName(index);
         }
         return String::emptyString;
