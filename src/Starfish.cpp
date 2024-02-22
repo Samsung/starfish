@@ -80,6 +80,9 @@ int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_FLUTTER)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_UV_CAIRO_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #endif
 
 static bool g_starfishGlobalInit = false;
