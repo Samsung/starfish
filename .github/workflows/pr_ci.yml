@@ -1,0 +1,102 @@
+name: Run PR
+
+on: [pull_request_target]
+
+jobs:
+  check_source:
+    runs-on: [ legacy-rat6 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Check tidy
+        run: ./tool/check_tidy.py
+
+  squash_thirdparty:
+    needs: check_source
+    runs-on: [ legacy-rat6 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Add safe directory
+        run: |
+              mkdir -p /__w/starfish/lwe_rel_tmp
+              git config --global --add safe.directory /__w/starfish/starfish
+              git config --global --add safe.directory /__w/starfish/lwe_rel_tmp
+
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
+
+      - name: Make source for window
+        run: |
+              git config --global user.email "github-actions[bot]@users.noreply.github.com"
+              git config --global user.name "github-actions[bot]"
+              tool/release/prepare_source_without_thirdparty.sh
+              cd ../lwe_rel_tmp
+              git remote add origin git@github.sec.samsung.net:mh-byun/starfish_window_build.git
+              git fetch origin
+              git push origin HEAD:${{ github.event.pull_request.number }} -f
+              cd ../starfish
+              rm -rf ../lwe_rel_tmp
+
+  x64_test:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/x64_test.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  window:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/windows.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  serviceworker:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/serviceworker.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  gl_backend:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/gl_backend.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  dynamic_loader:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/dynamic_loader.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  minor_port:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/minor.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit

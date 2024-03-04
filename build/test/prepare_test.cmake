@@ -13,9 +13,8 @@ SET_TARGET_PROPERTIES (imgdiff PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TOOL_ROOT}/imgdiff"
 )
 
-pkg_check_modules (TEST_PNG REQUIRED libpng)
-TARGET_LINK_LIBRARIES (imgdiff ${TEST_PNG_LIBRARIES})
-TARGET_COMPILE_OPTIONS (imgdiff PUBLIC -O3 -g3 --std=c++11 ${TEST_PNG_CFLAGS})
+TARGET_LINK_LIBRARIES (imgdiff png)
+TARGET_COMPILE_OPTIONS (imgdiff PUBLIC -O3 -g3 --std=c++11)
 
 ADD_CUSTOM_TARGET (install_pixel_test_dep
     DEPENDS imgdiff

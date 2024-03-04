@@ -1,31 +1,16 @@
-name: Build Starfish
+name: Build Starfish (x64 test)
 
 on:
-  pull_request_target:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
 
 jobs:
-  check_source:
-    runs-on: [ legacy-rat6 ]
-    container:
-      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    # Set reasonable timeout value.
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout source..
-        uses: CODE-Actions/checkout@v2
-        with:
-          submodules: false
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Check tidy
-        run: ./tool/check_tidy.py
-
   build_x64:
-    needs: check_source
     runs-on: [ legacy-rat6 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
@@ -43,14 +28,19 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout source..
+      - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: "recursive"
-          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      - name: Clean workspace
+        run: |
+            git clean -xdf
       - name: Build Starfish
         run: |
           cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
@@ -125,7 +115,7 @@ jobs:
 
       - name: Build image diff tool
         run: |
-          cmake --clean-first CMakeLists.txt -DMODE=debug -DBACKEND=glfw_cairo_gl -DDOCKER=1 -DWEBRTC=1 -G Ninja
+          cmake build/test -G Ninja
           ninja install_pixel_test_dep
 
       - name: Run internal_test
