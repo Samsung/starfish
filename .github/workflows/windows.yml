@@ -1,35 +1,32 @@
 name: Build Starfish (windows)
 
-on: [pull_request_target]
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
 
 jobs:
   build_x64:
     runs-on: [self-hosted, Windows]
     timeout-minutes: 60
     steps:
-      - name: Git setup
-        run: |
-            git config --global http.proxy http://10.112.1.184:8080
-            git config --global https.proxy http://10.112.1.184:8080
-            git config --global http.sslVerify false
-            git config --global core.eol lf
-            git config --global core.autocrlf input
       - name: Python setup
         run: |
             pip install Jinja2 ply --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --proxy=http://10.112.1.184:8080
-      - name: Clean workspace
-        continue-on-error: true
-        run: |
-            git clean -xdf
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Checkout submodules
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        continue-on-error: true
         run: |
-          git submodule update --init binding_generator third_party/MP4Parse third_party/clipper third_party/rapidxml third_party/skia_matrix third_party/webm third_party/earcut.hpp third_party/windows/* third_party/libwebsockets
-          git submodule update --init --recursive third_party/escargot/
+            git clean -xdf
       - name: Build
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat"

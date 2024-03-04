@@ -1,0 +1,40 @@
+name: Build Starfish (minor port)
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
+
+
+jobs:
+  build_x64:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    strategy:
+      matrix:
+        mode: [x64_glfw_debug_wasm, x64_glfw_release, x64_efl_headless]
+
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Build Starfish
+        run: /root/workspace/build.sh ${{ matrix.mode }}

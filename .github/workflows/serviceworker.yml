@@ -1,10 +1,17 @@
-name: Build Starfish
+name: Build Starfish (serviceworker)
 
-on: [pull_request_target]
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
 
 jobs:
   build_x64_serivce_worker:
-    runs-on: [ legacy-rat6 ]
+    runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -21,12 +28,12 @@ jobs:
       - name: Checkout
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: "recursive"
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Add safe directory
-        run: git config --global --add safe.directory /__w/starfish/starfish
-      - name: Reset Submodule
-        run: git submodule foreach --recursive git reset --hard
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
       - name: Configuration
         run: |
           cmake CMakeLists.txt -B${{ matrix.backend }}/release -G Ninja -DTARGETNAME=Starfish \
