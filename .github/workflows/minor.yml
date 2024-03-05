@@ -11,7 +11,7 @@ on:
 
 
 jobs:
-  build_x64:
+  build_x64_glfw_debug_wasm:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
@@ -19,9 +19,61 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
-    strategy:
-      matrix:
-        mode: [x64_glfw_debug_wasm, x64_glfw_release, x64_efl_headless]
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Build Starfish
+        run: |
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=glfw_cairo_gl -DDOCKER=1 -DENABLE_WASM=1 -G Ninja
+            ninja starfish.executable
+
+  build_x64_glfw_release:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Build Starfish
+        run: |
+            cmake CMakeLists.txt -DMODE=release -DBACKEND=glfw_cairo_gl -DDOCKER=1 -G Ninja
+            ninja starfish.executable
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
+
+  x64_efl_headless:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
 
     # Set reasonable timeout value.
     timeout-minutes: 30
@@ -37,4 +89,6 @@ jobs:
         run: |
             git clean -xdf
       - name: Build Starfish
-        run: /root/workspace/build.sh ${{ matrix.mode }}
+        run: |
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=efl_headless -DDOCKER=1 -G Ninja
+            ninja starfish.executable

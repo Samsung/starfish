@@ -37,6 +37,7 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: "recursive"
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Add safe directory
         run: |
