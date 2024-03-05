@@ -22,7 +22,7 @@
 #include "Console.h"
 #include "MiniBrowser.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -46,7 +46,9 @@ void Console::run()
             sleep(1);
             while (1) {
                 // Poll input
-                fgets(buf, 1024, stdin);
+                if (!std::fgets(buf, sizeof(buf), stdin)) {
+                    continue;
+                }
 
                 Param* param = new Param;
                 param->console = console;
