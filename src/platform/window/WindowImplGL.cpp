@@ -117,13 +117,14 @@ public:
         }
 
         m_compostiorContext->willRendering();
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-        {
+        if (m_renderingPrepareCallback) {
             RenderInfo renderInfo = m_renderingPrepareCallback();
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
             m_compostiorContext->prepareExternalSurface(
                 renderInfo.updatedBufferAddress);
-        }
 #endif
+        }
+
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
