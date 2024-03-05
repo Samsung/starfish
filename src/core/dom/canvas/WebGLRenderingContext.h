@@ -135,6 +135,7 @@ public:
     WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
     WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
     GLint getAttribLocation(WebGLProgram* program, String* name);
+    ScriptValue getBufferParameter(GLenum target, GLenum pname);
     ScriptValue getParameter(GLenum pname);
     GLenum getError();
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
@@ -211,6 +212,8 @@ public:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, Nullable<AllowSharedBufferSource> data,
                     GLenum usage);
+    void bufferSubData(GLenum target, GLintptr offset,
+                       AllowSharedBufferSource data);
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     Nullable<ScriptArrayBufferView> pixels);
