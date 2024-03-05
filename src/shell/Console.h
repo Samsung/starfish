@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,15 +17,35 @@
  *  USA
  */
 
-#ifndef __StarfishWindowType__
-#define __StarfishWindowType__
+#ifndef __StarfishShellConsole__
+#define __StarfishShellConsole__
 
-namespace LWE {
+#include <string>
 
-#ifndef NativeWindowType
-typedef unsigned long NativeWindowType;
-#endif
+namespace StarfishShell {
 
-} // namespace LWE
+class MiniBrowser;
+
+class Console {
+public:
+    struct Param {
+        Console* console;
+        std::string input;
+    };
+
+    static Console* create(MiniBrowser* browser);
+
+    virtual ~Console() = default;
+    void run();
+    virtual void send(Param* param) = 0;
+    void write(const std::string& input);
+
+protected:
+    Console(MiniBrowser* browser);
+
+    MiniBrowser* m_browser;
+};
+
+} // namespace StarfishShell
 
 #endif

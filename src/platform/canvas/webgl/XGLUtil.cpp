@@ -29,6 +29,50 @@
 
 namespace XGLUtil {
 
+void initXGLPlatform()
+{
+    EGLContext context = eglGetCurrentContext();
+
+    if (!context) {
+        STARFISH_LOG_ERROR("No attached context found.");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    EGLDisplay display = eglGetCurrentDisplay();
+    EGLSurface read = eglGetCurrentSurface(EGL_READ);
+    EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
+
+    STARFISH_ASSERT(read == draw);
+
+    EGLConfig config = nullptr;
+    EGLint configId, numConfigs, currentConfigId;
+    eglQueryContext(display, context, EGL_CONFIG_ID, &configId);
+    eglGetConfigs(display, nullptr, 0, &numConfigs);
+
+    std::vector<EGLConfig> configs(numConfigs);
+    eglGetConfigs(display, configs.data(), numConfigs, &numConfigs);
+    for (const auto& c : configs) {
+        eglGetConfigAttrib(display, c, EGL_CONFIG_ID, &currentConfigId);
+        if (currentConfigId == configId) {
+            config = c;
+            break;
+        }
+    }
+
+    if (!display || !read || !draw || !config || !context) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    XGLPlatform platform;
+    platform.type = XGLPlatform::Type::EGL;
+    platform.context = context;
+    platform.egl.display = display;
+    platform.egl.surface = draw;
+    platform.egl.config = config;
+
+    XGLPlatform::instance()->update(platform);
+}
+
 bool createXGLContext(XGLContext& context, const XGLContext shareContext)
 {
     XGLPlatform platform = XGLPlatform::ref();

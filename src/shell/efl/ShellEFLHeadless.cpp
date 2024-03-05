@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,35 @@
  *  USA
  */
 
-#ifndef __StarfishWindowEGL__
-#define __StarfishWindowEGL__
+#include "ShellConfig.h"
 
-#include "public/bridge/x11/WindowType.h"
+#if defined(STARFISH_EFL_HEADLESS)
+#include "Shell.h"
 
-struct XGLPlatform;
+#include <Ecore.h>
 
-namespace LWE {
+namespace StarfishShell {
 
-bool initEGL(const NativeWindowType window, XGLPlatform *platform = nullptr);
-
+int Shell::runMainLoop()
+{
+    ecore_main_loop_begin();
+    return 0;
 }
+
+void Shell::stopMainLoop()
+{
+    ecore_shutdown();
+}
+
+void Shell::onTimeout()
+{
+    ecore_main_loop_thread_safe_call_sync(
+        [](void* data) -> void* {
+            ecore_main_loop_quit();
+            return nullptr;
+        },
+        nullptr);
+}
+} // namespace StarfishShell
 
 #endif

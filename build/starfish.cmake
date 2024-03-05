@@ -47,10 +47,12 @@ IF (${HOST} STREQUAL "tizen")
     FILE (GLOB STARFISH_SRC_EXTRA ${THIRD_PARTY_ROOT}/deviceapi/src/*.cpp)
 ENDIF()
 
+FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
+
 LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/public/LWEWebView.cpp
     ${STARFISH_ROOT}/src/public/LWEDelegateLoader.cpp
-    ${STARFISH_ROOT}/src/shell/Shell.cpp
+    ${STARFISH_SHELL_SRC}
 )
 
 FILE (GLOB_RECURSE SERVICE_WORKER_HOST_SRC ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp)

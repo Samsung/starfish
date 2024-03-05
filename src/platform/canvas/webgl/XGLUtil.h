@@ -27,6 +27,8 @@
 
 namespace XGLUtil {
 
+void initXGLPlatform();
+
 bool createXGLContext(XGLContext &context, const XGLContext shareContext);
 
 bool destroyXGLContext(const XGLContext context);

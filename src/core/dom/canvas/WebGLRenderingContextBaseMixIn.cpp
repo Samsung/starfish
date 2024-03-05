@@ -27,6 +27,9 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/canvas/webgl/GLES.h"
+#include "platform/canvas/webgl/XGLPlatform.h"
+#include "platform/canvas/webgl/XGLUtil.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
 
@@ -50,6 +53,11 @@ void WebGLRenderingContextBaseMixIn::initialize()
 {
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(!m_context.isValid());
+
+    if (!XGLPlatform::instance()->isValid()) {
+        m_ownerHTMLCanvasElement->webView()->platformWindow()->glMakeCurrent();
+        XGLUtil::initXGLPlatform();
+    }
 
     // Create a GL context for this rendering context
     if (!m_context.create(true)) {

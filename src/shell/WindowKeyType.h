@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarfishWindowKeyType__
-#define __StarfishWindowKeyType__
+#ifndef __StarfishShellWindowKeyType__
+#define __StarfishShellWindowKeyType__
 
-namespace LWE {
+namespace StarfishShell {
 
 enum class INPUT : unsigned long {
     // clang-format off
@@ -177,6 +177,6 @@ enum class ASCII : unsigned int {
     DEL
 };
 
-} // namespace LWE
+} // namespace StarfishShell
 
 #endif
