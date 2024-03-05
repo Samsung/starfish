@@ -15,6 +15,9 @@ typedef (HTMLImageElement or
          ImageBitmap /*or
          OffscreenCanvas*/) CanvasImageSource;
 
+[STARFISH_ENABLE_CANVAS]
+enum PredefinedColorSpace { "srgb", "display-p3" };
+
 // mixin
 [STARFISH_ENABLE_CANVAS,
  PartialInterface,

@@ -41,6 +41,7 @@ class WebGLTexture;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
+class String;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
 class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
@@ -65,6 +66,10 @@ public:
 
     GLsizei drawingBufferWidth() const;
     GLsizei drawingBufferHeight() const;
+    String* drawingBufferColorSpace();
+    void setDrawingBufferColorSpace(String* value);
+    String* unpackColorSpace();
+    void setUnpackColorSpace(String* value);
 
     // Implement WebGLRenderingContextBase
     Nullable<WebGLContextAttributes> getContextAttributes();
@@ -259,6 +264,8 @@ private:
     WebGLContextAttributes m_attributes;
     WebGLRenderingContextState m_state;
     bool m_isContextLost;
+    String* m_unpackColorSpace;
+    String* m_drawingBufferColorSpace;
 };
 } // namespace Starfish
 
