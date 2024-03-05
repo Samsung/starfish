@@ -391,10 +391,10 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/conformance/webGL
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bindBufferBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bindBuffer.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bindFramebufferLeaveNonZero.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferDataBadArgs.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferData.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferSubDataBadArgs.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferSubData.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferDataBadArgs.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferData.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferSubDataBadArgs.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/bufferSubData.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/copyTexImage2DBadArgs.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/copyTexImage2D.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/copyTexSubImage2DBadArgs.html

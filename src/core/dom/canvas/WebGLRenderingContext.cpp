@@ -1004,6 +1004,24 @@ void WebGLRenderingContext::stencilOpSeparate(GLenum face, GLenum fail,
     glStencilOpSeparate(face, fail, zfail, zpass);
 }
 
+ScriptValue WebGLRenderingContext::getBufferParameter(GLenum target,
+                                                      GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    GLint value = -1;
+    glGetBufferParameteriv(target, pname, &value);
+
+    if (hasGLError()) {
+        // GL_INVALID_ENUM is generated in glGetBufferParameteriv if target or
+        // pname is not an accepted value.
+        return scriptNull();
+    }
+
+    return ValueRef::create(
+        pname == GL_BUFFER_SIZE ? value : static_cast<GLenum>(value));
+}
+
 ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
@@ -2003,26 +2021,44 @@ void WebGLRenderingContext::bufferData(GLenum target,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (data.hasValue()) {
-        if (data.value().isArrayBufferValue()) {
-            ScriptArrayBuffer buffer = data.value().getArrayBufferValue();
-            glBufferData(target, buffer->byteLength(), buffer->rawBuffer(),
-                         usage);
-        } else if (data.value().isArrayBufferViewValue()) {
-            ScriptArrayBufferView view = data.value().getArrayBufferViewValue();
-            glBufferData(target, view->byteLength(), view->rawBuffer(), usage);
-        } else if (data.value().isSharedArrayBufferValue()) {
-            ScriptSharedArrayBuffer buffer =
-                data.value().getSharedArrayBufferValue();
-            glBufferData(target, buffer->byteLength(), buffer->rawBuffer(),
-                         usage);
-        } else {
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
+    if (!data.hasValue()) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (data.value().isArrayBufferValue()) {
+        ScriptArrayBuffer buffer = data.value().getArrayBufferValue();
+        glBufferData(target, buffer->byteLength(), buffer->rawBuffer(), usage);
+    } else if (data.value().isArrayBufferViewValue()) {
+        ScriptArrayBufferView view = data.value().getArrayBufferViewValue();
+        glBufferData(target, view->byteLength(), view->rawBuffer(), usage);
+    } else if (data.value().isSharedArrayBufferValue()) {
+        ScriptSharedArrayBuffer buffer =
+            data.value().getSharedArrayBufferValue();
+        glBufferData(target, buffer->byteLength(), buffer->rawBuffer(), usage);
     } else {
-        //  If data is null, then the contents of the buffer object’s data store
-        //  are undefined.
-        glBufferData(target, 0, nullptr, usage);
+        setGLError(GL_INVALID_VALUE);
+    }
+}
+
+void WebGLRenderingContext::bufferSubData(GLenum target, GLintptr offset,
+                                          AllowSharedBufferSource data)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (data.isArrayBufferValue()) {
+        ScriptArrayBuffer buffer = data.getArrayBufferValue();
+        glBufferSubData(target, offset, buffer->byteLength(),
+                        buffer->rawBuffer());
+    } else if (data.isArrayBufferViewValue()) {
+        ScriptArrayBufferView view = data.getArrayBufferViewValue();
+        glBufferSubData(target, offset, view->byteLength(), view->rawBuffer());
+    } else if (data.isSharedArrayBufferValue()) {
+        ScriptSharedArrayBuffer buffer = data.getSharedArrayBufferValue();
+        glBufferSubData(target, offset, buffer->byteLength(),
+                        buffer->rawBuffer());
+    } else {
+        setGLError(GL_INVALID_VALUE);
     }
 }
 
