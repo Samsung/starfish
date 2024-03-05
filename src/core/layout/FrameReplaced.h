@@ -142,9 +142,6 @@ public:
     {
         const LayoutRect rect(0, 0, width(), height());
         applyBorderRadiusClippingIfNeeds(canvas, rect);
-        if (!isFrameReplaced()) {
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
     }
 
     virtual void paintContent(PaintingContext& ctx) override;

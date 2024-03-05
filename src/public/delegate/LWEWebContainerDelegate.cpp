@@ -414,10 +414,6 @@ void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
 void WebContainerImpl::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         m_webView->platformWindow()->registerRenderingPrepareCallback(
             [cb](void) -> Starfish::RenderInfo {
