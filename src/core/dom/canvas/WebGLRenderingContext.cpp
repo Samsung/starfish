@@ -146,6 +146,8 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_unpackPremultiplyAlpha = false;
     m_unpackColorspaceConversion = kBROWSER_DEFAULT_WEBGL;
     m_isContextLost = false;
+    m_unpackColorSpace = String::createASCIIString("srgb");
+    m_drawingBufferColorSpace = String::createASCIIString("srgb");
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
@@ -278,6 +280,41 @@ GLsizei WebGLRenderingContext::drawingBufferWidth() const
 GLsizei WebGLRenderingContext::drawingBufferHeight() const
 {
     return m_canvasSurface->bufferHeight();
+}
+
+static bool isPredefinedColorSpace(String* value)
+{
+    STARFISH_ASSERT(value != nullptr);
+    // Refs: https://html.spec.whatwg.org/multipage/canvas.html#2dcontext
+    // enum PredefinedColorSpace { "srgb", "display-p3" };
+    if (value->equals("srgb") || value->equals("display-p3")) {
+        return true;
+    }
+    return false;
+}
+
+String* WebGLRenderingContext::drawingBufferColorSpace()
+{
+    return m_drawingBufferColorSpace;
+}
+
+void WebGLRenderingContext::setDrawingBufferColorSpace(String* value)
+{
+    if (isPredefinedColorSpace(value)) {
+        m_drawingBufferColorSpace = value;
+    }
+}
+
+String* WebGLRenderingContext::unpackColorSpace()
+{
+    return m_unpackColorSpace;
+}
+
+void WebGLRenderingContext::setUnpackColorSpace(String* value)
+{
+    if (isPredefinedColorSpace(value)) {
+        m_unpackColorSpace = value;
+    }
 }
 
 Nullable<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
