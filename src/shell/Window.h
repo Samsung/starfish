@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,18 +17,22 @@
  *  USA
  */
 
-#ifndef __StarfishWindowBase__
-#define __StarfishWindowBase__
+#ifndef __StarfishShellWindowBase__
+#define __StarfishShellWindowBase__
 
-#include "public/bridge/x11/WindowType.h"
-#include "public/bridge/x11/WindowKeyType.h"
+#include <string>
+#include <cstdint>
 #include <functional>
+#include <memory>
 
-namespace LWE {
+#include "WindowKeyType.h"
+#include "PlatformIntegrationData.h"
+
+namespace StarfishShell {
 
 #define HINT_VISIBLE 0x0001
 
-class WindowBase {
+class Window {
 public:
     using MotionEventHandler = std::function<void(int xpos, int ypos)>;
     using WindowSizeEventHandler = std::function<void(int width, int height)>;
@@ -38,6 +42,13 @@ public:
     using ExitEventHandler = std::function<void()>;
     using KeyEventHandler =
         std::function<void(unsigned long code, INPUT action, unsigned mods)>;
+    using FocusInHandler = std::function<void()>;
+
+    static Window* create();
+    static LWE::KeyValue convertKeyCode(const unsigned long key, INPUT action,
+                                        unsigned mods);
+
+    virtual ~Window() = default;
 
     void setMotionEventHandler(const MotionEventHandler& handler)
     {
@@ -69,22 +80,47 @@ public:
         m_exitEventHandler = handler;
     }
 
+    void setFocusInHandler(const FocusInHandler& handler)
+    {
+        m_focusInHandler = handler;
+    }
+
+    void setInitHint(int hint, int value)
+    {
+        if (hint == HINT_VISIBLE) {
+            m_isVisible = value;
+        }
+    }
+
     virtual bool init(const char* applicationName, int width, int height) = 0;
-    virtual void pollEvent() = 0;
+    virtual void pollEvent(){};
     virtual void terminate() = 0;
-    virtual NativeWindowType getNativeWindowHandle() = 0;
+
+#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+    virtual void addAutoFitChild(void* child) = 0;
+#endif
+
+    virtual void* getNativeWindowHandle() = 0;
     virtual void getCursorPos(double& xpos, double& ypos) = 0;
-    virtual void setInitHint(int hint, int value) = 0;
+
+    virtual bool initEGL() = 0;
+    virtual bool makeCurrent() = 0;
+    virtual bool resetCurrent() = 0;
+    virtual bool swapBuffer() = 0;
 
 protected:
+    Window() = default;
+
     MotionEventHandler m_motionEventHandler;
     ButtonEventHandler m_buttonEventHandler;
     WindowSizeEventHandler m_windowSizeEventHandler;
     KeyEventHandler m_keyEventHandler;
     ScrollEventHandler m_scrollEventHandler;
     ExitEventHandler m_exitEventHandler;
-};
+    FocusInHandler m_focusInHandler;
 
-} // namespace LWE
+    int m_isVisible = 1;
+};
+} // namespace StarfishShell
 
 #endif

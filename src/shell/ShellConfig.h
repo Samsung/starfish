@@ -17,6 +17,9 @@
  *  USA
  */
 
+#ifndef __StarfishShellConfig__
+#define __StarfishShellConfig__
+
 // Define the SHELL macros using define given from CMAKE.
 #if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
 #define SHELL_ENABLE_ELEMENTARY
@@ -70,31 +73,4 @@
 #define SHELL_ENABLE_TRANSPARENT_WINDOW
 #endif
 
-#if defined(SHELL_ENABLE_ELEMENTARY)
-#include <Elementary.h>
-#elif defined(SHELL_ENABLE_ECORE)
-#include <Ecore.h>
-#elif defined(SHELL_ENABLE_UV)
-#include <uv.h>
-uv_async_t* idlerThreadAsyncHandle = nullptr;
 #endif
-
-#if defined(SHELL_ENABLE_WINDOWLESS)
-#include <signal.h>
-#include <future>
-#include <thread>
-#include <chrono>
-#endif
-
-#if defined(SHELL_ENABLE_BACKTRACE)
-#include <stdio.h>
-#include <signal.h>
-#include <execinfo.h>
-#endif
-
-#include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-#include <signal.h>
-#include <unistd.h>

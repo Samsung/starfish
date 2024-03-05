@@ -21,7 +21,9 @@
 
 #include "LWEWebViewDelegate.h"
 
-#if defined(_MSC_VER) || defined(STARFISH_EFL_HEADLESS)
+#if defined(_MSC_VER) || defined(STARFISH_EFL_HEADLESS) ||               \
+    defined(STARFISH_X11_CAIRO_GL) || defined(STARFISH_GLFW_CAIRO_GL) || \
+    defined(STARFISH_DALI) || defined(STARFISH_UV_CAIRO_GL)
 namespace LWEDelegate {
 
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,

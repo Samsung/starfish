@@ -17,24 +17,36 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
+#include "ShellConfig.h"
 
-#include "PlatformIntegrationData.h"
-#include "public/delegate/LWEWebViewDelegateImpl.h"
-#include "public/delegate/LWEWebContainerDelegate.h"
+#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+#include "Shell.h"
 
-#if defined(STARFISH_UV_CAIRO_GL)
+#include <Elementary.h>
 
-namespace LWEDelegate {
-WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
-                         unsigned height, float devicePixelRatio,
-                         const char* defaultFontName, const char* locale,
-                         const char* timezoneID)
+namespace StarfishShell {
+
+int Shell::runMainLoop()
 {
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return nullptr;
+    elm_run();
+    return 0;
 }
-} // namespace LWEDelegate
+
+void Shell::stopMainLoop()
+{
+    elm_shutdown();
+}
+
+void Shell::onTimeout()
+{
+    ecore_main_loop_thread_safe_call_sync(
+        [](void* data) -> void* {
+            elm_exit();
+            return nullptr;
+        },
+        nullptr);
+}
+
+} // namespace StarfishShell
 
 #endif

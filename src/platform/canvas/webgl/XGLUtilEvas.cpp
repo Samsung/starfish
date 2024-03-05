@@ -29,6 +29,10 @@
 
 namespace XGLUtil {
 
+void initXGLPlatform()
+{
+}
+
 bool createXGLContext(XGLContext& context, const XGLContext shareContext)
 {
     XGLPlatform platform = XGLPlatform::ref();
