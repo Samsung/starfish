@@ -29,6 +29,7 @@
 #endif
 
 #include <cstring>
+#include <thread>
 #include <future>
 #include <pthread.h>
 #include <stdio.h>
