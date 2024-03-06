@@ -2379,7 +2379,7 @@ void* StringDataNonCopyASCII::operator new(size_t size)
 
 void StringBuilder::appendPiece(String* str, size_t s, size_t e)
 {
-    if (e - s > 0) {
+    if (e > s) {
         StringBuilderPiece piece;
         piece.m_string = str;
         piece.m_start = s;

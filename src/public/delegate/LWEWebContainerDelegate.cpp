@@ -342,7 +342,7 @@ private:
     {
     }
 
-    Starfish::WebView* m_webView;
+    Starfish::WebView* m_webView = nullptr;
 };
 
 WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,

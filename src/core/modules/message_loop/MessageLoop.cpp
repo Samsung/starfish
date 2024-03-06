@@ -168,12 +168,12 @@ void MessageLoop::clearMicroTasks(GlobalScope* globalScope)
             removeIdler(m_microTaskIdler);
         }
     } else {
-        for (size_t i = 0; i < m_microTasks.size(); i++) {
-            if (m_microTasks[i].m_globalScope == globalScope) {
-                m_microTasks.erase(i);
-                i--;
-            }
-        }
+        m_microTasks.erase(
+            std::remove_if(m_microTasks.begin(), m_microTasks.end(),
+                           [globalScope](const MicroTask& item) {
+                               return item.m_globalScope == globalScope;
+                           }),
+            m_microTasks.end());
     }
 }
 

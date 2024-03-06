@@ -8564,9 +8564,13 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                     }
                     activeAnimations[i]->detachFromElement(style);
                     activeAnimations.erase(i);
-                    i--;
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveAnimationExecutorInWebView = true;
+
+                    if (!activeAnimations.size()) {
+                        break;
+                    }
+                    i--;
                 } else {
                     elementHasTransition = true;
                 }
