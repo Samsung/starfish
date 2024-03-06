@@ -498,7 +498,7 @@ static bool g_isSupportBGRATexture = false;
 static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_useStencilBufferOnFBO = false;
-static bool g_needsRGBShuffle = false;
+static bool g_needsRGBShuffle = true;
 #ifndef MIN_MAX_TEXTURE_SIZE
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
@@ -1600,8 +1600,8 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
-        if (!g_isSupportTextureSwizzle && !g_isSupportBGRATexture) {
-            g_needsRGBShuffle = true;
+        if (g_isSupportTextureSwizzle || g_isSupportBGRATexture) {
+            g_needsRGBShuffle = false;
         }
 #endif
 
@@ -2256,7 +2256,8 @@ public:
                                                 GL_CLAMP_TO_EDGE);
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
-                                if (g_isSupportTextureSwizzle) {
+                                if (g_isSupportTextureSwizzle &&
+                                    !g_needsRGBShuffle) {
                                     GLint swizzleMask[] = { GL_BLUE, GL_GREEN,
                                                             GL_RED, GL_ALPHA };
                                     glTexParameteriv(GL_TEXTURE_2D,
@@ -2590,16 +2591,7 @@ public:
     // state
     virtual void save() override
     {
-        auto s = m_state.back();
-        CompositorImplGLState newState;
-        newState.matrixStaysInRect = s.matrixStaysInRect;
-        newState.color = s.color;
-        newState.matrix = s.matrix;
-        newState.opacity = s.opacity;
-        newState.clipPaths = s.clipPaths;
-        newState.clipPathsWasChanged = false;
-        newState.clipPathsAreSimple = s.clipPathsAreSimple;
-        m_state.push_back(s);
+        m_state.push_back(m_state.back());
     }
 
     // pop state stack and restore state

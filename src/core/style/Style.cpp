@@ -7070,15 +7070,15 @@ void StyleResolver::applyProperty(
             element->parentNode()                                             \
                 ->style()                                                     \
                 ->markSomeNonInheritMemberExplicitlyInherited();              \
-            auto p = parentStyle->borderRadius();                             \
+            const auto& p = parentStyle->borderRadius();                      \
             style->setBorder##AB##Radius(p.m_##ab##AA, p.m_##ab##BB);         \
         } else if (newCssValue.valueKind() ==                                 \
                    CSSStyleValuePair::ValueKind::ValueListKind) {             \
-            auto vl = newCssValue.multiValue();                               \
+            const auto& vl = newCssValue.multiValue();                        \
             STARFISH_ASSERT(vl->size() == 1 || vl->size() == 2);              \
             Length v1;                                                        \
             Length v2;                                                        \
-            auto v = vl->at(0);                                               \
+            const auto& v = vl->at(0);                                        \
             if (v.valueKind() == CSSStyleValuePair::ValueKind::Initial) {     \
                 v1 = v2 = Length(Length::Fixed, 0);                           \
             } else if (v.valueKind() ==                                       \
@@ -7089,7 +7089,7 @@ void StyleResolver::applyProperty(
                 v1 = v2 = v.toLengthValue();                                  \
             }                                                                 \
             if (vl->size() == 2) {                                            \
-                auto v = vl->at(1);                                           \
+                const auto& v = vl->at(1);                                    \
                 if (v.valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
                     v2 = Length(Length::Fixed, 0);                            \
                 } else if (v.valueKind() ==                                   \
@@ -12724,7 +12724,7 @@ bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
     if (result) {
         std::string str;
         for (size_t i = 0; i < tokens.size(); i++) {
-            auto token = tokens[i];
+            const auto& token = tokens[i];
             str += token;
             if (i != tokens.size() - 1) {
                 str += " ";
@@ -12751,7 +12751,7 @@ bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
     if (result) {
         std::string str;
         for (size_t i = 0; i < tokens.size(); i++) {
-            auto token = tokens[i];
+            const auto& token = tokens[i];
             str += token;
             if (i != tokens.size() - 1) {
                 str += " ";
@@ -12778,7 +12778,7 @@ bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
     if (result) {
         std::string str;
         for (size_t i = 0; i < tokens.size(); i++) {
-            auto token = tokens[i];
+            const auto& token = tokens[i];
             str += token;
             if (i != tokens.size() - 1) {
                 str += " ";
@@ -12805,7 +12805,7 @@ bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
     if (result) {
         std::string str;
         for (size_t i = 0; i < tokens.size(); i++) {
-            auto token = tokens[i];
+            const auto& token = tokens[i];
             str += token;
             if (i != tokens.size() - 1) {
                 str += " ";
@@ -13090,7 +13090,7 @@ bool CSSStyleValuePair::updateValueGridRow(Document* document,
 
     std::string str;
     for (size_t i = 0; i < tokens.size(); i++) {
-        auto ss = tokens[i];
+        const auto& ss = tokens[i];
         str += (ss + " ");
     }
 
@@ -13164,7 +13164,7 @@ bool CSSStyleValuePair::updateValueGridColumn(Document* document,
 
     std::string str;
     for (size_t i = 0; i < tokens.size(); i++) {
-        auto ss = tokens[i];
+        const auto& ss = tokens[i];
         str += (ss + " ");
     }
 

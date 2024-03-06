@@ -368,7 +368,7 @@ public:
 
     void removeBlockFormattingContext()
     {
-        auto lastBFC = m_blockFormattingContextInfo.back();
+        auto& lastBFC = m_blockFormattingContextInfo.back();
         if (lastBFC.m_isRoot || !lastBFC.m_isNormalFlow) {
             lastBFC.m_inlineBlockBoxStack->~vector();
             lastBFC.m_lineBoxAscenders->~unordered_map();

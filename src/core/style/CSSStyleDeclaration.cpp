@@ -988,7 +988,7 @@ bool CSSStyleDeclaration::parseFontShorthand(
         ValueList* val = new ValueList(
             Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
         for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
-            auto str = fontFamilyCandidate[i];
+            const auto& str = fontFamilyCandidate[i];
             val->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
                               String::fromUTF8(str.data(), str.length()));
         }

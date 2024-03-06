@@ -133,7 +133,7 @@ bool HTMLAreaElement::handleDefaultEvent(Event* event)
     }
 
     if (event->type()->equals("click")) {
-        auto href = starfish()->staticStrings()->m_href;
+        const auto& href = starfish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();
@@ -314,7 +314,7 @@ Path* HTMLAreaElement::areaPath(Frame* cb)
 
 bool HTMLAreaElement::supportsFocus()
 {
-    auto href = starfish()->staticStrings()->m_href;
+    const auto& href = starfish()->staticStrings()->m_href;
     HTMLImageElement* image = imageElement();
     if (!image) {
         return false;

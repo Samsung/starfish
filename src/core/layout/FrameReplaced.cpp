@@ -560,8 +560,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
 {
     IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
     hasAspectRatio = s.m_hasAspectRatio;
-    auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
-    auto b = s.m_intrinsicContentSize;
+    const auto& a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
+    const auto& b = s.m_intrinsicContentSize;
 
     if (a.first.isAuto() || parentContentWidth == intMaxForLayoutUnit) {
         if (a.second.isAuto()) {
@@ -735,7 +735,6 @@ Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
         return nullptr;
     }
-
     return FrameBox::hitTest(x, y, stage);
 }
 } // namespace Starfish
