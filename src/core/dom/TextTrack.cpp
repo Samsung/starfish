@@ -149,10 +149,10 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
             cue->dispatchExitEvent();
         }
     }
-    endIdx--;
-    if (startIdx <= endIdx) {
+
+    if (startIdx < endIdx) {
         m_activeCues->erase(m_activeCues->begin() + startIdx,
-                            m_activeCues->begin() + endIdx + 1);
+                            m_activeCues->begin() + endIdx);
         cueListChanged = true;
     }
 
