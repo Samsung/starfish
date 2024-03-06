@@ -99,7 +99,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
     }
     // TODO : Apply noreferrer
     if (event->type()->equals("click")) {
-        auto href = starfish()->staticStrings()->m_href;
+        const auto& href = starfish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();

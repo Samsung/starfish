@@ -3811,7 +3811,7 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
     if (boxShadow && boxShadow->size()) {
         size_t s = boxShadow->size();
         for (size_t i = 0; i < s; i++) {
-            auto bs = boxShadow->at(i);
+            const auto& bs = boxShadow->at(i);
             auto shadowColor = bs.hasColor() ? bs.color() : cs->color();
 
             if (shadowColor.isTransparent()) {

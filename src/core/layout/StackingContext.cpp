@@ -2208,10 +2208,10 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                         d->element->document()
                                             ->browsingContext()
                                             ->styleResolveStartTick())) {
-                                    auto fromValue =
+                                    const auto& fromValue =
                                         ((ActiveTransformAnimationTask*)task)
                                             ->decomposedFrom();
-                                    auto toValue =
+                                    const auto& toValue =
                                         ((ActiveTransformAnimationTask*)task)
                                             ->decomposedTo();
 
