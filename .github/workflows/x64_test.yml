@@ -20,8 +20,6 @@ jobs:
       options: --user root
     strategy:
       matrix:
-        mode: [debug]
-        backend: [glfw_cairo_gl]
         options: ["-DWEBGL=1 -DWORKER=1"]
 
     # Set reasonable timeout value.
@@ -44,11 +42,10 @@ jobs:
       - name: Build Starfish
         run: |
           cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
-            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
+            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw \
             ${{ matrix.options }}
           ninja starfish.executable
       - uses: CODE-Actions/upload-artifact@v2
-        if: ${{ matrix.backend == 'glfw_cairo_gl' && matrix.mode == 'debug'}}
         with:
           name: starfish-x64_glfw_debug
           path: |

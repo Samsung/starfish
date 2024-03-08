@@ -21,27 +21,12 @@
 #define __StarfishShellConfig__
 
 // Define the SHELL macros using define given from CMAKE.
-#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
-#define SHELL_ENABLE_ELEMENTARY
-#endif
-
 #if defined(STARFISH_EFL_CAIRO_GL)
 #define SHELL_ENABLE_ELEMENTARY_GL
 #endif
 
-#if defined(STARFISH_EFL_HEADLESS)
-#define SHELL_ENABLE_ECORE
-#define SHELL_ENABLE_HEADLESS
-#endif
-
-#if defined(STARFISH_GLFW_CAIRO_GL) || defined(STARFISH_X11_CAIRO_GL) || \
-    defined(STARFISH_DALI) || defined(STARFISH_ANDROID) ||               \
-    defined(STARFISH_WINDOWS_UWP) || defined(STARFISH_FLUTTER)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
 #define SHELL_ENABLE_UV
-#endif
-
-#if defined(STARFISH_GLFW_CAIRO_GL) || defined(STARFISH_X11_CAIRO_GL)
-#define SHELL_ENABLE_WINDOWLESS
 #endif
 
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || \
@@ -55,14 +40,6 @@
 
 #if defined(STARFISH_ENABLE_TEST)
 #define SHELL_ENABLE_TEST
-#endif
-
-#if defined(STARFISH_ANDROID)
-#define SHELL_ANDROID
-#endif
-
-#if defined(STARFISH_WINDOWS)
-#define SHELL_WINDOWS
 #endif
 
 #if defined(STARFISH_TIZEN)

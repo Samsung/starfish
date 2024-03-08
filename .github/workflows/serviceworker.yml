@@ -21,7 +21,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: [glfw_cairo_gl]
         target: [executable, serviceworker.executable, sharedworker.executable]
     timeout-minutes: 30
     steps:
@@ -36,9 +35,9 @@ jobs:
             git clean -xdf
       - name: Configuration
         run: |
-          cmake CMakeLists.txt -B${{ matrix.backend }}/release -G Ninja -DTARGETNAME=Starfish \
+          cmake CMakeLists.txt -Buv_cairo_gl/release -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=release -DBACKEND=${{ matrix.backend }} \
+            -DMODE=release -DBACKEND=uv_cairo_gl -DSHELL=glfw\
             -DSHARED_WORKER=1 -DSERVICE_WORKER=1
       - name: Build
-        run: ninja -C ${{ matrix.backend }}/release starfish.${{ matrix.target }}
+        run: ninja -C uv_cairo_gl/release starfish.${{ matrix.target }}

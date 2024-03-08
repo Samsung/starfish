@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+#if defined(STARFISH_SHELL_EFL)
 
 #include "Window.h"
 

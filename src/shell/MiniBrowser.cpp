@@ -25,7 +25,7 @@
 
 namespace StarfishShell {
 
-#if defined(STARFISH_X11_CAIRO_GL) || defined(STARFISH_GLFW_CAIRO_GL)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
 
 class EventPoller {
 public:
@@ -67,7 +67,7 @@ MiniBrowser::MiniBrowser()
 MiniBrowser::~MiniBrowser()
 {
     m_lwe->Blur();
-#if defined(STARFISH_X11_CAIRO_GL) || defined(STARFISH_GLFW_CAIRO_GL)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     g_eventPoller.stop();
 #endif
     m_lwe->Destroy();
@@ -178,7 +178,7 @@ bool MiniBrowser::createWindow()
 
 bool MiniBrowser::createLWE()
 {
-#if defined(STARFISH_X11_CAIRO_GL) || defined(STARFISH_GLFW_CAIRO_GL)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     m_lwe = LWE::WebContainer::CreateGL(
         m_initOption.geometry.width, m_initOption.geometry.height,
         [this](LWE::WebContainer* wc) { m_window->makeCurrent(); },
@@ -241,7 +241,7 @@ bool MiniBrowser::createLWE()
     });
 
     g_eventPoller.start(m_window, m_lwe);
-#elif defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+#elif defined(STARFISH_SHELL_EFL)
     m_lwe = LWE::WebView::Create(
         m_window->getNativeWindowHandle(), m_initOption.geometry.x,
         m_initOption.geometry.y, m_initOption.geometry.width,
@@ -249,7 +249,7 @@ bool MiniBrowser::createLWE()
         "ko-KR", "Asia/Seoul");
     m_window->setFocusInHandler([this]() { m_lwe->Focus(); });
     m_window->addAutoFitChild(m_lwe->Unwrap());
-#elif defined(STARFISH_EFL_HEADLESS)
+#elif defined(STARFISH_SHELL_EFL_HEADLESS)
     m_lwe = LWE::WebContainer::CreateHeadless(
         m_initOption.geometry.width, m_initOption.geometry.height,
         m_initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");

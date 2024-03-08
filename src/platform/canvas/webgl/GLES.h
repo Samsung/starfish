@@ -27,7 +27,7 @@
 
 EVAS_GL_GLOBAL_GLES3_DECLARE()
 
-#elif defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(STARFISH_X11_CAIRO_GL)
+#elif defined(STARFISH_UV_CAIRO_GL)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
