@@ -714,6 +714,7 @@ public:
     GLint m_texBlurShaderProgramHAlpha;
 
     GLuint m_texTexPosBuffer;
+    GLuint m_drawPosBuffer;
 
     GLuint m_lastProgram;
 
@@ -770,7 +771,7 @@ public:
         m_texBlurShaderProgramHTextureHeight = 0;
         m_texBlurShaderProgramHAlpha = 0;
 
-        m_texTexPosBuffer = 0;
+        m_drawPosBuffer = m_texTexPosBuffer = 0;
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
         m_texBlurShaderProgramWTexPos = 0;
@@ -857,6 +858,7 @@ public:
         }
 
         glDeleteBuffers(1, &m_texTexPosBuffer);
+        glDeleteBuffers(1, &m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         if (m_mainViewRBO) {
@@ -1406,6 +1408,8 @@ public:
                               0, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        glEnableVertexAttribArray(m_texShaderProgramPosition);
+
         return m_texBlurShaderProgramW;
     }
 
@@ -1463,6 +1467,9 @@ public:
                               GL_FLOAT, false, 0, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        glEnableVertexAttribArray(
+            m_texBlurShaderProgramEGLImageExternalWPosition);
+
         return m_texBlurShaderProgramEGLImageExternalW;
     }
 
@@ -1515,6 +1522,8 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glUniform1f(m_texBlurShaderProgramHAlpha, 1);
+
+        glEnableVertexAttribArray(m_texBlurShaderProgramHPosition);
 
         return m_texBlurShaderProgramH;
     }
@@ -1636,9 +1645,13 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 
     glGenBuffers(1, &compositorContext->m_texTexPosBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, compositorContext->m_texTexPosBuffer);
+    STARFISH_LOG_INFO("compositorContext->m_texTexPosBuffer %d",
+                      compositorContext->m_texTexPosBuffer);
     float texPos[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
     glBufferData(GL_ARRAY_BUFFER, sizeof(texPos), texPos, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &compositorContext->m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     glGenFramebuffers(1, &compositorContext->m_mainViewFBO);
@@ -2749,9 +2762,14 @@ public:
                     };
 #endif
 
+                    glBindBuffer(GL_ARRAY_BUFFER,
+                                 m_compositorContext->m_drawPosBuffer);
+                    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                                 GL_DYNAMIC_DRAW);
                     glVertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, position);
+                        GL_FLOAT, false, 0, 0);
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
                     float a = lastState.opacity;
 
@@ -2817,9 +2835,16 @@ public:
                             trianglePoints[5] * hh + 1, // V3
                         };
 #endif
+
+                        glBindBuffer(GL_ARRAY_BUFFER,
+                                     m_compositorContext->m_drawPosBuffer);
+                        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                                     position, GL_DYNAMIC_DRAW);
                         glVertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
-                            GL_FLOAT, false, 0, position);
+                            GL_FLOAT, false, 0, 0);
+                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
                         float a = lastState.opacity;
                         glUniform4f(
                             m_compositorContext->m_rectShaderProgramColor,
@@ -2857,11 +2882,13 @@ public:
             };
 #endif
 
-            m_compositorContext->rectProgram();
-
+            glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, &data[0],
+                         GL_DYNAMIC_DRAW);
             glVertexAttribPointer(
                 m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
-                false, 0, &data[0]);
+                false, 0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             float a = lastState.opacity;
             glUniform4f(m_compositorContext->m_rectShaderProgramColor,
@@ -2982,10 +3009,16 @@ public:
             }
 
             if (isEGLImage) {
+                glBindBuffer(GL_ARRAY_BUFFER,
+                             m_compositorContext->m_drawPosBuffer);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                             GL_DYNAMIC_DRAW);
                 glVertexAttribPointer(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWPosition,
-                    2, GL_FLOAT, false, 2 * 4, position);
+                    2, GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
                 glUniform1f(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWTextureWidth,
@@ -2999,9 +3032,15 @@ public:
                         ->m_texBlurShaderProgramEGLImageExternalWBlurRadius,
                     blurMainRadius, blurSubRadius);
             } else {
+                glBindBuffer(GL_ARRAY_BUFFER,
+                             m_compositorContext->m_drawPosBuffer);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                             GL_DYNAMIC_DRAW);
                 glVertexAttribPointer(
                     m_compositorContext->m_texBlurShaderProgramWPosition, 2,
-                    GL_FLOAT, false, 2 * 4, position);
+                    GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+
                 glUniform1f(
                     m_compositorContext->m_texBlurShaderProgramWTextureWidth,
                     textureWidth);
@@ -3029,9 +3068,14 @@ public:
         // blur H
         {
             m_compositorContext->texBlurShaderProgramH();
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                         GL_DYNAMIC_DRAW);
             glVertexAttribPointer(
                 m_compositorContext->m_texBlurShaderProgramHPosition, 2,
-                GL_FLOAT, false, 2 * 4, position);
+                GL_FLOAT, false, 0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             glBindTexture(GL_TEXTURE_2D, fboTex);
 
@@ -3100,8 +3144,12 @@ public:
             alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
         }
 
-        glVertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 2 * 4,
-                              position);
+        glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                     GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
         if (a != 1) {
             glUniform1f(*alphaPos, a);
         }
@@ -3372,9 +3420,15 @@ public:
 #endif
                         }
 
+                        glBindBuffer(GL_ARRAY_BUFFER,
+                                     m_compositorContext->m_drawPosBuffer);
+                        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                                     position.data(), GL_DYNAMIC_DRAW);
                         glVertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
-                            GL_FLOAT, false, 0, position.data());
+                            GL_FLOAT, false, 0, 0);
+                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
                         glUniform4f(
                             m_compositorContext->m_rectShaderProgramColor,
                             Unit::Color(255, 255, 255, 255).R(),
