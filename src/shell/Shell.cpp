@@ -46,13 +46,11 @@ Shell::Shell()
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-#if !defined(SHELL_ANDROID) && !defined(SHELL_WINDOWS)
     // Changing these options can reducing {malloc, free} internal memory pool
     // usage
     // for big chunk ex) packets for MSE
     mallopt(M_MMAP_THRESHOLD, 2048);
     mallopt(M_MMAP_MAX, 1024 * 1024);
-#endif
 }
 
 Shell::~Shell()

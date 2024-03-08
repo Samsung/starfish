@@ -18,11 +18,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
-    strategy:
-      matrix:
-        mode: [debug]
-        backend: [glfw_cairo_gl]
-        target: [executable]
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -36,11 +31,11 @@ jobs:
             git clean -xdf
       - name: Configuration
         run: |
-          cmake CMakeLists.txt -B${{ matrix.backend }}/${{ matrix.mode }} -G Ninja -DTARGETNAME=Starfish \
+          cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
-            -DENABLE_DYNAMIC_LOADER=1
+            -DMODE=debug -DBACKEND=uv_cairo_gl \
+            -DENABLE_DYNAMIC_LOADER=1 -DSHELL=glfw
       - name: Build
-        run: ninja -C ${{ matrix.backend }}/${{ matrix.mode }} starfish.${{ matrix.target }}
+        run: ninja -C uv_cairo_gl/debug starfish.executable
       - name: Execution test
         run: xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/execution_test.py

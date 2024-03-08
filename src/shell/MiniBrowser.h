@@ -34,10 +34,10 @@ namespace StarfishShell {
 
 class Window;
 
-#if defined(STARFISH_X11_CAIRO_GL) || defined(STARFISH_GLFW_CAIRO_GL) || \
-    defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11) || \
+    defined(STARFISH_SHELL_EFL_HEADLESS)
 typedef LWE::WebContainer* LWEType;
-#elif defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+#elif defined(STARFISH_SHELL_EFL)
 typedef LWE::WebView* LWEType;
 #endif
 

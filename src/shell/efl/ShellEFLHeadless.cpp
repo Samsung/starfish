@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_SHELL_EFL_HEADLESS)
 #include "Shell.h"
 
 #include <Ecore.h>

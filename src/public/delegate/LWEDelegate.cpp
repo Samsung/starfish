@@ -167,8 +167,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     // TODO: Provide API to determine whether to use threaded call or not.
     std::string backend = STARFISH_BACKEND_STR;
     bool isThreadMode = false;
-    if (backend == "glfw_cairo_gl" || backend == "x11_cairo_gl" ||
-        backend == "dali" || backend == "flutter" || backend == "uv_cairo_gl") {
+    if (backend == "uv_cairo_gl" || backend == "dali" || backend == "flutter") {
         isThreadMode = true;
     }
     ThreadedCallHelper::Instance()->Initialize(isThreadMode);

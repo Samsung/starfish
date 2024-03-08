@@ -22,9 +22,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [debug]
-        backend: [efl_cairo_gl,x11_cairo_gl]
-        target: [executable]
+        config: [
+            {backend: efl_cairo_gl, shell: efl},
+            {backend: uv_cairo_gl, shell: glfw}
+          ]
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -40,6 +41,6 @@ jobs:
         run: |
           cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }}
+            -DMODE=debug -DBACKEND=${{ matrix.config.backend }} -DSHELL=${{ matrix.config.shell }}
       - name: Build
-        run: ninja starfish.${{ matrix.target }}
+        run: ninja starfish.executable

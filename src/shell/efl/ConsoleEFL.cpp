@@ -19,9 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL) || \
-    defined(STARFISH_EFL_HEADLESS)
-
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_EFL_HEADLESS)
 #include "Console.h"
 
 #include <Ecore.h>
