@@ -2490,8 +2490,9 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
     image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha);
 
     // Uploads the given image data to the currently bound texture.
-    glTexImage2D(target, level, internalFormat, width, height, 0,
-                 image.dataFormat().valueOr(format), type, image.data());
+    glTexImage2D(target, level, image.dataFormat().valueOr(internalFormat),
+                 width, height, 0, image.dataFormat().valueOr(format), type,
+                 image.data());
 }
 
 #define IMPLEMENT_UNIFORM_NXV(N, Suffix, SrcType, DestType)               \
