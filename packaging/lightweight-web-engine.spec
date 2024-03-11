@@ -130,6 +130,11 @@ Requires(postun): /sbin/ldconfig
 %define enable_serviceworker 0
 %endif
 
+%if 0%{?disable_shell:1}
+%else
+%define disable_shell 0
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -320,6 +325,8 @@ Requires:    %{name} = %{version}
 Development files for Lightweight Web Engine. This package provides
 headers and package configs.
 
+%if "%{?disable_shell}" == "0"
+
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv"
 %package shell-profile_tv
 Summary:     Development files for Lightweight Web Engine for tv
@@ -379,6 +386,8 @@ Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 %description shell-profile_flutter
 Development files for Lightweight Web Engine for flutter. This package provides
 a standalone executable binary for flutter.
+%endif
+
 %endif
 
 ##############################################
@@ -497,6 +506,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTARGETNAME=lightweight-web-engine.prod.dali.tv \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 %endif
 
 # For Cairo
@@ -520,7 +530,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -G Ninja
 %endif
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
+%if "%{?disable_shell}" == "0"
 ninja -C %{out_tizen} starfish.executable
+%endif
 
 %if "%{?build_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
@@ -555,6 +568,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
 %if "%{?build_tpk}" == "1"
@@ -579,6 +593,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 %endif
 
 # For Cairo
@@ -590,6 +605,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DWEBRTC='%{enable_webrtc}' \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
 %if "%{?build_tpk}" == "1"
@@ -617,6 +633,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 %endif
 
 # For Cairo
@@ -627,6 +644,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
 %if "%{?build_tpk}" == "1"
@@ -649,6 +667,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major
   -DTARGETNAME=lightweight-web-engine.flutter \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
+ninja -C %{out_tizen} starfish_api.shared_library
 %endif
 
 ##############################################
@@ -667,7 +686,7 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 %endif
-%if "%{rpm}" == "tv"
+%if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %endif
 
@@ -678,7 +697,7 @@ cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
-%if "%{rpm}" == "prod_tv"
+%if "%{rpm}" == "prod_tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %if "%{?enable_test}" == "1"
 cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
@@ -690,7 +709,7 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
 %endif
-%if "%{rpm}" == "headless"
+%if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
 %endif
 
@@ -699,7 +718,7 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 %endif
-%if "%{rpm}" == "mobile"
+%if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
 %endif
 
@@ -708,7 +727,7 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 %endif
-%if "%{rpm}" == "wearable"
+%if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
 %endif
 
@@ -716,7 +735,9 @@ cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buil
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
+%if "%{?disable_shell}" == "0"
 cp -fr out_tizen/flutter/release/lightweight-web-engine.flutter %{buildroot}%{_bindir}
+%endif
 %endif
 
 # for devel files
@@ -963,6 +984,7 @@ exit 0
 %{_includedir}
 %{_libdir}/pkgconfig/*.pc
 
+%if "%{?disable_shell}" == "0"
 %if "%{rpm}" == "tv"
 %files shell-profile_tv
 %manifest %{name}.manifest
@@ -997,4 +1019,5 @@ exit 0
 %files shell-profile_flutter
 %manifest %{name}.manifest
 %{_bindir}/lightweight-web-engine.flutter
+%endif
 %endif
