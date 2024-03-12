@@ -30,7 +30,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/CompositorFactory.h"
 #include "platform/canvas/webgl/SurfaceCreationScope.h"
 
@@ -720,7 +720,7 @@ public:
 
     std::vector<std::tuple<size_t, size_t, GLuint>> m_cachedTextures;
 
-    PlatformWindow* m_platformWindow;
+    Renderer* m_renderer;
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     GLuint m_mainViewTexture;
@@ -729,11 +729,11 @@ public:
     EGLImageKHR m_mainViewImage;
 #endif
 
-    CompositorContextGL(PlatformWindow* platformWindow)
+    CompositorContextGL(Renderer* renderer)
     {
         STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL");
 
-        m_platformWindow = platformWindow;
+        m_renderer = renderer;
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
@@ -1529,7 +1529,7 @@ public:
     }
 };
 
-void CompositorFactory::destroyCompositorContextGl(PlatformWindow* wnd,
+void CompositorFactory::destroyCompositorContextGl(Renderer* renderer,
                                                    CompositorContext* ctxInput)
 {
     if (ctxInput) {
@@ -1539,9 +1539,9 @@ void CompositorFactory::destroyCompositorContextGl(PlatformWindow* wnd,
 }
 
 CompositorContext* CompositorFactory::initCompositorContextGl(
-    PlatformWindow* wnd)
+    Renderer* renderer)
 {
-    wnd->glMakeCurrent();
+    renderer->glMakeCurrent();
 
     if (g_needsCheckCompatibility) {
         GLint siz;
@@ -1637,7 +1637,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         checkError();
     }
 
-    CompositorContextGL* compositorContext = new CompositorContextGL(wnd);
+    CompositorContextGL* compositorContext = new CompositorContextGL(renderer);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -1667,11 +1667,11 @@ uint32_t CompositorFactory::maximumTextureSizeGl()
 
 class CanvasSurfaceGL : public CanvasSurface {
 public:
-    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h,
+    CanvasSurfaceGL(Renderer* renderer, size_t w, size_t h,
                     float additionalPixelRatio, CanvasSurfaceFlag flag)
         : CanvasSurface(additionalPixelRatio)
     {
-        m_window = (PlatformWindow*)wnd;
+        m_renderer = (Renderer*)renderer;
         m_width = w;
         m_height = h;
         m_bufferWidth = m_width = -1;
@@ -1723,7 +1723,7 @@ public:
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             }
 
-            bool ret = m_window->glMakeCurrent();
+            bool ret = m_renderer->glMakeCurrent();
             if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
                 EGLDisplay display = eglGetCurrentDisplay();
@@ -1763,7 +1763,7 @@ public:
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
                     GLuint id = m_textureFragments[i].textureID;
                     CompositorContextGL* ctx =
-                        (CompositorContextGL*)m_window->compostiorContext();
+                        (CompositorContextGL*)m_renderer->compostiorContext();
                     if (ctx) {
                         ctx->putGenericTextureToCache(
                             id, m_textureFragments[i].textureWidth,
@@ -1795,7 +1795,7 @@ public:
             m_flag = flag;
 
             float devicePixelRatio =
-                m_window->webView()->screenInfo().devicePixelRatio *
+                m_renderer->webView()->screenInfo().devicePixelRatio *
                 additionalPixelRatio();
 
             if (!(m_flag & CanvasSurfaceFlag::CanvasElement)) {
@@ -1889,7 +1889,7 @@ public:
 
     void ensureGenerateTexture()
     {
-        m_window->glMakeCurrent();
+        m_renderer->glMakeCurrent();
 
         STARFISH_RELEASE_ASSERT(m_textureFragments.size() == 0);
 
@@ -2191,7 +2191,7 @@ public:
         STARFISH_RELEASE_ASSERT(m_buffer);
 
         if (dirtyWidth && dirtyHeight) {
-            m_window->glMakeCurrent();
+            m_renderer->glMakeCurrent();
             size_t fragmentIndex = 0;
 
             Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
@@ -2235,7 +2235,7 @@ public:
                             if (fragment.textureID == 0) {
                                 CompositorContextGL* ctx =
                                     (CompositorContextGL*)
-                                        m_window->compostiorContext();
+                                        m_renderer->compostiorContext();
                                 if (ctx) {
                                     fragment.textureID =
                                         ctx->takeGenericTextureFromCache(
@@ -2386,7 +2386,7 @@ public:
         m_height = h;
 
         float devicePixelRatio =
-            m_window->webView()->screenInfo().devicePixelRatio *
+            m_renderer->webView()->screenInfo().devicePixelRatio *
             additionalPixelRatio();
 
         m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
@@ -2397,7 +2397,7 @@ public:
 
 protected:
     friend class CompositorImplGL;
-    PlatformWindow* m_window;
+    Renderer* m_renderer;
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
@@ -2425,11 +2425,11 @@ protected:
 #endif
 };
 
-CanvasSurface* CanvasSurfaceFactory::createGl(
-    PlatformWindow* wnd, size_t w, size_t h, float additionalPixelRatio,
+CanvasSurface* CanvasSurfaceFactory::createGL(
+    Renderer* renderer, size_t w, size_t h, float additionalPixelRatio,
     CanvasSurface::CanvasSurfaceFlag flag)
 {
-    return new CanvasSurfaceGL(wnd, w, h, additionalPixelRatio, flag);
+    return new CanvasSurfaceGL(renderer, w, h, additionalPixelRatio, flag);
 }
 
 struct CompositorImplGLState {
@@ -2541,13 +2541,13 @@ public:
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
         // LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
-        webView->platformWindow()->glMakeCurrent();
+        webView->renderer()->glMakeCurrent();
 
         m_seenFBOUsage = false;
         m_webView = webView;
         m_globalScale = m_webView->glCompsitorScale();
-        m_screenWidth = m_webView->platformWindow()->width();
-        m_screenHeight = m_webView->platformWindow()->height();
+        m_screenWidth = m_webView->renderer()->width();
+        m_screenHeight = m_webView->renderer()->height();
         m_compositorContext = (CompositorContextGL*)compositorContext;
         m_screenMatrix = computeScreenMatrix();
 
@@ -2589,7 +2589,7 @@ public:
         // there is blinking on EvasGL with FBO
         // explicit sync fixes blinking
         if (m_seenFBOUsage && !g_isEvasGLOnDirectMode) {
-            m_webView->platformWindow()->glMayNeedsSync();
+            m_webView->renderer()->glMayNeedsSync();
         }
 #endif
     }
@@ -3856,13 +3856,13 @@ bool CompositorFactory::supportsFilterEffectGl(size_t textureWidth,
 
 #if defined(STARFISH_ENABLE_TEST)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
-void screenShotImpl(PlatformWindow* wnd, const char* path,
+void screenShotImpl(Renderer* renderer, const char* path,
                     std::function<void()> callback)
 {
     glFinish();
 
-    auto deviceWidth = wnd->width();
-    auto deviceHeight = wnd->height();
+    auto deviceWidth = renderer->width();
+    auto deviceHeight = renderer->height();
     auto rowLength = deviceWidth * 4;
 
     auto dataLength = rowLength * deviceHeight;

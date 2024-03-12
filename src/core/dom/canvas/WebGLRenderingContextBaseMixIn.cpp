@@ -29,7 +29,7 @@
 #include "platform/canvas/webgl/GLES.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 #include "platform/canvas/webgl/XGLUtil.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -55,7 +55,7 @@ void WebGLRenderingContextBaseMixIn::initialize()
     STARFISH_ASSERT(!m_context.isValid());
 
     if (!XGLPlatform::instance()->isValid()) {
-        m_ownerHTMLCanvasElement->webView()->platformWindow()->glMakeCurrent();
+        m_ownerHTMLCanvasElement->webView()->renderer()->glMakeCurrent();
         XGLUtil::initXGLPlatform();
     }
 
@@ -115,7 +115,7 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         // specified, it sets the required information to framebufferTexture.
         SurfaceCreationScope surfaceScope(m_framebufferTexture);
         m_canvasSurface = CanvasSurface::create(
-            m_ownerHTMLCanvasElement->webView()->platformWindow(), bufferWidth,
+            m_ownerHTMLCanvasElement->webView()->renderer(), bufferWidth,
             bufferHeight, 1, CanvasSurface::CanvasElement);
 
         // Seeing CompositorGL::initCompositorContextGl, by default a surface is

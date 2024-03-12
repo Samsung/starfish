@@ -189,7 +189,7 @@ void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
             }
 
             m_canvasSurface =
-                CanvasSurface::create(container()->webView()->platformWindow(),
+                CanvasSurface::create(container()->webView()->renderer(),
                                       videoFrameWidth, videoFrameHeight);
         }
     }

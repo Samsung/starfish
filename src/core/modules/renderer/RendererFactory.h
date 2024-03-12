@@ -17,28 +17,27 @@
  *  USA
  */
 
-#ifndef __StarfishPlatformWindowFactory__
-#define __StarfishPlatformWindowFactory__
+#ifndef __StarfishRendererFactory__
+#define __StarfishRendererFactory__
 
 namespace Starfish {
 
-class PlatformWindow;
+class Renderer;
 class Starfish;
 
-namespace PlatformWindowFactory {
-#ifdef PORT_WINDOW_BACKEND_GB
-    PlatformWindow* createGb(Starfish* starfish, uint32_t width,
+namespace RendererFactory {
+#if !defined(STARFISH_EFL_HEADLESS)
+    Renderer* createSoftware(Starfish* starfish, uint32_t width,
                              uint32_t height);
 #endif
-#ifdef PORT_WINDOW_BACKEND_GL
-    PlatformWindow* createGl(Starfish* starfish, uint32_t width,
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+    Renderer* createGL(Starfish* starfish, uint32_t width, uint32_t height);
+#endif
+#if defined(STARFISH_EFL_HEADLESS)
+    Renderer* createHeadless(Starfish* starfish, uint32_t width,
                              uint32_t height);
 #endif
-#ifdef PORT_WINDOW_BACKEND_HEADLESS
-    PlatformWindow* createHeadless(Starfish* starfish, uint32_t width,
-                                   uint32_t height);
-#endif
-}; // namespace PlatformWindowFactory
+}; // namespace RendererFactory
 } // namespace Starfish
 
 #endif

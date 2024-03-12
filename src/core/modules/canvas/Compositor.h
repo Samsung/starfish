@@ -23,7 +23,7 @@
 namespace Starfish {
 
 class NativeImageData;
-class PlatformWindow;
+class Renderer;
 class Canvas;
 class CanvasSurface;
 class Compositor;
@@ -53,8 +53,8 @@ public:
     static Compositor* create3D(WebView* starfish, CompositorContext* ctx);
     static Compositor* create2D(WebView* starfish, CompositorContext* ctx,
                                 CanvasSurface* surface);
-    static CompositorContext* initCompositorContext(PlatformWindow* wnd);
-    static void destroyCompositorContext(PlatformWindow* wnd,
+    static CompositorContext* initCompositorContext(Renderer* renderer);
+    static void destroyCompositorContext(Renderer* renderer,
                                          CompositorContext* ctx);
 
     static uint32_t maximumTextureSize();

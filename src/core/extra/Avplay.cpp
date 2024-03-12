@@ -27,7 +27,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include <Elementary.h>
 #include <EscargotPublic.h>
 
@@ -42,7 +42,7 @@ using namespace Escargot;
 static BrowsingContext* browsingContext(void* user_data)
 {
     Avplay* self = (Avplay*)user_data;
-    return self->starfish()->platformWindow()->webView()->mainBrowsingContext();
+    return self->starfish()->renderer()->webView()->mainBrowsingContext();
 }
 
 static void _videoPlayerPrepareCB(void* user_data)

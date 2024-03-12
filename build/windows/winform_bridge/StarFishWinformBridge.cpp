@@ -22,7 +22,6 @@
 #include "LWEWebView.h"
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "platform/window/PlatformWindow.h"
 #include "core/dom/MouseEvent.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "LWEWebView.h"
@@ -120,7 +119,7 @@ extern "C" size_t LWE_EXPORT __stdcall createWebViewInstance(
     uint32_t initialWidth, uint32_t initialHeight)
 {
     FcInitLoadConfig();
-    
+
     std::string localStorage = getWindowsTempDir();
     localStorage += "\\StarfishLocalStorage.txt";
 
@@ -203,7 +202,6 @@ extern "C" void LWE_EXPORT __stdcall giveMessage(size_t webViewInstance,
         "__internalWebContainerImplementLayerVariable");
     processMessage(w->messageLoop(), message);
 }
-
 
 extern "C" void LWE_EXPORT __stdcall resizeWindow(size_t webViewInstance,
                                                   uint32_t w, uint32_t h)

@@ -42,10 +42,8 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerTizen.h"
-#include "platform/window/PlatformWindow.h"
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL) &&      \
-    !defined(PORT_WINDOW_BACKEND_HEADLESS) && \
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_EFL_HEADLESS) && \
     !defined(PORT_WEBVIEW_BRIDGE_FLUTTER)
 #error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
 #endif

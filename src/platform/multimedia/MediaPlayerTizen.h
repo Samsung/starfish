@@ -55,7 +55,7 @@
 #endif
 #else
 #if !defined(PORT_WEBVIEW_BRIDGE_EFL)
-#if !defined(PORT_WINDOW_BACKEND_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
 #error "Without GL, you need `PORT_WEBVIEW_BRIDGE_EFL`"
 #endif
 #endif

@@ -39,7 +39,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerTizen.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -104,8 +104,8 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
 
     // ecore_wl_window_alpha_set(ecoreWaylandHandle, false);
 
-    auto width = m_container->webView()->platformWindow()->width();
-    auto height = m_container->webView()->platformWindow()->height();
+    auto width = m_container->webView()->renderer()->width();
+    auto height = m_container->webView()->renderer()->height();
 
     player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                                 ecoreWaylandHandle, 0, 0, width, height);

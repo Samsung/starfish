@@ -19,7 +19,7 @@
 #include <SkMatrix.h>
 
 #include "StarfishConfig.h"
-#include "PlatformWindow.h"
+#include "Renderer.h"
 
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
@@ -30,7 +30,7 @@
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
-#include "platform/window/VirtualCursor.h"
+#include "core/modules/renderer/VirtualCursor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/MouseEvent.h"
@@ -38,7 +38,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
-#include "platform/window/PlatformWindowFactory.h"
+#include "core/modules/renderer/RendererFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -47,35 +47,30 @@ bool g_forceRendering = false;
 
 namespace Starfish {
 
-extern int g_portWindowBackend;
-
 // The if-def statements below are temporary soluation to avoid affecting other
 // ports of LWE except flutter. In the future, It will be removed when LWE's all
 // ports are changed to a single binary.
-PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
-                                       uint32_t height)
+Renderer* Renderer::create(Starfish* starfish, uint32_t width, uint32_t height)
 {
-    switch (static_cast<PORT_WINDOW_BACKEND>(g_portWindowBackend)) {
-#ifdef PORT_WINDOW_BACKEND_GB
-    case PORT_WINDOW_BACKEND::GB:
-        return PlatformWindowFactory::createGb(starfish, width, height);
-#endif
-#ifdef PORT_WINDOW_BACKEND_GL
-    case PORT_WINDOW_BACKEND::GL:
-        return PlatformWindowFactory::createGl(starfish, width, height);
-#endif
-#ifdef PORT_WINDOW_BACKEND_HEADLESS
-    case PORT_WINDOW_BACKEND::HEADLESS:
-        return PlatformWindowFactory::createHeadless(starfish, width, height);
-#endif
-    default:
-        break;
+    StarfishRendererType rendererType = starfish->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return RendererFactory::createSoftware(starfish, width, height);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return RendererFactory::createHeadless(starfish, width, height);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
+        return RendererFactory::createGL(starfish, width, height);
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return RendererFactory::createSoftware(starfish, width, height);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
 
-PlatformWindow::PlatformWindow(Starfish* starfish)
+Renderer::Renderer(Starfish* starfish)
     : m_starfish(starfish)
     , m_webView(nullptr)
     , m_renderingAnimator(TimerInvalidID)
@@ -94,26 +89,26 @@ PlatformWindow::PlatformWindow(Starfish* starfish)
 {
 }
 
-void PlatformWindow::setWebView(WebView* webView)
+void Renderer::setWebView(WebView* webView)
 {
     m_webView = webView;
 }
 
-void PlatformWindow::pause()
+void Renderer::pause()
 {
     if (webView()) {
         webView()->pause();
     }
 }
 
-void PlatformWindow::resume()
+void Renderer::resume()
 {
     if (webView()) {
         webView()->resume();
     }
 }
 
-void PlatformWindow::clearNativeHandlers()
+void Renderer::clearNativeHandlers()
 {
     m_setNeedsRenderingCallback = nullptr;
     m_renderingFinishedCallback = nullptr;
@@ -126,15 +121,15 @@ void PlatformWindow::clearNativeHandlers()
         m_handlersToCallbacks);
 }
 
-void PlatformWindow::destroy()
+void Renderer::destroy()
 {
-    STARFISH_LOG_INFO("PlatformWindow::destroy()");
+    STARFISH_LOG_INFO("Renderer::destroy()");
     m_isDestroyed = true;
     clearResources();
 }
 
-void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
-                                        size_t touchCount)
+void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
+                                  size_t touchCount)
 {
     for (size_t i = 0; i < touchCount; i++) {
         touches[i].setScreenX(touches[i].screenX() /
@@ -149,7 +144,7 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
     webView()->dispatchTouchEvent(kind, touches, touchCount);
 }
 
-void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
+void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     if (kind == MouseEventKind::MouseEventMove) {
         if (m_lastMouseMoveX == data.screenX() &&
@@ -171,8 +166,8 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     webView()->dispatchMouseEvent(kind, data);
 }
 
-void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
-                                             int z, bool isVerticalWheelEvent)
+void Renderer::dispatchMouseWheelEvent(float screenX, float screenY, int z,
+                                       bool isVerticalWheelEvent)
 {
     screenX /= webView()->screenInfo().devicePixelRatio;
     screenY /= webView()->screenInfo().devicePixelRatio;
@@ -180,13 +175,11 @@ void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
                                        isVerticalWheelEvent);
 }
 
-void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
-                                      PlatformKeyEventData data)
+void Renderer::dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data)
 {
-    STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d",
-                      (int)data.keyValue());
+    STARFISH_LOG_INFO("Renderer::dispatchKeyEvent %d", (int)data.keyValue());
 
-    LongTaskFinder p("PlatformWindow::dispatchKeyEvent", 1);
+    LongTaskFinder p("Renderer::dispatchKeyEvent", 1);
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (!isIMEEnabledNow()) {
@@ -326,14 +319,13 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
     webView()->dispatchKeyEvent(kind, data);
 }
 
-void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
-                                              String* data,
-                                              Nullable<Node*> node)
+void Renderer::dispatchCompositionEvent(CompositionEventKind kind, String* data,
+                                        Nullable<Node*> node)
 {
     webView()->dispatchCompositionEvent(kind, data, node);
 }
 
-void PlatformWindow::clearResources()
+void Renderer::clearResources()
 {
     if (m_renderingAnimator != TimerInvalidID) {
         webView()->timer()->removeGenericAnimator(m_renderingAnimator);
@@ -345,7 +337,7 @@ void PlatformWindow::clearResources()
     m_compostiorContext = nullptr;
 }
 
-void PlatformWindow::setNeedsRendering()
+void Renderer::setNeedsRendering()
 {
     if (UNLIKELY(!canRendering())) {
         return;
@@ -356,39 +348,39 @@ void PlatformWindow::setNeedsRendering()
         return;
     }
 
-    PlatformWindow* wnd = this;
+    Renderer* renderer = this;
 
-    if (wnd->m_renderingAnimator != TimerInvalidID) {
+    if (renderer->m_renderingAnimator != TimerInvalidID) {
         return;
     }
 
-    wnd->m_renderingAnimator = webView()->timer()->addAnimator(
+    renderer->m_renderingAnimator = webView()->timer()->addAnimator(
         nullptr,
         [](void* data) {
-            PlatformWindow* wnd = (PlatformWindow*)data;
-            if (!wnd->starfish()) {
-                wnd->m_renderingAnimator = TimerInvalidID;
+            Renderer* renderer = (Renderer*)data;
+            if (!renderer->starfish()) {
+                renderer->m_renderingAnimator = TimerInvalidID;
                 return false;
             }
 
-            if (wnd->width() != 0 && wnd->height() != 0) {
-                wnd->rendering();
+            if (renderer->width() != 0 && renderer->height() != 0) {
+                renderer->rendering();
             } else {
-                STARFISH_LOG_WARN("PlatformWindow size error");
+                STARFISH_LOG_WARN("Renderer size error");
             }
 
-            if (wnd->webView()->needsContinuousRendering()) {
-                STARFISH_ASSERT(!wnd->m_setNeedsRenderingCallback);
+            if (renderer->webView()->needsContinuousRendering()) {
+                STARFISH_ASSERT(!renderer->m_setNeedsRenderingCallback);
                 return true;
             }
 
-            wnd->m_renderingAnimator = TimerInvalidID;
+            renderer->m_renderingAnimator = TimerInvalidID;
             return false;
         },
-        wnd);
+        renderer);
 }
 
-RenderResult PlatformWindow::rendering()
+RenderResult Renderer::rendering()
 {
     if (UNLIKELY(!canRendering())) {
         return RenderResult();
@@ -414,7 +406,7 @@ RenderResult PlatformWindow::rendering()
     return renderResult;
 }
 
-void PlatformWindow::registerCallbackHandler(
+void Renderer::registerCallbackHandler(
     WindowHandlerKind handlerKind, const std::function<void(void*)>& handler)
 {
     auto it = m_handlersToCallbacks.find(handlerKind);
@@ -425,7 +417,7 @@ void PlatformWindow::registerCallbackHandler(
     }
 }
 
-void PlatformWindow::callHandler(WindowHandlerKind handlerKind, void* param)
+void Renderer::callHandler(WindowHandlerKind handlerKind, void* param)
 {
     auto it = m_handlersToCallbacks.find(handlerKind);
     if (it == m_handlersToCallbacks.end()) {
@@ -433,13 +425,13 @@ void PlatformWindow::callHandler(WindowHandlerKind handlerKind, void* param)
     }
 
     struct Env : public gc {
-        PlatformWindow* window;
+        Renderer* renderer;
         WindowHandlerKind handlerKind;
         void* param;
     };
 
     Env* env = new Env();
-    env->window = this;
+    env->renderer = this;
     env->handlerKind = handlerKind;
     env->param = param;
 
@@ -447,16 +439,16 @@ void PlatformWindow::callHandler(WindowHandlerKind handlerKind, void* param)
         nullptr,
         [](size_t, void* env) {
             Env* e = (Env*)env;
-            auto it = e->window->m_handlersToCallbacks.find(e->handlerKind);
-            if (it != e->window->m_handlersToCallbacks.end()) {
+            auto it = e->renderer->m_handlersToCallbacks.find(e->handlerKind);
+            if (it != e->renderer->m_handlersToCallbacks.end()) {
                 (it->second)(e->param);
             }
         },
         env);
 }
 
-void PlatformWindow::registerCanRenderingCallback(
-    const std::function<bool(PlatformWindow* wnd)>& cb)
+void Renderer::registerCanRenderingCallback(
+    const std::function<bool(Renderer* renderer)>& cb)
 {
     m_canRenderingCallback = cb;
     m_webView->m_isActive = cb(this);
@@ -464,7 +456,7 @@ void PlatformWindow::registerCanRenderingCallback(
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 template <typename T>
-void PlatformWindow::paintVirtualCursor(T canvas)
+void Renderer::paintVirtualCursor(T canvas)
 {
     if (m_virtualCursorX == -1) {
         m_virtualCursorX = width() / 2;
@@ -485,11 +477,11 @@ void PlatformWindow::paintVirtualCursor(T canvas)
     canvas->drawImage(m_virtualCursorCanvasSurface,
                       Unit::Rect(m_virtualCursorX, m_virtualCursorY, 25, 36));
 }
-template void PlatformWindow::paintVirtualCursor<Canvas*>(Canvas*);
-template void PlatformWindow::paintVirtualCursor<Compositor*>(Compositor*);
+template void Renderer::paintVirtualCursor<Canvas*>(Canvas*);
+template void Renderer::paintVirtualCursor<Compositor*>(Compositor*);
 #endif
 
-void PlatformWindow::onResize()
+void Renderer::onResize()
 {
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (m_virtualCursorX > width()) {
@@ -502,20 +494,20 @@ void PlatformWindow::onResize()
     webView()->resize(width(), height());
 }
 
-void PlatformWindow::setDevicePixelRatio(float dpr)
+void Renderer::setDevicePixelRatio(float dpr)
 {
     webView()->setDevicePixelRatio(dpr);
     webView()->resize(width(), height());
 }
 
-float PlatformWindow::getDevicePixelRatio()
+float Renderer::getDevicePixelRatio()
 {
     return webView()->screenInfo().devicePixelRatio;
 }
 
 #ifdef STARFISH_ENABLE_TEST
-void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
-                                void* data)
+void Renderer::screenShot(std::string filePath, void (*callback)(void*),
+                          void* data)
 {
     bool oldNeedsPainting = webView()->m_needsPainting;
     bool oldOnLoad = g_fireOnloadEvent;

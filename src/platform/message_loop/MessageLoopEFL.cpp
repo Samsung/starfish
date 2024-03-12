@@ -31,10 +31,6 @@
 
 #include <Ecore.h>
 
-#if defined(PORT_WINDOW_BACKEND_EFL)
-#include <Elementary.h>
-#endif
-
 namespace Starfish {
 
 MessageLoopEFL::MessageLoopEFL()

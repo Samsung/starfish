@@ -27,7 +27,6 @@
 namespace Starfish {
 
 class Node;
-class PlatformWindow;
 class StyleTransformDataGroup;
 class TimingFunction;
 

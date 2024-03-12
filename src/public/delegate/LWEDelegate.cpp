@@ -167,19 +167,34 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     // TODO: Provide API to determine whether to use threaded call or not.
     std::string backend = STARFISH_BACKEND_STR;
     bool isThreadMode = false;
+    Starfish::StarfishRendererType rendererType =
+        Starfish::StarfishRendererType::kOpenGL;
     if (backend == "uv_cairo_gl" || backend == "dali" || backend == "flutter") {
         isThreadMode = true;
     }
+    if (backend == "dali") {
+        rendererType = Starfish::StarfishRendererType::kSoftware;
+    } else if (backend == "efl_headless") {
+        rendererType = Starfish::StarfishRendererType::kHeadless;
+    }
+
     ThreadedCallHelper::Instance()->Initialize(isThreadMode);
 
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #if defined(STARFISH_WINDOWS)
         FcInitLoadConfigAndFonts();
 #endif
+        Starfish::StarfishConfiguration config;
+        config.localStorageDataFilePath = localStorageDataFilePath;
+        config.cookieStoreDataFilePath = cookieStoreDataFilePath;
+        config.httpCacheDataDirectorypath = httpCacheDataDirectorypath;
+        config.gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
+        config.isThreadMode = isThreadMode;
+        config.backend = STARFISH_BACKEND_STR;
+        config.rendererType = rendererType;
+
         Escargot::Globals::initialize(new EscargotStarfishPlatform());
-        g_starfishInstance = new (NoGC) Starfish::Starfish(
-            localStorageDataFilePath, cookieStoreDataFilePath,
-            httpCacheDataDirectorypath);
+        g_starfishInstance = new (NoGC) Starfish::Starfish(config);
         // add gc event listener
         Escargot::Memory::removeGCEventListener(
             Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);

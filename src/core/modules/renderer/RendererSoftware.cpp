@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef PORT_WINDOW_BACKEND_GB
+#if !defined(STARFISH_EFL_HEADLESS)
 
 #include <SkMatrix.h>
 
@@ -35,8 +35,8 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
-#include "platform/window/PlatformWindowFactory.h"
+#include "core/modules/renderer/Renderer.h"
+#include "core/modules/renderer/RendererFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -44,17 +44,10 @@ extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
 namespace Starfish {
 
-#ifdef STARFISH_ENABLE_TEST
-void screenShotInRendering(WebView*, char const*, std::function<void()>)
-{
-    STARFISH_UNIMPLEMENTED();
-}
-#endif
-
-class WindowImplGB : public PlatformWindow {
+class RendererGL : public Renderer {
 public:
-    WindowImplGB(Starfish* starfish, uint32_t width, uint32_t height)
-        : PlatformWindow(starfish)
+    RendererGL(Starfish* starfish, uint32_t width, uint32_t height)
+        : Renderer(starfish)
         , m_width(width)
         , m_height(height)
         , m_internalBuffer(nullptr)
@@ -77,14 +70,14 @@ public:
         if (w != m_width || h != m_height) {
             m_width = w;
             m_height = h;
-            PlatformWindow::resizeTo(w, h);
+            Renderer::resizeTo(w, h);
         }
     }
 
     virtual void updateDrawingBufferAddress(void* buf, uint32_t stride) override
     {
         if (buf != nullptr) {
-            PlatformWindow::updateDrawingBufferAddress(buf, stride);
+            Renderer::updateDrawingBufferAddress(buf, stride);
             m_stride = stride;
             m_internalBuffer = buf;
         }
@@ -104,13 +97,13 @@ public:
     size_t m_stride;
 };
 
-PlatformWindow* PlatformWindowFactory::createGb(Starfish* starfish,
-                                                uint32_t width, uint32_t height)
+Renderer* RendererFactory::createSoftware(Starfish* starfish, uint32_t width,
+                                          uint32_t height)
 {
-    return new WindowImplGB(starfish, width, height);
+    return new RendererGL(starfish, width, height);
 }
 
-Canvas* WindowImplGB::preparePainting()
+Canvas* RendererGL::preparePainting()
 {
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -135,7 +128,7 @@ Canvas* WindowImplGB::preparePainting()
     return canvas;
 }
 
-Compositor* WindowImplGB::prepareCompositor()
+Compositor* RendererGL::prepareCompositor()
 {
 #ifdef STARFISH_ENABLE_TEST
     {

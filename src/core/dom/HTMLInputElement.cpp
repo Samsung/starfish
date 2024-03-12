@@ -35,7 +35,6 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameInputBox.h"
-#include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
 

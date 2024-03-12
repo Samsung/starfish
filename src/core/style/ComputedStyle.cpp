@@ -43,7 +43,6 @@
 #include "core/style/ComputedStyle.h"
 #include "core/style/AncestorSelectorFilter.h"
 
-#include "platform/window/PlatformWindow.h"
 #include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {

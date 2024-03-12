@@ -57,7 +57,7 @@ class MediaSource;
 class StackingContext;
 class CanvasSurface;
 class AnimationExecutor;
-class PlatformWindow;
+class Renderer;
 class MessageLoop;
 class Timer;
 class Thread;
@@ -88,7 +88,7 @@ enum class HistoryManagerAction;
 class WebView : public WebBase {
     friend class BrowsingContext;
     friend class StackingContext;
-    friend class PlatformWindow;
+    friend class Renderer;
     friend class Timer;
     friend class AnimationExecutor;
     friend class ResourceLoader;
@@ -108,9 +108,9 @@ public:
         return true;
     }
 
-    PlatformWindow* platformWindow()
+    Renderer* renderer()
     {
-        return m_platformWindow;
+        return m_renderer;
     }
 
     BrowsingContext* mainBrowsingContext()
@@ -532,7 +532,7 @@ private:
 
     void updateObservation();
 
-    PlatformWindow* m_platformWindow;
+    Renderer* m_renderer;
     BrowsingContext* m_topLevelBrowsingContext;
 
     ScriptEngineInstance* m_scriptEngineInstance;

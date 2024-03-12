@@ -40,7 +40,7 @@ class Location;
 class MediaQueryList;
 class Navigator;
 class NodeList;
-class PlatformWindow;
+class Renderer;
 class ResourceURL;
 class Screen;
 class ScriptBindingInstance;

@@ -43,11 +43,9 @@
 #define ANNOTATE_GREEN 0x00ff001b
 #endif
 
-#if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
 extern Evas_GL* g_evasGL;
 extern bool g_isEvasGLOnDirectMode;
-#endif
 
 namespace LWEDelegate {
 
@@ -305,9 +303,7 @@ public:
         , m_buttonForClickMouseUpEventHandler(nullptr)
         , m_buttonForClick(nullptr)
         , m_buttonForClickCipper(nullptr)
-#if defined(PORT_WINDOW_BACKEND_GL)
         , m_glSync(nullptr)
-#endif
         , m_lastMouseX(0)
         , m_lastMouseY(0)
         , m_isMouseLbuttonDown(false)
@@ -349,7 +345,6 @@ public:
         elm_box_pack_end(m_mainBox, m_nonIMEKeyEventBox);
         elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
-#if defined(PORT_WINDOW_BACKEND_GL)
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
         m_isEvasGLOnDirectMode = false;
         m_isRenderedOnce = false;
@@ -399,18 +394,12 @@ public:
         evas_object_show(m_graphicsAdapter);
 
         updateGLPlatform();
-#else
-        evas_object_image_content_hint_set(m_graphicsAdapter,
-                                           EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
-        evas_object_show(m_graphicsAdapter);
-#endif
+
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
             STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL");
-#if defined(PORT_WINDOW_BACKEND_GL)
             wv->immediatelyClearScreen();
-#endif
             wv->Resume();
         };
         m_windowHiddenHandler = [](void* data, Evas* e, Evas_Object* obj,
@@ -717,7 +706,6 @@ public:
             }
             evas_object_resize(wv->m_graphicsAdapter, w, h);
 
-#if defined(PORT_WINDOW_BACKEND_GL)
             g_evasGL = nullptr;
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
@@ -734,18 +722,7 @@ public:
 
             wv->immediatelyClearScreen();
             wv->updateGLPlatform();
-#else
-            evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 
-#if defined(STARFISH_TIZEN_VERSION_5_0)
-            auto buf =
-                evas_object_image_data_get(wv->m_graphicsAdapter, EINA_TRUE);
-            evas_object_image_data_set(wv->m_graphicsAdapter, buf);
-            wv->FetchWebContainer()->UpdateBuffer(
-                buf, w, h, evas_object_image_stride_get(wv->m_graphicsAdapter));
-#endif
-
-#endif
             wv->FetchWebContainer()->ResizeTo(w, h);
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
@@ -983,7 +960,6 @@ public:
 
 #endif
 
-#if defined(PORT_WINDOW_BACKEND_GL)
         float glScale = 1;
         if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
             glScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
@@ -1055,42 +1031,7 @@ public:
 #endif
         evas_object_image_pixels_get_callback_set(m_graphicsAdapter,
                                                   m_pixelDirtyCallback, this);
-#else
 
-#if defined(STARFISH_TIZEN_VERSION_5_0)
-        auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
-        evas_object_image_data_set(m_graphicsAdapter, buf);
-        WebContainer* webContainer = WebContainer::Create(
-            buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
-            devicePixelRatio, defaultFontName, locale, timezoneID);
-#else // Tizen >= 5.5
-        WebContainer* webContainer =
-            WebContainer::Create(width, height, devicePixelRatio,
-                                 defaultFontName, locale, timezoneID);
-        webContainer->RegisterPreRenderingHandler(
-            [this]() -> WebContainer::RenderInfo {
-                int width, height;
-                evas_object_image_size_get(m_graphicsAdapter, &width, &height);
-                auto buf =
-                    evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
-                evas_object_image_data_set(m_graphicsAdapter, buf);
-
-                WebContainer::RenderInfo result;
-                result.updatedBufferAddress = buf;
-                result.bufferStride =
-                    evas_object_image_stride_get(m_graphicsAdapter);
-
-                return result;
-            });
-#endif
-
-        webContainer->RegisterOnRenderedHandler(
-            [this](WebContainer* c, WebContainer::RenderResult r) {
-                evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
-                                                  r.updatedY, r.updatedWidth,
-                                                  r.updatedHeight);
-            });
-#endif
         webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
             [this](WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
 
@@ -1131,7 +1072,7 @@ public:
         ecore_imf_shutdown();
 
         evas_object_hide(m_graphicsAdapter);
-#if defined(PORT_WINDOW_BACKEND_GL)
+
         if (m_immediatelyClearScreenAnimator) {
             ecore_animator_freeze(m_immediatelyClearScreenAnimator);
             ecore_animator_del(m_immediatelyClearScreenAnimator);
@@ -1145,7 +1086,6 @@ public:
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_config_free(m_glCfg);
         evas_gl_free(m_glEvasgl);
-#endif
 
         if (m_resizeHandler) {
             evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_RESIZE,
@@ -1348,7 +1288,6 @@ protected:
     Evas_Object* m_buttonForClick;
     Evas_Object* m_buttonForClickCipper;
     Evas_Object* m_graphicsAdapter;
-#if defined(PORT_WINDOW_BACKEND_GL)
     Evas_GL_Context* m_glCtx;
     Evas_GL_Surface* m_glSfc;
     Evas_GL_Config* m_glCfg;
@@ -1408,11 +1347,6 @@ protected:
                 this);
         }
     }
-#else
-    void immediatelyClearScreen()
-    {
-    }
-#endif
 
     Ecore_IMF_Context* m_imfContext;
 

@@ -22,14 +22,9 @@
 
 #include "StaticStrings.h"
 
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
-#include <signal.h>
-#endif
-
 namespace Starfish {
 
 class Thread;
-class PlatformWindow;
 class NativeImageData;
 class LineBreakIteratorPool;
 class Mutex;
@@ -44,6 +39,22 @@ class HTTPCache;
 #define BDWGC_FREE_SPACE_DIVISOR 12
 #endif
 
+enum class StarfishRendererType {
+    kOpenGL,
+    kSoftware,
+    kHeadless,
+};
+
+struct StarfishConfiguration {
+    const char* localStorageDataFilePath = nullptr;
+    const char* cookieStoreDataFilePath = nullptr;
+    const char* httpCacheDataDirectorypath = nullptr;
+    unsigned char gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
+    bool isThreadMode = false;
+    const char* backend = nullptr;
+    StarfishRendererType rendererType = StarfishRendererType::kOpenGL;
+};
+
 // ctor of Starfish class is NOT THREAD-SAFE
 class Starfish : public gc {
     friend class AtomicString;
@@ -51,8 +62,7 @@ class Starfish : public gc {
     friend class WebView;
     friend class HTMLDocument; // m_caseInsensitiveAttrSet
 public:
-    Starfish(const char* localStorageFilePath, const char* cookieStoreFilePath,
-             const char* httpCacheDirectorypath);
+    Starfish(const StarfishConfiguration& config);
 
     void destroy();
 
@@ -68,7 +78,7 @@ public:
 
     String* localStorageFilePath()
     {
-        return m_localStorageFilePath;
+        return m_localStorageDataFilePath;
     }
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -91,6 +101,16 @@ public:
         GC_set_free_space_divisor(c);
     }
 
+    std::string backend()
+    {
+        return m_backend;
+    }
+
+    StarfishRendererType rendererType()
+    {
+        return m_rendererType;
+    }
+
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG
@@ -101,15 +121,15 @@ public:
     static void printEveryReachableGCObjects();
 
 protected:
-    StaticStrings* m_staticStrings;
-    LineBreakIteratorPool* m_lineBreakIteratorPool;
-    String* m_localStorageFilePath;
+    StaticStrings* m_staticStrings = nullptr;
+    LineBreakIteratorPool* m_lineBreakIteratorPool = nullptr;
+    String* m_localStorageDataFilePath = nullptr;
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    HTTPCache* m_httpCache;
+    HTTPCache* m_httpCache = nullptr;
 #endif
 #if defined(STARFISH_USE_WORKER_PROCESS)
 public:
@@ -119,11 +139,13 @@ public:
     }
 
 protected:
-    WorkerManager* m_workerManager{ nullptr };
+    WorkerManager* m_workerManager = nullptr;
 #endif // STARFISH_ENABLE_SERVICE_WORKER
 
-    size_t m_webViewInstanceCount;
-    unsigned char m_gcFrequency;
+    size_t m_webViewInstanceCount = 0;
+    unsigned char m_gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
+    std::string m_backend;
+    StarfishRendererType m_rendererType = StarfishRendererType::kOpenGL;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
@@ -131,10 +153,6 @@ private:
 
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)
 extern bool g_fireOnloadEvent;
-#endif
-
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
-extern volatile sig_atomic_t g_doneFlag;
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE

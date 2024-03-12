@@ -30,7 +30,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -324,8 +324,8 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
     window->webView()->messageLoop()->addIdler(
         window,
         [](size_t, void* data, void*) {
-            PlatformWindow* window = (PlatformWindow*)data;
-            window->pause();
+            Renderer* renderer = (Renderer*)data;
+            renderer->pause();
         },
         window->webView(), nullptr);
     return scriptUndefined();
@@ -340,8 +340,8 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
     window->webView()->messageLoop()->addIdler(
         window,
         [](size_t, void* data, void*) {
-            PlatformWindow* window = (PlatformWindow*)data;
-            window->resume();
+            Renderer* renderer = (Renderer*)data;
+            renderer->resume();
         },
         window->webView(), nullptr);
     return scriptUndefined();
