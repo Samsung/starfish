@@ -38,7 +38,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerTizen.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -114,7 +114,7 @@ void MediaPlayerTizen::disposePlayer()
         m_container->setNeedsComposite();
         // NOTE Deplay dispose()
         //      Transparent hole can be exposed by disposal of player.
-        m_container->webView()->platformWindow()->rendering();
+        m_container->webView()->renderer()->rendering();
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         if (m_playerDeadFlag) {
             // give dead flag for killing MSE thread first.
@@ -161,8 +161,8 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
     // This is need for displaying video
     // ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle, false);
 
-    auto width = m_container->webView()->platformWindow()->width();
-    auto height = m_container->webView()->platformWindow()->height();
+    auto width = m_container->webView()->renderer()->width();
+    auto height = m_container->webView()->renderer()->height();
 
     player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
                                 ecoreWaylandHandle, 0, 0, width, height);

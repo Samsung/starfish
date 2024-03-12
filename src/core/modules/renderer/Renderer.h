@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishPlatformWindow__
-#define __StarfishPlatformWindow__
+#ifndef __StarfishRenderer__
+#define __StarfishRenderer__
 
 #include "core/page/RenderResult.h"
 #include "core/event/EventModifierData.h"
@@ -97,17 +97,17 @@ enum class CompositionEventKind {
 
 namespace Starfish {
 
-class PlatformWindow : public gc {
+class Renderer : public gc {
 public:
-    virtual ~PlatformWindow(){};
-    static PlatformWindow* create(Starfish* starfish, uint32_t width,
-                                  uint32_t height);
+    virtual ~Renderer(){};
+    static Renderer* create(Starfish* starfish, uint32_t width,
+                            uint32_t height);
 
     virtual uint32_t width() = 0;
     virtual uint32_t height() = 0;
     virtual void resizeTo(uint32_t w, uint32_t h)
     {
-        STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d", w, h);
+        STARFISH_LOG_INFO("Renderer::resizeTo %d %d", w, h);
         onResize();
     }
     virtual void clearResources();
@@ -135,16 +135,10 @@ public:
     }
     virtual void* drawingBufferAddress()
     {
-#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
         return nullptr;
     }
     virtual void updateDrawingBufferAddress(void* buf, uint32_t stride)
     {
-#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     }
 
     virtual bool glMakeCurrent()
@@ -180,13 +174,13 @@ public:
     }
 
     void registerGLMakeCurrentCallback(
-        const std::function<void(PlatformWindow* wnd)>& cb)
+        const std::function<void(Renderer* renderer)>& cb)
     {
         m_glMakeCurrentCallback = cb;
     }
 
     void registerGLSwapBuffersCallback(
-        const std::function<void(PlatformWindow* wnd, bool mayNeedsSync)>& cb)
+        const std::function<void(Renderer* renderer, bool mayNeedsSync)>& cb)
     {
         m_glSwapBufferCallback = cb;
     }
@@ -203,7 +197,7 @@ public:
     }
 
     void registerSetNeedsRenderingCallback(
-        const std::function<void(PlatformWindow* wnd)>& cb)
+        const std::function<void(Renderer* renderer)>& cb)
     {
         m_setNeedsRenderingCallback = cb;
     }
@@ -213,7 +207,7 @@ public:
     void callHandler(WindowHandlerKind handlerKind, void* param);
 
     void registerCanRenderingCallback(
-        const std::function<bool(PlatformWindow* wnd)>& cb);
+        const std::function<bool(Renderer* renderer)>& cb);
     bool canRendering()
     {
         if (m_canRenderingCallback) {
@@ -281,7 +275,7 @@ public:
     }
 
 protected:
-    PlatformWindow(Starfish* starfish);
+    Renderer(Starfish* starfish);
 
     Starfish* m_starfish;
     WebView* m_webView;
@@ -292,17 +286,17 @@ protected:
     float m_lastMouseMoveY;
     bool m_isDestroyed;
 
-    std::function<void(PlatformWindow* wnd)> m_setNeedsRenderingCallback;
+    std::function<void(Renderer* renderer)> m_setNeedsRenderingCallback;
     std::function<RenderInfo(void)> m_renderingPrepareCallback;
     std::function<void(const RenderResult& renderResult)>
         m_renderingFinishedCallback;
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 
-    std::function<void(PlatformWindow* wnd)> m_glMakeCurrentCallback;
-    std::function<void(PlatformWindow* wnd, bool)> m_glSwapBufferCallback;
+    std::function<void(Renderer* renderer)> m_glMakeCurrentCallback;
+    std::function<void(Renderer* renderer, bool)> m_glSwapBufferCallback;
 
-    std::function<bool(PlatformWindow* wnd)> m_canRenderingCallback;
+    std::function<bool(Renderer* renderer)> m_canRenderingCallback;
     std::function<void(bool needsFlush)> m_surfaceFlushCallback;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>

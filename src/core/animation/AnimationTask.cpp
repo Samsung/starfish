@@ -40,7 +40,6 @@
 #include "core/style/CSSProperty.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
-#include "platform/window/PlatformWindow.h"
 #include "core/animation/TransitionApplier.h"
 
 namespace Starfish {

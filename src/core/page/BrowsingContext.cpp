@@ -65,7 +65,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/util/URL.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/animation/AnimationTask.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -142,9 +142,9 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
 
     if (isTopLevelBrowsingContext()) {
         m_window = Window::create(this, url,
-                                  webView()->platformWindow()->width() /
+                                  webView()->renderer()->width() /
                                       webView()->screenInfo().devicePixelRatio,
-                                  webView()->platformWindow()->height() /
+                                  webView()->renderer()->height() /
                                       webView()->screenInfo().devicePixelRatio);
     } else {
         if (m_sourceElement->frame()) {
@@ -848,7 +848,7 @@ void BrowsingContext::dispose()
     }
 
     if (isTopLevelBrowsingContext()) {
-        webView()->platformWindow()->clearResources();
+        webView()->renderer()->clearResources();
         webView()->messageLoop()->clearPendingIdlers(m_window);
 
         auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
@@ -1732,8 +1732,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
         pkdata.setCharCode(0);
     }
 
-    pkdata.setEventModifierData(
-        webView()->platformWindow()->eventModifierData());
+    pkdata.setEventModifierData(webView()->renderer()->eventModifierData());
 
     KeyboardEventInit kinitData(pkdata);
     KeyboardEvent* e =

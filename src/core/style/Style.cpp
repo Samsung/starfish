@@ -73,7 +73,6 @@
 #include "core/style/RectData.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
-#include "platform/window/PlatformWindow.h"
 #include "core/style/ShadowData.h"
 #include "core/style/WillChangeData.h"
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"

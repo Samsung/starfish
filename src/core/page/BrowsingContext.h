@@ -32,7 +32,7 @@ class ResourceURL;
 class Starfish;
 class StackingContext;
 class CanvasSurface;
-class PlatformWindow;
+class Renderer;
 class Window;
 class HTMLIFrameElement;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -53,7 +53,7 @@ enum class CompositionEventKind;
 enum class HistoryManagerAction;
 
 class BrowsingContext : public gc, public WebViewHoldable {
-    friend class PlatformWindow;
+    friend class Renderer;
     friend class Window;
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;

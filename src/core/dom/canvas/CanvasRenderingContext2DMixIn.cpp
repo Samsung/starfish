@@ -358,9 +358,9 @@ void CanvasRenderingContext2DMixIn::initialize()
     calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
 
-    m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->platformWindow(), width, height, 1,
-        CanvasSurface::CanvasElement);
+    m_canvasSurface =
+        CanvasSurface::create(m_ownerHTMLCanvasElement->webView()->renderer(),
+                              width, height, 1, CanvasSurface::CanvasElement);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,
                        Canvas::CanvasFlag::CanvasElement);

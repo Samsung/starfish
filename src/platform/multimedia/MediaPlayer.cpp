@@ -24,7 +24,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "platform/multimedia/MediaPlayer.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/message_loop/Timer.h"
@@ -50,7 +50,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_playerStateMutex(new Mutex())
 {
     m_canvasSurface =
-        CanvasSurface::create(m_container->webView()->platformWindow(), 1, 1);
+        CanvasSurface::create(m_container->webView()->renderer(), 1, 1);
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()

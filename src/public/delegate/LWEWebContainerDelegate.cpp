@@ -27,7 +27,7 @@
 #include "SettingsDelegate.h"
 #include "ResourceErrorDelegate.h"
 
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "browser/history/HistoryManager.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -144,11 +144,9 @@ static Starfish::ScriptValue nativeCallbackFunction(
     return Starfish::scriptUndefined();
 }
 
-static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
-                                                float devicePixelRatio,
-                                                const char* defaultFontName,
-                                                const char* locale,
-                                                const char* timezoneID)
+static Starfish::WebView* createStarfishWebViewInstance(
+    unsigned width, unsigned height, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID)
 {
     if (!LWEDelegate::LWE::IsInitialized()) {
         STARFISH_LOG_ERROR(
@@ -352,30 +350,19 @@ WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
                                              const char* locale,
                                              const char* timezoneID)
 {
-#if defined(STARFISH_DALI)
-#if !defined(PORT_WINDOW_BACKEND_GB)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return nullptr;
-#endif
     STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
     STARFISH_RELEASE_ASSERT(locale != nullptr);
     STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        auto webView = createWebViewInstance(
+        Starfish::WebView* webView = createStarfishWebViewInstance(
             width, height, scaleFactor, defaultFontName, locale, timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
         newWebContainer->UpdateBuffer(buffer, width, height, stride);
     });
     return newWebContainer;
-#else
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return nullptr;
-#endif
 }
 
 WebContainer* WebContainer::Create(unsigned width, unsigned height,
@@ -383,18 +370,13 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    const char* defaultFontName,
                                    const char* locale, const char* timezoneID)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return nullptr;
-#endif
     STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
     STARFISH_RELEASE_ASSERT(locale != nullptr);
     STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        auto webView = createWebViewInstance(
+        Starfish::WebView* webView = createStarfishWebViewInstance(
             width, height, scaleFactor, defaultFontName, locale, timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
@@ -407,7 +389,7 @@ void WebContainerImpl::UpdateBuffer(void* buffer, unsigned width,
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         ResizeTo(width, height);
-        m_webView->platformWindow()->updateDrawingBufferAddress(buffer, stride);
+        m_webView->renderer()->updateDrawingBufferAddress(buffer, stride);
     });
 }
 
@@ -415,7 +397,7 @@ void WebContainerImpl::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->platformWindow()->registerRenderingPrepareCallback(
+        m_webView->renderer()->registerRenderingPrepareCallback(
             [cb](void) -> Starfish::RenderInfo {
                 WebContainer::RenderInfo tmp = cb();
                 Starfish::RenderInfo result;
@@ -431,12 +413,8 @@ void WebContainerImpl::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
         cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->platformWindow()->registerRenderingFinishedCallback(
+        m_webView->renderer()->registerRenderingFinishedCallback(
             [this, cb](const Starfish::RenderResult& renderResult) {
                 WebContainer::RenderResult result;
                 result.updatedX = (int)renderResult.updateRect.x();
@@ -444,10 +422,9 @@ void WebContainerImpl::RegisterOnRenderedHandler(
                 result.updatedWidth = (int)renderResult.updateRect.width();
                 result.updatedHeight = (int)renderResult.updateRect.height();
                 result.updatedBufferAddress =
-                    m_webView->platformWindow()->drawingBufferAddress();
-                result.bufferImageWidth = m_webView->platformWindow()->width();
-                result.bufferImageHeight =
-                    m_webView->platformWindow()->height();
+                    m_webView->renderer()->drawingBufferAddress();
+                result.bufferImageWidth = m_webView->renderer()->width();
+                result.bufferImageHeight = m_webView->renderer()->height();
                 cb(this, result);
             });
     });
@@ -460,25 +437,21 @@ WebContainer* WebContainer::CreateGL(unsigned width, unsigned height,
                                      const char* defaultFontName,
                                      const char* locale, const char* timezoneID)
 {
-#if !defined(PORT_WINDOW_BACKEND_GL)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        auto webView =
-            createWebViewInstance(width, height, devicePixelRatio,
-                                  defaultFontName, locale, timezoneID);
+        Starfish::WebView* webView =
+            createStarfishWebViewInstance(width, height, devicePixelRatio,
+                                          defaultFontName, locale, timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
-        webView->platformWindow()->registerGLMakeCurrentCallback(
-            [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
+        webView->renderer()->registerGLMakeCurrentCallback(
+            [onGLMakeCurrent, newWebContainer](Starfish::Renderer* renderer) {
                 onGLMakeCurrent(newWebContainer);
             });
 
-        webView->platformWindow()->registerGLSwapBuffersCallback(
-            [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd,
+        webView->renderer()->registerGLSwapBuffersCallback(
+            [onGLSwapBuffers, newWebContainer](Starfish::Renderer* renderer,
                                                bool mayNeedsSync) {
                 onGLSwapBuffers(newWebContainer, mayNeedsSync);
             });
@@ -497,12 +470,12 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 {
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        auto webView =
-            createWebViewInstance(width, height, devicePixelRatio,
-                                  defaultFontName, locale, timezoneID);
+        Starfish::WebView* webView =
+            createStarfishWebViewInstance(width, height, devicePixelRatio,
+                                          defaultFontName, locale, timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
-        webView->platformWindow()->registerRenderingPrepareCallback(
+        webView->renderer()->registerRenderingPrepareCallback(
             [prepareImageCb](void) -> Starfish::RenderInfo {
                 WebContainer::ExternalImageInfo buffer = prepareImageCb();
                 Starfish::RenderInfo result;
@@ -518,7 +491,7 @@ WebContainer* WebContainer::CreateWithPlatformImage(
                 return result;
             });
 
-        webView->platformWindow()->registerRenderingFinishedCallback(
+        webView->renderer()->registerRenderingFinishedCallback(
             [newWebContainer,
              flushCb](const Starfish::RenderResult& renderResult) {
                 flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
@@ -534,30 +507,26 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
-#if !defined(PORT_WINDOW_BACKEND_GL)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        auto webView =
-            createWebViewInstance(width, height, devicePixelRatio,
-                                  defaultFontName, locale, timezoneID);
+        Starfish::WebView* webView =
+            createStarfishWebViewInstance(width, height, devicePixelRatio,
+                                          defaultFontName, locale, timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
-        webView->platformWindow()->registerGLMakeCurrentCallback(
-            [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
+        webView->renderer()->registerGLMakeCurrentCallback(
+            [onGLMakeCurrent, newWebContainer](Starfish::Renderer* renderer) {
                 onGLMakeCurrent(newWebContainer);
             });
 
-        webView->platformWindow()->registerGLSwapBuffersCallback(
-            [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd,
+        webView->renderer()->registerGLSwapBuffersCallback(
+            [onGLSwapBuffers, newWebContainer](Starfish::Renderer* renderer,
                                                bool mayNeedsSync) {
                 onGLSwapBuffers(newWebContainer, mayNeedsSync);
             });
 
-        webView->platformWindow()->registerRenderingPrepareCallback(
+        webView->renderer()->registerRenderingPrepareCallback(
             [prepareImageCb](void) -> Starfish::RenderInfo {
                 WebContainer::ExternalImageInfo tmp = prepareImageCb();
                 Starfish::RenderInfo result;
@@ -566,7 +535,7 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
                 return result;
             });
 
-        webView->platformWindow()->registerSurfaceFlushedCallback(
+        webView->renderer()->registerSurfaceFlushedCallback(
             [newWebContainer, flushCb](bool needsFlush) {
                 flushCb(newWebContainer, needsFlush);
             });
@@ -580,7 +549,7 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
                                            const char* locale,
                                            const char* timezoneID)
 {
-    Starfish::WebView* webView = createWebViewInstance(
+    Starfish::WebView* webView = createStarfishWebViewInstance(
         width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
     WebContainer* newWebContainer = new (NoGC) WebContainerImpl(webView);
 
@@ -590,7 +559,7 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
 void WebContainerImpl::ResizeTo(size_t width, size_t height)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->platformWindow()->resizeTo((int)width, (int)height);
+        m_webView->renderer()->resizeTo((int)width, (int)height);
     });
 }
 
@@ -655,8 +624,8 @@ void WebContainerImpl::RegisterCanRenderingHandler(
     const std::function<bool(WebContainer*)>& cb)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->platformWindow()->registerCanRenderingCallback(
-            [this, cb](Starfish::PlatformWindow* wnd) -> bool {
+        m_webView->renderer()->registerCanRenderingCallback(
+            [this, cb](Starfish::Renderer* renderer) -> bool {
                 return cb(this);
             });
     });
@@ -899,13 +868,13 @@ void WebContainerImpl::Destroy()
 void WebContainerImpl::Resume()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { m_webView->platformWindow()->resume(); });
+        [&]() -> void { m_webView->renderer()->resume(); });
 }
 
 void WebContainerImpl::Pause()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { m_webView->platformWindow()->pause(); });
+        [&]() -> void { m_webView->renderer()->pause(); });
 }
 
 void WebContainerImpl::Focus()
@@ -921,7 +890,7 @@ void WebContainerImpl::Blur()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(),
-        [=]() -> void { m_webView->platformWindow()->webView()->blur(); });
+        [=]() -> void { m_webView->renderer()->webView()->blur(); });
 }
 
 void WebContainerImpl::SetSettings(const Settings* settings)
@@ -1163,7 +1132,7 @@ void WebContainerImpl::RegisterShowDropdownMenuHandler(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->registerCallbackHandler(
+            m_webView->renderer()->registerCallbackHandler(
                 Starfish::WindowHandlerShowDropdownMenu,
                 [this, cb](void* param) -> void {
                     struct Param {
@@ -1185,7 +1154,7 @@ void WebContainerImpl::RegisterShowAlertHandler(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->registerCallbackHandler(
+            m_webView->renderer()->registerCallbackHandler(
                 Starfish::WindowHandlerShowAlert,
                 [this, cb](void* param) -> void {
                     struct Param {
@@ -1221,7 +1190,7 @@ void WebContainerImpl::CallHandler(const std::string& handler, void* param)
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             if (handler.compare("onDropdownMenuItemSelected") == 0) {
-                m_webView->platformWindow()->callHandler(
+                m_webView->renderer()->callHandler(
                     Starfish::WindowHandlerOnDropdownMenuItemSelected, param);
             }
         });
@@ -1231,7 +1200,7 @@ size_t WebContainerImpl::Width()
 {
     size_t ret = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = m_webView->platformWindow()->width(); });
+        [&]() -> void { ret = m_webView->renderer()->width(); });
     return ret;
 }
 
@@ -1239,7 +1208,7 @@ size_t WebContainerImpl::Height()
 {
     size_t ret = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void { ret = m_webView->platformWindow()->height(); });
+        [&]() -> void { ret = m_webView->renderer()->height(); });
     return ret;
 }
 
@@ -1363,7 +1332,7 @@ void WebContainerImpl::DispatchMouseMoveEvent(MouseButtonValue button,
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchMouseEvent(
+            m_webView->renderer()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventMove,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1376,7 +1345,7 @@ void WebContainerImpl::DispatchMouseDownEvent(MouseButtonValue button,
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchMouseEvent(
+            m_webView->renderer()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventDown,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1389,7 +1358,7 @@ void WebContainerImpl::DispatchMouseUpEvent(MouseButtonValue button,
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchMouseEvent(
+            m_webView->renderer()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventUp,
                 ::Starfish::MouseData(button, buttons, x, y, 0,
                                       Starfish::timestamp()));
@@ -1400,8 +1369,7 @@ void WebContainerImpl::DispatchMouseWheelEvent(double x, double y, int delta)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchMouseWheelEvent(x, y, delta,
-                                                                 true);
+            m_webView->renderer()->dispatchMouseWheelEvent(x, y, delta, true);
         });
 }
 
@@ -1409,7 +1377,7 @@ void WebContainerImpl::DispatchKeyDownEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchKeyEvent(
+            m_webView->renderer()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventDown,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1419,7 +1387,7 @@ void WebContainerImpl::DispatchKeyPressEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchKeyEvent(
+            m_webView->renderer()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventPress,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1429,7 +1397,7 @@ void WebContainerImpl::DispatchKeyUpEvent(KeyValue keyCode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchKeyEvent(
+            m_webView->renderer()->dispatchKeyEvent(
                 ::Starfish::KeyEventKind::KeyEventUp,
                 ::Starfish::PlatformKeyEventData(keyCode));
         });
@@ -1440,7 +1408,7 @@ void WebContainerImpl::DispatchCompositionStartEvent(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchCompositionEvent(
+            m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventStart,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1453,7 +1421,7 @@ void WebContainerImpl::DispatchCompositionUpdateEvent(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchCompositionEvent(
+            m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventUpdate,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1466,7 +1434,7 @@ void WebContainerImpl::DispatchCompositionEndEvent(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->dispatchCompositionEvent(
+            m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventEnd,
                 ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                              soFarCompositiedString.length()),
@@ -1478,7 +1446,7 @@ void WebContainerImpl::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()
+            m_webView->renderer()
                 ->registerShowSoftwareKeyboardIfPossibleCallback(
                     [this, cb]() { cb(this); });
         });
@@ -1489,7 +1457,7 @@ void WebContainerImpl::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()
+            m_webView->renderer()
                 ->registerHideSoftwareKeyboardIfPossibleCallback(
                     [this, cb]() { cb(this); });
         });
@@ -1501,10 +1469,10 @@ void WebContainerImpl::RegisterSetNeedsRenderingCallback(
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->platformWindow()->registerSetNeedsRenderingCallback(
-                [this, cb](Starfish::PlatformWindow* wnd) {
-                    std::function<void()> fn = [wnd]() {
-                        auto p = wnd;
+            m_webView->renderer()->registerSetNeedsRenderingCallback(
+                [this, cb](Starfish::Renderer* renderer) {
+                    std::function<void()> fn = [renderer]() {
+                        auto p = renderer;
                         p->rendering();
                     };
                     cb(this, fn);
@@ -1572,17 +1540,15 @@ int WebContainerImpl::GetScrollY()
 
 void WebContainerImpl::SetDevicePixelRatio(float dpr)
 {
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->platformWindow()->setDevicePixelRatio(dpr);
-    });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { m_webView->renderer()->setDevicePixelRatio(dpr); });
 }
 
 float WebContainerImpl::GetDevicePixelRatio()
 {
     float dpr = 0;
-    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        dpr = m_webView->platformWindow()->getDevicePixelRatio();
-    });
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { dpr = m_webView->renderer()->getDevicePixelRatio(); });
     return dpr;
 }
 

@@ -57,9 +57,8 @@ MediaPlayerWebRtcTizen::MediaPlayerWebRtcTizen(HTMLMediaElement* element)
 
     if (element->isHTMLVideoElement()) {
         HTMLVideoElement* elem = element->asHTMLVideoElement();
-        m_canvasSurface =
-            CanvasSurface::create(m_container->webView()->platformWindow(),
-                                  elem->width(), elem->height());
+        m_canvasSurface = CanvasSurface::create(
+            m_container->webView()->renderer(), elem->width(), elem->height());
     }
 }
 
@@ -197,7 +196,7 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
                 elem->setHeight(videoFrameHeight);
             }
             m_canvasSurface =
-                CanvasSurface::create(container()->webView()->platformWindow(),
+                CanvasSurface::create(container()->webView()->renderer(),
                                       videoFrameWidth, videoFrameHeight);
         }
     }

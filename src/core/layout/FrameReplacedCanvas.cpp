@@ -41,7 +41,7 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     computeStyleFlags();
     // This case is just that a empty element is defined.
     m_emptySurface =
-        CanvasSurface::create(node->webView()->platformWindow(), 1, 1, 1,
+        CanvasSurface::create(node->webView()->renderer(), 1, 1, 1,
                               CanvasSurface::CanvasSurfaceFlag::CanvasElement);
 }
 

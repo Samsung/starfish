@@ -167,12 +167,12 @@ bool CompositorFactory::supportsFilterEffectMock(size_t textureWidth,
 }
 
 void CompositorFactory::destroyCompositorContextMock(
-    PlatformWindow* wnd, CompositorContext* ctxInput)
+    Renderer* renderer, CompositorContext* ctxInput)
 {
 }
 
 CompositorContext* CompositorFactory::initCompositorContextMock(
-    PlatformWindow* wnd)
+    Renderer* renderer)
 {
     return nullptr;
 }

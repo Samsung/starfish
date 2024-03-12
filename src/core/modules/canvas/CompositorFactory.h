@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class PlatformWindow;
+class Renderer;
 class Canvas;
 class CanvasSurface;
 class Compositor;
@@ -37,8 +37,8 @@ namespace CompositorFactory {
     Compositor* create3dCairo(WebView* starfish, CompositorContext* ctx);
     Compositor* create2dCairo(WebView* starfish, CompositorContext* ctx,
                               CanvasSurface* surface);
-    CompositorContext* initCompositorContextCairo(PlatformWindow* wnd);
-    void destroyCompositorContextCairo(PlatformWindow* wnd,
+    CompositorContext* initCompositorContextCairo(Renderer* renderer);
+    void destroyCompositorContextCairo(Renderer* renderer,
                                        CompositorContext* ctx);
     uint32_t maximumTextureSizeCairo();
     bool supportsFilterEffectCairo(size_t textureWidth, size_t textureHeight);
@@ -48,9 +48,8 @@ namespace CompositorFactory {
     Compositor* create3dGl(WebView* starfish, CompositorContext* ctx);
     Compositor* create2dGl(WebView* starfish, CompositorContext* ctx,
                            CanvasSurface* surface);
-    CompositorContext* initCompositorContextGl(PlatformWindow* wnd);
-    void destroyCompositorContextGl(PlatformWindow* wnd,
-                                    CompositorContext* ctx);
+    CompositorContext* initCompositorContextGl(Renderer* renderer);
+    void destroyCompositorContextGl(Renderer* renderer, CompositorContext* ctx);
     uint32_t maximumTextureSizeGl();
     bool supportsFilterEffectGl(size_t textureWidth, size_t textureHeight);
 #endif
@@ -59,8 +58,8 @@ namespace CompositorFactory {
     Compositor* create3dMock(WebView* starfish, CompositorContext* ctx);
     Compositor* create2dMock(WebView* starfish, CompositorContext* ctx,
                              CanvasSurface* surface);
-    CompositorContext* initCompositorContextMock(PlatformWindow* wnd);
-    void destroyCompositorContextMock(PlatformWindow* wnd,
+    CompositorContext* initCompositorContextMock(Renderer* renderer);
+    void destroyCompositorContextMock(Renderer* renderer,
                                       CompositorContext* ctx);
     uint32_t maximumTextureSizeMock();
     bool supportsFilterEffectMock(size_t textureWidth, size_t textureHeight);

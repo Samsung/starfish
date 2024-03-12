@@ -27,7 +27,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/CompositorFactory.h"
 
 #include <vector>
@@ -432,12 +432,12 @@ bool CompositorFactory::supportsFilterEffectCairo(size_t textureWidth,
 }
 
 void CompositorFactory::destroyCompositorContextCairo(
-    PlatformWindow* wnd, CompositorContext* ctxInput)
+    Renderer* renderer, CompositorContext* ctxInput)
 {
 }
 
 CompositorContext* CompositorFactory::initCompositorContextCairo(
-    PlatformWindow* wnd)
+    Renderer* renderer)
 {
     return nullptr;
 }

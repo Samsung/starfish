@@ -44,7 +44,7 @@
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/StyleUtil.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -478,7 +478,7 @@ void HTMLSelectElement::showDropdownMenu()
 {
     if (webView()->useExternalPopup()) {
         // register the callback to be called when an item is selected
-        webView()->platformWindow()->registerCallbackHandler(
+        webView()->renderer()->registerCallbackHandler(
             WindowHandlerOnDropdownMenuItemSelected,
             [this](void* param) -> void {
                 struct Param {
@@ -517,8 +517,8 @@ void HTMLSelectElement::showDropdownMenu()
             }
         }
 
-        webView()->platformWindow()->callHandler(WindowHandlerShowDropdownMenu,
-                                                 (void*)p);
+        webView()->renderer()->callHandler(WindowHandlerShowDropdownMenu,
+                                           (void*)p);
     } else {
         if (frame() == nullptr) {
             return;

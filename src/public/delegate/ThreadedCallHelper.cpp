@@ -109,10 +109,10 @@ void ThreadedCallHelper::CreateLWEMainThread()
     pthread_create(
         &tid, &attr,
         [](void* data) -> void* {
+            STARFISH_LOG_INFO("Start LWE thread to run MessageLoop.");
             ThreadedCallHelper* self = static_cast<ThreadedCallHelper*>(data);
             Starfish::MessageLoop::init();
             pthread_mutex_unlock(&self->m_mainThreadInitLocker);
-            STARFISH_LOG_INFO("Worker thread started!");
             Starfish::MessageLoop::run();
             return nullptr;
         },

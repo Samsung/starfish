@@ -62,7 +62,7 @@
 #include "core/page/PopStateEvent.h"
 #include "core/page/Serializer.h"
 
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/dom/Document.h"
@@ -256,7 +256,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* builtinPolyfillPathString)
     : WebBase(starfish, MessageLoop::create(), Timer::create(this), locale,
               timezoneID, customUserAgentString)
-    , m_platformWindow(PlatformWindow::create(starfish, w, h))
+    , m_renderer(Renderer::create(starfish, w, h))
     , m_topLevelBrowsingContext(nullptr)
     , m_scriptEngineInstance(nullptr)
     , m_storageNamespaceProvider(nullptr)
@@ -314,7 +314,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     STARFISH_ASSERT(customUserAgentString != nullptr);
     STARFISH_ASSERT(builtinPolyfillPathString != nullptr);
 
-    m_platformWindow->setWebView(this);
+    m_renderer->setWebView(this);
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = 0;
 #ifdef STARFISH_ENABLE_TEST
@@ -405,7 +405,7 @@ void WebView::clearDrawnBuffers()
         m_needsPainting = true;
     }
 
-    platformWindow()->onClearDrawnBuffers();
+    renderer()->onClearDrawnBuffers();
 }
 
 void WebView::enterIdleMode()
@@ -569,12 +569,12 @@ void WebView::destroy()
     delete m_platformFontCache;
     delete m_platformFontSelector;
 
-    m_platformWindow->destroy();
+    m_renderer->destroy();
 
     m_starfish->m_webViewInstanceCount--;
     this->WebView::~WebView();
 
-    m_platformWindow->clearNativeHandlers();
+    m_renderer->clearNativeHandlers();
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }
@@ -746,7 +746,7 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
         m_rootStackingContext = nullptr;
     }
 
-    platformWindow()->hideSoftwareKeyboardIfPossible();
+    renderer()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(this);
 
     removeScriptEngineInstance();
@@ -1190,9 +1190,8 @@ void WebView::setNeedsRendering()
     if (m_inRendering) {
         return;
     }
-    auto wnd = platformWindow();
     m_needsRendering = true;
-    wnd->setNeedsRendering();
+    m_renderer->setNeedsRendering();
 }
 
 static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
@@ -1274,11 +1273,11 @@ RenderResult WebView::rendering(bool force)
                             .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet");
         m_needsRendering = false;
-        Canvas* canvas = platformWindow()->preparePainting();
+        Canvas* canvas = renderer()->preparePainting();
         mainBrowsingContext()->clearingBeforePaint(canvas);
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
-                                             platformWindow()->height());
+        renderResult.updateRect =
+            LayoutRect(0, 0, renderer()->width(), renderer()->height());
         delete canvas;
         m_didFirstRenderingAfterWakeup = true;
         return renderResult;
@@ -1317,8 +1316,8 @@ RenderResult WebView::rendering(bool force)
         INSTALL_PROFILE_TIMER("painting");
 
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
-                                             platformWindow()->height());
+        renderResult.updateRect =
+            LayoutRect(0, 0, renderer()->width(), renderer()->height());
 
         // painting
         Canvas* canvas = nullptr;
@@ -1469,7 +1468,7 @@ RenderResult WebView::rendering(bool force)
             if (!m_needsComposite) {
                 INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
                                                  "painting job");
-                canvas = platformWindow()->preparePainting();
+                canvas = renderer()->preparePainting();
                 canvas->save();
                 renderResult.updateRect = canvas->pixelSnappedClip(repaintRect);
                 canvas->translate(-scrollX, -scrollY);
@@ -1501,7 +1500,7 @@ RenderResult WebView::rendering(bool force)
             } else {
                 INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
                                                  "painting job(composite)");
-                platformWindow()->willCompositing();
+                renderer()->willCompositing();
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
@@ -1537,7 +1536,7 @@ RenderResult WebView::rendering(bool force)
         m_needsPainting = false;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {
-            platformWindow()->paintVirtualCursor(canvas);
+            renderer()->paintVirtualCursor(canvas);
         }
 #endif
 
@@ -1549,8 +1548,8 @@ RenderResult WebView::rendering(bool force)
     if (m_needsComposite) {
         INSTALL_PROFILE_TIMER("composite");
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
-                                             platformWindow()->height());
+        renderResult.updateRect =
+            LayoutRect(0, 0, renderer()->width(), renderer()->height());
         m_didCompositeBefore = true;
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
@@ -1568,7 +1567,7 @@ RenderResult WebView::rendering(bool force)
                 }
             }
 
-            Compositor* compositor = platformWindow()->prepareCompositor();
+            Compositor* compositor = renderer()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
 
@@ -1600,11 +1599,11 @@ RenderResult WebView::rendering(bool force)
             }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-            platformWindow()->paintVirtualCursor(compositor);
+            renderer()->paintVirtualCursor(compositor);
 #endif
             delete compositor;
         } else {
-            Compositor* compositor = platformWindow()->prepareCompositor();
+            Compositor* compositor = renderer()->prepareCompositor();
             compositor->clearColor(Unit::Color(0, 0, 0, 0));
             delete compositor;
         }

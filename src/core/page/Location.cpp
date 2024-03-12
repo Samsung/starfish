@@ -30,7 +30,6 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
 #include "platform/loader/ResourceLoader.h"
-#include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
 

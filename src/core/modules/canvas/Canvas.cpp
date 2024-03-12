@@ -24,7 +24,7 @@
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "Starfish.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/canvas/CanvasDirection.h"
@@ -38,8 +38,6 @@
 
 namespace Starfish {
 
-extern int g_portWindowBackend;
-
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 #ifndef STARFISH_CANVAS_SURFACE_TILE_SIZE
 #define STARFISH_CANVAS_SURFACE_TILE_SIZE 128
@@ -49,11 +47,11 @@ size_t CanvasSurface::g_canvasSurfaceTileSize =
 
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
-    CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h,
+    CanvasSurfaceSimple(Renderer* renderer, size_t w, size_t h,
                         float additionalPixelRatio)
         : CanvasSurface(additionalPixelRatio)
     {
-        m_window = wnd;
+        m_renderer = renderer;
         m_width = w;
         m_height = h;
         m_bufferStride = m_bufferWidth = m_width = -1;
@@ -93,7 +91,7 @@ public:
             m_height = h;
 
             float devicePixelRatio =
-                m_window->webView()->screenInfo().devicePixelRatio *
+                m_renderer->webView()->screenInfo().devicePixelRatio *
                 additionalPixelRatio();
 
             m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
@@ -152,7 +150,7 @@ public:
     }
 
 protected:
-    PlatformWindow* m_window;
+    Renderer* m_renderer;
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
@@ -160,40 +158,6 @@ protected:
     size_t m_bufferHeight;
     size_t m_bufferStride;
 };
-
-#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
-CanvasSurface* CanvasSurfaceFactory::createSimple(
-    PlatformWindow* wnd, size_t w, size_t h, float additionalPixelRatio,
-    CanvasSurface::CanvasSurfaceFlag flag)
-{
-    return new CanvasSurfaceSimple(wnd, w, h, additionalPixelRatio);
-}
-#endif
-
-// The if-def statements below are temporary soluation to avoid affecting other
-// ports of LWE except flutter. In the future, It will be removed when LWE's all
-// ports are changed to a single binary.
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
-                                     float additionalPixelRatio,
-                                     CanvasSurfaceFlag flag)
-{
-    switch (static_cast<PORT_WINDOW_BACKEND>(g_portWindowBackend)) {
-#ifdef PORT_WINDOW_BACKEND_GL
-    case PORT_WINDOW_BACKEND::GL:
-        return CanvasSurfaceFactory::createGl(wnd, w, h, additionalPixelRatio,
-                                              flag);
-#endif
-#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
-    case PORT_WINDOW_BACKEND::GB:
-    case PORT_WINDOW_BACKEND::HEADLESS:
-        return CanvasSurfaceFactory::createSimple(wnd, w, h,
-                                                  additionalPixelRatio, flag);
-#endif
-    default:
-        break;
-    }
-    return nullptr;
-}
 
 class CanvasSurfaceCanvasTarget : public CanvasSurface {
 public:
@@ -293,18 +257,46 @@ protected:
     size_t m_pixelRatio;
 };
 
-CanvasSurface* CanvasSurfaceFactory::createCanvasTargetSimple(uint8_t* buffer,
-                                                              size_t w,
-                                                              size_t h,
-                                                              size_t stride)
+CanvasSurface* CanvasSurface::create(Renderer* renderer, size_t w, size_t h,
+                                     float additionalPixelRatio,
+                                     CanvasSurfaceFlag flag)
 {
-    return new CanvasSurfaceCanvasTarget(buffer, w, h, stride);
+#if defined(STARFISH_DALI) || defined(STARFISH_EFL_HEADLESS)
+    return CanvasSurfaceFactory::createSimple(renderer, w, h,
+                                              additionalPixelRatio, flag);
+#else
+    StarfishRendererType rendererType = renderer->starfish()->rendererType();
+    if (rendererType == StarfishRendererType::kOpenGL) {
+        return CanvasSurfaceFactory::createGL(renderer, w, h,
+                                              additionalPixelRatio, flag);
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CanvasSurfaceFactory::createSimple(renderer, w, h,
+                                                  additionalPixelRatio, flag);
+    }
+#endif
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
 }
 
 CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
                                                  size_t h, size_t stride)
 {
     return CanvasSurfaceFactory::createCanvasTargetSimple(buffer, w, h, stride);
+}
+
+CanvasSurface* CanvasSurfaceFactory::createSimple(
+    Renderer* renderer, size_t w, size_t h, float additionalPixelRatio,
+    CanvasSurface::CanvasSurfaceFlag flag)
+{
+    return new CanvasSurfaceSimple(renderer, w, h, additionalPixelRatio);
+}
+
+CanvasSurface* CanvasSurfaceFactory::createCanvasTargetSimple(uint8_t* buffer,
+                                                              size_t w,
+                                                              size_t h,
+                                                              size_t stride)
+{
+    return new CanvasSurfaceCanvasTarget(buffer, w, h, stride);
 }
 
 CanvasState::CanvasState()

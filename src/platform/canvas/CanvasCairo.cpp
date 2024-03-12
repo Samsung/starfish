@@ -43,7 +43,6 @@
 #include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
 #include "platform/canvas/font/FontImplCairo.h"
 
 #include <vector>

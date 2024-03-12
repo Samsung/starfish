@@ -33,7 +33,7 @@ namespace Starfish {
 
 class Frame;
 class NativeImageData;
-class PlatformWindow;
+class Renderer;
 class NativeGradient;
 class Path;
 
@@ -181,7 +181,7 @@ public:
         ElementHasFilterEffect = 1,
         CanvasElement = 1 << 1
     };
-    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h,
+    static CanvasSurface* create(Renderer* renderer, size_t w, size_t h,
                                  float additionalPixelRatio = 1,
                                  CanvasSurfaceFlag flag = PlainElement);
     static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
@@ -275,16 +275,15 @@ protected:
 };
 
 namespace CanvasSurfaceFactory {
-#ifdef PORT_WINDOW_BACKEND_GL
-    CanvasSurface* createGl(PlatformWindow* window, size_t w, size_t h,
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+    CanvasSurface* createGL(Renderer* renderer, size_t w, size_t h,
                             float additionalPixelRatio,
                             CanvasSurface::CanvasSurfaceFlag flag);
 #endif
-#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
-    CanvasSurface* createSimple(PlatformWindow* window, size_t w, size_t h,
+    CanvasSurface* createSimple(Renderer* renderer, size_t w, size_t h,
                                 float additionalPixelRatio,
                                 CanvasSurface::CanvasSurfaceFlag flag);
-#endif
+
     CanvasSurface* createCanvasTargetSimple(uint8_t* buffer, size_t w, size_t h,
                                             size_t stride);
 }; // namespace CanvasSurfaceFactory

@@ -40,7 +40,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/style/CSSGradientValue.h"
@@ -2305,7 +2305,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                     CanvasSurface::create(
                                         m_owner->document()
                                             ->webView()
-                                            ->platformWindow(),
+                                            ->renderer(),
                                         tileDataWidth, tileDataHeight,
                                         additionalPixelRatio(),
                                         m_hasFilterEffect
@@ -2526,7 +2526,7 @@ bool StackingContext::fillGraphicsBufferContents(
                          ->m_surfaces[tileIndex]) {
                     m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex] =
                         CanvasSurface::create(
-                            m_owner->document()->webView()->platformWindow(),
+                            m_owner->document()->webView()->renderer(),
                             tileDataWidth, tileDataHeight,
                             additionalPixelRatio(),
                             m_hasFilterEffect
@@ -3038,9 +3038,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
                 if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
                     CanvasSurface* backgroundSurface = CanvasSurface::create(
-                        m_owner->document()->webView()->platformWindow(),
-                        bufferWidth, bufferHeight, 1,
-                        CanvasSurface::CanvasElement);
+                        m_owner->document()->webView()->renderer(), bufferWidth,
+                        bufferHeight, 1, CanvasSurface::CanvasElement);
                     Canvas* canvas = Canvas::create(m_owner->node()->webView(),
                                                     backgroundSurface);
                     canvas->clearColor(Unit::Color(0, 0, 0, 0));

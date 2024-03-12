@@ -35,7 +35,6 @@
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/multimedia/MockMediaPlayer.h"
-#include "platform/window/PlatformWindow.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"

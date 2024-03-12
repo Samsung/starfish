@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-#if defined(PORT_WINDOW_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
 
 #include <SkMatrix.h>
 
@@ -38,17 +38,17 @@
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "platform/event/PlatformKeyEventData.h"
-#include "platform/window/PlatformWindowFactory.h"
+#include "core/modules/renderer/RendererFactory.h"
 
 namespace Starfish {
 
 #if defined(STARFISH_ENABLE_TEST)
 std::function<void()> g_screenShotCallback;
 std::string g_screenShotPath;
-class WindowImplGL;
-void screenShotImpl(PlatformWindow* wnd, const char* path,
+class RendererSoftware;
+void screenShotImpl(Renderer* renderer, const char* path,
                     std::function<void()> callback);
 void screenShotInRendering(WebView* wv, const char* path,
                            std::function<void()> callback)
@@ -59,10 +59,10 @@ void screenShotInRendering(WebView* wv, const char* path,
 }
 #endif
 
-class WindowImplGL : public PlatformWindow {
+class RendererSoftware : public Renderer {
 public:
-    WindowImplGL(Starfish* starfish, uint32_t width, uint32_t height)
-        : PlatformWindow(starfish)
+    RendererSoftware(Starfish* starfish, uint32_t width, uint32_t height)
+        : Renderer(starfish)
         , m_width(width)
         , m_height(height)
         , m_glPaintingSurface(nullptr)
@@ -92,13 +92,13 @@ public:
         if (w != m_width || h != m_height) {
             m_width = w;
             m_height = h;
-            PlatformWindow::resizeTo(w, h);
+            Renderer::resizeTo(w, h);
         }
     }
 
     virtual void destroy() override
     {
-        PlatformWindow::destroy();
+        Renderer::destroy();
 
         if (m_glPaintingSurface) {
             m_glPaintingSurface->detachNativeBuffer();
@@ -125,7 +125,7 @@ public:
 #endif
         }
 
-        RenderResult ret = PlatformWindow::rendering();
+        RenderResult ret = Renderer::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
             } else {
@@ -154,7 +154,7 @@ public:
                 // We should draw every frame in GL backend for non-buffer mode
                 if (webView()->didCompositeBefore()) {
                     m_webView->markNeedsCompositeConsiderInRendering();
-                    PlatformWindow::rendering();
+                    Renderer::rendering();
                 } else {
                     float oldDPR = webView()->screenInfo().devicePixelRatio;
                     webView()->mutableScreenInfo().devicePixelRatio = 1;
@@ -200,7 +200,7 @@ public:
         glMakeCurrent();
         if (m_glPaintingSurface) {
             STARFISH_LOG_INFO(
-                "WindowImplGL::willCompositing - remove "
+                "RendererSoftware::willCompositing - remove "
                 "m_glPaintingSurface");
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
@@ -245,12 +245,12 @@ public:
         Compositor::destroyCompositorContext(this, m_compostiorContext);
         m_compostiorContext = nullptr;
 
-        PlatformWindow::pause();
+        Renderer::pause();
     }
 
     virtual void onClearDrawnBuffers() override
     {
-        STARFISH_LOG_INFO("WindowImplGL::onClearDrawnBuffers");
+        STARFISH_LOG_INFO("RendererSoftware::onClearDrawnBuffers");
 
         if (m_compostiorContext) {
             glMakeCurrent();
@@ -275,9 +275,9 @@ public:
     int m_offsetYDueToSoftwareKeyboard;
 };
 
-Canvas* WindowImplGL::preparePainting()
+Canvas* RendererSoftware::preparePainting()
 {
-    LongTaskFinder p("WindowImplGL::preparePainting", 1);
+    LongTaskFinder p("RendererSoftware::preparePainting", 1);
 
     float DPR = webView()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
@@ -292,12 +292,12 @@ Canvas* WindowImplGL::preparePainting()
     return Canvas::create(webView(), m_glPaintingSurface);
 }
 
-Compositor* WindowImplGL::prepareCompositor()
+Compositor* RendererSoftware::prepareCompositor()
 {
-    LongTaskFinder p("WindowImplGL::prepareCompositor", 1);
+    LongTaskFinder p("RendererSoftware::prepareCompositor", 1);
     if (m_glPaintingSurface) {
         STARFISH_LOG_INFO(
-            "WindowImplGL::prepareCompositor - remove "
+            "RendererSoftware::prepareCompositor - remove "
             "m_glPaintingSurface");
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
@@ -305,10 +305,10 @@ Compositor* WindowImplGL::prepareCompositor()
     return Compositor::create3D(webView(), m_compostiorContext);
 }
 
-PlatformWindow* PlatformWindowFactory::createGl(Starfish* starfish,
-                                                uint32_t width, uint32_t height)
+Renderer* RendererFactory::createGL(Starfish* starfish, uint32_t width,
+                                    uint32_t height)
 {
-    return new WindowImplGL(starfish, width, height);
+    return new RendererSoftware(starfish, width, height);
 }
 
 } // namespace Starfish

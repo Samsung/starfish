@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef PORT_WINDOW_BACKEND_HEADLESS
+#ifdef STARFISH_EFL_HEADLESS
 
 #include <SkMatrix.h>
 
@@ -35,8 +35,8 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
-#include "platform/window/PlatformWindowFactory.h"
+#include "core/modules/renderer/Renderer.h"
+#include "core/modules/renderer/RendererFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -51,10 +51,10 @@ void screenShotInRendering(WebView*, char const*, std::function<void()>)
 }
 #endif
 
-class WindowImplHeadless : public PlatformWindow {
+class RendererHeadless : public Renderer {
 public:
-    WindowImplHeadless(Starfish* starfish, uint32_t width, uint32_t height)
-        : PlatformWindow(starfish)
+    RendererHeadless(Starfish* starfish, uint32_t width, uint32_t height)
+        : Renderer(starfish)
         , m_width(width)
         , m_height(height)
     {
@@ -75,7 +75,7 @@ public:
         if (w != m_width || h != m_height) {
             m_width = w;
             m_height = h;
-            PlatformWindow::resizeTo(w, h);
+            Renderer::resizeTo(w, h);
         }
     }
 
@@ -95,20 +95,19 @@ public:
     uint32_t m_height;
 };
 
-PlatformWindow* PlatformWindowFactory::createHeadless(Starfish* starfish,
-                                                      uint32_t width,
-                                                      uint32_t height)
+Renderer* RendererFactory::createHeadless(Starfish* starfish, uint32_t width,
+                                          uint32_t height)
 {
-    return new WindowImplHeadless(starfish, width, height);
+    return new RendererHeadless(starfish, width, height);
 }
 
-Canvas* WindowImplHeadless::preparePainting()
+Canvas* RendererHeadless::preparePainting()
 {
     Canvas* canvas = Canvas::create(webView(), (CanvasSurface*)NULL);
     return canvas;
 }
 
-Compositor* WindowImplHeadless::prepareCompositor()
+Compositor* RendererHeadless::prepareCompositor()
 {
     return Compositor::create2D(webView(), m_compostiorContext,
                                 (CanvasSurface*)NULL);

@@ -80,20 +80,20 @@ Compositor* Compositor::create2D(WebView* starfish, CompositorContext* ctx,
     return nullptr;
 }
 
-CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
+CompositorContext* Compositor::initCompositorContext(Renderer* renderer)
 {
     switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
 #ifdef PORT_COMPOSITOR_BACKEND_CAIRO
     case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::initCompositorContextCairo(wnd);
+        return CompositorFactory::initCompositorContextCairo(renderer);
 #endif
 #ifdef PORT_COMPOSITOR_BACKEND_GL
     case PORT_COMPOSITOR_BACKEND::GL:
-        return CompositorFactory::initCompositorContextGl(wnd);
+        return CompositorFactory::initCompositorContextGl(renderer);
 #endif
 #ifdef PORT_COMPOSITOR_BACKEND_MOCK
     case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::initCompositorContextMock(wnd);
+        return CompositorFactory::initCompositorContextMock(renderer);
 #endif
     default:
         break;
@@ -102,21 +102,21 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
     return nullptr;
 }
 
-void Compositor::destroyCompositorContext(PlatformWindow* wnd,
+void Compositor::destroyCompositorContext(Renderer* renderer,
                                           CompositorContext* ctx)
 {
     switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
 #ifdef PORT_COMPOSITOR_BACKEND_CAIRO
     case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::destroyCompositorContextCairo(wnd, ctx);
+        return CompositorFactory::destroyCompositorContextCairo(renderer, ctx);
 #endif
 #ifdef PORT_COMPOSITOR_BACKEND_GL
     case PORT_COMPOSITOR_BACKEND::GL:
-        return CompositorFactory::destroyCompositorContextGl(wnd, ctx);
+        return CompositorFactory::destroyCompositorContextGl(renderer, ctx);
 #endif
 #ifdef PORT_COMPOSITOR_BACKEND_MOCK
     case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::destroyCompositorContextMock(wnd, ctx);
+        return CompositorFactory::destroyCompositorContextMock(renderer, ctx);
 #endif
     default:
         break;

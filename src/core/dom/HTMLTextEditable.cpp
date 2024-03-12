@@ -28,7 +28,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/Timer.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -83,14 +83,14 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
                     e->setNeedsPainting();
                 },
                 500, this);
-            webView()->platformWindow()->showSoftwareKeyboardIfPossible();
+            webView()->renderer()->showSoftwareKeyboardIfPossible();
         } else if (oldGotFocus && !newGotFocus) {
-            webView()->platformWindow()->hideSoftwareKeyboardIfPossible();
+            webView()->renderer()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
         } else if (oldGotFocus && newGotFocus) {
-            webView()->platformWindow()->showSoftwareKeyboardIfPossible();
+            webView()->renderer()->showSoftwareKeyboardIfPossible();
         }
     }
 }
@@ -190,7 +190,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 isUseful = true;
             }
             resetCurrentContext();
-            webView()->platformWindow()->hideSoftwareKeyboardIfPossible();
+            webView()->renderer()->hideSoftwareKeyboardIfPossible();
         } break;
         default: {
             if (String::isASCIIPrintableKey(

@@ -47,54 +47,43 @@ bool g_fireOnloadEvent = false;
 Profiler g_profiler;
 #endif
 
-#if defined(STARFISH_EFL_CAIRO)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
-#elif defined(STARFISH_EFL_CAIRO_GL)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+#if defined(STARFISH_EFL_CAIRO_GL)
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_UV_CAIRO_GL)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_EFL_HEADLESS)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::HEADLESS);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::MOCK);
 #elif defined(STARFISH_DALI)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
 #elif defined(STARFISH_TIZEN_WEARABLE_WIDGET)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
 #elif defined(STARFISH_ANDROID)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_WINDOWS_UWP)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_WINDOWS)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_FLUTTER)
-int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #endif
 
 static bool g_starfishGlobalInit = false;
 
-Starfish::Starfish(const char* localStorageFilePath,
-                   const char* cookieStoreFilePath,
-                   const char* httpCacheDirectorypath)
-    : m_localStorageFilePath(
-          String::fromUTF8(localStorageFilePath, strlen(localStorageFilePath)))
+Starfish::Starfish(const StarfishConfiguration& config)
+    : m_localStorageDataFilePath(
+          String::fromUTF8(config.localStorageDataFilePath,
+                           strlen(config.localStorageDataFilePath)))
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , m_httpCache(nullptr)
 #endif
     , m_webViewInstanceCount(0)
-    , m_gcFrequency(BDWGC_FREE_SPACE_DIVISOR)
+    , m_gcFrequency(config.gcFrequency)
+    , m_backend(config.backend)
+    , m_rendererType(config.rendererType)
 {
-    STARFISH_RELEASE_ASSERT(localStorageFilePath != nullptr);
-    STARFISH_RELEASE_ASSERT(cookieStoreFilePath != nullptr);
-    STARFISH_RELEASE_ASSERT(httpCacheDirectorypath != nullptr);
+    STARFISH_RELEASE_ASSERT(config.localStorageDataFilePath != nullptr);
+    STARFISH_RELEASE_ASSERT(config.cookieStoreDataFilePath != nullptr);
+    STARFISH_RELEASE_ASSERT(config.httpCacheDataDirectorypath != nullptr);
 
     registerMainThread();
     if (!g_starfishGlobalInit) {
@@ -122,11 +111,12 @@ Starfish::Starfish(const char* localStorageFilePath,
     m_atomicStringMap.insert(String::emptyString);
     m_staticStrings = new StaticStrings(this);
 
-    initNetworkSharedResourceManager(cookieStoreFilePath);
+    initNetworkSharedResourceManager(config.cookieStoreDataFilePath);
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (strlen(httpCacheDirectorypath) != 0) {
-        auto nullable = HTTPCache::getInstance((String::fromUTF8(
-            httpCacheDirectorypath, strlen(httpCacheDirectorypath))));
+    if (strlen(config.httpCacheDataDirectorypath) != 0) {
+        auto nullable = HTTPCache::getInstance(
+            (String::fromUTF8(config.httpCacheDataDirectorypath,
+                              strlen(config.httpCacheDataDirectorypath))));
         if (nullable.hasValue()) {
             m_httpCache = nullable.getValue();
         }
@@ -172,14 +162,15 @@ void Starfish::destroy()
     GC_FREE(this);
 }
 
-void Starfish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
+void Starfish::initNetworkSharedResourceManager(
+    const char* cookieStoreDataFilePath)
 {
     // NetworkSharedResourceManager is singleton, So do not hold the instance.
-    if (cookieStoreFilePath) {
-        // Disable to store cookies as a file If m_cookieStoreFilePath is
+    if (cookieStoreDataFilePath) {
+        // Disable to store cookies as a file If m_cookieStoreDataFilePath is
         // nullptr or empty string
         NetworkSharedResourceManager::getInstance()->setCookieStoreFilePath(
-            cookieStoreFilePath);
+            cookieStoreDataFilePath);
     }
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }

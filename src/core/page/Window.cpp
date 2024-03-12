@@ -56,7 +56,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
-#include "platform/window/PlatformWindow.h"
+#include "core/modules/renderer/Renderer.h"
 #include "binding/ScriptBindingSecurity.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -590,10 +590,10 @@ void Window::simulateClick(float x, float y)
 {
     TouchData data(x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio);
-    webView()->platformWindow()->dispatchTouchEvent(
-        TouchEventKind::TouchEventStart, &data, 1);
-    webView()->platformWindow()->dispatchTouchEvent(
-        TouchEventKind::TouchEventEnd, &data, 1);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventStart,
+                                              &data, 1);
+    webView()->renderer()->dispatchTouchEvent(TouchEventKind::TouchEventEnd,
+                                              &data, 1);
 }
 
 void Window::simulateMouseDown(float x, float y)
@@ -602,8 +602,8 @@ void Window::simulateMouseDown(float x, float y)
                    MouseButtonsValue::LeftButtonDown,
                    x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio, 0);
-    webView()->platformWindow()->dispatchMouseEvent(
-        MouseEventKind::MouseEventDown, data);
+    webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventDown,
+                                              data);
 }
 
 void Window::simulateMouseUp(float x, float y)
@@ -611,16 +611,16 @@ void Window::simulateMouseUp(float x, float y)
     MouseData data(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
                    x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio, 0);
-    webView()->platformWindow()->dispatchMouseEvent(
-        MouseEventKind::MouseEventUp, data);
+    webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventUp,
+                                              data);
 }
 
 void Window::simulateVisibilitychange(bool show)
 {
     if (show) {
-        webView()->platformWindow()->resume();
+        webView()->renderer()->resume();
     } else {
-        webView()->platformWindow()->pause();
+        webView()->renderer()->pause();
     }
 }
 
@@ -701,7 +701,7 @@ void Window::alert(String* message)
     p->title =
         document()->location()->url()->origin()->toUTF8NonGCString().data();
     p->message = message->toUTF8NonGCString().data();
-    webView()->platformWindow()->callHandler(WindowHandlerShowAlert, (void*)p);
+    webView()->renderer()->callHandler(WindowHandlerShowAlert, (void*)p);
 }
 
 void Window::processUrlFragment(String* name)
@@ -921,8 +921,8 @@ NodeList* Window::ensureFrames()
 void Window::screenShot(std::string filePath, void (*callback)(void*),
                         void* data)
 {
-    browsingContext()->webView()->platformWindow()->screenShot(filePath,
-                                                               callback, data);
+    browsingContext()->webView()->renderer()->screenShot(filePath, callback,
+                                                         data);
 }
 #endif
 

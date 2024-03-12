@@ -35,7 +35,6 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
