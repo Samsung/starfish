@@ -41,6 +41,8 @@ public:
     static WorkerAgent* instance();
     static bool isCreated();
 
+    virtual void start() = 0;
+
     virtual void destroy();
 
     void registerOnStatusChangedHandler(WorkerAgentStateHandler cb);

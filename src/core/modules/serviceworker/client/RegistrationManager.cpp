@@ -39,7 +39,9 @@ RegistrationManager::RegistrationManager(WorkerSettings* settings)
     refreshRegistrationList();
 
     settings->addOnChangeDataDirectoryPathCallback(
-        [this](const std::string& path) { refreshRegistrationList(path); });
+        [this](const std::string& curPath, const std::string& newPath) {
+            refreshRegistrationList(newPath);
+        });
 }
 
 void RegistrationManager::refreshRegistrationList(const std::string path)

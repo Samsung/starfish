@@ -91,7 +91,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
     Message::init();
 
     m_perProcess = perProcess;
-    m_perProcess->initialize();
+    m_perProcess->initialize(PATH_SERVICE_WORKER_IPC_DIR);
     m_pushServiceAgent = new PushServiceAgent();
     m_registrationManager =
         new RegistrationManager(perProcess->workerSettings());
@@ -166,7 +166,8 @@ bool ServiceWorkerProcessManager::processExist(const std::string identifier)
     STARFISH_ASSERT_NOT_REACHED();
 #endif
     // Here we use the socket handle promised exists.
-    auto handlePath = Connection::Config::getHandlePath(identifier);
+    auto handlePath =
+        m_perProcess->processResource()->getIPCHandlePath(identifier);
     bool exist = isFile(handlePath);
     TRACE(SVCWORKER, "result: ", exist);
     return exist;
@@ -183,7 +184,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::shared_ptr<ProcessData> processData = nullptr;
 
     std::string encodedOrigin = Base64Utils::encodeBase64(origin);
-    std::string address = Connection::Config::createAddress(encodedOrigin);
+    std::string address =
+        m_perProcess->processResource()->createIPCAddress(encodedOrigin);
 
     TRACE(SVCWORKER, "origin", origin);
     TRACE(SVCWORKER, "encodedOrigin", encodedOrigin);

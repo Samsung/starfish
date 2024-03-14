@@ -27,6 +27,7 @@
 namespace Starfish {
 
 class SharedWorkerAgent;
+class SharedWorkerAgentServer;
 class Starfish;
 
 class SharedWorkerAgent final : public WorkerAgent {
@@ -35,10 +36,15 @@ class SharedWorkerAgent final : public WorkerAgent {
 public:
     static SharedWorkerAgent* instance();
 
+    void start() override;
+
+    void destroy() override;
+
 private:
     SharedWorkerAgent(Starfish* starfish);
 
     static SharedWorkerAgent* m_instance;
+    SharedWorkerAgentServer* m_server;
 };
 } // namespace Starfish
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,21 +17,37 @@
  *  USA
  */
 
-#pragma once
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#ifndef __StarfishSharedWorkerConnection__
+#define __StarfishSharedWorkerConnection__
 
-#ifdef STARFISH_ENABLE_WORKER
+#include "core/modules/worker/util/network/Connection.h"
 
-#include "core/util/GlobalOptions.h"
-#include "core/modules/worker/util/Trace.h"
+namespace Starfish {
 
-// PATHS
-#define PATH_TMP_DIR "/tmp"
-#define PATH_IPC_DIR "/.ipc"
-#define PATH_WORKER_DATA_DIR "/starfish-worker-data"
-#define PATH_SERVICE_WORKER_IPC_DIR "/.ipc-service-worker"
-#define PATH_SHARED_WORKER_IPC_DIR "/.ipc-shared-worker"
+class PerProcess;
 
-// NAMES
-#define WORKER_IPC_PROCESS_NAME ".ipc"
+class SharedWorkerConnection : public Connection {
+public:
+    enum class State { None, Start, Stop };
 
+    SharedWorkerConnection(PerProcess* perProcess,
+                           const std::string& lastIPCAddress, int protocol);
+
+    bool bind();
+
+    bool connect();
+
+    void close();
+
+protected:
+    PerProcess* m_perProcess;
+    const std::string m_ipcAddress;
+    State m_state;
+    int m_endpointId;
+};
+
+} // namespace Starfish
+
+#endif
 #endif

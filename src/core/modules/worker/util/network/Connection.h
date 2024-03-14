@@ -30,18 +30,8 @@ class Socket;
 
 class Connection : public IORunnable::Client {
 public:
-    class Config {
-    public:
-        static void setHandleDir(std::string path);
-        static std::string getHandleDir();
-        static std::string getHandlePath(const std::string& last = "");
-        static std::string createAddress(const std::string& last = "");
-
-    private:
-        static std::string s_handlePath;
-    };
-
     Connection();
+    Connection(int protocol);
 
     void send(const char* data, size_t len);
     void onReceived(Socket* socket, const char* data, size_t len) override;

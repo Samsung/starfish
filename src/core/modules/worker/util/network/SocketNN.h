@@ -19,15 +19,21 @@
 
 #if defined(STARFISH_USE_WORKER_PROCESS) && !defined(__StarfishSocketNN__)
 #define __StarfishSocketNN__
+
 #include "core/modules/networking/Socket.h"
 
 namespace Starfish {
 
 #define SCK_WAIT 0
 #define SCK_DONTWAIT 1
+#define SOCKETNN_INVALID_END_POINT -1
 
 class SocketNN : public Socket {
 public:
+    static const int kReplyProtocol;
+    static const int kRequestProtocol;
+    static const int kPairProtocol;
+
     class Exception : public Socket::Exception {
     public:
         Exception();

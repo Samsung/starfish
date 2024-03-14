@@ -78,7 +78,9 @@ static void initializeWorkerProcess(const std::string &dataDirectoryPath,
                     ->workerSettings()
                     ->setDataDirectoryPath(workerDataDirPath);
 
-                WorkerAgent::create(LWEDelegate::g_starfishInstance);
+                WorkerAgent *agent =
+                    WorkerAgent::create(LWEDelegate::g_starfishInstance);
+                agent->start();
             }
         });
 }

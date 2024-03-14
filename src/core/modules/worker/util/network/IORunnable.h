@@ -56,6 +56,7 @@ public:
     void stop() override;
     void setStopper(std::future<void>&& stopper) override;
     void addClient(Client* connection);
+    void removeClient(Client* connection);
 
 private:
     bool stopRequested();

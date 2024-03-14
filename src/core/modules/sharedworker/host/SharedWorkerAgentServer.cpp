@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,21 +17,26 @@
  *  USA
  */
 
-#pragma once
+#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
-#ifdef STARFISH_ENABLE_WORKER
+#include "StarfishConfig.h"
 
-#include "core/util/GlobalOptions.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/util/network/SocketNN.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
 
-// PATHS
-#define PATH_TMP_DIR "/tmp"
-#define PATH_IPC_DIR "/.ipc"
-#define PATH_WORKER_DATA_DIR "/starfish-worker-data"
-#define PATH_SERVICE_WORKER_IPC_DIR "/.ipc-service-worker"
-#define PATH_SHARED_WORKER_IPC_DIR "/.ipc-shared-worker"
+namespace Starfish {
 
-// NAMES
-#define WORKER_IPC_PROCESS_NAME ".ipc"
+SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess)
+    : SharedWorkerConnection(perProcess, WORKER_IPC_PROCESS_NAME,
+                             SocketNN::kReplyProtocol)
+{
+}
 
-#endif
+void SharedWorkerAgentServer::start()
+{
+    bind();
+}
+
+} // namespace Starfish
+#endif // #ifdef STARFISH_WEBWORKER_HOST

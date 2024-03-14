@@ -25,8 +25,8 @@ namespace Starfish {
 class WorkerSettings : public gc {
 public:
     using ProcessExecutorCallback = std::function<bool()>;
-    using OnChangeDataDirectoryPathCallback =
-        std::function<void(const std::string&)>;
+    using OnChangeDataDirectoryPathCallback = std::function<void(
+        const std::string& curPath, const std::string& newPath)>;
 
     static std::string getDefaultDataDirectoryPath();
 

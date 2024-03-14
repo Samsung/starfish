@@ -32,9 +32,6 @@ WorkerHostManager::WorkerHostManager()
     : WorkerManager()
 {
     m_workerSettings->setThreadPoolSize(s_threadPoolSize);
-    m_perProcess->initialize();
-
-    createLocalStorageRootDir();
 }
 
 void WorkerHostManager::createLocalStorageRootDir()
