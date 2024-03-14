@@ -39,35 +39,72 @@ namespace Starfish {
 
 #define IO_EVENT_POLLING_TIMEOUT_MS 300
 
-class ProcessResource {
-public:
-    static void acquire(const std::string& rootPath)
-    {
-        // TODO: consider making parent directories as needed.
-        LocalStorageHelper::File::mkdirIfNotExists(rootPath);
-        std::string path = rootPath;
+ProcessResource::ProcessResource(WorkerSettings* settings,
+                                 const std::string& resourceDirPath)
+    : m_workerSettings(settings)
+    , m_resourceDirPath(resourceDirPath)
+{
+}
 
-        path += PATH_IPC_DIR;
-        // create a directory for ipc handles
-        auto dir = PlatformDirectory::create();
-        // TODO: Replace creating a GC-allocated string with `std::string`.
-        LocalStorageHelper::File::mkdirIfNotExists(path);
-        // set the above directory path
-        Connection::Config::setHandleDir(path);
-    }
+const std::string ProcessResource::getIPCHandlePath(const std::string& last)
+{
+    std::stringstream ss;
 
-    static void release()
-    {
-        TRACE_SCOPE(CONFIG);
-        // release the directory for ipc handles
-        auto path = Connection::Config::getHandleDir();
-        // TODO: Replace creating a GC-allocated string with `std::string`.
-        if (!GlobalOptions::instance().has("--leave-ipc-handle")) {
-            LocalStorageHelper::File::remove(path);
-            TRACE(IPC, "Remove", path);
-        }
+    ss << m_workerSettings->dataDirectoryPath() << m_resourceDirPath << "/";
+
+    // Appends more parts.
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    ss << "host";
+#else
+    ss << last;
+#endif
+    return ss.str();
+}
+
+const std::string ProcessResource::createIPCAddress(const std::string& last)
+{
+    std::stringstream ss;
+
+#ifdef STARFISH_USE_WORKER_PROCESS
+    // For Inter-Process Communication
+    ss << "ipc://" << getIPCHandlePath(last);
+#else
+    // For In-Process Communication
+    ss << "inproc://sw/";
+#endif
+
+    TRACE(PERPROC, ss.str());
+    return ss.str();
+}
+
+void ProcessResource::acquire()
+{
+    // TODO: consider making parent directories as needed.
+    LocalStorageHelper::File::mkdirIfNotExists(
+        m_workerSettings->dataDirectoryPath());
+
+    LocalStorageHelper::File::mkdirIfNotExists(getIPCHandlePath());
+
+    m_workerSettings->addOnChangeDataDirectoryPathCallback(
+        [this](const std::string& curPath, const std::string& newPath) {
+            LocalStorageHelper::File::remove(curPath);
+            LocalStorageHelper::File::mkdirIfNotExists(newPath);
+
+            LocalStorageHelper::File::mkdirIfNotExists(getIPCHandlePath());
+            TRACE(IPC, "Create", getIPCHandlePath());
+        });
+}
+
+void ProcessResource::release()
+{
+    TRACE_SCOPE(PERPROC);
+    // release the directory for ipc handles
+
+    if (!GlobalOptions::instance().has("--leave-ipc-handle")) {
+        LocalStorageHelper::File::remove(getIPCHandlePath());
+        TRACE(IPC, "Remove", getIPCHandlePath());
     }
-};
+}
 
 PerProcess::PerProcess(WorkerSettings* settings)
 {
@@ -86,19 +123,14 @@ PerProcess::PerProcess(WorkerSettings* settings)
     m_workerSettings = settings;
 }
 
-void PerProcess::initialize()
+void PerProcess::initialize(const std::string& resourceDirPath)
 {
     TRACE_SCOPE(PERPROC);
     if (m_isInitialized) {
         return;
     }
 
-    ProcessResource::acquire(m_workerSettings->dataDirectoryPath());
-    m_workerSettings->addOnChangeDataDirectoryPathCallback(
-        [](const std::string& path) {
-            ProcessResource::release();
-            ProcessResource::acquire(path);
-        });
+    m_processResource = new ProcessResource(m_workerSettings, resourceDirPath);
 
     m_messageLoop = MessageLoop::create();
 
@@ -130,8 +162,6 @@ void PerProcess::destroy()
 
     m_threadPool->destroy();
     m_messageLoop->destroy();
-
-    ProcessResource::release();
 }
 
 Nullable<WorkerSettings::ProcessExecutorCallback>

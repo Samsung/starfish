@@ -29,8 +29,10 @@
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerHostManager.h"
 #include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/PerProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/notification/NotificationService.h"
@@ -74,11 +76,21 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
 {
     TRACE_SCOPE(SVCWORKER);
 
+    m_workerHostManager->perProcess()->initialize(PATH_SERVICE_WORKER_IPC_DIR);
+    m_workerHostManager->perProcess()->processResource()->acquire();
+
     m_SWServer = new ServiceWorkerServer(perProcess());
-    m_SWServer->start();
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     m_castServer = CastServer::instance();
+#endif
+}
+
+void ServiceWorkerAgent::start()
+{
+    m_SWServer->start();
+
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
     m_castServer->start();
 #endif
 }
@@ -107,6 +119,8 @@ void ServiceWorkerAgent::destroy()
         webWorker->destroy();
     }
     m_webWorkerList.clear();
+
+    m_workerHostManager->perProcess()->processResource()->release();
 
     WorkerAgent::destroy();
 }

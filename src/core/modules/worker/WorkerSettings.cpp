@@ -63,10 +63,12 @@ void WorkerSettings::setDataDirectoryPath(const std::string &path)
 
     TRACEF(SVCWORKER, "Change worker working dir: %s -> %s",
            m_dataDirectoryPath.data(), path.data());
+
+    const std::string curPath = m_dataDirectoryPath;
     m_dataDirectoryPath = path;
 
     for (auto cb : m_onChangeDataDirectoryPathCallbacks) {
-        cb(m_dataDirectoryPath);
+        cb(curPath, m_dataDirectoryPath);
     }
 }
 

@@ -32,6 +32,23 @@ class IORunnable;
 class MessageLoop;
 class WorkerSettings;
 
+class ProcessResource : public gc {
+public:
+    const std::string getIPCHandlePath(const std::string &last = "");
+    const std::string createIPCAddress(const std::string &last = "");
+
+    ProcessResource(WorkerSettings *settings,
+                    const std::string &resourceDirPath);
+
+    void acquire();
+
+    void release();
+
+private:
+    WorkerSettings *m_workerSettings;
+    const std::string m_resourceDirPath;
+};
+
 class PerProcess : public gc {
 public:
     PerProcess(WorkerSettings *settings);
@@ -41,8 +58,9 @@ public:
     DEFINE_GETTER(ThreadPool *, threadPool);
     DEFINE_GETTER(MessageLoop *, messageLoop);
     DEFINE_GETTER(WorkerSettings *, workerSettings);
+    DEFINE_GETTER(ProcessResource *, processResource);
 
-    void initialize();
+    void initialize(const std::string &resourceDirPath);
     void destroy();
 
     Nullable<WorkerSettings::ProcessExecutorCallback>
@@ -54,6 +72,7 @@ private:
     IThread *m_ioThread{ nullptr };
     IORunnable *m_ioRunnable{ nullptr };
     WorkerSettings *m_workerSettings{ nullptr };
+    ProcessResource *m_processResource{ nullptr };
     bool m_isInitialized{ false };
 };
 

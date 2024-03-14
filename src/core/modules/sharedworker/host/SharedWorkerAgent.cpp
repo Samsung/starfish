@@ -24,6 +24,10 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/WorkerConfig.h"
+#include "core/modules/worker/PerProcess.h"
+#include "core/modules/worker/host/WorkerHostManager.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 
 namespace Starfish {
@@ -51,6 +55,27 @@ SharedWorkerAgent* SharedWorkerAgent::instance()
 SharedWorkerAgent::SharedWorkerAgent(Starfish* starfish)
     : WorkerAgent(starfish)
 {
+    PerProcess* perProcess = m_workerHostManager->perProcess();
+    perProcess->initialize(PATH_SHARED_WORKER_IPC_DIR);
+    perProcess->processResource()->acquire();
+
+    m_server = new SharedWorkerAgentServer(perProcess);
+}
+
+void SharedWorkerAgent::start()
+{
+    m_server->start();
+}
+
+void SharedWorkerAgent::destroy()
+{
+    TRACE(SHAREDWORKER);
+
+    m_server->close();
+
+    m_workerHostManager->perProcess()->processResource()->release();
+
+    WorkerAgent::destroy();
 }
 
 } // namespace Starfish

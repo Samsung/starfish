@@ -41,6 +41,8 @@ class ServiceWorkerAgent final : public WorkerAgent {
 public:
     static ServiceWorkerAgent* instance();
 
+    void start() override;
+
     void destroy() override;
 
     void onWebWorkerTerminated(WebWorker* worker);

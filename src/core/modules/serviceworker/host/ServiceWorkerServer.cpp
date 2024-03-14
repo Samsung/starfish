@@ -85,7 +85,7 @@ void ServiceWorkerServer::start()
     registerConnection(m_connection);
 
     m_perProcess->ioRunnable()->addClient(m_connection);
-    std::string address = Connection::Config::createAddress();
+    std::string address = m_perProcess->processResource()->createIPCAddress();
     m_connection->socket()->bind(address.c_str());
 }
 
@@ -102,7 +102,8 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     registerConnection(m_connection);
 
-    std::string address = Connection::Config::createAddress(encodedOrigin);
+    std::string address =
+        m_perProcess->processResource()->createIPCAddress(encodedOrigin);
 
     TRACE(HOST, "Origin: ", origin);
 

@@ -27,5 +27,11 @@
 // PATHS
 #define PATH_TMP_DIR "/tmp"
 #define PATH_IPC_DIR "/.ipc"
+#define PATH_WORKER_DATA_DIR "/starfish-worker-data"
+#define PATH_SERVICE_WORKER_IPC_DIR "/.ipc-service-worker"
+#define PATH_SHARED_WORKER_IPC_DIR "/.ipc-shared-worker"
+
+// NAMES
+#define WORKER_IPC_PROCESS_NAME ".ipc"
 
 #endif

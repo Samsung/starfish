@@ -202,6 +202,24 @@ void IORunnable::addClient(Client* connection)
     m_cv.notify_one();
 }
 
+void IORunnable::removeClient(Client* connection)
+{
+    TRACE_SCOPE(SOCKET);
+    std::unique_lock<std::mutex> lock(m_mutex);
+
+    auto iter = std::find(m_clients.begin(), m_clients.end(), connection);
+    if (iter == m_clients.end()) {
+        return;
+    }
+
+    m_clients.erase(iter);
+
+    m_isFdUpdateNeeded = true;
+
+    lock.unlock();
+    m_cv.notify_one();
+}
+
 void IORunnable::closeClients()
 {
     for (const auto& connection : m_clients) {

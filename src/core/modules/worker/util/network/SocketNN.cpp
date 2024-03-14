@@ -31,6 +31,10 @@
 
 namespace Starfish {
 
+const int SocketNN::kReplyProtocol = NN_REP;
+const int SocketNN::kRequestProtocol = NN_REQ;
+const int SocketNN::kPairProtocol = NN_PAIR;
+
 SocketNN::Exception::Exception()
     : Socket::Exception::Exception(nn_errno())
 {

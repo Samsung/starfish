@@ -57,7 +57,6 @@ struct ProcessData {
 class ServiceWorkerProcessManager : public gc {
 public:
     static ServiceWorkerProcessManager* instance();
-    static std::string createAddress(const std::string& lastAddress = "");
 
     void init(PerProcess* perProcess);
     void destroy();
