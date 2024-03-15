@@ -1,0 +1,12 @@
+// https://www.w3.org/TR/SVG11/single-page.html#struct-InterfaceSVGSwitchElement
+
+// interface SVGSwitchElement : SVGElement,
+//                              SVGTests,
+//                              SVGLangSpace,
+//                              SVGExternalResourcesRequired,
+//                              SVGStylable,
+//                              SVGTransformable {
+// };
+
+interface SVGSwitchElement : SVGElement {
+};
