@@ -22,7 +22,6 @@
 #ifndef __StarfishGLContext__
 #define __StarfishGLContext__
 
-#include "platform/canvas/webgl/GLES.h" // For GLuint
 #include "platform/canvas/webgl/XGLUtil.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 

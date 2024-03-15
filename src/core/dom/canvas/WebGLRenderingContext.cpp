@@ -30,6 +30,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/util/String.h"
+#include "platform/canvas/webgl/GLES.h"
 #include "platform/canvas/webgl/GLContext.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 #include "core/dom/canvas/WebGLActiveInfo.h"

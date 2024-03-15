@@ -22,7 +22,7 @@
 #ifndef __StarfishGLUtil__
 #define __StarfishGLUtil__
 
-#include "platform/canvas/webgl/GLES.h"
+#include "platform/canvas/gl/GLTypes.h"
 #include "platform/canvas/webgl/SurfaceCreationScope.h"
 #include <memory>
 

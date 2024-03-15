@@ -20,11 +20,9 @@
 #ifndef __StarfishSurfaceCreationScope__
 #define __StarfishSurfaceCreationScope__
 
-#include <memory>
+#include "platform/canvas/gl/GLTypes.h"
 
-#ifndef GLuint
-typedef unsigned int GLuint;
-#endif
+#include <memory>
 
 namespace Starfish {
 
