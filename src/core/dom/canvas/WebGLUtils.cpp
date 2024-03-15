@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "WebGLUtils.h"
-#include "platform/canvas/webgl/GLES.h"
+#include "platform/canvas/gl/IncludeGL.h"
 
 namespace Starfish {
 
