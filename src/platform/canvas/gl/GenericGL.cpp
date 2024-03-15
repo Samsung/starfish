@@ -41,6 +41,12 @@ public:
         glAttachShader(program, shader);
     }
 
+    virtual void bindAttribLocation(GLuint program, GLuint index,
+                                    const GLchar *name) override
+    {
+        glBindAttribLocation(program, index, name);
+    }
+
     virtual void bindBuffer(GLenum target, GLuint buffer) override
     {
         glBindBuffer(target, buffer);
@@ -61,15 +67,50 @@ public:
         glBindTexture(target, texture);
     }
 
+    virtual void blendColor(GLfloat red, GLfloat green, GLfloat blue,
+                            GLfloat alpha) override
+    {
+        glBlendColor(red, green, blue, alpha);
+    }
+
+    virtual void blendEquation(GLenum mode) override
+    {
+        glBlendEquation(mode);
+    }
+
+    virtual void blendEquationSeparate(GLenum modeRGB,
+                                       GLenum modeAlpha) override
+    {
+        glBlendEquationSeparate(modeRGB, modeAlpha);
+    }
+
     virtual void blendFunc(GLenum sfactor, GLenum dfactor) override
     {
         glBlendFunc(sfactor, dfactor);
+    }
+
+    virtual void blendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB,
+                                   GLenum sfactorAlpha,
+                                   GLenum dfactorAlpha) override
+    {
+        glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
     }
 
     virtual void bufferData(GLenum target, GLsizeiptr size, const void *data,
                             GLenum usage) override
     {
         glBufferData(target, size, data, usage);
+    }
+
+    virtual void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+                               const void *data) override
+    {
+        glBufferSubData(target, offset, size, data);
+    }
+
+    virtual GLenum checkFramebufferStatus(GLenum target) override
+    {
+        return glCheckFramebufferStatus(target);
     }
 
     virtual void clear(GLbitfield mask) override
@@ -81,6 +122,11 @@ public:
                             GLclampf alpha) override
     {
         glClearColor(red, green, blue, alpha);
+    }
+
+    virtual void clearDepthf(GLfloat d) override
+    {
+        glClearDepthf(d);
     }
 
     virtual void clearStencil(GLint s) override
@@ -105,6 +151,12 @@ public:
                                   GLsizei *length, char *infolog) override
     {
         glGetShaderInfoLog(shader, bufsize, length, infolog);
+    }
+
+    virtual void getShaderSource(GLuint shader, GLsizei bufSize,
+                                 GLsizei *length, GLchar *source)
+    {
+        glGetShaderSource(shader, bufSize, length, source);
     }
 
     virtual void compileShader(GLuint shader) override
@@ -142,6 +194,11 @@ public:
         return glCreateShader(type);
     }
 
+    virtual void cullFace(GLenum mode) override
+    {
+        glCullFace(mode);
+    }
+
     virtual void deleteBuffers(GLsizei n, const GLuint *buffers) override
     {
         glDeleteBuffers(n, buffers);
@@ -172,6 +229,21 @@ public:
     virtual void deleteTextures(GLsizei n, const GLuint *textures) override
     {
         glDeleteTextures(n, textures);
+    }
+
+    virtual void depthFunc(GLenum func) override
+    {
+        glDepthFunc(func);
+    }
+
+    virtual void depthMask(GLboolean flag) override
+    {
+        glDepthMask(flag);
+    }
+
+    virtual void depthRangef(GLfloat n, GLfloat f) override
+    {
+        glDepthRangef(n, f);
     }
 
     virtual void detachShader(GLuint program, GLuint shader) override
@@ -235,9 +307,19 @@ public:
         glFramebufferTexture2D(target, attachment, textarget, texture, level);
     }
 
+    virtual void frontFace(GLenum mode) override
+    {
+        glFrontFace(mode);
+    }
+
     virtual void genBuffers(GLsizei n, GLuint *buffers) override
     {
         glGenBuffers(n, buffers);
+    }
+
+    virtual void generateMipmap(GLenum target) override
+    {
+        glGenerateMipmap(target);
     }
 
     virtual void genFramebuffers(GLsizei n, GLuint *framebuffers) override
@@ -321,6 +403,12 @@ public:
         glGetProgramiv(program, pname, params);
     }
 
+    virtual void getProgramInfoLog(GLuint program, GLsizei bufSize,
+                                   GLsizei *length, GLchar *infoLog) override
+    {
+        glGetProgramInfoLog(program, bufSize, length, infoLog);
+    }
+
     virtual void getRenderbufferParameteriv(GLenum target, GLenum pname,
                                             GLint *params) override
     {
@@ -378,6 +466,11 @@ public:
         glHint(target, mode);
     }
 
+    virtual void lineWidth(GLfloat width) override
+    {
+        glLineWidth(width);
+    }
+
     virtual void linkProgram(GLuint program) override
     {
         glLinkProgram(program);
@@ -386,6 +479,11 @@ public:
     virtual void pixelStorei(GLenum pname, GLint param) override
     {
         glPixelStorei(pname, param);
+    }
+
+    virtual void polygonOffset(GLfloat factor, GLfloat units) override
+    {
+        glPolygonOffset(factor, units);
     }
 
     virtual void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
@@ -405,6 +503,11 @@ public:
         glRenderbufferStorage(target, internalformat, width, height);
     }
 
+    virtual void sampleCoverage(GLfloat value, GLboolean invert) override
+    {
+        glSampleCoverage(value, invert);
+    }
+
     virtual void scissor(GLint x, GLint y, GLsizei width,
                          GLsizei height) override
     {
@@ -416,9 +519,31 @@ public:
         glStencilFunc(func, ref, mask);
     }
 
+    virtual void stencilFuncSeparate(GLenum face, GLenum func, GLint ref,
+                                     GLuint mask) override
+    {
+        glStencilFuncSeparate(face, func, ref, mask);
+    }
+
+    virtual void stencilMask(GLuint mask) override
+    {
+        glStencilMask(mask);
+    }
+
+    virtual void stencilMaskSeparate(GLenum face, GLuint mask) override
+    {
+        glStencilMaskSeparate(face, mask);
+    }
+
     virtual void stencilOp(GLenum fail, GLenum zfail, GLenum zpass) override
     {
         glStencilOp(fail, zfail, zpass);
+    }
+
+    virtual void stencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
+                                   GLenum dppass) override
+    {
+        glStencilOpSeparate(face, sfail, dpfail, dppass);
     }
 
     virtual void texImage2D(GLenum target, GLint level, GLint internalformat,

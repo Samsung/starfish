@@ -42,16 +42,29 @@ public:
 
     virtual void activeTexture(GLenum texture) = 0;
     virtual void attachShader(GLuint program, GLuint shader) = 0;
+    virtual void bindAttribLocation(GLuint program, GLuint index,
+                                    const GLchar *name) = 0;
     virtual void bindBuffer(GLenum target, GLuint buffer) = 0;
     virtual void bindFramebuffer(GLenum target, GLuint framebuffer) = 0;
     virtual void bindRenderbuffer(GLenum target, GLuint renderbuffer) = 0;
     virtual void bindTexture(GLenum target, GLuint texture) = 0;
+    virtual void blendColor(GLfloat red, GLfloat green, GLfloat blue,
+                            GLfloat alpha) = 0;
+    virtual void blendEquation(GLenum mode) = 0;
+    virtual void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha) = 0;
     virtual void blendFunc(GLenum sfactor, GLenum dfactor) = 0;
+    virtual void blendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB,
+                                   GLenum sfactorAlpha,
+                                   GLenum dfactorAlpha) = 0;
     virtual void bufferData(GLenum target, GLsizeiptr size, const void *data,
                             GLenum usage) = 0;
+    virtual void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+                               const void *data) = 0;
+    virtual GLenum checkFramebufferStatus(GLenum target) = 0;
     virtual void clear(GLbitfield mask) = 0;
     virtual void clearColor(GLclampf red, GLclampf green, GLclampf blue,
                             GLclampf alpha) = 0;
+    virtual void clearDepthf(GLfloat d) = 0;
     virtual void clearStencil(GLint s) = 0;
     virtual void colorMask(GLboolean red, GLboolean green, GLboolean blue,
                            GLboolean alpha) = 0;
@@ -60,6 +73,8 @@ public:
                               const GLint *length) = 0;
     virtual void getShaderInfoLog(GLuint shader, GLsizei bufsize,
                                   GLsizei *length, char *infolog) = 0;
+    virtual void getShaderSource(GLuint shader, GLsizei bufSize,
+                                 GLsizei *length, GLchar *source) = 0;
     virtual void compileShader(GLuint shader) = 0;
     virtual void compressedTexImage2D(GLenum target, GLint level,
                                       GLenum internalformat, GLsizei width,
@@ -72,6 +87,7 @@ public:
                                          const void *data) = 0;
     virtual GLuint createProgram(void) = 0;
     virtual GLuint createShader(GLenum type) = 0;
+    virtual void cullFace(GLenum mode) = 0;
     virtual void deleteBuffers(GLsizei n, const GLuint *buffers) = 0;
     virtual void deleteFramebuffers(GLsizei n, const GLuint *framebuffers) = 0;
     virtual void deleteProgram(GLuint program) = 0;
@@ -79,6 +95,9 @@ public:
                                      const GLuint *renderbuffers) = 0;
     virtual void deleteShader(GLuint shader) = 0;
     virtual void deleteTextures(GLsizei n, const GLuint *textures) = 0;
+    virtual void depthFunc(GLenum func) = 0;
+    virtual void depthMask(GLboolean flag) = 0;
+    virtual void depthRangef(GLfloat n, GLfloat f) = 0;
     virtual void detachShader(GLuint program, GLuint shader) = 0;
     virtual void disable(GLenum cap) = 0;
     virtual void disableVertexAttribArray(GLuint index) = 0;
@@ -95,7 +114,9 @@ public:
     virtual void framebufferTexture2D(GLenum target, GLenum attachment,
                                       GLenum textarget, GLuint texture,
                                       GLint level) = 0;
+    virtual void frontFace(GLenum mode) = 0;
     virtual void genBuffers(GLsizei n, GLuint *buffers) = 0;
+    virtual void generateMipmap(GLenum target) = 0;
     virtual void genFramebuffers(GLsizei n, GLuint *framebuffers) = 0;
     virtual void genRenderbuffers(GLsizei n, GLuint *renderbuffers) = 0;
     virtual void genTextures(GLsizei n, GLuint *textures) = 0;
@@ -119,6 +140,8 @@ public:
                                                      GLint *params) = 0;
     virtual void getIntegerv(GLenum pname, GLint *params) = 0;
     virtual void getProgramiv(GLuint program, GLenum pname, GLint *params) = 0;
+    virtual void getProgramInfoLog(GLuint program, GLsizei bufSize,
+                                   GLsizei *length, GLchar *infoLog) = 0;
     virtual void getRenderbufferParameteriv(GLenum target, GLenum pname,
                                             GLint *params) = 0;
     virtual void getShaderiv(GLuint shader, GLenum pname, GLint *params) = 0;
@@ -135,16 +158,25 @@ public:
     virtual void getVertexAttribPointerv(GLuint index, GLenum pname,
                                          void **pointer) = 0;
     virtual void hint(GLenum target, GLenum mode) = 0;
+    virtual void lineWidth(GLfloat width) = 0;
     virtual void linkProgram(GLuint program) = 0;
     virtual void pixelStorei(GLenum pname, GLint param) = 0;
+    virtual void polygonOffset(GLfloat factor, GLfloat units) = 0;
     virtual void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, void *pixels) = 0;
     virtual void releaseShaderCompiler(void) = 0;
     virtual void renderbufferStorage(GLenum target, GLenum internalformat,
                                      GLsizei width, GLsizei height) = 0;
+    virtual void sampleCoverage(GLfloat value, GLboolean invert) = 0;
     virtual void scissor(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
     virtual void stencilFunc(GLenum func, GLint ref, GLuint mask) = 0;
+    virtual void stencilFuncSeparate(GLenum face, GLenum func, GLint ref,
+                                     GLuint mask) = 0;
+    virtual void stencilMask(GLuint mask) = 0;
+    virtual void stencilMaskSeparate(GLenum face, GLuint mask) = 0;
     virtual void stencilOp(GLenum fail, GLenum zfail, GLenum zpass) = 0;
+    virtual void stencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
+                                   GLenum dppass) = 0;
     virtual void texImage2D(GLenum target, GLint level, GLint internalformat,
                             GLsizei width, GLsizei height, GLint border,
                             GLenum format, GLenum type, const void *pixels) = 0;

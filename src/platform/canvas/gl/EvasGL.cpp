@@ -41,6 +41,12 @@ public:
         m_evasGLAPI->glAttachShader(program, shader);
     }
 
+    virtual void bindAttribLocation(GLuint program, GLuint index,
+                                    const GLchar *name) override
+    {
+        m_evasGLAPI->glBindAttribLocation(program, index, name);
+    }
+
     virtual void bindBuffer(GLenum target, GLuint buffer) override
     {
         m_evasGLAPI->glBindBuffer(target, buffer);
@@ -61,15 +67,51 @@ public:
         m_evasGLAPI->glBindTexture(target, texture);
     }
 
+    virtual void blendColor(GLfloat red, GLfloat green, GLfloat blue,
+                            GLfloat alpha) override
+    {
+        m_evasGLAPI->glBlendColor(red, green, blue, alpha);
+    }
+
+    virtual void blendEquation(GLenum mode) override
+    {
+        m_evasGLAPI->glBlendEquation(mode);
+    }
+
+    virtual void blendEquationSeparate(GLenum modeRGB,
+                                       GLenum modeAlpha) override
+    {
+        m_evasGLAPI->glBlendEquationSeparate(modeRGB, modeAlpha);
+    }
+
     virtual void blendFunc(GLenum sfactor, GLenum dfactor) override
     {
         m_evasGLAPI->glBlendFunc(sfactor, dfactor);
+    }
+
+    virtual void blendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB,
+                                   GLenum sfactorAlpha,
+                                   GLenum dfactorAlpha) override
+    {
+        m_evasGLAPI->glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha,
+                                         dfactorAlpha);
     }
 
     virtual void bufferData(GLenum target, GLsizeiptr size, const void *data,
                             GLenum usage) override
     {
         m_evasGLAPI->glBufferData(target, size, data, usage);
+    }
+
+    virtual void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+                               const void *data) override
+    {
+        m_evasGLAPI->glBufferSubData(target, offset, size, data);
+    }
+
+    virtual GLenum checkFramebufferStatus(GLenum target) override
+    {
+        return m_evasGLAPI->glCheckFramebufferStatus(target);
     }
 
     virtual void clear(GLbitfield mask) override
@@ -81,6 +123,11 @@ public:
                             GLclampf alpha) override
     {
         m_evasGLAPI->glClearColor(red, green, blue, alpha);
+    }
+
+    virtual void clearDepthf(GLfloat d) override
+    {
+        m_evasGLAPI->glClearDepthf(d);
     }
 
     virtual void clearStencil(GLint s) override
@@ -105,6 +152,12 @@ public:
                                   GLsizei *length, char *infolog) override
     {
         m_evasGLAPI->glGetShaderInfoLog(shader, bufsize, length, infolog);
+    }
+
+    virtual void getShaderSource(GLuint shader, GLsizei bufSize,
+                                 GLsizei *length, GLchar *source)
+    {
+        m_evasGLAPI->glGetShaderSource(shader, bufSize, length, source);
     }
 
     virtual void compileShader(GLuint shader) override
@@ -144,6 +197,11 @@ public:
         return m_evasGLAPI->glCreateShader(type);
     }
 
+    virtual void cullFace(GLenum mode) override
+    {
+        m_evasGLAPI->glCullFace(mode);
+    }
+
     virtual void deleteBuffers(GLsizei n, const GLuint *buffers) override
     {
         m_evasGLAPI->glDeleteBuffers(n, buffers);
@@ -174,6 +232,21 @@ public:
     virtual void deleteTextures(GLsizei n, const GLuint *textures) override
     {
         m_evasGLAPI->glDeleteTextures(n, textures);
+    }
+
+    virtual void depthFunc(GLenum func) override
+    {
+        m_evasGLAPI->glDepthFunc(func);
+    }
+
+    virtual void depthMask(GLboolean flag) override
+    {
+        m_evasGLAPI->glDepthMask(flag);
+    }
+
+    virtual void depthRangef(GLfloat n, GLfloat f) override
+    {
+        m_evasGLAPI->glDepthRangef(n, f);
     }
 
     virtual void detachShader(GLuint program, GLuint shader) override
@@ -238,9 +311,19 @@ public:
                                             texture, level);
     }
 
+    virtual void frontFace(GLenum mode) override
+    {
+        m_evasGLAPI->glFrontFace(mode);
+    }
+
     virtual void genBuffers(GLsizei n, GLuint *buffers) override
     {
         m_evasGLAPI->glGenBuffers(n, buffers);
+    }
+
+    virtual void generateMipmap(GLenum target) override
+    {
+        m_evasGLAPI->glGenerateMipmap(target);
     }
 
     virtual void genFramebuffers(GLsizei n, GLuint *framebuffers) override
@@ -326,6 +409,12 @@ public:
         m_evasGLAPI->glGetProgramiv(program, pname, params);
     }
 
+    virtual void getProgramInfoLog(GLuint program, GLsizei bufSize,
+                                   GLsizei *length, GLchar *infoLog) override
+    {
+        m_evasGLAPI->glGetProgramInfoLog(program, bufSize, length, infoLog);
+    }
+
     virtual void getRenderbufferParameteriv(GLenum target, GLenum pname,
                                             GLint *params) override
     {
@@ -383,6 +472,11 @@ public:
         m_evasGLAPI->glHint(target, mode);
     }
 
+    virtual void lineWidth(GLfloat width) override
+    {
+        m_evasGLAPI->glLineWidth(width);
+    }
+
     virtual void linkProgram(GLuint program) override
     {
         m_evasGLAPI->glLinkProgram(program);
@@ -391,6 +485,11 @@ public:
     virtual void pixelStorei(GLenum pname, GLint param) override
     {
         m_evasGLAPI->glPixelStorei(pname, param);
+    }
+
+    virtual void polygonOffset(GLfloat factor, GLfloat units) override
+    {
+        m_evasGLAPI->glPolygonOffset(factor, units);
     }
 
     virtual void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
@@ -411,6 +510,11 @@ public:
                                            height);
     }
 
+    virtual void sampleCoverage(GLfloat value, GLboolean invert) override
+    {
+        m_evasGLAPI->glSampleCoverage(value, invert);
+    }
+
     virtual void scissor(GLint x, GLint y, GLsizei width,
                          GLsizei height) override
     {
@@ -422,9 +526,31 @@ public:
         m_evasGLAPI->glStencilFunc(func, ref, mask);
     }
 
+    virtual void stencilFuncSeparate(GLenum face, GLenum func, GLint ref,
+                                     GLuint mask) override
+    {
+        m_evasGLAPI->glStencilFuncSeparate(face, func, ref, mask);
+    }
+
+    virtual void stencilMask(GLuint mask) override
+    {
+        m_evasGLAPI->glStencilMask(mask);
+    }
+
+    virtual void stencilMaskSeparate(GLenum face, GLuint mask) override
+    {
+        m_evasGLAPI->glStencilMaskSeparate(face, mask);
+    }
+
     virtual void stencilOp(GLenum fail, GLenum zfail, GLenum zpass) override
     {
         m_evasGLAPI->glStencilOp(fail, zfail, zpass);
+    }
+
+    virtual void stencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail,
+                                   GLenum dppass) override
+    {
+        m_evasGLAPI->glStencilOpSeparate(face, sfail, dpfail, dppass);
     }
 
     virtual void texImage2D(GLenum target, GLint level, GLint internalformat,
