@@ -172,6 +172,10 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         shouldContinue = true;
         shouldVisitChild = true;
         currentFrame = new FrameSVGMaskBox(svgElement);
+    } else if (svgElement->isSVGSwitchElement()) {
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGBox(svgElement);
     } else if (svgElement->isSVGTSpanElement()) {
         shouldContinue = true;
         auto txt = svgElement->textContent();
