@@ -26,7 +26,6 @@
 #include "core/modules/worker/util/Trace.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/canvas/webgl/GLES.h"
 #include "platform/canvas/webgl/XGLPlatform.h"
 #include "platform/canvas/webgl/XGLUtil.h"
 #include "core/modules/renderer/Renderer.h"
