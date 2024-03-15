@@ -32,13 +32,13 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/renderer/VirtualCursor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
-#include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/renderer/RendererFactory.h"
+#include "platform/event/PlatformKeyEventData.h"
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -88,6 +88,16 @@ Renderer::Renderer(Starfish* starfish)
 #endif
 {
 }
+
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+GL* Renderer::gl()
+{
+    if (!m_gl) {
+        m_gl.reset(GL::create(this));
+    }
+    return m_gl.get();
+}
+#endif
 
 void Renderer::setWebView(WebView* webView)
 {
@@ -333,8 +343,9 @@ void Renderer::clearResources()
     }
     webView()->clearStackingContext();
 
-    Compositor::destroyCompositorContext(this, m_compostiorContext);
-    m_compostiorContext = nullptr;
+    if (m_compostiorContext) {
+        m_compostiorContext->onIdle();
+    }
 }
 
 void Renderer::setNeedsRendering()

@@ -383,7 +383,7 @@ void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
 void WebView::clearDrawnBuffers()
 {
     if (m_didCompositeBefore) {
-        LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
+        LongTaskFinder f("drop CanvasSurfaces(WebView::clearDrawnBuffers)");
         auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
         while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
             StackingContext* sc = *iter;
@@ -569,12 +569,11 @@ void WebView::destroy()
     delete m_platformFontCache;
     delete m_platformFontSelector;
 
-    m_renderer->destroy();
-
     m_starfish->m_webViewInstanceCount--;
     this->WebView::~WebView();
 
     m_renderer->clearNativeHandlers();
+    m_renderer->destroy();
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }

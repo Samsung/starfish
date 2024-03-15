@@ -43,10 +43,6 @@
 #define ANNOTATE_GREEN 0x00ff001b
 #endif
 
-extern Evas_GL_API* g_evasGLAPI;
-extern Evas_GL* g_evasGL;
-extern bool g_isEvasGLOnDirectMode;
-
 namespace LWEDelegate {
 
 using namespace LWE;
@@ -346,7 +342,6 @@ public:
         elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
-        m_isEvasGLOnDirectMode = false;
         m_isRenderedOnce = false;
         m_immediatelyClearScreenAnimator = nullptr;
         // Set a surface config
@@ -362,7 +357,6 @@ public:
 // or ./src/modules/evas/engines/gl_common/evas_gl_core.c in efl git
 #define EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE (1 << 12)
 #define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
-        m_isEvasGLOnDirectMode = true;
         m_glCfg->options_bits = (Evas_GL_Options_Bits)(
             EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
             EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
@@ -706,7 +700,6 @@ public:
             }
             evas_object_resize(wv->m_graphicsAdapter, w, h);
 
-            g_evasGL = nullptr;
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
@@ -974,25 +967,19 @@ public:
             [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
 
-                if (g_evasGL != m_glEvasgl) {
-                    g_evasGL = m_glEvasgl;
-                    g_evasGLAPI = m_glGlapi;
-                    g_isEvasGLOnDirectMode = m_isEvasGLOnDirectMode;
-                }
                 if (m_glSync) {
                     Starfish::LongTaskFinder t("evasglWaitSync");
-                    g_evasGLAPI->evasglClientWaitSync(
+                    m_glGlapi->evasglClientWaitSync(
                         m_glEvasgl, m_glSync,
                         EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE, EVAS_GL_FOREVER);
-                    g_evasGLAPI->evasglDestroySync(m_glEvasgl, m_glSync);
+                    m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
                     m_glSync = nullptr;
                 }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
-                if (mayNeedsSync && g_evasGLAPI->evasglCreateSync &&
-                    !m_glSync) {
+                if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
                     int attr[] = { EVAS_GL_NONE };
-                    m_glSync = g_evasGLAPI->evasglCreateSync(
+                    m_glSync = m_glGlapi->evasglCreateSync(
                         m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
                 }
                 if (m_lastInputTime) {
@@ -1041,6 +1028,9 @@ public:
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         SetWebContainer(webContainer);
 
+        webContainer->SetUserData("__internalLWEWebViewEvasGLAPI", m_glGlapi);
+        webContainer->SetUserData("__internalLWEWebViewEvasGL", m_glEvasgl);
+
         webContainer->SetUserData(
             "__internalLWEWebViewEFLNativeWindowEvasObject", win);
 
@@ -1079,7 +1069,7 @@ public:
             m_immediatelyClearScreenAnimator = nullptr;
         }
         if (m_glSync) {
-            g_evasGLAPI->evasglDestroySync(m_glEvasgl, m_glSync);
+            m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
         }
         evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
@@ -1294,7 +1284,6 @@ protected:
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
     EvasGLSync m_glSync;
-    bool m_isEvasGLOnDirectMode;
     bool m_isRenderedOnce;
     void (*m_pixelDirtyCallback)(void* data, Evas_Object* o);
     Ecore_Animator* m_immediatelyClearScreenAnimator;

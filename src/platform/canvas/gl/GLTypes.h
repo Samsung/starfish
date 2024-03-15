@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,23 +17,31 @@
  *  USA
  */
 
-#ifndef __StarfishGLESTypes__
-#define __StarfishGLESTypes__
+#ifndef __StarfishGLTypes__
+#define __StarfishGLTypes__
 
-#ifndef GLint
-typedef int GLint;
-#endif
+#include <stdint.h>
 
-#ifndef GLuint
-typedef unsigned int GLuint;
-#endif
+typedef void GLvoid;
+typedef char GLchar;
+typedef uint32_t GLenum;
+typedef uint8_t GLboolean;
+typedef uint32_t GLbitfield;
+typedef int8_t GLbyte;
+typedef int16_t GLshort;
+typedef int32_t GLint;
+typedef int32_t GLsizei;
+typedef uint8_t GLubyte;
+typedef uint16_t GLushort;
+typedef uint32_t GLuint;
+typedef float GLfloat;
+typedef float GLclampf;
+typedef int32_t GLfixed;
 
-#ifndef GLenum
-typedef unsigned int GLenum;
-#endif
-
-#ifndef GLboolean
-typedef unsigned char GLboolean;
+#if defined(STARFISH_WINDOWS)
+typedef ptrdiff_t GLsizeiptr;
+#else
+typedef long int GLsizeiptr;
 #endif
 
 #ifndef GL_NONE

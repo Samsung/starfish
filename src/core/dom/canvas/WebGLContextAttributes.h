@@ -24,7 +24,6 @@
 
 #include "StarfishBase.h"
 #include "core/dom/canvas/WebGLObject.h"
-#include "platform/canvas/webgl/GLESTypes.h"
 #include <string>
 
 namespace Starfish {
