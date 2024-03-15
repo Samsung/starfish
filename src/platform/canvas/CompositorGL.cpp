@@ -52,64 +52,10 @@ using N = uint32_t;
 // Create array
 using Point = std::array<Coord, 2>;
 
-// We only Support OpenGL ES 2.0+ context
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#include <Evas_GL.h>
-#if defined(STARFISH_TIZEN) // PORT_WEBVIEW_BRIDGE_EFL + STARFISH_TIZEN
-#include <tbm_surface.h>
-#endif
-#elif defined(STARFISH_TIZEN) // STARFISH_TIZEN with out PORT_WEBVIEW_BRIDGE_EFL
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <EGL/eglext.h>
-#include <tbm_surface.h>
+#include "platform/canvas/gl/IncludeGL.h"
+#include "platform/canvas/gl/GL.h"
 
-#include <tbm_bufmgr.h>
-#include <tbm_surface_internal.h>
-#ifndef EGL_DMA_BUF_PLANE3_FD_EXT
-#define EGL_DMA_BUF_PLANE3_FD_EXT 0x3440
-#endif
-#ifndef EGL_DMA_BUF_PLANE3_OFFSET_EXT
-#define EGL_DMA_BUF_PLANE3_OFFSET_EXT 0x3441
-#endif
-#ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
-#define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
-#endif
-#define EGL_ATTRIBUTE_MAX 50
-
-static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
-static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
-
-static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
-#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
-#elif defined(STARFISH_WINDOWS_UWP)
-// Enable function definitions in the GL headers below
-#define GL_GLEXT_PROTOTYPES
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl3.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <EGL/eglplatform.h>
-#include <angle_windowsstore.h>
-#elif defined(STARFISH_WINDOWS)
-#include <GL/glew.h>
-#include <GL/wglew.h>
-
-#include <Windows.h>
-#pragma comment(lib, "Opengl32.lib")
-#elif defined(STARFISH_ANDROID)
-#define EGL_EGLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#include <android/hardware_buffer.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#include <GLES3/gl3.h>
-
+#if defined(STARFISH_ANDROID)
 static void logEglError(const char* name) noexcept
 {
     const char* err;
@@ -162,349 +108,42 @@ static void logEglError(const char* name) noexcept
     }
     STARFISH_LOG_ERROR("%s failed with %s", name, err);
 }
+#endif
+
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#define EVAS_GL_IMAGE_PRESERVED 0x30D2
+#endif
+
+#if defined(STARFISH_TIZEN)
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#define EVAS_GL_NATIVE_SURFACE_TIZEN 0x32A1
+#include <tbm_surface.h>
 #else
-#include <GLES3/gl3.h>
-#endif
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES2/gl2ext.h>
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#define glActiveTexture g_evasGLAPI->glActiveTexture
-#define glAttachShader g_evasGLAPI->glAttachShader
-#define glBindAttribLocation g_evasGLAPI->glBindAttribLocation
-#define glBindBuffer g_evasGLAPI->glBindBuffer
-#define glBindFramebuffer g_evasGLAPI->glBindFramebuffer
-#define glBindRenderbuffer g_evasGLAPI->glBindRenderbuffer
-#define glBindTexture g_evasGLAPI->glBindTexture
-#define glBlendColor g_evasGLAPI->glBlendColor
-#define glBlendEquation g_evasGLAPI->glBlendEquation
-#define glBlendEquationSeparate g_evasGLAPI->glBlendEquationSeparate
-#define glBlendFunc g_evasGLAPI->glBlendFunc
-#define glBlendFuncSeparate g_evasGLAPI->glBlendFuncSeparate
-#define glBufferData g_evasGLAPI->glBufferData
-#define glBufferSubData g_evasGLAPI->glBufferSubData
-#define glCheckFramebufferStatus g_evasGLAPI->glCheckFramebufferStatus
-#define glClear g_evasGLAPI->glClear
-#define glClearColor g_evasGLAPI->glClearColor
-#define glClearDepthf g_evasGLAPI->glClearDepthf
-#define glClearStencil g_evasGLAPI->glClearStencil
-#define glColorMask g_evasGLAPI->glColorMask
-#define glCompileShader g_evasGLAPI->glCompileShader
-#define glCompressedTexImage2D g_evasGLAPI->glCompressedTexImage2D
-#define glCompressedTexSubImage2D g_evasGLAPI->glCompressedTexSubImage2D
-#define glCopyTexImage2D g_evasGLAPI->glCopyTexImage2D
-#define glCopyTexSubImage2D g_evasGLAPI->glCopyTexSubImage2D
-#define glCreateProgram g_evasGLAPI->glCreateProgram
-#define glCreateShader g_evasGLAPI->glCreateShader
-#define glCullFace g_evasGLAPI->glCullFace
-#define glDeleteBuffers g_evasGLAPI->glDeleteBuffers
-#define glDeleteFramebuffers g_evasGLAPI->glDeleteFramebuffers
-#define glDeleteProgram g_evasGLAPI->glDeleteProgram
-#define glDeleteRenderbuffers g_evasGLAPI->glDeleteRenderbuffers
-#define glDeleteShader g_evasGLAPI->glDeleteShader
-#define glDeleteTextures g_evasGLAPI->glDeleteTextures
-#define glDepthFunc g_evasGLAPI->glDepthFunc
-#define glDepthMask g_evasGLAPI->glDepthMask
-#define glDepthRangef g_evasGLAPI->glDepthRangef
-#define glDetachShader g_evasGLAPI->glDetachShader
-#define glDisable g_evasGLAPI->glDisable
-#define glDisableVertexAttribArray g_evasGLAPI->glDisableVertexAttribArray
-#define glDrawArrays g_evasGLAPI->glDrawArrays
-#define glDrawElements g_evasGLAPI->glDrawElements
-#define glEnable g_evasGLAPI->glEnable
-#define glEnableVertexAttribArray g_evasGLAPI->glEnableVertexAttribArray
-#define glFinish g_evasGLAPI->glFinish
-#define glFlush g_evasGLAPI->glFlush
-#define glFramebufferRenderbuffer g_evasGLAPI->glFramebufferRenderbuffer
-#define glFramebufferTexture2D g_evasGLAPI->glFramebufferTexture2D
-#define glFrontFace g_evasGLAPI->glFrontFace
-#define glGenBuffers g_evasGLAPI->glGenBuffers
-#define glGenerateMipmap g_evasGLAPI->glGenerateMipmap
-#define glGenFramebuffers g_evasGLAPI->glGenFramebuffers
-#define glGenRenderbuffers g_evasGLAPI->glGenRenderbuffers
-#define glGenTextures g_evasGLAPI->glGenTextures
-#define glGetActiveAttrib g_evasGLAPI->glGetActiveAttrib
-#define glGetActiveUniform g_evasGLAPI->glGetActiveUniform
-#define glGetAttachedShaders g_evasGLAPI->glGetAttachedShaders
-#define glGetAttribLocation g_evasGLAPI->glGetAttribLocation
-#define glGetBooleanv g_evasGLAPI->glGetBooleanv
-#define glGetBufferParameteriv g_evasGLAPI->glGetBufferParameteriv
-#define glGetError g_evasGLAPI->glGetError
-#define glGetFloatv g_evasGLAPI->glGetFloatv
-#define glGetFramebufferAttachmentParameteriv \
-    g_evasGLAPI->glGetFramebufferAttachmentParameteriv
-#define glGetIntegerv g_evasGLAPI->glGetIntegerv
-#define glGetProgramiv g_evasGLAPI->glGetProgramiv
-#define glGetProgramInfoLog g_evasGLAPI->glGetProgramInfoLog
-#define glGetRenderbufferParameteriv g_evasGLAPI->glGetRenderbufferParameteriv
-#define glGetShaderiv g_evasGLAPI->glGetShaderiv
-#define glGetShaderInfoLog g_evasGLAPI->glGetShaderInfoLog
-#define glGetShaderPrecisionFormat g_evasGLAPI->glGetShaderPrecisionFormat
-#define glGetShaderSource g_evasGLAPI->glGetShaderSource
-#define glGetString g_evasGLAPI->glGetString
-#define glGetTexParameterfv g_evasGLAPI->glGetTexParameterfv
-#define glGetTexParameteriv g_evasGLAPI->glGetTexParameteriv
-#define glGetUniformfv g_evasGLAPI->glGetUniformfv
-#define glGetUniformiv g_evasGLAPI->glGetUniformiv
-#define glGetUniformLocation g_evasGLAPI->glGetUniformLocation
-#define glGetVertexAttribfv g_evasGLAPI->glGetVertexAttribfv
-#define glGetVertexAttribiv g_evasGLAPI->glGetVertexAttribiv
-#define glGetVertexAttribPointerv g_evasGLAPI->glGetVertexAttribPointerv
-#define glHint g_evasGLAPI->glHint
-#define glIsBuffer g_evasGLAPI->glIsBuffer
-#define glIsEnabled g_evasGLAPI->glIsEnabled
-#define glIsFramebuffer g_evasGLAPI->glIsFramebuffer
-#define glIsProgram g_evasGLAPI->glIsProgram
-#define glIsRenderbuffer g_evasGLAPI->glIsRenderbuffer
-#define glIsShader g_evasGLAPI->glIsShader
-#define glIsTexture g_evasGLAPI->glIsTexture
-#define glLineWidth g_evasGLAPI->glLineWidth
-#define glLinkProgram g_evasGLAPI->glLinkProgram
-#define glPixelStorei g_evasGLAPI->glPixelStorei
-#define glPolygonOffset g_evasGLAPI->glPolygonOffset
-#define glReadPixels g_evasGLAPI->glReadPixels
-#define glReleaseShaderCompiler g_evasGLAPI->glReleaseShaderCompiler
-#define glRenderbufferStorage g_evasGLAPI->glRenderbufferStorage
-#define glSampleCoverage g_evasGLAPI->glSampleCoverage
-#define glScissor g_evasGLAPI->glScissor
-#define glShaderBinary g_evasGLAPI->glShaderBinary
-#define glShaderSource g_evasGLAPI->glShaderSource
-#define glStencilFunc g_evasGLAPI->glStencilFunc
-#define glStencilFuncSeparate g_evasGLAPI->glStencilFuncSeparate
-#define glStencilMask g_evasGLAPI->glStencilMask
-#define glStencilMaskSeparate g_evasGLAPI->glStencilMaskSeparate
-#define glStencilOp g_evasGLAPI->glStencilOp
-#define glStencilOpSeparate g_evasGLAPI->glStencilOpSeparate
-#define glTexImage2D g_evasGLAPI->glTexImage2D
-#define glTexParameterf g_evasGLAPI->glTexParameterf
-#define glTexParameterfv g_evasGLAPI->glTexParameterfv
-#define glTexParameteri g_evasGLAPI->glTexParameteri
-#define glTexParameteriv g_evasGLAPI->glTexParameteriv
-#define glTexSubImage2D g_evasGLAPI->glTexSubImage2D
-#define glUniform1f g_evasGLAPI->glUniform1f
-#define glUniform1fv g_evasGLAPI->glUniform1fv
-#define glUniform1i g_evasGLAPI->glUniform1i
-#define glUniform1iv g_evasGLAPI->glUniform1iv
-#define glUniform2f g_evasGLAPI->glUniform2f
-#define glUniform2fv g_evasGLAPI->glUniform2fv
-#define glUniform2i g_evasGLAPI->glUniform2i
-#define glUniform2iv g_evasGLAPI->glUniform2iv
-#define glUniform3f g_evasGLAPI->glUniform3f
-#define glUniform3fv g_evasGLAPI->glUniform3fv
-#define glUniform3i g_evasGLAPI->glUniform3i
-#define glUniform3iv g_evasGLAPI->glUniform3iv
-#define glUniform4f g_evasGLAPI->glUniform4f
-#define glUniform4fv g_evasGLAPI->glUniform4fv
-#define glUniform4i g_evasGLAPI->glUniform4i
-#define glUniform4iv g_evasGLAPI->glUniform4iv
-#define glUniformMatrix2fv g_evasGLAPI->glUniformMatrix2fv
-#define glUniformMatrix3fv g_evasGLAPI->glUniformMatrix3fv
-#define glUniformMatrix4fv g_evasGLAPI->glUniformMatrix4fv
-#define glUseProgram g_evasGLAPI->glUseProgram
-#define glValidateProgram g_evasGLAPI->glValidateProgram
-#define glVertexAttrib1f g_evasGLAPI->glVertexAttrib1f
-#define glVertexAttrib1fv g_evasGLAPI->glVertexAttrib1fv
-#define glVertexAttrib2f g_evasGLAPI->glVertexAttrib2f
-#define glVertexAttrib2fv g_evasGLAPI->glVertexAttrib2fv
-#define glVertexAttrib3f g_evasGLAPI->glVertexAttrib3f
-#define glVertexAttrib3fv g_evasGLAPI->glVertexAttrib3fv
-#define glVertexAttrib4f g_evasGLAPI->glVertexAttrib4f
-#define glVertexAttrib4fv g_evasGLAPI->glVertexAttrib4fv
-#define glVertexAttribPointer g_evasGLAPI->glVertexAttribPointer
-#define glViewport g_evasGLAPI->glViewport
-#define glBeginQuery g_evasGLAPI->glBeginQuery
-#define glBeginTransformFeedback g_evasGLAPI->glBeginTransformFeedback
-#define glBindBufferBase g_evasGLAPI->glBindBufferBase
-#define glBindBufferRange g_evasGLAPI->glBindBufferRange
-#define glBindSampler g_evasGLAPI->glBindSampler
-#define glBindTransformFeedback g_evasGLAPI->glBindTransformFeedback
-#define glBindVertexArray g_evasGLAPI->glBindVertexArray
-#define glBlitFramebuffer g_evasGLAPI->glBlitFramebuffer
-#define glClearBufferfi g_evasGLAPI->glClearBufferfi
-#define glClearBufferfv g_evasGLAPI->glClearBufferfv
-#define glClearBufferiv g_evasGLAPI->glClearBufferiv
-#define glClearBufferuiv g_evasGLAPI->glClearBufferuiv
-#define glClientWaitSync g_evasGLAPI->glClientWaitSync
-#define glCompressedTexImage3D g_evasGLAPI->glCompressedTexImage3D
-#define glCompressedTexSubImage3D g_evasGLAPI->glCompressedTexSubImage3D
-#define glCopyBufferSubData g_evasGLAPI->glCopyBufferSubData
-#define glCopyTexSubImage3D g_evasGLAPI->glCopyTexSubImage3D
-#define glDeleteQueries g_evasGLAPI->glDeleteQueries
-#define glDeleteSamplers g_evasGLAPI->glDeleteSamplers
-#define glDeleteSync g_evasGLAPI->glDeleteSync
-#define glDeleteTransformFeedbacks g_evasGLAPI->glDeleteTransformFeedbacks
-#define glDeleteVertexArrays g_evasGLAPI->glDeleteVertexArrays
-#define glDrawArraysInstanced g_evasGLAPI->glDrawArraysInstanced
-#define glDrawBuffers g_evasGLAPI->glDrawBuffers
-#define glDrawElementsInstanced g_evasGLAPI->glDrawElementsInstanced
-#define glDrawRangeElements g_evasGLAPI->glDrawRangeElements
-#define glEndQuery g_evasGLAPI->glEndQuery
-#define glEndTransformFeedback g_evasGLAPI->glEndTransformFeedback
-#define glFenceSync g_evasGLAPI->glFenceSync
-#define glFlushMappedBufferRange g_evasGLAPI->glFlushMappedBufferRange
-#define glFramebufferTextureLayer g_evasGLAPI->glFramebufferTextureLayer
-#define glGenQueries g_evasGLAPI->glGenQueries
-#define glGenSamplers g_evasGLAPI->glGenSamplers
-#define glGenTransformFeedbacks g_evasGLAPI->glGenTransformFeedbacks
-#define glGenVertexArrays g_evasGLAPI->glGenVertexArrays
-#define glGetActiveUniformBlockiv g_evasGLAPI->glGetActiveUniformBlockiv
-#define glGetActiveUniformBlockName g_evasGLAPI->glGetActiveUniformBlockName
-#define glGetActiveUniformsiv g_evasGLAPI->glGetActiveUniformsiv
-#define glGetBufferParameteri64v g_evasGLAPI->glGetBufferParameteri64v
-#define glGetBufferPointerv g_evasGLAPI->glGetBufferPointerv
-#define glGetFragDataLocation g_evasGLAPI->glGetFragDataLocation
-#define glGetInteger64i_v g_evasGLAPI->glGetInteger64i_v
-#define glGetInteger64v g_evasGLAPI->glGetInteger64v
-#define glGetIntegeri_v g_evasGLAPI->glGetIntegeri_v
-#define glGetInternalformativ g_evasGLAPI->glGetInternalformativ
-#define glGetProgramBinary g_evasGLAPI->glGetProgramBinary
-#define glGetQueryiv g_evasGLAPI->glGetQueryiv
-#define glGetQueryObjectuiv g_evasGLAPI->glGetQueryObjectuiv
-#define glGetSamplerParameterfv g_evasGLAPI->glGetSamplerParameterfv
-#define glGetSamplerParameteriv g_evasGLAPI->glGetSamplerParameteriv
-#define glGetStringi g_evasGLAPI->glGetStringi
-#define glGetSynciv g_evasGLAPI->glGetSynciv
-#define glGetTransformFeedbackVarying g_evasGLAPI->glGetTransformFeedbackVarying
-#define glGetUniformBlockIndex g_evasGLAPI->glGetUniformBlockIndex
-#define glGetUniformIndices g_evasGLAPI->glGetUniformIndices
-#define glGetUniformuiv g_evasGLAPI->glGetUniformuiv
-#define glGetVertexAttribIiv g_evasGLAPI->glGetVertexAttribIiv
-#define glGetVertexAttribIuiv g_evasGLAPI->glGetVertexAttribIuiv
-#define glInvalidateFramebuffer g_evasGLAPI->glInvalidateFramebuffer
-#define glInvalidateSubFramebuffer g_evasGLAPI->glInvalidateSubFramebuffer
-#define glIsQuery g_evasGLAPI->glIsQuery
-#define glIsSampler g_evasGLAPI->glIsSampler
-#define glIsSync g_evasGLAPI->glIsSync
-#define glIsTransformFeedback g_evasGLAPI->glIsTransformFeedback
-#define glIsVertexArray g_evasGLAPI->glIsVertexArray
-#define glMapBufferRange g_evasGLAPI->glMapBufferRange
-#define glPauseTransformFeedback g_evasGLAPI->glPauseTransformFeedback
-#define glProgramBinary g_evasGLAPI->glProgramBinary
-#define glProgramParameteri g_evasGLAPI->glProgramParameteri
-#define glReadBuffer g_evasGLAPI->glReadBuffer
-#define glRenderbufferStorageMultisample \
-    g_evasGLAPI->glRenderbufferStorageMultisample
-#define glResumeTransformFeedback g_evasGLAPI->glResumeTransformFeedback
-#define glSamplerParameterf g_evasGLAPI->glSamplerParameterf
-#define glSamplerParameterfv g_evasGLAPI->glSamplerParameterfv
-#define glSamplerParameteri g_evasGLAPI->glSamplerParameteri
-#define glSamplerParameteriv g_evasGLAPI->glSamplerParameteriv
-#define glTexImage3D g_evasGLAPI->glTexImage3D
-#define glTexStorage2D g_evasGLAPI->glTexStorage2D
-#define glTexStorage3D g_evasGLAPI->glTexStorage3D
-#define glTexSubImage3D g_evasGLAPI->glTexSubImage3D
-#define glTransformFeedbackVaryings g_evasGLAPI->glTransformFeedbackVaryings
-#define glUniform1ui g_evasGLAPI->glUniform1ui
-#define glUniform1uiv g_evasGLAPI->glUniform1uiv
-#define glUniform2ui g_evasGLAPI->glUniform2ui
-#define glUniform2uiv g_evasGLAPI->glUniform2uiv
-#define glUniform3ui g_evasGLAPI->glUniform3ui
-#define glUniform3uiv g_evasGLAPI->glUniform3uiv
-#define glUniform4ui g_evasGLAPI->glUniform4ui
-#define glUniform4uiv g_evasGLAPI->glUniform4uiv
-#define glUniformBlockBinding g_evasGLAPI->glUniformBlockBinding
-#define glUniformMatrix2x3fv g_evasGLAPI->glUniformMatrix2x3fv
-#define glUniformMatrix3x2fv g_evasGLAPI->glUniformMatrix3x2fv
-#define glUniformMatrix2x4fv g_evasGLAPI->glUniformMatrix2x4fv
-#define glUniformMatrix4x2fv g_evasGLAPI->glUniformMatrix4x2fv
-#define glUniformMatrix3x4fv g_evasGLAPI->glUniformMatrix3x4fv
-#define glUniformMatrix4x3fv g_evasGLAPI->glUniformMatrix4x3fv
-#define glUnmapBuffer g_evasGLAPI->glUnmapBuffer
-#define glVertexAttribDivisor g_evasGLAPI->glVertexAttribDivisor
-#define glVertexAttribI4i g_evasGLAPI->glVertexAttribI4i
-#define glVertexAttribI4iv g_evasGLAPI->glVertexAttribI4iv
-#define glVertexAttribI4ui g_evasGLAPI->glVertexAttribI4ui
-#define glVertexAttribI4uiv g_evasGLAPI->glVertexAttribI4uiv
-#define glVertexAttribIPointer g_evasGLAPI->glVertexAttribIPointer
-#define glWaitSync g_evasGLAPI->glWaitSync
+#include <tbm_bufmgr.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
 
+#ifndef EGL_DMA_BUF_PLANE3_FD_EXT
+#define EGL_DMA_BUF_PLANE3_FD_EXT 0x3440
 #endif
+#ifndef EGL_DMA_BUF_PLANE3_OFFSET_EXT
+#define EGL_DMA_BUF_PLANE3_OFFSET_EXT 0x3441
+#endif
+#ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
+#define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
+#endif
+#define EGL_ATTRIBUTE_MAX 50
 
-#ifndef GL_TEXTURE_EXTERNAL_OES
-#define GL_TEXTURE_EXTERNAL_OES 0x8D65
-#endif
+static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
+static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
+static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 
-#ifndef GL_BGRA_EXT
-#define GL_BGRA_EXT 0x80E1
-#endif
-
-#ifndef GL_MAJOR_VERSION
-#define GL_MAJOR_VERSION 0x821B
-#endif
-
-#ifndef GL_MINOR_VERSION
-#define GL_MINOR_VERSION 0x821C
-#endif
-
-#ifndef GL_UNPACK_ROW_LENGTH
-#define GL_UNPACK_ROW_LENGTH 0x0CF2
-#endif
-
-#ifndef GL_UNPACK_SKIP_ROWS
-#define GL_UNPACK_SKIP_ROWS 0x0CF3
-#endif
-
-#ifndef GL_UNPACK_SKIP_PIXELS
-#define GL_UNPACK_SKIP_PIXELS 0x0CF4
-#endif
-
-#ifndef GL_DEPTH_STENCIL
-#define GL_DEPTH_STENCIL 0x84F9
-#endif
-
-#ifndef GL_UNSIGNED_INT_24_8
-#define GL_UNSIGNED_INT_24_8 0x84FA
-#endif
-
-#ifndef GL_TEXTURE_SWIZZLE_R
-#define GL_TEXTURE_SWIZZLE_R 0x8E42
-#endif
-#ifndef GL_TEXTURE_SWIZZLE_G
-#define GL_TEXTURE_SWIZZLE_G 0x8E43
-#endif
-#ifndef GL_TEXTURE_SWIZZLE_B
-#define GL_TEXTURE_SWIZZLE_B 0x8E44
-#endif
-#ifndef GL_TEXTURE_SWIZZLE_A
-#define GL_TEXTURE_SWIZZLE_A 0x8E45
-#endif
-#ifndef TEXTURE_SWIZZLE_RGBA
-#define TEXTURE_SWIZZLE_RGBA 0x8E46
-#endif
-
-#ifndef GL_RED
-#define GL_RED 0x1903
-#endif
-#ifndef GL_GREEN
-#define GL_GREEN 0x1904
-#endif
-#ifndef GL_BLUE
-#define GL_BLUE 0x1905
-#endif
-#ifndef GL_ALPHA
-#define GL_ALPHA 0x1906
-#endif
-
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-Evas_GL_API* g_evasGLAPI;
-Evas_GL* g_evasGL;
-bool g_isEvasGLOnDirectMode;
-#endif
-
-namespace Starfish {
-
-static bool g_needsCheckCompatibility = true;
-static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
-static bool g_isSupportExtensionEGLImageExternal = false;
-static bool g_isSupportBGRATexture = false;
-static bool g_isSupportTextureSwizzle = false;
-static bool g_shouldUseEGLImageOnPlainSurface = true;
-static bool g_useStencilBufferOnFBO = false;
-static bool g_needsRGBShuffle = true;
-#ifndef MIN_MAX_TEXTURE_SIZE
-#define MIN_MAX_TEXTURE_SIZE 2048
-#endif
-static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
-
-#if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
+static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
+#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
 
 #define RETURN_IF_INVALID_INDEX(atti, attrib_max) \
     if ((atti) >= (attrib_max)) {                 \
@@ -582,50 +221,66 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
 }
 #undef RETURN_IF_INVALID_INDEX
 #endif
-static void checkError()
+#endif
+
+namespace Starfish {
+
+static bool g_needsCheckCompatibility = true;
+static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
+static bool g_isSupportExtensionEGLImageExternal = false;
+static bool g_isSupportBGRATexture = false;
+static bool g_isSupportTextureSwizzle = false;
+static bool g_shouldUseEGLImageOnPlainSurface = true;
+static bool g_needsRGBShuffle = true;
+#ifndef MIN_MAX_TEXTURE_SIZE
+#define MIN_MAX_TEXTURE_SIZE 2048
+#endif
+static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
+
+static void checkError(GL* gl)
 {
-    volatile auto error = glGetError();
+    volatile auto error = gl->getError();
     if (error != 0) {
         STARFISH_LOG_ERROR("OpenGL error.. 0x%04x", error);
         STARFISH_ASSERT_NOT_REACHED();
     }
 }
 
-static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
+static GLuint loadShader(GL* gl, GLenum type, const GLchar* shaderSrc)
 {
     GLuint shader;
     GLint compiled;
 
-    checkError();
+    checkError(gl);
     LongTaskFinder t("loadShader");
 
     // Create the shader object
-    shader = glCreateShader(type);
+    shader = gl->createShader(type);
 
     // Load the shader source
-    glShaderSource(shader, 1, &shaderSrc, NULL);
+    gl->shaderSource(shader, 1, &shaderSrc, NULL);
 
     // Compile the shader
-    glCompileShader(shader);
+    gl->compileShader(shader);
 
     // Check the compile status
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    checkError();
+    gl->getShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    checkError(gl);
 
     if (!compiled) {
         GLint maxLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+        gl->getShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 
         // The maxLength includes the NULL character
         std::vector<GLchar> errorLog(maxLength);
-        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+        gl->getShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
 
         STARFISH_LOG_ERROR("loadShader error.. shader source -> %s", shaderSrc);
         STARFISH_LOG_ERROR("loadShader error.. error desc -> %s",
                            errorLog.data());
         // Provide the infolog in whatever manor you deem best.
         // Exit with failure.
-        glDeleteShader(shader); // Don't leak the shader.
+        gl->deleteShader(shader); // Don't leak the shader.
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return shader;
@@ -734,6 +389,23 @@ public:
         STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL");
 
         m_renderer = renderer;
+        clearGLProgramVariables();
+
+        m_drawPosBuffer = m_texTexPosBuffer = 0;
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        m_mainViewTexture = 0;
+        m_mainViewFBO = 0;
+        m_mainViewRBO = 0;
+#endif
+    }
+
+    GL* gl()
+    {
+        return m_renderer->gl();
+    }
+
+    void clearGLProgramVariables()
+    {
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
@@ -771,7 +443,6 @@ public:
         m_texBlurShaderProgramHTextureHeight = 0;
         m_texBlurShaderProgramHAlpha = 0;
 
-        m_drawPosBuffer = m_texTexPosBuffer = 0;
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
         m_texBlurShaderProgramWTexPos = 0;
@@ -779,93 +450,25 @@ public:
         m_texBlurShaderProgramHTexPos = 0;
 
         m_lastProgram = 0;
-
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-        m_mainViewTexture = 0;
-        m_mainViewFBO = 0;
-        m_mainViewRBO = 0;
-#endif
     }
 
     ~CompositorContextGL()
     {
         STARFISH_LOG_INFO("CompositorContextGL::~CompositorContextGL");
-        glUseProgram(0);
+        gl()->useProgram(0);
 
         cleanUpTextureCache();
+        cleanUpGLPrograms();
 
-        if (m_texBlurShaderProgramW) {
-            glDetachShader(m_texBlurShaderProgramW, m_texVertexShader);
-            glDetachShader(m_texBlurShaderProgramW, m_texFragmentBlurShaderW);
-            glDeleteProgram(m_texBlurShaderProgramW);
-        }
-
-        if (m_texBlurShaderProgramEGLImageExternalW) {
-            glDetachShader(m_texBlurShaderProgramEGLImageExternalW,
-                           m_texVertexShader);
-            glDetachShader(m_texBlurShaderProgramEGLImageExternalW,
-                           m_texFragmentBlurShaderEGLImageExternalW);
-            glDeleteProgram(m_texBlurShaderProgramEGLImageExternalW);
-        }
-
-        if (m_texBlurShaderProgramH) {
-            glDetachShader(m_texBlurShaderProgramH, m_texVertexShader);
-            glDetachShader(m_texBlurShaderProgramH, m_texFragmentBlurShaderH);
-            glDeleteProgram(m_texBlurShaderProgramH);
-        }
-
-        if (m_texFragmentBlurShaderW) {
-            glDeleteShader(m_texFragmentBlurShaderW);
-        }
-
-        if (m_texFragmentBlurShaderH) {
-            glDeleteShader(m_texFragmentBlurShaderH);
-        }
-
-        if (m_texFragmentBlurShaderEGLImageExternalW) {
-            glDeleteShader(m_texFragmentBlurShaderEGLImageExternalW);
-        }
-
-        if (m_rectShaderProgram) {
-            glDetachShader(m_rectShaderProgram, m_rectVertexShader);
-            glDetachShader(m_rectShaderProgram, m_rectFragmentShader);
-            glDeleteProgram(m_rectShaderProgram);
-            glDeleteShader(m_rectVertexShader);
-            glDeleteShader(m_rectFragmentShader);
-        }
-
-        if (m_texShaderProgramEGLImageExternal) {
-            glDetachShader(m_texShaderProgramEGLImageExternal,
-                           m_texVertexShader);
-            glDetachShader(m_texShaderProgramEGLImageExternal,
-                           m_texFragmentShaderEGLImageExternal);
-            glDeleteProgram(m_texShaderProgramEGLImageExternal);
-            glDeleteShader(m_texFragmentShaderEGLImageExternal);
-        }
-
-        if (m_texShaderProgram) {
-            glDetachShader(m_texShaderProgram, m_texVertexShader);
-            glDetachShader(m_texShaderProgram, m_texFragmentShader);
-            glDeleteProgram(m_texShaderProgram);
-        }
-
-        if (m_texVertexShader) {
-            glDeleteShader(m_texVertexShader);
-        }
-
-        if (m_texFragmentShader) {
-            glDeleteShader(m_texFragmentShader);
-        }
-
-        glDeleteBuffers(1, &m_texTexPosBuffer);
-        glDeleteBuffers(1, &m_drawPosBuffer);
+        gl()->deleteBuffers(1, &m_texTexPosBuffer);
+        gl()->deleteBuffers(1, &m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         if (m_mainViewRBO) {
-            glDeleteRenderbuffers(1, &m_mainViewRBO);
+            gl()->deleteRenderbuffers(1, &m_mainViewRBO);
         }
         if (m_mainViewFBO) {
-            glDeleteFramebuffers(1, &m_mainViewFBO);
+            gl()->deleteFramebuffers(1, &m_mainViewFBO);
         }
 #endif
     }
@@ -873,10 +476,79 @@ public:
     void cleanUpTextureCache()
     {
         for (size_t i = 0; i < m_cachedTextures.size(); i++) {
-            glDeleteTextures(1, &std::get<2>(m_cachedTextures[i]));
+            gl()->deleteTextures(1, &std::get<2>(m_cachedTextures[i]));
         }
         std::vector<std::tuple<size_t, size_t, GLuint>>().swap(
             m_cachedTextures);
+    }
+
+    void cleanUpGLPrograms()
+    {
+        if (m_texBlurShaderProgramW) {
+            gl()->detachShader(m_texBlurShaderProgramW, m_texVertexShader);
+            gl()->detachShader(m_texBlurShaderProgramW,
+                               m_texFragmentBlurShaderW);
+            gl()->deleteProgram(m_texBlurShaderProgramW);
+        }
+
+        if (m_texBlurShaderProgramEGLImageExternalW) {
+            gl()->detachShader(m_texBlurShaderProgramEGLImageExternalW,
+                               m_texVertexShader);
+            gl()->detachShader(m_texBlurShaderProgramEGLImageExternalW,
+                               m_texFragmentBlurShaderEGLImageExternalW);
+            gl()->deleteProgram(m_texBlurShaderProgramEGLImageExternalW);
+        }
+
+        if (m_texBlurShaderProgramH) {
+            gl()->detachShader(m_texBlurShaderProgramH, m_texVertexShader);
+            gl()->detachShader(m_texBlurShaderProgramH,
+                               m_texFragmentBlurShaderH);
+            gl()->deleteProgram(m_texBlurShaderProgramH);
+        }
+
+        if (m_texFragmentBlurShaderW) {
+            gl()->deleteShader(m_texFragmentBlurShaderW);
+        }
+
+        if (m_texFragmentBlurShaderH) {
+            gl()->deleteShader(m_texFragmentBlurShaderH);
+        }
+
+        if (m_texFragmentBlurShaderEGLImageExternalW) {
+            gl()->deleteShader(m_texFragmentBlurShaderEGLImageExternalW);
+        }
+
+        if (m_rectShaderProgram) {
+            gl()->detachShader(m_rectShaderProgram, m_rectVertexShader);
+            gl()->detachShader(m_rectShaderProgram, m_rectFragmentShader);
+            gl()->deleteProgram(m_rectShaderProgram);
+            gl()->deleteShader(m_rectVertexShader);
+            gl()->deleteShader(m_rectFragmentShader);
+        }
+
+        if (m_texShaderProgramEGLImageExternal) {
+            gl()->detachShader(m_texShaderProgramEGLImageExternal,
+                               m_texVertexShader);
+            gl()->detachShader(m_texShaderProgramEGLImageExternal,
+                               m_texFragmentShaderEGLImageExternal);
+            gl()->deleteProgram(m_texShaderProgramEGLImageExternal);
+            gl()->deleteShader(m_texFragmentShaderEGLImageExternal);
+        }
+
+        if (m_texShaderProgram) {
+            gl()->detachShader(m_texShaderProgram, m_texVertexShader);
+            gl()->detachShader(m_texShaderProgram, m_texFragmentShader);
+            gl()->deleteProgram(m_texShaderProgram);
+        }
+
+        if (m_texVertexShader) {
+            gl()->deleteShader(m_texVertexShader);
+        }
+
+        if (m_texFragmentShader) {
+            gl()->deleteShader(m_texFragmentShader);
+        }
+        clearGLProgramVariables();
     }
 
     void putGenericTextureToCache(GLuint textureID, size_t textureDataWidth,
@@ -907,8 +579,8 @@ public:
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     virtual void prepareExternalSurface(void* externalSurface) override
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_mainViewRBO);
+        gl()->bindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
+        gl()->bindRenderbuffer(GL_RENDERBUFFER, m_mainViewRBO);
 
         EGLDisplay display = eglGetCurrentDisplay();
 
@@ -930,36 +602,36 @@ public:
                                                       nullptr, attribs);
         }
 
-        glGenTextures(1, &m_mainViewTexture);
-        glBindTexture(GL_TEXTURE_2D, m_mainViewTexture);
+        gl()->genTextures(1, &m_mainViewTexture);
+        gl()->bindTexture(GL_TEXTURE_2D, m_mainViewTexture);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_2D, m_mainViewImage);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, m_mainViewTexture, 0);
+        gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, m_mainViewTexture, 0);
     }
 
     virtual void flushExternalSurface(
         const std::function<void(bool needsFlush)>& cb,
         bool isRendered) override
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        gl()->bindTexture(GL_TEXTURE_2D, 0);
+        gl()->bindFramebuffer(GL_FRAMEBUFFER, 0);
 
         EGLDisplay display = eglGetCurrentDisplay();
         if (isRendered) {
-            glFinish();
+            gl()->finish();
         }
         cb(isRendered);
         g_eglDestroyImageKHRProc(display, m_mainViewImage);
         m_mainViewImage = nullptr;
-        glDeleteTextures(1, &m_mainViewTexture);
+        gl()->deleteTextures(1, &m_mainViewTexture);
     }
 #endif
 
@@ -971,6 +643,7 @@ public:
     virtual void onIdle() override
     {
         cleanUpTextureCache();
+        cleanUpGLPrograms();
     }
 
     GLuint rectProgram()
@@ -1007,36 +680,37 @@ public:
                     "}";
             }
 
-            m_rectVertexShader = loadShader(GL_VERTEX_SHADER, rectVertexSource);
-            checkError();
+            m_rectVertexShader =
+                loadShader(gl(), GL_VERTEX_SHADER, rectVertexSource);
+            checkError(gl());
             m_rectFragmentShader =
-                loadShader(GL_FRAGMENT_SHADER, rectFragmentSource);
-            checkError();
+                loadShader(gl(), GL_FRAGMENT_SHADER, rectFragmentSource);
+            checkError(gl());
 
-            m_rectShaderProgram = glCreateProgram();
-            checkError();
+            m_rectShaderProgram = gl()->createProgram();
+            checkError(gl());
 
-            glAttachShader(m_rectShaderProgram, m_rectVertexShader);
-            checkError();
-            glAttachShader(m_rectShaderProgram, m_rectFragmentShader);
-            checkError();
+            gl()->attachShader(m_rectShaderProgram, m_rectVertexShader);
+            checkError(gl());
+            gl()->attachShader(m_rectShaderProgram, m_rectFragmentShader);
+            checkError(gl());
 
-            glLinkProgram(m_rectShaderProgram);
-            checkError();
+            gl()->linkProgram(m_rectShaderProgram);
+            checkError(gl());
 
             m_lastProgram = m_rectShaderProgram;
-            glUseProgram(m_rectShaderProgram);
+            gl()->useProgram(m_rectShaderProgram);
 
             m_rectShaderProgramPosition =
-                glGetAttribLocation(m_rectShaderProgram, "aPosition");
+                gl()->getAttribLocation(m_rectShaderProgram, "aPosition");
             m_rectShaderProgramColor =
-                glGetUniformLocation(m_rectShaderProgram, "uColor");
+                gl()->getUniformLocation(m_rectShaderProgram, "uColor");
 
-            glEnableVertexAttribArray(m_rectShaderProgramPosition);
+            gl()->enableVertexAttribArray(m_rectShaderProgramPosition);
         } else {
             if (m_lastProgram != m_rectShaderProgram) {
                 m_lastProgram = m_rectShaderProgram;
-                glUseProgram(m_rectShaderProgram);
+                gl()->useProgram(m_rectShaderProgram);
             }
         }
 
@@ -1055,7 +729,8 @@ public:
               vTexPos = vec2(aTexPos.x, uFlipY == 1.0 ? 1.0 - aTexPos.y : aTexPos.y);
               gl_Position = vec4(aPosition.xy, 0.0, 1.0);
             })";
-            m_texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
+            m_texVertexShader =
+                loadShader(gl(), GL_VERTEX_SHADER, texVertexSource);
         }
         return m_texVertexShader;
     }
@@ -1095,55 +770,59 @@ public:
             }
 
             m_texFragmentShaderEGLImageExternal = loadShader(
-                GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
-            checkError();
+                gl(), GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
+            checkError(gl());
 
-            m_texShaderProgramEGLImageExternal = glCreateProgram();
-            checkError();
+            m_texShaderProgramEGLImageExternal = gl()->createProgram();
+            checkError(gl());
 
-            glAttachShader(m_texShaderProgramEGLImageExternal,
-                           texVertexShader());
-            checkError();
-            glAttachShader(m_texShaderProgramEGLImageExternal,
-                           m_texFragmentShaderEGLImageExternal);
-            checkError();
+            gl()->attachShader(m_texShaderProgramEGLImageExternal,
+                               texVertexShader());
+            checkError(gl());
+            gl()->attachShader(m_texShaderProgramEGLImageExternal,
+                               m_texFragmentShaderEGLImageExternal);
+            checkError(gl());
 
-            glLinkProgram(m_texShaderProgramEGLImageExternal);
-            checkError();
+            gl()->linkProgram(m_texShaderProgramEGLImageExternal);
+            checkError(gl());
 
             m_lastProgram = m_texShaderProgramEGLImageExternal;
-            glUseProgram(m_texShaderProgramEGLImageExternal);
-            checkError();
+            gl()->useProgram(m_texShaderProgramEGLImageExternal);
+            checkError(gl());
 
-            m_texShaderProgramEGLImageExternalPosition = glGetAttribLocation(
-                m_texShaderProgramEGLImageExternal, "aPosition");
-            m_texShaderProgramEGLImageExternalTexPos = glGetAttribLocation(
+            m_texShaderProgramEGLImageExternalPosition =
+                gl()->getAttribLocation(m_texShaderProgramEGLImageExternal,
+                                        "aPosition");
+            m_texShaderProgramEGLImageExternalTexPos = gl()->getAttribLocation(
                 m_texShaderProgramEGLImageExternal, "aTexPos");
-            m_texShaderProgramEGLImageExternalTexture = glGetUniformLocation(
-                m_texShaderProgramEGLImageExternal, "uTexture");
-            m_texShaderProgramEGLImageExternalAlpha = glGetUniformLocation(
+            m_texShaderProgramEGLImageExternalTexture =
+                gl()->getUniformLocation(m_texShaderProgramEGLImageExternal,
+                                         "uTexture");
+            m_texShaderProgramEGLImageExternalAlpha = gl()->getUniformLocation(
                 m_texShaderProgramEGLImageExternal, "uAlpha");
 
-            glUniform1i(m_texShaderProgramEGLImageExternalTexture, 0);
-            glEnableVertexAttribArray(
+            gl()->uniform1i(m_texShaderProgramEGLImageExternalTexture, 0);
+            gl()->enableVertexAttribArray(
                 m_texShaderProgramEGLImageExternalPosition);
 
-            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-            glEnableVertexAttribArray(m_texShaderProgramEGLImageExternalTexPos);
-            glVertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos, 2,
-                                  GL_FLOAT, false, 0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->enableVertexAttribArray(
+                m_texShaderProgramEGLImageExternalTexPos);
+            gl()->vertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos,
+                                      2, GL_FLOAT, false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glUniform1f(m_texShaderProgramEGLImageExternalAlpha, 1);
+            gl()->uniform1f(m_texShaderProgramEGLImageExternalAlpha, 1);
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
                 m_lastProgram = m_texShaderProgramEGLImageExternal;
-                glUseProgram(m_texShaderProgramEGLImageExternal);
+                gl()->useProgram(m_texShaderProgramEGLImageExternal);
 
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos,
-                                      2, GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->vertexAttribPointer(
+                    m_texShaderProgramEGLImageExternalTexPos, 2, GL_FLOAT,
+                    false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
 
@@ -1186,52 +865,52 @@ public:
             }
 
             m_texFragmentShader =
-                loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
-            checkError();
+                loadShader(gl(), GL_FRAGMENT_SHADER, texFragmentSource);
+            checkError(gl());
 
-            m_texShaderProgram = glCreateProgram();
-            checkError();
+            m_texShaderProgram = gl()->createProgram();
+            checkError(gl());
 
-            glAttachShader(m_texShaderProgram, texVertexShader());
-            checkError();
-            glAttachShader(m_texShaderProgram, m_texFragmentShader);
-            checkError();
+            gl()->attachShader(m_texShaderProgram, texVertexShader());
+            checkError(gl());
+            gl()->attachShader(m_texShaderProgram, m_texFragmentShader);
+            checkError(gl());
 
-            glLinkProgram(m_texShaderProgram);
-            checkError();
+            gl()->linkProgram(m_texShaderProgram);
+            checkError(gl());
 
             m_lastProgram = m_texShaderProgram;
-            glUseProgram(m_texShaderProgram);
-            checkError();
+            gl()->useProgram(m_texShaderProgram);
+            checkError(gl());
 
             m_texShaderProgramPosition =
-                glGetAttribLocation(m_texShaderProgram, "aPosition");
+                gl()->getAttribLocation(m_texShaderProgram, "aPosition");
             m_texShaderProgramTexPos =
-                glGetAttribLocation(m_texShaderProgram, "aTexPos");
+                gl()->getAttribLocation(m_texShaderProgram, "aTexPos");
             m_texShaderProgramTexture =
-                glGetUniformLocation(m_texShaderProgram, "uTexture");
+                gl()->getUniformLocation(m_texShaderProgram, "uTexture");
             m_texShaderProgramAlpha =
-                glGetUniformLocation(m_texShaderProgram, "uAlpha");
+                gl()->getUniformLocation(m_texShaderProgram, "uAlpha");
 
-            glUniform1i(m_texShaderProgramTexture, 0);
-            glEnableVertexAttribArray(m_texShaderProgramPosition);
+            gl()->uniform1i(m_texShaderProgramTexture, 0);
+            gl()->enableVertexAttribArray(m_texShaderProgramPosition);
 
-            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-            glEnableVertexAttribArray(m_texShaderProgramTexPos);
-            glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT, false,
-                                  0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->enableVertexAttribArray(m_texShaderProgramTexPos);
+            gl()->vertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
+                                      false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glUniform1f(m_texShaderProgramAlpha, 1);
+            gl()->uniform1f(m_texShaderProgramAlpha, 1);
         } else {
             if (m_lastProgram != m_texShaderProgram) {
                 m_lastProgram = m_texShaderProgram;
-                glUseProgram(m_texShaderProgram);
+                gl()->useProgram(m_texShaderProgram);
 
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
-                                      false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->vertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
+                                          false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
         return m_texShaderProgram;
@@ -1333,9 +1012,10 @@ public:
         if (m_texFragmentBlurShaderW) {
             return m_texFragmentBlurShaderW;
         }
-        m_texFragmentBlurShaderW = loadShader(
-            GL_FRAGMENT_SHADER, generateBlurEffectFragmentShader(false).data());
-        checkError();
+        m_texFragmentBlurShaderW =
+            loadShader(gl(), GL_FRAGMENT_SHADER,
+                       generateBlurEffectFragmentShader(false).data());
+        checkError(gl());
         return m_texFragmentBlurShaderW;
     }
 
@@ -1344,9 +1024,10 @@ public:
         if (m_texFragmentBlurShaderEGLImageExternalW) {
             return m_texFragmentBlurShaderEGLImageExternalW;
         }
-        m_texFragmentBlurShaderEGLImageExternalW = loadShader(
-            GL_FRAGMENT_SHADER, generateBlurEffectFragmentShader(true).data());
-        checkError();
+        m_texFragmentBlurShaderEGLImageExternalW =
+            loadShader(gl(), GL_FRAGMENT_SHADER,
+                       generateBlurEffectFragmentShader(true).data());
+        checkError(gl());
         return m_texFragmentBlurShaderEGLImageExternalW;
     }
 
@@ -1356,9 +1037,9 @@ public:
             return m_texFragmentBlurShaderH;
         }
         m_texFragmentBlurShaderH =
-            loadShader(GL_FRAGMENT_SHADER,
+            loadShader(gl(), GL_FRAGMENT_SHADER,
                        generateBlurEffectFragmentShader(false, true).data());
-        checkError();
+        checkError(gl());
         return m_texFragmentBlurShaderH;
     }
 
@@ -1367,48 +1048,48 @@ public:
         if (m_texBlurShaderProgramW) {
             if (m_lastProgram != m_texBlurShaderProgramW) {
                 m_lastProgram = m_texBlurShaderProgramW;
-                glUseProgram(m_texBlurShaderProgramW);
+                gl()->useProgram(m_texBlurShaderProgramW);
 
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texBlurShaderProgramWTexPos, 2,
-                                      GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->vertexAttribPointer(m_texBlurShaderProgramWTexPos, 2,
+                                          GL_FLOAT, false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
             return m_texBlurShaderProgramW;
         }
-        m_texBlurShaderProgramW = glCreateProgram();
+        m_texBlurShaderProgramW = gl()->createProgram();
 
-        glAttachShader(m_texBlurShaderProgramW, texVertexShader());
-        glAttachShader(m_texBlurShaderProgramW, texFragmentBlurShaderW());
-        glLinkProgram(m_texBlurShaderProgramW);
-        checkError();
+        gl()->attachShader(m_texBlurShaderProgramW, texVertexShader());
+        gl()->attachShader(m_texBlurShaderProgramW, texFragmentBlurShaderW());
+        gl()->linkProgram(m_texBlurShaderProgramW);
+        checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramW;
-        glUseProgram(m_texBlurShaderProgramW);
+        gl()->useProgram(m_texBlurShaderProgramW);
 
         m_texBlurShaderProgramWPosition =
-            glGetAttribLocation(m_texBlurShaderProgramW, "aPosition");
+            gl()->getAttribLocation(m_texBlurShaderProgramW, "aPosition");
         m_texBlurShaderProgramWTexPos =
-            glGetAttribLocation(m_texBlurShaderProgramW, "aTexPos");
+            gl()->getAttribLocation(m_texBlurShaderProgramW, "aTexPos");
         m_texBlurShaderProgramWTexture =
-            glGetUniformLocation(m_texBlurShaderProgramW, "uTexture");
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uTexture");
         m_texBlurShaderProgramWBlurRadius =
-            glGetUniformLocation(m_texBlurShaderProgramW, "uBlurRadius");
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uBlurRadius");
         m_texBlurShaderProgramWTextureWidth =
-            glGetUniformLocation(m_texBlurShaderProgramW, "uTextureWidth");
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uTextureWidth");
         m_texBlurShaderProgramWTextureHeight =
-            glGetUniformLocation(m_texBlurShaderProgramW, "uTextureHeight");
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uTextureHeight");
 
-        glUniform1i(m_texBlurShaderProgramWTexture, 0);
-        glEnableVertexAttribArray(m_texBlurShaderProgramWPosition);
+        gl()->uniform1i(m_texBlurShaderProgramWTexture, 0);
+        gl()->enableVertexAttribArray(m_texBlurShaderProgramWPosition);
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-        glEnableVertexAttribArray(m_texBlurShaderProgramWTexPos);
-        glVertexAttribPointer(m_texBlurShaderProgramWTexPos, 2, GL_FLOAT, false,
-                              0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->enableVertexAttribArray(m_texBlurShaderProgramWTexPos);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramWTexPos, 2, GL_FLOAT,
+                                  false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glEnableVertexAttribArray(m_texShaderProgramPosition);
+        gl()->enableVertexAttribArray(m_texShaderProgramPosition);
 
         return m_texBlurShaderProgramW;
     }
@@ -1418,56 +1099,58 @@ public:
         if (m_texBlurShaderProgramEGLImageExternalW) {
             if (m_lastProgram != m_texBlurShaderProgramEGLImageExternalW) {
                 m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
-                glUseProgram(m_texBlurShaderProgramEGLImageExternalW);
+                gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
 
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->vertexAttribPointer(
                     m_texBlurShaderProgramEGLImageExternalWTexPos, 2, GL_FLOAT,
                     false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
             return m_texBlurShaderProgramEGLImageExternalW;
         }
-        m_texBlurShaderProgramEGLImageExternalW = glCreateProgram();
+        m_texBlurShaderProgramEGLImageExternalW = gl()->createProgram();
 
-        glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
-                       texVertexShader());
-        glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
-                       texFragmentBlurShaderEGLImageExternalW());
-        glLinkProgram(m_texBlurShaderProgramEGLImageExternalW);
-        checkError();
+        gl()->attachShader(m_texBlurShaderProgramEGLImageExternalW,
+                           texVertexShader());
+        gl()->attachShader(m_texBlurShaderProgramEGLImageExternalW,
+                           texFragmentBlurShaderEGLImageExternalW());
+        gl()->linkProgram(m_texBlurShaderProgramEGLImageExternalW);
+        checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
-        glUseProgram(m_texBlurShaderProgramEGLImageExternalW);
+        gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
 
-        m_texBlurShaderProgramEGLImageExternalWPosition = glGetAttribLocation(
-            m_texBlurShaderProgramEGLImageExternalW, "aPosition");
-        m_texBlurShaderProgramEGLImageExternalWTexPos = glGetAttribLocation(
+        m_texBlurShaderProgramEGLImageExternalWPosition =
+            gl()->getAttribLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                    "aPosition");
+        m_texBlurShaderProgramEGLImageExternalWTexPos = gl()->getAttribLocation(
             m_texBlurShaderProgramEGLImageExternalW, "aTexPos");
-        m_texBlurShaderProgramEGLImageExternalWTexture = glGetUniformLocation(
-            m_texBlurShaderProgramEGLImageExternalW, "uTexture");
+        m_texBlurShaderProgramEGLImageExternalWTexture =
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uTexture");
         m_texBlurShaderProgramEGLImageExternalWBlurRadius =
-            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
-                                 "uBlurRadius");
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uBlurRadius");
         m_texBlurShaderProgramEGLImageExternalWTextureWidth =
-            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
-                                 "uTextureWidth");
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uTextureWidth");
         m_texBlurShaderProgramEGLImageExternalWTextureHeight =
-            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
-                                 "uTextureHeight");
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uTextureHeight");
 
-        glUniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
-        glEnableVertexAttribArray(
+        gl()->uniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
+        gl()->enableVertexAttribArray(
             m_texBlurShaderProgramEGLImageExternalWPosition);
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-        glEnableVertexAttribArray(
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->enableVertexAttribArray(
             m_texBlurShaderProgramEGLImageExternalWTexPos);
-        glVertexAttribPointer(m_texBlurShaderProgramEGLImageExternalWTexPos, 2,
-                              GL_FLOAT, false, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramEGLImageExternalWTexPos,
+                                  2, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glEnableVertexAttribArray(
+        gl()->enableVertexAttribArray(
             m_texBlurShaderProgramEGLImageExternalWPosition);
 
         return m_texBlurShaderProgramEGLImageExternalW;
@@ -1478,52 +1161,52 @@ public:
         if (m_texBlurShaderProgramH) {
             if (m_lastProgram != m_texBlurShaderProgramH) {
                 m_lastProgram = m_texBlurShaderProgramH;
-                glUseProgram(m_texBlurShaderProgramH);
+                gl()->useProgram(m_texBlurShaderProgramH);
 
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texBlurShaderProgramHTexPos, 2,
-                                      GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->vertexAttribPointer(m_texBlurShaderProgramHTexPos, 2,
+                                          GL_FLOAT, false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
             return m_texBlurShaderProgramH;
         }
-        m_texBlurShaderProgramH = glCreateProgram();
+        m_texBlurShaderProgramH = gl()->createProgram();
 
-        glAttachShader(m_texBlurShaderProgramH, texVertexShader());
-        glAttachShader(m_texBlurShaderProgramH, texFragmentBlurShaderH());
-        glLinkProgram(m_texBlurShaderProgramH);
-        checkError();
+        gl()->attachShader(m_texBlurShaderProgramH, texVertexShader());
+        gl()->attachShader(m_texBlurShaderProgramH, texFragmentBlurShaderH());
+        gl()->linkProgram(m_texBlurShaderProgramH);
+        checkError(gl());
 
         m_lastProgram = m_texBlurShaderProgramH;
-        glUseProgram(m_texBlurShaderProgramH);
+        gl()->useProgram(m_texBlurShaderProgramH);
 
         m_texBlurShaderProgramHPosition =
-            glGetAttribLocation(m_texBlurShaderProgramH, "aPosition");
+            gl()->getAttribLocation(m_texBlurShaderProgramH, "aPosition");
         m_texBlurShaderProgramHTexPos =
-            glGetAttribLocation(m_texBlurShaderProgramH, "aTexPos");
+            gl()->getAttribLocation(m_texBlurShaderProgramH, "aTexPos");
         m_texBlurShaderProgramHTexture =
-            glGetUniformLocation(m_texBlurShaderProgramH, "uTexture");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uTexture");
         m_texBlurShaderProgramHBlurRadius =
-            glGetUniformLocation(m_texBlurShaderProgramH, "uBlurRadius");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uBlurRadius");
         m_texBlurShaderProgramHTextureWidth =
-            glGetUniformLocation(m_texBlurShaderProgramH, "uTextureWidth");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uTextureWidth");
         m_texBlurShaderProgramHTextureHeight =
-            glGetUniformLocation(m_texBlurShaderProgramH, "uTextureHeight");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uTextureHeight");
         m_texBlurShaderProgramHAlpha =
-            glGetUniformLocation(m_texBlurShaderProgramH, "uAlpha");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlpha");
 
-        glUniform1i(m_texBlurShaderProgramHTexture, 0);
-        glEnableVertexAttribArray(m_texBlurShaderProgramHPosition);
+        gl()->uniform1i(m_texBlurShaderProgramHTexture, 0);
+        gl()->enableVertexAttribArray(m_texBlurShaderProgramHPosition);
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-        glEnableVertexAttribArray(m_texBlurShaderProgramHTexPos);
-        glVertexAttribPointer(m_texBlurShaderProgramHTexPos, 2, GL_FLOAT, false,
-                              0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->enableVertexAttribArray(m_texBlurShaderProgramHTexPos);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramHTexPos, 2, GL_FLOAT,
+                                  false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glUniform1f(m_texBlurShaderProgramHAlpha, 1);
+        gl()->uniform1f(m_texBlurShaderProgramHAlpha, 1);
 
-        glEnableVertexAttribArray(m_texBlurShaderProgramHPosition);
+        gl()->enableVertexAttribArray(m_texBlurShaderProgramHPosition);
 
         return m_texBlurShaderProgramH;
     }
@@ -1543,10 +1226,13 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 {
     renderer->glMakeCurrent();
 
+    CompositorContextGL* compositorContext = new CompositorContextGL(renderer);
+    GL* gl = renderer->gl();
+
     if (g_needsCheckCompatibility) {
         GLint siz;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
-        checkError();
+        gl->getIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
+        checkError(gl);
         g_maxTextureSize = siz;
 
         STARFISH_RELEASE_ASSERT(CanvasSurface::g_canvasSurfaceTileSize <=
@@ -1555,8 +1241,8 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 
         bool isOpenGLES3 = true;
         int major;
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        if (glGetError()) {
+        gl->getIntegerv(GL_MAJOR_VERSION, &major);
+        if (gl->getError()) {
             isOpenGLES3 = false;
             major = 2;
         }
@@ -1571,7 +1257,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
             g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
         }
 
-        const char* ex = (const char*)glGetString(GL_EXTENSIONS);
+        const char* ex = (const char*)gl->getString(GL_EXTENSIONS);
 
         if (ex) {
             // STARFISH_LOG_INFO("GL_EXTENSIONS -> %s", ex);
@@ -1595,6 +1281,12 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
             g_shouldUseEGLImageOnPlainSurface = false;
         }
 #endif
+
+        // if efl enabled, there is no way to support egl image with evasgl
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+        g_shouldUseEGLImageOnPlainSurface = false;
+#endif
+
         if (g_isSupportExtensionEGLImageExternal) {
             STARFISH_LOG_INFO("support EGLImageExternal!");
         }
@@ -1634,29 +1326,26 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 #endif
 
         g_needsCheckCompatibility = false;
-        checkError();
+        checkError(gl);
     }
 
-    CompositorContextGL* compositorContext = new CompositorContextGL(renderer);
+    gl->enable(GL_BLEND);
+    gl->blendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    gl->activeTexture(GL_TEXTURE0);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glActiveTexture(GL_TEXTURE0);
-
-    glGenBuffers(1, &compositorContext->m_texTexPosBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, compositorContext->m_texTexPosBuffer);
-    STARFISH_LOG_INFO("compositorContext->m_texTexPosBuffer %d",
-                      compositorContext->m_texTexPosBuffer);
+    gl->genBuffers(1, &compositorContext->m_texTexPosBuffer);
+    gl->bindBuffer(GL_ARRAY_BUFFER, compositorContext->m_texTexPosBuffer);
     float texPos[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(texPos), texPos, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->bufferData(GL_ARRAY_BUFFER, sizeof(texPos), texPos, GL_STATIC_DRAW);
+    gl->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glGenBuffers(1, &compositorContext->m_drawPosBuffer);
+    gl->genBuffers(1, &compositorContext->m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    glGenFramebuffers(1, &compositorContext->m_mainViewFBO);
-    glGenRenderbuffers(1, &compositorContext->m_mainViewRBO);
+    gl->genFramebuffers(1, &compositorContext->m_mainViewFBO);
+    gl->genRenderbuffers(1, &compositorContext->m_mainViewRBO);
 #endif
+
     return compositorContext;
 }
 
@@ -1692,7 +1381,7 @@ public:
 #endif
 
         attachNativeBuffer(w, h, flag);
-        checkError();
+        checkError(gl());
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
@@ -1700,6 +1389,11 @@ public:
                 s->detachNativeBuffer();
             },
             NULL, NULL, NULL);
+    }
+
+    GL* gl()
+    {
+        return m_renderer->gl();
     }
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -1735,7 +1429,7 @@ public:
                 }
                 m_tbmSurface = nullptr;
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-                g_evasGLAPI->evasglDestroyImage(m_eglImage);
+                gl()->evasglDestroyImage(m_eglImage);
                 m_eglImage = nullptr;
                 if (m_isEGLBufferOwner) {
                     LongTaskFinder t("tbm_surface_destroy", 1);
@@ -1769,7 +1463,7 @@ public:
                             id, m_textureFragments[i].textureWidth,
                             m_textureFragments[i].textureHeight);
                     } else {
-                        glDeleteTextures(1, &id);
+                        gl()->deleteTextures(1, &id);
                     }
                 }
             }
@@ -1944,17 +1638,17 @@ public:
                         display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr,
                         attribs);
                 }
-                checkError();
+                checkError(gl());
             }
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
             {
                 STARFISH_RELEASE_ASSERT(m_tbmSurface);
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
                 int eglImgAttr[] = { EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0 };
-                m_eglImage = g_evasGLAPI->evasglCreateImage(
+                m_eglImage = gl()->evasglCreateImage(
                     EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)m_tbmSurface,
                     eglImgAttr);
-                checkError();
+                checkError(gl());
             }
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
             {
@@ -1988,36 +1682,36 @@ public:
 #endif
             {
                 GLuint textureID;
-                glGenTextures(1, &textureID);
+                gl()->genTextures(1, &textureID);
 
-                glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureID);
-                checkError();
+                gl()->bindTexture(GL_TEXTURE_EXTERNAL_OES, textureID);
+                checkError(gl());
 
-                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER,
-                                GL_LINEAR);
+                gl()->texParameteri(GL_TEXTURE_EXTERNAL_OES,
+                                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                gl()->texParameteri(GL_TEXTURE_EXTERNAL_OES,
+                                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
-                                GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
-                                GL_CLAMP_TO_EDGE);
+                gl()->texParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
+                                    GL_CLAMP_TO_EDGE);
+                gl()->texParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
+                                    GL_CLAMP_TO_EDGE);
 
-                checkError();
+                checkError(gl());
 #if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
                 g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_EXTERNAL_OES,
                                                    m_eglImage);
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-                g_evasGLAPI->glEvasGLImageTargetTexture2DOES(
-                    GL_TEXTURE_EXTERNAL_OES, m_eglImage);
+                gl()->evasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
+                                                    m_eglImage);
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
-                glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
-                                             m_eglImage);
+                g_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
+                                               m_eglImage);
 #endif
-                checkError();
+                checkError(gl());
 
-                glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-                checkError();
+                gl()->bindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+                checkError(gl());
 
                 fragment.textureWidth = m_bufferWidth;
                 fragment.textureHeight = m_bufferHeight;
@@ -2244,38 +1938,39 @@ public:
                                 }
                             }
 
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                            gl()->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
                             bool textureJustCreated = false;
                             if (fragment.textureID == 0) {
                                 textureJustCreated = true;
-                                glGenTextures(1, (GLuint*)&fragment.textureID);
-                                glBindTexture(GL_TEXTURE_2D,
-                                              fragment.textureID);
-                                checkError();
+                                gl()->genTextures(1,
+                                                  (GLuint*)&fragment.textureID);
+                                gl()->bindTexture(GL_TEXTURE_2D,
+                                                  fragment.textureID);
+                                checkError(gl());
 
-                                glTexParameteri(GL_TEXTURE_2D,
-                                                GL_TEXTURE_MIN_FILTER,
-                                                GL_LINEAR);
-                                glTexParameteri(GL_TEXTURE_2D,
-                                                GL_TEXTURE_MAG_FILTER,
-                                                GL_LINEAR);
+                                gl()->texParameteri(GL_TEXTURE_2D,
+                                                    GL_TEXTURE_MIN_FILTER,
+                                                    GL_LINEAR);
+                                gl()->texParameteri(GL_TEXTURE_2D,
+                                                    GL_TEXTURE_MAG_FILTER,
+                                                    GL_LINEAR);
 
-                                glTexParameteri(GL_TEXTURE_2D,
-                                                GL_TEXTURE_WRAP_S,
-                                                GL_CLAMP_TO_EDGE);
-                                glTexParameteri(GL_TEXTURE_2D,
-                                                GL_TEXTURE_WRAP_T,
-                                                GL_CLAMP_TO_EDGE);
+                                gl()->texParameteri(GL_TEXTURE_2D,
+                                                    GL_TEXTURE_WRAP_S,
+                                                    GL_CLAMP_TO_EDGE);
+                                gl()->texParameteri(GL_TEXTURE_2D,
+                                                    GL_TEXTURE_WRAP_T,
+                                                    GL_CLAMP_TO_EDGE);
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
                                 if (g_isSupportTextureSwizzle &&
                                     !g_needsRGBShuffle) {
                                     GLint swizzleMask[] = { GL_BLUE, GL_GREEN,
                                                             GL_RED, GL_ALPHA };
-                                    glTexParameteriv(GL_TEXTURE_2D,
-                                                     TEXTURE_SWIZZLE_RGBA,
-                                                     swizzleMask);
+                                    gl()->texParameteriv(GL_TEXTURE_2D,
+                                                         TEXTURE_SWIZZLE_RGBA,
+                                                         swizzleMask);
                                 }
 #endif
                             }
@@ -2291,54 +1986,56 @@ public:
                                 updateWholeTexture = true;
                             }
 
-                            glBindTexture(GL_TEXTURE_2D, fragment.textureID);
-                            checkError();
+                            gl()->bindTexture(GL_TEXTURE_2D,
+                                              fragment.textureID);
+                            checkError(gl());
 
                             if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
-                                glPixelStorei(GL_UNPACK_ROW_LENGTH,
-                                              bufferWidth());
-                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
-                                glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
+                                gl()->pixelStorei(GL_UNPACK_ROW_LENGTH,
+                                                  bufferWidth());
+                                gl()->pixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
+                                gl()->pixelStorei(GL_UNPACK_SKIP_ROWS, yy);
 
                                 auto data = bData;
                                 data += textureDataY * bStride;
                                 data += textureDataX * 4;
                                 if (updateWholeTexture) {
-                                    glTexImage2D(GL_TEXTURE_2D, 0, kind,
-                                                 fragment.textureWidth,
-                                                 fragment.textureHeight, 0,
-                                                 kind, GL_UNSIGNED_BYTE, data);
+                                    gl()->texImage2D(GL_TEXTURE_2D, 0, kind,
+                                                     fragment.textureWidth,
+                                                     fragment.textureHeight, 0,
+                                                     kind, GL_UNSIGNED_BYTE,
+                                                     data);
                                 } else {
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                    xxEnd - xx, yyEnd - yy,
-                                                    kind, GL_UNSIGNED_BYTE,
-                                                    data);
+                                    gl()->texSubImage2D(GL_TEXTURE_2D, 0, xx,
+                                                        yy, xxEnd - xx,
+                                                        yyEnd - yy, kind,
+                                                        GL_UNSIGNED_BYTE, data);
                                 }
 
-                                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-                                glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+                                gl()->pixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                                gl()->pixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+                                gl()->pixelStorei(GL_UNPACK_SKIP_ROWS, 0);
                             } else {
                                 if (updateWholeTexture) {
-                                    glTexImage2D(GL_TEXTURE_2D, 0, kind,
-                                                 fragment.textureWidth,
-                                                 fragment.textureHeight, 0,
-                                                 kind, GL_UNSIGNED_BYTE,
-                                                 nullptr);
+                                    gl()->texImage2D(GL_TEXTURE_2D, 0, kind,
+                                                     fragment.textureWidth,
+                                                     fragment.textureHeight, 0,
+                                                     kind, GL_UNSIGNED_BYTE,
+                                                     nullptr);
                                 }
                                 for (; yy < yyEnd; yy++) {
                                     auto data = bData;
                                     data += ((yy + textureDataY) * bStride);
                                     data += ((textureDataX + xx) * 4);
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                    xxEnd - xx, 1, kind,
-                                                    GL_UNSIGNED_BYTE, data);
-                                    checkError();
+                                    gl()->texSubImage2D(GL_TEXTURE_2D, 0, xx,
+                                                        yy, xxEnd - xx, 1, kind,
+                                                        GL_UNSIGNED_BYTE, data);
+                                    checkError(gl());
                                 }
                             }
 
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                            checkError();
+                            gl()->pixelStorei(GL_UNPACK_ALIGNMENT, 4);
+                            checkError(gl());
                         }
                     }
 
@@ -2415,7 +2112,7 @@ protected:
     bool m_isEGLBufferOwner;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
-    EvasGLImage m_eglImage;
+    void* m_eglImage;
 #elif defined(STARFISH_TIZEN)
     tbm_surface_h m_tbmSurface;
     EGLImageKHR m_eglImage;
@@ -2445,6 +2142,11 @@ struct CompositorImplGLState {
 
 class CompositorImplGL : public Compositor {
 public:
+    GL* gl()
+    {
+        return m_webView->renderer()->gl();
+    }
+
     void applyDevicePixelRatio()
     {
         m_state.back().matrix.preScale(
@@ -2454,7 +2156,7 @@ public:
 
     void setViewport()
     {
-        glViewport(0, 0, screenWidth(), screenHeight());
+        gl()->viewport(0, 0, screenWidth(), screenHeight());
     }
 
     size_t screenWidth()
@@ -2470,9 +2172,9 @@ public:
     void scissor(float x, float y, float width, float height)
     {
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-        glScissor(x, y, width, height);
+        gl()->scissor(x, y, width, height);
 #else
-        glScissor(x, (float)screenHeight() - (y + height), width, height);
+        gl()->scissor(x, (float)screenHeight() - (y + height), width, height);
 #endif
     }
 
@@ -2506,36 +2208,8 @@ public:
 
     SkMatrix computeScreenMatrix()
     {
-        SkMatrix m = SkMatrix::I();
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-        size_t w = screenWidth();
-        size_t h = screenHeight();
-        int deg = evas_gl_rotation_get(g_evasGL);
-        if (deg % 180 == 90) {
-            float tx = w / 2.f;
-            float ty = h / 2.f;
-
-            m.preTranslate(tx, ty);
-
-            SkMatrix t = SkMatrix::I();
-            t.preRotate(360 - deg);
-            t.preScale(h / (float)w, w / (float)h);
-            m.preConcat(t);
-
-            m.preTranslate(-tx, -ty);
-        } else if (deg == 180) {
-            float tx = w / 2.f;
-            float ty = h / 2.f;
-            m.preTranslate(tx, ty);
-
-            SkMatrix t = SkMatrix::I();
-            t.preRotate(360 - deg);
-            m.preConcat(t);
-
-            m.preTranslate(-tx, -ty);
-        }
-#endif
-        return m;
+        return gl()->computeScreenMatrix(m_compositorContext->m_renderer,
+                                         screenWidth(), screenHeight());
     }
 
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
@@ -2577,28 +2251,20 @@ public:
 
         setViewport();
 
-        glBindTexture(GL_TEXTURE_2D, 0);
+        gl()->bindTexture(GL_TEXTURE_2D, 0);
         if (g_isSupportExtensionEGLImageExternal) {
-            glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+            gl()->bindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
         }
 
-        glUseProgram(0);
+        gl()->useProgram(0);
         m_compositorContext->m_lastProgram = 0;
-
-#if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-        // there is blinking on EvasGL with FBO
-        // explicit sync fixes blinking
-        if (m_seenFBOUsage && !g_isEvasGLOnDirectMode) {
-            m_webView->renderer()->glMayNeedsSync();
-        }
-#endif
     }
 
     virtual void clearColor(const Unit::Color& clr) override
     {
         // LongTaskFinder p("CompositorImplGL::clearColor", 1);
-        glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
-        glClear(GL_COLOR_BUFFER_BIT);
+        gl()->clearColor(clr.R(), clr.G(), clr.B(), clr.A());
+        gl()->clear(GL_COLOR_BUFFER_BIT);
     }
 
     // state
@@ -2692,9 +2358,9 @@ public:
     {
         save();
         setFillColor(Unit::Color(0, 0, 0, 0));
-        glBlendFunc(GL_ONE, GL_ZERO);
+        gl()->blendFunc(GL_ONE, GL_ZERO);
         drawRect(rt);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        gl()->blendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         restore();
     }
 
@@ -2762,23 +2428,24 @@ public:
                     };
 #endif
 
-                    glBindBuffer(GL_ARRAY_BUFFER,
-                                 m_compositorContext->m_drawPosBuffer);
-                    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_DYNAMIC_DRAW);
-                    glVertexAttribPointer(
+                    gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                     m_compositorContext->m_drawPosBuffer);
+                    gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                                     position, GL_DYNAMIC_DRAW);
+                    gl()->vertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
                         GL_FLOAT, false, 0, 0);
-                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
                     float a = lastState.opacity;
 
-                    glUniform4f(m_compositorContext->m_rectShaderProgramColor,
-                                a * currentColor.R(), a * currentColor.G(),
-                                a * currentColor.B(), a * currentColor.A());
+                    gl()->uniform4f(
+                        m_compositorContext->m_rectShaderProgramColor,
+                        a * currentColor.R(), a * currentColor.G(),
+                        a * currentColor.B(), a * currentColor.A());
 
-                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                    checkError();
+                    gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                    checkError(gl());
                 } else {
                     // polygon painting
                     std::vector<std::vector<Point>> polygon;
@@ -2836,23 +2503,23 @@ public:
                         };
 #endif
 
-                        glBindBuffer(GL_ARRAY_BUFFER,
-                                     m_compositorContext->m_drawPosBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                     position, GL_DYNAMIC_DRAW);
-                        glVertexAttribPointer(
+                        gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                         m_compositorContext->m_drawPosBuffer);
+                        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                                         position, GL_DYNAMIC_DRAW);
+                        gl()->vertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
                             GL_FLOAT, false, 0, 0);
-                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+                        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
                         float a = lastState.opacity;
-                        glUniform4f(
+                        gl()->uniform4f(
                             m_compositorContext->m_rectShaderProgramColor,
                             a * currentColor.R(), a * currentColor.G(),
                             a * currentColor.B(), a * currentColor.A());
 
-                        glDrawArrays(GL_TRIANGLES, 0, 3);
-                        checkError();
+                        gl()->drawArrays(GL_TRIANGLES, 0, 3);
+                        checkError(gl());
                     }
                 }
             }
@@ -2882,21 +2549,22 @@ public:
             };
 #endif
 
-            glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, &data[0],
-                         GL_DYNAMIC_DRAW);
-            glVertexAttribPointer(
+            gl()->bindBuffer(GL_ARRAY_BUFFER,
+                             m_compositorContext->m_drawPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, &data[0],
+                             GL_DYNAMIC_DRAW);
+            gl()->vertexAttribPointer(
                 m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
                 false, 0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
             float a = lastState.opacity;
-            glUniform4f(m_compositorContext->m_rectShaderProgramColor,
-                        a * currentColor.R(), a * currentColor.G(),
-                        a * currentColor.B(), a * currentColor.A());
+            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
+                            a * currentColor.R(), a * currentColor.G(),
+                            a * currentColor.B(), a * currentColor.A());
 
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            checkError();
+            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            checkError(gl());
         }
     }
 
@@ -2976,18 +2644,18 @@ public:
         pushFBOContext(textureWidth, textureHeight, false,
                        LayoutRect(0, 0, textureWidth, textureHeight));
 
-        bool isStencilEnabled = glIsEnabled(GL_STENCIL_TEST);
-        bool isScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+        bool isStencilEnabled = gl()->isEnabled(GL_STENCIL_TEST);
+        bool isScissorEnabled = gl()->isEnabled(GL_SCISSOR_TEST);
 
         if (isStencilEnabled) {
-            glDisable(GL_STENCIL_TEST);
+            gl()->disable(GL_STENCIL_TEST);
         }
         if (isScissorEnabled) {
-            glDisable(GL_SCISSOR_TEST);
+            gl()->disable(GL_SCISSOR_TEST);
         }
 
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT);
+        gl()->clearColor(0, 0, 0, 0);
+        gl()->clear(GL_COLOR_BUFFER_BIT);
 
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
         float blurMainRadius = lastState.blurRadius;
@@ -3009,106 +2677,108 @@ public:
             }
 
             if (isEGLImage) {
-                glBindBuffer(GL_ARRAY_BUFFER,
-                             m_compositorContext->m_drawPosBuffer);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_DYNAMIC_DRAW);
-                glVertexAttribPointer(
+                gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                 m_compositorContext->m_drawPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                                 GL_DYNAMIC_DRAW);
+                gl()->vertexAttribPointer(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWPosition,
                     2, GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-                glUniform1f(
+                gl()->uniform1f(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWTextureWidth,
                     textureWidth);
-                glUniform1f(
+                gl()->uniform1f(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWTextureHeight,
                     textureHeight);
-                glUniform2f(
+                gl()->uniform2f(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWBlurRadius,
                     blurMainRadius, blurSubRadius);
             } else {
-                glBindBuffer(GL_ARRAY_BUFFER,
-                             m_compositorContext->m_drawPosBuffer);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_DYNAMIC_DRAW);
-                glVertexAttribPointer(
+                gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                 m_compositorContext->m_drawPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                                 GL_DYNAMIC_DRAW);
+                gl()->vertexAttribPointer(
                     m_compositorContext->m_texBlurShaderProgramWPosition, 2,
                     GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-                glUniform1f(
+                gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramWTextureWidth,
                     textureWidth);
-                glUniform1f(
+                gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramWTextureHeight,
                     textureHeight);
-                glUniform2f(
+                gl()->uniform2f(
                     m_compositorContext->m_texBlurShaderProgramWBlurRadius,
                     blurMainRadius, blurSubRadius);
             }
-            glBindTexture(textureKind, textureID);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            gl()->bindTexture(textureKind, textureID);
+            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
 
         GLuint fboTex = popFBOContext();
-        checkError();
+        checkError(gl());
 
         if (isStencilEnabled) {
-            glEnable(GL_STENCIL_TEST);
+            gl()->enable(GL_STENCIL_TEST);
         }
         if (isScissorEnabled) {
-            glEnable(GL_SCISSOR_TEST);
+            gl()->enable(GL_SCISSOR_TEST);
         }
 
         // blur H
         {
             m_compositorContext->texBlurShaderProgramH();
 
-            glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                         GL_DYNAMIC_DRAW);
-            glVertexAttribPointer(
+            gl()->bindBuffer(GL_ARRAY_BUFFER,
+                             m_compositorContext->m_drawPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                             GL_DYNAMIC_DRAW);
+            gl()->vertexAttribPointer(
                 m_compositorContext->m_texBlurShaderProgramHPosition, 2,
                 GL_FLOAT, false, 0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glBindTexture(GL_TEXTURE_2D, fboTex);
+            gl()->bindTexture(GL_TEXTURE_2D, fboTex);
 
-            glUniform1f(
+            gl()->uniform1f(
                 m_compositorContext->m_texBlurShaderProgramHTextureWidth,
                 textureWidth);
-            glUniform1f(
+            gl()->uniform1f(
                 m_compositorContext->m_texBlurShaderProgramHTextureHeight,
                 textureHeight);
 
-            glUniform2f(m_compositorContext->m_texBlurShaderProgramHBlurRadius,
-                        -blurSubRadius, blurMainRadius);
+            gl()->uniform2f(
+                m_compositorContext->m_texBlurShaderProgramHBlurRadius,
+                -blurSubRadius, blurMainRadius);
             float a = lastState.opacity;
             if (a != 1) {
-                glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
-                            a);
+                gl()->uniform1f(
+                    m_compositorContext->m_texBlurShaderProgramHAlpha, a);
             }
 
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-            if (glGetError() == 1286) {
+            if (gl()->getError() == 1286) {
                 STARFISH_LOG_ERROR("drawFilteredTexture got error 1286");
             }
             if (a != 1) {
-                glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
-                            1);
+                gl()->uniform1f(
+                    m_compositorContext->m_texBlurShaderProgramHAlpha, 1);
             }
-            checkError();
+            checkError(gl());
         }
 
         m_compositorContext->putGenericTextureToCache(fboTex, textureWidth,
                                                       textureHeight);
-        checkError();
+        checkError(gl());
     }
 
     void drawTexture(CanvasSurfaceGL* cs, float position[8], GLuint textureID,
@@ -3128,7 +2798,7 @@ public:
             m_compositorContext->texShaderProgram();
         }
 
-        glBindTexture(textureKind, textureID);
+        gl()->bindTexture(textureKind, textureID);
 
         GLint* positionPos;
         GLint* alphaPos;
@@ -3144,28 +2814,28 @@ public:
             alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                     GL_DYNAMIC_DRAW);
-        glVertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                         GL_DYNAMIC_DRAW);
+        gl()->vertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
         if (a != 1) {
-            glUniform1f(*alphaPos, a);
+            gl()->uniform1f(*alphaPos, a);
         }
 
-        GLint location =
-            glGetUniformLocation(m_compositorContext->m_lastProgram, "uFlipY");
+        GLint location = gl()->getUniformLocation(
+            m_compositorContext->m_lastProgram, "uFlipY");
         STARFISH_ASSERT(location != -1);
-        glUniform1f(location, cs->isFlipYNeeded() ? 1.0 : 0.0);
+        gl()->uniform1f(location, cs->isFlipYNeeded() ? 1.0 : 0.0);
 
-        checkError();
+        checkError(gl());
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        checkError();
+        gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        checkError(gl());
 
         if (a != 1) {
-            glUniform1f(*alphaPos, 1);
+            gl()->uniform1f(*alphaPos, 1);
         }
     }
 
@@ -3324,7 +2994,7 @@ public:
                     }
                 }
 
-                glEnable(GL_SCISSOR_TEST);
+                gl()->enable(GL_SCISSOR_TEST);
                 scissor(visibleArea.x(), visibleArea.y(), visibleArea.width(),
                         visibleArea.height());
                 scissorClippingEnabled = true;
@@ -3348,7 +3018,7 @@ public:
 
                         visibleArea =
                             Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-                        glEnable(GL_SCISSOR_TEST);
+                        gl()->enable(GL_SCISSOR_TEST);
                         scissor(minX, minY, maxX - minX, maxY - minY);
                         scissorClippingEnabled = true;
                     } else {
@@ -3370,12 +3040,12 @@ public:
 
                         stencilClippingEnabled = true;
 
-                        glEnable(GL_STENCIL_TEST);
-                        glClearStencil(0);
-                        glClear(GL_STENCIL_BUFFER_BIT);
-                        glColorMask(false, false, false, false);
-                        glStencilFunc(GL_ALWAYS, 1, 1);
-                        glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+                        gl()->enable(GL_STENCIL_TEST);
+                        gl()->clearStencil(0);
+                        gl()->clear(GL_STENCIL_BUFFER_BIT);
+                        gl()->colorMask(false, false, false, false);
+                        gl()->stencilFunc(GL_ALWAYS, 1, 1);
+                        gl()->stencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
                         std::vector<float> position;
                         m_compositorContext->rectProgram();
@@ -3420,27 +3090,27 @@ public:
 #endif
                         }
 
-                        glBindBuffer(GL_ARRAY_BUFFER,
-                                     m_compositorContext->m_drawPosBuffer);
-                        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                     position.data(), GL_DYNAMIC_DRAW);
-                        glVertexAttribPointer(
+                        gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                         m_compositorContext->m_drawPosBuffer);
+                        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                                         position.data(), GL_DYNAMIC_DRAW);
+                        gl()->vertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
                             GL_FLOAT, false, 0, 0);
-                        glBindBuffer(GL_ARRAY_BUFFER, 0);
+                        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-                        glUniform4f(
+                        gl()->uniform4f(
                             m_compositorContext->m_rectShaderProgramColor,
                             Unit::Color(255, 255, 255, 255).R(),
                             Unit::Color(255, 255, 255, 255).G(),
                             Unit::Color(255, 255, 255, 255).B(),
                             Unit::Color(255, 255, 255, 255).A());
-                        glDrawArrays(GL_TRIANGLES, 0, position.size() / 2);
-                        checkError();
+                        gl()->drawArrays(GL_TRIANGLES, 0, position.size() / 2);
+                        checkError(gl());
 
-                        glColorMask(true, true, true, true);
-                        glStencilFunc(GL_EQUAL, 1, 1);
-                        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                        gl()->colorMask(true, true, true, true);
+                        gl()->stencilFunc(GL_EQUAL, 1, 1);
+                        gl()->stencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
                     }
                 } else {
                     shouldSkipTexturePainting = true;
@@ -3552,10 +3222,10 @@ public:
         }
 
         if (stencilClippingEnabled) {
-            glDisable(GL_STENCIL_TEST);
+            gl()->disable(GL_STENCIL_TEST);
         }
         if (scissorClippingEnabled) {
-            glDisable(GL_SCISSOR_TEST);
+            gl()->disable(GL_SCISSOR_TEST);
         }
     }
 
@@ -3707,73 +3377,76 @@ public:
         FBOState newFBOState;
 
         // generate FBO
-        glGenFramebuffers(1, &newFBOState.fboId);
-        checkError();
+        gl()->genFramebuffers(1, &newFBOState.fboId);
+        checkError(gl());
 
         // generate texture
         newFBOState.fboTex =
             m_compositorContext->takeGenericTextureFromCache(width, height);
         if (newFBOState.fboTex == 0) {
-            glGenTextures(1, &newFBOState.fboTex);
-            checkError();
+            gl()->genTextures(1, &newFBOState.fboTex);
+            checkError(gl());
         }
 
         // generate render buffer
-        glGenRenderbuffers(1, &newFBOState.renderBufferId);
-        checkError();
+        gl()->genRenderbuffers(1, &newFBOState.renderBufferId);
+        checkError(gl());
 
         // Bind Frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
-        checkError();
+        gl()->bindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
+        checkError(gl());
 
         // Bind texture
-        glBindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
-        checkError();
+        gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
+        checkError(gl());
 
         // Define texture parameters
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        checkError();
+        gl()->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, nullptr);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        checkError(gl());
 
         // Bind render buffer and define buffer dimension
-        glBindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
+        gl()->bindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
 
         // Attach texture FBO color attachment
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, newFBOState.fboTex, 0);
-        checkError();
+        gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, newFBOState.fboTex, 0);
+        checkError(gl());
 
         if (needsStencilDepth) {
-            glGenTextures(1, &newFBOState.fboSupportTex);
-            glBindTexture(GL_TEXTURE_2D, newFBOState.fboSupportTex);
-            glTexImage2D(GL_TEXTURE_2D, 0, // target and mipmap level
-                         GL_DEPTH_STENCIL, width, height, // size of texture
-                         0,                               // border size
-                         GL_DEPTH_STENCIL, // format of of data we are uploading
-                                           // to to the texture (ignored)
-                         GL_UNSIGNED_INT_24_8, // type of of data we are
-                                               // uploading to to the texture
-                                               // (ignored)
-                         NULL /* no data uploaded */);
-            checkError();
+            gl()->genTextures(1, &newFBOState.fboSupportTex);
+            gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboSupportTex);
+            gl()->texImage2D(
+                GL_TEXTURE_2D, 0,                // target and mipmap level
+                GL_DEPTH_STENCIL, width, height, // size of texture
+                0,                               // border size
+                GL_DEPTH_STENCIL,     // format of of data we are uploading
+                                      // to to the texture (ignored)
+                GL_UNSIGNED_INT_24_8, // type of of data we are
+                                      // uploading to to the texture
+                                      // (ignored)
+                NULL /* no data uploaded */);
+            checkError(gl());
             // attatch the depth/stencil texture to both the stencil and depth
             // render objects.
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                   GL_TEXTURE_2D, newFBOState.fboSupportTex, 0);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                                   GL_TEXTURE_2D, newFBOState.fboSupportTex, 0);
-            checkError();
+            gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                       GL_TEXTURE_2D, newFBOState.fboSupportTex,
+                                       0);
+            gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                       GL_TEXTURE_2D, newFBOState.fboSupportTex,
+                                       0);
+            checkError(gl());
         } else {
             newFBOState.fboSupportTex = 0;
         }
 
         newFBOState.viewport = viewport;
-        glViewport(viewport.x(), viewport.y(), viewport.width(),
-                   viewport.height());
+        gl()->viewport(viewport.x(), viewport.y(), viewport.width(),
+                       viewport.height());
 
         m_fboState.push_back(newFBOState);
     }
@@ -3785,32 +3458,32 @@ public:
 
         if (m_fboState.size()) {
             auto& s = m_fboState.back();
-            glBindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
-            glBindFramebuffer(GL_FRAMEBUFFER, s.fboId);
+            gl()->bindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
+            gl()->bindFramebuffer(GL_FRAMEBUFFER, s.fboId);
 
-            glViewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
-                       s.viewport.height());
+            gl()->viewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
+                           s.viewport.height());
         } else {
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
             if (m_compositorContext->m_mainViewRBO) {
-                glBindRenderbuffer(GL_RENDERBUFFER,
-                                   m_compositorContext->m_mainViewRBO);
+                gl()->bindRenderbuffer(GL_RENDERBUFFER,
+                                       m_compositorContext->m_mainViewRBO);
             }
             if (m_compositorContext->m_mainViewFBO) {
-                glBindFramebuffer(GL_FRAMEBUFFER,
-                                  m_compositorContext->m_mainViewFBO);
+                gl()->bindFramebuffer(GL_FRAMEBUFFER,
+                                      m_compositorContext->m_mainViewFBO);
             }
 #else
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            gl()->bindRenderbuffer(GL_RENDERBUFFER, 0);
+            gl()->bindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
             setViewport();
         }
 
-        glDeleteRenderbuffers(1, &lastState.renderBufferId);
-        glDeleteFramebuffers(1, &lastState.fboId);
+        gl()->deleteRenderbuffers(1, &lastState.renderBufferId);
+        gl()->deleteFramebuffers(1, &lastState.fboId);
         if (lastState.fboSupportTex) {
-            glDeleteTextures(1, &lastState.fboSupportTex);
+            gl()->deleteTextures(1, &lastState.fboSupportTex);
         }
         return lastState.fboTex;
     }
@@ -3859,7 +3532,8 @@ bool CompositorFactory::supportsFilterEffectGl(size_t textureWidth,
 void screenShotImpl(Renderer* renderer, const char* path,
                     std::function<void()> callback)
 {
-    glFinish();
+    GL* gl = renderer->gl();
+    gl->finish();
 
     auto deviceWidth = renderer->width();
     auto deviceHeight = renderer->height();
@@ -3867,11 +3541,11 @@ void screenShotImpl(Renderer* renderer, const char* path,
 
     auto dataLength = rowLength * deviceHeight;
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    gl->pixelStorei(GL_PACK_ALIGNMENT, 1);
     uint8_t* buffer = new uint8_t[dataLength];
-    glReadPixels(0, 0, deviceWidth, deviceHeight, GL_RGBA, GL_UNSIGNED_BYTE,
-                 buffer);
+    gl->readPixels(0, 0, deviceWidth, deviceHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                   buffer);
 
     // convert to rgba to bgra for cairo
     for (uint32_t y = 0; y < deviceHeight; y++) {

@@ -242,9 +242,9 @@ public:
             m_glPaintingSurface = nullptr;
         }
 
-        Compositor::destroyCompositorContext(this, m_compostiorContext);
-        m_compostiorContext = nullptr;
-
+        if (m_compostiorContext) {
+            m_compostiorContext->onIdle();
+        }
         Renderer::pause();
     }
 

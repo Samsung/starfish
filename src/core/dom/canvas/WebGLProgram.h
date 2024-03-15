@@ -23,7 +23,6 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/WebGLObject.h"
-#include "platform/canvas/webgl/GLESTypes.h"
 
 namespace Starfish {
 

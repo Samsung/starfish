@@ -22,6 +22,7 @@
 
 #include "core/page/RenderResult.h"
 #include "core/event/EventModifierData.h"
+#include "platform/canvas/gl/GL.h"
 
 namespace Starfish {
 enum WindowHandlerKind {
@@ -96,6 +97,8 @@ enum class CompositionEventKind {
 } // namespace Starfish
 
 namespace Starfish {
+
+class GL;
 
 class Renderer : public gc {
 public:
@@ -273,13 +276,18 @@ public:
     {
         return m_compostiorContext;
     }
-
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    GL* gl();
+#endif
 protected:
     Renderer(Starfish* starfish);
 
     Starfish* m_starfish;
     WebView* m_webView;
     size_t m_renderingAnimator;
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    std::unique_ptr<GL> m_gl;
+#endif
     CompositorContext* m_compostiorContext;
     EventModifierData m_eventModifierData;
     float m_lastMouseMoveX;

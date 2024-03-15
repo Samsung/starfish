@@ -1,0 +1,673 @@
+/*
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#include "StarfishConfig.h"
+#include "Starfish.h"
+
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#include "GL.h"
+#include "IncludeGL.h"
+
+#include "core/page/WebView.h"
+#include "core/modules/renderer/Renderer.h"
+
+namespace Starfish {
+
+class GenericGL : public GL {
+public:
+    virtual void activeTexture(GLenum texture) override
+    {
+        glActiveTexture(texture);
+    }
+
+    virtual void attachShader(GLuint program, GLuint shader) override
+    {
+        glAttachShader(program, shader);
+    }
+
+    virtual void bindBuffer(GLenum target, GLuint buffer) override
+    {
+        glBindBuffer(target, buffer);
+    }
+
+    virtual void bindFramebuffer(GLenum target, GLuint framebuffer) override
+    {
+        glBindFramebuffer(target, framebuffer);
+    }
+
+    virtual void bindRenderbuffer(GLenum target, GLuint renderbuffer) override
+    {
+        glBindRenderbuffer(target, renderbuffer);
+    }
+
+    virtual void bindTexture(GLenum target, GLuint texture) override
+    {
+        glBindTexture(target, texture);
+    }
+
+    virtual void blendFunc(GLenum sfactor, GLenum dfactor) override
+    {
+        glBlendFunc(sfactor, dfactor);
+    }
+
+    virtual void bufferData(GLenum target, GLsizeiptr size, const void *data,
+                            GLenum usage) override
+    {
+        glBufferData(target, size, data, usage);
+    }
+
+    virtual void clear(GLbitfield mask) override
+    {
+        glClear(mask);
+    }
+
+    virtual void clearColor(GLclampf red, GLclampf green, GLclampf blue,
+                            GLclampf alpha) override
+    {
+        glClearColor(red, green, blue, alpha);
+    }
+
+    virtual void clearStencil(GLint s) override
+    {
+        glClearStencil(s);
+    }
+
+    virtual void colorMask(GLboolean red, GLboolean green, GLboolean blue,
+                           GLboolean alpha) override
+    {
+        glColorMask(red, green, blue, alpha);
+    }
+
+    virtual void shaderSource(GLuint shader, GLsizei count,
+                              const char *const *string,
+                              const GLint *length) override
+    {
+        glShaderSource(shader, count, string, length);
+    }
+
+    virtual void getShaderInfoLog(GLuint shader, GLsizei bufsize,
+                                  GLsizei *length, char *infolog) override
+    {
+        glGetShaderInfoLog(shader, bufsize, length, infolog);
+    }
+
+    virtual void compileShader(GLuint shader) override
+    {
+        glCompileShader(shader);
+    }
+
+    virtual void compressedTexImage2D(GLenum target, GLint level,
+                                      GLenum internalformat, GLsizei width,
+                                      GLsizei height, GLint border,
+                                      GLsizei imageSize,
+                                      const void *data) override
+    {
+        glCompressedTexImage2D(target, level, internalformat, width, height,
+                               border, imageSize, data);
+    }
+
+    virtual void compressedTexSubImage2D(GLenum target, GLint level,
+                                         GLint xoffset, GLint yoffset,
+                                         GLsizei width, GLsizei height,
+                                         GLenum format, GLsizei imageSize,
+                                         const void *data) override
+    {
+        glCompressedTexSubImage2D(target, level, xoffset, yoffset, width,
+                                  height, format, imageSize, data);
+    }
+
+    virtual GLuint createProgram(void) override
+    {
+        return glCreateProgram();
+    }
+
+    virtual GLuint createShader(GLenum type) override
+    {
+        return glCreateShader(type);
+    }
+
+    virtual void deleteBuffers(GLsizei n, const GLuint *buffers) override
+    {
+        glDeleteBuffers(n, buffers);
+    }
+
+    virtual void deleteFramebuffers(GLsizei n,
+                                    const GLuint *framebuffers) override
+    {
+        glDeleteFramebuffers(n, framebuffers);
+    }
+
+    virtual void deleteProgram(GLuint program) override
+    {
+        glDeleteProgram(program);
+    }
+
+    virtual void deleteRenderbuffers(GLsizei n,
+                                     const GLuint *renderbuffers) override
+    {
+        glDeleteRenderbuffers(n, renderbuffers);
+    }
+
+    virtual void deleteShader(GLuint shader) override
+    {
+        glDeleteShader(shader);
+    }
+
+    virtual void deleteTextures(GLsizei n, const GLuint *textures) override
+    {
+        glDeleteTextures(n, textures);
+    }
+
+    virtual void detachShader(GLuint program, GLuint shader) override
+    {
+        glDetachShader(program, shader);
+    }
+
+    virtual void disable(GLenum cap) override
+    {
+        glDisable(cap);
+    }
+
+    virtual void disableVertexAttribArray(GLuint index) override
+    {
+        glDisableVertexAttribArray(index);
+    }
+
+    virtual void drawArrays(GLenum mode, GLint first, GLsizei count) override
+    {
+        glDrawArrays(mode, first, count);
+    }
+
+    virtual void drawElements(GLenum mode, GLsizei count, GLenum type,
+                              const void *indices) override
+    {
+        glDrawElements(mode, count, type, indices);
+    }
+
+    virtual void enable(GLenum cap) override
+    {
+        glEnable(cap);
+    }
+
+    virtual void enableVertexAttribArray(GLuint index) override
+    {
+        glEnableVertexAttribArray(index);
+    }
+
+    virtual void finish(void) override
+    {
+        glFinish();
+    }
+
+    virtual void flush(void) override
+    {
+        glFlush();
+    }
+
+    virtual void framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                         GLenum renderbuffertarget,
+                                         GLuint renderbuffer) override
+    {
+        glFramebufferRenderbuffer(target, attachment, renderbuffertarget,
+                                  renderbuffer);
+    }
+
+    virtual void framebufferTexture2D(GLenum target, GLenum attachment,
+                                      GLenum textarget, GLuint texture,
+                                      GLint level) override
+    {
+        glFramebufferTexture2D(target, attachment, textarget, texture, level);
+    }
+
+    virtual void genBuffers(GLsizei n, GLuint *buffers) override
+    {
+        glGenBuffers(n, buffers);
+    }
+
+    virtual void genFramebuffers(GLsizei n, GLuint *framebuffers) override
+    {
+        glGenFramebuffers(n, framebuffers);
+    }
+
+    virtual void genRenderbuffers(GLsizei n, GLuint *renderbuffers) override
+    {
+        glGenRenderbuffers(n, renderbuffers);
+    }
+
+    virtual void genTextures(GLsizei n, GLuint *textures) override
+    {
+        glGenTextures(n, textures);
+    }
+
+    virtual void getActiveAttrib(GLuint program, GLuint index, GLsizei bufsize,
+                                 GLsizei *length, GLint *size, GLenum *type,
+                                 char *name) override
+    {
+        glGetActiveAttrib(program, index, bufsize, length, size, type, name);
+    }
+
+    virtual void getActiveUniform(GLuint program, GLuint index, GLsizei bufsize,
+                                  GLsizei *length, GLint *size, GLenum *type,
+                                  char *name) override
+    {
+        glGetActiveUniform(program, index, bufsize, length, size, type, name);
+    }
+
+    virtual void getAttachedShaders(GLuint program, GLsizei maxcount,
+                                    GLsizei *count, GLuint *shaders) override
+    {
+        glGetAttachedShaders(program, maxcount, count, shaders);
+    }
+
+    virtual int getAttribLocation(GLuint program, const char *name) override
+    {
+        return glGetAttribLocation(program, name);
+    }
+
+    virtual void getBooleanv(GLenum pname, GLboolean *params) override
+    {
+        glGetBooleanv(pname, params);
+    }
+
+    virtual void getBufferParameteriv(GLenum target, GLenum pname,
+                                      GLint *params) override
+    {
+        glGetBufferParameteriv(target, pname, params);
+    }
+
+    virtual GLenum getError(void) override
+    {
+        return glGetError();
+    }
+
+    virtual void getFloatv(GLenum pname, GLfloat *params) override
+    {
+        glGetFloatv(pname, params);
+    }
+
+    virtual void getFramebufferAttachmentParameteriv(GLenum target,
+                                                     GLenum attachment,
+                                                     GLenum pname,
+                                                     GLint *params) override
+    {
+        glGetFramebufferAttachmentParameteriv(target, attachment, pname,
+                                              params);
+    }
+
+    virtual void getIntegerv(GLenum pname, GLint *params) override
+    {
+        glGetIntegerv(pname, params);
+    }
+
+    virtual void getProgramiv(GLuint program, GLenum pname,
+                              GLint *params) override
+    {
+        glGetProgramiv(program, pname, params);
+    }
+
+    virtual void getRenderbufferParameteriv(GLenum target, GLenum pname,
+                                            GLint *params) override
+    {
+        glGetRenderbufferParameteriv(target, pname, params);
+    }
+
+    virtual void getShaderiv(GLuint shader, GLenum pname,
+                             GLint *params) override
+    {
+        glGetShaderiv(shader, pname, params);
+    }
+
+    virtual const GLubyte *getString(GLenum name) override
+    {
+        return glGetString(name);
+    }
+
+    virtual void getUniformfv(GLuint program, GLint location,
+                              GLfloat *params) override
+    {
+        glGetUniformfv(program, location, params);
+    }
+
+    virtual void getUniformiv(GLuint program, GLint location,
+                              GLint *params) override
+    {
+        glGetUniformiv(program, location, params);
+    }
+
+    virtual GLint getUniformLocation(GLuint program, const char *name) override
+    {
+        return glGetUniformLocation(program, name);
+    }
+
+    virtual void getVertexAttribfv(GLuint index, GLenum pname,
+                                   GLfloat *params) override
+    {
+        glGetVertexAttribfv(index, pname, params);
+    }
+
+    virtual void getVertexAttribiv(GLuint index, GLenum pname,
+                                   GLint *params) override
+    {
+        glGetVertexAttribiv(index, pname, params);
+    }
+
+    virtual void getVertexAttribPointerv(GLuint index, GLenum pname,
+                                         void **pointer) override
+    {
+        glGetVertexAttribPointerv(index, pname, pointer);
+    }
+
+    virtual void hint(GLenum target, GLenum mode) override
+    {
+        glHint(target, mode);
+    }
+
+    virtual void linkProgram(GLuint program) override
+    {
+        glLinkProgram(program);
+    }
+
+    virtual void pixelStorei(GLenum pname, GLint param) override
+    {
+        glPixelStorei(pname, param);
+    }
+
+    virtual void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, void *pixels) override
+    {
+        glReadPixels(x, y, width, height, format, type, pixels);
+    }
+
+    virtual void releaseShaderCompiler(void) override
+    {
+        glReleaseShaderCompiler();
+    }
+
+    virtual void renderbufferStorage(GLenum target, GLenum internalformat,
+                                     GLsizei width, GLsizei height) override
+    {
+        glRenderbufferStorage(target, internalformat, width, height);
+    }
+
+    virtual void scissor(GLint x, GLint y, GLsizei width,
+                         GLsizei height) override
+    {
+        glScissor(x, y, width, height);
+    }
+
+    virtual void stencilFunc(GLenum func, GLint ref, GLuint mask) override
+    {
+        glStencilFunc(func, ref, mask);
+    }
+
+    virtual void stencilOp(GLenum fail, GLenum zfail, GLenum zpass) override
+    {
+        glStencilOp(fail, zfail, zpass);
+    }
+
+    virtual void texImage2D(GLenum target, GLint level, GLint internalformat,
+                            GLsizei width, GLsizei height, GLint border,
+                            GLenum format, GLenum type,
+                            const void *pixels) override
+    {
+        glTexImage2D(target, level, internalformat, width, height, border,
+                     format, type, pixels);
+    }
+
+    virtual void texParameterf(GLenum target, GLenum pname,
+                               GLfloat param) override
+    {
+        glTexParameterf(target, pname, param);
+    }
+
+    virtual void texParameterfv(GLenum target, GLenum pname,
+                                const GLfloat *params) override
+    {
+        glTexParameterfv(target, pname, params);
+    }
+
+    virtual void texParameteri(GLenum target, GLenum pname,
+                               GLint param) override
+    {
+        glTexParameteri(target, pname, param);
+    }
+
+    virtual void texParameteriv(GLenum target, GLenum pname,
+                                const GLint *params) override
+    {
+        glTexParameteriv(target, pname, params);
+    }
+
+    virtual void texSubImage2D(GLenum target, GLint level, GLint xoffset,
+                               GLint yoffset, GLsizei width, GLsizei height,
+                               GLenum format, GLenum type,
+                               const void *pixels) override
+    {
+        glTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
+                        type, pixels);
+    }
+
+    virtual void uniform1f(GLint location, GLfloat x) override
+    {
+        glUniform1f(location, x);
+    }
+
+    virtual void uniform1fv(GLint location, GLsizei count,
+                            const GLfloat *v) override
+    {
+        glUniform1fv(location, count, v);
+    }
+
+    virtual void uniform1i(GLint location, GLint x) override
+    {
+        glUniform1i(location, x);
+    }
+
+    virtual void uniform1iv(GLint location, GLsizei count,
+                            const GLint *v) override
+    {
+        glUniform1iv(location, count, v);
+    }
+
+    virtual void uniform2f(GLint location, GLfloat x, GLfloat y) override
+    {
+        glUniform2f(location, x, y);
+    }
+
+    virtual void uniform2fv(GLint location, GLsizei count,
+                            const GLfloat *v) override
+    {
+        glUniform2fv(location, count, v);
+    }
+
+    virtual void uniform2i(GLint location, GLint x, GLint y) override
+    {
+        glUniform2i(location, x, y);
+    }
+
+    virtual void uniform2iv(GLint location, GLsizei count,
+                            const GLint *v) override
+    {
+        glUniform2iv(location, count, v);
+    }
+
+    virtual void uniform3f(GLint location, GLfloat x, GLfloat y,
+                           GLfloat z) override
+    {
+        glUniform3f(location, x, y, z);
+    }
+
+    virtual void uniform3fv(GLint location, GLsizei count,
+                            const GLfloat *v) override
+    {
+        glUniform3fv(location, count, v);
+    }
+
+    virtual void uniform3i(GLint location, GLint x, GLint y, GLint z) override
+    {
+        glUniform3i(location, x, y, z);
+    }
+
+    virtual void uniform3iv(GLint location, GLsizei count,
+                            const GLint *v) override
+    {
+        glUniform3iv(location, count, v);
+    }
+
+    virtual void uniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z,
+                           GLfloat w) override
+    {
+        glUniform4f(location, x, y, z, w);
+    }
+
+    virtual void uniform4fv(GLint location, GLsizei count,
+                            const GLfloat *v) override
+    {
+        glUniform4fv(location, count, v);
+    }
+
+    virtual void uniform4i(GLint location, GLint x, GLint y, GLint z,
+                           GLint w) override
+    {
+        glUniform4i(location, x, y, z, w);
+    }
+
+    virtual void uniform4iv(GLint location, GLsizei count,
+                            const GLint *v) override
+    {
+        glUniform4iv(location, count, v);
+    }
+
+    virtual void uniformMatrix2fv(GLint location, GLsizei count,
+                                  GLboolean transpose,
+                                  const GLfloat *value) override
+    {
+        glUniformMatrix2fv(location, count, transpose, value);
+    }
+
+    virtual void uniformMatrix3fv(GLint location, GLsizei count,
+                                  GLboolean transpose,
+                                  const GLfloat *value) override
+    {
+        glUniformMatrix3fv(location, count, transpose, value);
+    }
+
+    virtual void uniformMatrix4fv(GLint location, GLsizei count,
+                                  GLboolean transpose,
+                                  const GLfloat *value) override
+    {
+        glUniformMatrix4fv(location, count, transpose, value);
+    }
+
+    virtual void useProgram(GLuint program) override
+    {
+        glUseProgram(program);
+    }
+
+    virtual void validateProgram(GLuint program) override
+    {
+        glValidateProgram(program);
+    }
+
+    virtual void vertexAttrib1f(GLuint indx, GLfloat x) override
+    {
+        glVertexAttrib1f(indx, x);
+    }
+
+    virtual void vertexAttrib1fv(GLuint indx, const GLfloat *values) override
+    {
+        glVertexAttrib1fv(indx, values);
+    }
+
+    virtual void vertexAttrib2f(GLuint indx, GLfloat x, GLfloat y) override
+    {
+        glVertexAttrib2f(indx, x, y);
+    }
+
+    virtual void vertexAttrib2fv(GLuint indx, const GLfloat *values) override
+    {
+        glVertexAttrib2fv(indx, values);
+    }
+
+    virtual void vertexAttrib3f(GLuint indx, GLfloat x, GLfloat y,
+                                GLfloat z) override
+    {
+        glVertexAttrib3f(indx, x, y, z);
+    }
+
+    virtual void vertexAttrib3fv(GLuint indx, const GLfloat *values) override
+    {
+        glVertexAttrib3fv(indx, values);
+    }
+
+    virtual void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z,
+                                GLfloat w) override
+    {
+        glVertexAttrib4f(indx, x, y, z, w);
+    }
+
+    virtual void vertexAttrib4fv(GLuint indx, const GLfloat *values) override
+    {
+        glVertexAttrib4fv(indx, values);
+    }
+
+    virtual void vertexAttribPointer(GLuint indx, GLint size, GLenum type,
+                                     GLboolean normalized, GLsizei stride,
+                                     const void *ptr) override
+    {
+        glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
+    }
+
+    virtual void viewport(GLint x, GLint y, GLsizei width,
+                          GLsizei height) override
+    {
+        glViewport(x, y, width, height);
+    }
+
+    virtual GLboolean isEnabled(GLenum cap) override
+    {
+        return glIsEnabled(cap);
+    }
+
+    virtual bool isGeneric() override
+    {
+        return true;
+    }
+
+    GenericGL(void *)
+    {
+    }
+
+private:
+};
+
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL)
+GL *GL::create(Renderer *)
+{
+    return new GenericGL(nullptr);
+}
+#endif
+GL *GL::createGeneric()
+{
+    return new GenericGL(nullptr);
+}
+
+} // namespace Starfish
+
+#endif
