@@ -29,34 +29,6 @@
 
 namespace LWEDelegate {
 
-class SimpleCaller : public Caller {
-public:
-    virtual void SyncCall(const std::function<void()>& functor) override
-    {
-        return functor();
-    }
-
-    virtual void AsyncCall(Starfish::MessageLoop*,
-                           const std::function<void()>& functor) override
-    {
-        functor();
-    }
-};
-
-class ThreadedCaller : public Caller {
-public:
-    virtual void SyncCall(const std::function<void()>& functor) override
-    {
-        Starfish::MessageLoop::runOnMainThreadSync(functor);
-    }
-
-    virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
-                           const std::function<void()>& functor) override
-    {
-        messageLoop->runOnMainThreadAsync(functor);
-    }
-};
-
 ThreadedCallHelper* ThreadedCallHelper::m_instance = nullptr;
 
 ThreadedCallHelper* ThreadedCallHelper::Instance()
@@ -75,25 +47,24 @@ ThreadedCallHelper::ThreadedCallHelper()
 void ThreadedCallHelper::Initialize(bool isThreadMode)
 {
     if (isThreadMode) {
-        m_caller = std::make_unique<ThreadedCaller>();
         if (!m_isLWEThreadStarted) {
             CreateLWEMainThread();
         }
     } else {
-        m_caller = std::make_unique<SimpleCaller>();
+        Starfish::MessageLoop::init();
     }
 }
 
 void ThreadedCallHelper::PostTaskToLWEMainThreadSync(
     const std::function<void()>& functor)
 {
-    m_caller->SyncCall(functor);
+    Starfish::MessageLoop::runOnMainThreadSync(functor);
 }
 
 void ThreadedCallHelper::PostTaskToLWEMainThreadAsync(
     Starfish::MessageLoop* messageLoop, const std::function<void()>& functor)
 {
-    m_caller->AsyncCall(messageLoop, functor);
+    messageLoop->runOnMainThreadAsync(functor);
 }
 
 void ThreadedCallHelper::CreateLWEMainThread()

@@ -85,7 +85,6 @@ Starfish::Starfish(const StarfishConfiguration& config)
     STARFISH_RELEASE_ASSERT(config.cookieStoreDataFilePath != nullptr);
     STARFISH_RELEASE_ASSERT(config.httpCacheDataDirectorypath != nullptr);
 
-    registerMainThread();
     if (!g_starfishGlobalInit) {
         g_starfishGlobalInit = true;
 
