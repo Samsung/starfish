@@ -52,6 +52,7 @@ MessageLoop* MessageLoop::createForWorker(RunLoop* runLoop)
 
 void MessageLoop::init()
 {
+    registerMainThread();
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
     MessageLoopEFL::init();
 #elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)

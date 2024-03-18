@@ -178,6 +178,8 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
 
+    Starfish::MessageLoop::init();
+
     ThreadedCallHelper::Instance()->Initialize(isThreadMode);
 
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {

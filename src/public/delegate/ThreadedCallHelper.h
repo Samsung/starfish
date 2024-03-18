@@ -29,15 +29,6 @@ class MessageLoop;
 
 namespace LWEDelegate {
 
-class Caller {
-public:
-    virtual ~Caller() = default;
-
-    virtual void SyncCall(const std::function<void()>& functor) = 0;
-    virtual void AsyncCall(Starfish::MessageLoop* messageLoop,
-                           const std::function<void()>& functor) = 0;
-};
-
 class ThreadedCallHelper {
 public:
     static ThreadedCallHelper* Instance();
@@ -60,8 +51,6 @@ private:
 
     bool m_isLWEThreadStarted = false;
     pthread_mutex_t m_mainThreadInitLocker;
-
-    std::unique_ptr<Caller> m_caller;
 };
 
 } // namespace LWEDelegate

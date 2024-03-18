@@ -81,6 +81,13 @@ MiniBrowser::~MiniBrowser()
 bool MiniBrowser::init(const MiniBrowserInitOption& initOption)
 {
     m_initOption = initOption;
+
+    // on EFL, createWindow must be called first
+    // since createWindow does elm_init();
+    if (!createWindow()) {
+        return false;
+    }
+
     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
                          "/tmp/Starfish_Cookies.txt", cacheDir().c_str());
 
@@ -89,9 +96,6 @@ bool MiniBrowser::init(const MiniBrowserInitOption& initOption)
         LWE::LWE::SetGCFrequency(std::atoi(gcFrequency));
     }
 
-    if (!createWindow()) {
-        return false;
-    }
     if (!createLWE()) {
         return false;
     }

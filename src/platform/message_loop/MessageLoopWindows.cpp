@@ -35,7 +35,9 @@ namespace Starfish {
 
 #define IDLE_MESSAGE (WM_USER + 20)
 #define IDLE_MESSAGE_FROM_OTHER_THREAD (WM_USER + 21)
-#define IDLE_MESSAGE_INVOKE_NAVIGATE (WM_USER + 22)
+#define IDLE_MESSAGE_FROM_OTHER_THREAD_SYNC (WM_USER + 22)
+
+static pthread_mutex_t g_threadSyncFlowControler;
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -111,12 +113,12 @@ public:
             STARFISH_ASSERT(_CrtCheckMemory());
             delete id;
         } break;
-        case IDLE_MESSAGE_INVOKE_NAVIGATE: {
-            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
-                self->m_idlersFromOtherThread.size() == 0) {
-                PostMessage(NULL, WM_QUIT, 0, 0);
-            }
-        }
+        case IDLE_MESSAGE_FROM_OTHER_THREAD_SYNC: {
+            const std::function<void()>* pFunctor =
+                (const std::function<void()>*)message.wParam;
+            (*pFunctor)();
+            pthread_mutex_unlock(&g_threadSyncFlowControler);
+        } break;
         default:
             STARFISH_LOG_WARN("Unhandled message.");
             break;
@@ -285,12 +287,42 @@ void MessageLoopWindows::clearPendingIdlers(GlobalScope* globalScope)
 void MessageLoopWindows::runOnMainThreadAsync(
     const std::function<void()>& functor)
 {
-    STARFISH_UNIMPLEMENTED();
+    struct Param {
+        std::function<void()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    if (isMainThread()) {
+        addIdler(
+            nullptr,
+            [](size_t, void* data) -> void {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+        return;
+    } else {
+        addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+    }
 }
 
 void MessageLoopWindows::init()
 {
-    STARFISH_UNIMPLEMENTED();
+    static bool needsInit = true;
+    if (UNLIKELY(needsInit)) {
+        needsInit = false;
+        pthread_mutex_init(&g_threadSyncFlowControler, NULL);
+    }
 }
 
 void MessageLoopWindows::run()
@@ -306,7 +338,15 @@ void MessageLoopWindows::stop()
 void MessageLoopWindows::runOnMainThreadSync(
     const std::function<void()>& functor)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (isMainThread()) {
+        functor();
+        return;
+    }
+
+    pthread_mutex_lock(&g_threadSyncFlowControler);
+    PostMessage(NULL, IDLE_MESSAGE_FROM_OTHER_THREAD_SYNC, (size_t)&functor, 0);
+    pthread_mutex_lock(&g_threadSyncFlowControler);
+    pthread_mutex_unlock(&g_threadSyncFlowControler);
 }
 
 } // namespace Starfish

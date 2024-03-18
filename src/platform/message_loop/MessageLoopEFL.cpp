@@ -30,8 +30,15 @@
 #include "platform/message_loop/MessageLoopEFL.h"
 
 #include <Ecore.h>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 namespace Starfish {
+
+static bool isSystemMainThread()
+{
+    return getCurrentThreadID() == getpid();
+}
 
 MessageLoopEFL::MessageLoopEFL()
     : MessageLoop()
@@ -317,21 +324,31 @@ void MessageLoopEFL::runOnMainThreadAsync(const std::function<void()>& functor)
     Param* p = new Param();
     p->functor = functor;
 
-    addIdlerWithNoGCRootingInOtherThread(
-        nullptr,
-        [](size_t, void* data) {
-            STARFISH_ASSERT(data != nullptr);
-            Param* p = (Param*)data;
-            p->functor();
-            delete p;
-        },
-        p);
-
-    return;
+    if (isMainThread()) {
+        addIdler(
+            nullptr,
+            [](size_t, void* data) -> void {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+        return;
+    } else {
+        addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+    }
 }
 
 void MessageLoopEFL::init()
 {
+    STARFISH_RELEASE_ASSERT(isSystemMainThread());
 }
 
 void MessageLoopEFL::run()

@@ -359,16 +359,26 @@ void MessageLoopLibUV::runOnMainThreadAsync(
     Param* p = new Param();
     p->functor = functor;
 
-    addIdlerWithNoGCRootingInOtherThread(
-        nullptr,
-        [](size_t, void* data) {
-            Param* p = (Param*)data;
-            p->functor();
-            delete p;
-        },
-        p);
-
-    return;
+    if (isMainThread()) {
+        addIdler(
+            nullptr,
+            [](size_t, void* data) -> void {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+        return;
+    } else {
+        addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                Param* p = (Param*)data;
+                p->functor();
+                delete p;
+            },
+            p);
+    }
 }
 
 RunLoop* MessageLoopLibUV::runLoop()
