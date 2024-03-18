@@ -37,11 +37,12 @@ typedef uint32_t GLuint;
 typedef float GLfloat;
 typedef float GLclampf;
 typedef int32_t GLfixed;
-typedef ptrdiff_t GLintptr;
 
 #if defined(STARFISH_WINDOWS)
+typedef ptrdiff_t GLintptr;
 typedef ptrdiff_t GLsizeiptr;
 #else
+typedef long int GLintptr;
 typedef long int GLsizeiptr;
 #endif
 
