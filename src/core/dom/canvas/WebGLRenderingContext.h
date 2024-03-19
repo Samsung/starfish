@@ -26,7 +26,8 @@
 #include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
 #include "core/dom/canvas/WebGLUtils.h"
 #include "core/dom/canvas/WebGLContextAttributes.h"
-#include "core/dom/canvas/WebGLRenderingContextState.h"
+#include "core/util/GCDescriptor.h"
+
 #include <unordered_set>
 #include <unordered_map>
 
@@ -41,6 +42,7 @@ class WebGLTexture;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
+class WebGLRenderingContextState;
 class String;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
@@ -245,6 +247,13 @@ public:
     bool executeInContextScope(std::function<void()> callback);
     WebGLRenderingContextState* getState();
 
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderingContext,
+                                     CanvasRenderingContext);
+    FILL_GC_DESC(WebGLRenderingContext, m_state);
+    FILL_GC_DESC(WebGLRenderingContext, m_unpackColorSpace);
+    FILL_GC_DESC(WebGLRenderingContext, m_drawingBufferColorSpace);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
+
 private:
     bool checkWebGLObject(WebGLObject* object);
     bool isFromCurrentContext(WebGLObject* object);
@@ -265,7 +274,7 @@ private:
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
     WebGLContextAttributes m_attributes;
-    WebGLRenderingContextState m_state;
+    WebGLRenderingContextState* m_state;
     bool m_isContextLost;
     String* m_unpackColorSpace;
     String* m_drawingBufferColorSpace;

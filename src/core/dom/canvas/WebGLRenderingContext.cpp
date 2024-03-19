@@ -44,6 +44,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
+#include "core/dom/canvas/WebGLRenderingContextState.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/generated/Float32ArrayOrSequenceOfGLfloatUnion.h"
 #include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
@@ -149,6 +150,7 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_isContextLost = false;
     m_unpackColorSpace = String::createASCIIString("srgb");
     m_drawingBufferColorSpace = String::createASCIIString("srgb");
+    m_state = new WebGLRenderingContextState();
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
@@ -348,13 +350,13 @@ bool WebGLRenderingContext::isExtensionEnabled(const char* name)
 
 bool WebGLRenderingContext::isDefaultFramebufferBound()
 {
-    return !m_state.hasWebGLFramebuffer();
+    return !m_state->hasWebGLFramebuffer();
 }
 
 GLuint WebGLRenderingContext::getCurrentFBO()
 {
-    return m_state.hasWebGLFramebuffer()
-               ? m_state.webGLFramebuffer()->glObject()
+    return m_state->hasWebGLFramebuffer()
+               ? m_state->webGLFramebuffer()->glObject()
                : m_framebufferTexture->fbo();
 }
 
@@ -442,7 +444,7 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
 
         TRACE(WEBGL, KV(hex(target)), value->glObject());
         glBindBuffer(target, value->glObject());
-        m_state.setBoundBuffer(target, value);
+        m_state->setBoundBuffer(target, value);
 
         // A given WebGLBuffer object may only be bound to one of the
         // ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its lifetime.
@@ -451,7 +453,7 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
         // If the buffer is null then any buffer currently bound is unbound.
         TRACE(WEBGL, KV(hex(target)), 0);
         glBindBuffer(target, 0);
-        m_state.setBoundBuffer(target, nullptr);
+        m_state->setBoundBuffer(target, nullptr);
     }
 }
 
@@ -479,7 +481,7 @@ void WebGLRenderingContext::bindFramebuffer(
 
         glBindFramebuffer(target, frameBuffer->glObject());
 
-        m_state.setWebGLFramebuffer(frameBuffer);
+        m_state->setWebGLFramebuffer(frameBuffer);
     } else {
         // NOTE: the spec. says that "if framebuffer is null, the default
         // framebuffer provided by the context is bound and attempts to modify
@@ -489,7 +491,7 @@ void WebGLRenderingContext::bindFramebuffer(
         // However, it's worth checking with TCs to see if this is the case.
         glBindFramebuffer(target, 0);
 
-        m_state.setWebGLFramebuffer(nullptr);
+        m_state->setWebGLFramebuffer(nullptr);
     }
 }
 
@@ -1060,7 +1062,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         GLint value = -1;
         glGetIntegerv(pname, &value);
 
-        Nullable<WebGLProgram*> maybe = m_state.webGLProgram();
+        Nullable<WebGLProgram*> maybe = m_state->webGLProgram();
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
         }
@@ -1075,7 +1077,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             return scriptNull();
         }
 
-        Nullable<WebGLFramebuffer*> maybe = m_state.webGLFramebuffer();
+        Nullable<WebGLFramebuffer*> maybe = m_state->webGLFramebuffer();
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
         }
@@ -1096,7 +1098,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         }
 
         Nullable<WebGLVertexArrayObjectOES*> maybe =
-            m_state.webGLVertexArrayObjectOES();
+            m_state->webGLVertexArrayObjectOES();
 
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
@@ -1110,7 +1112,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         GLuint target = (pname == GL_ARRAY_BUFFER_BINDING)
                             ? GL_ARRAY_BUFFER
                             : GL_ELEMENT_ARRAY_BUFFER_BINDING;
-        WebGLBuffer* buffer = m_state.getBoundBuffer(target).valueOr(nullptr);
+        WebGLBuffer* buffer = m_state->getBoundBuffer(target).valueOr(nullptr);
         return buffer ? buffer->scriptValue() : scriptNull();
     }
     case kIMPLEMENTATION_COLOR_READ_TYPE: {
@@ -1434,14 +1436,14 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
         TRACE(WEBGL, KV(index), KV(value));
 
         Nullable<WebGLVertexArrayObjectOES*> maybe =
-            m_state.webGLVertexArrayObjectOES();
+            m_state->webGLVertexArrayObjectOES();
 
         if (!maybe.hasValue()) {
             return scriptNull(); // No mention found for this in the spec.
         }
 
         Nullable<WebGLBuffer*> maybeBuffer =
-            m_state.getBufferBoundToVertexAttributes(index);
+            m_state->getBufferBoundToVertexAttributes(index);
 
         if (!maybeBuffer.hasValue()) {
             return scriptNull(); // No mention found for this in the spec.
@@ -1887,10 +1889,10 @@ void WebGLRenderingContext::useProgram(Nullable<WebGLProgram*> maybeProgram)
             return;
         }
         glUseProgram(program->glObject());
-        m_state.setWebGLProgram(program);
+        m_state->setWebGLProgram(program);
     } else {
         glUseProgram(0);
-        m_state.setWebGLProgram(nullptr);
+        m_state->setWebGLProgram(nullptr);
     }
 }
 
@@ -1974,8 +1976,8 @@ void WebGLRenderingContext::vertexAttribPointer(GLuint index, GLint size,
         return;
     }
 
-    m_state.setBufferBoundToVertexAttributes(
-        index, m_state.getBoundBuffer(GL_ARRAY_BUFFER));
+    m_state->setBufferBoundToVertexAttributes(
+        index, m_state->getBoundBuffer(GL_ARRAY_BUFFER));
 
     /*
         The following errors are handled in GLES3.
@@ -2567,7 +2569,7 @@ bool WebGLRenderingContext::executeInContextScope(
 
 WebGLRenderingContextState* WebGLRenderingContext::getState()
 {
-    return &m_state;
+    return m_state;
 }
 
 bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)

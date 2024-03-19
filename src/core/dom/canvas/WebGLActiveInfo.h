@@ -24,6 +24,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "platform/canvas/gl/GLTypes.h"
+#include "core/util/GCDescriptor.h"
 
 namespace Starfish {
 
@@ -51,6 +52,10 @@ public:
     DEFINE_GETTER(GLint, size);
     DEFINE_GETTER(GLenum, type);
     DEFINE_GETTER(String*, name);
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLActiveInfo);
+    FILL_GC_DESC(WebGLActiveInfo, m_name);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
