@@ -47,7 +47,7 @@ namespace Starfish {
 #if defined(STARFISH_ENABLE_TEST)
 std::function<void()> g_screenShotCallback;
 std::string g_screenShotPath;
-class RendererSoftware;
+class RendererGL;
 void screenShotImpl(Renderer* renderer, const char* path,
                     std::function<void()> callback);
 void screenShotInRendering(WebView* wv, const char* path,
@@ -59,9 +59,9 @@ void screenShotInRendering(WebView* wv, const char* path,
 }
 #endif
 
-class RendererSoftware : public Renderer {
+class RendererGL : public Renderer {
 public:
-    RendererSoftware(Starfish* starfish, uint32_t width, uint32_t height)
+    RendererGL(Starfish* starfish, uint32_t width, uint32_t height)
         : Renderer(starfish)
         , m_width(width)
         , m_height(height)
@@ -194,20 +194,47 @@ public:
         return m_setNeedsRenderingCallback != nullptr;
     }
 
-    virtual Canvas* preparePainting() override;
+    virtual Canvas* preparePainting() override
+    {
+        LongTaskFinder p("RendererGL::preparePainting", 1);
+
+        float DPR = webView()->screenInfo().devicePixelRatio;
+        if (!m_glPaintingSurface) {
+            webView()->setNeedsFullRepainting();
+            m_glPaintingSurface =
+                CanvasSurface::create(this, width() / DPR, height() / DPR);
+        }
+        if (m_glPaintingSurface->attachNativeBuffer(width() / DPR,
+                                                    height() / DPR)) {
+            webView()->setNeedsFullRepainting();
+        }
+        return Canvas::create(webView(), m_glPaintingSurface);
+    }
+
     virtual void willCompositing() override
     {
         glMakeCurrent();
         if (m_glPaintingSurface) {
             STARFISH_LOG_INFO(
-                "RendererSoftware::willCompositing - remove "
+                "RendererGL::willCompositing - remove "
                 "m_glPaintingSurface");
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
         }
     }
 
-    virtual Compositor* prepareCompositor() override;
+    virtual Compositor* prepareCompositor() override
+    {
+        LongTaskFinder p("RendererGL::prepareCompositor", 1);
+        if (m_glPaintingSurface) {
+            STARFISH_LOG_INFO(
+                "RendererGL::prepareCompositor - remove "
+                "m_glPaintingSurface");
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
+        return Compositor::create3D(webView(), m_compostiorContext);
+    }
 
     virtual bool glMakeCurrent() override
     {
@@ -250,7 +277,7 @@ public:
 
     virtual void onClearDrawnBuffers() override
     {
-        STARFISH_LOG_INFO("RendererSoftware::onClearDrawnBuffers");
+        STARFISH_LOG_INFO("RendererGL::onClearDrawnBuffers");
 
         if (m_compostiorContext) {
             glMakeCurrent();
@@ -275,40 +302,10 @@ public:
     int m_offsetYDueToSoftwareKeyboard;
 };
 
-Canvas* RendererSoftware::preparePainting()
-{
-    LongTaskFinder p("RendererSoftware::preparePainting", 1);
-
-    float DPR = webView()->screenInfo().devicePixelRatio;
-    if (!m_glPaintingSurface) {
-        webView()->setNeedsFullRepainting();
-        m_glPaintingSurface =
-            CanvasSurface::create(this, width() / DPR, height() / DPR);
-    }
-    if (m_glPaintingSurface->attachNativeBuffer(width() / DPR,
-                                                height() / DPR)) {
-        webView()->setNeedsFullRepainting();
-    }
-    return Canvas::create(webView(), m_glPaintingSurface);
-}
-
-Compositor* RendererSoftware::prepareCompositor()
-{
-    LongTaskFinder p("RendererSoftware::prepareCompositor", 1);
-    if (m_glPaintingSurface) {
-        STARFISH_LOG_INFO(
-            "RendererSoftware::prepareCompositor - remove "
-            "m_glPaintingSurface");
-        m_glPaintingSurface->detachNativeBuffer();
-        m_glPaintingSurface = nullptr;
-    }
-    return Compositor::create3D(webView(), m_compostiorContext);
-}
-
 Renderer* RendererFactory::createGL(Starfish* starfish, uint32_t width,
                                     uint32_t height)
 {
-    return new RendererSoftware(starfish, width, height);
+    return new RendererGL(starfish, width, height);
 }
 
 } // namespace Starfish
