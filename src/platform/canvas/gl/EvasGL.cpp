@@ -773,6 +773,11 @@ public:
         m_evasGLAPI->glViewport(x, y, width, height);
     }
 
+    virtual void genVertexArrays(GLsizei n, GLuint *arrays)
+    {
+        m_evasGLAPI->glGenVertexArrays(n, arrays);
+    }
+
     virtual GLboolean isEnabled(GLenum cap) override
     {
         return m_evasGLAPI->glIsEnabled(cap);

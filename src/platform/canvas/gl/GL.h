@@ -237,6 +237,9 @@ public:
                                      GLboolean normalized, GLsizei stride,
                                      const void *ptr) = 0;
     virtual void viewport(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
+
+    virtual void genVertexArrays(GLsizei n, GLuint *arrays) = 0;
+
     virtual GLboolean isEnabled(GLenum cap) = 0;
 
     virtual bool isGeneric() = 0;
