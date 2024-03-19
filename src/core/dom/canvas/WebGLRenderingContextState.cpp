@@ -44,7 +44,7 @@ void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
     GLuint index, Nullable<WebGLBuffer*> maybe)
 {
     if (maybe.hasValue()) {
-        m_buffersBoundToVertexAttributes.insert({ index, maybe.value() });
+        m_buffersBoundToVertexAttributes.insert_or_assign(index, maybe.value());
     } else {
         m_buffersBoundToVertexAttributes.erase(index);
     }
@@ -65,7 +65,7 @@ void WebGLRenderingContextState::setBoundBuffer(GLenum target,
                                                 Nullable<WebGLBuffer*> maybe)
 {
     if (maybe.hasValue()) {
-        m_buffersBound.insert({ target, maybe.value() });
+        m_buffersBound.insert_or_assign(target, maybe.value());
     } else {
         m_buffersBound.erase(target);
     }
