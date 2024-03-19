@@ -24,6 +24,7 @@
 #include "core/modules/worker/util/Trace.h"
 #include "platform/canvas/webgl/GLES.h"
 #include "core/dom/canvas/WebGLRenderingContext.h"
+#include "core/dom/canvas/WebGLRenderingContextState.h"
 
 namespace Starfish {
 

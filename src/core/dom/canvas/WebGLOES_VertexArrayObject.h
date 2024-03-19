@@ -24,6 +24,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/canvas/WebGLObject.h"
+#include "core/util/GCDescriptor.h"
 
 namespace Starfish {
 
@@ -70,6 +71,10 @@ public:
     GLboolean isVertexArrayOES(
         Nullable<WebGLVertexArrayObjectOES*> arrayObject);
     void bindVertexArrayOES(Nullable<WebGLVertexArrayObjectOES*> arrayObject);
+
+    BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(OES_vertex_array_object);
+    FILL_GC_DESC(OES_vertex_array_object, m_context);
+    END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
