@@ -22,9 +22,11 @@
 #include "StarfishConfig.h"
 #include "WebGLOES_VertexArrayObject.h"
 #include "core/modules/worker/util/Trace.h"
-#include "platform/canvas/webgl/GLES.h"
 #include "core/dom/canvas/WebGLRenderingContext.h"
 #include "core/dom/canvas/WebGLRenderingContextState.h"
+
+#include "platform/canvas/gl/IncludeGL.h"
+#include "platform/canvas/gl/GL.h"
 
 namespace Starfish {
 
@@ -39,8 +41,8 @@ OES_vertex_array_object::OES_vertex_array_object(
 WebGLVertexArrayObjectOES* OES_vertex_array_object::createVertexArrayOES()
 {
     GLuint vao = 0;
-    bool result = m_context->executeInContextScope([&vao]() {
-        glGenVertexArrays(1, &vao);
+    bool result = m_context->executeInContextScope([&vao, this]() {
+        m_context->gl()->genVertexArrays(1, &vao);
         TRACE(WEBGL, KV(vao));
     });
 

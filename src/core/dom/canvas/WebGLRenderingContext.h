@@ -49,6 +49,7 @@ class Int32ArrayOrSequenceOfGLint;
 class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 class
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
+class GL;
 
 using Float32List = Float32ArrayOrSequenceOfGLfloat;
 using Int32List = Int32ArrayOrSequenceOfGLint;
@@ -246,6 +247,7 @@ public:
     void setGLError(GLenum code, const char* message = nullptr);
     bool executeInContextScope(std::function<void()> callback);
     WebGLRenderingContextState* getState();
+    GL* gl();
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderingContext,
                                      CanvasRenderingContext);
@@ -265,6 +267,8 @@ private:
     bool isExtensionEnabled(const char* requestedName);
     bool isDefaultFramebufferBound();
     GLuint getCurrentFBO();
+    GLint getCurrentProgram();
+
     std::unordered_set<GLenum> m_GLErrors;
     std::unordered_map<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
@@ -278,6 +282,7 @@ private:
     bool m_isContextLost;
     String* m_unpackColorSpace;
     String* m_drawingBufferColorSpace;
+    GL* m_gl;
 };
 } // namespace Starfish
 
