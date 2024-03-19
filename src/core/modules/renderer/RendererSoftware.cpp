@@ -44,9 +44,9 @@ extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
 namespace Starfish {
 
-class RendererGL : public Renderer {
+class RendererSoftware : public Renderer {
 public:
-    RendererGL(Starfish* starfish, uint32_t width, uint32_t height)
+    RendererSoftware(Starfish* starfish, uint32_t width, uint32_t height)
         : Renderer(starfish)
         , m_width(width)
         , m_height(height)
@@ -88,8 +88,54 @@ public:
         return m_internalBuffer;
     }
 
-    virtual Canvas* preparePainting() override;
-    virtual Compositor* prepareCompositor() override;
+    virtual Canvas* preparePainting() override
+    {
+#ifdef STARFISH_ENABLE_TEST
+        {
+            const char* path = getenv("SCREEN_SHOT");
+            if (path && strlen(path) && g_fireOnloadEvent) {
+                g_surfaceForScreehShot = CanvasSurface::create(
+                    this, width() / webView()->screenInfo().devicePixelRatio,
+                    height() / webView()->screenInfo().devicePixelRatio);
+                Canvas* c = Canvas::create(webView(), g_surfaceForScreehShot);
+                return c;
+            }
+        }
+#endif
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
+        RenderInfo renderInfo = m_renderingPrepareCallback();
+        updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                                   renderInfo.bufferStride);
+#endif
+        CanvasSurface* target = CanvasSurface::createCanvasTarget(
+            (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
+        Canvas* canvas = Canvas::create(webView(), target);
+        return canvas;
+    }
+
+    virtual Compositor* prepareCompositor() override
+    {
+#ifdef STARFISH_ENABLE_TEST
+        {
+            const char* path = getenv("SCREEN_SHOT");
+            if (path && strlen(path) && g_fireOnloadEvent) {
+                g_surfaceForScreehShot = CanvasSurface::create(
+                    this, width() / webView()->screenInfo().devicePixelRatio,
+                    height() / webView()->screenInfo().devicePixelRatio);
+                return Compositor::create2D(webView(), m_compostiorContext,
+                                            g_surfaceForScreehShot);
+            }
+        }
+#endif
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
+        RenderInfo renderInfo = m_renderingPrepareCallback();
+        updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                                   renderInfo.bufferStride);
+#endif
+        CanvasSurface* target = CanvasSurface::createCanvasTarget(
+            (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
+        return Compositor::create2D(webView(), m_compostiorContext, target);
+    }
 
     uint32_t m_width;
     uint32_t m_height;
@@ -100,56 +146,7 @@ public:
 Renderer* RendererFactory::createSoftware(Starfish* starfish, uint32_t width,
                                           uint32_t height)
 {
-    return new RendererGL(starfish, width, height);
-}
-
-Canvas* RendererGL::preparePainting()
-{
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
-            g_surfaceForScreehShot = CanvasSurface::create(
-                this, width() / webView()->screenInfo().devicePixelRatio,
-                height() / webView()->screenInfo().devicePixelRatio);
-            Canvas* c = Canvas::create(webView(), g_surfaceForScreehShot);
-            return c;
-        }
-    }
-#endif
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
-    RenderInfo renderInfo = m_renderingPrepareCallback();
-    updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
-                               renderInfo.bufferStride);
-#endif
-    CanvasSurface* target = CanvasSurface::createCanvasTarget(
-        (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
-    Canvas* canvas = Canvas::create(webView(), target);
-    return canvas;
-}
-
-Compositor* RendererGL::prepareCompositor()
-{
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
-            g_surfaceForScreehShot = CanvasSurface::create(
-                this, width() / webView()->screenInfo().devicePixelRatio,
-                height() / webView()->screenInfo().devicePixelRatio);
-            return Compositor::create2D(webView(), m_compostiorContext,
-                                        g_surfaceForScreehShot);
-        }
-    }
-#endif
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
-    RenderInfo renderInfo = m_renderingPrepareCallback();
-    updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
-                               renderInfo.bufferStride);
-#endif
-    CanvasSurface* target = CanvasSurface::createCanvasTarget(
-        (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
-    return Compositor::create2D(webView(), m_compostiorContext, target);
+    return new RendererSoftware(starfish, width, height);
 }
 
 } // namespace Starfish
