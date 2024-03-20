@@ -250,7 +250,7 @@ public:
     GL* gl();
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderingContext,
-                                     CanvasRenderingContext);
+                                     WebGLRenderingContextBaseMixIn);
     FILL_GC_DESC(WebGLRenderingContext, m_state);
     FILL_GC_DESC(WebGLRenderingContext, m_unpackColorSpace);
     FILL_GC_DESC(WebGLRenderingContext, m_drawingBufferColorSpace);
