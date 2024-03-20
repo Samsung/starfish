@@ -183,13 +183,21 @@ bool MiniBrowser::createWindow()
 bool MiniBrowser::createLWE()
 {
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
-    m_lwe = LWE::WebContainer::CreateGL(
-        m_initOption.geometry.width, m_initOption.geometry.height,
+    LWE::WebContainer::WebContainerArguments args{
+        .width = m_initOption.geometry.width,
+        .height = m_initOption.geometry.height,
+        .devicePixelRatio = m_initOption.scaleFactor,
+        .defaultFontName = "serif",
+        .locale = "ko-KR",
+        .timezoneID = "Asia/Seoul",
+    };
+    LWE::WebContainer::RendererGLConfiguration config{
         [this](LWE::WebContainer* wc) { m_window->makeCurrent(); },
         [this](LWE::WebContainer* wc, bool mayNeedsSync) {
             m_window->swapBuffer();
         },
-        m_initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
+    };
+    m_lwe = LWE::WebContainer::CreateGL(args, config);
 
     if (!m_lwe) {
         return false;

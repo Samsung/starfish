@@ -68,6 +68,20 @@ public:
         size_t bufferImageHeight;
     };
 
+    struct WebContainerArguments {
+        unsigned width;
+        unsigned height;
+        float devicePixelRatio;
+        const char* defaultFontName;
+        const char* locale;
+        const char* timezoneID;
+    };
+
+    struct RendererGLConfiguration {
+        std::function<void(WebContainer*)> onGLMakeCurrent;
+        std::function<void(WebContainer*, bool mayNeedsSync)> onGLSwapBuffers;
+    };
+
     // For Tizen 5.5 and above.
     virtual void RegisterPreRenderingHandler(
         const std::function<RenderInfo(void)>& cb) = 0;
@@ -92,12 +106,8 @@ public:
     using OnGLSwapBuffers =
         std::function<void(WebContainer*, bool mayNeedsSync)>;
     // Function set for render with OpenGL
-    static WebContainer* CreateGL(unsigned width, unsigned height,
-                                  const OnGLMakeCurrent& onGLMakeCurrent,
-                                  const OnGLSwapBuffers& onGLSwapBuffers,
-                                  float devicePixelRatio,
-                                  const char* defaultFontName,
-                                  const char* locale, const char* timezoneID);
+    static WebContainer* CreateGL(const WebContainerArguments& args,
+                                  const RendererGLConfiguration& config);
 
     static WebContainer* CreateGLWithPlatformImage(
         unsigned width, unsigned height, const OnGLMakeCurrent& onGLMakeCurrent,
@@ -280,9 +290,7 @@ LWEDelegate_WebContainer_Create_With_PlatformImage(
     const char* locale, const char* timezoneID);
 
 uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
-    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
-    uintptr_t onGLSwapBuffers, float devicePixelRatio,
-    const char* defaultFontName, const char* locale, const char* timezoneID);
+    uintptr_t webContainerArguments, uintptr_t rendererGLConfiguration);
 
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_WebContainer_CreateGLWithPlatformImage(
@@ -303,8 +311,7 @@ typedef struct {
     uintptr_t (*CreateWithPlatformImage)(unsigned, unsigned, uintptr_t,
                                          uintptr_t, float, const char*,
                                          const char*, const char*);
-    uintptr_t (*CreateGL)(unsigned, unsigned, uintptr_t, uintptr_t, float,
-                          const char*, const char*, const char*);
+    uintptr_t (*CreateGL)(uintptr_t, uintptr_t);
     uintptr_t (*CreateGLWithPlatformImage)(unsigned, unsigned, uintptr_t,
                                            uintptr_t, uintptr_t, uintptr_t,
                                            float, const char*, const char*,

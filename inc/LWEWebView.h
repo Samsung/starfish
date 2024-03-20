@@ -228,6 +228,21 @@ public:
         size_t bufferImageWidth;
         size_t bufferImageHeight;
     };
+
+    struct WebContainerArguments {
+        unsigned width;
+        unsigned height;
+        float devicePixelRatio;
+        const char* defaultFontName;
+        const char* locale;
+        const char* timezoneID;
+    };
+
+    struct RendererGLConfiguration {
+        std::function<void(WebContainer*)> onGLMakeCurrent;
+        std::function<void(WebContainer*, bool mayNeedsSync)> onGLSwapBuffers;
+    };
+
     void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);
     void RegisterOnRenderedHandler(
         const std::function<void(WebContainer*,
@@ -249,6 +264,8 @@ public:
             onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
+    static WebContainer* CreateGL(const WebContainerArguments& args,
+                                  const RendererGLConfiguration& config);
 
     static WebContainer* CreateGLWithPlatformImage(
         unsigned width, unsigned height,

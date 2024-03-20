@@ -129,10 +129,9 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
         uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, float,
                       const char*, const char*, const char*)>(
         dlsym(m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
-    kWebContainerProcTable.CreateGL = reinterpret_cast<uintptr_t (*)(
-        unsigned, unsigned, uintptr_t, uintptr_t, float, const char*,
-        const char*, const char*)>(
-        dlsym(m_handle, "LWEDelegate_WebContainer_CreateGL"));
+    kWebContainerProcTable.CreateGL =
+        reinterpret_cast<uintptr_t (*)(uintptr_t, uintptr_t)>(
+            dlsym(m_handle, "LWEDelegate_WebContainer_CreateGL"));
     kWebContainerProcTable.CreateGLWithPlatformImage = reinterpret_cast<
         uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, uintptr_t,
                       uintptr_t, float, const char*, const char*, const char*)>(

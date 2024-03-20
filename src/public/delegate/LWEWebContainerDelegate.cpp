@@ -430,30 +430,26 @@ void WebContainerImpl::RegisterOnRenderedHandler(
     });
 }
 
-WebContainer* WebContainer::CreateGL(unsigned width, unsigned height,
-                                     const OnGLMakeCurrent& onGLMakeCurrent,
-                                     const OnGLSwapBuffers& onGLSwapBuffers,
-                                     float devicePixelRatio,
-                                     const char* defaultFontName,
-                                     const char* locale, const char* timezoneID)
+WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
+                                     const RendererGLConfiguration& config)
 {
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        Starfish::WebView* webView =
-            createStarfishWebViewInstance(width, height, devicePixelRatio,
-                                          defaultFontName, locale, timezoneID);
+        Starfish::WebView* webView = createStarfishWebViewInstance(
+            args.width, args.height, args.devicePixelRatio,
+            args.defaultFontName, args.locale, args.timezoneID);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
         webView->renderer()->registerGLMakeCurrentCallback(
-            [onGLMakeCurrent, newWebContainer](Starfish::Renderer* renderer) {
-                onGLMakeCurrent(newWebContainer);
+            [config, newWebContainer](Starfish::Renderer* renderer) {
+                config.onGLMakeCurrent(newWebContainer);
             });
 
         webView->renderer()->registerGLSwapBuffersCallback(
-            [onGLSwapBuffers, newWebContainer](Starfish::Renderer* renderer,
-                                               bool mayNeedsSync) {
-                onGLSwapBuffers(newWebContainer, mayNeedsSync);
+            [config, newWebContainer](Starfish::Renderer* renderer,
+                                      bool mayNeedsSync) {
+                config.onGLSwapBuffers(newWebContainer, mayNeedsSync);
             });
     });
     return newWebContainer;
@@ -1594,20 +1590,17 @@ uintptr_t LWEDelegate_WebContainer_Create_With_PlatformImage(
             defaultFontName, locale, timezoneID));
 }
 
-uintptr_t LWEDelegate_WebContainer_CreateGL(
-    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
-    uintptr_t onGLSwapBuffers, float devicePixelRatio,
-    const char* defaultFontName, const char* locale, const char* timezoneID)
+uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
+    uintptr_t webContainerArguments, uintptr_t rendererGLConfiguration)
 {
-    auto* onGLMakeCurrentPtr =
-        reinterpret_cast<const LWEDelegate::WebContainer::OnGLMakeCurrent*>(
-            onGLMakeCurrent);
-    auto* onGLSwapBuffersPtr =
-        reinterpret_cast<const LWEDelegate::WebContainer::OnGLSwapBuffers*>(
-            onGLSwapBuffers);
-    return reinterpret_cast<uintptr_t>(LWEDelegate::WebContainer::CreateGL(
-        width, height, *onGLMakeCurrentPtr, *onGLSwapBuffersPtr,
-        devicePixelRatio, defaultFontName, locale, timezoneID));
+    auto* args = reinterpret_cast<
+        const LWEDelegate::WebContainer::WebContainerArguments*>(
+        webContainerArguments);
+    auto* config = reinterpret_cast<
+        const LWEDelegate::WebContainer::RendererGLConfiguration*>(
+        rendererGLConfiguration);
+    return reinterpret_cast<uintptr_t>(
+        LWEDelegate::WebContainer::CreateGL(*args, *config));
 }
 
 uintptr_t LWEDelegate_WebContainer_CreateGLWithPlatformImage(
