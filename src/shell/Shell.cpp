@@ -39,6 +39,11 @@
 #include <chrono>
 #include <signal.h>
 
+namespace {
+constexpr uint32_t kDefaultWidth = 1920;
+constexpr uint32_t kDefaultHeight = 1080;
+} // namespace
+
 namespace StarfishShell {
 
 Shell::Shell()
@@ -51,6 +56,8 @@ Shell::Shell()
     // for big chunk ex) packets for MSE
     mallopt(M_MMAP_THRESHOLD, 2048);
     mallopt(M_MMAP_MAX, 1024 * 1024);
+
+    m_initOption.geometry = { 0, 0, kDefaultWidth, kDefaultHeight };
 }
 
 Shell::~Shell()

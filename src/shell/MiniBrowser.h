@@ -43,7 +43,7 @@ typedef LWE::WebView* LWEType;
 
 struct MiniBrowserGeometry {
     MiniBrowserGeometry() = default;
-    MiniBrowserGeometry(int32_t x, int32_t y, int32_t width, int32_t height)
+    MiniBrowserGeometry(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
         : x(x)
         , y(y)
         , width(width)
@@ -51,7 +51,7 @@ struct MiniBrowserGeometry {
     {
     }
 
-    int32_t x = 0, y = 0, width = 1920, height = 1080;
+    uint32_t x = 0, y = 0, width = 0, height = 0;
 };
 
 struct MiniBrowserInitOption {

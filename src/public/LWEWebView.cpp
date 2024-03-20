@@ -582,32 +582,44 @@ WebContainer* WebContainer::CreateGL(
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
+    // This is legacy API, forward to new API.
+    return WebContainer::CreateGL({ width, height, devicePixelRatio,
+                                    defaultFontName, locale, timezoneID },
+                                  { onGLMakeCurrent, onGLSwapBuffers });
+}
+
+WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
+                                     const RendererGLConfiguration& config)
+{
     WebContainer* instance = new WebContainer();
     const LWEDelegate::WebContainer::OnGLMakeCurrent onGLMakeCurrentWrapper =
-        [instance,
-         onGLMakeCurrent](LWEDelegate::WebContainer* container) -> void {
+        [instance, config](LWEDelegate::WebContainer* container) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
                        instance->m_delegate.get()) == container);
-        onGLMakeCurrent(instance);
+        config.onGLMakeCurrent(instance);
     };
     const LWEDelegate::WebContainer::OnGLSwapBuffers onGLSwapBuffersWrapper =
-        [instance, onGLSwapBuffers](LWEDelegate::WebContainer* container,
-                                    bool mayNeedsSync) -> void {
+        [instance, config](LWEDelegate::WebContainer* container,
+                           bool mayNeedsSync) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
                        instance->m_delegate.get()) == container);
-        onGLSwapBuffers(instance, mayNeedsSync);
+        config.onGLSwapBuffers(instance, mayNeedsSync);
     };
-
+    LWEDelegate::WebContainer::WebContainerArguments dArgs{
+        args.width,           args.height, args.devicePixelRatio,
+        args.defaultFontName, args.locale, args.timezoneID
+    };
+    LWEDelegate::WebContainer::RendererGLConfiguration dConfig{
+        onGLMakeCurrentWrapper,
+        onGLSwapBuffersWrapper,
+    };
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
         LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateGL(
-            width, height, reinterpret_cast<uintptr_t>(&onGLMakeCurrentWrapper),
-            reinterpret_cast<uintptr_t>(&onGLSwapBuffersWrapper),
-            devicePixelRatio, defaultFontName, locale, timezoneID));
+            reinterpret_cast<uintptr_t>(&dArgs),
+            reinterpret_cast<uintptr_t>(&dConfig)));
 #else
-    auto delegate = LWEDelegate::WebContainer::CreateGL(
-        width, height, onGLMakeCurrentWrapper, onGLSwapBuffersWrapper,
-        devicePixelRatio, defaultFontName, locale, timezoneID);
+    auto delegate = LWEDelegate::WebContainer::CreateGL(dArgs, dConfig);
 #endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {

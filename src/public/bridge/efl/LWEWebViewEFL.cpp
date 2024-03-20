@@ -962,8 +962,12 @@ public:
             height = (unsigned)(height / glScale);
             devicePixelRatio = 1 / glScale;
         }
-        WebContainer* webContainer = WebContainer::CreateGL(
-            width, height,
+
+        WebContainer::WebContainerArguments args{
+            width,           height, devicePixelRatio,
+            defaultFontName, locale, timezoneID,
+        };
+        WebContainer::RendererGLConfiguration config{
             [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
 
@@ -994,8 +998,9 @@ public:
                     m_lastInputTime = 0;
                     ANNOTATE_CHANNEL_END(3002);
                 }
-            },
-            devicePixelRatio, defaultFontName, locale, timezoneID);
+            }
+        };
+        WebContainer* webContainer = WebContainer::CreateGL(args, config);
 
         m_pixelDirtyCallback = [](void* data, Evas_Object* o) {
             // We need to draw every time for preventing screen blinking
