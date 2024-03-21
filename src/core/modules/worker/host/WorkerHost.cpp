@@ -84,8 +84,8 @@ WorkerHost::WorkerHost(Worker* workerObject, RunLoop* runLoop)
         new WebWorker(workerObject->executionContext()->webBase(), runLoop);
 
     m_globalScope = m_webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(
-        new ResourceURL(workerObject->url()->urlString(),
-                        workerObject->url()->baseURI()));
+        new ResourceURL(workerObject->scriptURL()->urlString(),
+                        workerObject->scriptURL()->baseURI()));
 
     m_globalScope->initialize(
         new WorkerObjectProxy(m_globalScope->executionContext(), workerObject,

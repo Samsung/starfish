@@ -17,43 +17,28 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
 
-#ifndef __StarfishWorkerClientManager__
-#define __StarfishWorkerClientManager__
+#include "StarfishConfig.h"
 
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/sharedworker/SharedWorkerKey.h"
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
-class SharedWorkerProcessManager;
+SharedWorkerKey::SharedWorkerKey(const String* storageKey, const String* url,
+                                 const String* name)
+    : hash(0)
+{
+    hash_combine(hash, storageKey->hashValue());
+    hash_combine(hash, url->hashValue());
+    hash_combine(hash, name->hashValue());
+}
 
-class WorkerClientManager : public WorkerManager {
-    friend class WorkerManager;
-
-public:
-    bool isWorkerClientManager() const override
-    {
-        return true;
-    }
-
-    virtual void destroy() override;
-
-private:
-    static const size_t s_threadPoolSize = 2;
-
-    WorkerClientManager();
-
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-    SharedWorkerProcessManager* m_sharedWorkerProcessManager{ nullptr };
-#endif
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
-#endif
-};
+bool SharedWorkerKey::operator==(const SharedWorkerKey& other) const
+{
+    return hash == other.hash;
+}
 
 } // namespace Starfish
 
-#endif
-#endif
+#endif // #ifdef STARFISH_ENABLE_SHARED_WORKER

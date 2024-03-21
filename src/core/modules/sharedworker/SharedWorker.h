@@ -17,40 +17,40 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#ifndef __StarfishSharedWorker__
+#define __StarfishSharedWorker__
 
-#ifndef __StarfishWorkerClientManager__
-#define __StarfishWorkerClientManager__
-
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/worker/AbstractWorker.h"
+#include "binding/generated/DOMStringOrWorkerOptionsUnion.h"
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
-class SharedWorkerProcessManager;
+class ExecutionContext;
+class MessagePort;
 
-class WorkerClientManager : public WorkerManager {
-    friend class WorkerManager;
-
+class SharedWorker : public AbstractWorker {
 public:
-    bool isWorkerClientManager() const override
+    SharedWorker(
+        ExecutionContext* executionContext, String* scriptURL,
+        DOMStringOrWorkerOptions nameOrOptions = DOMStringOrWorkerOptions());
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SharedWorker)
+
+    virtual ExecutionContext* executionContext() const override
     {
-        return true;
+        return m_executionContext;
     }
 
-    virtual void destroy() override;
+    MessagePort* port() const;
+
+    DEFINE_GETTER(size_t, sharedWorkerKey);
+    DEFINE_GETTER(uint32_t, clientID);
 
 private:
-    static const size_t s_threadPoolSize = 2;
-
-    WorkerClientManager();
-
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-    SharedWorkerProcessManager* m_sharedWorkerProcessManager{ nullptr };
-#endif
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
-#endif
+    MessagePort* m_messagePort;
+    size_t m_sharedWorkerKey;
+    uint32_t m_clientID;
 };
 
 } // namespace Starfish

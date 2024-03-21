@@ -22,7 +22,6 @@
 
 #include "core/dom/StructuredSerializeOptions.h"
 #include "core/modules/worker/AbstractWorker.h"
-#include "core/modules/worker/WorkerOptions.h"
 
 namespace Starfish {
 
@@ -51,12 +50,6 @@ public:
 
     void terminate();
 
-    const WorkerOptions& workerOptions() const
-    {
-        return m_options;
-    }
-
-    DEFINE_GETTER(ResourceURL*, url);
     DEFINE_GETTER(WorkerThread*, workerThread);
     DEFINE_GETTER(WorkerHostProxy*, workerHostProxy);
     DEFINE_GETTER(bool, wasTerminated);
@@ -69,8 +62,6 @@ public:
 #undef OVERRIDE
 
 private:
-    ResourceURL* m_url;
-    const WorkerOptions m_options;
     WorkerThread* m_workerThread;
     WorkerHostProxy* m_workerHostProxy;
     std::atomic_bool m_wasTerminated;

@@ -29,9 +29,7 @@ namespace Starfish {
 
 Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
                const WorkerOptions& workerOptions)
-    : AbstractWorker(executionContext)
-    , m_url(resolveURL(scriptURL))
-    , m_options(workerOptions)
+    : AbstractWorker(executionContext, scriptURL, workerOptions)
     , m_workerThread(new WorkerThread(executionContext))
     , m_workerHostProxy(new WorkerHostProxy(executionContext, m_workerThread))
     , m_wasTerminated(false)

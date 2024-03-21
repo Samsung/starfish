@@ -17,40 +17,27 @@
  *  USA
  */
 
-#if defined(STARFISH_USE_WORKER_PROCESS) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#ifndef __StarfishSharedWorkerClient__
+#define __StarfishSharedWorkerClient__
 
-#ifndef __StarfishWorkerClientManager__
-#define __StarfishWorkerClientManager__
-
-#include "core/modules/worker/WorkerManager.h"
+#include "core/modules/sharedworker/SharedWorkerConnection.h"
 
 namespace Starfish {
 
-class ServiceWorkerProcessManager;
-class SharedWorkerProcessManager;
+class PerProcess;
 
-class WorkerClientManager : public WorkerManager {
-    friend class WorkerManager;
-
+class SharedWorkerClient : public SharedWorkerConnection {
 public:
-    bool isWorkerClientManager() const override
-    {
-        return true;
-    }
+    SharedWorkerClient(PerProcess* perProcess);
 
-    virtual void destroy() override;
+    void start();
+
+    void requestConnection(SharedWorker* sharedWorker);
+
+    void requestClose(SharedWorker* sharedWorker);
 
 private:
-    static const size_t s_threadPoolSize = 2;
-
-    WorkerClientManager();
-
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-    SharedWorkerProcessManager* m_sharedWorkerProcessManager{ nullptr };
-#endif
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
-    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
-#endif
 };
 
 } // namespace Starfish
