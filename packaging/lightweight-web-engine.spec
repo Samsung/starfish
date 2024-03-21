@@ -468,6 +468,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen \
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=dali \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 %endif
@@ -479,6 +480,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish.executable
@@ -504,6 +506,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DTARGETNAME=lightweight-web-engine.prod.dali.tv \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -518,6 +521,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  %{?extra_cmake_options} \
   -G Ninja
 %else # 0%{?build_option:1}
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -527,6 +531,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  %{?extra_cmake_options} \
   -G Ninja
 %endif
 ninja -C %{out_tizen} starfish.shared_library
@@ -566,6 +571,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
   -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -591,6 +597,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -603,6 +610,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.mobile \
   -DWEBRTC='%{enable_webrtc}' \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -631,6 +639,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -642,6 +651,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -665,6 +675,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter \
   -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DTARGETNAME=lightweight-web-engine.flutter \
+  %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
