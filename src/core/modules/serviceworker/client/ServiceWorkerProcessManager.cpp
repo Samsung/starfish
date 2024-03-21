@@ -90,8 +90,11 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 
     Message::init();
 
+    // For service workers, the PerProcess must always be initialized to
+    // check app installation before the web page is loaded.
     m_perProcess = perProcess;
     m_perProcess->initialize(PATH_SERVICE_WORKER_IPC_DIR);
+
     m_pushServiceAgent = new PushServiceAgent();
     m_registrationManager =
         new RegistrationManager(perProcess->workerSettings());

@@ -30,8 +30,18 @@
 
 namespace Starfish {
 
-AbstractWorker::AbstractWorker(ExecutionContext* executionContext)
+AbstractWorker::AbstractWorker(ExecutionContext* executionContext,
+                               String* scriptURL)
     : m_executionContext(executionContext)
+    , m_scriptURL(resolveURL(scriptURL))
+{
+}
+
+AbstractWorker::AbstractWorker(ExecutionContext* executionContext,
+                               String* scriptURL, const WorkerOptions& options)
+    : m_executionContext(executionContext)
+    , m_scriptURL(resolveURL(scriptURL))
+    , m_options(options)
 {
 }
 

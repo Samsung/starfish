@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/modules/worker/WorkerSettings.h"
-
+#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/worker/client/WorkerClientManager.h"
 
@@ -33,9 +33,11 @@ WorkerClientManager::WorkerClientManager()
 {
     m_workerSettings->setThreadPoolSize(s_threadPoolSize);
 
-    // For service workers, the WorkerManager must always be initialized to
-    // check app installation before the web page is loaded.
-    // For shared worker, it is initialized when the shared worker is used.
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    m_sharedWorkerProcessManager = SharedWorkerProcessManager::instance();
+    m_sharedWorkerProcessManager->init(m_perProcess);
+#endif
+
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init(m_perProcess);
@@ -45,6 +47,13 @@ WorkerClientManager::WorkerClientManager()
 void WorkerClientManager::destroy()
 {
     WorkerManager::destroy();
+
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    if (m_sharedWorkerProcessManager) {
+        m_sharedWorkerProcessManager->destroy();
+        m_sharedWorkerProcessManager = nullptr;
+    }
+#endif
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     if (m_serviceWorkerProcessManager) {

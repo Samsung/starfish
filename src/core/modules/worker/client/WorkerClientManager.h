@@ -45,6 +45,9 @@ private:
 
     WorkerClientManager();
 
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    SharedWorkerProcessManager* m_sharedWorkerProcessManager{ nullptr };
+#endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
 #endif

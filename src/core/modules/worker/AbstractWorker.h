@@ -21,14 +21,24 @@
 #define __StarfishAbstractWorker__
 
 #include "core/dom/EventTarget.h"
+#include "core/modules/worker/WorkerOptions.h"
 
 namespace Starfish {
 
 class AbstractWorker : public EventTarget {
 public:
-    AbstractWorker(ExecutionContext* executionContext);
+    AbstractWorker(ExecutionContext* executionContext, String* scriptURL);
+    AbstractWorker(ExecutionContext* executionContext, String* scriptURL,
+                   const WorkerOptions& options);
 
     ResourceURL* resolveURL(String* scriptURL);
+
+    const WorkerOptions& workerOptions() const
+    {
+        return m_options;
+    }
+
+    DEFINE_GETTER(ResourceURL*, scriptURL);
 
 #define VIRTUAL
 #define OVERRIDE
@@ -38,6 +48,8 @@ public:
 
 protected:
     ExecutionContext* m_executionContext;
+    ResourceURL* m_scriptURL;
+    WorkerOptions m_options;
 
 private:
 };

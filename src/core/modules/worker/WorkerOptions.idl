@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
+
+[STARFISH_ENABLE_WORKER]
+dictionary WorkerOptions {
+  WorkerType type = "classic";
+  RequestCredentials credentials = "same-origin"; // credentials is only used if type is "module"
+  DOMString name = "";
+};
