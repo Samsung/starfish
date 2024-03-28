@@ -117,7 +117,7 @@ IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL
                         COMMENT "COPY LIBWEBSOCKETS SOURCE"
                         COMMAND cp -r ${LIBWEBSOCKETS_SOURCE_DIR} ${OUTPUT_DIRECTORY}
                         COMMAND sed -i "s/hidden/default/" ${LIBWEBSOCKETS_BUILD_DIR}/include/libwebsockets.h
-                        COMMAND touch ${LIBWEBSOCKETS_BUILD_DIR}/copied
+                        COMMAND touch ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
     )
 
     IF (${ARCH} STREQUAL "x64")
