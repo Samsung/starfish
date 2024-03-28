@@ -172,8 +172,11 @@ public:
 
     bool initEGL() override;
     bool makeCurrent() override;
-    bool resetCurrent() override;
+    bool clearCurrentContext() override;
     bool swapBuffer() override;
+    uintptr_t createSharedContext() override;
+    bool destroyContext(uintptr_t context) override;
+    bool makeCurrentWithContext(uintptr_t context) override;
 
 private:
     Display* m_display = nullptr;
@@ -248,16 +251,42 @@ bool WindowX11::makeCurrent()
     return true;
 }
 
-bool WindowX11::resetCurrent()
+bool WindowX11::clearCurrentContext()
 {
-    eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                   EGL_NO_CONTEXT);
-    return true;
+    return eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                          EGL_NO_CONTEXT);
 }
 
 bool WindowX11::swapBuffer()
 {
     eglSwapBuffers(m_eglDisplay, m_eglSurface);
+    return true;
+}
+
+uintptr_t WindowX11::createSharedContext()
+{
+    EGLContext sharedContext;
+    if (createGLContext(sharedContext, m_eglDisplay, m_eglConfig,
+                        m_eglContext)) {
+        return reinterpret_cast<uintptr_t>(sharedContext);
+    }
+    return UINTPTR_MAX;
+}
+
+bool WindowX11::destroyContext(uintptr_t context)
+{
+    return eglDestroyContext(m_eglDisplay,
+                             reinterpret_cast<EGLContext>(context));
+}
+
+bool WindowX11::makeCurrentWithContext(uintptr_t context)
+{
+    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
+                        reinterpret_cast<EGLContext>(context))) {
+        printf("Failed to set current context (eglError: 0x%x)\n",
+               eglGetError());
+        return false;
+    }
     return true;
 }
 

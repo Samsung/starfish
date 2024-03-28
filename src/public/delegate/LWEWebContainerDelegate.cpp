@@ -451,6 +451,36 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                       bool mayNeedsSync) {
                 config.onGLSwapBuffers(newWebContainer, mayNeedsSync);
             });
+
+        if (config.onGLCreateSharedContext) {
+            webView->renderer()->registerGLCreateSharedContext(
+                [config,
+                 newWebContainer](Starfish::Renderer* renderer) -> uintptr_t {
+                    return config.onGLCreateSharedContext(newWebContainer);
+                });
+        }
+        if (config.onGLDestroyContext) {
+            webView->renderer()->registerGLDestroyContext(
+                [config, newWebContainer](Starfish::Renderer* renderer,
+                                          uintptr_t context) -> bool {
+                    return config.onGLDestroyContext(newWebContainer, context);
+                });
+        }
+        if (config.onGLClearCurrentContext) {
+            webView->renderer()->registerGLClearCurrentContext(
+                [config,
+                 newWebContainer](Starfish::Renderer* renderer) -> bool {
+                    return config.onGLClearCurrentContext(newWebContainer);
+                });
+        }
+        if (config.onGLMakeCurrentWithContext) {
+            webView->renderer()->registerGLMakeCurrentWithContext(
+                [config, newWebContainer](Starfish::Renderer* renderer,
+                                          uintptr_t context) -> bool {
+                    return config.onGLMakeCurrentWithContext(newWebContainer,
+                                                             context);
+                });
+        }
     });
     return newWebContainer;
 }
