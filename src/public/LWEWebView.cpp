@@ -1165,6 +1165,20 @@ void WebContainer::RegisterDebuggerShouldContinueWaitingHandler(
         ->RegisterDebuggerShouldContinueWaitingHandler(cb);
 }
 
+void WebContainer::RegisterOnIdleHandler(
+    const std::function<void(WebContainer*)>& cb)
+{
+    const auto wrapper = [this,
+                          cb](LWEDelegate::WebContainer* container) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        cb(this);
+    };
+
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterOnIdleHandler(wrapper);
+}
+
 void WebContainer::CallHandler(const std::string& handler, void* param)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())

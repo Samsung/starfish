@@ -218,6 +218,9 @@ public:
         const std::function<void(const std::string& url, int port,
                                  bool& shouldWait)>& cb) = 0;
 
+    virtual void RegisterOnIdleHandler(
+        const std::function<void(WebContainer*)>& cb) = 0;
+
     virtual void CallHandler(const std::string& handler, void* param) = 0;
 
     virtual void SetUserAgentString(const std::string& userAgent) = 0;

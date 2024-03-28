@@ -48,6 +48,7 @@ enum StarfishPubicWebViewHandlerKind {
     OnReceivedError,
     OnProgressChanged,
     OnDownloadStart,
+    OnIdle,
     ShouldOverrideUrlLoading,
     DebuggerShouldInit,
     DebuggerShouldContinueWaiting,
