@@ -149,6 +149,13 @@ bool WindowEFL::createSimpleWindow(const char* appName, int width, int height)
     evas_object_resize(m_window, width, height);
     evas_object_show(m_window);
 
+    // Hack: Move the position slightly as shown below to avoid cases where the
+    // window object is not displayed correctly, and then move back.
+    Evas_Coord x, y;
+    evas_object_geometry_get(m_window, &x, &y, nullptr, nullptr);
+    evas_object_move(m_window, x + 1, y);
+    evas_object_move(m_window, x, y);
+
 #if defined(SHELL_TIZEN)
     int rots[4] = { 0, 90, 180, 270 };
     elm_win_wm_rotation_available_rotations_set(m_window, (const int*)(&rots),
