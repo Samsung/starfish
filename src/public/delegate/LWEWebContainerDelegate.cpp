@@ -279,6 +279,9 @@ public:
         const std::function<void(const std::string& url, int port,
                                  bool& shouldWait)>& cb) override;
 
+    void RegisterOnIdleHandler(
+        const std::function<void(WebContainer*)>& cb) override;
+
     void CallHandler(const std::string& handler, void* param) override;
 
     void SetUserAgentString(const std::string& userAgent) override;
@@ -1288,6 +1291,17 @@ void WebContainerImpl::RegisterDebuggerShouldContinueWaitingHandler(
                     Param* p = (Param*)param;
                     cb(p->url, p->port, *p->ret);
                 });
+        });
+}
+
+void WebContainerImpl::RegisterOnIdleHandler(
+    const std::function<void(WebContainer*)>& cb)
+{
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
+        m_webView->messageLoop(), [cb, this]() -> void {
+            m_webView->registerPublicWebViewHandler(
+                Starfish::OnIdle,
+                [cb, this](void* param) -> void { cb(this); });
         });
 }
 

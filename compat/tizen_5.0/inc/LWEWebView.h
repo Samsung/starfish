@@ -371,6 +371,7 @@ public:
     void RegisterDebuggerShouldContinueWaitingHandler(
         const std::function<void(const std::string& url, int port,
                                  bool& shouldWait)>& cb);
+    void RegisterOnIdleHandler(const std::function<void(WebContainer*)>& cb);
 
     void CallHandler(const std::string& handler, void* param);
 

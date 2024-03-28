@@ -1454,16 +1454,18 @@ public:
             }
 
             if (ret) {
+                CompositorContextGL* ctx =
+                    (CompositorContextGL*)m_renderer->compostiorContext();
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
                     GLuint id = m_textureFragments[i].textureID;
-                    CompositorContextGL* ctx =
-                        (CompositorContextGL*)m_renderer->compostiorContext();
-                    if (ctx) {
-                        ctx->putGenericTextureToCache(
-                            id, m_textureFragments[i].textureWidth,
-                            m_textureFragments[i].textureHeight);
-                    } else {
-                        gl()->deleteTextures(1, &id);
+                    if (id) {
+                        if (ctx) {
+                            ctx->putGenericTextureToCache(
+                                id, m_textureFragments[i].textureWidth,
+                                m_textureFragments[i].textureHeight);
+                        } else {
+                            gl()->deleteTextures(1, &id);
+                        }
                     }
                 }
             }

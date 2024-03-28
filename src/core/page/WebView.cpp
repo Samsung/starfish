@@ -445,6 +445,8 @@ void WebView::enterIdleMode()
         malloc_trim(0);
     }
 #endif
+
+    callPublicWebViewHandler(OnIdle, nullptr, true);
 }
 
 void WebView::addJavaScriptNativeInterface(
