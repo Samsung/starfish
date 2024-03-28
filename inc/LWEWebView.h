@@ -241,6 +241,11 @@ public:
     struct RendererGLConfiguration {
         std::function<void(WebContainer*)> onGLMakeCurrent;
         std::function<void(WebContainer*, bool mayNeedsSync)> onGLSwapBuffers;
+        std::function<uintptr_t(WebContainer*)> onGLCreateSharedContext;
+        std::function<bool(WebContainer*, uintptr_t)> onGLDestroyContext;
+        std::function<bool(WebContainer*)> onGLClearCurrentContext;
+        std::function<bool(WebContainer*, uintptr_t)>
+            onGLMakeCurrentWithContext;
     };
 
     void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);

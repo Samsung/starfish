@@ -45,8 +45,11 @@ public:
 
     bool initEGL() override;
     bool makeCurrent() override;
-    bool resetCurrent() override;
+    bool clearCurrentContext() override;
     bool swapBuffer() override;
+    uintptr_t createSharedContext() override;
+    bool destroyContext(uintptr_t context) override;
+    bool makeCurrentWithContext(uintptr_t context) override;
 
 private:
     bool createSimpleWindow(const char* appName, int width, int height);
@@ -218,7 +221,7 @@ bool WindowGLFW::initEGL()
     m_eglSurface = draw;
     m_eglConfig = config;
 
-    resetCurrent();
+    clearCurrentContext();
 
     return true;
 }
@@ -229,7 +232,7 @@ bool WindowGLFW::makeCurrent()
     return true;
 }
 
-bool WindowGLFW::resetCurrent()
+bool WindowGLFW::clearCurrentContext()
 {
     glfwMakeContextCurrent(nullptr);
     return true;
@@ -238,6 +241,42 @@ bool WindowGLFW::resetCurrent()
 bool WindowGLFW::swapBuffer()
 {
     glfwSwapBuffers(m_window);
+    return true;
+}
+
+uintptr_t WindowGLFW::createSharedContext()
+{
+    EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
+    EGLContext sharedContext =
+        eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, attributes);
+
+    if (sharedContext == EGL_NO_CONTEXT) {
+        EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
+        sharedContext = eglCreateContext(m_eglDisplay, m_eglConfig,
+                                         m_eglContext, attributes);
+        if (sharedContext == EGL_NO_CONTEXT) {
+            printf("Unable to create EGL context (eglError: 0x%x)\n",
+                   eglGetError());
+            return UINTPTR_MAX;
+        }
+    }
+
+    return reinterpret_cast<uintptr_t>(sharedContext);
+}
+
+bool WindowGLFW::destroyContext(uintptr_t context)
+{
+    return eglDestroyContext(m_eglDisplay,
+                             reinterpret_cast<EGLContext>(context));
+}
+
+bool WindowGLFW::makeCurrentWithContext(uintptr_t context)
+{
+    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
+                        reinterpret_cast<EGLContext>(context))) {
+        printf("Failed to set current context (eglError: 0x%x)", eglGetError());
+        return false;
+    }
     return true;
 }
 

@@ -105,8 +105,11 @@ public:
 
     virtual bool initEGL() = 0;
     virtual bool makeCurrent() = 0;
-    virtual bool resetCurrent() = 0;
+    virtual bool clearCurrentContext() = 0;
     virtual bool swapBuffer() = 0;
+    virtual uintptr_t createSharedContext() = 0;
+    virtual bool destroyContext(uintptr_t context) = 0;
+    virtual bool makeCurrentWithContext(uintptr_t context) = 0;
 
 protected:
     Window() = default;

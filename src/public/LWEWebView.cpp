@@ -583,15 +583,23 @@ WebContainer* WebContainer::CreateGL(
     const char* timezoneID)
 {
     // This is legacy API, forward to new API.
-    return WebContainer::CreateGL({ width, height, devicePixelRatio,
-                                    defaultFontName, locale, timezoneID },
-                                  { onGLMakeCurrent, onGLSwapBuffers });
+    WebContainerArguments args = { width,           height, devicePixelRatio,
+                                   defaultFontName, locale, timezoneID };
+    RendererGLConfiguration config;
+    config.onGLMakeCurrent = onGLMakeCurrent;
+    config.onGLSwapBuffers = onGLSwapBuffers;
+    return WebContainer::CreateGL(args, config);
 }
 
 WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                      const RendererGLConfiguration& config)
 {
     WebContainer* instance = new WebContainer();
+    LWEDelegate::WebContainer::WebContainerArguments arguments{
+        args.width,           args.height, args.devicePixelRatio,
+        args.defaultFontName, args.locale, args.timezoneID
+    };
+
     const LWEDelegate::WebContainer::OnGLMakeCurrent onGLMakeCurrentWrapper =
         [instance, config](LWEDelegate::WebContainer* container) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
@@ -605,21 +613,65 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                        instance->m_delegate.get()) == container);
         config.onGLSwapBuffers(instance, mayNeedsSync);
     };
-    LWEDelegate::WebContainer::WebContainerArguments dArgs{
-        args.width,           args.height, args.devicePixelRatio,
-        args.defaultFontName, args.locale, args.timezoneID
-    };
-    LWEDelegate::WebContainer::RendererGLConfiguration dConfig{
-        onGLMakeCurrentWrapper,
-        onGLSwapBuffersWrapper,
-    };
+    LWEDelegate::WebContainer::RendererGLConfiguration configration;
+    configration.onGLMakeCurrent = onGLMakeCurrentWrapper;
+    configration.onGLSwapBuffers = onGLSwapBuffersWrapper;
+
+    // Optional callbacks for webgl.
+    if (config.onGLCreateSharedContext) {
+        const LWEDelegate::WebContainer::OnGLCreateSharedContext
+            onGLCreateSharedContextWrapper =
+                [instance,
+                 config](LWEDelegate::WebContainer* container) -> uintptr_t {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGLCreateSharedContext(instance);
+        };
+        configration.onGLCreateSharedContext = onGLCreateSharedContextWrapper;
+    }
+    if (config.onGLDestroyContext) {
+        const LWEDelegate::WebContainer::OnGLDestroyContext
+            onGLDestroyContextWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   uintptr_t context) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGLDestroyContext(instance, context);
+        };
+        configration.onGLDestroyContext = onGLDestroyContextWrapper;
+    }
+    if (config.onGLClearCurrentContext) {
+        const LWEDelegate::WebContainer::OnGLClearCurrentContext
+            onGLClearCurrentContextWrapper =
+                [instance,
+                 config](LWEDelegate::WebContainer* container) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGLClearCurrentContext(instance);
+        };
+        configration.onGLClearCurrentContext = onGLClearCurrentContextWrapper;
+    }
+    if (config.onGLMakeCurrentWithContext) {
+        const LWEDelegate::WebContainer::OnGLMakeCurrentWithContext
+            onGLMakeCurrentWithContextWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   uintptr_t context) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGLMakeCurrentWithContext(instance, context);
+        };
+        configration.onGLMakeCurrentWithContext =
+            onGLMakeCurrentWithContextWrapper;
+    }
+
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
         LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateGL(
-            reinterpret_cast<uintptr_t>(&dArgs),
-            reinterpret_cast<uintptr_t>(&dConfig)));
+            reinterpret_cast<uintptr_t>(&arguments),
+            reinterpret_cast<uintptr_t>(&configration)));
 #else
-    auto delegate = LWEDelegate::WebContainer::CreateGL(dArgs, dConfig);
+    auto delegate =
+        LWEDelegate::WebContainer::CreateGL(arguments, configration);
 #endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {

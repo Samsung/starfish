@@ -77,9 +77,22 @@ public:
         const char* timezoneID;
     };
 
+    using OnGLMakeCurrent = std::function<void(WebContainer*)>;
+    using OnGLSwapBuffers =
+        std::function<void(WebContainer*, bool mayNeedsSync)>;
+    using OnGLCreateSharedContext = std::function<uintptr_t(WebContainer*)>;
+    using OnGLDestroyContext = std::function<bool(WebContainer*, uintptr_t)>;
+    using OnGLClearCurrentContext = std::function<bool(WebContainer*)>;
+    using OnGLMakeCurrentWithContext =
+        std::function<bool(WebContainer*, uintptr_t)>;
+
     struct RendererGLConfiguration {
-        std::function<void(WebContainer*)> onGLMakeCurrent;
-        std::function<void(WebContainer*, bool mayNeedsSync)> onGLSwapBuffers;
+        OnGLMakeCurrent onGLMakeCurrent;
+        OnGLSwapBuffers onGLSwapBuffers;
+        OnGLCreateSharedContext onGLCreateSharedContext;
+        OnGLDestroyContext onGLDestroyContext;
+        OnGLClearCurrentContext onGLClearCurrentContext;
+        OnGLMakeCurrentWithContext onGLMakeCurrentWithContext;
     };
 
     // For Tizen 5.5 and above.
@@ -102,9 +115,6 @@ public:
         const char* timezoneID);
     // <--- end of function set for render to buffer
 
-    using OnGLMakeCurrent = std::function<void(WebContainer*)>;
-    using OnGLSwapBuffers =
-        std::function<void(WebContainer*, bool mayNeedsSync)>;
     // Function set for render with OpenGL
     static WebContainer* CreateGL(const WebContainerArguments& args,
                                   const RendererGLConfiguration& config);

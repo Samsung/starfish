@@ -191,12 +191,29 @@ bool MiniBrowser::createLWE()
         .locale = "ko-KR",
         .timezoneID = "Asia/Seoul",
     };
-    LWE::WebContainer::RendererGLConfiguration config{
-        [this](LWE::WebContainer* wc) { m_window->makeCurrent(); },
-        [this](LWE::WebContainer* wc, bool mayNeedsSync) {
-            m_window->swapBuffer();
-        },
+    LWE::WebContainer::RendererGLConfiguration config;
+    config.onGLMakeCurrent = [this](LWE::WebContainer* wc) {
+        m_window->makeCurrent();
     };
+    config.onGLSwapBuffers = [this](LWE::WebContainer* wc, bool mayNeedsSync) {
+        m_window->swapBuffer();
+    };
+    config.onGLCreateSharedContext =
+        [this](LWE::WebContainer* wc) -> uintptr_t {
+        return m_window->createSharedContext();
+    };
+    config.onGLDestroyContext = [this](LWE::WebContainer* wc,
+                                       uintptr_t context) -> bool {
+        return m_window->destroyContext(context);
+    };
+    config.onGLClearCurrentContext = [this](LWE::WebContainer* wc) -> bool {
+        return m_window->clearCurrentContext();
+    };
+    config.onGLMakeCurrentWithContext = [this](LWE::WebContainer* wc,
+                                               uintptr_t context) -> bool {
+        return m_window->makeCurrentWithContext(context);
+    };
+
     m_lwe = LWE::WebContainer::CreateGL(args, config);
 
     if (!m_lwe) {

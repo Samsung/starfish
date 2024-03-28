@@ -251,6 +251,26 @@ public:
         m_mayNeedsSync = false;
     }
 
+    virtual uintptr_t glCreateSharedContext()
+    {
+        return m_glCreateSharedContextCallback(this);
+    }
+
+    virtual bool glDestroyContext(uintptr_t context)
+    {
+        return m_glDestroyContextCallback(this, context);
+    }
+
+    virtual bool glClearCurrentContext()
+    {
+        return m_glClearCurrentContextCallback(this);
+    }
+
+    virtual bool glMakeCurrentWithContext(uintptr_t context)
+    {
+        return m_glMakeCurrentWithContextCallback(this, context);
+    }
+
     virtual void glMayNeedsSync() override
     {
         m_mayNeedsSync = true;

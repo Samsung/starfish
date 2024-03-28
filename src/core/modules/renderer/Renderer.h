@@ -146,16 +146,35 @@ public:
 
     virtual bool glMakeCurrent()
     {
-        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return true;
     }
+
     virtual void glSwapBuffers()
     {
-        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
+
     virtual void glMayNeedsSync()
     {
-        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    virtual uintptr_t glCreateSharedContext()
+    {
+        return UINTPTR_MAX;
+    }
+
+    virtual bool glDestroyContext(uintptr_t context)
+    {
+        return true;
+    }
+
+    virtual bool glClearCurrentContext()
+    {
+        return true;
+    }
+
+    virtual bool glMakeCurrentWithContext(uintptr_t context)
+    {
+        return true;
     }
 
     void registerRenderingPrepareCallback(
@@ -186,6 +205,30 @@ public:
         const std::function<void(Renderer* renderer, bool mayNeedsSync)>& cb)
     {
         m_glSwapBufferCallback = cb;
+    }
+
+    void registerGLCreateSharedContext(
+        const std::function<uintptr_t(Renderer* renderer)>& cb)
+    {
+        m_glCreateSharedContextCallback = cb;
+    }
+
+    void registerGLDestroyContext(
+        const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
+    {
+        m_glDestroyContextCallback = cb;
+    }
+
+    void registerGLClearCurrentContext(
+        const std::function<bool(Renderer* renderer)>& cb)
+    {
+        m_glClearCurrentContextCallback = cb;
+    }
+
+    void registerGLMakeCurrentWithContext(
+        const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
+    {
+        m_glMakeCurrentWithContextCallback = cb;
     }
 
     void registerShowSoftwareKeyboardIfPossibleCallback(
@@ -303,6 +346,13 @@ protected:
 
     std::function<void(Renderer* renderer)> m_glMakeCurrentCallback;
     std::function<void(Renderer* renderer, bool)> m_glSwapBufferCallback;
+    std::function<uintptr_t(Renderer* renderer)>
+        m_glCreateSharedContextCallback;
+    std::function<bool(Renderer* renderer, uintptr_t context)>
+        m_glDestroyContextCallback;
+    std::function<bool(Renderer* renderer)> m_glClearCurrentContextCallback;
+    std::function<bool(Renderer* renderer, uintptr_t context)>
+        m_glMakeCurrentWithContextCallback;
 
     std::function<bool(Renderer* renderer)> m_canRenderingCallback;
     std::function<void(bool needsFlush)> m_surfaceFlushCallback;
