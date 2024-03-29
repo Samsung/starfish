@@ -17,27 +17,30 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+
 #if defined(STARFISH_ENABLE_WEBGL)
 
-#include "StarfishBase.h"
-#include "platform/canvas/webgl/GLUtil.h"
-#include "platform/canvas/webgl/GLContext.h"
-#include "platform/canvas/webgl/GLES.h"
+#include "GLUtil.h"
+#include "GLContext.h"
+#include "platform/canvas/gl/IncludeGL.h"
+#include "platform/canvas/gl/GL.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
-static GLuint createFrameBufferTexture2D(const unsigned width,
+static GLuint createFrameBufferTexture2D(GL* gl, const unsigned width,
                                          const unsigned height)
 {
     GLuint textureUnitId;
-    glGenTextures(1, &textureUnitId);
-    glBindTexture(GL_TEXTURE_2D, textureUnitId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, nullptr);
+    gl->genTextures(1, &textureUnitId);
+    gl->bindTexture(GL_TEXTURE_2D, textureUnitId);
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, nullptr);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    gl->bindTexture(GL_TEXTURE_2D, 0);
     return textureUnitId;
 }
 
@@ -50,45 +53,52 @@ static GLuint createFrameBufferTexture2D(const unsigned width,
  *
  * @return result
  */
-static bool createFrameBufferObject(const unsigned width, const unsigned height,
-                                    GLuint& outFbo, GLuint& outTextureId,
-                                    GLuint& outRbo)
+static bool createFrameBufferObject(GL* gl, const unsigned width,
+                                    const unsigned height, GLuint& outFbo,
+                                    GLuint& outTextureId, GLuint& outRbo)
 {
     GLuint fbo, textureId, rbo;
 
     // 1. Create a framebuffer object
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    gl->genFramebuffers(1, &fbo);
+    gl->bindFramebuffer(GL_FRAMEBUFFER, fbo);
 
     // 2. Attach a "color buffer" attachment
-    textureId = createFrameBufferTexture2D(width, height);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           textureId, 0);
+    textureId = createFrameBufferTexture2D(gl, width, height);
+    gl->bindTexture(GL_TEXTURE_2D, textureId);
+    gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                             GL_TEXTURE_2D, textureId, 0);
 
     // 3. Attach a "depth buffer" attachment
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                              GL_RENDERBUFFER, rbo);
+    gl->genRenderbuffers(1, &rbo);
+    gl->bindRenderbuffer(GL_RENDERBUFFER, rbo);
+    gl->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
+                            height);
+    gl->framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                GL_RENDERBUFFER, rbo);
 
     // 4. Verify that setting fbo is complete
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    if (gl->checkFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         STARFISH_LOG_ERROR("Error: creating framebuffer is incomplete. (0x%x)",
                            glCheckFramebufferStatus(GL_FRAMEBUFFER));
         return false;
     }
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    gl->bindTexture(GL_TEXTURE_2D, 0);
+    gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl->bindRenderbuffer(GL_RENDERBUFFER, 0);
 
     outFbo = fbo;
     outRbo = rbo;
     outTextureId = textureId;
 
     return true;
+}
+
+FramebufferTexture::FramebufferTexture(Renderer* renderer)
+    : m_renderer(renderer)
+    , m_gl(renderer->gl())
+{
 }
 
 FramebufferTexture::~FramebufferTexture()
@@ -99,10 +109,11 @@ FramebufferTexture::~FramebufferTexture()
 bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
                                 GLuint& outTextureId)
 {
-    GLRevertableContextScope scope(GLContextScope::getCurrentXGLContext());
+    GLRevertableContextScope scope(GLContextScope::getCurrentGLContext(),
+                                   m_renderer);
 
-    if (!createFrameBufferObject(bufferWidth, bufferHeight, m_fbo, m_textureId,
-                                 m_rbo)) {
+    if (!createFrameBufferObject(m_gl, bufferWidth, bufferHeight, m_fbo,
+                                 m_textureId, m_rbo)) {
         STARFISH_ASSERT(false);
     }
 
@@ -112,20 +123,21 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
 
 bool FramebufferTexture::destory()
 {
-    glDeleteTextures(1, &m_textureId);
-    glDeleteRenderbuffers(1, &m_rbo);
-    glDeleteFramebuffers(1, &m_fbo);
+    m_gl->deleteTextures(1, &m_textureId);
+    m_gl->deleteRenderbuffers(1, &m_rbo);
+    m_gl->deleteFramebuffers(1, &m_fbo);
     return true;
 };
 
-FBOScope::FBOScope(GLuint fbo)
+FBOScope::FBOScope(GLuint fbo, GL* gl)
+    : m_gl(gl)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    m_gl->bindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
 FBOScope::~FBOScope()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    m_gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)

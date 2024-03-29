@@ -21,7 +21,6 @@
 #include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/delegate/LWEWebContainerDelegate.h"
-#include "platform/canvas/webgl/XGLPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 
@@ -387,8 +386,6 @@ public:
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
 
-        updateGLPlatform();
-
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
@@ -714,8 +711,6 @@ public:
                               w, h);
 
             wv->immediatelyClearScreen();
-            wv->updateGLPlatform();
-
             wv->FetchWebContainer()->ResizeTo(w, h);
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
@@ -1318,17 +1313,6 @@ protected:
     bool m_isRenderedOnce;
     void (*m_pixelDirtyCallback)(void* data, Evas_Object* o);
     Ecore_Animator* m_immediatelyClearScreenAnimator;
-
-    void updateGLPlatform()
-    {
-        XGLPlatform platform;
-        platform.type = XGLPlatform::Type::EVAS;
-        platform.context = m_glCtx;
-        platform.evasgl.object = m_glEvasgl;
-        platform.evasgl.api = m_glGlapi;
-        platform.evasgl.surface = m_glSfc;
-        XGLPlatform::instance()->update(platform);
-    }
 
     void immediatelyClearScreen()
     {

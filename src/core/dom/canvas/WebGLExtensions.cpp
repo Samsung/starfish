@@ -22,7 +22,6 @@
 #include "WebGLExtensions.h"
 #include "core/util/String.h"
 #include <unordered_set>
-#include "platform/canvas/webgl/GLES.h" // glGetString
 #include "core/modules/worker/util/Trace.h"
 #include <iostream>
 #include <sstream>
@@ -34,17 +33,31 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/canvas/WebGLOES_VertexArrayObject.h"
 
+#include "platform/canvas/gl/IncludeGL.h"
+#include "platform/canvas/gl/GL.h"
+
 namespace Starfish {
+
+WebGLExtensionRegistry& WebGLExtensionRegistry::instance()
+{
+    static WebGLExtensionRegistry instance;
+    return instance;
+}
 
 WebGLExtensionRegistry::WebGLExtensionRegistry()
 {
+}
+
+void WebGLExtensionRegistry::initialize(GL* gl)
+{
     // 1. Get a list of extensions supported on this device
-    const std::string rawString =
-        reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+    const char* raw =
+        reinterpret_cast<const char*>(gl->getString(GL_EXTENSIONS));
+    const std::string extensions = raw ? raw : "";
 
     // WebGL uses extension names without the 'GL_' prefix.
     std::vector<std::string> tokens;
-    std::stringstream ss(rawString);
+    std::stringstream ss(extensions);
     std::string token;
     while (getline(ss, token, ' ')) {
         if (token.substr(0, 3) == "GL_") {
@@ -109,13 +122,10 @@ WebGLExtensionRegistry::WebGLExtensionRegistry()
 #undef SUPPORTED_GL_EXTENSIONS
 
     m_hasEXT_texture_format_BGRA8888 =
-        (rawString.find("GL_EXT_texture_format_BGRA8888") != std::string::npos);
-}
+        (extensions.find("GL_EXT_texture_format_BGRA8888") !=
+         std::string::npos);
 
-WebGLExtensionRegistry& WebGLExtensionRegistry::instance()
-{
-    static WebGLExtensionRegistry instance;
-    return instance;
+    m_isInitialized = true;
 }
 
 GCVector<String*> WebGLExtensionRegistry::getSupportedExtensions()

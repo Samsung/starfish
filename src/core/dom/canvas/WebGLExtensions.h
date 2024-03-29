@@ -35,6 +35,7 @@ namespace Starfish {
 class ScriptBindingInstance;
 class String;
 class WebGLRenderingContext;
+class GL;
 
 using ExtensionGenerator = std::function<Escargot::ObjectRef*(
     ScriptBindingInstance*, WebGLRenderingContext*)>;
@@ -42,6 +43,12 @@ using ExtensionGenerator = std::function<Escargot::ObjectRef*(
 class WebGLExtensionRegistry {
 public:
     static WebGLExtensionRegistry& instance();
+
+    void initialize(GL* gl);
+    bool isInitialized()
+    {
+        return m_isInitialized;
+    }
 
     Optional<ExtensionGenerator> getGenerator(const std::string& name);
     GCVector<String*> getSupportedExtensions();
@@ -63,7 +70,8 @@ private:
                        CaseInsensitiveEqual>
         m_interfaceGenerators;
 
-    bool m_hasEXT_texture_format_BGRA8888;
+    bool m_hasEXT_texture_format_BGRA8888 = false;
+    bool m_isInitialized = false;
 };
 
 } // namespace Starfish

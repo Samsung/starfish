@@ -17,12 +17,12 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+
 #if defined(STARFISH_ENABLE_WEBGL)
 
 #include "platform/canvas/webgl/GLContext.h"
-
-#include "platform/canvas/webgl/XGLUtil.h"
-#include "StarfishBase.h"
+#include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
 
@@ -32,21 +32,17 @@ GLContext::GLContext()
 {
 }
 
-GLContext::GLContext(XGLContext context)
-    : m_context(context)
+GLContext::GLContext(Renderer* renderer)
+    : m_context(UINTPTR_MAX)
+    , m_renderer(renderer)
 {
 }
 
-bool GLContext::create(bool shareContext)
+bool GLContext::createSharedContext()
 {
-    STARFISH_ASSERT(m_context == nullptr);
-
-    XGLPlatform platform = XGLPlatform::ref();
-
-    XGLContext newContext;
-
-    if (!XGLUtil::createXGLContext(newContext,
-                                   shareContext ? platform.context : nullptr)) {
+    STARFISH_ASSERT(m_context == UINTPTR_MAX);
+    uintptr_t newContext = m_renderer->glCreateSharedContext();
+    if (newContext == UINTPTR_MAX) {
         return false;
     }
     m_context = newContext;
@@ -55,36 +51,36 @@ bool GLContext::create(bool shareContext)
 
 bool GLContext::setCurrent()
 {
-    STARFISH_ASSERT(m_context != nullptr);
+    STARFISH_ASSERT(m_context != UINTPTR_MAX);
 
-    return XGLUtil::makeCurrentXGLContext(m_context);
+    return m_renderer->glMakeCurrentWithContext(m_context);
 }
 
 void GLContext::resetCurrent()
 {
-    XGLUtil::resetCurrentXGLContext();
+    m_renderer->glClearCurrentContext();
 }
 
 bool GLContext::destory()
 {
-    if (m_context) {
-        if (!XGLUtil::destroyXGLContext(m_context)) {
+    if (m_context != UINTPTR_MAX) {
+        if (!m_renderer->glDestroyContext(m_context)) {
             STARFISH_LOG_WARN("Context is not destoryed.");
             return false;
         }
-        m_context = nullptr;
+        m_context = UINTPTR_MAX;
     }
     return true;
 }
 
 void GLContext::reset()
 {
-    m_context = nullptr;
+    m_context = UINTPTR_MAX;
 }
 
 bool GLContext::isValid()
 {
-    return m_context != nullptr;
+    return m_context != UINTPTR_MAX;
 }
 
 // GLContextScope
@@ -102,19 +98,21 @@ GLContextScope::GLContextScope(GLContext context)
 GLContextScope::~GLContextScope()
 {
     if (m_result) {
-        XGLUtil::resetCurrentXGLContext();
+        currentContext.resetCurrent();
     }
     currentContext.reset();
 }
 
-GLContext GLContextScope::getCurrentXGLContext()
+GLContext GLContextScope::getCurrentGLContext()
 {
     return currentContext.isValid() ? currentContext : GLContext();
 }
 
 // GLRevertableContextScope
 
-GLRevertableContextScope::GLRevertableContextScope(GLContext context)
+GLRevertableContextScope::GLRevertableContextScope(GLContext context,
+                                                   Renderer* renderer)
+    : m_renderer(renderer)
 {
     context.setCurrent();
 }
@@ -125,7 +123,7 @@ GLRevertableContextScope::~GLRevertableContextScope()
     // does not have an API to get the current GL context, so we cannot have a
     // unified API to know the current context unless we unify the API to change
     // context across the codebase.
-    XGLUtil::makeCurrentXGLContext(XGLPlatform::ref().context);
+    m_renderer->glMakeCurrent();
 }
 
 } // namespace Starfish
