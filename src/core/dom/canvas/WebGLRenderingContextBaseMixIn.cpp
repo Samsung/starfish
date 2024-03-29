@@ -26,8 +26,6 @@
 #include "core/modules/worker/util/Trace.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "platform/canvas/webgl/XGLPlatform.h"
-#include "platform/canvas/webgl/XGLUtil.h"
 #include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {
@@ -53,13 +51,10 @@ void WebGLRenderingContextBaseMixIn::initialize()
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(!m_context.isValid());
 
-    if (!XGLPlatform::instance()->isValid()) {
-        m_ownerHTMLCanvasElement->webView()->renderer()->glMakeCurrent();
-        XGLUtil::initXGLPlatform();
-    }
+    m_context = GLContext(m_ownerHTMLCanvasElement->webView()->renderer());
 
     // Create a GL context for this rendering context
-    if (!m_context.create(true)) {
+    if (!m_context.createSharedContext()) {
         STARFISH_LOG_ERROR("GLContext creation has failed.");
     }
 
@@ -107,7 +102,8 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         // Ensure that the framebufferTexture is destroyed and a new one
         // created when invoked in the resize event.
         m_framebufferTexture.reset();
-        m_framebufferTexture = std::make_shared<FramebufferTexture>();
+        m_framebufferTexture = std::make_shared<FramebufferTexture>(
+            m_ownerHTMLCanvasElement->webView()->renderer());
 
         // Set the SurfaceCreationScope with a framebufferTexture. When
         // CanvasSurface::create detects that a SurfaceCreationScope is

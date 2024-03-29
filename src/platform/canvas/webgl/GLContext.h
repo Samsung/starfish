@@ -22,17 +22,16 @@
 #ifndef __StarfishGLContext__
 #define __StarfishGLContext__
 
-#include "platform/canvas/webgl/XGLUtil.h"
-#include "platform/canvas/webgl/XGLPlatform.h"
-
 namespace Starfish {
+
+class Renderer;
 
 class GLContext {
 public:
     GLContext();
-    GLContext(XGLContext context);
+    GLContext(Renderer* renderer);
 
-    bool create(bool shareContext);
+    bool createSharedContext();
     bool destory();
     bool setCurrent();
     void resetCurrent();
@@ -40,7 +39,8 @@ public:
     bool isValid();
 
 private:
-    XGLContext m_context{ nullptr };
+    uintptr_t m_context{ UINTPTR_MAX };
+    Renderer* m_renderer{ nullptr };
 };
 
 class GLContextScope final {
@@ -57,7 +57,7 @@ public:
         return m_result == false;
     }
 
-    static GLContext getCurrentXGLContext();
+    static GLContext getCurrentGLContext();
 
 private:
     static thread_local GLContext currentContext;
@@ -66,13 +66,16 @@ private:
 
 class GLRevertableContextScope final {
 public:
-    explicit GLRevertableContextScope(GLContext context);
+    explicit GLRevertableContextScope(GLContext context, Renderer* renderer);
     ~GLRevertableContextScope();
 
     GLRevertableContextScope(const GLRevertableContextScope& other) = delete;
     GLRevertableContextScope& operator=(const GLRevertableContextScope& other) =
         delete;
     GLRevertableContextScope(GLRevertableContextScope&& other) = delete;
+
+private:
+    Renderer* m_renderer = nullptr;
 };
 
 } // namespace Starfish

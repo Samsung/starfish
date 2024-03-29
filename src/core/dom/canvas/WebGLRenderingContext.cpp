@@ -149,6 +149,9 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_drawingBufferColorSpace = String::createASCIIString("srgb");
     m_state = new WebGLRenderingContextState();
     m_gl = m_ownerHTMLCanvasElement->webView()->renderer()->gl();
+    if (!WebGLExtensionRegistry::instance().isInitialized()) {
+        WebGLExtensionRegistry::instance().initialize(m_gl);
+    }
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
@@ -625,7 +628,7 @@ void WebGLRenderingContext::clear(uint32_t mask)
 
     maskHistory |= mask;
 
-    FBOScope fboScope(getCurrentFBO());
+    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->clear(mask);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -830,7 +833,7 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         setGLError(GL_INVALID_OPERATION);
     }
 
-    FBOScope fboScope(getCurrentFBO());
+    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->drawArrays(mode, first, count);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -859,7 +862,7 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         setGLError(GL_INVALID_OPERATION);
     }
 
-    FBOScope fboScope(getCurrentFBO());
+    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->drawElements(mode, count, type, reinterpret_cast<void*>(offset));
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -887,7 +890,7 @@ void WebGLRenderingContext::finish()
 {
     ENTER_CONTEXT_SCOPE();
 
-    FBOScope fboScope(getCurrentFBO());
+    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->finish();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -896,7 +899,7 @@ void WebGLRenderingContext::flushWebGL()
 {
     ENTER_CONTEXT_SCOPE();
 
-    FBOScope fboScope(getCurrentFBO());
+    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->flush();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -2406,7 +2409,7 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
 
         GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
 
-        FBOScope fboScope(getCurrentFBO());
+        FBOScope fboScope(getCurrentFBO(), m_gl);
         m_gl->readPixels(x, y, width, height, format, type, data);
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.

@@ -28,11 +28,15 @@
 
 namespace Starfish {
 
+class Renderer;
+class GL;
+
 /**
  * @brief Create a texture for offscreen rendering with a depth buffer
  */
 class FramebufferTexture : public TextureCreationDelegate {
 public:
+    FramebufferTexture(Renderer* renderer);
     ~FramebufferTexture();
 
     bool create(unsigned bufferWidth, unsigned bufferHeight,
@@ -54,11 +58,13 @@ private:
     GLuint m_fbo{ 0 };
     GLuint m_textureId{ 0 };
     GLuint m_rbo{ 0 };
+    Renderer* m_renderer{ nullptr };
+    GL* m_gl{ nullptr };
 };
 
 class FBOScope {
 public:
-    explicit FBOScope(GLuint fbo);
+    explicit FBOScope(GLuint fbo, GL*);
     ~FBOScope();
     FBOScope(const FBOScope& other) = delete;
     FBOScope& operator=(const FBOScope& other) = delete;
@@ -66,6 +72,9 @@ public:
     void* operator new(size_t size) = delete;
     void* operator new[](size_t size) = delete;
     void operator delete(void* p) = delete;
+
+private:
+    GL* m_gl{ nullptr };
 };
 
 class Pixel {
