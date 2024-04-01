@@ -17,59 +17,26 @@
  *  USA
  */
 
-#include "ShellConfig.h"
+#ifndef __StarfishShellRendererDelegate__
+#define __StarfishShellRendererDelegate__
 
-#if defined(STARFISH_SHELL_EFL_HEADLESS)
-
-#include "Window.h"
-
-#include <Ecore.h>
+#include <cstdint>
 
 namespace StarfishShell {
 
-class WindowEFLHeadless final : public Window {
+class RendererDelegate {
 public:
-    WindowEFLHeadless()
-    {
-    }
+    RendererDelegate() = default;
+    virtual ~RendererDelegate() = default;
 
-    bool init(const char* appName, int width, int height) override
-    {
-        ecore_init();
-        return true;
-    }
-
-    void terminate() override
-    {
-    }
-
-    void getCursorPos(double& xpos, double& ypos)
-    {
-    }
-
-    void* getNativeWindowHandle() override
-    {
-        return nullptr;
-    }
-
-    virtual RendererDelegate* renderer() override
-    {
-        return nullptr;
-    }
-
-private:
+    virtual bool makeCurrent() = 0;
+    virtual bool swapBuffers() = 0;
+    virtual uintptr_t createSharedContext() = 0;
+    virtual bool destroyContext(uintptr_t context) = 0;
+    virtual bool clearCurrentContext() = 0;
+    virtual bool makeCurrentWithContext(uintptr_t context) = 0;
 };
 
-Window* Window::create()
-{
-    return new WindowEFLHeadless();
-}
-
-LWE::KeyValue Window::convertKeyCode(const unsigned long key, INPUT action,
-                                     unsigned mods)
-{
-    return LWE::KeyValue::UnidentifiedKey;
-}
 } // namespace StarfishShell
 
 #endif

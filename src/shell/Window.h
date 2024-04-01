@@ -23,10 +23,10 @@
 #include <string>
 #include <cstdint>
 #include <functional>
-#include <memory>
 
 #include "WindowKeyType.h"
 #include "PlatformIntegrationData.h"
+#include "RendererDelegate.h"
 
 namespace StarfishShell {
 
@@ -103,13 +103,7 @@ public:
     virtual void* getNativeWindowHandle() = 0;
     virtual void getCursorPos(double& xpos, double& ypos) = 0;
 
-    virtual bool initEGL() = 0;
-    virtual bool makeCurrent() = 0;
-    virtual bool clearCurrentContext() = 0;
-    virtual bool swapBuffer() = 0;
-    virtual uintptr_t createSharedContext() = 0;
-    virtual bool destroyContext(uintptr_t context) = 0;
-    virtual bool makeCurrentWithContext(uintptr_t context) = 0;
+    virtual RendererDelegate* renderer() = 0;
 
 protected:
     Window() = default;

@@ -27,9 +27,133 @@
 #include <GLFW/glfw3.h>
 #include <EGL/egl.h>
 
+#include <memory>
 #include <vector>
 
 namespace StarfishShell {
+
+class RendererDelegateGLFW : public RendererDelegate {
+public:
+    RendererDelegateGLFW(GLFWwindow* window);
+    virtual ~RendererDelegateGLFW() = default;
+
+    bool initialize();
+
+    virtual bool makeCurrent() override;
+    virtual bool clearCurrentContext() override;
+    virtual bool swapBuffers() override;
+    virtual uintptr_t createSharedContext() override;
+    virtual bool destroyContext(uintptr_t context) override;
+    virtual bool makeCurrentWithContext(uintptr_t context) override;
+
+private:
+    EGLDisplay m_eglDisplay = nullptr;
+    EGLSurface m_eglSurface = nullptr;
+    EGLContext m_eglContext = nullptr;
+    EGLConfig m_eglConfig = nullptr;
+
+    GLFWwindow* m_window = nullptr;
+};
+
+RendererDelegateGLFW::RendererDelegateGLFW(GLFWwindow* window)
+    : m_window(window)
+{
+}
+
+bool RendererDelegateGLFW::initialize()
+{
+    makeCurrent();
+    EGLContext context = eglGetCurrentContext();
+
+    if (!context) {
+        printf("No attached context found.\n");
+        exit(-1);
+    }
+
+    EGLDisplay display = eglGetCurrentDisplay();
+    EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
+
+    EGLConfig config = nullptr;
+    EGLint configId, numConfigs, currentConfigId;
+    eglQueryContext(display, context, EGL_CONFIG_ID, &configId);
+    eglGetConfigs(display, nullptr, 0, &numConfigs);
+
+    std::vector<EGLConfig> configs(numConfigs);
+    eglGetConfigs(display, configs.data(), numConfigs, &numConfigs);
+    for (const auto& c : configs) {
+        eglGetConfigAttrib(display, c, EGL_CONFIG_ID, &currentConfigId);
+        if (currentConfigId == configId) {
+            config = c;
+            break;
+        }
+    }
+
+    if (!display || !draw || !config || !context) {
+        exit(-1);
+    }
+
+    m_eglContext = context;
+    m_eglDisplay = display;
+    m_eglSurface = draw;
+    m_eglConfig = config;
+
+    clearCurrentContext();
+    return true;
+}
+
+bool RendererDelegateGLFW::makeCurrent()
+{
+    glfwMakeContextCurrent(m_window);
+    return true;
+}
+
+bool RendererDelegateGLFW::clearCurrentContext()
+{
+    glfwMakeContextCurrent(nullptr);
+    return true;
+}
+
+bool RendererDelegateGLFW::swapBuffers()
+{
+    glfwSwapBuffers(m_window);
+    return true;
+}
+
+uintptr_t RendererDelegateGLFW::createSharedContext()
+{
+    EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
+    EGLContext sharedContext =
+        eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, attributes);
+
+    if (sharedContext == EGL_NO_CONTEXT) {
+        EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
+        sharedContext = eglCreateContext(m_eglDisplay, m_eglConfig,
+                                         m_eglContext, attributes);
+        if (sharedContext == EGL_NO_CONTEXT) {
+            printf("Unable to create EGL context (eglError: 0x%x)\n",
+                   eglGetError());
+            return UINTPTR_MAX;
+        }
+    }
+
+    return reinterpret_cast<uintptr_t>(sharedContext);
+}
+
+bool RendererDelegateGLFW::destroyContext(uintptr_t context)
+{
+    return eglDestroyContext(m_eglDisplay,
+                             reinterpret_cast<EGLContext>(context));
+}
+
+bool RendererDelegateGLFW::makeCurrentWithContext(uintptr_t context)
+{
+    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
+                        reinterpret_cast<EGLContext>(context))) {
+        printf("Failed to set current context (eglError: 0x%x)", eglGetError());
+        return false;
+    }
+    return true;
+}
 
 class WindowGLFW final : public Window {
 public:
@@ -43,24 +167,17 @@ public:
         return nullptr;
     }
 
-    bool initEGL() override;
-    bool makeCurrent() override;
-    bool clearCurrentContext() override;
-    bool swapBuffer() override;
-    uintptr_t createSharedContext() override;
-    bool destroyContext(uintptr_t context) override;
-    bool makeCurrentWithContext(uintptr_t context) override;
+    virtual RendererDelegate* renderer()
+    {
+        return m_renderer.get();
+    }
 
 private:
     bool createSimpleWindow(const char* appName, int width, int height);
     void setEventHandlers();
 
     GLFWwindow* m_window = nullptr;
-
-    EGLDisplay m_eglDisplay = nullptr;
-    EGLSurface m_eglSurface = nullptr;
-    EGLContext m_eglContext = nullptr;
-    EGLConfig m_eglConfig = nullptr;
+    std::unique_ptr<RendererDelegateGLFW> m_renderer;
 };
 
 WindowGLFW::WindowGLFW()
@@ -93,6 +210,12 @@ bool WindowGLFW::init(const char* appName, int width, int height)
     // for screen shot
     glfwSwapInterval(0);
 #endif
+
+    m_renderer = std::unique_ptr<RendererDelegateGLFW>(
+        new RendererDelegateGLFW(m_window));
+    if (!m_renderer->initialize()) {
+        return false;
+    }
 
     return true;
 }
@@ -183,103 +306,6 @@ void WindowGLFW::setEventHandlers()
     });
 }
 
-bool WindowGLFW::initEGL()
-{
-    makeCurrent();
-    EGLContext context = eglGetCurrentContext();
-
-    if (!context) {
-        printf("No attached context found.\n");
-        exit(-1);
-    }
-
-    EGLDisplay display = eglGetCurrentDisplay();
-    EGLSurface read = eglGetCurrentSurface(EGL_READ);
-    EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
-
-    EGLConfig config = nullptr;
-    EGLint configId, numConfigs, currentConfigId;
-    eglQueryContext(display, context, EGL_CONFIG_ID, &configId);
-    eglGetConfigs(display, nullptr, 0, &numConfigs);
-
-    std::vector<EGLConfig> configs(numConfigs);
-    eglGetConfigs(display, configs.data(), numConfigs, &numConfigs);
-    for (const auto& c : configs) {
-        eglGetConfigAttrib(display, c, EGL_CONFIG_ID, &currentConfigId);
-        if (currentConfigId == configId) {
-            config = c;
-            break;
-        }
-    }
-
-    if (!display || !read || !draw || !config || !context) {
-        exit(-1);
-    }
-
-    m_eglContext = context;
-    m_eglDisplay = display;
-    m_eglSurface = draw;
-    m_eglConfig = config;
-
-    clearCurrentContext();
-
-    return true;
-}
-
-bool WindowGLFW::makeCurrent()
-{
-    glfwMakeContextCurrent(m_window);
-    return true;
-}
-
-bool WindowGLFW::clearCurrentContext()
-{
-    glfwMakeContextCurrent(nullptr);
-    return true;
-}
-
-bool WindowGLFW::swapBuffer()
-{
-    glfwSwapBuffers(m_window);
-    return true;
-}
-
-uintptr_t WindowGLFW::createSharedContext()
-{
-    EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
-    EGLContext sharedContext =
-        eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, attributes);
-
-    if (sharedContext == EGL_NO_CONTEXT) {
-        EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
-        sharedContext = eglCreateContext(m_eglDisplay, m_eglConfig,
-                                         m_eglContext, attributes);
-        if (sharedContext == EGL_NO_CONTEXT) {
-            printf("Unable to create EGL context (eglError: 0x%x)\n",
-                   eglGetError());
-            return UINTPTR_MAX;
-        }
-    }
-
-    return reinterpret_cast<uintptr_t>(sharedContext);
-}
-
-bool WindowGLFW::destroyContext(uintptr_t context)
-{
-    return eglDestroyContext(m_eglDisplay,
-                             reinterpret_cast<EGLContext>(context));
-}
-
-bool WindowGLFW::makeCurrentWithContext(uintptr_t context)
-{
-    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
-                        reinterpret_cast<EGLContext>(context))) {
-        printf("Failed to set current context (eglError: 0x%x)", eglGetError());
-        return false;
-    }
-    return true;
-}
-
 void WindowGLFW::getCursorPos(double& xpos, double& ypos)
 {
     glfwGetCursorPos(m_window, &xpos, &ypos);
@@ -292,6 +318,7 @@ void WindowGLFW::pollEvent()
 
 void WindowGLFW::terminate()
 {
+    m_renderer = nullptr;
     glfwDestroyWindow(m_window);
 }
 

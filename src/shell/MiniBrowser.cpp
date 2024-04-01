@@ -173,10 +173,6 @@ bool MiniBrowser::createWindow()
         return false;
     }
 
-    if (!m_window->initEGL()) {
-        return false;
-    }
-
     return true;
 }
 
@@ -193,25 +189,25 @@ bool MiniBrowser::createLWE()
     };
     LWE::WebContainer::RendererGLConfiguration config;
     config.onGLMakeCurrent = [this](LWE::WebContainer* wc) {
-        m_window->makeCurrent();
+        m_window->renderer()->makeCurrent();
     };
     config.onGLSwapBuffers = [this](LWE::WebContainer* wc, bool mayNeedsSync) {
-        m_window->swapBuffer();
+        m_window->renderer()->swapBuffers();
     };
     config.onGLCreateSharedContext =
         [this](LWE::WebContainer* wc) -> uintptr_t {
-        return m_window->createSharedContext();
+        return m_window->renderer()->createSharedContext();
     };
     config.onGLDestroyContext = [this](LWE::WebContainer* wc,
                                        uintptr_t context) -> bool {
-        return m_window->destroyContext(context);
+        return m_window->renderer()->destroyContext(context);
     };
     config.onGLClearCurrentContext = [this](LWE::WebContainer* wc) -> bool {
-        return m_window->clearCurrentContext();
+        return m_window->renderer()->clearCurrentContext();
     };
     config.onGLMakeCurrentWithContext = [this](LWE::WebContainer* wc,
                                                uintptr_t context) -> bool {
-        return m_window->makeCurrentWithContext(context);
+        return m_window->renderer()->makeCurrentWithContext(context);
     };
 
     m_lwe = LWE::WebContainer::CreateGL(args, config);
