@@ -39,40 +39,9 @@ public:
     }
 
     void* getNativeWindowHandle() override;
-
-    bool initEGL() override
+    RendererDelegate* renderer() override
     {
-        return true;
-    }
-
-    bool makeCurrent() override
-    {
-        return true;
-    }
-
-    bool clearCurrentContext() override
-    {
-        return true;
-    }
-
-    bool swapBuffer() override
-    {
-        return true;
-    }
-
-    uintptr_t createSharedContext() override
-    {
-        return UINTPTR_MAX;
-    }
-
-    bool destroyContext(uintptr_t context) override
-    {
-        return true;
-    }
-
-    bool makeCurrentWithContext(uintptr_t context) override
-    {
-        return true;
+        return nullptr;
     }
 
 private:

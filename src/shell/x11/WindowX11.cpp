@@ -26,6 +26,8 @@
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
+#include <memory>
+
 using XWindow = Window;
 
 namespace {
@@ -158,35 +160,118 @@ bool createGLContext(EGLContext& context, const EGLDisplay eglDisplay,
 
 namespace StarfishShell {
 
+class RendererDelegateEGL : public RendererDelegate {
+public:
+    RendererDelegateEGL() = default;
+    virtual ~RendererDelegateEGL() = default;
+
+    bool initialize(XWindow window);
+    void deinitialize();
+
+    virtual bool makeCurrent() override;
+    virtual bool clearCurrentContext() override;
+    virtual bool swapBuffers() override;
+    virtual uintptr_t createSharedContext() override;
+    virtual bool destroyContext(uintptr_t context) override;
+    virtual bool makeCurrentWithContext(uintptr_t context) override;
+
+private:
+    EGLDisplay m_eglDisplay = nullptr;
+    EGLSurface m_eglSurface = nullptr;
+    EGLContext m_eglContext = nullptr;
+    EGLConfig m_eglConfig = nullptr;
+};
+
+bool RendererDelegateEGL::initialize(XWindow window)
+{
+    if (!createEGLDisplay(m_eglDisplay, m_eglConfig) ||
+        !createEGLSurface(m_eglSurface, m_eglDisplay, m_eglConfig, window) ||
+        !createGLContext(m_eglContext, m_eglDisplay, m_eglConfig, nullptr)) {
+        return false;
+    }
+    return true;
+}
+
+void RendererDelegateEGL::deinitialize()
+{
+    eglDestroySurface(m_eglDisplay, m_eglSurface);
+    eglDestroyContext(m_eglDisplay, m_eglContext);
+    eglTerminate(m_eglDisplay);
+}
+
+bool RendererDelegateEGL::makeCurrent()
+{
+    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
+                        m_eglContext)) {
+        printf("Failed to set current context (eglError: 0x%x)\n",
+               eglGetError());
+        return false;
+    }
+    return true;
+}
+
+bool RendererDelegateEGL::swapBuffers()
+{
+    return eglSwapBuffers(m_eglDisplay, m_eglSurface);
+}
+
+uintptr_t RendererDelegateEGL::createSharedContext()
+{
+    EGLContext sharedContext;
+    if (createGLContext(sharedContext, m_eglDisplay, m_eglConfig,
+                        m_eglContext)) {
+        return reinterpret_cast<uintptr_t>(sharedContext);
+    }
+    return UINTPTR_MAX;
+}
+
+bool RendererDelegateEGL::destroyContext(uintptr_t context)
+{
+    return eglDestroyContext(m_eglDisplay,
+                             reinterpret_cast<EGLContext>(context));
+}
+
+bool RendererDelegateEGL::clearCurrentContext()
+{
+    return eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                          EGL_NO_CONTEXT);
+}
+
+bool RendererDelegateEGL::makeCurrentWithContext(uintptr_t context)
+{
+    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
+                        reinterpret_cast<EGLContext>(context))) {
+        printf("Failed to set current context (eglError: 0x%x)\n",
+               eglGetError());
+        return false;
+    }
+    return true;
+}
+
 class WindowX11 final : public Window {
 public:
     WindowX11();
+
     bool init(const char* appName, int width, int height) override;
     void pollEvent() override;
     void terminate() override;
     void getCursorPos(double& xpos, double& ypos) override;
+
     void* getNativeWindowHandle() override
     {
         return nullptr;
-    };
+    }
 
-    bool initEGL() override;
-    bool makeCurrent() override;
-    bool clearCurrentContext() override;
-    bool swapBuffer() override;
-    uintptr_t createSharedContext() override;
-    bool destroyContext(uintptr_t context) override;
-    bool makeCurrentWithContext(uintptr_t context) override;
+    virtual RendererDelegate* renderer() override
+    {
+        return m_renderer.get();
+    }
 
 private:
     Display* m_display = nullptr;
     XWindow m_window = 0;
     Atom m_wmDeleteWindow = 0;
-
-    EGLDisplay m_eglDisplay = nullptr;
-    EGLSurface m_eglSurface = nullptr;
-    EGLContext m_eglContext = nullptr;
-    EGLConfig m_eglConfig = nullptr;
+    std::unique_ptr<RendererDelegateEGL> m_renderer;
 };
 
 WindowX11::WindowX11()
@@ -227,66 +312,12 @@ bool WindowX11::init(const char* appName, int width, int height)
     m_window = window;
     m_wmDeleteWindow = wmDeleteWindow;
 
-    return true;
-}
-
-bool WindowX11::initEGL()
-{
-    if (!createEGLDisplay(m_eglDisplay, m_eglConfig) ||
-        !createEGLSurface(m_eglSurface, m_eglDisplay, m_eglConfig, m_window) ||
-        !createGLContext(m_eglContext, m_eglDisplay, m_eglConfig, nullptr)) {
+    m_renderer =
+        std::unique_ptr<RendererDelegateEGL>(new RendererDelegateEGL());
+    if (!m_renderer->initialize(m_window)) {
         return false;
     }
-    return true;
-}
 
-bool WindowX11::makeCurrent()
-{
-    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
-                        m_eglContext)) {
-        printf("Failed to set current context (eglError: 0x%x)\n",
-               eglGetError());
-        return false;
-    }
-    return true;
-}
-
-bool WindowX11::clearCurrentContext()
-{
-    return eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                          EGL_NO_CONTEXT);
-}
-
-bool WindowX11::swapBuffer()
-{
-    eglSwapBuffers(m_eglDisplay, m_eglSurface);
-    return true;
-}
-
-uintptr_t WindowX11::createSharedContext()
-{
-    EGLContext sharedContext;
-    if (createGLContext(sharedContext, m_eglDisplay, m_eglConfig,
-                        m_eglContext)) {
-        return reinterpret_cast<uintptr_t>(sharedContext);
-    }
-    return UINTPTR_MAX;
-}
-
-bool WindowX11::destroyContext(uintptr_t context)
-{
-    return eglDestroyContext(m_eglDisplay,
-                             reinterpret_cast<EGLContext>(context));
-}
-
-bool WindowX11::makeCurrentWithContext(uintptr_t context)
-{
-    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
-                        reinterpret_cast<EGLContext>(context))) {
-        printf("Failed to set current context (eglError: 0x%x)\n",
-               eglGetError());
-        return false;
-    }
     return true;
 }
 
@@ -391,9 +422,8 @@ void WindowX11::pollEvent()
 
 void WindowX11::terminate()
 {
-    eglDestroySurface(m_eglDisplay, m_eglSurface);
-    eglDestroyContext(m_eglDisplay, m_eglContext);
-    eglTerminate(m_eglDisplay);
+    m_renderer->deinitialize();
+    m_renderer = nullptr;
 
     XDestroyWindow(m_display, m_window);
     XCloseDisplay(m_display);
