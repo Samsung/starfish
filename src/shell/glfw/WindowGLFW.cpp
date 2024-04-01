@@ -25,7 +25,6 @@
 
 #define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
-#include <EGL/egl.h>
 
 #include <memory>
 #include <vector>
@@ -37,8 +36,6 @@ public:
     RendererDelegateGLFW(GLFWwindow* window);
     virtual ~RendererDelegateGLFW() = default;
 
-    bool initialize();
-
     virtual bool makeCurrent() override;
     virtual bool clearCurrentContext() override;
     virtual bool swapBuffers() override;
@@ -47,58 +44,12 @@ public:
     virtual bool makeCurrentWithContext(uintptr_t context) override;
 
 private:
-    EGLDisplay m_eglDisplay = nullptr;
-    EGLSurface m_eglSurface = nullptr;
-    EGLContext m_eglContext = nullptr;
-    EGLConfig m_eglConfig = nullptr;
-
     GLFWwindow* m_window = nullptr;
 };
 
 RendererDelegateGLFW::RendererDelegateGLFW(GLFWwindow* window)
     : m_window(window)
 {
-}
-
-bool RendererDelegateGLFW::initialize()
-{
-    makeCurrent();
-    EGLContext context = eglGetCurrentContext();
-
-    if (!context) {
-        printf("No attached context found.\n");
-        exit(-1);
-    }
-
-    EGLDisplay display = eglGetCurrentDisplay();
-    EGLSurface draw = eglGetCurrentSurface(EGL_DRAW);
-
-    EGLConfig config = nullptr;
-    EGLint configId, numConfigs, currentConfigId;
-    eglQueryContext(display, context, EGL_CONFIG_ID, &configId);
-    eglGetConfigs(display, nullptr, 0, &numConfigs);
-
-    std::vector<EGLConfig> configs(numConfigs);
-    eglGetConfigs(display, configs.data(), numConfigs, &numConfigs);
-    for (const auto& c : configs) {
-        eglGetConfigAttrib(display, c, EGL_CONFIG_ID, &currentConfigId);
-        if (currentConfigId == configId) {
-            config = c;
-            break;
-        }
-    }
-
-    if (!display || !draw || !config || !context) {
-        exit(-1);
-    }
-
-    m_eglContext = context;
-    m_eglDisplay = display;
-    m_eglSurface = draw;
-    m_eglConfig = config;
-
-    clearCurrentContext();
-    return true;
 }
 
 bool RendererDelegateGLFW::makeCurrent()
@@ -121,37 +72,24 @@ bool RendererDelegateGLFW::swapBuffers()
 
 uintptr_t RendererDelegateGLFW::createSharedContext()
 {
-    EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
-    EGLContext sharedContext =
-        eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, attributes);
-
-    if (sharedContext == EGL_NO_CONTEXT) {
-        EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
-        sharedContext = eglCreateContext(m_eglDisplay, m_eglConfig,
-                                         m_eglContext, attributes);
-        if (sharedContext == EGL_NO_CONTEXT) {
-            printf("Unable to create EGL context (eglError: 0x%x)\n",
-                   eglGetError());
-            return UINTPTR_MAX;
-        }
-    }
-
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    GLFWwindow* sharedContext = glfwCreateWindow(1, 1, "", nullptr, m_window);
     return reinterpret_cast<uintptr_t>(sharedContext);
 }
 
 bool RendererDelegateGLFW::destroyContext(uintptr_t context)
 {
-    return eglDestroyContext(m_eglDisplay,
-                             reinterpret_cast<EGLContext>(context));
+    glfwDestroyWindow(reinterpret_cast<GLFWwindow*>(context));
+    return true;
 }
 
 bool RendererDelegateGLFW::makeCurrentWithContext(uintptr_t context)
 {
-    if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
-                        reinterpret_cast<EGLContext>(context))) {
-        printf("Failed to set current context (eglError: 0x%x)", eglGetError());
-        return false;
-    }
+    glfwMakeContextCurrent(reinterpret_cast<GLFWwindow*>(context));
     return true;
 }
 
@@ -213,20 +151,17 @@ bool WindowGLFW::init(const char* appName, int width, int height)
 
     m_renderer = std::unique_ptr<RendererDelegateGLFW>(
         new RendererDelegateGLFW(m_window));
-    if (!m_renderer->initialize()) {
-        return false;
-    }
 
     return true;
 }
 
 bool WindowGLFW::createSimpleWindow(const char* appName, int width, int height)
 {
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     m_window = glfwCreateWindow(width, height, appName, nullptr, nullptr);
     if (m_window == nullptr) {
