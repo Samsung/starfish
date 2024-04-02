@@ -823,7 +823,7 @@ public:
                 m.preTranslate(-tx, -ty);
             }
         }
-        return SkMatrix::I();
+        return m;
     }
 
     virtual void *evasglCreateImage(int target, void *buffer,
