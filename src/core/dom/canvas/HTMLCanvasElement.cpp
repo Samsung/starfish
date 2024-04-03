@@ -26,7 +26,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/modules/canvas/Canvas.h"
-#include "platform/canvas/image/ImageUtils.h"
+#include "core/modules/canvas/image/ImageEncoder.h"
 #include "core/dom/canvas/WebGLRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/ImageBitmapRenderingContext.h"
@@ -136,28 +136,34 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
         throw new DOMException(executionContext(), DOMException::SECURITY_ERR);
     }
 
-    if (type->equals("image/png")) {
-        m_canvasRenderingContext->flush();
-        CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
-        if (canvasSurface != nullptr) {
-            auto width = canvasSurface->bufferWidth();
-            auto height = canvasSurface->bufferHeight();
-            size_t stride = 0;
-            if (width && height) {
-                stride = width / height;
-            } else {
-                stride = 4;
-            }
-            std::string result =
+    std::string result = "data:,";
+    m_canvasRenderingContext->flush();
+    CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
+    if (canvasSurface != nullptr) {
+        auto width = canvasSurface->bufferWidth();
+        auto height = canvasSurface->bufferHeight();
+#if defined(PORT_PIXEL_ORDER_RGBA)
+        ImageEncoder::ImageColorSpace colorSpace =
+            ImageEncoder::ImageColorSpace::RGBA;
+#else
+        ImageEncoder::ImageColorSpace colorSpace =
+            ImageEncoder::ImageColorSpace::BGRA;
+#endif
+        if (type->equals("image/png")) {
+            result =
                 "data:image/png;base64," +
-                Base64Utils::encodeBase64(ImageUtils::encodePNG(
-                    canvasSurface->mapBuffer(), width, height, stride));
-            return String::fromUTF8(result.data(), result.size());
+                Base64Utils::encodeBase64(ImageEncoder::encodePNG(
+                    canvasSurface->mapBuffer(), width, height, colorSpace));
+        } else if (type->equals("image/jpeg")) {
+            result =
+                "data:image/jpeg;base64," +
+                Base64Utils::encodeBase64(ImageEncoder::encodeJPEG(
+                    canvasSurface->mapBuffer(), width, height, colorSpace));
+        } else {
+            STARFISH_UNIMPLEMENTED();
         }
-    } else {
-        STARFISH_UNIMPLEMENTED();
     }
-    return String::fromUTF8("data:,");
+    return String::fromUTF8(result.data(), result.size());
 }
 
 #ifdef STARFISH_ENABLE_TEST

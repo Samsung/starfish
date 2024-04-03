@@ -17,15 +17,23 @@
  *  USA
  */
 
-#ifndef __StarfishImageUtils__
-#define __StarfishImageUtils__
+#ifndef __StarfishImageEncoder__
+#define __StarfishImageEncoder__
 
 namespace Starfish {
 
-class ImageUtils {
+class ImageEncoder {
 public:
+    enum class ImageColorSpace {
+        RGBA,
+        BGRA,
+    };
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
-                                          size_t height, size_t stride);
+                                          size_t height,
+                                          ImageColorSpace colorSpace);
+    static std::vector<uint8_t> encodeJPEG(const uint8_t* src, size_t width,
+                                           size_t height,
+                                           ImageColorSpace colorSpace);
 };
 } // namespace Starfish
 

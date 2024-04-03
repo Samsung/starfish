@@ -39,9 +39,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "Windowscodecs.lib")
 #else
-extern "C" {
 #include <jpeglib.h>
-}
 #endif
 #include <png.h>
 #include <gif_lib.h>
