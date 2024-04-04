@@ -3246,9 +3246,6 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     if (owner()->shouldApplyOverflow()) {
         if (owner()->isFrameReplaced()) {
             return owner()->hitTest(x, y, HitTestStageEnd);
-        } else if (owner()->FrameBox::hitTest(x, y, HitTestStageEnd) ==
-                   nullptr) {
-            return nullptr;
         }
     }
 
