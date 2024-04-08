@@ -931,15 +931,17 @@ bool Element::handleDefaultEvent(Event* event)
 
     if (frame() && frame()->isFrameBlockBox() && frame()->style() &&
         frame()->shouldApplyOverflow()) {
-        bool isDownOrMoveEvent =
+        bool isDownOrMoveOrUpEvent =
             ((event->isMouseEvent() && event->type()->equals("mousedown")) ||
              (event->isTouchEvent() && event->type()->equals("touchstart"))) ||
             ((event->isMouseEvent() && event->type()->equals("mousemove")) ||
-             (event->isTouchEvent() && event->type()->equals("touchmove")));
+             (event->isTouchEvent() && event->type()->equals("touchmove"))) ||
+            ((event->isMouseEvent() && event->type()->equals("mouseup")) ||
+             (event->isTouchEvent() && event->type()->equals("touchend")));
         auto ox = frame()->appliedOverflowX();
         auto oy = frame()->appliedOverflowY();
 
-        if (isDownOrMoveEvent &&
+        if (isDownOrMoveOrUpEvent &&
             ensureRareElementMembers()
                 ->ensureScrolling(this)
                 ->handleDefaultEvent(event, window(),
