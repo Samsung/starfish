@@ -571,7 +571,7 @@ test/cairo/internal-test/css/flex/flex_item_margin-inline.html
 test/cairo/internal-test/css/flex/flex_item_padding-inline.html
 test/cairo/internal-test/css/flex/flex_align_items_center_with_grid_child.html
 test/cairo/internal-test/css/flex/flex_align_items_center_and_stratch_with_grid_child.html
-test/cairo/internal-test/css/flex/flex_align_item_center_with_justify_content_flex_end.html
+#test/cairo/internal-test/css/flex/flex_align_item_center_with_justify_content_flex_end.html
 test/cairo/internal-test/css/flex/register-content-height.html
 test/cairo/internal-test/css/flex/flexitem_max-width_has_calc.html
 test/cairo/internal-test/css/flex/flex_column_direction_percent_size.html

@@ -1422,6 +1422,11 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         }
     }
 
+    bool clickableEvent = (kind == TouchEventKind::TouchEventEnd) &&
+                          targetNode && m_activeNodeTarget &&
+                          (targetNode == m_activeNodeTarget ||
+                           targetNode->isDescendantOf(m_activeNodeTarget));
+
     bool returnValue = false;
     // Dispatch events
     String* name = String::emptyString;
@@ -1446,7 +1451,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     }
     case TouchEventKind::TouchEventEnd: {
         Node* t = targetNode->nearestParentElement();
-        if (m_activeNodeTarget == targetNode) {
+        if (clickableEvent) {
             // Dispatch click event
             Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
@@ -1510,6 +1515,11 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     double targetY = data.clientY();
     double newX = targetX;
     double newY = targetY;
+
+    bool clickableEvent = (kind == MouseEventKind::MouseEventUp) &&
+                          targetNode && m_activeNodeTarget &&
+                          (targetNode == m_activeNodeTarget ||
+                           targetNode->isDescendantOf(m_activeNodeTarget));
 
     // Handle event inside iframe
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
@@ -1576,7 +1586,8 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
             document(), starfish()->staticStrings()->m_pointerup.localName(),
             upData);
         document()->window()->dispatchEventByUA(t, pe);
-        if (m_activeNodeTarget == t) {
+
+        if (clickableEvent) {
             // Dispatch click event
             name = starfish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
