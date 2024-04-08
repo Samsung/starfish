@@ -47,6 +47,16 @@ bool g_forceRendering = false;
 
 namespace Starfish {
 
+const TransformationMatrix& TransformationMatrix::identityMatrix()
+{
+    static const TransformationMatrix identityMatrix = {
+        1.0, 0.0, 0.0, // x
+        0.0, 1.0, 0.0, // y
+        0.0, 0.0, 1.0  // perspective
+    };
+    return identityMatrix;
+}
+
 // The if-def statements below are temporary soluation to avoid affecting other
 // ports of LWE except flutter. In the future, It will be removed when LWE's all
 // ports are changed to a single binary.

@@ -788,44 +788,6 @@ public:
         return false;
     }
 
-    virtual SkMatrix computeScreenMatrix(Renderer *renderer, size_t screenWidth,
-                                         size_t screenHeight) override
-    {
-        SkMatrix m = SkMatrix::I();
-        void *evasGL =
-            renderer->webView()
-                ->publicLayerUserDataMap()["__internalLWEWebViewEvasGL"];
-        if (evasGL) {
-            const size_t w = screenWidth;
-            const size_t h = screenHeight;
-            int deg = evas_gl_rotation_get(static_cast<Evas_GL *>(evasGL));
-            if (deg % 180 == 90) {
-                float tx = w / 2.f;
-                float ty = h / 2.f;
-
-                m.preTranslate(tx, ty);
-
-                SkMatrix t = SkMatrix::I();
-                t.preRotate(360 - deg);
-                t.preScale(h / (float)w, w / (float)h);
-                m.preConcat(t);
-
-                m.preTranslate(-tx, -ty);
-            } else if (deg == 180) {
-                float tx = w / 2.f;
-                float ty = h / 2.f;
-                m.preTranslate(tx, ty);
-
-                SkMatrix t = SkMatrix::I();
-                t.preRotate(360 - deg);
-                m.preConcat(t);
-
-                m.preTranslate(-tx, -ty);
-            }
-        }
-        return m;
-    }
-
     virtual void *evasglCreateImage(int target, void *buffer,
                                     const int *attriblist) override
     {

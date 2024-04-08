@@ -389,14 +389,14 @@ public:
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
-            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL");
+            STARFISH_LOG_INFO("WebViewEFL::windowShownHandler");
             wv->immediatelyClearScreen();
             wv->Resume();
         };
         m_windowHiddenHandler = [](void* data, Evas* e, Evas_Object* obj,
                                    void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
-            STARFISH_LOG_INFO("WebViewEFL::windowHiddenCallback");
+            STARFISH_LOG_INFO("WebViewEFL::windowHiddenHandler");
             wv->Pause();
         };
         evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
@@ -404,12 +404,24 @@ public:
         evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_HIDE,
                                        m_windowHiddenHandler, this);
 
+        m_windowRotaionChangedHandler = [](void* data, Evas_Object* object,
+                                           void* event_info) {
+            STARFISH_LOG_INFO("WebViewEFL::windowRotaionChangedHandler");
+            WebViewEFL* wv = static_cast<WebViewEFL*>(data);
+            wv->FetchWebContainer()->SetNeedsFullRepainting();
+        };
+        evas_object_smart_callback_add(m_windowObject, "rotation,changed",
+                                       m_windowRotaionChangedHandler, this);
+
         m_isKeyDown = false;
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
+
+        // Initialize screen matrix.
+        updateScreenMatrix(0, width, height);
 
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         m_buttonForClick = elm_button_add(m_windowObject);
@@ -1051,11 +1063,23 @@ public:
         webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
             [this](WebContainer* t) { HideSoftwareKeyboardIfPossible(); });
 
+        webContainer->RegisterGetScreenMatrixHandler(
+            [this](WebContainer*) -> WebContainer::TransformationMatrix {
+                int degrees = evas_gl_rotation_get(m_glEvasgl);
+                if (m_evasGlRotationDegrees != degrees) {
+                    m_evasGlRotationDegrees = degrees;
+                    int width = 0, height = 0;
+                    evas_object_geometry_get(m_mainBox, nullptr, nullptr,
+                                             &width, &height);
+                    updateScreenMatrix(m_evasGlRotationDegrees, width, height);
+                }
+                return m_screenMatrix;
+            });
+
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         SetWebContainer(webContainer);
 
         webContainer->SetUserData("__internalLWEWebViewEvasGLAPI", m_glGlapi);
-        webContainer->SetUserData("__internalLWEWebViewEvasGL", m_glEvasgl);
 
         webContainer->SetUserData(
             "__internalLWEWebViewEFLNativeWindowEvasObject", win);
@@ -1141,6 +1165,9 @@ public:
                                        m_windowShownHandler);
         evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_HIDE,
                                        m_windowHiddenHandler);
+        evas_object_smart_callback_del(m_windowObject, "rotation,changed",
+                                       m_windowRotaionChangedHandler);
+
         evas_object_event_callback_del(
             m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
         evas_object_event_callback_del(
@@ -1287,6 +1314,8 @@ protected:
                                  void* event_info);
     void (*m_windowHiddenHandler)(void* data, Evas* evas, Evas_Object* obj,
                                   void* event_info);
+    void (*m_windowRotaionChangedHandler)(void* data, Evas_Object* object,
+                                          void* event_info);
     void (*m_buttonForClickClickEventHandler)(void* data, Evas_Object* obj,
                                               void* event_info);
     void (*m_buttonForClickMouseDownEventHandler)(void* data, Evas* evas,
@@ -1352,6 +1381,34 @@ protected:
         }
     }
 
+    void updateScreenMatrix(int degrees, int width, int height)
+    {
+        double translateX = 0.0, translateY = 0.0;
+        if (degrees == 90) {
+            translateY = height;
+        } else if (degrees == 180) {
+            translateX = width;
+            translateY = height;
+        } else if (degrees == 270) {
+            translateX = width;
+        }
+
+        double scaleX = 1.0, scaleY = 1.0;
+        if (degrees % 180 == 90) {
+            scaleX = height / static_cast<double>(width);
+            scaleY = width / static_cast<double>(height);
+        }
+
+        double radians = (360 - degrees) * M_PI / 180;
+        // clang-format off
+        m_screenMatrix = {
+            cos(radians) * scaleY, -sin(radians) * scaleY, translateX, // x
+            sin(radians) * scaleX, cos(radians) * scaleX, translateY, // y
+            0.0, 0.0, 1.0 // perspective
+        };
+        // clang-format on
+    }
+
     Ecore_IMF_Context* m_imfContext;
 
     float m_lastMouseX, m_lastMouseY;
@@ -1366,6 +1423,8 @@ protected:
     int m_offsetYDueToSoftwareKeyboard;
     size_t m_keyboardTimeoutId;
     size_t m_hideKeyboardTimeoutId;
+    int m_evasGlRotationDegrees;
+    WebContainer::TransformationMatrix m_screenMatrix;
 
     std::function<void()> m_lastDoRenderingFunction;
 };

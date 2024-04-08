@@ -243,11 +243,6 @@ public:
     virtual GLboolean isEnabled(GLenum cap) = 0;
 
     virtual bool isGeneric() = 0;
-    virtual SkMatrix computeScreenMatrix(Renderer *, size_t screenWidth,
-                                         size_t screenHeight)
-    {
-        return SkMatrix::I();
-    }
 
     virtual void *evasglCreateImage(int target, void *buffer,
                                     const int *attriblist)

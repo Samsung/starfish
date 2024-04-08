@@ -88,6 +88,8 @@ public:
 
     void focus();
 
+    void setRotate(int degree);
+
 private:
     bool createWindow();
 

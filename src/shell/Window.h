@@ -105,6 +105,8 @@ public:
 
     virtual RendererDelegate* renderer() = 0;
 
+    virtual void setRotate(int degree){};
+
 protected:
     Window() = default;
 

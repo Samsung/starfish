@@ -70,6 +70,12 @@ void Console::write(const std::string& input)
         command.erase(0, prefix.size());
         if (command == "reload") {
             m_browser->reload();
+        } else if (command.find("rotate", 0) == 0) { // ex) \rotate 90
+            int degrees = std::atoi(command.c_str() + 7);
+            if (degrees == 0 || degrees == 90 || degrees == 180 ||
+                degrees == 270) {
+                m_browser->setRotate(degrees);
+            }
         }
         return;
     }

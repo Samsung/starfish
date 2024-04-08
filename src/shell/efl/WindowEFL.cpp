@@ -44,6 +44,8 @@ public:
         return nullptr;
     }
 
+    virtual void setRotate(int degree) override;
+
 private:
     void initEFL();
     bool createSimpleWindow(const char* appName, int width, int height);
@@ -170,6 +172,11 @@ void WindowEFL::addAutoFitChild(void* child)
     Evas_Object* c = static_cast<Evas_Object*>(child);
     evas_object_size_hint_weight_set(c, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     elm_win_resize_object_add(m_window, c);
+}
+
+void WindowEFL::setRotate(int degree)
+{
+    elm_win_rotation_with_resize_set(m_window, degree);
 }
 
 Window* Window::create()

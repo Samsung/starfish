@@ -251,6 +251,11 @@ public:
         m_mayNeedsSync = false;
     }
 
+    virtual void glMayNeedsSync() override
+    {
+        m_mayNeedsSync = true;
+    }
+
     virtual uintptr_t glCreateSharedContext()
     {
         return m_glCreateSharedContextCallback(this);
@@ -271,9 +276,12 @@ public:
         return m_glMakeCurrentWithContextCallback(this, context);
     }
 
-    virtual void glMayNeedsSync() override
+    virtual TransformationMatrix screenMatrix() override
     {
-        m_mayNeedsSync = true;
+        if (m_getScreenMatrix) {
+            return m_getScreenMatrix(this);
+        }
+        return TransformationMatrix::identityMatrix();
     }
 
     virtual void pause() override

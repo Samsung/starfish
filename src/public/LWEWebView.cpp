@@ -1387,6 +1387,24 @@ float WebContainer::GetDevicePixelRatio()
         ->GetDevicePixelRatio();
 }
 
+void WebContainer::RegisterGetScreenMatrixHandler(
+    const std::function<TransformationMatrix(WebContainer*)>& cb)
+{
+    const auto wrapper = [this, cb](LWEDelegate::WebContainer* container)
+        -> LWEDelegate::WebContainer::TransformationMatrix {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(m_delegate.get()) ==
+                   container);
+        TransformationMatrix m = cb(this);
+        return {
+            m.scaleX,       m.skewX,        m.translateX,
+            m.skewY,        m.scaleY,       m.translateY,
+            m.perspectiveX, m.perspectiveY, m.perspectiveScale,
+        };
+    };
+    toImpl<LWEDelegate::WebContainer>(m_delegate.get())
+        ->RegisterGetScreenMatrixHandler(wrapper);
+}
+
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          unsigned height, float devicePixelRatio,
                          const char* defaultFontName, const char* locale,
