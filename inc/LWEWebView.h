@@ -248,6 +248,18 @@ public:
             onGLMakeCurrentWithContext;
     };
 
+    struct TransformationMatrix {
+        double scaleX;
+        double skewX;
+        double translateX;
+        double skewY;
+        double scaleY;
+        double translateY;
+        double perspectiveX;
+        double perspectiveY;
+        double perspectiveScale;
+    };
+
     void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);
     void RegisterOnRenderedHandler(
         const std::function<void(WebContainer*,
@@ -421,6 +433,9 @@ public:
                                                     doRenderingFunction)>& cb);
     void SetDevicePixelRatio(float dpr);
     float GetDevicePixelRatio();
+
+    void RegisterGetScreenMatrixHandler(
+        const std::function<TransformationMatrix(WebContainer*)>& cb);
 
 private:
     WebContainer();

@@ -335,6 +335,11 @@ public:
     void SetDevicePixelRatio(float dpr) override;
     float GetDevicePixelRatio() override;
 
+    virtual void RegisterGetScreenMatrixHandler(
+        const std::function<TransformationMatrix(WebContainer*)>& cb) override;
+
+    virtual void SetNeedsFullRepainting() override;
+
     WebContainerImpl(Starfish::WebView* webView);
 
 private:
@@ -1590,6 +1595,29 @@ float WebContainerImpl::GetDevicePixelRatio()
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
         [&]() -> void { dpr = m_webView->renderer()->getDevicePixelRatio(); });
     return dpr;
+}
+
+void WebContainerImpl::RegisterGetScreenMatrixHandler(
+    const std::function<TransformationMatrix(WebContainer*)>& cb)
+{
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
+        m_webView->renderer()->registerGetScreenMatrix(
+            [this, cb](Starfish::Renderer* renderer)
+                -> Starfish::TransformationMatrix {
+                TransformationMatrix m = cb(this);
+                return {
+                    m.scaleX,       m.skewX,        m.translateX,
+                    m.skewY,        m.scaleY,       m.translateY,
+                    m.perspectiveX, m.perspectiveY, m.perspectiveScale,
+                };
+            });
+    });
+}
+
+void WebContainerImpl::SetNeedsFullRepainting()
+{
+    ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
+        [&]() -> void { m_webView->setNeedsFullRepainting(); });
 }
 
 } // namespace LWEDelegate

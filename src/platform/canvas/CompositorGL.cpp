@@ -2208,12 +2208,6 @@ public:
         mapPointsByMatrix(x, y, m_screenMatrix);
     }
 
-    SkMatrix computeScreenMatrix()
-    {
-        return gl()->computeScreenMatrix(m_compositorContext->m_renderer,
-                                         screenWidth(), screenHeight());
-    }
-
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
         // LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
@@ -2225,8 +2219,10 @@ public:
         m_screenWidth = m_webView->renderer()->width();
         m_screenHeight = m_webView->renderer()->height();
         m_compositorContext = (CompositorContextGL*)compositorContext;
-        m_screenMatrix = computeScreenMatrix();
-
+        TransformationMatrix m = m_webView->renderer()->screenMatrix();
+        m_screenMatrix.setAll(m.scaleX, m.skewX, m.translateX, m.skewY,
+                              m.scaleY, m.translateY, m.perspectiveX,
+                              m.perspectiveY, m.perspectiveScale);
         setViewport();
 
         m_state.reserve(32);

@@ -77,6 +77,18 @@ public:
         const char* timezoneID;
     };
 
+    struct TransformationMatrix {
+        double scaleX;
+        double skewX;
+        double translateX;
+        double skewY;
+        double scaleY;
+        double translateY;
+        double perspectiveX;
+        double perspectiveY;
+        double perspectiveScale;
+    };
+
     using OnGLMakeCurrent = std::function<void(WebContainer*)>;
     using OnGLSwapBuffers =
         std::function<void(WebContainer*, bool mayNeedsSync)>;
@@ -275,6 +287,11 @@ public:
             cb) = 0;
     virtual void SetDevicePixelRatio(float dpr) = 0;
     virtual float GetDevicePixelRatio() = 0;
+
+    virtual void RegisterGetScreenMatrixHandler(
+        const std::function<TransformationMatrix(WebContainer*)>& cb) = 0;
+
+    virtual void SetNeedsFullRepainting() = 0;
 
 protected:
     WebContainer() = default;

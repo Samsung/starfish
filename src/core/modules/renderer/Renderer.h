@@ -53,24 +53,16 @@ struct equal_to<Starfish::WindowHandlerKind> {
 namespace Starfish {
 
 class AnimationExecutor;
-
 class Canvas;
-
 class Compositor;
-
 class CompositorContext;
-
 class Node;
-
 class WebView;
-
 class NativeImageData;
-
 class MouseData;
-
 class TouchData;
-
 class PlatformKeyEventData;
+class GL;
 
 enum class TouchEventKind {
     TouchEventStart,
@@ -94,11 +86,20 @@ enum class CompositionEventKind {
     CompositionEventUpdate,
     CompositionEventEnd,
 };
-} // namespace Starfish
 
-namespace Starfish {
+struct TransformationMatrix {
+    static const TransformationMatrix& identityMatrix();
 
-class GL;
+    double scaleX;
+    double skewX;
+    double translateX;
+    double skewY;
+    double scaleY;
+    double translateY;
+    double perspectiveX;
+    double perspectiveY;
+    double perspectiveScale;
+};
 
 class Renderer : public gc {
 public:
@@ -177,6 +178,11 @@ public:
         return true;
     }
 
+    virtual TransformationMatrix screenMatrix()
+    {
+        return TransformationMatrix::identityMatrix();
+    }
+
     void registerRenderingPrepareCallback(
         const std::function<RenderInfo(void)>& cb)
     {
@@ -229,6 +235,12 @@ public:
         const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
     {
         m_glMakeCurrentWithContextCallback = cb;
+    }
+
+    void registerGetScreenMatrix(
+        const std::function<TransformationMatrix(Renderer* renderer)>& cb)
+    {
+        m_getScreenMatrix = cb;
     }
 
     void registerShowSoftwareKeyboardIfPossibleCallback(
@@ -353,6 +365,7 @@ protected:
     std::function<bool(Renderer* renderer)> m_glClearCurrentContextCallback;
     std::function<bool(Renderer* renderer, uintptr_t context)>
         m_glMakeCurrentWithContextCallback;
+    std::function<TransformationMatrix(Renderer* renderer)> m_getScreenMatrix;
 
     std::function<bool(Renderer* renderer)> m_canRenderingCallback;
     std::function<void(bool needsFlush)> m_surfaceFlushCallback;

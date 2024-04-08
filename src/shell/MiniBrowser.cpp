@@ -159,6 +159,11 @@ void MiniBrowser::focus()
     m_lwe->Focus();
 }
 
+void MiniBrowser::setRotate(int degree)
+{
+    m_window->setRotate(degree);
+}
+
 bool MiniBrowser::createWindow()
 {
     m_window = Window::create();
