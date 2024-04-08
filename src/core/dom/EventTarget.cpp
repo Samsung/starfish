@@ -506,8 +506,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
     event->setTarget(origin);
     event->setEventPhase(Event::AT_TARGET);
     // Invoke event listeners
-    GCVector<EventListener*>* originals =
-        origin->getEventListeners(event->type());
+    GCVector<EventListener*>* originals = getEventListeners(event->type());
     if (originals) {
         if (!event->stopPropagationValue()) {
             // Iterate Copied Vector : listeners can be removed during iteration
@@ -520,7 +519,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
                 }
                 if (std::find(originals->begin(), originals->end(), listener) !=
                     originals->end()) {
-                    event->setCurrentTarget(origin);
+                    event->setCurrentTarget(this);
                     listener->call(event);
                 }
             }

@@ -39,8 +39,8 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler onloadend;
   attribute EventHandler onloadstart;
   attribute EventHandler onmousedown;
-  [Unimplemented, LenientThis] attribute EventHandler onmouseenter;
-  [Unimplemented, LenientThis] attribute EventHandler onmouseleave;
+  attribute EventHandler onmouseenter;
+  attribute EventHandler onmouseleave;
   attribute EventHandler onmousemove;
   attribute EventHandler onmouseout;
   attribute EventHandler onmouseover;

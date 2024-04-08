@@ -2570,6 +2570,8 @@ DEFINE_EVENT_LISTENER(Document, mousemove);
 DEFINE_EVENT_LISTENER(Document, mouseover);
 DEFINE_EVENT_LISTENER(Document, mouseout);
 DEFINE_EVENT_LISTENER(Document, mouseup);
+DEFINE_EVENT_LISTENER(Document, mouseenter);
+DEFINE_EVENT_LISTENER(Document, mouseleave);
 DEFINE_EVENT_LISTENER(Document, pointerdown);
 DEFINE_EVENT_LISTENER(Document, pointerup);
 DEFINE_EVENT_LISTENER(Document, pointermove);

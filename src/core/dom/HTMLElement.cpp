@@ -120,6 +120,10 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_mousedown, value, this);
     } else if (name == ss->m_onmousemove) {
         setAttributeEventListener(ss->m_mousemove, value, this);
+    } else if (name == ss->m_onmouseenter) {
+        setAttributeEventListener(ss->m_mouseenter, value, this);
+    } else if (name == ss->m_onmouseleave) {
+        setAttributeEventListener(ss->m_mouseleave, value, this);
     } else if (name == ss->m_ontouchstart) {
         setAttributeEventListener(ss->m_touchstart, value, this);
     } else if (name == ss->m_ontouchend) {

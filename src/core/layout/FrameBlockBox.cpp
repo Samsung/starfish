@@ -540,6 +540,16 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
     }
 }
 
+static bool absolutePositionIgnorableFlexJustifyContentValue(JustifyContentValue value)
+{
+    if (value == JustifyContentValue::StartJustifyContentValue ||
+            value == JustifyContentValue::FlexStartJustifyContentValue ||
+            value == JustifyContentValue::SpaceBetweenJustifyContentValue) {
+        return false;
+    }
+    return true;
+}
+
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
@@ -616,7 +626,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 if (width.isAuto()) {
                     if (parent()->isAnonymous() &&
                         parent()->parent()->isFrameFlexibleBox() &&
-                        !parent()->isFlexItem() && !isPseudoElementFrame) {
+                        !parent()->isFlexItem() && !isPseudoElementFrame &&
+                        absolutePositionIgnorableFlexJustifyContentValue(
+                            parent()->parent()->style()->justifyContent())) {
                         moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
                             this);
                     } else {
