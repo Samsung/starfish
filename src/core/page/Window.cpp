@@ -615,6 +615,15 @@ void Window::simulateMouseUp(float x, float y)
                                               data);
 }
 
+void Window::simulateMouseMove(float x, float y)
+{
+    MouseData data(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
+                   x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio, 0);
+    webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventMove,
+                                              data);
+}
+
 void Window::simulateVisibilitychange(bool show)
 {
     if (show) {
