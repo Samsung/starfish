@@ -586,6 +586,22 @@ static ValueRef* simulateMouseUpFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static ValueRef* simulateMouseMoveFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         NULLABLE ValueRef** argv,
+                                         bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    double value0 = arg0->toNumber(state);
+    double value1 = arg1->toNumber(state);
+
+    window->simulateMouseMove(value0, value1);
+    return scriptUndefined();
+}
+
 static ValueRef* simulateVisibilitychangeFunction(ExecutionStateRef* state,
                                                   ValueRef* thisValue,
                                                   size_t argc, ValueRef** argv,
@@ -766,6 +782,7 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(simulateClick, 2);
             DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
             DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
+            DEFINE_TEST_FUNCTION(simulateMouseMove, 2);
             DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
             DEFINE_TEST_FUNCTION(testAssert, 1);
             DEFINE_TEST_FUNCTION(testEnd, 0);

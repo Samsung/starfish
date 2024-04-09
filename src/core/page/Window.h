@@ -293,6 +293,7 @@ public:
     void simulateClick(float x, float y);
     void simulateMouseDown(float x, float y);
     void simulateMouseUp(float x, float y);
+    void simulateMouseMove(float x, float y);
     void simulateVisibilitychange(bool show);
     void testStart();
 #endif
