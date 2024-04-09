@@ -1143,8 +1143,10 @@ Element* BrowsingContext::activeElement()
 }
 
 static bool updateEventNodeSet(Document* document, Node* n,
-                               GCUnorderedSet<Node*>& set, Node** target,
-                               size_t* version, Node::NodeState state)
+                               GCUnorderedSet<Node*>& set,
+                               Nullable<GCUnorderedSet<Node*>*> oldSet,
+                               Node** target, size_t* version,
+                               Node::NodeState state)
 {
     Node* t = n->nearestParentElement();
     if (*target != n || set.find(t) != set.end() ||
@@ -1173,6 +1175,9 @@ static bool updateEventNodeSet(Document* document, Node* n,
             iter++;
         }
 
+        if (oldSet) {
+            *oldSet = std::move(set);
+        }
         set = std::move(newSet);
         *target = n;
         *version = document->domVersion();
@@ -1184,7 +1189,7 @@ static bool updateEventNodeSet(Document* document, Node* n,
 bool BrowsingContext::setActiveNode(Node* n)
 {
     return updateEventNodeSet(
-        document(), n, m_activeNodeSet, &m_activeNodeTarget,
+        document(), n, m_activeNodeSet, nullptr, &m_activeNodeTarget,
         &m_documentVersionWhenComputingActiveNodeSet, Node::NodeStateActive);
 }
 
@@ -1204,11 +1209,13 @@ void BrowsingContext::releaseActiveNode()
     m_documentVersionWhenComputingActiveNodeSet = 0;
 }
 
-bool BrowsingContext::setHoveredNode(Node* n)
+bool BrowsingContext::setHoveredNode(
+    Node* n, Nullable<GCUnorderedSet<Node*>*> oldHoveredNodeSet)
 {
-    return updateEventNodeSet(
-        document(), n, m_hoveredNodeSet, &m_hoveredNodeTarget,
-        &m_documentVersionWhenComputingHoveredNodeSet, Node::NodeStateHovered);
+    return updateEventNodeSet(document(), n, m_hoveredNodeSet,
+                              oldHoveredNodeSet, &m_hoveredNodeTarget,
+                              &m_documentVersionWhenComputingHoveredNodeSet,
+                              Node::NodeStateHovered);
 }
 
 void BrowsingContext::releaseHoveredNode()
@@ -1307,8 +1314,9 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
         return;
     }
 
+    GCUnorderedSet<Node*> oldhoveredNodeSet;
     Node* oldTarget = m_hoveredNodeTarget;
-    if (setHoveredNode(targetNode)) {
+    if (setHoveredNode(targetNode, &oldhoveredNodeSet)) {
         Node* newTarget = m_hoveredNodeTarget;
         if (newTarget != oldTarget) {
             Node* newElement = newTarget->nearestParentElement();
@@ -1319,15 +1327,23 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
             if (newElement && newElement->isElement()) {
                 MouseData data(button, buttons, posX, posY, 0, ts, oldElement);
                 Element* enterTarget = newElement->asElement();
+                GCVector<Element*> enterList;
                 while (enterTarget) {
+                    if (!oldhoveredNodeSet.contains(enterTarget)) {
+                        enterList.push_back(enterTarget);
+                    }
+                    enterTarget = enterTarget->parentElement();
+                }
+
+                for (auto iter = enterList.rbegin(); iter != enterList.rend();
+                     iter++) {
                     Event* e = createMouseEvent(
                         document(),
                         starfish()->staticStrings()->m_mouseenter.localName(),
                         data);
                     e->setCancelable(false);
                     e->setBubbles(false);
-                    enterTarget->dispatchEventByUA(newElement, e, true);
-                    enterTarget = enterTarget->parentElement();
+                    (*iter)->dispatchEventByUA(newElement, e, true);
                 }
             }
 
@@ -1353,13 +1369,17 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
                 MouseData data(button, buttons, posX, posY, 0, ts, newElement);
                 Element* leaveTarget = oldElement->asElement();
                 while (leaveTarget) {
-                    Event* e = createMouseEvent(
-                        document(),
-                        starfish()->staticStrings()->m_mouseleave.localName(),
-                        data);
-                    e->setCancelable(false);
-                    e->setBubbles(false);
-                    leaveTarget->dispatchEventByUA(oldElement, e, true);
+                    if (!(leaveTarget->state() & Node::NodeStateHovered)) {
+                        Event* e =
+                            createMouseEvent(document(),
+                                             starfish()
+                                                 ->staticStrings()
+                                                 ->m_mouseleave.localName(),
+                                             data);
+                        e->setCancelable(false);
+                        e->setBubbles(false);
+                        leaveTarget->dispatchEventByUA(oldElement, e, true);
+                    }
                     leaveTarget = leaveTarget->parentElement();
                 }
             }
