@@ -199,7 +199,8 @@ public:
     bool setActiveNode(Node* n);
     void releaseActiveNode();
 
-    bool setHoveredNode(Node* n);
+    bool setHoveredNode(Node* n,
+                        Nullable<GCUnorderedSet<Node*>*> oldHoveredNodeSet);
     void releaseHoveredNode();
 
     Node* focusedNode();
