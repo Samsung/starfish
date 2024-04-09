@@ -13,6 +13,7 @@ P /.circleci
 - /compat
 - /test
 + /tool
++ /tool/imgdiff
 - /out_tizen
 - /third_party/clipper/Documentation
 + /third_party/escargot/third_party/windows
@@ -67,4 +68,3 @@ P /.circleci
 - *.pyc
 - lextab.*
 - parsetab.*
-
