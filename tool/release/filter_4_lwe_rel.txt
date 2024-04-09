@@ -5,13 +5,22 @@ P /.circleci
 - /.github
 - /src/public/bridge/android
 - /inspector
++ /build/test
 + /build/windows
 - /build/android
 - /third_party/android
 + /third_party/windows
 - /compat
 - /test
-- /tool
++ /tool/imgdiff
+- /tool/*.py
+- /tool/coverage
+- /tool/drivers
+- /tool/fonts
+- /tool/gyp
+- /tool/pixel_test
+- /tool/reftest
+- /tool/release
 - /out_tizen
 - /third_party/clipper/Documentation
 + /third_party/escargot/third_party/windows
@@ -66,4 +75,3 @@ P /.circleci
 - *.pyc
 - lextab.*
 - parsetab.*
-

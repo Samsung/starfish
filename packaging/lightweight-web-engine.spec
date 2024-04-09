@@ -569,7 +569,7 @@ ninja -C %{out_tizen} starfish.serviceworker.shared_library
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
-  -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
+  -DBACKEND=efl_headless -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
   %{?extra_cmake_options} \
   -G Ninja
@@ -649,7 +649,7 @@ ninja -C %{out_tizen} starfish_api.shared_library
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
-  -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
+  -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
   %{?extra_cmake_options} \
   -G Ninja
@@ -746,9 +746,6 @@ cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buil
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
-%if "%{?disable_shell}" == "0"
-cp -fr out_tizen/flutter/release/lightweight-web-engine.flutter %{buildroot}%{_bindir}
-%endif
 %endif
 
 # for devel files
@@ -922,9 +919,6 @@ ln -sf flutter/liblightweight-web-engine.flutter.so liblightweight-web-engine.so
 popd
 %endif
 %if "%{rpm}" == "flutter"
-pushd %{_bindir}
-ln -sf lightweight-web-engine.flutter %{bin}
-popd
 /sbin/ldconfig
 exit 0
 %endif
@@ -1029,6 +1023,5 @@ exit 0
 %if "%{rpm}" == "flutter"
 %files shell-profile_flutter
 %manifest %{name}.manifest
-%{_bindir}/lightweight-web-engine.flutter
 %endif
 %endif
