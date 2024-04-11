@@ -20,6 +20,8 @@
 #ifndef __StarfishCompositor__
 #define __StarfishCompositor__
 
+#include <SkMatrix.h>
+
 namespace Starfish {
 
 class NativeImageData;
@@ -50,14 +52,18 @@ protected:
     }
 
 public:
-    static Compositor* create3D(WebView* starfish, CompositorContext* ctx);
-    static Compositor* create2D(WebView* starfish, CompositorContext* ctx,
+    static Compositor* create3D(WebView* webview, CompositorContext* ctx);
+    static Compositor* create2D(WebView* webview, CompositorContext* ctx,
                                 CanvasSurface* surface);
     static CompositorContext* initCompositorContext(Renderer* renderer);
     static void destroyCompositorContext(Renderer* renderer,
                                          CompositorContext* ctx);
 
-    static uint32_t maximumTextureSize();
+    static uint32_t maximumTextureSize(Starfish* starfish);
+
+    static bool supportsFilterEffect(Starfish* starfish, size_t textureWidth,
+                                     size_t textureHeight);
+
     virtual ~Compositor()
     {
     }
@@ -105,8 +111,6 @@ public:
     virtual void enableBlurEffect(float blurRadius)
     {
     }
-
-    static bool supportsFilterEffect(size_t textureWidth, size_t textureHeight);
 };
 } // namespace Starfish
 

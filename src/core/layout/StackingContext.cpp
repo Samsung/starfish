@@ -1049,7 +1049,8 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
-    if (Compositor::supportsFilterEffect(1, 1) ==
+    if (Compositor::supportsFilterEffect(m_owner->document()->starfish(), 1,
+                                         1) ==
             true /* test whatever compostior supports filter */
         && m_hasFilterEffect) {
         compositedBySelf = true;
@@ -1906,6 +1907,7 @@ void StackingContext::fillGraphicsBufferContents(
 
     if (!canRejectPainting) {
         if (m_hasFilterEffect && !Compositor::supportsFilterEffect(
+                                     m_owner->document()->starfish(),
                                      canvas->renderTargetInfo().m_width,
                                      canvas->renderTargetInfo().m_height)) {
             FilterContext filterContext(&canvas, this, ctx);
@@ -3004,7 +3006,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         owner()->willCompsiteStackingContext(compositor);
 
         bool hasFilterEffect = false;
-        if (Compositor::supportsFilterEffect(bufferWidth, bufferHeight) &&
+        if (Compositor::supportsFilterEffect(m_owner->document()->starfish(),
+                                             bufferWidth, bufferHeight) &&
             m_hasFilterEffect) {
             hasFilterEffect = true;
             Length standardDeviation;

@@ -17,87 +17,78 @@
  *  USA
  */
 
-#include <SkMatrix.h>
-
 #include "StarfishConfig.h"
+
 #include "Compositor.h"
+
+#include "Starfish.h"
+#include "core/page/WebView.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "core/modules/renderer/Renderer.h"
 #include "Canvas.h"
 #include "CompositorFactory.h"
 
 namespace Starfish {
 
-extern int g_portCompositorBackend;
-
-// The if-def statements below are temporary soluation to avoid affecting other
-// ports of LWE except flutter. In the future, It will be removed when LWE's all
-// ports are changed to a single binary.
-
-Compositor* Compositor::create3D(WebView* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(WebView* webview, CompositorContext* ctx)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::create3dCairo(starfish, ctx);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
-        return CompositorFactory::create3dGl(starfish, ctx);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::create3dMock(starfish, ctx);
-#endif
-    default:
-        break;
+    StarfishRendererType rendererType = webview->starfish()->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::create3dCairo(webview, ctx);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::create3dMock(webview, ctx);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
+        return CompositorFactory::create3dGl(webview, ctx);
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::create3dCairo(webview, ctx);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
 
-Compositor* Compositor::create2D(WebView* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::create2dCairo(starfish, ctx, surface);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
-        return CompositorFactory::create2dGl(starfish, ctx, surface);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::create2dMock(starfish, ctx, surface);
-#endif
-    default:
-        break;
+    StarfishRendererType rendererType = webview->starfish()->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::create2dCairo(webview, ctx, surface);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::create2dMock(webview, ctx, surface);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
+        return CompositorFactory::create2dGl(webview, ctx, surface);
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::create2dCairo(webview, ctx, surface);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
 
 CompositorContext* Compositor::initCompositorContext(Renderer* renderer)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::initCompositorContextCairo(renderer);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
+    StarfishRendererType rendererType = renderer->starfish()->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::initCompositorContextCairo(renderer);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::initCompositorContextMock(renderer);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
         return CompositorFactory::initCompositorContextGl(renderer);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::initCompositorContextMock(renderer);
-#endif
-    default:
-        break;
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::initCompositorContextCairo(renderer);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
@@ -105,68 +96,64 @@ CompositorContext* Compositor::initCompositorContext(Renderer* renderer)
 void Compositor::destroyCompositorContext(Renderer* renderer,
                                           CompositorContext* ctx)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::destroyCompositorContextCairo(renderer, ctx);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
+    StarfishRendererType rendererType = renderer->starfish()->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::destroyCompositorContextCairo(renderer, ctx);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::destroyCompositorContextMock(renderer, ctx);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
         return CompositorFactory::destroyCompositorContextGl(renderer, ctx);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::destroyCompositorContextMock(renderer, ctx);
-#endif
-    default:
-        break;
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::destroyCompositorContextCairo(renderer, ctx);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-uint32_t Compositor::maximumTextureSize()
+uint32_t Compositor::maximumTextureSize(Starfish* starfish)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::maximumTextureSizeCairo();
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
+    StarfishRendererType rendererType = starfish->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::maximumTextureSizeCairo();
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::maximumTextureSizeMock();
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
         return CompositorFactory::maximumTextureSizeGl();
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::maximumTextureSizeMock();
-#endif
-    default:
-        break;
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::maximumTextureSizeCairo();
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return 0;
 }
 
-bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+bool Compositor::supportsFilterEffect(Starfish* starfish, size_t textureWidth,
+                                      size_t textureHeight)
 {
-    switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    case PORT_COMPOSITOR_BACKEND::CAIRO:
-        return CompositorFactory::supportsFilterEffectCairo(textureWidth,
-                                                            textureHeight);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    case PORT_COMPOSITOR_BACKEND::GL:
+    StarfishRendererType rendererType = starfish->rendererType();
+#if defined(STARFISH_DALI)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
+    return CompositorFactory::supportsFilterEffectCairo(textureWidth,
+                                                        textureHeight);
+#elif defined(STARFISH_EFL_HEADLESS)
+    STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
+    return CompositorFactory::supportsFilterEffectMock(textureWidth,
+                                                       textureHeight);
+#else
+    if (rendererType == StarfishRendererType::kOpenGL) {
         return CompositorFactory::supportsFilterEffectGl(textureWidth,
                                                          textureHeight);
-#endif
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    case PORT_COMPOSITOR_BACKEND::MOCK:
-        return CompositorFactory::supportsFilterEffectMock(textureWidth,
-                                                           textureHeight);
-#endif
-    default:
-        break;
+    } else if (rendererType == StarfishRendererType::kSoftware) {
+        return CompositorFactory::supportsFilterEffectCairo(textureWidth,
+                                                            textureHeight);
     }
+#endif
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return false;
 }
