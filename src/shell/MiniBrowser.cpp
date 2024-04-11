@@ -131,6 +131,10 @@ void MiniBrowser::setSettings(const MiniBrowserSettings& settings)
         lweSettings.SetUseExternalPopup(settings.useExternalPopup);
     }
 
+    if (settings.showFps) {
+        lweSettings.UpdateSetting("--show-fps", "true");
+    }
+
     lweSettings.SetUseSpatialNavigation(settings.useSpatialNavigation);
     lweSettings.SetTTSMode(settings.ttsMode);
     lweSettings.SetTTSLanguage(settings.language);

@@ -78,6 +78,8 @@
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "EscargotPublic.h"
 
+#include "core/modules/profiling/FrameRateCounter.h"
+
 #if defined(OS_POSIX)
 #include <malloc.h>
 #endif
@@ -306,6 +308,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_useSpatialNavigation(false)
     , m_needsDownScaleImageResourceLargerThan(0)
     , m_glCompsitorScale(1)
+    , m_showFps(false)
 {
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);
@@ -356,6 +359,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #endif
 
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
+
+    FrameRateCounter::instance().setWebview(this);
 }
 
 void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
@@ -1254,6 +1259,10 @@ static void saveCurrentPaintingState(StackingContext* ctx)
 
 RenderResult WebView::rendering(bool force)
 {
+    if (m_showFps) {
+        FrameRateCounter::instance().update();
+    }
+
     RenderResult renderResult;
     renderResult.didPaintingOrCompositing = false;
     if (!m_needsRendering || !m_isActive) {
@@ -1385,6 +1394,10 @@ RenderResult WebView::rendering(bool force)
                     needsFullPainting, prevDrawnStackingContextInfo, scrollX,
                     scrollY, m_needsComposite);
                 m_repaintRegionInRendering = std::move(tracker.repaintRegion());
+                if (m_showFps) {
+                    m_repaintRegionInRendering[nullptr].unite(
+                        FrameRateCounter::instance().updateArea());
+                }
             }
 
             auto repaintRect = m_repaintRegionInRendering[nullptr];
@@ -1497,6 +1510,9 @@ RenderResult WebView::rendering(bool force)
                             mainFrame->appliedOverflowY());
                 }
                 canvas->restore();
+                if (m_showFps) {
+                    FrameRateCounter::instance().drawFps(canvas);
+                }
                 m_didCompositeBefore = false;
             } else {
                 INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kPaint,
@@ -1597,6 +1613,9 @@ RenderResult WebView::rendering(bool force)
                     mainBrowsingContext()->window()->scrolling(), compositor,
                     mainFrame, mainFrame->appliedOverflowX(),
                     mainFrame->appliedOverflowY());
+            }
+            if (m_showFps) {
+                FrameRateCounter::instance().drawFps(compositor);
             }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR

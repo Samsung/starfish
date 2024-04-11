@@ -66,6 +66,7 @@ struct MiniBrowserSettings {
     bool useExternalPopup = false;
     bool useSpatialNavigation = false;
     bool useHTTP2 = false;
+    bool showFps = false;
     uint32_t needsDownScaleImageResourceLargerThan = 0;
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
     std::string customUserAgentString;

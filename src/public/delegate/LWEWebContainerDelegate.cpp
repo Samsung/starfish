@@ -973,6 +973,8 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setUseExternalPopup(settings->UseExternalPopup());
             m_webView->setUseSpatialNavigation(
                 settings->UseSpatialNavigation());
+            std::string showFPS = settings->GetSetting("--show-fps");
+            m_webView->setShowFps(showFPS == "true" ? true : false);
 
             delete settings;
         });
