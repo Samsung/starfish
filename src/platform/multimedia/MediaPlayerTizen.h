@@ -49,7 +49,7 @@
 
 #define STARFISH_RUN_MSE_THREAD
 
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
 #if !defined(STARFISH_TIZEN_TV)
 #define STARFISH_MM_OUTPUT_WITH_GL
 #endif

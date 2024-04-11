@@ -331,7 +331,7 @@ public:
     {
         return m_compostiorContext;
     }
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
     GL* gl();
 #endif
 protected:
@@ -340,7 +340,7 @@ protected:
     Starfish* m_starfish;
     WebView* m_webView;
     size_t m_renderingAnimator;
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
     std::unique_ptr<GL> m_gl;
 #endif
     CompositorContext* m_compostiorContext;

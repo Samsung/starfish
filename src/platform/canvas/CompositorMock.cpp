@@ -18,11 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-#include <SkMatrix.h>
+#ifdef STARFISH_EFL_HEADLESS
+
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/CompositorFactory.h"
-
-#if defined(PORT_COMPOSITOR_BACKEND_MOCK)
 
 namespace Starfish {
 
@@ -154,7 +153,7 @@ Compositor* CompositorFactory::create2dMock(WebView* webview,
     return new CompositorMock(webview, surface);
 }
 
-Compositor* CompositorFactory::create3dMock(WebView* starfish,
+Compositor* CompositorFactory::create3dMock(WebView* webview,
                                             CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

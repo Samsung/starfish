@@ -47,26 +47,6 @@ bool g_fireOnloadEvent = false;
 Profiler g_profiler;
 #endif
 
-#if defined(STARFISH_EFL_CAIRO_GL)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_UV_CAIRO_GL)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_EFL_HEADLESS)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::MOCK);
-#elif defined(STARFISH_DALI)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
-#elif defined(STARFISH_TIZEN_WEARABLE_WIDGET)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
-#elif defined(STARFISH_ANDROID)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_WINDOWS_UWP)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_WINDOWS)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#elif defined(STARFISH_FLUTTER)
-int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
-#endif
-
 static bool g_starfishGlobalInit = false;
 
 Starfish::Starfish(const StarfishConfiguration& config)

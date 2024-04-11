@@ -22,7 +22,7 @@
 
 #include "StarfishPlatform.h"
 
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
 
 #include <SkMatrix.h>
 #include "platform/canvas/gl/GLTypes.h"

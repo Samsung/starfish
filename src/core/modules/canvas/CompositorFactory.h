@@ -33,9 +33,10 @@ class CompositorContext;
 // ports are changed to a single binary.
 
 namespace CompositorFactory {
-#ifdef PORT_COMPOSITOR_BACKEND_CAIRO
-    Compositor* create3dCairo(WebView* starfish, CompositorContext* ctx);
-    Compositor* create2dCairo(WebView* starfish, CompositorContext* ctx,
+
+#if !defined(STARFISH_EFL_HEADLESS)
+    Compositor* create3dCairo(WebView* webview, CompositorContext* ctx);
+    Compositor* create2dCairo(WebView* webview, CompositorContext* ctx,
                               CanvasSurface* surface);
     CompositorContext* initCompositorContextCairo(Renderer* renderer);
     void destroyCompositorContextCairo(Renderer* renderer,
@@ -43,20 +44,18 @@ namespace CompositorFactory {
     uint32_t maximumTextureSizeCairo();
     bool supportsFilterEffectCairo(size_t textureWidth, size_t textureHeight);
 #endif
-
-#ifdef PORT_COMPOSITOR_BACKEND_GL
-    Compositor* create3dGl(WebView* starfish, CompositorContext* ctx);
-    Compositor* create2dGl(WebView* starfish, CompositorContext* ctx,
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+    Compositor* create3dGl(WebView* webview, CompositorContext* ctx);
+    Compositor* create2dGl(WebView* webview, CompositorContext* ctx,
                            CanvasSurface* surface);
     CompositorContext* initCompositorContextGl(Renderer* renderer);
     void destroyCompositorContextGl(Renderer* renderer, CompositorContext* ctx);
     uint32_t maximumTextureSizeGl();
     bool supportsFilterEffectGl(size_t textureWidth, size_t textureHeight);
 #endif
-
-#ifdef PORT_COMPOSITOR_BACKEND_MOCK
-    Compositor* create3dMock(WebView* starfish, CompositorContext* ctx);
-    Compositor* create2dMock(WebView* starfish, CompositorContext* ctx,
+#if defined(STARFISH_EFL_HEADLESS)
+    Compositor* create3dMock(WebView* webview, CompositorContext* ctx);
+    Compositor* create2dMock(WebView* webview, CompositorContext* ctx,
                              CanvasSurface* surface);
     CompositorContext* initCompositorContextMock(Renderer* renderer);
     void destroyCompositorContextMock(Renderer* renderer,

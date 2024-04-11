@@ -48,7 +48,8 @@ void CanvasRenderingContext::calculateDimension(uint32_t& outWidth,
         height = 1;
     }
 
-    uint32_t maxTextureSize = Compositor::maximumTextureSize();
+    uint32_t maxTextureSize =
+        Compositor::maximumTextureSize(executionContext()->starfish());
     uint64_t maxTextureArea = maxTextureSize * maxTextureSize;
 
     if (elementWidth * elementHeight >= maxTextureArea) {

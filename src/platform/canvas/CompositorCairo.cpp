@@ -18,20 +18,19 @@
  */
 
 #include "StarfishConfig.h"
+#if !defined(STARFISH_EFL_HEADLESS)
+
+#include "core/modules/canvas/Compositor.h"
+
 #include "Starfish.h"
-
-#if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
-
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/CompositorFactory.h"
 
 #include <vector>
-#include <SkMatrix.h>
 
 #include <cairo.h>
 

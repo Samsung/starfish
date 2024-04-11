@@ -20,7 +20,7 @@
 #ifndef __StarfishIncludeGL__
 #define __StarfishIncludeGL__
 
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
 
 #if defined(STARFISH_WINDOWS_UWP)
 // Enable function definitions in the GL headers below

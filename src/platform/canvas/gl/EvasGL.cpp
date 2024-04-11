@@ -24,7 +24,8 @@
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL) && defined(PORT_COMPOSITOR_BACKEND_GL)
+#if defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_DALI) && \
+    !defined(STARFISH_EFL_HEADLESS)
 #include <Evas_GL.h>
 
 namespace Starfish {
