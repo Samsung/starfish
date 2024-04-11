@@ -277,6 +277,8 @@ void Shell::parseArg(int argc, char* argv[])
             // this is secret feature for testing(working on gl + efl webview)
             m_envOptions.glCompositorScale =
                 argv[i] + strlen("--gl-compositor-scale=");
+        } else if (strstr(argv[i], "--show-fps") == argv[i]) {
+            m_settings.showFps = true;
         }
     }
 }

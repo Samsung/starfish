@@ -466,6 +466,11 @@ public:
         return m_idleModeCheckIntervalInMS;
     }
 
+    void setShowFps(bool showFps)
+    {
+        m_showFps = showFps;
+    }
+
     bool didFirstRenderingAfterWakeup()
     {
         return m_didFirstRenderingAfterWakeup;
@@ -635,6 +640,7 @@ private:
     bool m_useSpatialNavigation;
     uint32_t m_needsDownScaleImageResourceLargerThan;
     float m_glCompsitorScale;
+    bool m_showFps;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };
