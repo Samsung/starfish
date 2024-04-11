@@ -117,6 +117,34 @@ static void logEglError(const char* name) noexcept
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #define EVAS_GL_NATIVE_SURFACE_TIZEN 0x32A1
 #include <tbm_surface.h>
+
+typedef void* EGLDisplay;
+typedef void* EGLContext;
+typedef void* EGLImageKHR;
+typedef void* EGLClientBuffer;
+
+typedef unsigned int EGLBoolean;
+typedef unsigned int EGLenum;
+typedef GLint EGLint;
+
+typedef EGLImageKHR (*PFNEGLCREATEIMAGEKHRPROC)(EGLDisplay dpy, EGLContext ctx,
+                                                EGLenum target,
+                                                EGLClientBuffer buffer,
+                                                const EGLint* attribList);
+typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC)(EGLDisplay dpy,
+                                                EGLImageKHR image);
+
+#define EGL_TRUE 1
+#define EGL_NONE 0x3038
+#define EGL_EXTENSIONS 0x3055
+#define EGL_NATIVE_PIXMAP_KHR 0x30B0
+#define EGL_IMAGE_PRESERVED_KHR 0x30D2
+#define EGL_NO_IMAGE_KHR ((EGLImageKHR)0)
+#define EGL_NO_CONTEXT ((EGLContext)0)
+
+static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
+#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+
 #else
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -136,10 +164,6 @@ static void logEglError(const char* name) noexcept
 #define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
 #endif
 #define EGL_ATTRIBUTE_MAX 50
-
-static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
-static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 #define EGL_NATIVE_SURFACE_TIZEN 0x32A1
@@ -220,6 +244,24 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
 }
 #undef RETURN_IF_INVALID_INDEX
 #endif
+
+#include <dlfcn.h>
+
+typedef void (*PPROC)(void);
+typedef PPROC (*PFNGLEGLGETPROCADDRESSPROC)(const char* procname);
+typedef EGLDisplay (*PFNGLEGLGETCURRENTDISPLAYPROC)();
+typedef const char* (*PFNGLEGLQUERYSTRINGPROC)(EGLDisplay dpy, EGLint name);
+
+static void* g_eglSoHandle;
+
+static PFNGLEGLGETPROCADDRESSPROC g_eglGetProcAddressProc;
+static PFNGLEGLGETCURRENTDISPLAYPROC g_eglGetCurrentDisplayProc;
+static PFNGLEGLQUERYSTRINGPROC g_eglQueryStringProc;
+
+static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
+static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
+static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
+
 #endif
 
 namespace Starfish {
@@ -1305,22 +1347,34 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
 #endif
 
-#if defined(STARFISH_TIZEN) && \
-    !defined(PORT_WEBVIEW_BRIDGE_EFL) // STARFISH_TIZEN without
-                                      // PORT_WEBVIEW_BRIDGE_EFL
+#if defined(STARFISH_TIZEN)
+        g_eglSoHandle = dlopen("libEGL.so", RTLD_NOW);
+        STARFISH_RELEASE_ASSERT(g_eglSoHandle);
+
+        g_eglGetProcAddressProc = reinterpret_cast<PFNGLEGLGETPROCADDRESSPROC>(
+            dlsym(g_eglSoHandle, "eglGetProcAddress"));
+        g_eglGetCurrentDisplayProc =
+            reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
+                dlsym(g_eglSoHandle, "eglGetCurrentDisplay"));
+        g_eglQueryStringProc = reinterpret_cast<PFNGLEGLQUERYSTRINGPROC>(
+            dlsym(g_eglSoHandle, "eglQueryString"));
+
         g_eglCreateImageKHRProc = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-            eglGetProcAddress("eglCreateImageKHR"));
+            g_eglGetProcAddressProc("eglCreateImageKHR"));
         g_eglDestroyImageKHRProc = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-            eglGetProcAddress("eglDestroyImageKHR"));
+            g_eglGetProcAddressProc("eglDestroyImageKHR"));
         g_glEGLImageTargetTexture2DOESProc =
             reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+                g_eglGetProcAddressProc("glEGLImageTargetTexture2DOES"));
 
         const char* eglExtensions =
-            eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+            g_eglQueryStringProc(g_eglGetCurrentDisplayProc(), EGL_EXTENSIONS);
         if (eglExtensions) {
             g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
                 strstr(eglExtensions, "EGL_TIZEN_image_native_surface");
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+            STARFISH_RELEASE_ASSERT(g_isSupported_EGL_NATIVE_SURFACE_TIZEN);
+#endif
         }
 #endif
 
@@ -1418,23 +1472,25 @@ public:
 
             bool ret = m_renderer->glMakeCurrent();
             if (m_isEGLImageExternal) {
-#if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
-                EGLDisplay display = eglGetCurrentDisplay();
-                g_eglDestroyImageKHRProc(display, m_eglImage);
-                m_eglImage = nullptr;
-                if (m_isEGLBufferOwner) {
-                    LongTaskFinder t("tbm_surface_destroy", 1);
-                    tbm_surface_destroy(m_tbmSurface);
+#if defined(STARFISH_TIZEN)
+                if (gl()->isGeneric()) {
+                    EGLDisplay display = g_eglGetCurrentDisplayProc();
+                    g_eglDestroyImageKHRProc(display, m_eglImage);
+                    m_eglImage = nullptr;
+                    if (m_isEGLBufferOwner) {
+                        LongTaskFinder t("tbm_surface_destroy", 1);
+                        tbm_surface_destroy(m_tbmSurface);
+                    }
+                    m_tbmSurface = nullptr;
+                } else {
+                    gl()->evasglDestroyImage(m_eglImage);
+                    m_eglImage = nullptr;
+                    if (m_isEGLBufferOwner) {
+                        LongTaskFinder t("tbm_surface_destroy", 1);
+                        tbm_surface_destroy(m_tbmSurface);
+                    }
+                    m_tbmSurface = nullptr;
                 }
-                m_tbmSurface = nullptr;
-#elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-                gl()->evasglDestroyImage(m_eglImage);
-                m_eglImage = nullptr;
-                if (m_isEGLBufferOwner) {
-                    LongTaskFinder t("tbm_surface_destroy", 1);
-                    tbm_surface_destroy(m_tbmSurface);
-                }
-                m_tbmSurface = nullptr;
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 EGLDisplay display = eglGetCurrentDisplay();
                 eglDestroyImageKHR(display, m_eglImage);
@@ -1493,7 +1549,9 @@ public:
                 m_renderer->webView()->screenInfo().devicePixelRatio *
                 additionalPixelRatio();
 
-            if (!(m_flag & CanvasSurfaceFlag::CanvasElement)) {
+            bool forCanvasElement = m_flag & CanvasSurfaceFlag::CanvasElement;
+
+            if (!forCanvasElement) {
                 m_bufferWidth =
                     std::max((size_t)1, (size_t)(w * devicePixelRatio));
                 m_bufferHeight =
@@ -1504,7 +1562,7 @@ public:
             }
 
             if (g_isSupportExtensionEGLImageExternal &&
-                g_shouldUseEGLImageOnPlainSurface &&
+                (g_shouldUseEGLImageOnPlainSurface || forCanvasElement) &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
@@ -1617,39 +1675,47 @@ public:
         if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN) || defined(STARFISH_ANDROID)
             CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
-#if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_TIZEN)
             {
                 STARFISH_RELEASE_ASSERT(m_tbmSurface);
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
 
-                EGLDisplay display = eglGetCurrentDisplay();
-                if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
+                if (gl()->isGeneric()) {
+                    EGLDisplay display = g_eglGetCurrentDisplayProc();
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
                     EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                                          EGL_NONE };
                     m_eglImage = g_eglCreateImageKHRProc(
                         display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
                         (void*)(intptr_t)m_tbmSurface, attribs);
-                } else {
-                    EGLint attribs[EGL_ATTRIBUTE_MAX];
-                    if (!prepareEglAttributeList(attribs, EGL_ATTRIBUTE_MAX,
-                                                 m_tbmSurface)) {
-                        return;
+#else
+                    if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
+                        EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+                                             EGL_NONE };
+                        m_eglImage = g_eglCreateImageKHRProc(
+                            display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
+                            (void*)(intptr_t)m_tbmSurface, attribs);
+                    } else {
+                        EGLint attribs[EGL_ATTRIBUTE_MAX];
+                        if (!prepareEglAttributeList(attribs, EGL_ATTRIBUTE_MAX,
+                                                     m_tbmSurface)) {
+                            return;
+                        }
+                        m_eglImage = g_eglCreateImageKHRProc(
+                            display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT,
+                            nullptr, attribs);
                     }
-                    m_eglImage = g_eglCreateImageKHRProc(
-                        display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr,
-                        attribs);
+#endif
+                    checkError(gl());
+                } else {
+                    STARFISH_RELEASE_ASSERT(m_tbmSurface);
+                    STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
+                    int eglImgAttr[] = { EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0 };
+                    m_eglImage = gl()->evasglCreateImage(
+                        EVAS_GL_NATIVE_SURFACE_TIZEN,
+                        (void*)(intptr_t)m_tbmSurface, eglImgAttr);
+                    checkError(gl());
                 }
-                checkError(gl());
-            }
-#elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-            {
-                STARFISH_RELEASE_ASSERT(m_tbmSurface);
-                STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
-                int eglImgAttr[] = { EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0 };
-                m_eglImage = gl()->evasglCreateImage(
-                    EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)m_tbmSurface,
-                    eglImgAttr);
-                checkError(gl());
             }
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
             {
@@ -1699,12 +1765,14 @@ public:
                                     GL_CLAMP_TO_EDGE);
 
                 checkError(gl());
-#if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
-                g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_EXTERNAL_OES,
-                                                   m_eglImage);
-#elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
-                gl()->evasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
-                                                    m_eglImage);
+#if defined(STARFISH_TIZEN)
+                if (gl()->isGeneric()) {
+                    g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_EXTERNAL_OES,
+                                                       m_eglImage);
+                } else {
+                    gl()->evasGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
+                                                        m_eglImage);
+                }
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 g_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
                                                m_eglImage);
