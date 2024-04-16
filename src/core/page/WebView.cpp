@@ -393,14 +393,12 @@ void WebView::clearDrawnBuffers()
         while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
             StackingContext* sc = *iter;
             iter++;
-            if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
-                auto holder = sc->graphicsBufferHolder();
-                if (holder) {
-                    for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
-                        if (holder->m_surfaces[i]) {
-                            holder->m_surfaces[i]->detachNativeBuffer();
-                            holder->m_surfaces[i] = nullptr;
-                        }
+            auto holder = sc->graphicsBufferHolder();
+            if (holder) {
+                for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
+                    if (holder->m_surfaces[i]) {
+                        holder->m_surfaces[i]->detachNativeBuffer();
+                        holder->m_surfaces[i] = nullptr;
                     }
                 }
             }

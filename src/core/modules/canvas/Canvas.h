@@ -178,8 +178,8 @@ public:
 
     enum CanvasSurfaceFlag {
         PlainElement = 0,
-        ElementHasFilterEffect = 1,
-        CanvasElement = 1 << 1
+        PreferEGLImage = 1,
+        PreferUnitedTexture = 1 << 1, // don't split texture if possible
     };
     static CanvasSurface* create(Renderer* renderer, size_t w, size_t h,
                                  float additionalPixelRatio = 1,
@@ -248,10 +248,6 @@ public:
         STARFISH_UNIMPLEMENTED();
     }
 #endif
-    bool isCanvasSurface()
-    {
-        return (m_flag & CanvasSurfaceFlag::CanvasElement);
-    }
 
     void setFlipYNeeded(bool flipY)
     {

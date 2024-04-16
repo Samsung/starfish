@@ -49,14 +49,7 @@ public:
     virtual void willCompsiteStackingContext(Compositor* c) override;
     virtual void didCompsiteStackingContext(Compositor* c) override;
 
-    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                      size_t visibleWidth,
-                                      size_t visibleHeight) override;
-
-    virtual bool hasOwnGraphicsBufferMethod() override
-    {
-        return true;
-    }
+    virtual Nullable<CanvasSurface*> contentSurface() override;
 
     void* operator new(size_t size)
     {

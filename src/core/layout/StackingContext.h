@@ -47,7 +47,6 @@ class GraphicsBufferHolder : public gc {
     friend class WebView;
 
 public:
-    GraphicsBufferHolder(CanvasSurface* s);
     GraphicsBufferHolder(size_t bufferWidth, size_t bufferHeight,
                          size_t screenWidth, size_t screenHeight,
                          StackingContext* sc);
@@ -165,6 +164,11 @@ public:
     SkMatrix transformMatrix()
     {
         return m_rareData ? m_rareData->m_matrix : SkMatrix::I();
+    }
+
+    TextDecorationData textDecorationData()
+    {
+        return m_rareData ? m_rareData->m_textDecorationData : TextDecorationData();
     }
 
     void computeStackingContextProperties();

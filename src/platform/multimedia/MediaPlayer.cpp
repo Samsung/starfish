@@ -72,8 +72,8 @@ Window* MediaPlayer::window()
 {
     return m_container->window();
 }
-CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
-                                                 size_t visibleHeight)
+
+CanvasSurface* MediaPlayer::contentSurface()
 {
     return m_canvasSurface;
 }

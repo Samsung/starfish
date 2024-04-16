@@ -417,12 +417,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         NULL, NULL, NULL);
 }
 
-CanvasSurface* MediaPlayerTizen::createGraphicsBuffer(size_t visibleWidth,
-                                                      size_t visibleHeight)
-{
-    return m_canvasSurface;
-}
-
 void MediaPlayerTizen::handlePlayerError()
 {
     if (isMainThread() == false) {
