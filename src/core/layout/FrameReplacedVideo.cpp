@@ -68,17 +68,14 @@ void FrameReplacedVideo::willCompsiteStackingContext(Compositor* c)
     }
 }
 
-void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                              size_t visibleWidth,
-                                              size_t visibleHeight)
+Nullable<CanvasSurface*> FrameReplacedVideo::contentSurface()
 {
-    if (!(*surfaceHolder)) {
-        auto v = node()->asHTMLVideoElement();
-        if (v->activeMediaPlayer()) {
-            *surfaceHolder = v->activeMediaPlayer()->createGraphicsBuffer(
-                visibleWidth, visibleHeight);
-        }
+    auto v = node()->asHTMLVideoElement();
+    if (v->activeMediaPlayer()) {
+        return v->activeMediaPlayer()->contentSurface();
     }
+    return nullptr;
 }
+
 } // namespace Starfish
 #endif

@@ -269,9 +269,6 @@ public:
         self->handleSeeked();
     }
 
-    virtual CanvasSurface* createGraphicsBuffer(size_t visibleWidth,
-                                                size_t visibleHeight) override;
-
 protected:
     int playerSetPlayPosition(int& timeInMS);
     void disposePlayer();

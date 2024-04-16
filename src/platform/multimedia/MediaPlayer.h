@@ -115,8 +115,7 @@ public:
     virtual void willDrawVideo(Compositor* canvas,
                                const LayoutRect& videoRect) = 0;
 
-    virtual CanvasSurface* createGraphicsBuffer(size_t visibleWidth,
-                                                size_t visibleHeight);
+    CanvasSurface* contentSurface();
 
     virtual unsigned long videoWidth()
     {

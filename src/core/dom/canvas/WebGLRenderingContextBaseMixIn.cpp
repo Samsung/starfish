@@ -111,7 +111,7 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         SurfaceCreationScope surfaceScope(m_framebufferTexture);
         m_canvasSurface = CanvasSurface::create(
             m_ownerHTMLCanvasElement->webView()->renderer(), bufferWidth,
-            bufferHeight, 1, CanvasSurface::CanvasElement);
+            bufferHeight, 1, CanvasSurface::PreferUnitedTexture);
 
         // Seeing CompositorGL::initCompositorContextGl, by default a surface is
         // mapped to u,v coordinates that are set to the opposite of the y-axis

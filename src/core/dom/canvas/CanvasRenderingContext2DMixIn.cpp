@@ -360,7 +360,7 @@ void CanvasRenderingContext2DMixIn::initialize()
 
     m_canvasSurface =
         CanvasSurface::create(m_ownerHTMLCanvasElement->webView()->renderer(),
-                              width, height, 1, CanvasSurface::CanvasElement);
+                              width, height, 1, CanvasSurface::PreferEGLImage);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,
                        Canvas::CanvasFlag::CanvasElement);

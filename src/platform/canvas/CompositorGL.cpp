@@ -1549,20 +1549,20 @@ public:
                 m_renderer->webView()->screenInfo().devicePixelRatio *
                 additionalPixelRatio();
 
-            bool forCanvasElement = m_flag & CanvasSurfaceFlag::CanvasElement;
-
-            if (!forCanvasElement) {
+            if ((m_flag & CanvasSurfaceFlag::PreferEGLImage) ||
+                (m_flag & CanvasSurfaceFlag::PreferUnitedTexture)) {
+                m_bufferWidth = w;
+                m_bufferHeight = h;
+            } else {
                 m_bufferWidth =
                     std::max((size_t)1, (size_t)(w * devicePixelRatio));
                 m_bufferHeight =
                     std::max((size_t)1, (size_t)(h * devicePixelRatio));
-            } else {
-                m_bufferWidth = w;
-                m_bufferHeight = h;
             }
 
             if (g_isSupportExtensionEGLImageExternal &&
-                (g_shouldUseEGLImageOnPlainSurface || forCanvasElement) &&
+                (g_shouldUseEGLImageOnPlainSurface ||
+                 (m_flag & CanvasSurfaceFlag::PreferEGLImage)) &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
@@ -1800,7 +1800,7 @@ public:
         m_wTextureCount = ceil((float)m_bufferWidth / m_textureTileSize);
         m_hTextureCount = ceil((float)m_bufferHeight / m_textureTileSize);
 
-        if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
+        if (m_flag & CanvasSurfaceFlag::PreferUnitedTexture) {
             m_wTextureCount = m_hTextureCount = 1;
         }
 
@@ -1817,7 +1817,7 @@ public:
                     (size_t)1, std::min((size_t)m_textureTileSize,
                                         m_bufferHeight - coveredRowsCount));
 
-                if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
+                if (m_flag & CanvasSurfaceFlag::PreferUnitedTexture) {
                     texureDataWidth = m_bufferWidth;
                     texureDataHeight = m_bufferHeight;
                 }
@@ -2116,7 +2116,7 @@ public:
             }
         }
 
-        if (!(m_flag & CanvasSurface::CanvasElement)) {
+        if (!(m_flag & CanvasSurface::PreferEGLImage)) {
             free(m_buffer);
             m_buffer = nullptr;
         }
@@ -2858,6 +2858,7 @@ public:
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
         if (isEGLImage) {
+            m_webView->renderer()->glMayNeedsSync();
             m_compositorContext->texShaderProgramEGLImageExternal();
         } else {
             m_compositorContext->texShaderProgram();

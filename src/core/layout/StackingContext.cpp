@@ -174,18 +174,6 @@ struct StackingContext::ComputeStackingContextContext {
     }
 };
 
-GraphicsBufferHolder::GraphicsBufferHolder(CanvasSurface* s)
-    : m_bufferWidth(s->bufferWidth())
-    , m_bufferHeight(s->bufferHeight())
-    , m_tileDataWidth(m_bufferWidth)
-    , m_tileDataHeight(m_bufferHeight)
-    , m_horizontalTileCount(1)
-    , m_verticalTileCount(1)
-    , m_additionalPixelRatio(1)
-{
-    m_surfaces.push_back(s);
-}
-
 GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
                                            size_t bufferHeight,
                                            size_t screenWidth,
@@ -258,9 +246,7 @@ void GraphicsBufferHolder::flushSurfaces()
 {
     for (size_t i = 0; i < m_surfaces.size(); i++) {
         if (m_surfaces[i]) {
-            if (!m_surfaces[i]->isCanvasSurface()) {
-                m_surfaces[i]->detachNativeBuffer();
-            }
+            m_surfaces[i]->detachNativeBuffer();
             m_surfaces[i] = nullptr;
         }
     }
@@ -1465,114 +1451,112 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
 
     if (needsComposite()) {
         ctx.stackingContextsNeedsGraphicsBuffer.push_back(this);
-        if (!m_owner->hasOwnGraphicsBufferMethod()) {
-            STARFISH_ASSERT(m_rareData);
-            float oldAdditionalPixelRatio = m_rareData->m_additionalPixelRatio;
-            m_rareData->m_additionalPixelRatio = ctx.baseAdditionalPixelRatio;
+        STARFISH_ASSERT(m_rareData);
+        float oldAdditionalPixelRatio = m_rareData->m_additionalPixelRatio;
+        m_rareData->m_additionalPixelRatio = ctx.baseAdditionalPixelRatio;
 
-            const float minScale = 1;
-            const float maxScale = 4;
+        const float minScale = 1;
+        const float maxScale = 4;
 
-            if (m_owner->node() &&
-                m_owner->node()->isRunningTransformAnimation()) {
-                float transformScaleMaxValue = 1;
+        if (m_owner->node() &&
+            m_owner->node()->isRunningTransformAnimation()) {
+            float transformScaleMaxValue = 1;
 
-                auto& transitions = m_owner->node()
-                                        ->document()
-                                        ->animationExecutor()
-                                        ->activeTransitions();
-                auto iter = transitions.begin();
-                while (iter != transitions.end()) {
-                    findAnimationTaskRelatedWithTransformScale(
-                        *iter, transformScaleMaxValue);
-                    iter++;
-                }
+            auto& transitions = m_owner->node()
+                                    ->document()
+                                    ->animationExecutor()
+                                    ->activeTransitions();
+            auto iter = transitions.begin();
+            while (iter != transitions.end()) {
+                findAnimationTaskRelatedWithTransformScale(
+                    *iter, transformScaleMaxValue);
+                iter++;
+            }
 
-                auto& animations = m_owner->node()
-                                       ->document()
-                                       ->animationExecutor()
-                                       ->activeAnimations();
-                auto iter2 = animations.begin();
-                while (iter2 != animations.end()) {
-                    if (iter2->first->m_element == m_owner->node()) {
-                        auto& v = iter2->second;
-                        auto iter3 = v.begin();
-                        while (iter3 != v.end()) {
-                            findAnimationTaskRelatedWithTransformScale(
-                                *iter3, transformScaleMaxValue);
-                            iter3++;
-                        }
+            auto& animations = m_owner->node()
+                                   ->document()
+                                   ->animationExecutor()
+                                   ->activeAnimations();
+            auto iter2 = animations.begin();
+            while (iter2 != animations.end()) {
+                if (iter2->first->m_element == m_owner->node()) {
+                    auto& v = iter2->second;
+                    auto iter3 = v.begin();
+                    while (iter3 != v.end()) {
+                        findAnimationTaskRelatedWithTransformScale(
+                            *iter3, transformScaleMaxValue);
+                        iter3++;
                     }
-                    iter2++;
                 }
+                iter2++;
+            }
 
-                if (transformScaleMaxValue < minScale) {
-                    transformScaleMaxValue = minScale;
-                } else if (transformScaleMaxValue > maxScale) {
-                    transformScaleMaxValue = maxScale;
-                }
-                m_rareData->m_additionalPixelRatio = std::max(
-                    ctx.baseAdditionalPixelRatio, transformScaleMaxValue);
-                ctx.baseAdditionalPixelRatio =
-                    std::max(ctx.baseAdditionalPixelRatio,
-                             m_rareData->m_additionalPixelRatio);
-            } else {
-                auto matrix = m_owner->style()->transformsToMatrix(
-                    m_owner->width(), m_owner->height(), m_owner,
-                    m_owner->isTransformable());
+            if (transformScaleMaxValue < minScale) {
+                transformScaleMaxValue = minScale;
+            } else if (transformScaleMaxValue > maxScale) {
+                transformScaleMaxValue = maxScale;
+            }
+            m_rareData->m_additionalPixelRatio = std::max(
+                ctx.baseAdditionalPixelRatio, transformScaleMaxValue);
+            ctx.baseAdditionalPixelRatio =
+                std::max(ctx.baseAdditionalPixelRatio,
+                         m_rareData->m_additionalPixelRatio);
+        } else {
+            auto matrix = m_owner->style()->transformsToMatrix(
+                m_owner->width(), m_owner->height(), m_owner,
+                m_owner->isTransformable());
 
-                int32_t windowWidth = m_owner->node()->window()->innerWidth();
-                int32_t windowHeight = m_owner->node()->window()->innerHeight();
-                LayoutUnit visibleWidth = m_rareData->m_visibleRect.width();
-                LayoutUnit visibleHeight = m_rareData->m_visibleRect.height();
-                // additional
+            int32_t windowWidth = m_owner->node()->window()->innerWidth();
+            int32_t windowHeight = m_owner->node()->window()->innerHeight();
+            LayoutUnit visibleWidth = m_rareData->m_visibleRect.width();
+            LayoutUnit visibleHeight = m_rareData->m_visibleRect.height();
+            // additional
 #ifndef STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE
 #define STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE 6
 #endif
 
 #ifdef DISABLE_SCALE_OPTIMIZE
-                const int32_t minimumScale =
-                    STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
+            const int32_t minimumScale =
+                STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
 
-                if ((!m_rareData->m_visibleRect.isEmpty() &&
-                     !m_owner->node()->window()->isInnerSizeEmpty()) &&
-                    ((visibleWidth > windowWidth * minimumScale) ||
-                     (visibleHeight > windowHeight * minimumScale))) {
-                    int m = std::max(visibleWidth / windowWidth,
-                                     visibleHeight / windowHeight);
-                    float scale =
-                        std::min(matrix.getScaleX(), matrix.getScaleY());
-                    scale = std::min(1.f / m, scale);
-                    // respect org scale
-                    m_rareData->m_additionalPixelRatio =
-                        std::min(ctx.baseAdditionalPixelRatio, scale);
-                    ctx.baseAdditionalPixelRatio =
-                        std::min(ctx.baseAdditionalPixelRatio,
-                                 m_rareData->m_additionalPixelRatio);
-                } else {
+            if ((!m_rareData->m_visibleRect.isEmpty() &&
+                 !m_owner->node()->window()->isInnerSizeEmpty()) &&
+                ((visibleWidth > windowWidth * minimumScale) ||
+                 (visibleHeight > windowHeight * minimumScale))) {
+                int m = std::max(visibleWidth / windowWidth,
+                                 visibleHeight / windowHeight);
+                float scale =
+                    std::min(matrix.getScaleX(), matrix.getScaleY());
+                scale = std::min(1.f / m, scale);
+                // respect org scale
+                m_rareData->m_additionalPixelRatio =
+                    std::min(ctx.baseAdditionalPixelRatio, scale);
+                ctx.baseAdditionalPixelRatio =
+                    std::min(ctx.baseAdditionalPixelRatio,
+                             m_rareData->m_additionalPixelRatio);
+            } else {
 #endif
-                    float scale =
-                        std::max(matrix.getScaleX(), matrix.getScaleY());
-                    if (scale < minScale) {
-                        scale = minScale;
-                    } else if (scale > maxScale) {
-                        scale = maxScale;
-                    }
-
-                    m_rareData->m_additionalPixelRatio =
-                        std::max(ctx.baseAdditionalPixelRatio, scale);
-                    ctx.baseAdditionalPixelRatio =
-                        std::max(ctx.baseAdditionalPixelRatio,
-                                 m_rareData->m_additionalPixelRatio);
-#ifdef DISABLE_SCALE_OPTIMIZE
+                float scale =
+                    std::max(matrix.getScaleX(), matrix.getScaleY());
+                if (scale < minScale) {
+                    scale = minScale;
+                } else if (scale > maxScale) {
+                    scale = maxScale;
                 }
+
+                m_rareData->m_additionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio, scale);
+                ctx.baseAdditionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio,
+                             m_rareData->m_additionalPixelRatio);
+#ifdef DISABLE_SCALE_OPTIMIZE
+            }
 #endif
-            }
-            if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
-                m_owner->node()
-                    ->webView()
-                    ->markNeedsPaintingConsiderInRendering();
-            }
+        }
+        if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
+            m_owner->node()
+                ->webView()
+                ->markNeedsPaintingConsiderInRendering();
         }
     } else {
         if (m_rareData) {
@@ -2066,315 +2050,306 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
         computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth,
                                          bufferHeight);
 
-        if (owner()->hasOwnGraphicsBufferMethod()) {
-            CanvasSurface* s = nullptr;
-            owner()->createGraphicsBuffer(&s, bufferWidth, bufferHeight);
-            if (s) {
-                ensureRareData()->m_graphicsBufferHolder =
-                    new GraphicsBufferHolder(s);
+        if (bufferWidth && bufferHeight) {
+            ensureRareData();
+            if (!m_rareData->m_graphicsBufferHolder) {
+                m_rareData->m_graphicsBufferHolder =
+                    new GraphicsBufferHolder(
+                        bufferWidth, bufferHeight,
+                        m_owner->node()->window()->innerWidth(),
+                        m_owner->node()->window()->innerHeight(), this);
             }
-        } else {
-            if (bufferWidth && bufferHeight) {
-                ensureRareData();
-                if (!m_rareData->m_graphicsBufferHolder) {
-                    m_rareData->m_graphicsBufferHolder =
-                        new GraphicsBufferHolder(
-                            bufferWidth, bufferHeight,
-                            m_owner->node()->window()->innerWidth(),
-                            m_owner->node()->window()->innerHeight(), this);
+
+            size_t wTileSize =
+                m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
+            size_t hTileSize =
+                m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
+            size_t wTextureCount =
+                m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
+            size_t hTextureCount =
+                m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
+
+            size_t tileIndex = 0;
+            size_t coveredRowsCount = 0;
+
+            LayoutRect screenRect = computeScreenRect(this);
+            LayoutRect windowRect = computeWindowRectOnScreen(this);
+            auto screenMatrix = m_owner->computeScreenMatrix();
+
+            size_t hVisibleTextureStart = hTextureCount;
+            size_t hVisibleTextureEnd = 0;
+            size_t wVisibleTextureStart = wTextureCount;
+            size_t wVisibleTextureEnd = 0;
+
+            for (size_t y = 0; y < hTextureCount; y++) {
+                size_t coveredColsCount = 0;
+                for (size_t x = 0; x < wTextureCount; x++) {
+                    size_t tileDataX = coveredColsCount;
+                    size_t tileDataY = coveredRowsCount;
+                    size_t tileDataWidth = std::min(
+                        wTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                            coveredColsCount);
+                    size_t tileDataHeight = std::min(
+                        hTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                            coveredRowsCount);
+
+                    LayoutRect tileExtent = computeBoxExtent(
+                        LayoutRect(minX + (LayoutUnit)tileDataX,
+                                   minY + (LayoutUnit)tileDataY,
+                                   tileDataWidth, tileDataHeight),
+                        screenMatrix);
+
+                    bool willPaintOnScreen =
+                        screenRect.intersects(tileExtent) &&
+                        windowRect.intersects(tileExtent);
+
+                    if (willPaintOnScreen) {
+                        wVisibleTextureStart =
+                            std::min(wVisibleTextureStart, x);
+                        wVisibleTextureEnd =
+                            std::max(wVisibleTextureEnd, x + 1);
+                        hVisibleTextureStart =
+                            std::min(hVisibleTextureStart, y);
+                        hVisibleTextureEnd =
+                            std::max(hVisibleTextureEnd, y + 1);
+                    }
+
+                    coveredColsCount += wTileSize;
                 }
+                coveredRowsCount += hTileSize;
+            }
 
-                size_t wTileSize =
-                    m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
-                size_t hTileSize =
-                    m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
-                size_t wTextureCount =
-                    m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
-                size_t hTextureCount =
-                    m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
-
-                size_t tileIndex = 0;
-                size_t coveredRowsCount = 0;
-
-                LayoutRect screenRect = computeScreenRect(this);
-                LayoutRect windowRect = computeWindowRectOnScreen(this);
-                auto screenMatrix = m_owner->computeScreenMatrix();
-
-                size_t hVisibleTextureStart = hTextureCount;
-                size_t hVisibleTextureEnd = 0;
-                size_t wVisibleTextureStart = wTextureCount;
-                size_t wVisibleTextureEnd = 0;
-
-                for (size_t y = 0; y < hTextureCount; y++) {
-                    size_t coveredColsCount = 0;
-                    for (size_t x = 0; x < wTextureCount; x++) {
-                        size_t tileDataX = coveredColsCount;
-                        size_t tileDataY = coveredRowsCount;
-                        size_t tileDataWidth = std::min(
-                            wTileSize,
-                            m_rareData->m_graphicsBufferHolder->bufferWidth() -
-                                coveredColsCount);
-                        size_t tileDataHeight = std::min(
-                            hTileSize,
-                            m_rareData->m_graphicsBufferHolder->bufferHeight() -
-                                coveredRowsCount);
-
-                        LayoutRect tileExtent = computeBoxExtent(
-                            LayoutRect(minX + (LayoutUnit)tileDataX,
-                                       minY + (LayoutUnit)tileDataY,
-                                       tileDataWidth, tileDataHeight),
-                            screenMatrix);
-
-                        bool willPaintOnScreen =
-                            screenRect.intersects(tileExtent) &&
-                            windowRect.intersects(tileExtent);
-
-                        if (willPaintOnScreen) {
-                            wVisibleTextureStart =
-                                std::min(wVisibleTextureStart, x);
-                            wVisibleTextureEnd =
-                                std::max(wVisibleTextureEnd, x + 1);
-                            hVisibleTextureStart =
-                                std::min(hVisibleTextureStart, y);
-                            hVisibleTextureEnd =
-                                std::max(hVisibleTextureEnd, y + 1);
-                        }
-
-                        coveredColsCount += wTileSize;
-                    }
-                    coveredRowsCount += hTileSize;
-                }
-
-                Scrolling* scrolling = nullptr;
-                if (m_owner->isRootElement()) {
-                    scrolling = m_owner->node()->window()->scrolling();
-                } else {
-                    if (m_owner->node()->isElement() &&
-                        m_owner->node()->asElement()->rareMembers()) {
-                        scrolling = m_owner->node()
-                                        ->asElement()
-                                        ->rareMembers()
-                                        ->asRareElementMembers()
-                                        ->m_scrolling;
-                    }
-                }
-
-                size_t hEarlyPaintingTextureStart = hVisibleTextureStart;
-                size_t hEarlyPaintingTextureEnd = hVisibleTextureEnd;
-                size_t wEarlyPaintingTextureStart = wVisibleTextureStart;
-                size_t wEarlyPaintingTextureEnd = wVisibleTextureEnd;
-
-                if (scrolling) {
-                    if (scrolling->inVerticalScrollingDown()) {
-                        hEarlyPaintingTextureEnd = hVisibleTextureEnd + 1;
-                    }
-                    if (hVisibleTextureStart != 0 &&
-                        scrolling->inVerticalScrollingUp()) {
-                        hEarlyPaintingTextureStart = hVisibleTextureStart - 1;
-                    }
-
-                    if (scrolling->inHorizontalScrollingRight()) {
-                        wEarlyPaintingTextureEnd = wVisibleTextureEnd + 1;
-                    }
-                    if (wVisibleTextureStart != 0 &&
-                        scrolling->inHorizontalScrollingLeft()) {
-                        wEarlyPaintingTextureStart = wVisibleTextureStart - 1;
-                    }
-                }
-
+            Scrolling* scrolling = nullptr;
+            if (m_owner->isRootElement()) {
+                scrolling = m_owner->node()->window()->scrolling();
+            } else {
                 if (m_owner->node()->isElement() &&
-                    m_owner->node()->isRunningTransformAnimation()) {
-                    struct Data {
-                        Element* element;
-                        size_t* hEarlyPaintingTextureStart;
-                        size_t* hEarlyPaintingTextureEnd;
-                        size_t* wEarlyPaintingTextureStart;
-                        size_t* wEarlyPaintingTextureEnd;
-                    } d;
-                    d.element = m_owner->node()->asElement();
-                    d.hEarlyPaintingTextureStart = &hEarlyPaintingTextureStart;
-                    d.hEarlyPaintingTextureEnd = &hEarlyPaintingTextureEnd;
-                    d.wEarlyPaintingTextureStart = &wEarlyPaintingTextureStart;
-                    d.wEarlyPaintingTextureEnd = &wEarlyPaintingTextureEnd;
+                    m_owner->node()->asElement()->rareMembers()) {
+                    scrolling = m_owner->node()
+                                    ->asElement()
+                                    ->rareMembers()
+                                    ->asRareElementMembers()
+                                    ->m_scrolling;
+                }
+            }
 
-                    m_owner->node()
-                        ->document()
-                        ->animationExecutor()
-                        ->iterateAnimationTasks(
-                            [](ActiveAnimationTask* task, void* data) {
-                                Data* d = (Data*)data;
-                                if (task->targetElement() == d->element &&
-                                    task->property() ==
-                                        CSSStyleValuePair::KeyKind::Transform &&
-                                    task->fraction(
-                                        d->element->document()
-                                            ->browsingContext()
-                                            ->styleResolveStartTick())) {
-                                    const auto& fromValue =
-                                        ((ActiveTransformAnimationTask*)task)
-                                            ->decomposedFrom();
-                                    const auto& toValue =
-                                        ((ActiveTransformAnimationTask*)task)
-                                            ->decomposedTo();
+            size_t hEarlyPaintingTextureStart = hVisibleTextureStart;
+            size_t hEarlyPaintingTextureEnd = hVisibleTextureEnd;
+            size_t wEarlyPaintingTextureStart = wVisibleTextureStart;
+            size_t wEarlyPaintingTextureEnd = wVisibleTextureEnd;
 
-                                    if (fromValue.translateX <
-                                        toValue.translateX) {
-                                        if (*d->wEarlyPaintingTextureStart !=
-                                            0) {
-                                            *d->wEarlyPaintingTextureStart =
-                                                *d->wEarlyPaintingTextureStart -
-                                                1;
-                                        }
-                                    }
-                                    if (fromValue.translateX >
-                                        toValue.translateX) {
-                                        *d->wEarlyPaintingTextureEnd =
-                                            *d->wEarlyPaintingTextureEnd + 1;
-                                    }
-
-                                    if (fromValue.translateY <
-                                        toValue.translateY) {
-                                        if (*d->hEarlyPaintingTextureStart !=
-                                            0) {
-                                            *d->hEarlyPaintingTextureStart =
-                                                *d->hEarlyPaintingTextureStart -
-                                                1;
-                                        }
-                                    }
-                                    if (fromValue.translateY >
-                                        toValue.translateY) {
-                                        *d->hEarlyPaintingTextureEnd =
-                                            *d->hEarlyPaintingTextureEnd + 1;
-                                    }
-                                }
-                            },
-                            &d);
+            if (scrolling) {
+                if (scrolling->inVerticalScrollingDown()) {
+                    hEarlyPaintingTextureEnd = hVisibleTextureEnd + 1;
+                }
+                if (hVisibleTextureStart != 0 &&
+                    scrolling->inVerticalScrollingUp()) {
+                    hEarlyPaintingTextureStart = hVisibleTextureStart - 1;
                 }
 
-                tileIndex = 0;
-                coveredRowsCount = 0;
+                if (scrolling->inHorizontalScrollingRight()) {
+                    wEarlyPaintingTextureEnd = wVisibleTextureEnd + 1;
+                }
+                if (wVisibleTextureStart != 0 &&
+                    scrolling->inHorizontalScrollingLeft()) {
+                    wEarlyPaintingTextureStart = wVisibleTextureStart - 1;
+                }
+            }
 
-                for (size_t y = 0; y < hTextureCount; y++) {
-                    size_t coveredColsCount = 0;
-                    for (size_t x = 0; x < wTextureCount; x++) {
-                        size_t tileDataX = coveredColsCount;
-                        size_t tileDataY = coveredRowsCount;
-                        size_t tileDataWidth = std::min(
-                            wTileSize,
-                            m_rareData->m_graphicsBufferHolder->bufferWidth() -
-                                coveredColsCount);
-                        size_t tileDataHeight = std::min(
-                            hTileSize,
-                            m_rareData->m_graphicsBufferHolder->bufferHeight() -
-                                coveredRowsCount);
+            if (m_owner->node()->isElement() &&
+                m_owner->node()->isRunningTransformAnimation()) {
+                struct Data {
+                    Element* element;
+                    size_t* hEarlyPaintingTextureStart;
+                    size_t* hEarlyPaintingTextureEnd;
+                    size_t* wEarlyPaintingTextureStart;
+                    size_t* wEarlyPaintingTextureEnd;
+                } d;
+                d.element = m_owner->node()->asElement();
+                d.hEarlyPaintingTextureStart = &hEarlyPaintingTextureStart;
+                d.hEarlyPaintingTextureEnd = &hEarlyPaintingTextureEnd;
+                d.wEarlyPaintingTextureStart = &wEarlyPaintingTextureStart;
+                d.wEarlyPaintingTextureEnd = &wEarlyPaintingTextureEnd;
 
-                        LayoutRect tileExtent = computeBoxExtent(
-                            LayoutRect(minX + (LayoutUnit)tileDataX,
-                                       minY + (LayoutUnit)tileDataY,
-                                       tileDataWidth, tileDataHeight),
-                            screenMatrix);
+                m_owner->node()
+                    ->document()
+                    ->animationExecutor()
+                    ->iterateAnimationTasks(
+                        [](ActiveAnimationTask* task, void* data) {
+                            Data* d = (Data*)data;
+                            if (task->targetElement() == d->element &&
+                                task->property() ==
+                                    CSSStyleValuePair::KeyKind::Transform &&
+                                task->fraction(
+                                    d->element->document()
+                                        ->browsingContext()
+                                        ->styleResolveStartTick())) {
+                                const auto& fromValue =
+                                    ((ActiveTransformAnimationTask*)task)
+                                        ->decomposedFrom();
+                                const auto& toValue =
+                                    ((ActiveTransformAnimationTask*)task)
+                                        ->decomposedTo();
 
-                        bool isVisible = hVisibleTextureStart <= y &&
-                                         y < hVisibleTextureEnd &&
-                                         wVisibleTextureStart <= x &&
-                                         x < wVisibleTextureEnd;
-                        bool isEarlyPainting =
-                            hEarlyPaintingTextureStart <= y &&
-                            y < hEarlyPaintingTextureEnd &&
-                            wEarlyPaintingTextureStart <= x &&
-                            x < wEarlyPaintingTextureEnd;
-
-                        if (isVisible || isEarlyPainting) {
-                            if (m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex] == nullptr) {
-                                if (m_owner->document()
-                                        ->webView()
-                                        ->didFirstRenderingAfterWakeup() &&
-                                    !isVisible && isEarlyPainting) {
-                                    auto tick = longTickCount();
-                                    if (tick - m_owner->node()
-                                                   ->webView()
-                                                   ->lastRenderingTick() >
-                                        (uint64_t)WebView::
-                                                g_fillingGraphicsBufferTileFrameTimeLimitInMS *
-                                            1000) {
-                                        tileIndex++;
-                                        continue;
+                                if (fromValue.translateX <
+                                    toValue.translateX) {
+                                    if (*d->wEarlyPaintingTextureStart !=
+                                        0) {
+                                        *d->wEarlyPaintingTextureStart =
+                                            *d->wEarlyPaintingTextureStart -
+                                            1;
                                     }
                                 }
+                                if (fromValue.translateX >
+                                    toValue.translateX) {
+                                    *d->wEarlyPaintingTextureEnd =
+                                        *d->wEarlyPaintingTextureEnd + 1;
+                                }
 
-                                CanvasSurface* canvasSurface =
-                                    CanvasSurface::create(
-                                        m_owner->document()
-                                            ->webView()
-                                            ->renderer(),
-                                        tileDataWidth, tileDataHeight,
-                                        additionalPixelRatio(),
-                                        m_hasFilterEffect
-                                            ? CanvasSurface::
-                                                  ElementHasFilterEffect
-                                            : CanvasSurface::PlainElement);
-                                Canvas* canvas = Canvas::create(
-                                    m_owner->node()->webView(), canvasSurface);
-
-                                canvas->setTextDecorationData(
-                                    m_rareData->m_textDecorationData);
-
-                                // give empty repaint region
-                                // this stage. we will just filling empty tiles
-                                // if
-                                // needed
-                                RepaintRegion rr;
-                                StackingContext::PaintingStackingContextContext
-                                    ctx(true,
-                                        m_owner->node()
-                                            ->webView()
-                                            ->m_prevDrawnStackingContextInfo,
-                                        LayoutRect(0, 0, 0, 0), rr, 0, 0);
-
-                                ctx.layerBaseX = tileDataX;
-                                ctx.layerBaseY = tileDataY;
-
-                                ctx.layerClipRect =
-                                    LayoutRect(0, 0, canvasSurface->width(),
-                                               canvasSurface->height());
-
-                                canvas->translate(-minX, -minY);
-                                canvas->translate(-ctx.layerBaseX,
-                                                  -ctx.layerBaseY);
-
-                                fillGraphicsBufferContents(canvas, ctx);
-
-                                delete canvas;
-
-                                canvasSurface
-                                    ->unmapBufferAndNotifyUpdatedRegion(
-                                        0, 0, canvasSurface->bufferWidth(),
-                                        canvasSurface->bufferHeight());
-
-                                m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex] = canvasSurface;
+                                if (fromValue.translateY <
+                                    toValue.translateY) {
+                                    if (*d->hEarlyPaintingTextureStart !=
+                                        0) {
+                                        *d->hEarlyPaintingTextureStart =
+                                            *d->hEarlyPaintingTextureStart -
+                                            1;
+                                    }
+                                }
+                                if (fromValue.translateY >
+                                    toValue.translateY) {
+                                    *d->hEarlyPaintingTextureEnd =
+                                        *d->hEarlyPaintingTextureEnd + 1;
+                                }
                             }
-                        } else {
-                            if (m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex]) {
-                                m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex]
-                                    ->detachNativeBuffer();
-                                m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex] = nullptr;
+                        },
+                        &d);
+            }
+
+            tileIndex = 0;
+            coveredRowsCount = 0;
+
+            for (size_t y = 0; y < hTextureCount; y++) {
+                size_t coveredColsCount = 0;
+                for (size_t x = 0; x < wTextureCount; x++) {
+                    size_t tileDataX = coveredColsCount;
+                    size_t tileDataY = coveredRowsCount;
+                    size_t tileDataWidth = std::min(
+                        wTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                            coveredColsCount);
+                    size_t tileDataHeight = std::min(
+                        hTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                            coveredRowsCount);
+
+                    LayoutRect tileExtent = computeBoxExtent(
+                        LayoutRect(minX + (LayoutUnit)tileDataX,
+                                   minY + (LayoutUnit)tileDataY,
+                                   tileDataWidth, tileDataHeight),
+                        screenMatrix);
+
+                    bool isVisible = hVisibleTextureStart <= y &&
+                                     y < hVisibleTextureEnd &&
+                                     wVisibleTextureStart <= x &&
+                                     x < wVisibleTextureEnd;
+                    bool isEarlyPainting =
+                        hEarlyPaintingTextureStart <= y &&
+                        y < hEarlyPaintingTextureEnd &&
+                        wEarlyPaintingTextureStart <= x &&
+                        x < wEarlyPaintingTextureEnd;
+
+                    if (isVisible || isEarlyPainting) {
+                        if (m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex] == nullptr) {
+                            if (m_owner->document()
+                                    ->webView()
+                                    ->didFirstRenderingAfterWakeup() &&
+                                !isVisible && isEarlyPainting) {
+                                auto tick = longTickCount();
+                                if (tick - m_owner->node()
+                                               ->webView()
+                                               ->lastRenderingTick() >
+                                    (uint64_t)WebView::
+                                            g_fillingGraphicsBufferTileFrameTimeLimitInMS *
+                                        1000) {
+                                    tileIndex++;
+                                    continue;
+                                }
                             }
+
+                            CanvasSurface* canvasSurface =
+                                CanvasSurface::create(
+                                    m_owner->document()
+                                        ->webView()
+                                        ->renderer(),
+                                    tileDataWidth, tileDataHeight,
+                                    additionalPixelRatio(),
+                                    m_hasFilterEffect
+                                        ? CanvasSurface::
+                                              PreferUnitedTexture
+                                        : CanvasSurface::PlainElement);
+                            Canvas* canvas = Canvas::create(
+                                m_owner->node()->webView(), canvasSurface);
+
+                            canvas->setTextDecorationData(
+                                m_rareData->m_textDecorationData);
+
+                            // give empty repaint region
+                            // this stage. we will just filling empty tiles
+                            // if
+                            // needed
+                            RepaintRegion rr;
+                            StackingContext::PaintingStackingContextContext
+                                ctx(true,
+                                    m_owner->node()
+                                        ->webView()
+                                        ->m_prevDrawnStackingContextInfo,
+                                    LayoutRect(0, 0, 0, 0), rr, 0, 0);
+
+                            ctx.layerBaseX = tileDataX;
+                            ctx.layerBaseY = tileDataY;
+
+                            ctx.layerClipRect =
+                                LayoutRect(0, 0, canvasSurface->width(),
+                                           canvasSurface->height());
+
+                            canvas->translate(-minX, -minY);
+                            canvas->translate(-ctx.layerBaseX,
+                                              -ctx.layerBaseY);
+
+                            fillGraphicsBufferContents(canvas, ctx);
+
+                            delete canvas;
+
+                            canvasSurface
+                                ->unmapBufferAndNotifyUpdatedRegion(
+                                    0, 0, canvasSurface->bufferWidth(),
+                                    canvasSurface->bufferHeight());
+
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex] = canvasSurface;
                         }
-
-                        tileIndex++;
-                        coveredColsCount += wTileSize;
+                    } else {
+                        if (m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex]) {
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex]
+                                ->detachNativeBuffer();
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex] = nullptr;
+                        }
                     }
 
-                    coveredRowsCount += hTileSize;
+                    tileIndex++;
+                    coveredColsCount += wTileSize;
                 }
 
-                STARFISH_ASSERT(tileIndex == wTextureCount * hTextureCount);
+                coveredRowsCount += hTileSize;
             }
+
+            STARFISH_ASSERT(tileIndex == wTextureCount * hTextureCount);
         }
     }
 
@@ -2415,43 +2390,34 @@ bool StackingContext::fillGraphicsBufferContents(
         m_rareData->m_graphicsBufferHolder->bufferHeight() != bufferHeight ||
         m_rareData->m_graphicsBufferHolder->additionalPixelRatio() !=
             additionalPixelRatio()) {
-        if (m_owner->hasOwnGraphicsBufferMethod()) {
-            CanvasSurface* s = nullptr;
-            m_owner->createGraphicsBuffer(&s, bufferWidth, bufferHeight);
-            if (s) {
+        bool reuse = false;
+        auto iter =
+            globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
+        if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
+            if (iter->second.graphicsBufferHolder &&
+                iter->second.graphicsBufferHolder->bufferWidth() ==
+                    bufferWidth &&
+                iter->second.graphicsBufferHolder->bufferHeight() ==
+                    bufferHeight &&
+                iter->second.graphicsBufferHolder->additionalPixelRatio() ==
+                    additionalPixelRatio()) {
+                reuse = true;
                 m_rareData->m_graphicsBufferHolder =
-                    new GraphicsBufferHolder(s);
-            }
-        } else {
-            bool reuse = false;
-            auto iter =
-                globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
-            if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
-                if (iter->second.graphicsBufferHolder &&
-                    iter->second.graphicsBufferHolder->bufferWidth() ==
-                        bufferWidth &&
-                    iter->second.graphicsBufferHolder->bufferHeight() ==
-                        bufferHeight &&
-                    iter->second.graphicsBufferHolder->additionalPixelRatio() ==
-                        additionalPixelRatio()) {
-                    reuse = true;
-                    m_rareData->m_graphicsBufferHolder =
-                        iter->second.graphicsBufferHolder;
+                    iter->second.graphicsBufferHolder;
+                iter.value().graphicsBufferHolder = nullptr;
+            } else {
+                if (iter->second.graphicsBufferHolder) {
+                    iter->second.graphicsBufferHolder->flushSurfaces();
                     iter.value().graphicsBufferHolder = nullptr;
-                } else {
-                    if (iter->second.graphicsBufferHolder) {
-                        iter->second.graphicsBufferHolder->flushSurfaces();
-                        iter.value().graphicsBufferHolder = nullptr;
-                    }
                 }
             }
+        }
 
-            if (!reuse) {
-                m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(
-                    bufferWidth, bufferHeight,
-                    m_owner->node()->window()->innerWidth(),
-                    m_owner->node()->window()->innerHeight(), this);
-            }
+        if (!reuse) {
+            m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(
+                bufferWidth, bufferHeight,
+                m_owner->node()->window()->innerWidth(),
+                m_owner->node()->window()->innerHeight(), this);
         }
     } else {
         auto iter =
@@ -2459,15 +2425,6 @@ bool StackingContext::fillGraphicsBufferContents(
         if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
             iter.value().graphicsBufferHolder = nullptr;
         }
-    }
-
-    if (m_owner->hasOwnGraphicsBufferMethod()) {
-        auto iter =
-            globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
-        if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
-            iter.value().graphicsBufferHolder = nullptr;
-        }
-        return false;
     }
 
     size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
@@ -2532,7 +2489,7 @@ bool StackingContext::fillGraphicsBufferContents(
                             tileDataWidth, tileDataHeight,
                             additionalPixelRatio(),
                             m_hasFilterEffect
-                                ? CanvasSurface::ElementHasFilterEffect
+                                ? CanvasSurface::PreferUnitedTexture
                                 : CanvasSurface::PlainElement);
                     gotNewBuffer = true;
                 }
@@ -3034,44 +2991,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
         }
 
-        if (owner()->hasOwnGraphicsBufferMethod()) {
-            if (m_rareData->m_graphicsBufferHolder) {
-                compositor->save();
-                compositor->translate(minX, minY);
-
-                if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
-                    CanvasSurface* backgroundSurface = CanvasSurface::create(
-                        m_owner->document()->webView()->renderer(), bufferWidth,
-                        bufferHeight, 1, CanvasSurface::CanvasElement);
-                    Canvas* canvas = Canvas::create(m_owner->node()->webView(),
-                                                    backgroundSurface);
-                    canvas->clearColor(Unit::Color(0, 0, 0, 0));
-                    canvas->setTextDecorationData(
-                        m_rareData->m_textDecorationData);
-                    owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
-                    delete canvas;
-                    backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
-                        0, 0, backgroundSurface->bufferWidth(),
-                        backgroundSurface->bufferHeight());
-                    compositor->drawSurface(
-                        backgroundSurface,
-                        Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
-                                   backgroundSurface->bufferHeight()));
-                    backgroundSurface->detachNativeBuffer();
-                }
-
-                auto dx = owner()->borderLeft() + owner()->paddingLeft();
-                auto dy = owner()->borderTop() + owner()->paddingTop();
-                compositor->translate(dx, dy);
-
-                auto surface =
-                    m_rareData->m_graphicsBufferHolder->m_surfaces[0];
-                compositor->drawSurface(
-                    surface, Unit::Rect(0, 0, owner()->contentWidth(),
-                                        owner()->contentHeight()));
-                compositor->restore();
-            }
-        } else if (m_rareData->m_graphicsBufferHolder) {
+        if (m_rareData->m_graphicsBufferHolder) {
             size_t wTileSize =
                 m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
             size_t hTileSize =
@@ -3118,6 +3038,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
 
             compositor->translate(-minX, -minY);
+        }
+
+        auto contentSurface = owner()->contentSurface();
+        if (contentSurface) {
+            compositor->save();
+            auto dx = owner()->borderLeft() + owner()->paddingLeft();
+            auto dy = owner()->borderTop() + owner()->paddingTop();
+            compositor->translate(dx, dy);
+
+            compositor->drawSurface(
+                contentSurface.getValue(), Unit::Rect(0, 0, owner()->contentWidth(),
+                            owner()->contentHeight()));
+            compositor->restore();
         }
 
 #ifdef STARFISH_ENABLE_TEST

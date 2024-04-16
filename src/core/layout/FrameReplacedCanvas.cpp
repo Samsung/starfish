@@ -42,7 +42,7 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     // This case is just that a empty element is defined.
     m_emptySurface =
         CanvasSurface::create(node->webView()->renderer(), 1, 1, 1,
-                              CanvasSurface::CanvasSurfaceFlag::CanvasElement);
+                    CanvasSurface::CanvasSurfaceFlag::PreferEGLImage);
 }
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()
@@ -75,17 +75,16 @@ void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
     }
 }
 
-void FrameReplacedCanvas::createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                               size_t visibleWidth,
-                                               size_t visibleHeight)
+Nullable<CanvasSurface*> FrameReplacedCanvas::contentSurface()
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
     if (canvasElement->canvasRenderingContext() &&
         canvasElement->canvasRenderingContext()->surface()) {
-        *surfaceHolder = canvasElement->canvasRenderingContext()->surface();
+        return canvasElement->canvasRenderingContext()->surface();
     } else {
-        *surfaceHolder = m_emptySurface;
+        return m_emptySurface;
     }
 }
+
 } // namespace Starfish
 #endif

@@ -945,16 +945,9 @@ public:
         return m_layoutParent;
     }
 
-    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                      size_t visibleWidth, size_t visibleHeight)
+    virtual Nullable<CanvasSurface*> contentSurface()
     {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return;
-    }
-
-    virtual bool hasOwnGraphicsBufferMethod()
-    {
-        return false;
+        return nullptr;
     }
 
     template <typename T>
