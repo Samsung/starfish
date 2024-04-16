@@ -265,13 +265,13 @@ IF (${WEBGL} STREQUAL "1")
 ENDIF()
 
 IF (${WORKER} STREQUAL "1")
-    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} 
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WORKER
     )
 ENDIF()
 
 IF (${SHARED_WORKER} STREQUAL "1")
-    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} 
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WORKER
         -DSTARFISH_ENABLE_SHARED_WORKER
         -DSTARFISH_USE_WORKER_PROCESS
@@ -283,10 +283,10 @@ IF (${SERVICE_WORKER} STREQUAL "1")
     # : If defined, all service workers use same IPC handle.
     #
     # SERVICE_WORKER_CXXFLAGS will be also used to config the sw host.
-    SET (SERVICE_WORKER_CXXFLAGS 
+    SET (SERVICE_WORKER_CXXFLAGS
         -DSERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
     )
-    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} 
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         ${SERVICE_WORKER_CXXFLAGS}
         -DSTARFISH_ENABLE_WORKER
         -DSTARFISH_ENABLE_SERVICE_WORKER
@@ -427,7 +427,7 @@ ELSEIF (${BACKEND} STREQUAL "uv_cairo_gl")
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED capi-media-player capi-media-sound-manager freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
-    pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
+    pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
     pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
@@ -438,6 +438,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "0")
 ENDIF()
 
 IF (${HOST} STREQUAL "tizen")
+    pkg_check_modules (STARFISH_BACKEND_GLES REQUIRED gles20)
     IF (${CUSTOM} STREQUAL "unified_common")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-appfw-app-common capi-media-player capi-network-connection)
     ELSEIF (${CUSTOM} MATCHES "mobile")
