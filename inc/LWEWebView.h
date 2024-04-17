@@ -246,6 +246,7 @@ public:
         std::function<bool(WebContainer*)> onGLClearCurrentContext;
         std::function<bool(WebContainer*, uintptr_t)>
             onGLMakeCurrentWithContext;
+        std::function<void*(WebContainer*, const char*)> onGLGetProcAddress;
     };
 
     struct TransformationMatrix {

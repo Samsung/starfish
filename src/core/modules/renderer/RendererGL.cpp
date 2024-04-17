@@ -256,24 +256,29 @@ public:
         m_mayNeedsSync = true;
     }
 
-    virtual uintptr_t glCreateSharedContext()
+    virtual uintptr_t glCreateSharedContext() override
     {
         return m_glCreateSharedContextCallback(this);
     }
 
-    virtual bool glDestroyContext(uintptr_t context)
+    virtual bool glDestroyContext(uintptr_t context) override
     {
         return m_glDestroyContextCallback(this, context);
     }
 
-    virtual bool glClearCurrentContext()
+    virtual bool glClearCurrentContext() override
     {
         return m_glClearCurrentContextCallback(this);
     }
 
-    virtual bool glMakeCurrentWithContext(uintptr_t context)
+    virtual bool glMakeCurrentWithContext(uintptr_t context) override
     {
         return m_glMakeCurrentWithContextCallback(this, context);
+    }
+
+    virtual void* glGetProcAddress(const char* name) override
+    {
+        return m_glGetProcAddressCallback(this, name);
     }
 
     virtual TransformationMatrix screenMatrix() override

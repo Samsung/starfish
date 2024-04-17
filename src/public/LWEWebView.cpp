@@ -663,6 +663,17 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
         configration.onGLMakeCurrentWithContext =
             onGLMakeCurrentWithContextWrapper;
     }
+    if (config.onGLGetProcAddress) {
+        const LWEDelegate::WebContainer::OnGLGetProcAddress
+            onGLGetProcAddressWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   const char* name) -> void* {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGLGetProcAddress(instance, name);
+        };
+        configration.onGLGetProcAddress = onGLGetProcAddressWrapper;
+    }
 
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(

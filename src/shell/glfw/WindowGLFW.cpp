@@ -42,6 +42,10 @@ public:
     virtual uintptr_t createSharedContext() override;
     virtual bool destroyContext(uintptr_t context) override;
     virtual bool makeCurrentWithContext(uintptr_t context) override;
+    virtual void* getProcAddress(const char* name) override
+    {
+        return nullptr;
+    }
 
 private:
     GLFWwindow* m_window = nullptr;
