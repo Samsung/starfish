@@ -70,9 +70,10 @@ DIR* opendir(const char* name)
         const char* all = /* search pattern must end with suitable wildcard */
             strchr("/\\", name[base_length - 1]) ? "*" : "/*";
 
+        size_t total_length = base_length + strlen(all) + 1;
         if ((dir = (DIR*)malloc(sizeof *dir)) != 0 &&
-            (dir->name = (char*)malloc(base_length + strlen(all) + 1)) != 0) {
-            strcat(strcpy(dir->name, name), all);
+            (dir->name = (char*)malloc(total_length)) != 0) {
+            strncat(strncpy(dir->name, name, total_length), all, strlen(all));
 
             if ((dir->handle =
                      (handle_type)_findfirst(dir->name, &dir->info)) != -1) {
