@@ -115,6 +115,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
             bool shouldComputeWithNormalBlockWidthRule =
                 isNormalFlow() && !isAtomicInlineLevel() &&
                 !width.isIntrinsic();
+            LayoutUnit lastKnownWidth = containgBlockContentWidth - mbpWidth();
             if (isFlexItem()) {
                 bool isColumnFlexDirection =
                     cb->asFrameFlexibleBox()->isColumnDirection();
@@ -125,11 +126,14 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
 
                 shouldComputeWithNormalBlockWidthRule =
                     isColumnFlexDirection && needToStrechWidth;
+                if (style()->flexShrink() == 0) {
+                    lastKnownWidth = intMaxForLayoutUnit;
+                }
             }
 
             if (width.isFitContent()) {
                 PreferredWidthContext p(ctx, nullptr, this, this,
-                                        containgBlockContentWidth - mbpWidth());
+                        lastKnownWidth);
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             } else if (isAbsolutePositioned() && width.isAuto() &&
@@ -147,10 +151,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 LengthData margin = style()->margin();
                 if (isFlexItem() &&
                     (margin.left().isAuto() || margin.right().isAuto())) {
-                    PreferredWidthContext p(ctx, nullptr, this, this,
-                                            containgBlockContentWidth -
-                                                mbpWidth());
-
+                    PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
                     p.computePreferredWidth();
                     contentWidth = p.preferredWidth();
                 } else {
@@ -158,9 +159,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                         containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
                 }
             } else {
-                PreferredWidthContext p(ctx, nullptr, this, this,
-                                        containgBlockContentWidth - mbpWidth());
-
+                PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             }
