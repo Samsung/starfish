@@ -4732,8 +4732,8 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
 
             if (w > ctx.remainingWidth()) {
                 f = firstChild();
-                LayoutUnit minWidth;
-                LayoutUnit maxWidth = 0;
+                LayoutUnit totalMinWidth;
+                LayoutUnit maxWidth;
                 while (f) {
                     if (!f->isFlexItem()) {
                         f = f->next();
@@ -4741,11 +4741,18 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                     }
                     auto widths =
                         ctx.preferredWidthsWithNewContext(f->asFrameBox());
-                    minWidth += widths.second;
+                    totalMinWidth += widths.second;
                     if (maxWidth < widths.second) {
                         maxWidth = widths.second;
                     }
                     f = f->next();
+                }
+
+                LayoutUnit minWidth;
+                if (maxWidth > ctx.remainingWidth()) {
+                    minWidth = totalMinWidth;
+                } else {
+                    minWidth = std::min(totalMinWidth, maxWidth);
                 }
 
                 FlexWrapValue flexWrap = style()->flexWrap();
