@@ -974,65 +974,66 @@ public:
             width,           height, devicePixelRatio,
             defaultFontName, locale, timezoneID,
         };
-        WebContainer::RendererGLConfiguration config{
-            [this](WebContainer* wc) {
-                evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
 
-                if (m_glSync) {
-                    Starfish::LongTaskFinder t("evasglWaitSync");
-                    m_glGlapi->evasglClientWaitSync(
-                        m_glEvasgl, m_glSync,
-                        EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE, EVAS_GL_FOREVER);
-                    m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
-                    m_glSync = nullptr;
-                }
-            },
-            [this](WebContainer* wc, bool mayNeedsSync) {
-                if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
-                    int attr[] = { EVAS_GL_NONE };
-                    m_glSync = m_glGlapi->evasglCreateSync(
-                        m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
-                }
-                if (m_lastInputTime) {
-                    ANNOTATE_SETUP;
-                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
-                                           "response time");
+        WebContainer::RendererGLConfiguration config;
+        config.onGLMakeCurrent = [this](WebContainer* wc) {
+            evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+
+            if (m_glSync) {
+                Starfish::LongTaskFinder t("evasglWaitSync");
+                m_glGlapi->evasglClientWaitSync(
+                    m_glEvasgl, m_glSync, EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE,
+                    EVAS_GL_FOREVER);
+                m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
+                m_glSync = nullptr;
+            }
+        };
+        config.onGLSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
+            if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
+                int attr[] = { EVAS_GL_NONE };
+                m_glSync = m_glGlapi->evasglCreateSync(
+                    m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
+            }
+            if (m_lastInputTime) {
+                ANNOTATE_SETUP;
+                ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN, "response time");
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
-                    uint64_t end = Starfish::longTickCount();
-                    float time = (float)((end - m_lastInputTime) / 1000.f);
-                    STARFISH_LOG_INFO("response time is %f ms", time);
+                uint64_t end = Starfish::longTickCount();
+                float time = (float)((end - m_lastInputTime) / 1000.f);
+                STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
-                    m_lastInputTime = 0;
-                    ANNOTATE_CHANNEL_END(3002);
-                }
-            },
-            [this](WebContainer* wc) -> uintptr_t {
-                Evas_GL_Context* sharedContext = nullptr;
+                m_lastInputTime = 0;
+                ANNOTATE_CHANNEL_END(3002);
+            }
+        };
+        config.onGLCreateSharedContext = [this](WebContainer* wc) -> uintptr_t {
+            Evas_GL_Context* sharedContext = nullptr;
+            sharedContext = evas_gl_context_version_create(
+                m_glEvasgl, m_glCtx, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
+            if (sharedContext == nullptr) {
                 sharedContext = evas_gl_context_version_create(
                     m_glEvasgl, m_glCtx,
-                    Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
-                if (sharedContext == nullptr) {
-                    sharedContext = evas_gl_context_version_create(
-                        m_glEvasgl, m_glCtx,
-                        Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
-                }
-                STARFISH_ASSERT(sharedContext != nullptr);
-                return reinterpret_cast<uintptr_t>(sharedContext);
-            },
-            [this](WebContainer* wc, uintptr_t context) -> bool {
-                evas_gl_context_destroy(
-                    m_glEvasgl, reinterpret_cast<Evas_GL_Context*>(context));
-                return true;
-            },
-            [this](WebContainer* wc) -> bool {
-                return evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
-            },
-            [this](WebContainer* wc, uintptr_t context) -> bool {
-                return evas_gl_make_current(
-                    m_glEvasgl, m_glSfc,
-                    reinterpret_cast<Evas_GL_Context*>(context));
-            },
+                    Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+            }
+            STARFISH_ASSERT(sharedContext != nullptr);
+            return reinterpret_cast<uintptr_t>(sharedContext);
         };
+        config.onGLDestroyContext = [this](WebContainer* wc,
+                                           uintptr_t context) -> bool {
+            evas_gl_context_destroy(
+                m_glEvasgl, reinterpret_cast<Evas_GL_Context*>(context));
+            return true;
+        };
+        config.onGLClearCurrentContext = [this](WebContainer* wc) -> bool {
+            return evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
+        };
+        config.onGLMakeCurrentWithContext = [this](WebContainer* wc,
+                                                   uintptr_t context) -> bool {
+            return evas_gl_make_current(
+                m_glEvasgl, m_glSfc,
+                reinterpret_cast<Evas_GL_Context*>(context));
+        };
+
         WebContainer* webContainer = WebContainer::CreateGL(args, config);
 
         m_pixelDirtyCallback = [](void* data, Evas_Object* o) {

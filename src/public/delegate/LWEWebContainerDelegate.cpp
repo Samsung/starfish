@@ -489,6 +489,13 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                                              context);
                 });
         }
+        if (config.onGLGetProcAddress) {
+            webView->renderer()->registerGLGetProcAddress(
+                [config, newWebContainer](Starfish::Renderer* renderer,
+                                          const char* name) -> void* {
+                    return config.onGLGetProcAddress(newWebContainer, name);
+                });
+        }
     });
     return newWebContainer;
 }

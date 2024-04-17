@@ -218,6 +218,10 @@ bool MiniBrowser::createLWE()
                                                uintptr_t context) -> bool {
         return m_window->renderer()->makeCurrentWithContext(context);
     };
+    config.onGLGetProcAddress = [this](LWE::WebContainer* wc,
+                                       const char* name) -> void* {
+        return m_window->renderer()->getProcAddress(name);
+    };
 
     m_lwe = LWE::WebContainer::CreateGL(args, config);
 

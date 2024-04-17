@@ -174,6 +174,7 @@ public:
     virtual uintptr_t createSharedContext() override;
     virtual bool destroyContext(uintptr_t context) override;
     virtual bool makeCurrentWithContext(uintptr_t context) override;
+    virtual void* getProcAddress(const char* name) override;
 
 private:
     EGLDisplay m_eglDisplay = nullptr;
@@ -246,6 +247,11 @@ bool RendererDelegateEGL::makeCurrentWithContext(uintptr_t context)
         return false;
     }
     return true;
+}
+
+void* RendererDelegateEGL::getProcAddress(const char* name)
+{
+    return reinterpret_cast<void*>(eglGetProcAddress(name));
 }
 
 class WindowX11 final : public Window {

@@ -178,6 +178,11 @@ public:
         return true;
     }
 
+    virtual void* glGetProcAddress(const char* name)
+    {
+        return nullptr;
+    }
+
     virtual TransformationMatrix screenMatrix()
     {
         return TransformationMatrix::identityMatrix();
@@ -235,6 +240,12 @@ public:
         const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
     {
         m_glMakeCurrentWithContextCallback = cb;
+    }
+
+    void registerGLGetProcAddress(
+        const std::function<void*(Renderer* renderer, const char*)>& cb)
+    {
+        m_glGetProcAddressCallback = cb;
     }
 
     void registerGetScreenMatrix(
@@ -365,6 +376,8 @@ protected:
     std::function<bool(Renderer* renderer)> m_glClearCurrentContextCallback;
     std::function<bool(Renderer* renderer, uintptr_t context)>
         m_glMakeCurrentWithContextCallback;
+    std::function<void*(Renderer* renderer, const char*)>
+        m_glGetProcAddressCallback;
     std::function<TransformationMatrix(Renderer* renderer)> m_getScreenMatrix;
 
     std::function<bool(Renderer* renderer)> m_canRenderingCallback;

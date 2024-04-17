@@ -97,6 +97,7 @@ public:
     using OnGLClearCurrentContext = std::function<bool(WebContainer*)>;
     using OnGLMakeCurrentWithContext =
         std::function<bool(WebContainer*, uintptr_t)>;
+    using OnGLGetProcAddress = std::function<void*(WebContainer*, const char*)>;
 
     struct RendererGLConfiguration {
         OnGLMakeCurrent onGLMakeCurrent;
@@ -105,6 +106,7 @@ public:
         OnGLDestroyContext onGLDestroyContext;
         OnGLClearCurrentContext onGLClearCurrentContext;
         OnGLMakeCurrentWithContext onGLMakeCurrentWithContext;
+        OnGLGetProcAddress onGLGetProcAddress;
     };
 
     // For Tizen 5.5 and above.

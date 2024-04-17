@@ -35,6 +35,7 @@ public:
     virtual bool destroyContext(uintptr_t context) = 0;
     virtual bool clearCurrentContext() = 0;
     virtual bool makeCurrentWithContext(uintptr_t context) = 0;
+    virtual void* getProcAddress(const char* name) = 0;
 };
 
 } // namespace StarfishShell

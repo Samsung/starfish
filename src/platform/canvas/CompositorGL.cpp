@@ -245,14 +245,10 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
 #undef RETURN_IF_INVALID_INDEX
 #endif
 
-#include <dlfcn.h>
-
 typedef void (*PPROC)(void);
 typedef PPROC (*PFNGLEGLGETPROCADDRESSPROC)(const char* procname);
 typedef EGLDisplay (*PFNGLEGLGETCURRENTDISPLAYPROC)();
 typedef const char* (*PFNGLEGLQUERYSTRINGPROC)(EGLDisplay dpy, EGLint name);
-
-static void* g_eglSoHandle;
 
 static PFNGLEGLGETPROCADDRESSPROC g_eglGetProcAddressProc;
 static PFNGLEGLGETCURRENTDISPLAYPROC g_eglGetCurrentDisplayProc;
@@ -1348,36 +1344,37 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 #endif
 
 #if defined(STARFISH_TIZEN)
-        g_eglSoHandle = dlopen("libEGL.so", RTLD_NOW);
-        STARFISH_RELEASE_ASSERT(g_eglSoHandle);
+        if (gl->isGeneric()) {
+            g_eglGetProcAddressProc =
+                reinterpret_cast<PFNGLEGLGETPROCADDRESSPROC>(
+                    renderer->glGetProcAddress("eglGetProcAddress"));
+            g_eglGetCurrentDisplayProc =
+                reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
+                    renderer->glGetProcAddress("eglGetCurrentDisplay"));
+            g_eglQueryStringProc = reinterpret_cast<PFNGLEGLQUERYSTRINGPROC>(
+                renderer->glGetProcAddress("eglQueryString"));
 
-        g_eglGetProcAddressProc = reinterpret_cast<PFNGLEGLGETPROCADDRESSPROC>(
-            dlsym(g_eglSoHandle, "eglGetProcAddress"));
-        g_eglGetCurrentDisplayProc =
-            reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
-                dlsym(g_eglSoHandle, "eglGetCurrentDisplay"));
-        g_eglQueryStringProc = reinterpret_cast<PFNGLEGLQUERYSTRINGPROC>(
-            dlsym(g_eglSoHandle, "eglQueryString"));
+            g_eglCreateImageKHRProc =
+                reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
+                    renderer->glGetProcAddress("eglCreateImageKHR"));
+            g_eglDestroyImageKHRProc =
+                reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
+                    renderer->glGetProcAddress("eglDestroyImageKHR"));
+            g_glEGLImageTargetTexture2DOESProc =
+                reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+                    renderer->glGetProcAddress("glEGLImageTargetTexture2DOES"));
 
-        g_eglCreateImageKHRProc = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-            g_eglGetProcAddressProc("eglCreateImageKHR"));
-        g_eglDestroyImageKHRProc = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-            g_eglGetProcAddressProc("eglDestroyImageKHR"));
-        g_glEGLImageTargetTexture2DOESProc =
-            reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                g_eglGetProcAddressProc("glEGLImageTargetTexture2DOES"));
-
-        const char* eglExtensions =
-            g_eglQueryStringProc(g_eglGetCurrentDisplayProc(), EGL_EXTENSIONS);
-        if (eglExtensions) {
-            g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
-                strstr(eglExtensions, "EGL_TIZEN_image_native_surface");
+            const char* eglExtensions = g_eglQueryStringProc(
+                g_eglGetCurrentDisplayProc(), EGL_EXTENSIONS);
+            if (eglExtensions) {
+                g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
+                    strstr(eglExtensions, "EGL_TIZEN_image_native_surface");
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
-            STARFISH_RELEASE_ASSERT(g_isSupported_EGL_NATIVE_SURFACE_TIZEN);
+                STARFISH_RELEASE_ASSERT(g_isSupported_EGL_NATIVE_SURFACE_TIZEN);
 #endif
+            }
         }
 #endif
-
         g_needsCheckCompatibility = false;
         checkError(gl);
     }
