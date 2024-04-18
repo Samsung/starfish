@@ -134,8 +134,8 @@ void Renderer::clearNativeHandlers()
     m_renderingFinishedCallback = nullptr;
     m_showSoftwareKeyboardIfPossibleCallback = nullptr;
     m_hideSoftwareKeyboardIfPossibleCallback = nullptr;
-    m_glMakeCurrentCallback = nullptr;
-    m_glSwapBufferCallback = nullptr;
+    m_onMakeCurrent = nullptr;
+    m_onSwapBuffer = nullptr;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>().swap(
         m_handlersToCallbacks);

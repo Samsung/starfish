@@ -449,51 +449,51 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
-        webView->renderer()->registerGLMakeCurrentCallback(
+        webView->renderer()->registerOnMakeCurrent(
             [config, newWebContainer](Starfish::Renderer* renderer) {
-                config.onGLMakeCurrent(newWebContainer);
+                config.onMakeCurrent(newWebContainer);
             });
 
-        webView->renderer()->registerGLSwapBuffersCallback(
+        webView->renderer()->registerOnSwapBuffers(
             [config, newWebContainer](Starfish::Renderer* renderer,
                                       bool mayNeedsSync) {
-                config.onGLSwapBuffers(newWebContainer, mayNeedsSync);
+                config.onSwapBuffers(newWebContainer, mayNeedsSync);
             });
 
-        if (config.onGLCreateSharedContext) {
-            webView->renderer()->registerGLCreateSharedContext(
+        if (config.onCreateSharedContext) {
+            webView->renderer()->registerOnCreateSharedContext(
                 [config,
                  newWebContainer](Starfish::Renderer* renderer) -> uintptr_t {
-                    return config.onGLCreateSharedContext(newWebContainer);
+                    return config.onCreateSharedContext(newWebContainer);
                 });
         }
-        if (config.onGLDestroyContext) {
-            webView->renderer()->registerGLDestroyContext(
+        if (config.onDestroyContext) {
+            webView->renderer()->registerOnDestroyContext(
                 [config, newWebContainer](Starfish::Renderer* renderer,
                                           uintptr_t context) -> bool {
-                    return config.onGLDestroyContext(newWebContainer, context);
+                    return config.onDestroyContext(newWebContainer, context);
                 });
         }
-        if (config.onGLClearCurrentContext) {
-            webView->renderer()->registerGLClearCurrentContext(
+        if (config.onClearCurrentContext) {
+            webView->renderer()->registerOnClearCurrentContext(
                 [config,
                  newWebContainer](Starfish::Renderer* renderer) -> bool {
-                    return config.onGLClearCurrentContext(newWebContainer);
+                    return config.onClearCurrentContext(newWebContainer);
                 });
         }
-        if (config.onGLMakeCurrentWithContext) {
-            webView->renderer()->registerGLMakeCurrentWithContext(
+        if (config.onMakeCurrentWithContext) {
+            webView->renderer()->registerOnMakeCurrentWithContext(
                 [config, newWebContainer](Starfish::Renderer* renderer,
                                           uintptr_t context) -> bool {
-                    return config.onGLMakeCurrentWithContext(newWebContainer,
-                                                             context);
+                    return config.onMakeCurrentWithContext(newWebContainer,
+                                                           context);
                 });
         }
-        if (config.onGLGetProcAddress) {
-            webView->renderer()->registerGLGetProcAddress(
+        if (config.onGetProcAddress) {
+            webView->renderer()->registerOnGetProcAddress(
                 [config, newWebContainer](Starfish::Renderer* renderer,
                                           const char* name) -> void* {
-                    return config.onGLGetProcAddress(newWebContainer, name);
+                    return config.onGetProcAddress(newWebContainer, name);
                 });
         }
     });
@@ -542,11 +542,10 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 }
 
 WebContainer* WebContainer::CreateGLWithPlatformImage(
-    unsigned width, unsigned height, const OnGLMakeCurrent& onGLMakeCurrent,
-    const OnGLSwapBuffers& onGLSwapBuffers,
-    const OnPrepareImage& prepareImageCb, const OnFlush& flushCb,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
+    unsigned width, unsigned height, const OnMakeCurrent& onMakeCurrent,
+    const OnSwapBuffers& onSwapBuffers, const OnPrepareImage& prepareImageCb,
+    const OnFlush& flushCb, float devicePixelRatio, const char* defaultFontName,
+    const char* locale, const char* timezoneID)
 {
     WebContainer* newWebContainer = nullptr;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
@@ -556,15 +555,15 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
 
-        webView->renderer()->registerGLMakeCurrentCallback(
-            [onGLMakeCurrent, newWebContainer](Starfish::Renderer* renderer) {
-                onGLMakeCurrent(newWebContainer);
+        webView->renderer()->registerOnMakeCurrent(
+            [onMakeCurrent, newWebContainer](Starfish::Renderer* renderer) {
+                onMakeCurrent(newWebContainer);
             });
 
-        webView->renderer()->registerGLSwapBuffersCallback(
-            [onGLSwapBuffers, newWebContainer](Starfish::Renderer* renderer,
-                                               bool mayNeedsSync) {
-                onGLSwapBuffers(newWebContainer, mayNeedsSync);
+        webView->renderer()->registerOnSwapBuffers(
+            [onSwapBuffers, newWebContainer](Starfish::Renderer* renderer,
+                                             bool mayNeedsSync) {
+                onSwapBuffers(newWebContainer, mayNeedsSync);
             });
 
         webView->renderer()->registerRenderingPrepareCallback(
@@ -1685,17 +1684,17 @@ uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
 }
 
 uintptr_t LWEDelegate_WebContainer_CreateGLWithPlatformImage(
-    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
-    uintptr_t onGLSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
+    unsigned width, unsigned height, uintptr_t onMakeCurrent,
+    uintptr_t onSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
-    auto* onGLMakeCurrentPtr =
-        reinterpret_cast<const LWEDelegate::WebContainer::OnGLMakeCurrent*>(
-            onGLMakeCurrent);
-    auto* onGLSwapBuffersPtr =
-        reinterpret_cast<const LWEDelegate::WebContainer::OnGLSwapBuffers*>(
-            onGLSwapBuffers);
+    auto* onMakeCurrentPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnMakeCurrent*>(
+            onMakeCurrent);
+    auto* onSwapBuffersPtr =
+        reinterpret_cast<const LWEDelegate::WebContainer::OnSwapBuffers*>(
+            onSwapBuffers);
     auto* onPrepareImagePtr =
         reinterpret_cast<const LWEDelegate::WebContainer::OnPrepareImage*>(
             prepareImageCb);
@@ -1703,7 +1702,7 @@ uintptr_t LWEDelegate_WebContainer_CreateGLWithPlatformImage(
         reinterpret_cast<const LWEDelegate::WebContainer::OnFlush*>(flushCb);
     return reinterpret_cast<uintptr_t>(
         LWEDelegate::WebContainer::CreateGLWithPlatformImage(
-            width, height, *onGLMakeCurrentPtr, *onGLSwapBuffersPtr,
+            width, height, *onMakeCurrentPtr, *onSwapBuffersPtr,
             *onPrepareImagePtr, *onFlushPtr, devicePixelRatio, defaultFontName,
             locale, timezoneID));
 }

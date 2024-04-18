@@ -143,7 +143,7 @@ public:
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
             m_compostiorContext->didRendering();
-            glSwapBuffers();
+            swapBuffers();
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
             m_compostiorContext->flushExternalSurface(
                 m_surfaceFlushCallback, ret.didPaintingOrCompositing);
@@ -169,7 +169,7 @@ public:
                     webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
                 }
                 m_compostiorContext->didRendering();
-                glSwapBuffers();
+                swapBuffers();
             }
 #endif
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
@@ -213,7 +213,7 @@ public:
 
     virtual void willCompositing() override
     {
-        glMakeCurrent();
+        makeCurrent();
         if (m_glPaintingSurface) {
             STARFISH_LOG_INFO(
                 "RendererGL::willCompositing - remove "
@@ -236,49 +236,49 @@ public:
         return Compositor::create3D(webView(), m_compostiorContext);
     }
 
-    virtual bool glMakeCurrent() override
+    virtual bool makeCurrent() override
     {
         if (m_isDestroyed) {
             return false;
         }
-        m_glMakeCurrentCallback(this);
+        m_onMakeCurrent(this);
         return true;
     }
 
-    virtual void glSwapBuffers() override
+    virtual void swapBuffers() override
     {
-        m_glSwapBufferCallback(this, m_mayNeedsSync);
+        m_onSwapBuffer(this, m_mayNeedsSync);
         m_mayNeedsSync = false;
     }
 
-    virtual void glMayNeedsSync() override
+    virtual void mayNeedsSync() override
     {
         m_mayNeedsSync = true;
     }
 
-    virtual uintptr_t glCreateSharedContext() override
+    virtual uintptr_t createSharedContext() override
     {
-        return m_glCreateSharedContextCallback(this);
+        return m_onCreateSharedContext(this);
     }
 
-    virtual bool glDestroyContext(uintptr_t context) override
+    virtual bool destroyContext(uintptr_t context) override
     {
-        return m_glDestroyContextCallback(this, context);
+        return m_onDestroyContext(this, context);
     }
 
-    virtual bool glClearCurrentContext() override
+    virtual bool clearCurrentContext() override
     {
-        return m_glClearCurrentContextCallback(this);
+        return m_onClearCurrentContext(this);
     }
 
-    virtual bool glMakeCurrentWithContext(uintptr_t context) override
+    virtual bool makeCurrentWithContext(uintptr_t context) override
     {
-        return m_glMakeCurrentWithContextCallback(this, context);
+        return m_onMakeCurrentWithContext(this, context);
     }
 
-    virtual void* glGetProcAddress(const char* name) override
+    virtual void* getProcAddress(const char* name) override
     {
-        return m_glGetProcAddressCallback(this, name);
+        return m_onGetProcAddress(this, name);
     }
 
     virtual TransformationMatrix screenMatrix() override
@@ -293,7 +293,7 @@ public:
     {
         // release m_glPaintingSurface && m_compostiorContext for reducing
         // memory usage
-        glMakeCurrent();
+        makeCurrent();
 
         m_webView->clearDrawnBuffers();
 
@@ -313,7 +313,7 @@ public:
         STARFISH_LOG_INFO("RendererGL::onClearDrawnBuffers");
 
         if (m_compostiorContext) {
-            glMakeCurrent();
+            makeCurrent();
 
             if (m_glPaintingSurface) {
                 m_glPaintingSurface->detachNativeBuffer();
