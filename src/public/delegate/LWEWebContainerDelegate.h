@@ -89,24 +89,23 @@ public:
         double perspectiveScale;
     };
 
-    using OnGLMakeCurrent = std::function<void(WebContainer*)>;
-    using OnGLSwapBuffers =
-        std::function<void(WebContainer*, bool mayNeedsSync)>;
-    using OnGLCreateSharedContext = std::function<uintptr_t(WebContainer*)>;
-    using OnGLDestroyContext = std::function<bool(WebContainer*, uintptr_t)>;
-    using OnGLClearCurrentContext = std::function<bool(WebContainer*)>;
-    using OnGLMakeCurrentWithContext =
+    using OnMakeCurrent = std::function<void(WebContainer*)>;
+    using OnSwapBuffers = std::function<void(WebContainer*, bool mayNeedsSync)>;
+    using OnCreateSharedContext = std::function<uintptr_t(WebContainer*)>;
+    using OnDestroyContext = std::function<bool(WebContainer*, uintptr_t)>;
+    using OnClearCurrentContext = std::function<bool(WebContainer*)>;
+    using OnMakeCurrentWithContext =
         std::function<bool(WebContainer*, uintptr_t)>;
-    using OnGLGetProcAddress = std::function<void*(WebContainer*, const char*)>;
+    using OnGetProcAddress = std::function<void*(WebContainer*, const char*)>;
 
     struct RendererGLConfiguration {
-        OnGLMakeCurrent onGLMakeCurrent;
-        OnGLSwapBuffers onGLSwapBuffers;
-        OnGLCreateSharedContext onGLCreateSharedContext;
-        OnGLDestroyContext onGLDestroyContext;
-        OnGLClearCurrentContext onGLClearCurrentContext;
-        OnGLMakeCurrentWithContext onGLMakeCurrentWithContext;
-        OnGLGetProcAddress onGLGetProcAddress;
+        OnMakeCurrent onMakeCurrent;
+        OnSwapBuffers onSwapBuffers;
+        OnCreateSharedContext onCreateSharedContext;
+        OnDestroyContext onDestroyContext;
+        OnClearCurrentContext onClearCurrentContext;
+        OnMakeCurrentWithContext onMakeCurrentWithContext;
+        OnGetProcAddress onGetProcAddress;
     };
 
     // For Tizen 5.5 and above.
@@ -134,8 +133,8 @@ public:
                                   const RendererGLConfiguration& config);
 
     static WebContainer* CreateGLWithPlatformImage(
-        unsigned width, unsigned height, const OnGLMakeCurrent& onGLMakeCurrent,
-        const OnGLSwapBuffers& onGLSwapBuffers,
+        unsigned width, unsigned height, const OnMakeCurrent& onMakeCurrent,
+        const OnSwapBuffers& onSwapBuffers,
         const OnPrepareImage& prepareImageCb, const OnFlush& flushCb,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
@@ -326,8 +325,8 @@ uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
 
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_WebContainer_CreateGLWithPlatformImage(
-    unsigned width, unsigned height, uintptr_t onGLMakeCurrent,
-    uintptr_t onGLSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
+    unsigned width, unsigned height, uintptr_t onMakeCurrent,
+    uintptr_t onSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID);
 

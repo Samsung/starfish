@@ -197,29 +197,28 @@ bool MiniBrowser::createLWE()
         .timezoneID = "Asia/Seoul",
     };
     LWE::WebContainer::RendererGLConfiguration config;
-    config.onGLMakeCurrent = [this](LWE::WebContainer* wc) {
+    config.onMakeCurrent = [this](LWE::WebContainer* wc) {
         m_window->renderer()->makeCurrent();
     };
-    config.onGLSwapBuffers = [this](LWE::WebContainer* wc, bool mayNeedsSync) {
+    config.onSwapBuffers = [this](LWE::WebContainer* wc, bool mayNeedsSync) {
         m_window->renderer()->swapBuffers();
     };
-    config.onGLCreateSharedContext =
-        [this](LWE::WebContainer* wc) -> uintptr_t {
+    config.onCreateSharedContext = [this](LWE::WebContainer* wc) -> uintptr_t {
         return m_window->renderer()->createSharedContext();
     };
-    config.onGLDestroyContext = [this](LWE::WebContainer* wc,
-                                       uintptr_t context) -> bool {
+    config.onDestroyContext = [this](LWE::WebContainer* wc,
+                                     uintptr_t context) -> bool {
         return m_window->renderer()->destroyContext(context);
     };
-    config.onGLClearCurrentContext = [this](LWE::WebContainer* wc) -> bool {
+    config.onClearCurrentContext = [this](LWE::WebContainer* wc) -> bool {
         return m_window->renderer()->clearCurrentContext();
     };
-    config.onGLMakeCurrentWithContext = [this](LWE::WebContainer* wc,
-                                               uintptr_t context) -> bool {
+    config.onMakeCurrentWithContext = [this](LWE::WebContainer* wc,
+                                             uintptr_t context) -> bool {
         return m_window->renderer()->makeCurrentWithContext(context);
     };
-    config.onGLGetProcAddress = [this](LWE::WebContainer* wc,
-                                       const char* name) -> void* {
+    config.onGetProcAddress = [this](LWE::WebContainer* wc,
+                                     const char* name) -> void* {
         return m_window->renderer()->getProcAddress(name);
     };
 

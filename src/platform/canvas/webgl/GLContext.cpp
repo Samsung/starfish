@@ -41,7 +41,7 @@ GLContext::GLContext(Renderer* renderer)
 bool GLContext::createSharedContext()
 {
     STARFISH_ASSERT(m_context == UINTPTR_MAX);
-    uintptr_t newContext = m_renderer->glCreateSharedContext();
+    uintptr_t newContext = m_renderer->createSharedContext();
     if (newContext == UINTPTR_MAX) {
         return false;
     }
@@ -53,18 +53,18 @@ bool GLContext::setCurrent()
 {
     STARFISH_ASSERT(m_context != UINTPTR_MAX);
 
-    return m_renderer->glMakeCurrentWithContext(m_context);
+    return m_renderer->makeCurrentWithContext(m_context);
 }
 
 void GLContext::resetCurrent()
 {
-    m_renderer->glClearCurrentContext();
+    m_renderer->clearCurrentContext();
 }
 
 bool GLContext::destory()
 {
     if (m_context != UINTPTR_MAX) {
-        if (!m_renderer->glDestroyContext(m_context)) {
+        if (!m_renderer->destroyContext(m_context)) {
             STARFISH_LOG_WARN("Context is not destoryed.");
             return false;
         }
@@ -123,7 +123,7 @@ GLRevertableContextScope::~GLRevertableContextScope()
     // does not have an API to get the current GL context, so we cannot have a
     // unified API to know the current context unless we unify the API to change
     // context across the codebase.
-    m_renderer->glMakeCurrent();
+    m_renderer->makeCurrent();
 }
 
 } // namespace Starfish

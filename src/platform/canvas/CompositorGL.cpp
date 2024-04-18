@@ -1261,7 +1261,7 @@ void CompositorFactory::destroyCompositorContextGl(Renderer* renderer,
 CompositorContext* CompositorFactory::initCompositorContextGl(
     Renderer* renderer)
 {
-    renderer->glMakeCurrent();
+    renderer->makeCurrent();
 
     CompositorContextGL* compositorContext = new CompositorContextGL(renderer);
     GL* gl = renderer->gl();
@@ -1347,22 +1347,22 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         if (gl->isGeneric()) {
             g_eglGetProcAddressProc =
                 reinterpret_cast<PFNGLEGLGETPROCADDRESSPROC>(
-                    renderer->glGetProcAddress("eglGetProcAddress"));
+                    renderer->getProcAddress("eglGetProcAddress"));
             g_eglGetCurrentDisplayProc =
                 reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
-                    renderer->glGetProcAddress("eglGetCurrentDisplay"));
+                    renderer->getProcAddress("eglGetCurrentDisplay"));
             g_eglQueryStringProc = reinterpret_cast<PFNGLEGLQUERYSTRINGPROC>(
-                renderer->glGetProcAddress("eglQueryString"));
+                renderer->getProcAddress("eglQueryString"));
 
             g_eglCreateImageKHRProc =
                 reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-                    renderer->glGetProcAddress("eglCreateImageKHR"));
+                    renderer->getProcAddress("eglCreateImageKHR"));
             g_eglDestroyImageKHRProc =
                 reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-                    renderer->glGetProcAddress("eglDestroyImageKHR"));
+                    renderer->getProcAddress("eglDestroyImageKHR"));
             g_glEGLImageTargetTexture2DOESProc =
                 reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                    renderer->glGetProcAddress("glEGLImageTargetTexture2DOES"));
+                    renderer->getProcAddress("glEGLImageTargetTexture2DOES"));
 
             const char* eglExtensions = g_eglQueryStringProc(
                 g_eglGetCurrentDisplayProc(), EGL_EXTENSIONS);
@@ -1467,7 +1467,7 @@ public:
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             }
 
-            bool ret = m_renderer->glMakeCurrent();
+            bool ret = m_renderer->makeCurrent();
             if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN)
                 if (gl()->isGeneric()) {
@@ -1639,7 +1639,7 @@ public:
 
     void ensureGenerateTexture()
     {
-        m_renderer->glMakeCurrent();
+        m_renderer->makeCurrent();
 
         STARFISH_RELEASE_ASSERT(m_textureFragments.size() == 0);
 
@@ -1951,7 +1951,7 @@ public:
         STARFISH_RELEASE_ASSERT(m_buffer);
 
         if (dirtyWidth && dirtyHeight) {
-            m_renderer->glMakeCurrent();
+            m_renderer->makeCurrent();
             size_t fragmentIndex = 0;
 
             Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
@@ -2275,7 +2275,7 @@ public:
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
         // LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
-        webView->renderer()->glMakeCurrent();
+        webView->renderer()->makeCurrent();
 
         m_seenFBOUsage = false;
         m_webView = webView;
@@ -2855,7 +2855,7 @@ public:
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
         if (isEGLImage) {
-            m_webView->renderer()->glMayNeedsSync();
+            m_webView->renderer()->mayNeedsSync();
             m_compositorContext->texShaderProgramEGLImageExternal();
         } else {
             m_compositorContext->texShaderProgram();

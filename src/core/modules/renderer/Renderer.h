@@ -145,40 +145,40 @@ public:
     {
     }
 
-    virtual bool glMakeCurrent()
+    virtual bool makeCurrent()
     {
         return true;
     }
 
-    virtual void glSwapBuffers()
+    virtual void swapBuffers()
     {
     }
 
-    virtual void glMayNeedsSync()
+    virtual void mayNeedsSync()
     {
     }
 
-    virtual uintptr_t glCreateSharedContext()
+    virtual uintptr_t createSharedContext()
     {
         return UINTPTR_MAX;
     }
 
-    virtual bool glDestroyContext(uintptr_t context)
+    virtual bool destroyContext(uintptr_t context)
     {
         return true;
     }
 
-    virtual bool glClearCurrentContext()
+    virtual bool clearCurrentContext()
     {
         return true;
     }
 
-    virtual bool glMakeCurrentWithContext(uintptr_t context)
+    virtual bool makeCurrentWithContext(uintptr_t context)
     {
         return true;
     }
 
-    virtual void* glGetProcAddress(const char* name)
+    virtual void* getProcAddress(const char* name)
     {
         return nullptr;
     }
@@ -206,46 +206,46 @@ public:
         m_surfaceFlushCallback = cb;
     }
 
-    void registerGLMakeCurrentCallback(
+    void registerOnMakeCurrent(
         const std::function<void(Renderer* renderer)>& cb)
     {
-        m_glMakeCurrentCallback = cb;
+        m_onMakeCurrent = cb;
     }
 
-    void registerGLSwapBuffersCallback(
+    void registerOnSwapBuffers(
         const std::function<void(Renderer* renderer, bool mayNeedsSync)>& cb)
     {
-        m_glSwapBufferCallback = cb;
+        m_onSwapBuffer = cb;
     }
 
-    void registerGLCreateSharedContext(
+    void registerOnCreateSharedContext(
         const std::function<uintptr_t(Renderer* renderer)>& cb)
     {
-        m_glCreateSharedContextCallback = cb;
+        m_onCreateSharedContext = cb;
     }
 
-    void registerGLDestroyContext(
+    void registerOnDestroyContext(
         const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
     {
-        m_glDestroyContextCallback = cb;
+        m_onDestroyContext = cb;
     }
 
-    void registerGLClearCurrentContext(
+    void registerOnClearCurrentContext(
         const std::function<bool(Renderer* renderer)>& cb)
     {
-        m_glClearCurrentContextCallback = cb;
+        m_onClearCurrentContext = cb;
     }
 
-    void registerGLMakeCurrentWithContext(
+    void registerOnMakeCurrentWithContext(
         const std::function<bool(Renderer* renderer, uintptr_t)>& cb)
     {
-        m_glMakeCurrentWithContextCallback = cb;
+        m_onMakeCurrentWithContext = cb;
     }
 
-    void registerGLGetProcAddress(
+    void registerOnGetProcAddress(
         const std::function<void*(Renderer* renderer, const char*)>& cb)
     {
-        m_glGetProcAddressCallback = cb;
+        m_onGetProcAddress = cb;
     }
 
     void registerGetScreenMatrix(
@@ -367,17 +367,16 @@ protected:
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 
-    std::function<void(Renderer* renderer)> m_glMakeCurrentCallback;
-    std::function<void(Renderer* renderer, bool)> m_glSwapBufferCallback;
-    std::function<uintptr_t(Renderer* renderer)>
-        m_glCreateSharedContextCallback;
+    std::function<void(Renderer* renderer)> m_onMakeCurrent;
+    std::function<void(Renderer* renderer, bool)> m_onSwapBuffer;
+    std::function<uintptr_t(Renderer* renderer)> m_onCreateSharedContext;
     std::function<bool(Renderer* renderer, uintptr_t context)>
-        m_glDestroyContextCallback;
-    std::function<bool(Renderer* renderer)> m_glClearCurrentContextCallback;
+        m_onDestroyContext;
+    std::function<bool(Renderer* renderer)> m_onClearCurrentContext;
     std::function<bool(Renderer* renderer, uintptr_t context)>
-        m_glMakeCurrentWithContextCallback;
-    std::function<void*(Renderer* renderer, const char*)>
-        m_glGetProcAddressCallback;
+        m_onMakeCurrentWithContext;
+    std::function<void*(Renderer* renderer, const char*)> m_onGetProcAddress;
+
     std::function<TransformationMatrix(Renderer* renderer)> m_getScreenMatrix;
 
     std::function<bool(Renderer* renderer)> m_canRenderingCallback;

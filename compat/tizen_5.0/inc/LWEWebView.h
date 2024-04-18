@@ -239,14 +239,13 @@ public:
     };
 
     struct RendererGLConfiguration {
-        std::function<void(WebContainer*)> onGLMakeCurrent;
-        std::function<void(WebContainer*, bool mayNeedsSync)> onGLSwapBuffers;
-        std::function<uintptr_t(WebContainer*)> onGLCreateSharedContext;
-        std::function<bool(WebContainer*, uintptr_t)> onGLDestroyContext;
-        std::function<bool(WebContainer*)> onGLClearCurrentContext;
-        std::function<bool(WebContainer*, uintptr_t)>
-            onGLMakeCurrentWithContext;
-        std::function<void*(WebContainer*, const char*)> onGLGetProcAddress;
+        std::function<void(WebContainer*)> onMakeCurrent;
+        std::function<void(WebContainer*, bool mayNeedsSync)> onSwapBuffers;
+        std::function<uintptr_t(WebContainer*)> onCreateSharedContext;
+        std::function<bool(WebContainer*, uintptr_t)> onDestroyContext;
+        std::function<bool(WebContainer*)> onClearCurrentContext;
+        std::function<bool(WebContainer*, uintptr_t)> onMakeCurrentWithContext;
+        std::function<void*(WebContainer*, const char*)> onGetProcAddress;
     };
 
     struct TransformationMatrix {
@@ -278,9 +277,9 @@ public:
     // Function set for render with OpenGL
     static WebContainer* CreateGL(
         unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onGLMakeCurrent,
+        const std::function<void(WebContainer*)>& onMakeCurrent,
         const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onGLSwapBuffers,
+            onSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
     static WebContainer* CreateGL(const WebContainerArguments& args,
@@ -288,9 +287,9 @@ public:
 
     static WebContainer* CreateGLWithPlatformImage(
         unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onGLMakeCurrent,
+        const std::function<void(WebContainer*)>& onMakeCurrent,
         const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onGLSwapBuffers,
+            onSwapBuffers,
         const std::function<ExternalImageInfo(void)>& prepareImageCb,
         const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
