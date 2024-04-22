@@ -24,6 +24,7 @@
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/SharedWorker.h"
+#include "core/modules/sharedworker/SharedWorkerMessage.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"
 
 namespace Starfish {
@@ -31,17 +32,30 @@ namespace Starfish {
 SharedWorkerClient::SharedWorkerClient(PerProcess* perProcess,
                                        const std::string& ipcAddress)
     : SharedWorkerConnection(perProcess, ipcAddress, SocketNN::kRequestProtocol)
+    , m_messageHandler(new IPCMessageHandler())
 {
 }
 
 void SharedWorkerClient::start()
 {
     connect();
+
+#if defined(STARFISH_ENABLE_TEST)
+    SharedWorkerMessage::SharedWorkerMessageTest message;
+    m_messageHandler->sendMessage(this, message);
+#endif
+}
+
+void SharedWorkerClient::onReceived(Socket* socket, const char* data,
+                                    size_t len)
+{
+    m_messageHandler->onReceiveMessage(data, len);
 }
 
 void SharedWorkerClient::requestConnection(SharedWorker* sharedWorker)
 {
-    // TODO: Request a connection to the server.
+    SharedWorkerMessage::RequestGetSharedWorker message(sharedWorker);
+    m_messageHandler->sendMessage(this, message);
 }
 
 void SharedWorkerClient::requestClose(SharedWorker* sharedWorker)

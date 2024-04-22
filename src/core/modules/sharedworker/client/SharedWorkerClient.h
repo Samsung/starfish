@@ -25,6 +25,7 @@
 
 namespace Starfish {
 
+class IPCMessageHandler;
 class PerProcess;
 
 class SharedWorkerClient : public SharedWorkerConnection {
@@ -33,11 +34,14 @@ public:
 
     void start();
 
+    void onReceived(Socket* socket, const char* data, size_t len) override;
+
     void requestConnection(SharedWorker* sharedWorker);
 
     void requestClose(SharedWorker* sharedWorker);
 
 private:
+    IPCMessageHandler* m_messageHandler;
 };
 
 } // namespace Starfish

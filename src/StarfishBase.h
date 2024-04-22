@@ -911,6 +911,21 @@ class GCUnorderedMap
       public gc {
 };
 
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              GCUtil::gc_malloc_atomic_allocator<std::pair<Key const, Value>>>
+using GCAtomicUnorderedMapT = HashMap<Key, Value, Hasher, Predicate, Allocator>;
+
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              GCUtil::gc_malloc_atomic_allocator<std::pair<Key const, Value>>>
+class GCAtomicUnorderedMap
+    : public GCAtomicUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
+      public gc {
+};
+
 template <class Key, class Hash = std::hash<Key>,
           class KeyEqual = std::equal_to<Key>,
           class Allocator = std::allocator<Key>, bool StoreHash = false,
