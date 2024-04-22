@@ -21,12 +21,14 @@
 #define __StarfishRenderResult__
 
 #include <SkMatrix.h>
+#include "core/layout/LayoutUtil.h"
 
 namespace Starfish {
 
 class CanvasSurface;
 class GraphicsBufferHolder;
 class FrameBox;
+class Node;
 
 struct RenderInfo {
     void* updatedBufferAddress;
