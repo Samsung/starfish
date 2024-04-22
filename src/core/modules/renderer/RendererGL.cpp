@@ -72,6 +72,7 @@ public:
         , m_mayNeedsSync(false)
     {
         m_offsetYDueToSoftwareKeyboard = 0;
+        m_currentContext = kEmptyContextOrUnknown;
 
         m_lastMouseX = -1;
         m_lastMouseY = -1;
@@ -242,6 +243,7 @@ public:
             return false;
         }
         m_onMakeCurrent(this);
+        m_currentContext = kEmptyContextOrUnknown;
         return true;
     }
 
@@ -268,12 +270,25 @@ public:
 
     virtual bool clearCurrentContext() override
     {
-        return m_onClearCurrentContext(this);
+        if (!m_onClearCurrentContext(this)) {
+            return false;
+        }
+        m_currentContext = kEmptyContextOrUnknown;
+        return true;
     }
 
     virtual bool makeCurrentWithContext(uintptr_t context) override
     {
-        return m_onMakeCurrentWithContext(this, context);
+        if (!m_onMakeCurrentWithContext(this, context)) {
+            return false;
+        }
+        m_currentContext = context;
+        return true;
+    }
+
+    virtual uintptr_t getCurrentContext() override
+    {
+        return m_currentContext;
     }
 
     virtual void* getProcAddress(const char* name) override
@@ -333,6 +348,7 @@ public:
     bool m_mayNeedsSync;
     float m_lastMouseX, m_lastMouseY;
     int m_offsetYDueToSoftwareKeyboard;
+    uintptr_t m_currentContext;
 };
 
 Renderer* RendererFactory::createGL(Starfish* starfish, uint32_t width,

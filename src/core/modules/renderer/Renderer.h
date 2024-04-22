@@ -175,6 +175,14 @@ public:
         return true;
     }
 
+    // FIXME: get a context handle on context changes so that `0` only means the
+    // handle is empty.
+    static constexpr uintptr_t kEmptyContextOrUnknown = 0;
+    virtual uintptr_t getCurrentContext()
+    {
+        return kEmptyContextOrUnknown;
+    }
+
     virtual bool makeCurrentWithContext(uintptr_t context)
     {
         return true;
