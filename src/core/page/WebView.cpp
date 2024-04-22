@@ -360,7 +360,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
 
-    FrameRateCounter::instance().setWebview(this);
+    auto& counter = FrameRateCounter::instance();
+    counter.setWebview(this);
+    counter.setObserver([](double fps) {
+        static unsigned counter = 0;
+        STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
+    });
 }
 
 void WebView::setIdleModeCheckIntervalInMS(uint32_t i)

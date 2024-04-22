@@ -30,7 +30,14 @@ class WebView;
 
 class FrameRateCounter : public gc {
 public:
+    using Observer = void (*)(double fps);
+
     static FrameRateCounter& instance();
+
+    void setObserver(Observer observer)
+    {
+        m_observer = observer;
+    }
 
     void update();
 
@@ -69,6 +76,7 @@ private:
     CanvasSurface* m_surface = nullptr;
     Canvas* m_canvas = nullptr;
     WebView* m_webView = nullptr;
+    Observer m_observer;
 };
 } // namespace Starfish
 
