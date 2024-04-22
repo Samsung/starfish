@@ -17,26 +17,30 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#ifndef __StarfishServiceWorkerIPCAddress__
+#define __StarfishServiceWorkerIPCAddress__
 
-#include "StarfishConfig.h"
-
-#include "core/modules/worker/WorkerConfig.h"
-#include "core/modules/worker/util/network/SocketNN.h"
-#include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 
 namespace Starfish {
 
-SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess,
-                                                 const std::string& address)
-    : SharedWorkerConnection(perProcess, address, SocketNN::kReplyProtocol)
-{
-}
+class WorkerSettings;
 
-void SharedWorkerAgentServer::start()
-{
-    bind();
-}
+class ServiceWorkerIPCAddress : public WorkerIPCAddress {
+public:
+    ServiceWorkerIPCAddress(WorkerSettings *settings);
+
+    const std::string getIPCHandlePath(const std::string &last = "") override;
+
+    const std::string createIPCAddress(const std::string &last = "") override;
+
+    void release() override;
+
+private:
+};
 
 } // namespace Starfish
-#endif // #ifdef STARFISH_WEBWORKER_HOST
+
+#endif
+#endif

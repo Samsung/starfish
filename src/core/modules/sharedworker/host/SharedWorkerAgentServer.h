@@ -29,7 +29,7 @@ class PerProcess;
 
 class SharedWorkerAgentServer final : public SharedWorkerConnection {
 public:
-    SharedWorkerAgentServer(PerProcess* perProcess);
+    SharedWorkerAgentServer(PerProcess* perProcess, const std::string& address);
 
     void start();
 

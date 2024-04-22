@@ -47,6 +47,7 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
@@ -63,8 +64,10 @@ void ServiceWorkerServer::destroy()
     }
 }
 
-ServiceWorkerServer::ServiceWorkerServer(PerProcess* perProcess)
+ServiceWorkerServer::ServiceWorkerServer(PerProcess* perProcess,
+                                         ServiceWorkerIPCAddress* ipcAddress)
     : m_perProcess(perProcess)
+    , m_ipcAddress(ipcAddress)
 {
     Message::init();
 
@@ -85,7 +88,7 @@ void ServiceWorkerServer::start()
     registerConnection(m_connection);
 
     m_perProcess->ioRunnable()->addClient(m_connection);
-    std::string address = m_perProcess->processResource()->createIPCAddress();
+    std::string address = m_ipcAddress->createIPCAddress();
     m_connection->socket()->bind(address.c_str());
 }
 
@@ -102,8 +105,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     registerConnection(m_connection);
 
-    std::string address =
-        m_perProcess->processResource()->createIPCAddress(encodedOrigin);
+    std::string address = m_ipcAddress->createIPCAddress(encodedOrigin);
 
     TRACE(HOST, "Origin: ", origin);
 

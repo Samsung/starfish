@@ -32,7 +32,7 @@ public:
     enum class State { None, Start, Stop };
 
     SharedWorkerConnection(PerProcess* perProcess,
-                           const std::string& lastIPCAddress, int protocol);
+                           const std::string& ipcAddress, int protocol);
 
     bool bind();
 

@@ -29,6 +29,7 @@ namespace Starfish {
 class SharedWorkerAgent;
 class SharedWorkerAgentServer;
 class Starfish;
+class WorkerIPCAddress;
 
 class SharedWorkerAgent final : public WorkerAgent {
     friend class WorkerAgent;
@@ -45,6 +46,7 @@ private:
 
     static SharedWorkerAgent* m_instance;
     SharedWorkerAgentServer* m_server;
+    WorkerIPCAddress* m_ipcAddress;
 };
 } // namespace Starfish
 
