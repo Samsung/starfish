@@ -23,6 +23,7 @@
 
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
@@ -41,6 +42,7 @@ SharedWorkerProcessManager* SharedWorkerProcessManager::instance()
 
 SharedWorkerProcessManager::SharedWorkerProcessManager()
     : m_perProcess(nullptr)
+    , m_ipcAddress(nullptr)
     , m_client(nullptr)
     , m_isStarted(false)
 {
@@ -63,9 +65,13 @@ void SharedWorkerProcessManager::start()
     }
     m_isStarted = true;
 
-    m_perProcess->initialize(PATH_SHARED_WORKER_IPC_DIR);
+    m_perProcess->initialize();
 
-    m_client = new SharedWorkerClient(m_perProcess);
+    m_ipcAddress = new WorkerIPCAddress(m_perProcess->workerSettings(),
+                                        PATH_SHARED_WORKER_IPC_DIR);
+
+    m_client = new SharedWorkerClient(
+        m_perProcess, m_ipcAddress->createIPCAddress(WORKER_IPC_PROCESS_NAME));
 
     m_client->start();
 }

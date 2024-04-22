@@ -28,12 +28,12 @@
 
 namespace Starfish {
 
-SharedWorkerConnection::SharedWorkerConnection(
-    PerProcess* perProcess, const std::string& lastIPCAddress, int protocol)
+SharedWorkerConnection::SharedWorkerConnection(PerProcess* perProcess,
+                                               const std::string& ipcAddress,
+                                               int protocol)
     : Connection(protocol)
     , m_perProcess(perProcess)
-    , m_ipcAddress(
-          perProcess->processResource()->createIPCAddress(lastIPCAddress))
+    , m_ipcAddress(ipcAddress)
     , m_state(State::None)
     , m_endpointId(SOCKETNN_INVALID_END_POINT)
 {

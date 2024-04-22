@@ -29,7 +29,7 @@ class PerProcess;
 
 class SharedWorkerClient : public SharedWorkerConnection {
 public:
-    SharedWorkerClient(PerProcess* perProcess);
+    SharedWorkerClient(PerProcess* perProcess, const std::string& ipcAddress);
 
     void start();
 

@@ -46,7 +46,6 @@ bool WorkerAgent::isCreated()
 WorkerAgent::WorkerAgent(Starfish* starfish)
     : m_starfish(starfish)
     , m_workerHostManager(starfish->workerManager()->asWorkerHostManager())
-
 {
     LoggerOption::instance()->parseEnv();
 }

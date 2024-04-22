@@ -43,6 +43,7 @@
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/FetchEventHandler.h"
 
@@ -93,7 +94,8 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
     // For service workers, the PerProcess must always be initialized to
     // check app installation before the web page is loaded.
     m_perProcess = perProcess;
-    m_perProcess->initialize(PATH_SERVICE_WORKER_IPC_DIR);
+    m_perProcess->initialize();
+    m_ipcAddress = new ServiceWorkerIPCAddress(m_perProcess->workerSettings());
 
     m_pushServiceAgent = new PushServiceAgent();
     m_registrationManager =
@@ -169,8 +171,7 @@ bool ServiceWorkerProcessManager::processExist(const std::string identifier)
     STARFISH_ASSERT_NOT_REACHED();
 #endif
     // Here we use the socket handle promised exists.
-    auto handlePath =
-        m_perProcess->processResource()->getIPCHandlePath(identifier);
+    auto handlePath = m_ipcAddress->getIPCHandlePath(identifier);
     bool exist = isFile(handlePath);
     TRACE(SVCWORKER, "result: ", exist);
     return exist;
@@ -187,8 +188,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::shared_ptr<ProcessData> processData = nullptr;
 
     std::string encodedOrigin = Base64Utils::encodeBase64(origin);
-    std::string address =
-        m_perProcess->processResource()->createIPCAddress(encodedOrigin);
+    std::string address = m_ipcAddress->createIPCAddress(encodedOrigin);
 
     TRACE(SVCWORKER, "origin", origin);
     TRACE(SVCWORKER, "encodedOrigin", encodedOrigin);

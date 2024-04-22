@@ -24,6 +24,7 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/util/Trace.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/host/WorkerHostManager.h"
@@ -56,10 +57,14 @@ SharedWorkerAgent::SharedWorkerAgent(Starfish* starfish)
     : WorkerAgent(starfish)
 {
     PerProcess* perProcess = m_workerHostManager->perProcess();
-    perProcess->initialize(PATH_SHARED_WORKER_IPC_DIR);
-    perProcess->processResource()->acquire();
+    perProcess->initialize();
 
-    m_server = new SharedWorkerAgentServer(perProcess);
+    m_ipcAddress = new WorkerIPCAddress(perProcess->workerSettings(),
+                                        PATH_SHARED_WORKER_IPC_DIR);
+    m_ipcAddress->acquire();
+
+    m_server = new SharedWorkerAgentServer(
+        perProcess, m_ipcAddress->createIPCAddress(WORKER_IPC_PROCESS_NAME));
 }
 
 void SharedWorkerAgent::start()
@@ -73,7 +78,7 @@ void SharedWorkerAgent::destroy()
 
     m_server->close();
 
-    m_workerHostManager->perProcess()->processResource()->release();
+    m_ipcAddress->release();
 
     WorkerAgent::destroy();
 }

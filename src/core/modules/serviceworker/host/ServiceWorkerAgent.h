@@ -34,6 +34,7 @@ class NotificationService;
 class ServiceWorkerServer;
 class CastServer;
 class ServiceWorkerGlobalScope;
+class ServiceWorkerIPCAddress;
 
 class ServiceWorkerAgent final : public WorkerAgent {
     friend class WorkerAgent;
@@ -91,6 +92,7 @@ private:
     ServiceWorkerAgent(Starfish* starfish);
 
     static ServiceWorkerAgent* m_instance;
+    ServiceWorkerIPCAddress* m_ipcAddress;
     ServiceWorkerServer* m_SWServer;
 #if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     NotificationService* m_notificationService;

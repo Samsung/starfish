@@ -23,6 +23,7 @@
 
 namespace Starfish {
 
+class WorkerIPCAddress;
 class PerProcess;
 class SharedWorker;
 class SharedWorkerClient;
@@ -49,6 +50,7 @@ private:
     static SharedWorkerProcessManager* m_instance;
 
     PerProcess* m_perProcess;
+    WorkerIPCAddress* m_ipcAddress;
     SharedWorkerClient* m_client;
     bool m_isStarted;
     GCUnorderedMap<uint32_t, SharedWorker*> m_sharedWorkers;

@@ -27,9 +27,9 @@
 
 namespace Starfish {
 
-SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess)
-    : SharedWorkerConnection(perProcess, WORKER_IPC_PROCESS_NAME,
-                             SocketNN::kReplyProtocol)
+SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess,
+                                                 const std::string& address)
+    : SharedWorkerConnection(perProcess, address, SocketNN::kReplyProtocol)
 {
 }
 

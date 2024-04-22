@@ -40,6 +40,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
@@ -76,10 +77,12 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
 {
     TRACE_SCOPE(SVCWORKER);
 
-    m_workerHostManager->perProcess()->initialize(PATH_SERVICE_WORKER_IPC_DIR);
-    m_workerHostManager->perProcess()->processResource()->acquire();
+    m_workerHostManager->perProcess()->initialize();
+    m_ipcAddress = new ServiceWorkerIPCAddress(
+        m_workerHostManager->perProcess()->workerSettings());
+    m_ipcAddress->acquire();
 
-    m_SWServer = new ServiceWorkerServer(perProcess());
+    m_SWServer = new ServiceWorkerServer(perProcess(), m_ipcAddress);
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     m_castServer = CastServer::instance();
@@ -120,7 +123,7 @@ void ServiceWorkerAgent::destroy()
     }
     m_webWorkerList.clear();
 
-    m_workerHostManager->perProcess()->processResource()->release();
+    m_ipcAddress->release();
 
     WorkerAgent::destroy();
 }
