@@ -371,9 +371,11 @@ protected:
     bool m_isDestroyed;
 
     std::function<void(Renderer* renderer)> m_setNeedsRenderingCallback;
+
     std::function<RenderInfo(void)> m_renderingPrepareCallback;
     std::function<void(const RenderResult& renderResult)>
         m_renderingFinishedCallback;
+
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 

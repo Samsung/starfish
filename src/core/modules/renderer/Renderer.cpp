@@ -131,11 +131,25 @@ void Renderer::resume()
 void Renderer::clearNativeHandlers()
 {
     m_setNeedsRenderingCallback = nullptr;
+
+    m_renderingPrepareCallback = nullptr;
     m_renderingFinishedCallback = nullptr;
+
     m_showSoftwareKeyboardIfPossibleCallback = nullptr;
     m_hideSoftwareKeyboardIfPossibleCallback = nullptr;
+
     m_onMakeCurrent = nullptr;
     m_onSwapBuffer = nullptr;
+    m_onCreateSharedContext = nullptr;
+    m_onDestroyContext = nullptr;
+    m_onClearCurrentContext = nullptr;
+    m_onMakeCurrentWithContext = nullptr;
+    m_onGetProcAddress = nullptr;
+
+    m_getScreenMatrix = nullptr;
+
+    m_canRenderingCallback = nullptr;
+    m_surfaceFlushCallback = nullptr;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>().swap(
         m_handlersToCallbacks);
