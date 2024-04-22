@@ -41,6 +41,8 @@ GLContext::GLContext(Renderer* renderer)
 bool GLContext::createSharedContext()
 {
     STARFISH_ASSERT(m_context == UINTPTR_MAX);
+    STARFISH_ASSERT(m_renderer != nullptr);
+
     uintptr_t newContext = m_renderer->createSharedContext();
     if (newContext == UINTPTR_MAX) {
         return false;
@@ -52,7 +54,14 @@ bool GLContext::createSharedContext()
 bool GLContext::setCurrent()
 {
     STARFISH_ASSERT(m_context != UINTPTR_MAX);
+    STARFISH_ASSERT(m_renderer != nullptr);
 
+    if (m_context == m_renderer->getCurrentContext()) {
+        // NOTE: As a performance safeguard, the makeCurrent call is skipped in
+        // advance in this condition. It's worth considering moving this into
+        // the Renderer logic.
+        return true;
+    }
     return m_renderer->makeCurrentWithContext(m_context);
 }
 
