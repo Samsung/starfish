@@ -63,6 +63,8 @@ class MouseData;
 class TouchData;
 class PlatformKeyEventData;
 class GL;
+class Starfish;
+class String;
 
 enum class TouchEventKind {
     TouchEventStart,
