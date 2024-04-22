@@ -49,6 +49,9 @@ void FrameRateCounter::update()
         m_fps = m_frames * 1000 / dt;
         m_frames = 0;
         m_startTime = now;
+        if (m_observer) {
+            m_observer(m_fps);
+        }
     }
     m_frames++;
 }
