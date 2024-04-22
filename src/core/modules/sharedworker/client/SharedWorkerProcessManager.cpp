@@ -102,6 +102,8 @@ void SharedWorkerProcessManager::destroy()
     }
 
     m_sharedWorkers.clear();
+
+    m_instance = nullptr;
 }
 
 } // namespace Starfish

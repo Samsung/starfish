@@ -17,28 +17,35 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
-#ifndef __StarfishSharedWorkerAgentServer__
-#define __StarfishSharedWorkerAgentServer__
-
-#include "core/modules/sharedworker/SharedWorkerConnection.h"
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#ifndef __StarfishIPCMessageHandler__
+#define __StarfishIPCMessageHandler__
 
 namespace Starfish {
 
-class IPCMessageHandler;
-class PerProcess;
+class IPCMessageSerializer;
+class IPCMessageDeserializer;
+class Connection;
 
-class SharedWorkerAgentServer final : public SharedWorkerConnection {
+class IPCMessage {
 public:
-    SharedWorkerAgentServer(PerProcess* perProcess, const std::string& address);
+    virtual IPCMessageSerializer* serialize() = 0;
+    virtual void deserialize(IPCMessageDeserializer* deserializer) = 0;
+};
 
-    void start();
+class IPCMessageHandler : public gc {
+public:
+    using MessageReceiveHandler = void (*)(IPCMessageDeserializer*);
 
-    void onReceived(Socket* socket, const char* data, size_t len) override;
+    void sendMessage(Connection* connection, IPCMessage& message);
+
+    void onReceiveMessage(const char* data, size_t length);
+
+    void setMessageReceiveHandler(const std::string& id,
+                                  MessageReceiveHandler handler);
 
 private:
-    void initMessageReceiveHandlers();
-    IPCMessageHandler* m_messageHandler;
+    GCAtomicUnorderedMap<std::string, MessageReceiveHandler> m_receiveHandlers;
 };
 
 } // namespace Starfish
