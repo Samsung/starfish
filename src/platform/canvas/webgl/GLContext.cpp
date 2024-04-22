@@ -56,11 +56,6 @@ bool GLContext::setCurrent()
     return m_renderer->makeCurrentWithContext(m_context);
 }
 
-void GLContext::resetCurrent()
-{
-    m_renderer->clearCurrentContext();
-}
-
 bool GLContext::destory()
 {
     if (m_context != UINTPTR_MAX) {
@@ -97,9 +92,6 @@ GLContextScope::GLContextScope(GLContext context)
 
 GLContextScope::~GLContextScope()
 {
-    if (m_result) {
-        currentContext.resetCurrent();
-    }
     currentContext.reset();
 }
 
@@ -119,10 +111,9 @@ GLRevertableContextScope::GLRevertableContextScope(GLContext context,
 
 GLRevertableContextScope::~GLRevertableContextScope()
 {
-    // We assume that the previous context is always the main context. EvasGL
-    // does not have an API to get the current GL context, so we cannot have a
-    // unified API to know the current context unless we unify the API to change
-    // context across the codebase.
+    // FIXME: Here assumes that the previous context is always the main context.
+    // We may use eglGetCurrentContext, evas_gl_current_context_get, or
+    // something for this through the Renderer.
     m_renderer->makeCurrent();
 }
 

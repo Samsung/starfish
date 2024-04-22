@@ -34,7 +34,6 @@ public:
     bool createSharedContext();
     bool destory();
     bool setCurrent();
-    void resetCurrent();
     void reset();
     bool isValid();
 
