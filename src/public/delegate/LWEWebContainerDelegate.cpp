@@ -720,12 +720,14 @@ std::string WebContainerImpl::GetURL()
 {
     std::string ret;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = m_webView->mainBrowsingContext()
-                  ->window()
-                  ->location()
-                  ->url()
-                  ->urlString()
-                  ->toUTF8NonGCString();
+        if (m_webView->mainBrowsingContext()) {
+            ret = m_webView->mainBrowsingContext()
+                      ->window()
+                      ->location()
+                      ->url()
+                      ->urlString()
+                      ->toUTF8NonGCString();
+        }
     });
     return ret;
 }
@@ -750,7 +752,12 @@ void WebContainerImpl::Reload()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->mainBrowsingContext()->window()->location()->reload();
+            if (m_webView->mainBrowsingContext()) {
+                m_webView->mainBrowsingContext()
+                    ->window()
+                    ->location()
+                    ->reload();
+            }
         });
 }
 
@@ -759,10 +766,12 @@ void WebContainerImpl::StopLoading()
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             STARFISH_ASSERT(m_webView);
-            m_webView->mainBrowsingContext()
-                ->document()
-                ->resourceLoader()
-                .clear();
+            if (m_webView->mainBrowsingContext()) {
+                m_webView->mainBrowsingContext()
+                    ->document()
+                    ->resourceLoader()
+                    .clear();
+            }
         });
 }
 
@@ -770,7 +779,9 @@ void WebContainerImpl::GoBack()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->mainBrowsingContext()->window()->history()->back();
+            if (m_webView->mainBrowsingContext()) {
+                m_webView->mainBrowsingContext()->window()->history()->back();
+            }
         });
 }
 
@@ -778,7 +789,12 @@ void WebContainerImpl::GoForward()
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
-            m_webView->mainBrowsingContext()->window()->history()->forward();
+            if (m_webView->mainBrowsingContext()) {
+                m_webView->mainBrowsingContext()
+                    ->window()
+                    ->history()
+                    ->forward();
+            }
         });
 }
 
@@ -786,8 +802,12 @@ bool WebContainerImpl::CanGoBack()
 {
     bool ret = false;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret =
-            m_webView->mainBrowsingContext()->window()->history()->canGoBack();
+        if (m_webView->mainBrowsingContext()) {
+            ret = m_webView->mainBrowsingContext()
+                      ->window()
+                      ->history()
+                      ->canGoBack();
+        }
     });
     return ret;
 }
@@ -796,10 +816,12 @@ bool WebContainerImpl::CanGoForward()
 {
     bool ret = false;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = m_webView->mainBrowsingContext()
-                  ->window()
-                  ->history()
-                  ->canGoForward();
+        if (m_webView->mainBrowsingContext()) {
+            ret = m_webView->mainBrowsingContext()
+                      ->window()
+                      ->history()
+                      ->canGoForward();
+        }
     });
     return ret;
 }
@@ -861,7 +883,9 @@ void WebContainerImpl::EvaluateJavaScript(
 
     if (Starfish::isMainThread()) {
         p->webview->messageLoop()->addIdler(
-            p->webview->mainBrowsingContext()->window(),
+            m_webView->mainBrowsingContext()
+                ? p->webview->mainBrowsingContext()->window()
+                : nullptr,
             [](size_t handle, void* data) {
                 STARFISH_ASSERT(data != nullptr);
                 Params* p = (Params*)data;
@@ -874,7 +898,9 @@ void WebContainerImpl::EvaluateJavaScript(
             p);
     } else {
         p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            p->webview->mainBrowsingContext()->window(),
+            m_webView->mainBrowsingContext()
+                ? p->webview->mainBrowsingContext()->window()
+                : nullptr,
             [](size_t handle, void* data) {
                 STARFISH_ASSERT(data != nullptr);
                 Params* p = (Params*)data;
@@ -1552,7 +1578,9 @@ std::string WebContainerImpl::GetTitle()
 {
     Starfish::String* ret = Starfish::String::emptyString;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        ret = m_webView->mainBrowsingContext()->document()->title();
+        if (m_webView->mainBrowsingContext()) {
+            ret = m_webView->mainBrowsingContext()->document()->title();
+        }
     });
     return ret->toUTF8NonGCString();
 }
@@ -1560,16 +1588,20 @@ std::string WebContainerImpl::GetTitle()
 void WebContainerImpl::ScrollTo(int x, int y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->mainBrowsingContext()->window()->scrollTo((double)x,
-                                                             (double)y);
+        if (m_webView->mainBrowsingContext()) {
+            m_webView->mainBrowsingContext()->window()->scrollTo((double)x,
+                                                                 (double)y);
+        }
     });
 }
 
 void WebContainerImpl::ScrollBy(int x, int y)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        m_webView->mainBrowsingContext()->window()->scrollBy((double)x,
-                                                             (double)y);
+        if (m_webView->mainBrowsingContext()) {
+            m_webView->mainBrowsingContext()->window()->scrollBy((double)x,
+                                                                 (double)y);
+        }
     });
 }
 
@@ -1577,7 +1609,9 @@ int WebContainerImpl::GetScrollX()
 {
     int x = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        x = (int)m_webView->mainBrowsingContext()->window()->scrollX();
+        if (m_webView->mainBrowsingContext()) {
+            x = (int)m_webView->mainBrowsingContext()->window()->scrollX();
+        }
     });
     return x;
 }
@@ -1586,7 +1620,9 @@ int WebContainerImpl::GetScrollY()
 {
     int y = 0;
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        y = (int)m_webView->mainBrowsingContext()->window()->scrollY();
+        if (m_webView->mainBrowsingContext()) {
+            y = (int)m_webView->mainBrowsingContext()->window()->scrollY();
+        }
     });
     return y;
 }
