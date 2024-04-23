@@ -42,8 +42,8 @@ public:
 
     AnimatedGIFNativeImageDataImpl(
         const std::vector<char>& compressedImageData, std::string&& imageURL,
-        uint32_t needsDownScaleImageResourceLargerThan, size_t width,
-        size_t height, size_t stride)
+        uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio,
+        size_t width, size_t height, size_t stride)
         : m_image(nullptr)
         , m_width(width)
         , m_stride(stride)
@@ -51,6 +51,7 @@ public:
         , m_imageURL(imageURL)
         , m_needsDownScaleImageResourceLargerThan(
               needsDownScaleImageResourceLargerThan)
+        , m_devicePixelRatio(devicePixelRatio)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
@@ -65,7 +66,8 @@ public:
                              compressedImageData.end());
 
         m_imageDecoder = new ImageDecoder(
-            m_inputBuffer, m_needsDownScaleImageResourceLargerThan, 1);
+            m_inputBuffer, m_needsDownScaleImageResourceLargerThan,
+            m_devicePixelRatio);
     }
 
     virtual ~AnimatedGIFNativeImageDataImpl()
@@ -99,10 +101,12 @@ public:
                 STARFISH_RELEASE_ASSERT(m_image != nullptr);
             }
 
-            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF(m_image);
+            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF(
+                m_image, m_width, m_height);
             if (idResult.m_width == 0 && idResult.m_height == 0) {
                 return false;
             }
+            STARFISH_ASSERT(m_image == idResult.m_buffer);
 
             m_delay = idResult.delay;
             if (m_delay <= MinimumDelay) {
@@ -211,6 +215,7 @@ protected:
     std::vector<char> m_inputBuffer;
     std::string m_imageURL;
     uint32_t m_needsDownScaleImageResourceLargerThan;
+    float m_devicePixelRatio;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
@@ -220,8 +225,8 @@ protected:
 
 NativeImageData* AnimatedGIFNativeImageData::create(
     const std::vector<char>& compressedImageData, std::string&& imageURL,
-    uint32_t needsDownScaleImageResourceLargerThan, size_t width, size_t height,
-    size_t stride)
+    uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio,
+    size_t width, size_t height, size_t stride)
 {
     STARFISH_ASSERT(width != 0);
     STARFISH_ASSERT(height != 0);
@@ -229,7 +234,8 @@ NativeImageData* AnimatedGIFNativeImageData::create(
 
     NativeImageData* imageData = new AnimatedGIFNativeImageDataImpl(
         compressedImageData, std::move(imageURL),
-        needsDownScaleImageResourceLargerThan, width, height, stride);
+        needsDownScaleImageResourceLargerThan, devicePixelRatio, width, height,
+        stride);
     return imageData;
 }
 } // namespace Starfish
