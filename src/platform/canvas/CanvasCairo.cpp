@@ -2113,6 +2113,7 @@ private:
         cairo_set_scaled_font(canvas, scaledFontFace);
 
         bool needsToDrawWithPath = false;
+        float fontStrokeWidth = 0;
 #if !defined(STARFISH_ENABLE_TEST)
         if (glyphCount && canUsePath && m_state.back()->m_font->size() >= 24) {
             cairo_matrix_t m;
@@ -2127,10 +2128,38 @@ private:
                 needsToDrawWithPath = true;
             }
         }
+
+        // draw glpyh with stoke if there was bold style on css but no bold font
+        // was selected
+        if (glyphCount && canUsePath && lastState()->m_font->weight() > 4 &&
+            !(fontFace->freetypeFace()->style_flags & FT_STYLE_FLAG_BOLD)) {
+            needsToDrawWithPath = true;
+            fontStrokeWidth =
+                (lastState()->m_font->weight() / 4.0) *
+                std::min(1.f, (lastState()->m_font->size() / 48.f));
+        }
 #endif
 
         if (needsToDrawWithPath) {
             cairo_glyph_path(canvas, glyphs, glyphCount);
+            if (fontStrokeWidth) {
+                cairo_save(canvas);
+
+                cairo_push_group_with_content(canvas, CAIRO_CONTENT_ALPHA);
+                cairo_set_source_rgba(canvas, 0, 0, 0, 1);
+                cairo_set_line_width(canvas, fontStrokeWidth);
+                cairo_set_operator(canvas, CAIRO_OPERATOR_SOURCE);
+                cairo_stroke_preserve(canvas);
+
+                cairo_set_operator(canvas, CAIRO_OPERATOR_CLEAR);
+                cairo_fill_preserve(canvas);
+
+                cairo_pattern_t* mask = cairo_pop_group(canvas);
+                cairo_mask(canvas, mask);
+                cairo_pattern_destroy(mask);
+
+                cairo_restore(canvas);
+            }
             cairo_fill(canvas);
         } else {
             cairo_show_glyphs(canvas, glyphs, glyphCount);
