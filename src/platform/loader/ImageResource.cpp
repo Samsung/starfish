@@ -265,6 +265,7 @@ void ImageResource::didLoadFinished()
                                                     ->urlString()
                                                     ->toUTF8NonGCString(),
                                                 d->needsDownScaleImageResourceLargerThan,
+                                                d->devicePixelRatio,
                                                 d->decodeResult.m_width,
                                                 d->decodeResult.m_height,
                                                 d->decodeResult.m_stride);
@@ -325,8 +326,8 @@ void ImageResource::didLoadFinished()
             m_imageData = AnimatedGIFNativeImageData::create(
                 m_resourceRequest->response(),
                 url()->urlString()->toUTF8NonGCString(),
-                needsDownScaleImageResourceLargerThan, result.m_width,
-                result.m_height, result.m_stride);
+                needsDownScaleImageResourceLargerThan, devicePixelRatio,
+                result.m_width, result.m_height, result.m_stride);
         } else {
             m_imageData = CompressedNativeImageData::create(
                 m_resourceRequest->response(),

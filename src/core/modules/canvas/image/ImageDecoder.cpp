@@ -795,27 +795,13 @@ static ImageDecoder::DecodeResult decodeWebP(
 }
 #endif
 
-static ImageDecoder::DecodeResult decodeBuffer(
-    const std::vector<char>& inputBuffer, bool full,
-    uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio)
+static ImageDecoder::DecodeResult scaleDownIfNeeds(
+    const ImageDecoder::DecodeResult& original, uint8_t* targetBuffer,
+    bool full, uint32_t needsDownScaleImageResourceLargerThan,
+    float devicePixelRatio)
 {
-    ImageDecoder::DecodeResult result;
-    if (isPNGFormat(inputBuffer)) {
-        result = decodePNG(inputBuffer, full);
-    } else if (isJPGFormat(inputBuffer)) {
-        result =
-            decodeJPG(inputBuffer, full, needsDownScaleImageResourceLargerThan);
-    } else if (isGIFFormat(inputBuffer)) {
-        result = decodeGIF(inputBuffer, full);
-#if defined(STARFISH_ENABLE_WEBP)
-    } else if (isWebPFormat(inputBuffer)) {
-        result = decodeWebP(inputBuffer, full);
-#endif
-    } else {
-        return ImageDecoder::DecodeResult();
-    }
-
-    uint64_t wh = result.m_width * result.m_height;
+    ImageDecoder::DecodeResult scaleDownedResult = original;
+    uint64_t wh = original.m_width * original.m_height;
     float newScale = 1;
     if (needsDownScaleImageResourceLargerThan &&
         wh >= needsDownScaleImageResourceLargerThan) {
@@ -826,35 +812,69 @@ static ImageDecoder::DecodeResult decodeBuffer(
         } else if (wh > 1920 * 1080) {
             newScale = 1 / 2.f;
         }
-    } else if (devicePixelRatio < 1 && result.m_width > 128 &&
-               result.m_height > 128) {
+    } else if (devicePixelRatio < 1 && original.m_width > 128 &&
+               original.m_height > 128) {
         newScale = devicePixelRatio;
     }
 
     if (newScale != 1) {
         STARFISH_ASSERT(newScale < 1);
-        auto oldWidth = result.m_width;
-        auto oldHeight = result.m_height;
-        auto oldStride = result.m_stride;
-        auto oldBuffer = result.m_buffer;
-        result.m_width = result.m_width * newScale;
-        result.m_height = result.m_height * newScale;
-        result.m_stride = result.m_width * 4;
+        scaleDownedResult.m_width = original.m_width * newScale;
+        scaleDownedResult.m_height = original.m_height * newScale;
+        scaleDownedResult.m_stride = scaleDownedResult.m_width * 4;
 
         if (full) {
-            result.m_buffer =
-                (uint8_t*)malloc(result.m_stride * result.m_height);
-            Canvas::resizeImage(oldBuffer, oldWidth, oldHeight, oldStride,
-                                result.m_buffer, result.m_width,
-                                result.m_height, result.m_stride);
-            free(oldBuffer);
+            if (!targetBuffer) {
+                scaleDownedResult.m_buffer = (uint8_t*)malloc(
+                    scaleDownedResult.m_stride * scaleDownedResult.m_height);
+            } else {
+                scaleDownedResult.m_buffer = targetBuffer;
+            }
+
+            Canvas::resizeImage(
+                original.m_buffer, original.m_width, original.m_height,
+                original.m_stride, scaleDownedResult.m_buffer,
+                scaleDownedResult.m_width, scaleDownedResult.m_height,
+                scaleDownedResult.m_stride);
         }
 
-        STARFISH_LOG_INFO("Downscale image(%zu,%zu -> %zu,%zu)", oldWidth,
-                          oldHeight, result.m_width, result.m_height);
+        STARFISH_LOG_INFO("Downscale image(%zu,%zu -> %zu,%zu)",
+                          original.m_width, original.m_height,
+                          scaleDownedResult.m_width,
+                          scaleDownedResult.m_height);
     }
 
-    return result;
+    return scaleDownedResult;
+}
+
+static ImageDecoder::DecodeResult decodeBuffer(
+    const std::vector<char>& inputBuffer, bool full,
+    uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio)
+{
+    ImageDecoder::DecodeResult originalResult;
+    if (isPNGFormat(inputBuffer)) {
+        originalResult = decodePNG(inputBuffer, full);
+    } else if (isJPGFormat(inputBuffer)) {
+        originalResult =
+            decodeJPG(inputBuffer, full, needsDownScaleImageResourceLargerThan);
+    } else if (isGIFFormat(inputBuffer)) {
+        originalResult = decodeGIF(inputBuffer, full);
+#if defined(STARFISH_ENABLE_WEBP)
+    } else if (isWebPFormat(inputBuffer)) {
+        originalResult = decodeWebP(inputBuffer, full);
+#endif
+    } else {
+        return ImageDecoder::DecodeResult();
+    }
+
+    ImageDecoder::DecodeResult scaleDownedResult = scaleDownIfNeeds(
+        originalResult, nullptr, full, needsDownScaleImageResourceLargerThan,
+        devicePixelRatio);
+    if (scaleDownedResult.m_buffer != originalResult.m_buffer) {
+        free(originalResult.m_buffer);
+    }
+
+    return scaleDownedResult;
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
@@ -914,7 +934,7 @@ bool ImageDecoder::prepareAnimatedGIF()
 }
 
 ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
-    uint8_t* targetBuffer)
+    uint8_t* targetBuffer, size_t targetWidth, size_t targetHeight)
 {
     bool isNewFrame = false;
     size_t row = 0, col = 0;
@@ -936,7 +956,18 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     result.m_width = gifFile->SWidth;
     result.m_height = gifFile->SHeight;
     result.m_stride = result.m_width * 4;
-    result.m_buffer = targetBuffer;
+
+    uint8_t* decodingBuffer = nullptr;
+    size_t actualSize = result.m_width * result.m_height * 4;
+    size_t targetSize = targetWidth * targetHeight * 4;
+
+    if (actualSize != targetSize) {
+        // Allocate memory equal to the actual gif image size.
+        // It must be freed after scale down.
+        decodingBuffer = (uint8_t*)malloc(result.m_width * result.m_height * 4);
+    } else {
+        decodingBuffer = targetBuffer;
+    }
 
     do {
         DGifGetRecordType(gifFile, &recordType);
@@ -977,7 +1008,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 for (int h = 0; h < (int)result.m_height; h++) {
                     for (int w = 0; w < (int)result.m_width; w++) {
                         GifByteType* buffer =
-                            result.m_buffer + h * result.m_stride + w * 4;
+                            decodingBuffer + h * result.m_stride + w * 4;
                         if (gifFile->SBackGroundColor != transparentIndex) {
                             setTargetPixel(buffer, colorMapEntry);
                         } else {
@@ -993,7 +1024,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 GifColorType* colorMapEntry = nullptr;
                 GifByteType* buffer = nullptr;
 
-                STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
+                STARFISH_RELEASE_ASSERT(decodingBuffer != nullptr);
 
                 row = gifFile->Image.Top;
                 col = gifFile->Image.Left;
@@ -1003,7 +1034,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 for (unsigned long h = row; h < row + height; h++) {
                     gifRow = gifBuffer[h];
                     for (unsigned long w = col; w < col + width; w++) {
-                        buffer = result.m_buffer + h * result.m_stride + w * 4;
+                        buffer = decodingBuffer + h * result.m_stride + w * 4;
                         colorMapEntry = &colorMap->Colors[gifRow[w]];
 
                         // http://giflib.sourceforge.net/whatsinagif/animation_and_transparency.html
@@ -1120,16 +1151,26 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
         }
     } while (recordType != TERMINATE_RECORD_TYPE);
 
+    // Scale down original result to scaleDownedResult with target buffer.
+    result.m_buffer = decodingBuffer;
+    DecodeResult scaleDownedResult = scaleDownIfNeeds(
+        result, targetBuffer, true, m_needsDownScaleImageResourceLargerThan,
+        m_devicePixelRatio);
+    if (scaleDownedResult.m_buffer != result.m_buffer) {
+        STARFISH_ASSERT(result.m_buffer == decodingBuffer);
+        free(decodingBuffer);
+    }
+
     if (colorMap == nullptr) {
         releaseGIFResource(gifFile, gifBuffer, result.m_height);
         // These handles are copied from members. After releasing these,
         // original members must be initialized to null.
         m_gifFile = nullptr;
         m_gifBuffer = nullptr;
-        return result;
+        return scaleDownedResult;
     }
-    result.m_isSuccessful = true;
-    return result;
+    scaleDownedResult.m_isSuccessful = true;
+    return scaleDownedResult;
 }
 
 ImageDecoder::~ImageDecoder()
@@ -1176,7 +1217,7 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
 }
 
 ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
-    uint8_t* targetBuffer)
+    uint8_t* targetBuffer, size_t targetWidth, size_t targetHeight)
 {
     return ImageDecoder::DecodeResult();
 }

@@ -67,7 +67,9 @@ public:
 
     DecodeResult decodeJustImageSize();
     DecodeResult decode();
-    DecodeResult nextFrameOfAnimatedGIF(uint8_t* targetBuffer);
+    DecodeResult nextFrameOfAnimatedGIF(uint8_t* targetBuffer,
+                                        size_t targetWidth,
+                                        size_t targetHeight);
     int loopCount()
     {
         return m_loopCount;

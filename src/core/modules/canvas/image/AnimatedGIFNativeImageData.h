@@ -28,8 +28,8 @@ class AnimatedGIFNativeImageData : public BufferedNativeImageData {
 public:
     static NativeImageData* create(
         const std::vector<char>& compressedImageData, std::string&& imageURL,
-        uint32_t needsDownScaleImageResourceLargerThan, size_t width,
-        size_t height, size_t stride);
+        uint32_t needsDownScaleImageResourceLargerThan, float devicePixelRatio,
+        size_t width, size_t height, size_t stride);
 
     virtual bool prepareNextFrame() = 0;
     virtual size_t delay() = 0;
