@@ -431,10 +431,15 @@ public:
         UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
         std::transform(after.begin(), after.end(), after.begin(), tolower);
 
+        FcPatternGetString(resultPattern, FC_FULLNAME, 0, &fontNameAfterMatch);
+        UTF8StringDataNonGCStd fullName = (char*)fontNameAfterMatch;
+        std::transform(fullName.begin(), fullName.end(), fullName.begin(),
+                       tolower);
+
         if (familyName != m_webView->initialFontFamilyDatas()[1]
                               .m_familyName.string()
                               ->toUTF8NonGCString()) {
-            if (after != familyName) {
+            if (after != familyName && fullName != familyName) {
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);
                     FcPatternDestroy(pattern);
