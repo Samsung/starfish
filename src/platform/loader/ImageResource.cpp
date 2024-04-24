@@ -321,7 +321,8 @@ void ImageResource::didLoadFinished()
             // use devicePixelRatio 1 for AnimatedGIF
             // since It may have a lots of frame what we have to decode
             ImageDecoder id(m_resourceRequest->response(),
-                            needsDownScaleImageResourceLargerThan, 1);
+                            needsDownScaleImageResourceLargerThan,
+                            devicePixelRatio);
             auto result = id.decodeJustImageSize();
             m_imageData = AnimatedGIFNativeImageData::create(
                 m_resourceRequest->response(),
