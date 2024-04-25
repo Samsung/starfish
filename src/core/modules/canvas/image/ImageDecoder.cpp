@@ -859,6 +859,8 @@ static ImageDecoder::DecodeResult decodeBuffer(
             decodeJPG(inputBuffer, full, needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
         originalResult = decodeGIF(inputBuffer, full);
+        // Do not down scale.
+        return originalResult;
 #if defined(STARFISH_ENABLE_WEBP)
     } else if (isWebPFormat(inputBuffer)) {
         originalResult = decodeWebP(inputBuffer, full);
@@ -956,18 +958,9 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     result.m_width = gifFile->SWidth;
     result.m_height = gifFile->SHeight;
     result.m_stride = result.m_width * 4;
-
-    uint8_t* decodingBuffer = nullptr;
-    size_t actualSize = result.m_width * result.m_height * 4;
-    size_t targetSize = targetWidth * targetHeight * 4;
-
-    if (actualSize != targetSize) {
-        // Allocate memory equal to the actual gif image size.
-        // It must be freed after scale down.
-        decodingBuffer = (uint8_t*)malloc(result.m_width * result.m_height * 4);
-    } else {
-        decodingBuffer = targetBuffer;
-    }
+    result.m_buffer = targetBuffer;
+    STARFISH_ASSERT((result.m_width * result.m_height) ==
+                    (targetWidth * targetHeight));
 
     do {
         DGifGetRecordType(gifFile, &recordType);
@@ -1008,7 +1001,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 for (int h = 0; h < (int)result.m_height; h++) {
                     for (int w = 0; w < (int)result.m_width; w++) {
                         GifByteType* buffer =
-                            decodingBuffer + h * result.m_stride + w * 4;
+                            result.m_buffer + h * result.m_stride + w * 4;
                         if (gifFile->SBackGroundColor != transparentIndex) {
                             setTargetPixel(buffer, colorMapEntry);
                         } else {
@@ -1024,7 +1017,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 GifColorType* colorMapEntry = nullptr;
                 GifByteType* buffer = nullptr;
 
-                STARFISH_RELEASE_ASSERT(decodingBuffer != nullptr);
+                STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
 
                 row = gifFile->Image.Top;
                 col = gifFile->Image.Left;
@@ -1034,7 +1027,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                 for (unsigned long h = row; h < row + height; h++) {
                     gifRow = gifBuffer[h];
                     for (unsigned long w = col; w < col + width; w++) {
-                        buffer = decodingBuffer + h * result.m_stride + w * 4;
+                        buffer = result.m_buffer + h * result.m_stride + w * 4;
                         colorMapEntry = &colorMap->Colors[gifRow[w]];
 
                         // http://giflib.sourceforge.net/whatsinagif/animation_and_transparency.html
@@ -1151,26 +1144,16 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
         }
     } while (recordType != TERMINATE_RECORD_TYPE);
 
-    // Scale down original result to scaleDownedResult with target buffer.
-    result.m_buffer = decodingBuffer;
-    DecodeResult scaleDownedResult = scaleDownIfNeeds(
-        result, targetBuffer, true, m_needsDownScaleImageResourceLargerThan,
-        m_devicePixelRatio);
-    if (scaleDownedResult.m_buffer != result.m_buffer) {
-        STARFISH_ASSERT(result.m_buffer == decodingBuffer);
-        free(decodingBuffer);
-    }
-
     if (colorMap == nullptr) {
         releaseGIFResource(gifFile, gifBuffer, result.m_height);
         // These handles are copied from members. After releasing these,
         // original members must be initialized to null.
         m_gifFile = nullptr;
         m_gifBuffer = nullptr;
-        return scaleDownedResult;
+        return result;
     }
-    scaleDownedResult.m_isSuccessful = true;
-    return scaleDownedResult;
+    result.m_isSuccessful = true;
+    return result;
 }
 
 ImageDecoder::~ImageDecoder()
