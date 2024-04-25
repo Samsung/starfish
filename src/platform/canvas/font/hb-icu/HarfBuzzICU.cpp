@@ -364,7 +364,7 @@ hb_unicode_funcs_t *hb_icu_get_unicode_funcs()
             user_data = (void *)unorm2_getNFCInstance(&icu_err);
             assert(user_data);
         }
-        hb_unicode_funcs_t *funcs = hb_unicode_funcs_create(nullptr);
+        funcs = hb_unicode_funcs_create(nullptr);
 
         hb_unicode_funcs_set_combining_class_func(
             funcs, hb_icu_unicode_combining_class, nullptr, nullptr);

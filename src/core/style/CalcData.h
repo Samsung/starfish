@@ -363,7 +363,7 @@ public:
 
 private:
     GCVector<CalcTerm*> m_terms;
-    std::vector<size_t> m_argumentsStartPostion;
+    GCAtomicVector<size_t> m_argumentsStartPostion;
     Type m_type = Type::kCalc;
 
     // Only supports numeric types
