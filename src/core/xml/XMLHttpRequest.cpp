@@ -244,7 +244,7 @@ public:
                         m_xhr->m_responseBlob = new ::Starfish::Blob(
                             m_xhr->executionContext(),
                             m_xhr->m_resourceRequest->response().size(),
-                            mimeString, buffer, false, false);
+                            mimeString, buffer, false, false, true);
                         if (request->readyState() == ReadyState::Done) {
                             m_xhr->m_resourceRequest->response().clear();
                             m_xhr->m_resourceRequest->response()
