@@ -469,8 +469,7 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
             FrameBox* box = m_target->asElement()->frame()->asFrameBox();
             StackingContext* sc = box->stackingContext();
 
-            if (sc->needsGraphicsBufferReason() &&
-                sc->visibleRect().isEmpty()) {
+            if (sc->needsGraphicsBuffer()) {
                 m_target->asElement()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
