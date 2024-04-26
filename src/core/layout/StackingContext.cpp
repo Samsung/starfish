@@ -693,8 +693,8 @@ public:
 
                     if (overflowOrScroll.first) {
                         clipFrameBoxRect(frameBox);
-                        clipBorderRadiusIfNeeds(frameBox);
                     }
+                    clipBorderRadiusIfNeeds(frameBox);
 
                     if (style->isAbsolutePositioned()) {
                         applyStyleClip(style);
@@ -2741,11 +2741,14 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
     }
 
+    bool wasTranslateAppliedDueToScroll = false;
     if (owner()->shouldApplyOverflow()) {
         canvas->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (m_owner->isFrameBlockBox()) {
+            wasTranslateAppliedDueToScroll = true;
+            canvas->save();
             canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                               -m_owner->asFrameBlockBox()->scrollTop());
         }
@@ -2808,6 +2811,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canvas->endOpacityLayer();
     }
 
+    if (wasTranslateAppliedDueToScroll) {
+        canvas->restore();
+    }
     paintScrollbar(canvas);
 
     canvas->restore();
