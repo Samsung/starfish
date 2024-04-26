@@ -66,6 +66,7 @@ public:
 
     void initialize() override;
     void flush() override;
+    void onResize() override;
 
     GLsizei drawingBufferWidth() const;
     GLsizei drawingBufferHeight() const;

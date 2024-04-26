@@ -176,6 +176,10 @@ void WebGLRenderingContext::initialize()
     // (context.drawingBufferWidth, context.drawingBufferHeight).
 
     viewport(0, 0, drawingBufferWidth(), drawingBufferHeight());
+
+    // bind default frame buffer
+    GLContextScope contextScope(m_context);
+    m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
 }
 
 void WebGLRenderingContext::flush()
@@ -185,6 +189,12 @@ void WebGLRenderingContext::flush()
     // drawing buffer.
 
     WebGLRenderingContextBaseMixIn::flush();
+
+    GLRevertableContextScope scope(
+        m_context, executionContext()->webBase()->asWebView()->renderer());
+    // we need to bind 0(screen) buffer for sending commands to gpu
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
 
     /*
     +---------+--------------+----------------------+---------------------+
@@ -206,6 +216,15 @@ void WebGLRenderingContext::flush()
     //
     // glClearColor(0, 0, 0, 0); // In EGL, the initial values are all 0.
     // glClearDepthf(1.0);       // In EGL, the initial value is 1.
+}
+
+void WebGLRenderingContext::onResize()
+{
+    WebGLRenderingContextBaseMixIn::onResize();
+
+    // bind default frame buffer
+    GLContextScope contextScope(m_context);
+    m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
 }
 
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...) \
@@ -488,17 +507,9 @@ void WebGLRenderingContext::bindFramebuffer(
         }
 
         m_gl->bindFramebuffer(target, frameBuffer->glObject());
-
         m_state->setWebGLFramebuffer(frameBuffer);
     } else {
-        // NOTE: the spec. says that "if framebuffer is null, the default
-        // framebuffer provided by the context is bound and attempts to modify
-        // or query state on target FRAMEBUFFER will generate an
-        // INVALID_OPERATION error." The default framebuffer we use would not be
-        // exposed to users, so I think that we don't need to worry about this.
-        // However, it's worth checking with TCs to see if this is the case.
-        m_gl->bindFramebuffer(target, 0);
-
+        m_gl->bindFramebuffer(target, m_framebufferTexture->fbo());
         m_state->setWebGLFramebuffer(nullptr);
     }
 }
@@ -628,7 +639,6 @@ void WebGLRenderingContext::clear(uint32_t mask)
 
     maskHistory |= mask;
 
-    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->clear(mask);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -833,7 +843,6 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
         setGLError(GL_INVALID_OPERATION);
     }
 
-    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->drawArrays(mode, first, count);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -862,7 +871,6 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
         setGLError(GL_INVALID_OPERATION);
     }
 
-    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->drawElements(mode, count, type, reinterpret_cast<void*>(offset));
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -890,7 +898,6 @@ void WebGLRenderingContext::finish()
 {
     ENTER_CONTEXT_SCOPE();
 
-    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->finish();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -899,7 +906,6 @@ void WebGLRenderingContext::flushWebGL()
 {
     ENTER_CONTEXT_SCOPE();
 
-    FBOScope fboScope(getCurrentFBO(), m_gl);
     m_gl->flush();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -922,6 +928,9 @@ void WebGLRenderingContext::framebufferRenderbuffer(
     } else {
         m_gl->framebufferRenderbuffer(target, attachment, renderbuffertarget,
                                       0);
+        if (isDefaultFramebufferBound()) {
+            setGLError(GL_INVALID_OPERATION);
+        }
     }
 }
 
@@ -948,6 +957,9 @@ void WebGLRenderingContext::framebufferTexture2D(
                                    level);
     } else {
         m_gl->framebufferTexture2D(target, attachment, textarget, 0, level);
+        if (isDefaultFramebufferBound()) {
+            setGLError(GL_INVALID_OPERATION);
+        }
     }
 }
 
@@ -2408,8 +2420,6 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         */
 
         GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
-
-        FBOScope fboScope(getCurrentFBO(), m_gl);
         m_gl->readPixels(x, y, width, height, format, type, data);
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.

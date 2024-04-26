@@ -62,21 +62,6 @@ private:
     GL* m_gl{ nullptr };
 };
 
-class FBOScope {
-public:
-    explicit FBOScope(GLuint fbo, GL*);
-    ~FBOScope();
-    FBOScope(const FBOScope& other) = delete;
-    FBOScope& operator=(const FBOScope& other) = delete;
-    FBOScope(FBOScope&& other) = delete;
-    void* operator new(size_t size) = delete;
-    void* operator new[](size_t size) = delete;
-    void operator delete(void* p) = delete;
-
-private:
-    GL* m_gl{ nullptr };
-};
-
 class Pixel {
 public:
     static size_t getBytesPerPixel(GLenum format, GLenum type);

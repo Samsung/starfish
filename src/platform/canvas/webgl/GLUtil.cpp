@@ -129,17 +129,6 @@ bool FramebufferTexture::destory()
     return true;
 };
 
-FBOScope::FBOScope(GLuint fbo, GL* gl)
-    : m_gl(gl)
-{
-    m_gl->bindFramebuffer(GL_FRAMEBUFFER, fbo);
-}
-
-FBOScope::~FBOScope()
-{
-    m_gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
 {
     // Format      Type                Bytes per Pixel
