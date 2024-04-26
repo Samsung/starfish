@@ -1658,7 +1658,7 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                                 ->hasBiggerContentThanFrameHeight()) {
                             double t = e->scrollTop();
                             double scrollBefore = t;
-                            t += z * 15;
+                            t += z * 30;
                             e->setScrollTop(t);
                             if (scrollBefore != e->scrollTop()) {
                                 useEventInDOMTree = true;
@@ -1675,7 +1675,7 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                                 ->hasBiggerContentThanFrameWidth()) {
                             double t = e->scrollLeft();
                             double scrollBefore = t;
-                            t += z * 15;
+                            t += z * 30;
                             e->setScrollLeft(t);
                             if (scrollBefore != e->scrollLeft()) {
                                 useEventInDOMTree = true;
