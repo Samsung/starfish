@@ -782,8 +782,8 @@ public:
 
                 if (overflowOrScroll.first && childFrameBox != frameBox) {
                     clipFrameBoxRect(frameBox);
-                    clipBorderRadiusIfNeeds(frameBox);
                 }
+                clipBorderRadiusIfNeeds(frameBox);
 
                 if (style->isAbsolutePositioned()) {
                     applyStyleClip(style);
@@ -1394,7 +1394,10 @@ void StackingContext::applyStackingContextProperties(
         if (m_rareData->m_visibleRect.width() == 0 &&
             m_rareData->m_visibleRect.height() == 0 &&
             !m_owner->isRootElement() && !inAnimation) {
-            willBeComposited = false;
+            if (m_owner->appliedOverflowX() == OverflowValue::VisibleOverflow &&
+               m_owner->appliedOverflowY() == OverflowValue::VisibleOverflow) {
+                willBeComposited = false;
+            }
         }
 
         m_isVisibleRectComputedForNonGraphicsLayer = true;
