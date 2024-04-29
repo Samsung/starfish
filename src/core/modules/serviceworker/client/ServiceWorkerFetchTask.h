@@ -42,8 +42,9 @@ public:
 
 private:
     ResourceRequest* m_resourceRequest;
-    FetchEventHandler* m_fetchEventHandler;
+    FetchEventHandler* m_fetchEventHandler{ nullptr };
     ServiceWorkerFetchKey m_id{ 0 };
+    bool m_enabled{ false };
 };
 
 } // namespace Starfish
