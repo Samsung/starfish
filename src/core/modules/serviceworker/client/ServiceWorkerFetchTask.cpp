@@ -46,14 +46,22 @@ ServiceWorkerFetchTask::ServiceWorkerFetchTask(ResourceRequest* resourceRequest)
     auto fetchEventHandler =
         ServiceWorkerProcessManager::instance()->findFetchEventHandler(
             m_resourceRequest->executionContext()->globalScope()->uid());
-    STARFISH_ASSERT(fetchEventHandler.hasValue());
 
-    m_fetchEventHandler = fetchEventHandler.getValue();
-    m_id = m_fetchEventHandler->fetchTaskId();
+    // In the global scope where the service worker is not registered, the
+    // service worker fetch is disabled.
+    if (fetchEventHandler.hasValue()) {
+        m_fetchEventHandler = fetchEventHandler.getValue();
+        m_id = m_fetchEventHandler->fetchTaskId();
+        m_enabled = true;
+    }
 }
 
 bool ServiceWorkerFetchTask::request(String* body)
 {
+    if (!m_enabled) {
+        return false;
+    }
+
     TRACE(CLIENT, m_resourceRequest->url()->href()->toUTF8String().data(),
           CSTR(body));
 
