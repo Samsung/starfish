@@ -70,6 +70,7 @@ public:
             m_lastLayoutResult);
         std::unordered_map<Node*, LayoutRect>().swap(
             m_dirtyAreaPerStackingContextOwners);
+        m_boundMaxExtentDueToOverflow.clear();
     }
 
     void clearDatasRelatedWithStackingContext()
