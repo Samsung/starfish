@@ -78,66 +78,6 @@ inline static std::string hex(GLenum name)
     return StringUtils::formatString("0x%04X", name);
 }
 
-static void copyFloat32List(ScriptBindingInstance* instance,
-                            const Float32List& variant,
-                            std::vector<float>& vector)
-{
-    Evaluator::EvaluatorResult evaluated = Evaluator::execute(
-        instance->scriptContext(),
-        [](ExecutionStateRef* state, const Float32List* variant,
-           std::vector<float>* vector) -> ValueRef* {
-            if (variant->isFloat32ArrayValue()) {
-                Float32ArrayObjectRef* values = variant->getFloat32ArrayValue();
-                const size_t arrayLength = values->arrayLength();
-
-                for (size_t i = 0; i < arrayLength; ++i) {
-                    vector->push_back(values->get(state, ValueRef::create(i))
-                                          ->toNumber(state));
-                }
-            } else {
-                STARFISH_ASSERT(variant->isSequenceOfGLfloatValue());
-
-                for (const auto& value : variant->getSequenceOfGLfloatValue()) {
-                    vector->push_back(static_cast<float>(value));
-                }
-            }
-            return ValueRef::createUndefined();
-        },
-        &variant, &vector);
-
-    STARFISH_ASSERT(evaluated.isSuccessful());
-}
-
-static void copyInt32List(ScriptBindingInstance* instance,
-                          const Int32List& variant,
-                          std::vector<int32_t>& vector)
-{
-    Evaluator::EvaluatorResult evaluated = Evaluator::execute(
-        instance->scriptContext(),
-        [](ExecutionStateRef* state, const Int32List* variant,
-           std::vector<int32_t>* vector) -> ValueRef* {
-            if (variant->isInt32ArrayValue()) {
-                Int32ArrayObjectRef* values = variant->getInt32ArrayValue();
-                const size_t arrayLength = values->arrayLength();
-
-                for (size_t i = 0; i < arrayLength; ++i) {
-                    vector->push_back(values->get(state, ValueRef::create(i))
-                                          ->toNumber(state));
-                }
-            } else {
-                STARFISH_ASSERT(variant->isSequenceOfGLintValue());
-
-                for (const auto& value : variant->getSequenceOfGLintValue()) {
-                    vector->push_back(static_cast<int32_t>(value));
-                }
-            }
-            return ValueRef::createUndefined();
-        },
-        &variant, &vector);
-
-    STARFISH_ASSERT(evaluated.isSuccessful());
-}
-
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     : WebGLRenderingContextBaseMixIn(canvasElement)
 {
@@ -1962,16 +1902,36 @@ void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
     m_gl->vertexAttrib4f(index, x, y, z, w);
 }
 
-#define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                   \
-    void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,        \
-                                                    Float32List variant) \
-    {                                                                    \
-        ENTER_CONTEXT_SCOPE();                                           \
-        std::vector<float> vector;                                       \
-        copyFloat32List(scriptBindingInstance(), variant, vector);       \
-        if (!vector.empty()) {                                           \
-            m_gl->vertexAttrib##N##fv(index, vector.data());             \
-        }                                                                \
+#define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                      \
+    void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,           \
+                                                    Float32List variant)    \
+    {                                                                       \
+        ENTER_CONTEXT_SCOPE();                                              \
+        if (variant.isFloat32ArrayValue()) {                                \
+            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue(); \
+            const size_t arrayLength = values->arrayLength();               \
+            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer()); \
+            if (arrayLength > 0) {                                          \
+                m_gl->vertexAttrib##N##fv(                                  \
+                    index, reinterpret_cast<GLfloat*>(rawBuffer));          \
+            }                                                               \
+        } else {                                                            \
+            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());            \
+            /* Due to the memory size of double and float types, the raw    \
+             * buffer returned by GCAtomicVector<double>::data() cannot be  \
+             * used directly. Reconstructs a float buffer including values  \
+             * converted from double. */                                    \
+            const GCAtomicVector<double> v =                                \
+                variant.getSequenceOfGLfloatValue();                        \
+            std::vector<GLfloat> vector;                                    \
+            vector.reserve(v.size());                                       \
+            for (const double& value : v) {                                 \
+                vector.push_back(static_cast<GLfloat>(value));              \
+            }                                                               \
+            if (!vector.empty()) {                                          \
+                m_gl->vertexAttrib##N##fv(index, vector.data());            \
+            }                                                               \
+        }                                                                   \
     }
 
 IMPLEMENT_VERTEX_ATTRIB_NFV(1)
@@ -2524,9 +2484,54 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                      image.data());
 }
 
-#define IMPLEMENT_UNIFORM_NXV(N, Suffix, SrcType, DestType)                   \
+#define IMPLEMENT_UNIFORM_NFV(N, Suffix, SrcType)                           \
+    void WebGLRenderingContext::uniform##N##Suffix(                         \
+        WebGLUniformLocation* location, SrcType variant)                    \
+    {                                                                       \
+        ENTER_CONTEXT_SCOPE();                                              \
+        if (location == nullptr) {                                          \
+            return;                                                         \
+        }                                                                   \
+        if (!isFromCurrentProgram(location)) {                              \
+            setGLError(GL_INVALID_OPERATION);                               \
+            return;                                                         \
+        }                                                                   \
+        if (variant.isFloat32ArrayValue()) {                                \
+            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue(); \
+            const size_t arrayLength = values->arrayLength();               \
+            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer()); \
+            if (arrayLength > 0) {                                          \
+                /* count specifies the number of matrices. */               \
+                m_gl->uniform##N##Suffix(                                   \
+                    location->location(), arrayLength / N,                  \
+                    reinterpret_cast<GLfloat*>(rawBuffer));                 \
+            }                                                               \
+        } else {                                                            \
+            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());            \
+            const GCAtomicVector<double> v =                                \
+                variant.getSequenceOfGLfloatValue();                        \
+            std::vector<GLfloat> vector;                                    \
+            vector.reserve(v.size());                                       \
+            for (const double& value : v) {                                 \
+                vector.push_back(static_cast<GLfloat>(value));              \
+            }                                                               \
+            if (!vector.empty()) {                                          \
+                m_gl->uniform##N##Suffix(location->location(),              \
+                                         vector.size() / N, vector.data()); \
+            }                                                               \
+        }                                                                   \
+    }
+
+IMPLEMENT_UNIFORM_NFV(1, fv, Float32List)
+IMPLEMENT_UNIFORM_NFV(2, fv, Float32List)
+IMPLEMENT_UNIFORM_NFV(3, fv, Float32List)
+IMPLEMENT_UNIFORM_NFV(4, fv, Float32List)
+
+#undef IMPLEMENT_UNIFORM_NFV
+
+#define IMPLEMENT_UNIFORM_NIV(N, Suffix, SrcType)                             \
     void WebGLRenderingContext::uniform##N##Suffix(                           \
-        WebGLUniformLocation* location, SrcType value)                        \
+        WebGLUniformLocation* location, SrcType variant)                      \
     {                                                                         \
         ENTER_CONTEXT_SCOPE();                                                \
         if (location == nullptr) {                                            \
@@ -2536,47 +2541,73 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
             setGLError(GL_INVALID_OPERATION);                                 \
             return;                                                           \
         }                                                                     \
-        std::vector<DestType> vector;                                         \
-        copy##SrcType(scriptBindingInstance(), value, vector);                \
-        if (!vector.empty()) {                                                \
-            m_gl->uniform##N##Suffix(location->location(), vector.size() / N, \
-                                     vector.data());                          \
+        if (variant.isInt32ArrayValue()) {                                    \
+            Int32ArrayObjectRef* values = variant.getInt32ArrayValue();       \
+            const size_t arrayLength = values->arrayLength();                 \
+            const uint8_t* rawBuffer = values->rawBuffer();                   \
+            if (arrayLength > 0) {                                            \
+                /* count specifies the number of matrices. */                 \
+                m_gl->uniform##N##Suffix(location->location(),                \
+                                         arrayLength / N, (GLint*)rawBuffer); \
+            }                                                                 \
+        } else {                                                              \
+            STARFISH_ASSERT(variant.isSequenceOfGLintValue());                \
+            GCAtomicVector<int32_t> vector =                                  \
+                variant.getSequenceOfGLintValue();                            \
+            if (!vector.empty()) {                                            \
+                m_gl->uniform##N##Suffix(location->location(),                \
+                                         vector.size() / N, vector.data());   \
+            }                                                                 \
         }                                                                     \
     }
 
-IMPLEMENT_UNIFORM_NXV(1, fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(2, fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(3, fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(4, fv, Float32List, float)
-IMPLEMENT_UNIFORM_NXV(1, iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(2, iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(3, iv, Int32List, int32_t)
-IMPLEMENT_UNIFORM_NXV(4, iv, Int32List, int32_t)
+IMPLEMENT_UNIFORM_NIV(1, iv, Int32List)
+IMPLEMENT_UNIFORM_NIV(2, iv, Int32List)
+IMPLEMENT_UNIFORM_NIV(3, iv, Int32List)
+IMPLEMENT_UNIFORM_NIV(4, iv, Int32List)
 
-#undef IMPLEMENT_UNIFORM_NXV
+#undef IMPLEMENT_UNIFORM_NIV
 
-#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                    \
-    void WebGLRenderingContext::uniformMatrix##N##fv(                      \
-        WebGLUniformLocation* location, GLboolean transpose,               \
-        Float32List value)                                                 \
-    {                                                                      \
-        ENTER_CONTEXT_SCOPE();                                             \
-        /* location is nullable. */                                        \
-        if (location == nullptr) {                                         \
-            return;                                                        \
-        }                                                                  \
-        if (!isFromCurrentProgram(location)) {                             \
-            setGLError(GL_INVALID_OPERATION);                              \
-            return;                                                        \
-        }                                                                  \
-        std::vector<float> vector;                                         \
-        copyFloat32List(scriptBindingInstance(), value, vector);           \
-        if (!vector.empty()) {                                             \
-            /* count specifies the number of matrices. */                  \
-            m_gl->uniformMatrix##N##fv(location->location(),               \
-                                       vector.size() / (N * N), transpose, \
-                                       vector.data());                     \
-        }                                                                  \
+#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                        \
+    void WebGLRenderingContext::uniformMatrix##N##fv(                          \
+        WebGLUniformLocation* location, GLboolean transpose,                   \
+        Float32List variant)                                                   \
+    {                                                                          \
+        ENTER_CONTEXT_SCOPE();                                                 \
+        /* location is nullable. */                                            \
+        if (location == nullptr) {                                             \
+            return;                                                            \
+        }                                                                      \
+        if (!isFromCurrentProgram(location)) {                                 \
+            setGLError(GL_INVALID_OPERATION);                                  \
+            return;                                                            \
+        }                                                                      \
+        if (variant.isFloat32ArrayValue()) {                                   \
+            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue();    \
+            const size_t arrayLength = values->arrayLength();                  \
+            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer());    \
+            if (arrayLength > 0) {                                             \
+                /* count specifies the number of matrices. */                  \
+                m_gl->uniformMatrix##N##fv(                                    \
+                    location->location(), arrayLength / (N * N), transpose,    \
+                    reinterpret_cast<GLfloat*>(rawBuffer));                    \
+            }                                                                  \
+        } else {                                                               \
+            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());               \
+            const GCAtomicVector<double> v =                                   \
+                variant.getSequenceOfGLfloatValue();                           \
+            std::vector<GLfloat> vector;                                       \
+            vector.reserve(v.size());                                          \
+            for (const double& value : v) {                                    \
+                vector.push_back(static_cast<GLfloat>(value));                 \
+            }                                                                  \
+            if (!vector.empty()) {                                             \
+                /* count specifies the number of matrices. */                  \
+                m_gl->uniformMatrix##N##fv(location->location(),               \
+                                           vector.size() / (N * N), transpose, \
+                                           vector.data());                     \
+            }                                                                  \
+        }                                                                      \
     }
 
 IMPLEMENT_UNIFORM_MATRIX_NFV(2)
