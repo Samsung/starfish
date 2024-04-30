@@ -1,3 +1,4 @@
+// #define STARFISH_ENABLE_PROFILE_TIMER
 /*
  * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *

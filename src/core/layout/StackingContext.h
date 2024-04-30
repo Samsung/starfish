@@ -40,6 +40,7 @@ enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
     NeedsGraphicsLayerReasonNotCoveredByParent,
     NeedsGraphicsLayerReasonCollapsedWithSiblingLayer,
     NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation,
+    NeedsGraphicsLayerReasonNeedsScroll,
 };
 
 class GraphicsBufferHolder : public gc {

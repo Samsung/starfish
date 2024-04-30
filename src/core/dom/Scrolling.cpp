@@ -433,6 +433,32 @@ void Scrolling::markAsActive()
     }
 }
 
+static bool needsRepaintingWhenScrolling(StackingContext* sc)
+{
+    if (!sc->needsGraphicsBuffer()) {
+        return true;
+    }
+
+    // check border
+    auto paddingBox = sc->owner()->makeRect(BoxValue::PaddingBoxBoxValue);
+    if ((paddingBox.width() != sc->owner()->width().toFloat()) ||
+        (paddingBox.height() != sc->owner()->height().toFloat())) {
+        return true;
+    }
+
+    if (sc->owner()->hasFrameBorderRadius()) {
+        return true;
+    }
+
+    auto visibleRect = sc->owner()->frameVisibleRect();
+    if ((visibleRect.width() != sc->owner()->width()) ||
+        (visibleRect.height() != sc->owner()->height())) {
+        return true;
+    }
+
+    return false;
+}
+
 void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
 {
     if (m_target->isWindow()) {
@@ -443,9 +469,14 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
                                    ->asFrameBox()
                                    ->stackingContext();
         if (ctx && ctx->needsGraphicsBuffer()) {
-            m_target->asWindow()
-                ->webView()
-                ->markNeedsCompositeConsiderInRendering();
+            if (needsRepaintingWhenScrolling(ctx)) {
+                m_target->asElement()->setNeedsPainting();
+            } else {
+                m_target->asElement()
+                    ->webView()
+                    ->markNeedsCompositeConsiderInRendering();
+            }
+
         } else {
             m_target->asWindow()->document()->setNeedsPainting();
 
@@ -469,7 +500,7 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
             FrameBox* box = m_target->asElement()->frame()->asFrameBox();
             StackingContext* sc = box->stackingContext();
 
-            if (sc->needsGraphicsBuffer()) {
+            if (!needsRepaintingWhenScrolling(sc)) {
                 m_target->asElement()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
