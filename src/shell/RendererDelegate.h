@@ -36,6 +36,7 @@ public:
     virtual bool clearCurrentContext() = 0;
     virtual bool makeCurrentWithContext(uintptr_t context) = 0;
     virtual void* getProcAddress(const char* name) = 0;
+    virtual bool isSupportedExtension(const char* extension) = 0;
 };
 
 } // namespace StarfishShell

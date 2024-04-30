@@ -789,19 +789,18 @@ public:
         return false;
     }
 
-    virtual void *evasglCreateImage(int target, void *buffer,
-                                    const int *attriblist) override
+    virtual void *xglCreateImage(int target, void *buffer,
+                                 const int *attriblist) override
     {
         return m_evasGLAPI->evasglCreateImage(target, buffer, attriblist);
     }
 
-    virtual void evasglDestroyImage(void *image) override
+    virtual void xglDestroyImage(void *image) override
     {
         m_evasGLAPI->evasglDestroyImage(image);
     }
 
-    virtual void evasGLImageTargetTexture2DOES(GLenum target,
-                                               void *image) override
+    virtual void xglImageTargetTexture2DOES(GLenum target, void *image) override
     {
         m_evasGLAPI->glEvasGLImageTargetTexture2DOES(target, image);
     }
@@ -815,14 +814,15 @@ private:
     Evas_GL_API *m_evasGLAPI;
 };
 
-GL *GL::create(Renderer *r)
+GL *GL::create(Renderer *renderer)
 {
     void *glAPI =
-        r->webView()->publicLayerUserDataMap()["__internalLWEWebViewEvasGLAPI"];
+        renderer->webView()
+            ->publicLayerUserDataMap()["__internalLWEWebViewEvasGLAPI"];
     if (glAPI) {
         return new EvasGL(glAPI);
     }
-    return GL::createGeneric();
+    return GL::createGeneric(renderer);
 }
 
 } // namespace Starfish

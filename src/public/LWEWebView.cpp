@@ -672,6 +672,17 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
         };
         configration.onGetProcAddress = onGetProcAddressWrapper;
     }
+    if (config.onIsSupportedExtension) {
+        const LWEDelegate::WebContainer::OnIsSupportedExtension
+            onIsSupportedExtensionWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   const char* extension) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onIsSupportedExtension(instance, extension);
+        };
+        configration.onIsSupportedExtension = onIsSupportedExtensionWrapper;
+    }
 
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(

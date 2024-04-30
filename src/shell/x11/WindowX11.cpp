@@ -27,6 +27,7 @@
 #include <EGL/egl.h>
 
 #include <memory>
+#include <cstring>
 
 using XWindow = Window;
 
@@ -175,6 +176,7 @@ public:
     virtual bool destroyContext(uintptr_t context) override;
     virtual bool makeCurrentWithContext(uintptr_t context) override;
     virtual void* getProcAddress(const char* name) override;
+    virtual bool isSupportedExtension(const char* extension) override;
 
 private:
     EGLDisplay m_eglDisplay = nullptr;
@@ -252,6 +254,12 @@ bool RendererDelegateEGL::makeCurrentWithContext(uintptr_t context)
 void* RendererDelegateEGL::getProcAddress(const char* name)
 {
     return reinterpret_cast<void*>(eglGetProcAddress(name));
+}
+
+bool RendererDelegateEGL::isSupportedExtension(const char* extension)
+{
+    const char* extensions = eglQueryString(m_eglDisplay, EGL_EXTENSIONS);
+    return strstr(extensions, extension) != nullptr;
 }
 
 class WindowX11 final : public Window {

@@ -1034,6 +1034,21 @@ public:
                 reinterpret_cast<Evas_GL_Context*>(context));
         };
 
+        config.onIsSupportedExtension = [this](WebContainer* wc,
+                                               const char* extension) -> bool {
+#if defined(STARFISH_TIZEN)
+            // The retuned string of evas_gl_string_query is never contain this
+            // extension. However, we should assume that Tizen supports this.
+            if (strncmp(extension, "EVAS_GL_TIZEN_image_native_surface", 34) ==
+                0) {
+                return true;
+            }
+#endif
+            const char* extensions =
+                evas_gl_string_query(m_glEvasgl, EVAS_GL_EXTENSIONS);
+            return strstr(extensions, extension) != nullptr;
+        };
+
         WebContainer* webContainer = WebContainer::CreateGL(args, config);
 
         m_pixelDirtyCallback = [](void* data, Evas_Object* o) {

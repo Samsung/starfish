@@ -496,6 +496,14 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                     return config.onGetProcAddress(newWebContainer, name);
                 });
         }
+        if (config.onIsSupportedExtension) {
+            webView->renderer()->registerOnIsSupportedExtension(
+                [config, newWebContainer](Starfish::Renderer* renderer,
+                                          const char* extension) -> bool {
+                    return config.onIsSupportedExtension(newWebContainer,
+                                                         extension);
+                });
+        }
     });
     return newWebContainer;
 }
