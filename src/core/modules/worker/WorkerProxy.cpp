@@ -35,6 +35,7 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
                          WorkerThread* workerThread)
     : m_ownerExecutionContext(executionContext)
     , m_workerThread(workerThread)
+    , m_entangledEventTarget(nullptr)
     , m_wasTerminated(false)
 {
 }

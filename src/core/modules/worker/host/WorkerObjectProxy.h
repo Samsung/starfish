@@ -31,8 +31,7 @@ class Worker;
 
 class WorkerObjectProxy final : public WorkerProxy {
 public:
-    WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker,
-                      WorkerThread* workerThread);
+    WorkerObjectProxy(ExecutionContext* executionContext, Worker* worker);
 
     void terminate() override;
 

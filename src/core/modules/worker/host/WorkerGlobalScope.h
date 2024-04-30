@@ -114,6 +114,8 @@ public:
     void importScript(ResourceURL* url);
     void importScripts(GCVector<String*>& urls);
 
+    bool loadMainScript();
+
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
 

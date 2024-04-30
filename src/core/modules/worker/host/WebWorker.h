@@ -31,10 +31,11 @@ class RunLoop;
 
 class WebWorker : public WebBase {
 public:
+    WebWorker(Starfish* starfish, RunLoop* runLoop, const char* locale,
+              const char* timezoneID, String* customUserAgentString);
+
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
               String* customUserAgentString);
-
-    WebWorker(WebBase* webBase, RunLoop* runLoop);
 
     virtual ~WebWorker();
 

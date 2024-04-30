@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,31 +17,17 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerHost__)
-#define __StarfishWorkerHost__
+#ifndef __StarfishWorkerHostInitData__
+#define __StarfishWorkerHostInitData__
 
 namespace Starfish {
 
-class RunLoop;
-class WebWorker;
-class WorkerGlobalScope;
-class WorkerThread;
-
-class WorkerHost : public gc {
-public:
-    WorkerHost(WorkerThread* workerThread, RunLoop* runLoop);
-
-    static void run(void* data);
-
-    DEFINE_GETTER(WebWorker*, webWorker);
-    DEFINE_GETTER(WorkerGlobalScope*, globalScope);
-
-protected:
-    WebWorker* m_webWorker;
-    WorkerGlobalScope* m_globalScope;
-    bool m_wasDisposed;
-
-    void dispose();
+struct WorkerHostInitData {
+    std::string url;
+    std::string baseURL;
+    std::string locale;
+    std::string timezoneID;
+    std::string userAgent;
 };
 
 } // namespace Starfish

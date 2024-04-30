@@ -38,19 +38,18 @@
 
 namespace Starfish {
 
-WebWorker::WebWorker(Starfish* starfish, const char* locale,
+WebWorker::WebWorker(Starfish* starfish, RunLoop* runLoop, const char* locale,
                      const char* timezoneID, String* customUserAgentString)
-    : WebBase(starfish, MessageLoop::createForWorker(RunLoop::create()),
+    : WebBase(starfish, MessageLoop::createForWorker(runLoop),
               Timer::createForWorker(this), locale, timezoneID,
               customUserAgentString)
 {
 }
 
-WebWorker::WebWorker(WebBase* webBase, RunLoop* runLoop)
-    : WebBase(webBase->starfish(), MessageLoop::createForWorker(runLoop),
-              Timer::createForWorker(this), webBase->locale().c_str(),
-              webBase->timezoneID()->toUTF8NonGCString().c_str(),
-              webBase->customUserAgentString())
+WebWorker::WebWorker(Starfish* starfish, const char* locale,
+                     const char* timezoneID, String* customUserAgentString)
+    : WebWorker(starfish, RunLoop::create(), locale, timezoneID,
+                customUserAgentString)
 {
 }
 

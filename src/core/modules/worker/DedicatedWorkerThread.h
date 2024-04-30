@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,33 +17,34 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerHost__)
-#define __StarfishWorkerHost__
+#if defined(STARFISH_ENABLE_WORKER)
+#ifndef __StarfishDedicatedWorkerThread__
+#define __StarfishDedicatedWorkerThread__
+
+#include "core/modules/worker/WorkerThread.h"
 
 namespace Starfish {
 
-class RunLoop;
+class WebBase;
+class Worker;
 class WebWorker;
-class WorkerGlobalScope;
-class WorkerThread;
+class WorkerHost;
 
-class WorkerHost : public gc {
+class DedicatedWorkerThread final : public WorkerThread {
 public:
-    WorkerHost(WorkerThread* workerThread, RunLoop* runLoop);
+    DedicatedWorkerThread(WebBase* webBase, Worker* worker);
+    ~DedicatedWorkerThread();
 
-    static void run(void* data);
+    WorkerGlobalScope* createWorkerGlobalScope(WebWorker* webWorker,
+                                               WorkerHost* workerHost) override;
 
-    DEFINE_GETTER(WebWorker*, webWorker);
-    DEFINE_GETTER(WorkerGlobalScope*, globalScope);
+    DEFINE_GETTER(Worker*, worker);
 
-protected:
-    WebWorker* m_webWorker;
-    WorkerGlobalScope* m_globalScope;
-    bool m_wasDisposed;
-
-    void dispose();
+private:
+    Worker* m_worker;
 };
 
 } // namespace Starfish
 
+#endif
 #endif
