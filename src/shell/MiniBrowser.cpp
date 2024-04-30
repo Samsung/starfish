@@ -221,6 +221,10 @@ bool MiniBrowser::createLWE()
                                      const char* name) -> void* {
         return m_window->renderer()->getProcAddress(name);
     };
+    config.onIsSupportedExtension = [this](LWE::WebContainer* wc,
+                                           const char* extension) -> bool {
+        return m_window->renderer()->isSupportedExtension(extension);
+    };
 
     m_lwe = LWE::WebContainer::CreateGL(args, config);
 

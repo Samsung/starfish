@@ -42,10 +42,8 @@ public:
     virtual uintptr_t createSharedContext() override;
     virtual bool destroyContext(uintptr_t context) override;
     virtual bool makeCurrentWithContext(uintptr_t context) override;
-    virtual void* getProcAddress(const char* name) override
-    {
-        return nullptr;
-    }
+    virtual void* getProcAddress(const char* name) override;
+    virtual bool isSupportedExtension(const char* extension) override;
 
 private:
     GLFWwindow* m_window = nullptr;
@@ -95,6 +93,16 @@ bool RendererDelegateGLFW::makeCurrentWithContext(uintptr_t context)
 {
     glfwMakeContextCurrent(reinterpret_cast<GLFWwindow*>(context));
     return true;
+}
+
+void* RendererDelegateGLFW::getProcAddress(const char* name)
+{
+    return reinterpret_cast<void*>(glfwGetProcAddress(name));
+}
+
+bool RendererDelegateGLFW::isSupportedExtension(const char* extension)
+{
+    return glfwExtensionSupported(extension);
 }
 
 class WindowGLFW final : public Window {

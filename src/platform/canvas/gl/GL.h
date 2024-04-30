@@ -33,8 +33,8 @@ class Renderer;
 
 class GL {
 public:
-    static GL *create(Renderer *);
-    static GL *createGeneric();
+    static GL *create(Renderer *renderer);
+    static GL *createGeneric(Renderer *renderer);
 
     virtual ~GL()
     {
@@ -244,15 +244,16 @@ public:
 
     virtual bool isGeneric() = 0;
 
-    virtual void *evasglCreateImage(int target, void *buffer,
-                                    const int *attriblist)
+    // Extensions
+    virtual void *xglCreateImage(int target, void *buffer,
+                                 const int *attriblist)
     {
         return nullptr;
     }
-    virtual void evasglDestroyImage(void *image)
+    virtual void xglDestroyImage(void *image)
     {
     }
-    virtual void evasGLImageTargetTexture2DOES(GLenum target, void *image)
+    virtual void xglImageTargetTexture2DOES(GLenum target, void *image)
     {
     }
 };

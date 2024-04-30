@@ -97,6 +97,8 @@ public:
     using OnMakeCurrentWithContext =
         std::function<bool(WebContainer*, uintptr_t)>;
     using OnGetProcAddress = std::function<void*(WebContainer*, const char*)>;
+    using OnIsSupportedExtension =
+        std::function<bool(WebContainer*, const char*)>;
 
     struct RendererGLConfiguration {
         OnMakeCurrent onMakeCurrent;
@@ -106,6 +108,7 @@ public:
         OnClearCurrentContext onClearCurrentContext;
         OnMakeCurrentWithContext onMakeCurrentWithContext;
         OnGetProcAddress onGetProcAddress;
+        OnIsSupportedExtension onIsSupportedExtension;
     };
 
     // For Tizen 5.5 and above.

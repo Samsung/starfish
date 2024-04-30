@@ -99,12 +99,11 @@ public:
 
     virtual void destroy() override
     {
-        Renderer::destroy();
-
         if (m_glPaintingSurface) {
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
         }
+        Renderer::destroy();
     }
 
     virtual RenderResult rendering() override
@@ -294,6 +293,11 @@ public:
     virtual void* getProcAddress(const char* name) override
     {
         return m_onGetProcAddress(this, name);
+    }
+
+    virtual bool isSupportedExtension(const char* extension) override
+    {
+        return m_onIsSupportedExtension(this, extension);
     }
 
     virtual TransformationMatrix screenMatrix() override

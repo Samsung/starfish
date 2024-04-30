@@ -246,6 +246,7 @@ public:
         std::function<bool(WebContainer*)> onClearCurrentContext;
         std::function<bool(WebContainer*, uintptr_t)> onMakeCurrentWithContext;
         std::function<void*(WebContainer*, const char*)> onGetProcAddress;
+        std::function<bool(WebContainer*, const char*)> onIsSupportedExtension;
     };
 
     struct TransformationMatrix {

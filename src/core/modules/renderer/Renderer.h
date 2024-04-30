@@ -193,6 +193,11 @@ public:
         return nullptr;
     }
 
+    virtual bool isSupportedExtension(const char* extension)
+    {
+        return false;
+    }
+
     virtual TransformationMatrix screenMatrix()
     {
         return TransformationMatrix::identityMatrix();
@@ -258,6 +263,12 @@ public:
         m_onGetProcAddress = cb;
     }
 
+    void registerOnIsSupportedExtension(
+        const std::function<bool(Renderer* renderer, const char*)>& cb)
+    {
+        m_onIsSupportedExtension = cb;
+    }
+
     void registerGetScreenMatrix(
         const std::function<TransformationMatrix(Renderer* renderer)>& cb)
     {
@@ -314,7 +325,6 @@ public:
     virtual void pause();
     virtual void resume();
     virtual void destroy();
-    void clearNativeHandlers();
     void setDevicePixelRatio(float dpr);
     float getDevicePixelRatio();
 
@@ -357,6 +367,7 @@ public:
 #endif
 protected:
     Renderer(Starfish* starfish);
+    void clearNativeHandlers();
 
     Starfish* m_starfish;
     WebView* m_webView;
@@ -388,6 +399,8 @@ protected:
     std::function<bool(Renderer* renderer, uintptr_t context)>
         m_onMakeCurrentWithContext;
     std::function<void*(Renderer* renderer, const char*)> m_onGetProcAddress;
+    std::function<bool(Renderer* renderer, const char*)>
+        m_onIsSupportedExtension;
 
     std::function<TransformationMatrix(Renderer* renderer)> m_getScreenMatrix;
 

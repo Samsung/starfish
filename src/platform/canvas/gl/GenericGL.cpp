@@ -27,6 +27,21 @@
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 
+#define EGL_NO_CONTEXT ((EGLContext)0)
+typedef void *EGLDisplay;
+typedef void *EGLContext;
+typedef void *EGLImageKHR;
+typedef void *EGLClientBuffer;
+typedef unsigned int EGLBoolean;
+typedef unsigned int EGLenum;
+typedef GLint EGLint;
+typedef EGLDisplay (*PFNGLEGLGETCURRENTDISPLAYPROC)();
+typedef EGLImageKHR (*PFNEGLCREATEIMAGEKHRPROC)(EGLDisplay dpy, EGLContext ctx,
+                                                EGLenum target,
+                                                EGLClientBuffer buffer,
+                                                const EGLint *attribList);
+typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC)(EGLDisplay dpy,
+                                                EGLImageKHR image);
 namespace Starfish {
 
 class GenericGL : public GL {
@@ -780,22 +795,78 @@ public:
         return true;
     }
 
-    GenericGL(void *)
+    virtual void *xglCreateImage(int target, void *buffer,
+                                 const int *attriblist) override
     {
+        STARFISH_ASSERT(m_eglGetCurrentDisplayProc != nullptr);
+        STARFISH_ASSERT(m_eglCreateImageKHRProc != nullptr);
+        EGLDisplay display = m_eglGetCurrentDisplayProc();
+        return m_eglCreateImageKHRProc(display, EGL_NO_CONTEXT, target, buffer,
+                                       attriblist);
+    }
+
+    virtual void xglDestroyImage(void *image) override
+    {
+        STARFISH_ASSERT(m_eglGetCurrentDisplayProc != nullptr);
+        STARFISH_ASSERT(m_eglDestroyImageKHRProc != nullptr);
+        EGLDisplay display = m_eglGetCurrentDisplayProc();
+        m_eglDestroyImageKHRProc(display, image);
+    }
+
+    virtual void xglImageTargetTexture2DOES(GLenum target, void *image) override
+    {
+#if !defined(STARFISH_WINDOWS)
+        STARFISH_ASSERT(m_glEGLImageTargetTexture2DOESProc != nullptr);
+        m_glEGLImageTargetTexture2DOESProc(target, image);
+#endif
+    }
+
+    GenericGL(Renderer *renderer)
+    {
+        m_eglGetCurrentDisplayProc =
+            reinterpret_cast<PFNGLEGLGETCURRENTDISPLAYPROC>(
+                renderer->getProcAddress("eglGetCurrentDisplay"));
+
+        m_eglCreateImageKHRProc = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
+            renderer->getProcAddress("eglCreateImageKHR"));
+        m_eglDestroyImageKHRProc = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
+            renderer->getProcAddress("eglDestroyImageKHR"));
+#if !defined(STARFISH_WINDOWS)
+        m_glEGLImageTargetTexture2DOESProc =
+            reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+                renderer->getProcAddress("glEGLImageTargetTexture2DOES"));
+#endif
+    }
+
+    ~GenericGL()
+    {
+        m_eglGetCurrentDisplayProc = nullptr;
+        m_eglCreateImageKHRProc = nullptr;
+        m_eglDestroyImageKHRProc = nullptr;
+#if !defined(STARFISH_WINDOWS)
+        m_glEGLImageTargetTexture2DOESProc = nullptr;
+#endif
     }
 
 private:
+    PFNGLEGLGETCURRENTDISPLAYPROC m_eglGetCurrentDisplayProc = nullptr;
+    PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHRProc = nullptr;
+    PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHRProc = nullptr;
+#if !defined(STARFISH_WINDOWS)
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOESProc =
+        nullptr;
+#endif
 };
 
 #if !defined(PORT_WEBVIEW_BRIDGE_EFL)
-GL *GL::create(Renderer *)
+GL *GL::create(Renderer *renderer)
 {
-    return new GenericGL(nullptr);
+    return new GenericGL(renderer);
 }
 #endif
-GL *GL::createGeneric()
+GL *GL::createGeneric(Renderer *renderer)
 {
-    return new GenericGL(nullptr);
+    return new GenericGL(renderer);
 }
 
 } // namespace Starfish

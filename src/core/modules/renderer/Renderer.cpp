@@ -145,6 +145,7 @@ void Renderer::clearNativeHandlers()
     m_onClearCurrentContext = nullptr;
     m_onMakeCurrentWithContext = nullptr;
     m_onGetProcAddress = nullptr;
+    m_onIsSupportedExtension = nullptr;
 
     m_getScreenMatrix = nullptr;
 
@@ -160,6 +161,10 @@ void Renderer::destroy()
     STARFISH_LOG_INFO("Renderer::destroy()");
     m_isDestroyed = true;
     clearResources();
+    clearNativeHandlers();
+#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+    m_gl = nullptr;
+#endif
 }
 
 void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
