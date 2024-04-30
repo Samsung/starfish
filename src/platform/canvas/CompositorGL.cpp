@@ -311,6 +311,7 @@ struct CanvasSurfaceTextureInfo {
         float srcY;      // [0~1]
         float srcWidth;  // [0~1]
         float srcHeight; // [0~1]
+        bool sharedTexture = false;
     };
 
     std::vector<CanvasSurfaceTextureInfoFragment> fragments;
@@ -1435,6 +1436,16 @@ public:
                 CompositorContextGL* ctx =
                     (CompositorContextGL*)m_renderer->compostiorContext();
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
+                    if (m_textureFragments[i].sharedTexture) {
+                        // The lifetime of externally created shared textures is
+                        // managed by the module that created them, not the
+                        // Compositor. For example, the FramebufferTexture of
+                        // WebGL is created in `WebGLRenderingContextBaseMixIn`
+                        // and destroyed in its `finalize()`. If required, make
+                        // the `CanvasSurfaceTextureInfoFragment` free its
+                        // resource by itself and share it via std::shared_ptr.
+                        continue;
+                    }
                     GLuint id = m_textureFragments[i].textureID;
                     if (id) {
                         if (ctx) {
@@ -1587,6 +1598,7 @@ public:
             fragment.srcY = 0;
             fragment.srcWidth = 1;
             fragment.srcHeight = 1;
+            fragment.sharedTexture = true;
             m_textureFragments.push_back(fragment);
 
             // 3. Set the dimension of the fragment list.
