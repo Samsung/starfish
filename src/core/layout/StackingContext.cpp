@@ -1046,7 +1046,16 @@ void StackingContext::computeStackingContextProperties(
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
     } else {
-        compositingState.compositeFlagInfoBecauseSelf[this] = false;
+        bool nonVisibleOverflowValueApplied =
+               m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
+               m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
+        if (nonVisibleOverflowValueApplied && m_owner->node() && m_owner->node()->isElement()) {
+            if (m_owner->node()->asElement()->scrollLeft(false) || m_owner->node()->asElement()->scrollTop(false)) {
+                compositedBySelf = true;
+                reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNeedsScroll;
+            }
+        }
+        compositingState.compositeFlagInfoBecauseSelf[this] = compositedBySelf;
     }
     bool willBeComposited = compositedBySelf;
 
@@ -1391,13 +1400,12 @@ void StackingContext::applyStackingContextProperties(
             }
         }
 
+
         if (m_rareData->m_visibleRect.width() == 0 &&
             m_rareData->m_visibleRect.height() == 0 &&
-            !m_owner->isRootElement() && !inAnimation) {
-            if (m_owner->appliedOverflowX() == OverflowValue::VisibleOverflow &&
-               m_owner->appliedOverflowY() == OverflowValue::VisibleOverflow) {
-                willBeComposited = false;
-            }
+            !m_owner->isRootElement() && !inAnimation &&
+            m_needsGraphicsBufferReason != NeedsGraphicsLayerReasonNeedsScroll) {
+            willBeComposited = false;
         }
 
         m_isVisibleRectComputedForNonGraphicsLayer = true;
@@ -1454,6 +1462,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
 
     if (needsComposite()) {
         ctx.stackingContextsNeedsGraphicsBuffer.push_back(this);
+        ensureRareData();
         STARFISH_ASSERT(m_rareData);
         float oldAdditionalPixelRatio = m_rareData->m_additionalPixelRatio;
         m_rareData->m_additionalPixelRatio = ctx.baseAdditionalPixelRatio;
@@ -1818,6 +1827,9 @@ void StackingContext::fillGraphicsBufferContents(
                               m_owner->isFrameBlockBox();
     if (needsComputeScroll) {
         canvas->save();
+        canvas->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
+        const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
+        m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
         canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                           -m_owner->asFrameBlockBox()->scrollTop());
         ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
