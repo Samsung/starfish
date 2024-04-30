@@ -63,7 +63,6 @@
 #include "core/page/PopStateEvent.h"
 #include "core/page/Serializer.h"
 
-#include "core/modules/renderer/Renderer.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/dom/Document.h"
@@ -71,15 +70,15 @@
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/WebStorageNamespaceProvider.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "core/modules/renderer/Renderer.h"
+#include "core/modules/profiling/FrameRateCounter.h"
 #include "browser/history/HistoryManager.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/file/PlatformFile.h"
-#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "EscargotPublic.h"
-
-#include "core/modules/profiling/FrameRateCounter.h"
 
 #if defined(OS_POSIX)
 #include <malloc.h>
@@ -337,6 +336,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
         (new (GC_MALLOC_ATOMIC(sizeof(FontFamilyData) * 2))
              FontFamilyData[2]{ 1, atomicDefaultFontName });
 
+    m_frameRateCounter = new FrameRateCounter(this);
+    m_frameRateCounter->setObserver([](double fps) {
+        thread_local static unsigned counter = 0;
+        STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
+    });
+
     m_platformFontSelector = PlatformFontSelector::create(this);
     m_platformFontCache = PlatformFontCache::create(this);
 
@@ -360,13 +365,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #endif
 
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
-
-    auto& counter = FrameRateCounter::instance();
-    counter.setWebview(this);
-    counter.setObserver([](double fps) {
-        static unsigned counter = 0;
-        STARFISH_LOG_INFO("#%02d FPS: %.2f", ++counter, fps);
-    });
 }
 
 void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
@@ -1263,7 +1261,7 @@ static void saveCurrentPaintingState(StackingContext* ctx)
 RenderResult WebView::rendering(bool force)
 {
     if (m_showFps) {
-        FrameRateCounter::instance().update();
+        m_frameRateCounter->update();
     }
 
     RenderResult renderResult;
@@ -1399,7 +1397,7 @@ RenderResult WebView::rendering(bool force)
                 m_repaintRegionInRendering = std::move(tracker.repaintRegion());
                 if (m_showFps) {
                     m_repaintRegionInRendering[nullptr].unite(
-                        FrameRateCounter::instance().updateArea());
+                        m_frameRateCounter->updateArea());
                 }
             }
 
@@ -1514,7 +1512,7 @@ RenderResult WebView::rendering(bool force)
                 }
                 canvas->restore();
                 if (m_showFps) {
-                    FrameRateCounter::instance().drawFps(canvas);
+                    m_frameRateCounter->drawFps(canvas);
                 }
                 m_didCompositeBefore = false;
             } else {
@@ -1618,7 +1616,7 @@ RenderResult WebView::rendering(bool force)
                     mainFrame->appliedOverflowY());
             }
             if (m_showFps) {
-                FrameRateCounter::instance().drawFps(compositor);
+                m_frameRateCounter->drawFps(compositor);
             }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR

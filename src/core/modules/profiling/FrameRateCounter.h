@@ -30,10 +30,9 @@ class WebView;
 
 class FrameRateCounter : public gc {
 public:
+    FrameRateCounter(WebView* webView);
+
     using Observer = void (*)(double fps);
-
-    static FrameRateCounter& instance();
-
     void setObserver(Observer observer)
     {
         m_observer = observer;
@@ -54,13 +53,7 @@ public:
     void drawFps(Canvas* canvas);
     void drawFps(Compositor* canvas);
 
-    void setWebview(WebView* webView)
-    {
-        m_webView = webView;
-    }
-
 private:
-    FrameRateCounter();
     ~FrameRateCounter() = default;
     FrameRateCounter(const FrameRateCounter&) = delete;
     FrameRateCounter& operator=(const FrameRateCounter&) = delete;
@@ -76,7 +69,7 @@ private:
     CanvasSurface* m_surface = nullptr;
     Canvas* m_canvas = nullptr;
     WebView* m_webView = nullptr;
-    Observer m_observer;
+    Observer m_observer = nullptr;
 };
 } // namespace Starfish
 

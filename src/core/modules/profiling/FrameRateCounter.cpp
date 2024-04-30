@@ -30,15 +30,10 @@
 
 namespace Starfish {
 
-FrameRateCounter& FrameRateCounter::instance()
+FrameRateCounter::FrameRateCounter(WebView* webView)
+    : m_startTime(timestamp())
+    , m_webView(webView)
 {
-    static FrameRateCounter* instance = new (NoGC) FrameRateCounter();
-    return *instance;
-}
-
-FrameRateCounter::FrameRateCounter()
-{
-    m_startTime = timestamp();
 }
 
 void FrameRateCounter::update()

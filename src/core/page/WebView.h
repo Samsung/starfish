@@ -70,6 +70,7 @@ class PlatformKeyEventData;
 class EventTarget;
 class Scrolling;
 class BufferedNativeImageData;
+class FrameRateCounter;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
@@ -592,6 +593,7 @@ private:
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;
     FontFamilyData* m_initialFontFamilyDatas;
+    FrameRateCounter* m_frameRateCounter;
 
     // when painting tile, each box can be painted multiple times
     template <class T1, class T2>
