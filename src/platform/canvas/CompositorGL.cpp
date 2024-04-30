@@ -109,13 +109,10 @@ static void logEglError(const char* name) noexcept
 }
 #endif
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#define EVAS_GL_IMAGE_PRESERVED 0x30D2
-#endif
-
 #if defined(STARFISH_TIZEN)
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#define EVAS_GL_IMAGE_PRESERVED 0x30D2
 #define EVAS_GL_NATIVE_SURFACE_TIZEN 0x32A1
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <tbm_surface.h>
 typedef GLint EGLint;
 #define EGL_TRUE 1
