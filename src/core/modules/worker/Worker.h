@@ -50,6 +50,8 @@ public:
 
     void terminate();
 
+    void destroy();
+
     DEFINE_GETTER(WorkerThread*, workerThread);
     DEFINE_GETTER(WorkerHostProxy*, workerHostProxy);
     DEFINE_GETTER(bool, wasTerminated);

@@ -39,8 +39,6 @@ void WorkerHostProxy::workerHostCreated(WorkerHost* workerHost)
 {
     STARFISH_ASSERT(!m_workerHost);
     m_workerHost = workerHost;
-
-    setEntangledEventTarget(m_workerHost->globalScope());
 }
 
 MessageLoop* WorkerHostProxy::targetMessageLoop()

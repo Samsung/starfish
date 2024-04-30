@@ -20,46 +20,74 @@
 #if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerThread__)
 #define __StarfishWorkerThread__
 
+#include "core/modules/threading/ThreadClient.h"
+#include "core/modules/worker/WorkerHostInitData.h"
+
 namespace Starfish {
 
-class ExecutionContext;
+class Starfish;
+class MessageLoop;
+class GlobalScope;
 class Thread;
 class Mutex;
 class ResourceURL;
 class RunLoop;
+class WebBase;
 class WebWorker;
 class WorkerGlobalScope;
-class Worker;
+class WorkerHost;
+
+class WorkerThreadClient : public ThreadClient, public gc {
+public:
+    using ThreadFinishedCallback = void (*)(void* data);
+
+    void onThreadStarted(Thread* thread) override;
+    void onThreadFinished(Thread* thread) override;
+
+    void setThreadFinishedCallback(ThreadFinishedCallback callback, void* data);
+
+private:
+    void* m_threadFinishedCallbackData{ nullptr };
+    ThreadFinishedCallback m_threadFinishedCallback{ nullptr };
+};
 
 class WorkerThread : public gc {
 public:
-    WorkerThread(ExecutionContext* executionContext);
+    enum class State { None, Running, Terminated };
 
-    void start(Worker* workerObject);
+    virtual WorkerGlobalScope* createWorkerGlobalScope(
+        WebWorker* webWorker, WorkerHost* workerHost) = 0;
+
+    void start();
 
     void terminate();
+
+    void setOnTerminatedCallback(
+        WorkerThreadClient::ThreadFinishedCallback callback, void* data);
 
     void onWorkerRunLoopStarted(RunLoop* runLoop);
 
     void addChildThread(WorkerThread* thread);
     void removeChildThread(WorkerThread* thread);
 
+    bool wasTerminated();
+
+    ResourceURL* createScriptURL();
+
+    DEFINE_GETTER(Starfish*, starfish);
     DEFINE_GETTER(RunLoop*, runLoop);
-    DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(GlobalScope*, workerMessageLoopGlobalScope);
+    DEFINE_GETTER(const WorkerHostInitData&, workerHostInitData);
 
-private:
-    ExecutionContext* m_executionContext;
-    Thread* m_mainThread;
-    std::thread m_workerThread;
-    Mutex* m_mutex;
-    RunLoop* m_runLoop;
-    std::atomic_bool m_wasTerminated;
-    GlobalScope* m_workerMessageLoopGlobalScope;
-    Mutex* m_childThreadDataLock;
-    std::vector<WorkerThread*> m_childThreads;
-
+protected:
     static void* workerMainThreadWork(void* data, std::future<void>&& stopTask);
+
+    WorkerThread(Starfish* starfish, MessageLoop* messageLoop,
+                 const WorkerHostInitData& initData);
+
+    WorkerThread(WebBase* webBase, ResourceURL* scriptURL);
+
+    virtual ~WorkerThread();
 
     void initializeWorkerThread();
 
@@ -68,6 +96,22 @@ private:
     bool stopWorkerRunLoop();
 
     void terminateChildThreads();
+
+    Starfish* m_starfish;
+    MessageLoop* m_messageLoop;
+    Thread* m_mainThread;
+    WorkerThreadClient* m_mainThreadClient;
+    std::thread m_workerThread;
+    Mutex* m_mutex;
+    RunLoop* m_runLoop;
+    std::atomic<State> m_state;
+    GlobalScope* m_workerMessageLoopGlobalScope;
+    Mutex* m_childThreadDataLock;
+    std::vector<WorkerThread*> m_childThreads;
+    WorkerHostInitData m_workerHostInitData;
+
+private:
+    WorkerThread(Starfish* starfish, MessageLoop* messageLoop);
 };
 
 } // namespace Starfish

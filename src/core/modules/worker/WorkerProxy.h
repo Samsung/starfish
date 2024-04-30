@@ -51,6 +51,8 @@ public:
     DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(ExecutionContext*, ownerExecutionContext);
     DEFINE_GETTER(WorkerThread*, workerThread);
+    DEFINE_GETTER_SETTER(EventTarget*, entangledEventTarget,
+                         EntangledEventTarget);
 
 protected:
     ExecutionContext* m_ownerExecutionContext;
@@ -58,8 +60,6 @@ protected:
     EventTarget* m_entangledEventTarget;
     bool m_wasTerminated;
     std::vector<SerializeWithTransferResult*> m_serializedMessages;
-
-    static GlobalScope* workerProxyGlobalScope();
 
     virtual MessageLoop* targetMessageLoop() = 0;
     virtual ExecutionContext* targetExecutionContext() = 0;
@@ -77,9 +77,6 @@ protected:
     void clearSerializedMessages();
 
     void clearPendingPostTask();
-
-    DEFINE_GETTER_SETTER(EventTarget*, entangledEventTarget,
-                         EntangledEventTarget);
 };
 
 } // namespace Starfish

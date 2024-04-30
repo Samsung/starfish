@@ -19,6 +19,8 @@
 
 #ifdef STARFISH_ENABLE_WORKER
 
+#include <EscargotPublic.h>
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
@@ -28,12 +30,9 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/RunLoop.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerObjectProxy.h"
-#include "core/modules/worker/Worker.h"
-#include "core/modules/worker/WorkerHostProxy.h"
 #include "core/modules/worker/WorkerThread.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
 
 #include "core/modules/worker/host/WorkerHost.h"
 
@@ -45,25 +44,9 @@ void WorkerHost::run(void* data)
     Escargot::Globals::initializeThread();
 
     RunLoop* runLoop = RunLoop::create();
-    Worker* workerObject = static_cast<Worker*>(data);
-    WorkerThread* workerThread = workerObject->workerThread();
-    WorkerHostProxy* hostProxy = workerObject->workerHostProxy();
+    WorkerThread* workerThread = static_cast<WorkerThread*>(data);
 
-    WorkerHost host = WorkerHost(workerObject, runLoop);
-    hostProxy->workerHostCreated(&host);
-
-    WorkerObjectProxy* objectProxy = host.globalScope()->workerObjectProxy();
-
-    if (host.loadMainScript()) {
-        objectProxy->postTask(
-            [](void* data) {
-                auto* hostProxy = static_cast<WorkerHostProxy*>(data);
-                hostProxy->onScriptLoadFinished();
-            },
-            hostProxy);
-    } else {
-        objectProxy->terminateWorker();
-    }
+    WorkerHost host = WorkerHost(workerThread, runLoop);
 
     if (!workerThread->wasTerminated()) {
         workerThread->onWorkerRunLoopStarted(runLoop);
@@ -77,31 +60,17 @@ void WorkerHost::run(void* data)
     Escargot::Globals::finalizeThread();
 }
 
-WorkerHost::WorkerHost(Worker* workerObject, RunLoop* runLoop)
+WorkerHost::WorkerHost(WorkerThread* workerThread, RunLoop* runLoop)
     : m_wasDisposed(false)
 {
+    const WorkerHostInitData& initData = workerThread->workerHostInitData();
     m_webWorker =
-        new WebWorker(workerObject->executionContext()->webBase(), runLoop);
+        new WebWorker(workerThread->starfish(), runLoop,
+                      initData.locale.c_str(), initData.timezoneID.c_str(),
+                      String::fromUTF8(initData.userAgent.data(),
+                                       initData.userAgent.length()));
 
-    m_globalScope = m_webWorker->createGlobalScope<DedicatedWorkerGlobalScope>(
-        new ResourceURL(workerObject->scriptURL()->urlString(),
-                        workerObject->scriptURL()->baseURI()));
-
-    m_globalScope->initialize(
-        new WorkerObjectProxy(m_globalScope->executionContext(), workerObject,
-                              workerObject->workerThread()));
-}
-
-bool WorkerHost::loadMainScript()
-{
-    try {
-        m_globalScope->importScript(
-            m_globalScope->executionContext()->documentURI());
-    } catch (DOMException* e) {
-        return false;
-    }
-
-    return true;
+    m_globalScope = workerThread->createWorkerGlobalScope(m_webWorker, this);
 }
 
 void WorkerHost::dispose()

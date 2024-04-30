@@ -199,6 +199,19 @@ void WorkerGlobalScope::importScript(ResourceURL* url)
     }
 }
 
+bool WorkerGlobalScope::loadMainScript()
+{
+    TRACE(WORKER, "load main script");
+
+    try {
+        importScript(executionContext()->documentURI());
+    } catch (DOMException* e) {
+        return false;
+    }
+
+    return true;
+}
+
 Promise* WorkerGlobalScope::fetch(RequestInfo& input)
 {
     TRACE_SCOPE(HOST);

@@ -26,6 +26,7 @@
 
 namespace Starfish {
 
+class WorkerHost;
 class WorkerObjectProxy;
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {
@@ -39,7 +40,8 @@ public:
         ScriptExecutionState state,
         ScriptBindingInstance* scriptBindingInstance) override;
 
-    void initialize(WorkerObjectProxy* workerObjectProxy);
+    void initialize(WorkerHost* workerHost,
+                    WorkerObjectProxy* workerObjectProxy);
 
     String* name()
     {

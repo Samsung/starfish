@@ -31,8 +31,8 @@
 namespace Starfish {
 
 WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
-                                     Worker* worker, WorkerThread* workerThread)
-    : WorkerProxy(executionContext, workerThread)
+                                     Worker* worker)
+    : WorkerProxy(executionContext, worker->workerThread())
     , m_workerObject(worker)
 {
     setEntangledEventTarget(m_workerObject);

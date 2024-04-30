@@ -21,7 +21,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/worker/WorkerThread.h"
+#include "core/modules/worker/DedicatedWorkerThread.h"
 #include "core/modules/worker/WorkerHostProxy.h"
 #include "core/modules/worker/Worker.h"
 
@@ -30,11 +30,12 @@ namespace Starfish {
 Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
                const WorkerOptions& workerOptions)
     : AbstractWorker(executionContext, scriptURL, workerOptions)
-    , m_workerThread(new WorkerThread(executionContext))
+    , m_workerThread(
+          new DedicatedWorkerThread(executionContext->webBase(), this))
     , m_workerHostProxy(new WorkerHostProxy(executionContext, m_workerThread))
     , m_wasTerminated(false)
 {
-    m_workerThread->start(this);
+    m_workerThread->start();
 }
 
 void Worker::postMessage(ScriptValue message,
@@ -66,7 +67,20 @@ void Worker::terminate()
 
     m_workerHostProxy->terminateWorkerGlobalScope();
     m_workerHostProxy->terminate();
+
+    m_workerThread->setOnTerminatedCallback(
+        [](void* data) {
+            Worker* self = static_cast<Worker*>(data);
+            self->destroy();
+        },
+        this);
     m_workerThread->terminate();
+}
+
+void Worker::destroy()
+{
+    m_workerHostProxy = nullptr;
+    m_workerThread = nullptr;
 }
 
 ScriptBindingInstance* Worker::scriptBindingInstance()

@@ -22,10 +22,12 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "platform/loader/ResourceURL.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/RunLoop.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Thread.h"
@@ -53,22 +55,61 @@ public:
     }
 };
 
-WorkerThread::WorkerThread(ExecutionContext* executionContext)
-    : m_executionContext(executionContext)
-    , m_mainThread(new Thread(nullptr))
+void WorkerThreadClient::onThreadStarted(Thread* thread)
+{
+}
+
+void WorkerThreadClient::onThreadFinished(Thread* thread)
+{
+    if (m_threadFinishedCallback) {
+        m_threadFinishedCallback(m_threadFinishedCallbackData);
+    }
+}
+
+void WorkerThreadClient::setThreadFinishedCallback(
+    ThreadFinishedCallback callback, void* data)
+{
+    m_threadFinishedCallback = callback;
+    m_threadFinishedCallbackData = data;
+}
+
+WorkerThread::WorkerThread(Starfish* starfish, MessageLoop* messageLoop)
+    : m_starfish(starfish)
+    , m_messageLoop(messageLoop)
     , m_mutex(new Mutex())
     , m_runLoop(nullptr)
-    , m_wasTerminated(false)
+    , m_state(State::None)
     , m_workerMessageLoopGlobalScope(new WorkerProxyGlobalScope())
     , m_childThreadDataLock(new Mutex())
 {
+    m_mainThreadClient = new WorkerThreadClient();
+    m_mainThread = new Thread(m_mainThreadClient);
 }
+
+WorkerThread::WorkerThread(Starfish* starfish, MessageLoop* messageLoop,
+                           const WorkerHostInitData& initData)
+    : WorkerThread(starfish, messageLoop)
+{
+    m_workerHostInitData = initData;
+}
+
+WorkerThread::WorkerThread(WebBase* webBase, ResourceURL* scriptURL)
+    : WorkerThread(webBase->starfish(), webBase->messageLoop())
+{
+    m_workerHostInitData.url = scriptURL->urlString()->toUTF8NonGCString();
+    m_workerHostInitData.baseURL = scriptURL->baseURI()->toUTF8NonGCString();
+    m_workerHostInitData.locale = webBase->locale();
+    m_workerHostInitData.timezoneID =
+        webBase->timezoneID()->toUTF8NonGCString();
+    m_workerHostInitData.userAgent = webBase->userAgent()->toUTF8NonGCString();
+}
+
+WorkerThread::~WorkerThread() = default;
 
 void* WorkerThread::workerMainThreadWork(void* data,
                                          std::future<void>&& stopTask)
 {
-    Worker* workerObject = static_cast<Worker*>(data);
-    WorkerThread* self = workerObject->workerThread();
+    WorkerThread* self = static_cast<WorkerThread*>(data);
 
     TRACE(WORKER, "start worker thread", getCurrentThreadID());
 
@@ -76,14 +117,14 @@ void* WorkerThread::workerMainThreadWork(void* data,
     auto workerHostThreadFuture = workerHostThreadSignal.get_future();
     self->m_workerThread = std::thread(
         [](std::promise<void> signal, void* data) {
-            auto* workerObject = static_cast<Worker*>(data);
-            workerObject->workerThread()->initializeWorkerThread();
+            auto* workerThread = static_cast<WorkerThread*>(data);
+            workerThread->initializeWorkerThread();
 
             WorkerHost::run(data);
 
             signal.set_value();
         },
-        std::move(workerHostThreadSignal), workerObject);
+        std::move(workerHostThreadSignal), data);
     stopTask.wait();
 
     if (workerHostThreadFuture.wait_for(std::chrono::seconds(1)) ==
@@ -101,14 +142,15 @@ void* WorkerThread::workerMainThreadWork(void* data,
     return nullptr;
 }
 
-void WorkerThread::start(Worker* workerObject)
+void WorkerThread::start()
 {
     Locker<Mutex> locker(*m_mutex);
 
-    STARFISH_ASSERT(m_executionContext->isContextThread());
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
-    m_mainThread->run(m_executionContext->webBase()->messageLoop(),
-                      workerMainThreadWork, workerObject);
+    m_mainThread->run(m_messageLoop, workerMainThreadWork, this);
+
+    m_state = State::Running;
 }
 
 void WorkerThread::terminate()
@@ -116,13 +158,20 @@ void WorkerThread::terminate()
     Locker<Mutex> locker(*m_mutex);
     TRACE(WORKER);
 
-    if (m_wasTerminated) {
+    if (m_state != State::Running) {
         return;
     }
-    m_wasTerminated = true;
+
+    m_state = State::Terminated;
 
     stopWorkerRunLoop();
     m_mainThread->stop();
+}
+
+void WorkerThread::setOnTerminatedCallback(
+    WorkerThreadClient::ThreadFinishedCallback callback, void* data)
+{
+    m_mainThreadClient->setThreadFinishedCallback(callback, data);
 }
 
 void WorkerThread::initializeWorkerThread()
@@ -195,6 +244,20 @@ void WorkerThread::terminateChildThreads()
 
     m_childThreads.clear();
     m_childThreads.shrink_to_fit();
+}
+
+bool WorkerThread::wasTerminated()
+{
+    return m_state == State::Terminated;
+}
+
+ResourceURL* WorkerThread::createScriptURL()
+{
+    return new ResourceURL(
+        String::fromUTF8(m_workerHostInitData.url.data(),
+                         m_workerHostInitData.url.length()),
+        String::fromUTF8(m_workerHostInitData.baseURL.data(),
+                         m_workerHostInitData.baseURL.length()));
 }
 
 } // namespace Starfish

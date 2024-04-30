@@ -24,25 +24,22 @@ namespace Starfish {
 
 class RunLoop;
 class WebWorker;
-class Worker;
-class DedicatedWorkerGlobalScope;
+class WorkerGlobalScope;
 class WorkerThread;
 
 class WorkerHost : public gc {
 public:
-    WorkerHost(Worker* workerObject, RunLoop* runLoop);
+    WorkerHost(WorkerThread* workerThread, RunLoop* runLoop);
 
     static void run(void* data);
 
     DEFINE_GETTER(WebWorker*, webWorker);
-    DEFINE_GETTER(DedicatedWorkerGlobalScope*, globalScope);
+    DEFINE_GETTER(WorkerGlobalScope*, globalScope);
 
 protected:
     WebWorker* m_webWorker;
-    DedicatedWorkerGlobalScope* m_globalScope;
+    WorkerGlobalScope* m_globalScope;
     bool m_wasDisposed;
-
-    bool loadMainScript();
 
     void dispose();
 };

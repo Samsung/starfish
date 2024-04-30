@@ -25,6 +25,8 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/worker/Worker.h"
+#include "core/modules/worker/WorkerHostProxy.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerObjectProxy.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
@@ -46,11 +48,27 @@ DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WebWorker* webWorker,
 }
 
 void DedicatedWorkerGlobalScope::initialize(
-    WorkerObjectProxy* workerObjectProxy)
+    WorkerHost* workerHost, WorkerObjectProxy* workerObjectProxy)
 {
     STARFISH_ASSERT(!m_workerObjectProxy);
     m_workerObjectProxy = workerObjectProxy;
     m_name = m_workerObjectProxy->workerName();
+
+    WorkerHostProxy* hostProxy =
+        m_workerObjectProxy->workerObject()->workerHostProxy();
+    hostProxy->workerHostCreated(workerHost);
+    hostProxy->setEntangledEventTarget(this);
+
+    if (loadMainScript()) {
+        m_workerObjectProxy->postTask(
+            [](void* data) {
+                auto* hostProxy = static_cast<WorkerHostProxy*>(data);
+                hostProxy->onScriptLoadFinished();
+            },
+            hostProxy);
+    } else {
+        m_workerObjectProxy->terminateWorker();
+    }
 }
 
 void DedicatedWorkerGlobalScope::postMessage(
