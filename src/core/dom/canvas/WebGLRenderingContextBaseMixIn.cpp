@@ -42,10 +42,6 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
             WebGLRenderingContextBaseMixIn* c =
                 (WebGLRenderingContextBaseMixIn*)obj;
             c->finalize();
-            // in order to prevent leak from
-            // WebGLRenderingContext::m_GLErrors, m_boundTextures;
-            // we need to call destructor explicitly
-            c->~WebGLRenderingContextBaseMixIn();
         },
         NULL, NULL, NULL);
 }
