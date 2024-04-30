@@ -270,8 +270,8 @@ private:
     GLuint getCurrentFBO();
     GLint getCurrentProgram();
 
-    std::unordered_set<GLenum> m_GLErrors;
-    std::unordered_map<GLenum, GLuint> m_boundTextures;
+    GCUnorderedSet<GLenum> m_GLErrors;
+    GCUnorderedMap<GLenum, GLuint> m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
                    CaseInsensitiveEqual>
         m_enabledExtensions;
