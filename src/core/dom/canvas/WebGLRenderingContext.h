@@ -57,6 +57,9 @@ using AllowSharedBufferSource = ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 using TexImageSource =
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 
+using GLErrorSet = std::unordered_set<GLenum>;
+using GLTextureMap = std::unordered_map<GLenum, GLuint>;
+
 class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
 public:
     WebGLRenderingContext(HTMLCanvasElement* canvasElement);
@@ -270,8 +273,8 @@ private:
     GLuint getCurrentFBO();
     GLint getCurrentProgram();
 
-    GCUnorderedSet<GLenum> m_GLErrors;
-    GCUnorderedMap<GLenum, GLuint> m_boundTextures;
+    GLErrorSet m_GLErrors;
+    GLTextureMap m_boundTextures;
     GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
                    CaseInsensitiveEqual>
         m_enabledExtensions;

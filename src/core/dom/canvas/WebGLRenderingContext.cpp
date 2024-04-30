@@ -92,6 +92,14 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     if (!WebGLExtensionRegistry::instance().isInitialized()) {
         WebGLExtensionRegistry::instance().initialize(m_gl);
     }
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            auto self = reinterpret_cast<WebGLRenderingContext*>(obj);
+            GLErrorSet().swap(self->m_GLErrors);
+            GLTextureMap().swap(self->m_boundTextures);
+        },
+        NULL, NULL, NULL);
 }
 
 WebGLRenderingContext::~WebGLRenderingContext()
