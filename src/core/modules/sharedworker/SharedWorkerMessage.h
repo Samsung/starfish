@@ -21,6 +21,7 @@
 #ifndef __StarfishSharedWorkerMessage__
 #define __StarfishSharedWorkerMessage__
 
+#include "core/modules/worker/WorkerHostInitData.h"
 #include "core/modules/sharedworker/IPCMessageHandler.h"
 
 namespace Starfish {
@@ -59,14 +60,14 @@ namespace SharedWorkerMessage {
 
         DEFINE_GETTER(uint32_t, clientID);
         DEFINE_GETTER(size_t, sharedWorkerKey);
-        DEFINE_GETTER(const std::string&, url);
         DEFINE_GETTER(const std::string&, name);
+        DEFINE_GETTER(const WorkerHostInitData&, workerHostInitData);
 
     private:
         uint32_t m_clientID;
         size_t m_sharedWorkerKey;
-        std::string m_url;
         std::string m_name;
+        WorkerHostInitData m_workerHostInitData;
     };
 
 } // namespace SharedWorkerMessage

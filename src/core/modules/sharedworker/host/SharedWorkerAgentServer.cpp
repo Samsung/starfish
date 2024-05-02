@@ -27,6 +27,8 @@
 #include "core/modules/sharedworker/IPCMessageHandler.h"
 #include "core/modules/sharedworker/IPCMessageSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
+#include "core/modules/sharedworker/host/SharedWorkerThread.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
 
 namespace Starfish {
@@ -69,9 +71,10 @@ static void onRequestSharedWorkerMessage(IPCMessageDeserializer* deserializer)
     }
 
     TRACE(SHAREDWORKER, message.sharedWorkerKey(), message.clientID(),
-          message.name(), message.url());
+          message.name(), message.workerHostInitData().baseURL,
+          message.workerHostInitData().url);
 
-    // TODO : run shared worker thread
+    SharedWorkerAgent::instance()->connectSharedWorker(message);
 }
 
 void SharedWorkerAgentServer::initMessageReceiveHandlers()

@@ -28,6 +28,9 @@
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/host/WorkerHostManager.h"
+#include "core/modules/sharedworker/SharedWorkerMessage.h"
+#include "core/modules/sharedworker/host/SharedWorkerThread.h"
+#include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 
@@ -55,6 +58,8 @@ SharedWorkerAgent* SharedWorkerAgent::instance()
 
 SharedWorkerAgent::SharedWorkerAgent(Starfish* starfish)
     : WorkerAgent(starfish)
+    , m_messageLoop(MessageLoop::create())
+
 {
     PerProcess* perProcess = m_workerHostManager->perProcess();
     perProcess->initialize();
@@ -81,6 +86,41 @@ void SharedWorkerAgent::destroy()
     m_ipcAddress->release();
 
     WorkerAgent::destroy();
+}
+
+SharedWorkerThread* SharedWorkerAgent::getWorkerThread(
+    const SharedWorkerMessage::RequestGetSharedWorker& message)
+{
+    const auto& iter = m_workerThreads.find(message.sharedWorkerKey());
+    if (iter != m_workerThreads.end()) {
+        SharedWorkerThread* thread = iter->second;
+        if (!thread->wasTerminated() && !thread->globalScope()->isClosing()) {
+            return iter->second;
+        } else {
+            m_workerThreads.erase(iter);
+        }
+    }
+
+    SharedWorkerThread* thread =
+        new SharedWorkerThread(m_starfish, m_messageLoop, message.name(),
+                               message.workerHostInitData());
+
+    m_workerThreads.insert({ message.sharedWorkerKey(), thread });
+
+    return thread;
+}
+
+void SharedWorkerAgent::connectSharedWorker(
+    const SharedWorkerMessage::RequestGetSharedWorker& message)
+{
+    SharedWorkerThread* thread =
+        SharedWorkerAgent::instance()->getWorkerThread(message);
+
+    if (!thread->isRunning()) {
+        thread->start();
+    } else {
+        // TODO: connect shared worker global scope
+    }
 }
 
 } // namespace Starfish

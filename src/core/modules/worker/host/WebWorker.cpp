@@ -33,6 +33,7 @@
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/worker/util/Trace.h"
+#include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"
 
@@ -131,9 +132,15 @@ GlobalScopeType* WebWorker::createGlobalScope(ResourceURL* scriptURL)
 
 template DedicatedWorkerGlobalScope* WebWorker::createGlobalScope(
     ResourceURL* scriptURL);
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+template SharedWorkerGlobalScope* WebWorker::createGlobalScope(
+    ResourceURL* scriptURL);
+#endif
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 template ServiceWorkerGlobalScope* WebWorker::createGlobalScope(
     ResourceURL* scriptURL);
+#endif
 #endif
 
 } // namespace Starfish

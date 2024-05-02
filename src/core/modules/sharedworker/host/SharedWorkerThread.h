@@ -18,49 +18,39 @@
  */
 
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#ifndef __StarfishSharedWorkerThread__
+#define __StarfishSharedWorkerThread__
 
-#ifndef __StarfishSharedWorkerAgent__
-#define __StarfishSharedWorkerAgent__
-
-#include "core/modules/worker/host/WorkerAgent.h"
+#include "core/modules/worker/WorkerThread.h"
 
 namespace Starfish {
 
-class SharedWorkerAgentServer;
-class SharedWorkerThread;
 class Starfish;
-class WorkerIPCAddress;
 class MessageLoop;
+class WorkerGlobalScope;
+class WebWorker;
+class WorkerHost;
+class SharedWorkerGlobalScope;
+struct WorkerHostInitData;
 
-namespace SharedWorkerMessage {
-    class RequestGetSharedWorker;
-}
-
-class SharedWorkerAgent final : public WorkerAgent {
-    friend class WorkerAgent;
-
+class SharedWorkerThread : public WorkerThread {
 public:
-    static SharedWorkerAgent* instance();
+    SharedWorkerThread(Starfish* starfish, MessageLoop* messageLoop,
+                       const std::string& name,
+                       const WorkerHostInitData& workerHostInitData);
 
-    void start() override;
+    ~SharedWorkerThread();
 
-    void destroy() override;
+    WorkerGlobalScope* createWorkerGlobalScope(WebWorker* webWorker,
+                                               WorkerHost* workerHost) override;
 
-    void connectSharedWorker(
-        const SharedWorkerMessage::RequestGetSharedWorker& message);
+    DEFINE_GETTER(SharedWorkerGlobalScope*, globalScope);
 
 private:
-    SharedWorkerAgent(Starfish* starfish);
-
-    SharedWorkerThread* getWorkerThread(
-        const SharedWorkerMessage::RequestGetSharedWorker& message);
-
-    static SharedWorkerAgent* m_instance;
-    MessageLoop* m_messageLoop;
-    SharedWorkerAgentServer* m_server;
-    WorkerIPCAddress* m_ipcAddress;
-    GCUnorderedMap<size_t, SharedWorkerThread*> m_workerThreads;
+    SharedWorkerGlobalScope* m_globalScope;
+    const std::string m_name;
 };
+
 } // namespace Starfish
 
 #endif

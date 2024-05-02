@@ -23,6 +23,7 @@
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
+#include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/dom/ErrorEvent.h"
 #include <EscargotPublic.h>
@@ -32,8 +33,14 @@ namespace Starfish {
 using namespace Escargot;
 
 template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+
+#if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+template class ScriptBindingWorkerInstance<SharedWorkerGlobalScope>;
+#endif
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
+#endif
 #endif
 
 #define DECLARE_WORKER_NAME_FOR_BINDING(exportName)                   \
@@ -68,7 +75,19 @@ void DedicatedWorkerGlobalScope::initJavaScriptGlobalBinding(
     scriptBindingInstance->fnDedicatedWorkerGlobalScope();
 }
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+void SharedWorkerGlobalScope::initJavaScriptGlobalBinding(
+    ScriptExecutionState state, ScriptBindingInstance* scriptBindingInstance)
+{
+    GlobalObjectRef* globalObject = state->context()->globalObject();
+    STARFISH_ENUM_GLOBAL_BINDING_SHAREDWORKER_NAMES(
+        DECLARE_WORKER_NAME_FOR_BINDING);
+
+    scriptBindingInstance->fnSharedWorkerGlobalScope();
+}
+#endif
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 void ServiceWorkerGlobalScope::initJavaScriptGlobalBinding(
     ScriptExecutionState state, ScriptBindingInstance* scriptBindingInstance)
 {
@@ -78,6 +97,7 @@ void ServiceWorkerGlobalScope::initJavaScriptGlobalBinding(
 
     scriptBindingInstance->fnServiceWorkerGlobalScope();
 }
+#endif
 #endif
 
 template <typename T>
@@ -135,7 +155,7 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
     m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);
 }
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_HOST)
 // TODO: Remove mockup function
 #define FOR_EACH_MOCKUP_INTERFACE(F) \
     F(CSS)                           \
