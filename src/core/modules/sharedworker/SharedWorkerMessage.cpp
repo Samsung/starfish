@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 
 #include "StarfishConfig.h"
+#include "core/page/WebBase.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/IPCMessageSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
@@ -69,10 +71,20 @@ namespace SharedWorkerMessage {
     RequestGetSharedWorker::RequestGetSharedWorker(SharedWorker* sharedWorker)
     {
         ResourceURL* url = sharedWorker->scriptURL();
+        WebBase* webBase = sharedWorker->executionContext()->webBase();
+
         m_clientID = sharedWorker->clientID();
         m_sharedWorkerKey = sharedWorker->sharedWorkerKey();
-        m_url = url->urlString()->toUTF8NonGCString();
         m_name = sharedWorker->workerOptions().name()->toUTF8NonGCString();
+        m_workerHostInitData.baseURL =
+            sharedWorker->scriptURL()->baseURI()->toUTF8NonGCString();
+        m_workerHostInitData.url =
+            sharedWorker->scriptURL()->urlString()->toUTF8NonGCString();
+        m_workerHostInitData.locale = webBase->locale();
+        m_workerHostInitData.timezoneID =
+            webBase->timezoneID()->toUTF8NonGCString();
+        m_workerHostInitData.userAgent =
+            webBase->userAgent()->toUTF8NonGCString();
     }
 
     IPCMessageSerializer* RequestGetSharedWorker::serialize()
@@ -82,9 +94,12 @@ namespace SharedWorkerMessage {
 
         serializer->writeUInt32(m_clientID);
         serializer->writeSize(m_sharedWorkerKey);
-        serializer->writeString(m_url);
         serializer->writeString(m_name);
-
+        serializer->writeString(m_workerHostInitData.baseURL);
+        serializer->writeString(m_workerHostInitData.url);
+        serializer->writeString(m_workerHostInitData.locale);
+        serializer->writeString(m_workerHostInitData.timezoneID);
+        serializer->writeString(m_workerHostInitData.userAgent);
         return serializer;
     }
 
@@ -93,8 +108,12 @@ namespace SharedWorkerMessage {
     {
         m_clientID = deserializer->readUInt32();
         m_sharedWorkerKey = deserializer->readSize();
-        m_url = deserializer->readString();
         m_name = deserializer->readString();
+        m_workerHostInitData.baseURL = deserializer->readString();
+        m_workerHostInitData.url = deserializer->readString();
+        m_workerHostInitData.locale = deserializer->readString();
+        m_workerHostInitData.timezoneID = deserializer->readString();
+        m_workerHostInitData.userAgent = deserializer->readString();
     }
 
 } // namespace SharedWorkerMessage

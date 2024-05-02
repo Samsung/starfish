@@ -1,0 +1,15 @@
+// https://html.spec.whatwg.org/multipage/workers.html#shared-workers-and-the-sharedworkerglobalscope-interface
+
+[
+  STARFISH_ENABLE_SHARED_WORKER,
+  STARFISH_WEBWORKER_HOST,
+  PrimaryGlobal,
+  Global=(Worker,SharedWorker),
+  Exposed=SharedWorker
+] interface SharedWorkerGlobalScope : WorkerGlobalScope {
+    [Replaceable] readonly attribute DOMString name;
+
+    [Unimplemented] undefined close();
+
+    [Unimplemented] attribute EventHandler onconnect;
+};

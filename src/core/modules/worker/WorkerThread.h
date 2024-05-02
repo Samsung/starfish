@@ -70,6 +70,7 @@ public:
     void addChildThread(WorkerThread* thread);
     void removeChildThread(WorkerThread* thread);
 
+    bool isRunning();
     bool wasTerminated();
 
     ResourceURL* createScriptURL();

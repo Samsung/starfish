@@ -26,10 +26,15 @@
 
 namespace Starfish {
 
-class SharedWorkerAgent;
 class SharedWorkerAgentServer;
+class SharedWorkerThread;
 class Starfish;
 class WorkerIPCAddress;
+class MessageLoop;
+
+namespace SharedWorkerMessage {
+    class RequestGetSharedWorker;
+}
 
 class SharedWorkerAgent final : public WorkerAgent {
     friend class WorkerAgent;
@@ -41,12 +46,20 @@ public:
 
     void destroy() override;
 
+    void connectSharedWorker(
+        const SharedWorkerMessage::RequestGetSharedWorker& message);
+
 private:
     SharedWorkerAgent(Starfish* starfish);
 
+    SharedWorkerThread* getWorkerThread(
+        const SharedWorkerMessage::RequestGetSharedWorker& message);
+
     static SharedWorkerAgent* m_instance;
+    MessageLoop* m_messageLoop;
     SharedWorkerAgentServer* m_server;
     WorkerIPCAddress* m_ipcAddress;
+    GCUnorderedMap<size_t, SharedWorkerThread*> m_workerThreads;
 };
 } // namespace Starfish
 

@@ -246,6 +246,11 @@ void WorkerThread::terminateChildThreads()
     m_childThreads.shrink_to_fit();
 }
 
+bool WorkerThread::isRunning()
+{
+    return m_state == State::Running;
+}
+
 bool WorkerThread::wasTerminated()
 {
     return m_state == State::Terminated;
