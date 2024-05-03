@@ -180,6 +180,7 @@ public:
         PlainElement = 0,
         PreferEGLImage = 1,
         PreferUnitedTexture = 1 << 1, // don't split texture if possible
+        PreferRetainCPUBufferWhenUnmap = 1 << 2
     };
     static CanvasSurface* create(Renderer* renderer, size_t w, size_t h,
                                  float additionalPixelRatio = 1,

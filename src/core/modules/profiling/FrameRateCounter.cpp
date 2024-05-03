@@ -75,10 +75,9 @@ void FrameRateCounter::drawFps(Compositor* compositor)
     compositor->save();
     compositor->resetMatrixAndClip();
     if (!m_surface && !m_canvas) {
-        // To hold internal buffer even after unmap, set
-        // CanvasSurface::PreferEGLImage.
-        m_surface = CanvasSurface::create(m_webView->renderer(), 50, 50, 1,
-                                          CanvasSurface::PreferEGLImage);
+        m_surface = CanvasSurface::create(
+            m_webView->renderer(), 50, 50, 1,
+            CanvasSurface::PreferRetainCPUBufferWhenUnmap);
         m_canvas = Canvas::create(m_webView, m_surface);
     }
     LayoutRect updateArea = m_updateArea;

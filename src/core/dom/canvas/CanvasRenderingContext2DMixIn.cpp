@@ -334,6 +334,7 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     HTMLCanvasElement* ownerHTMLCanvasElement)
     : CanvasRenderingContext(ownerHTMLCanvasElement->executionContext())
     , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
+    , m_canvasSurfaceBufferAddressBefore(nullptr)
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
@@ -358,12 +359,15 @@ void CanvasRenderingContext2DMixIn::initialize()
     calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
 
-    m_canvasSurface =
-        CanvasSurface::create(m_ownerHTMLCanvasElement->webView()->renderer(),
-                              width, height, 1, CanvasSurface::PreferEGLImage);
+    m_canvasSurface = CanvasSurface::create(
+        m_ownerHTMLCanvasElement->webView()->renderer(), width, height, 1,
+        static_cast<CanvasSurface::CanvasSurfaceFlag>(
+            CanvasSurface::PreferEGLImage |
+            CanvasSurface::PreferRetainCPUBufferWhenUnmap));
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,
                        Canvas::CanvasFlag::CanvasElement);
+    m_canvasSurfaceBufferAddressBefore = nullptr;
     m_canvas->unsetDevicePixelRatio();
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     m_canvasPath = new CanvasPath(executionContext());
@@ -392,6 +396,7 @@ void CanvasRenderingContext2DMixIn::finalize()
 {
     STARFISH_ASSERT(m_canvasSurface);
     STARFISH_ASSERT(m_canvas);
+    m_canvasSurfaceBufferAddressBefore = nullptr;
     // Do not call m_canvasSurface's detachNativeBuffer, it will be called in
     // GC_REGISTER_FINALIZER_NO_ORDER registered by CanvasSurface
     m_canvasSurface = nullptr;
@@ -403,6 +408,18 @@ void CanvasRenderingContext2DMixIn::finalize()
 void CanvasRenderingContext2DMixIn::flush()
 {
     m_canvas->flush();
+}
+
+void CanvasRenderingContext2DMixIn::flushInRendering()
+{
+    flush();
+    if (!m_canvasSurfaceBufferAddressBefore) {
+        m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
+            0, 0, m_canvasSurface->bufferWidth(),
+            m_canvasSurface->bufferHeight());
+        m_canvasSurfaceBufferAddressBefore =
+            m_canvas->renderTargetInfo().m_buffer;
+    }
 }
 
 void CanvasRenderingContext2DMixIn::onResize()
@@ -959,7 +976,8 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    willCanvasSurfaceUpdate();
+
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }
@@ -1375,6 +1393,16 @@ void CanvasRenderingContext2DMixIn::updateFontIfNeeds()
     }
 }
 
+void CanvasRenderingContext2DMixIn::willCanvasSurfaceUpdate()
+{
+    if (m_canvasSurfaceBufferAddressBefore) {
+        auto buffer = m_canvasSurface->mapBuffer();
+        STARFISH_RELEASE_ASSERT(m_canvasSurfaceBufferAddressBefore == buffer);
+        m_canvasSurfaceBufferAddressBefore = nullptr;
+    }
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
 void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
                                              float maxWidth,
                                              bool isMaxWidthProvided)
@@ -1568,9 +1596,9 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
     ImageRenderingValue imageRenderingValue = toImageRenderingValue(
         m_canvas->imageSmoothingEnabled(), m_canvas->imageSmoothingQuality());
 
+    willCanvasSurfaceUpdate();
     m_canvas->drawImage(nativeImageData, src, dst, drawImageInfo,
                         imageRenderingValue);
-    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 ImageData* CanvasRenderingContext2DMixIn::createImageData(int32_t sw,
@@ -1779,6 +1807,9 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
     if (destWidth == 0 || destHeight == 0) {
         return;
     }
+
+    willCanvasSurfaceUpdate();
+
     size_t destStride = 0;
     if (destWidth != 0 && m_canvasSurface->bufferStride() != 0) {
         destStride =
@@ -1824,7 +1855,6 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
         }
     }
     m_canvas->markDirtyRect(Unit::Rect(dx, dy, dirtyWidth, dirtyHeight));
-    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
@@ -1841,7 +1871,7 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    willCanvasSurfaceUpdate();
     m_canvas->save();
     m_canvas->clip(Unit::Rect(x, y, w, h));
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1865,7 +1895,7 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    willCanvasSurfaceUpdate();
 
     CanvasFillRule rule;
     if (stringToCanvasFillRule(fillRule, rule) == false) {
@@ -1903,7 +1933,7 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    willCanvasSurfaceUpdate();
 
     if (path->isEmpty() == false) {
         m_canvas->save();
