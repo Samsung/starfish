@@ -2044,7 +2044,8 @@ public:
             }
         }
 
-        if (!(m_flag & CanvasSurface::PreferEGLImage)) {
+        if (!(m_flag & (CanvasSurface::PreferEGLImage |
+                        CanvasSurface::PreferRetainCPUBufferWhenUnmap))) {
             free(m_buffer);
             m_buffer = nullptr;
         }

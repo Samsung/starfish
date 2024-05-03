@@ -58,6 +58,10 @@ public:
     virtual void initialize() = 0;
     virtual CanvasSurface* surface() = 0;
     virtual void flush() = 0;
+    virtual void flushInRendering()
+    {
+        flush();
+    }
     virtual void onResize() = 0;
 
 protected:

@@ -1839,13 +1839,13 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
 
     // After editing, this 'oninput' event is called.
     if (kind == KeyEventKind::KeyEventDown && isTextEditable &&
-        shouldDispatchInputEvent) {
+        shouldDispatchInputEvent && target->isHTMLFormControl()) {
         InputEvent* event = new InputEvent(document()->executionContext(),
                                            String::createASCIIString("input"));
         event->setCancelable(false);
         event->setBubbles(true);
         event->setComposed(true);
-        event->setData(target->asHTMLInputElement()->value());
+        event->setData(target->asHTMLFormControl()->value());
         event->setInputType(String::createASCIIString("insertText"));
 
         document()->window()->dispatchEventByUA(target, event);

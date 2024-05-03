@@ -60,6 +60,7 @@ public:
 
     virtual void initialize() override;
     virtual void flush() override;
+    virtual void flushInRendering() override;
     virtual void onResize() override;
 
     virtual CanvasSurface* surface() override
@@ -281,10 +282,13 @@ private:
     void drawTextNormal(String* text, float x, float y, float maxWidth,
                         bool shouldApplyMaxWidth, bool isStroke);
     void updateFontIfNeeds();
+    void willCanvasSurfaceUpdate();
 
     std::pair<NULLABLE NativeImageData*, bool>
     CanvasImageSourceToNativeImageData(CanvasImageSource& image);
 
+    // we store buffer address when flush to check address is same further
+    void* m_canvasSurfaceBufferAddressBefore;
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;

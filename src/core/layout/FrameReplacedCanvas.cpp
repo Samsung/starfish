@@ -42,7 +42,8 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     // This case is just that a empty element is defined.
     m_emptySurface =
         CanvasSurface::create(node->webView()->renderer(), 1, 1, 1,
-                    CanvasSurface::CanvasSurfaceFlag::PreferEGLImage);
+                static_cast<CanvasSurface::CanvasSurfaceFlag>(
+                                                  CanvasSurface::PreferEGLImage | CanvasSurface::PreferRetainCPUBufferWhenUnmap));
 }
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()
@@ -66,12 +67,7 @@ void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
     auto context = canvasElement->canvasRenderingContext();
     if (context) {
-        context->flush();
-        CanvasSurface* surface = context->surface();
-        if (surface) {
-            surface->unmapBufferAndNotifyUpdatedRegion(
-                0, 0, surface->bufferWidth(), surface->bufferHeight());
-        }
+        context->flushInRendering();
     }
 }
 
