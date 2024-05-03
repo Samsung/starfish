@@ -1221,8 +1221,6 @@ void CompositorFactory::destroyCompositorContextGl(Renderer* renderer,
 CompositorContext* CompositorFactory::initCompositorContextGl(
     Renderer* renderer)
 {
-    renderer->makeCurrent();
-
     CompositorContextGL* compositorContext = new CompositorContextGL(renderer);
     GL* gl = renderer->gl();
 

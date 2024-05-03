@@ -78,6 +78,12 @@ public:
         m_lastMouseY = -1;
     }
 
+    void ensureCompositorContext()
+    {
+        STARFISH_ASSERT(!m_compostiorContext);
+        m_compostiorContext = Compositor::initCompositorContext(this);
+    }
+
     virtual uint32_t width() override
     {
         return m_width;
@@ -113,7 +119,9 @@ public:
         }
 
         if (!m_compostiorContext) {
-            m_compostiorContext = Compositor::initCompositorContext(this);
+            // calling makeCurrent will create compositor context
+            makeCurrent();
+            STARFISH_ASSERT(m_compostiorContext);
         }
 
         m_compostiorContext->willRendering();
@@ -243,6 +251,9 @@ public:
         }
         m_onMakeCurrent(this);
         m_currentContext = kEmptyContextOrUnknown;
+        if (!m_compostiorContext) {
+            ensureCompositorContext();
+        }
         return true;
     }
 
