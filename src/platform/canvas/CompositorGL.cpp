@@ -1407,19 +1407,20 @@ public:
 
             bool ret = m_renderer->makeCurrent();
             if (m_isEGLImageExternal) {
-#if defined(STARFISH_TIZEN)
-                gl()->xglDestroyImage(m_eglImage);
+#if defined(STARFISH_TIZEN) || \
+    (defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID))
+                if (ret) {
+                    gl()->xglDestroyImage(m_eglImage);
+                }
                 m_eglImage = nullptr;
+#endif
+#if defined(STARFISH_TIZEN)
                 if (m_isEGLBufferOwner) {
                     LongTaskFinder t("tbm_surface_destroy", 1);
                     tbm_surface_destroy(m_tbmSurface);
                 }
                 m_tbmSurface = nullptr;
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
-                EGLDisplay display = eglGetCurrentDisplay();
-                eglDestroyImageKHR(display, m_eglImage);
-
-                m_eglImage = nullptr;
                 if (m_isEGLBufferOwner) {
                     AHardwareBuffer_release(m_aHardwareBuffer);
                 }
@@ -1663,11 +1664,9 @@ public:
                 }
                 EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                                      EGL_NONE };
-                EGLDisplay display = eglGetCurrentDisplay();
                 // eglCreateImageKHR will add a ref to the AHardwareBuffer
-                m_eglImage = eglCreateImageKHR(display, EGL_NO_CONTEXT,
-                                               EGL_NATIVE_BUFFER_ANDROID,
-                                               clientBuffer, attribs);
+                m_eglImage = gl()->xglCreateImage(EGL_NATIVE_BUFFER_ANDROID,
+                                                  clientBuffer, attribs);
                 if (UNLIKELY(!m_eglImage)) {
                     logEglError("eglCreateImageKHR");
                     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
