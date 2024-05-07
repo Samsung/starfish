@@ -470,9 +470,9 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
                                    ->stackingContext();
         if (ctx && ctx->needsGraphicsBuffer()) {
             if (needsRepaintingWhenScrolling(ctx)) {
-                m_target->asElement()->setNeedsPainting();
+                ctx->owner()->node()->setNeedsPainting();
             } else {
-                m_target->asElement()
+                m_target->asWindow()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
             }
