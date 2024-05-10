@@ -503,26 +503,17 @@ void CanvasRenderingContext2DMixIn::setLineDash(GCAtomicVector<double> segments)
         }
     }
 
-    std::vector<double> dashes;
-    for (auto& segment : segments) {
-        dashes.emplace_back(segment);
-    }
-
     if (segments.size() % 2 != 0) {
-        for (auto& segment : segments) {
-            dashes.emplace_back(segment);
-        }
+        size_t len = segments.size();
+        segments.reserve(len * 2);
+        segments.insert(segments.end(), segments.begin(), segments.end());
     }
-    m_canvas->setDash(dashes);
+    m_canvas->setDash(segments);
 }
 
 GCAtomicVector<double> CanvasRenderingContext2DMixIn::getLineDash()
 {
-    GCAtomicVector<double> dashes;
-    for (auto& segment : m_canvas->dash()) {
-        dashes.emplace_back(segment);
-    }
-    return dashes;
+    return m_canvas->dash();
 }
 
 double CanvasRenderingContext2DMixIn::lineDashOffset()

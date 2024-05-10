@@ -263,13 +263,13 @@ public:
     {
     }
 
-    virtual void setDash(const std::vector<double>& dashes)
+    virtual void setDash(const GCAtomicVector<double>& dashes)
     {
     }
 
-    virtual std::vector<double> dash()
+    virtual GCAtomicVector<double> dash()
     {
-        return std::vector<double>();
+        return GCAtomicVector<double>();
     }
 
     virtual double dashOffset()

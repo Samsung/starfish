@@ -1961,13 +1961,13 @@ public:
         cairo_set_line_width(m_canvas, width);
     }
 
-    virtual void setDash(const std::vector<double>& dashes) override
+    virtual void setDash(const GCAtomicVector<double>& dashes) override
     {
         lastState()->m_dashes = dashes;
         updateDashAndDashOffset();
     }
 
-    virtual std::vector<double> dash() override
+    virtual GCAtomicVector<double> dash() override
     {
         return lastState()->m_dashes;
     }
