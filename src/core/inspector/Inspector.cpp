@@ -34,7 +34,7 @@
 #include <nanomsg/pair.h>
 
 namespace Starfish {
-struct Request {
+struct InspectorRequest {
     Inspector* inspector;
     rapidjson::Document document;
 };
@@ -181,7 +181,7 @@ void Inspector::sendDebugMessage(String* m)
 
 void Inspector::commandEvaluator(size_t, void* data)
 {
-    Request* r = (Request*)data;
+    InspectorRequest* r = (InspectorRequest*)data;
     if (std::string(r->document["command"].GetString()) == "eval") {
         const char* str = r->document["content"].GetString();
         STARFISH_ASSERT(str != nullptr);
@@ -215,7 +215,7 @@ void* Inspector::worker(void* data)
             int nbytes = self->m_nnmSocket->recv(&buffer, NN_MSG, NN_DONTWAIT);
 
             if (nbytes > 0) {
-                Request* r = new Request;
+                InspectorRequest* r = new InspectorRequest;
                 r->inspector = self;
                 std::string s(buffer, nbytes);
                 r->document.Parse(s.c_str());
