@@ -151,10 +151,6 @@ void WebGLRenderingContextBaseMixIn::onResize()
 
 CanvasSurface* WebGLRenderingContextBaseMixIn::surface()
 {
-    // NOTE: "FrameReplacedCanvas::willCompositeStackingContext" checks whether
-    // there is a surface on a CanvasElement. If a valid surface is returned, it
-    // requests filling the surface using 'flush()', and then unmaps the buffer
-    // of the surface.
     return m_canvasSurface;
 }
 
