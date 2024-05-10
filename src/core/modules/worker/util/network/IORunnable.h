@@ -63,7 +63,7 @@ private:
     void closeClients();
 
     IMessageLoop* m_messageLoop;
-    GCVector<Client*> m_clients;
+    std::vector<Client*> m_clients;
 
     std::atomic_bool m_isFdUpdateNeeded;
     std::atomic_bool m_isStopped;

@@ -25,16 +25,21 @@
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
+#include "core/modules/sharedworker/IPCMessageSerializer.h"
+#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"
 
 namespace Starfish {
 
 SharedWorkerClient::SharedWorkerClient(PerProcess* perProcess,
                                        const std::string& ipcAddress)
-    : SharedWorkerConnection(perProcess, ipcAddress, SocketNN::kRequestProtocol)
+    : IPCConnection(perProcess, ipcAddress, SocketNN::kRequestProtocol)
     , m_messageHandler(new IPCMessageHandler())
 {
+    initMessageReceiveHandlers();
 }
+
+SharedWorkerClient::~SharedWorkerClient() = default;
 
 void SharedWorkerClient::start()
 {
@@ -61,6 +66,26 @@ void SharedWorkerClient::requestConnection(SharedWorker* sharedWorker)
 void SharedWorkerClient::requestClose(SharedWorker* sharedWorker)
 {
     // TODO: Request a close to the server.
+}
+
+static void onResponseGetSharedWorker(IPCMessageDeserializer* deserializer)
+{
+    SharedWorkerMessage::ResponseGetSharedWorker message;
+    message.deserialize(deserializer);
+    if (deserializer->isError()) {
+        TRACE(SHAREDWORKER,
+              "failed to deserializer ResponseGetSharedWorker message");
+        return;
+    }
+
+    SharedWorkerProcessManager::instance()->startMessagePortConnection(message);
+}
+
+void SharedWorkerClient::initMessageReceiveHandlers()
+{
+    m_messageHandler->setMessageReceiveHandler(
+        SharedWorkerMessage::ResponseGetSharedWorker::messageID(),
+        onResponseGetSharedWorker);
 }
 
 } // namespace Starfish

@@ -22,7 +22,13 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/MessagePort.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -56,7 +62,79 @@ void SharedWorkerGlobalScope::dispose()
 {
     STARFISH_ASSERT(m_executionContext->isContextThread());
 
+    for (const auto& connection : m_connections) {
+        connection.second->close();
+    }
+
     WorkerGlobalScope::dispose();
+}
+
+void SharedWorkerGlobalScope::postTask(PostTaskCallback task, void* data)
+{
+    if (m_closing) {
+        return;
+    }
+
+    MessageLoop* messageLoop = m_webWorker->messageLoop();
+
+    struct Param {
+        SharedWorkerGlobalScope* globalScope;
+        PostTaskCallback task;
+        void* data;
+    };
+
+    Param* p = new Param();
+    p->globalScope = this;
+    p->task = task;
+    p->data = data;
+
+    auto callback = [](size_t, void* data) {
+        Param* p = static_cast<Param*>(data);
+        if (p->globalScope->isClosing()) {
+            delete p;
+            return;
+        }
+
+        p->task(p->globalScope, p->data);
+        delete p;
+    };
+
+    if (messageLoop->calledOnValidThread()) {
+        messageLoop->addIdler(this, callback, p);
+    } else {
+        messageLoop->addIdlerWithNoGCRootingInOtherThread(this, callback, p);
+    }
+}
+
+SharedWorkerMessagePortConnection*
+SharedWorkerGlobalScope::createMessagePortConnection(
+    MessagePortConnectionInfo* info, MessagePort* messagePort)
+{
+    auto* agent = SharedWorkerAgent::instance();
+    auto* connection = new SharedWorkerMessagePortConnection(
+        agent->perProcess(), messagePort, info->identifier, info->clientID,
+        agent->ipcAddress()->createIPCAddress(
+            std::to_string(info->identifier)));
+
+    m_connections.insert({ info->identifier, connection });
+
+    return connection;
+}
+
+void SharedWorkerGlobalScope::requestConnection(MessagePortConnectionInfo* info)
+{
+    TRACE(SHAREDWORKER, info->identifier);
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+
+    MessagePort* messagePort = new MessagePort(m_executionContext);
+
+    // TODO: entangle target MessagePort and emit onConnectMessage
+
+    SharedWorkerMessagePortConnection* connection =
+        createMessagePortConnection(info, messagePort);
+    connection->bind();
+
+    SharedWorkerAgent::instance()->didGlobalScopeConnected(this, connection);
 }
 
 ScriptBindingInstance* SharedWorkerGlobalScope::scriptBindingInstance()

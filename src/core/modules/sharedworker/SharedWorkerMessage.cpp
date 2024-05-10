@@ -24,6 +24,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/IPCMessageSerializer.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 
 namespace Starfish {
@@ -114,6 +115,34 @@ namespace SharedWorkerMessage {
         m_workerHostInitData.locale = deserializer->readString();
         m_workerHostInitData.timezoneID = deserializer->readString();
         m_workerHostInitData.userAgent = deserializer->readString();
+    }
+
+    ResponseGetSharedWorker::ResponseGetSharedWorker(
+        SharedWorkerMessagePortConnection* connection)
+        : m_identifier(connection->identifier())
+        , m_clientID(connection->clientID())
+        , m_ipcAddress(connection->ipcAddress())
+    {
+    }
+
+    IPCMessageSerializer* ResponseGetSharedWorker::serialize()
+    {
+        IPCMessageSerializer* serializer =
+            new IPCMessageSerializer(messageID());
+
+        serializer->writeUInt32(m_identifier);
+        serializer->writeUInt32(m_clientID);
+        serializer->writeString(m_ipcAddress);
+
+        return serializer;
+    }
+
+    void ResponseGetSharedWorker::deserialize(
+        IPCMessageDeserializer* deserializer)
+    {
+        m_identifier = deserializer->readUInt32();
+        m_clientID = deserializer->readUInt32();
+        m_ipcAddress = deserializer->readString();
     }
 
 } // namespace SharedWorkerMessage

@@ -27,6 +27,11 @@ class WorkerIPCAddress;
 class PerProcess;
 class SharedWorker;
 class SharedWorkerClient;
+class SharedWorkerMessagePortConnection;
+
+namespace SharedWorkerMessage {
+    class ResponseGetSharedWorker;
+}
 
 class SharedWorkerProcessManager : public gc {
 public:
@@ -40,12 +45,20 @@ public:
 
     void destroy();
 
+    void startMessagePortConnection(
+        const SharedWorkerMessage::ResponseGetSharedWorker& message);
+
     DEFINE_GETTER_SETTER(PerProcess*, perProcess, PerProcess);
 
 private:
     SharedWorkerProcessManager();
 
     void addSharedWorkerObject(SharedWorker* sharedWorker);
+    Nullable<SharedWorker*> getSharedWorkerObject(int32_t clientID);
+
+    SharedWorkerMessagePortConnection* createMessagePortConnection(
+        SharedWorker* sharedWorker,
+        const SharedWorkerMessage::ResponseGetSharedWorker& message);
 
     static SharedWorkerProcessManager* m_instance;
 
@@ -54,6 +67,7 @@ private:
     SharedWorkerClient* m_client;
     bool m_isStarted;
     GCUnorderedMap<uint32_t, SharedWorker*> m_sharedWorkers;
+    GCVector<SharedWorkerMessagePortConnection*> m_connections;
 };
 
 } // namespace Starfish

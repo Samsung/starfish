@@ -27,6 +27,7 @@
 #include "core/modules/sharedworker/IPCMessageHandler.h"
 #include "core/modules/sharedworker/IPCMessageSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/host/SharedWorkerThread.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgentServer.h"
@@ -35,11 +36,13 @@ namespace Starfish {
 
 SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess,
                                                  const std::string& address)
-    : SharedWorkerConnection(perProcess, address, SocketNN::kReplyProtocol)
+    : IPCConnection(perProcess, address, SocketNN::kReplyProtocol)
     , m_messageHandler(new IPCMessageHandler())
 {
     initMessageReceiveHandlers();
 }
+
+SharedWorkerAgentServer::~SharedWorkerAgentServer() = default;
 
 void SharedWorkerAgentServer::start()
 {
@@ -74,7 +77,14 @@ static void onRequestSharedWorkerMessage(IPCMessageDeserializer* deserializer)
           message.name(), message.workerHostInitData().baseURL,
           message.workerHostInitData().url);
 
-    SharedWorkerAgent::instance()->connectSharedWorker(message);
+    SharedWorkerAgent::instance()->connectWorkerThread(message);
+}
+
+void SharedWorkerAgentServer::responseShareWorkerConnection(
+    SharedWorkerMessagePortConnection* connection)
+{
+    SharedWorkerMessage::ResponseGetSharedWorker message(connection);
+    m_messageHandler->sendMessage(this, message);
 }
 
 void SharedWorkerAgentServer::initMessageReceiveHandlers()

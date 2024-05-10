@@ -17,36 +17,38 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
-#ifndef __StarfishSharedWorkerAgentServer__
-#define __StarfishSharedWorkerAgentServer__
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#ifndef __StarfishIPCConnection__
+#define __StarfishIPCConnection__
 
-#include "core/modules/sharedworker/IPCConnection.h"
+#include "core/modules/worker/util/network/Connection.h"
 
 namespace Starfish {
 
-class IPCMessageHandler;
 class PerProcess;
 
-class SharedWorkerAgentServer final : public IPCConnection {
+class IPCConnection : public Connection {
 public:
-    SharedWorkerAgentServer(PerProcess* perProcess, const std::string& address);
+    enum class State { None, Start, Stop };
 
-    ~SharedWorkerAgentServer();
+    bool bind();
 
-    void start();
+    bool connect();
 
-    void onReceived(Socket* socket, const char* data, size_t len) override;
+    void close();
 
-    void responseShareWorkerConnection(
-        SharedWorkerMessagePortConnection* connection);
+    DEFINE_GETTER(const std::string&, ipcAddress);
 
-    void responseStartMessagePort(uint32_t clientID);
+protected:
+    IPCConnection(PerProcess* perProcess, const std::string& ipcAddress,
+                  int protocol);
 
-private:
-    void initMessageReceiveHandlers();
+    virtual ~IPCConnection();
 
-    IPCMessageHandler* m_messageHandler;
+    PerProcess* m_perProcess;
+    const std::string m_ipcAddress;
+    State m_state;
+    int m_endpointId;
 };
 
 } // namespace Starfish

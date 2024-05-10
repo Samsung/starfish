@@ -21,16 +21,18 @@
 #ifndef __StarfishSharedWorkerClient__
 #define __StarfishSharedWorkerClient__
 
-#include "core/modules/sharedworker/SharedWorkerConnection.h"
+#include "core/modules/sharedworker/IPCConnection.h"
 
 namespace Starfish {
 
 class IPCMessageHandler;
 class PerProcess;
 
-class SharedWorkerClient : public SharedWorkerConnection {
+class SharedWorkerClient : public IPCConnection {
 public:
     SharedWorkerClient(PerProcess* perProcess, const std::string& ipcAddress);
+
+    ~SharedWorkerClient();
 
     void start();
 
@@ -41,6 +43,8 @@ public:
     void requestClose(SharedWorker* sharedWorker);
 
 private:
+    void initMessageReceiveHandlers();
+
     IPCMessageHandler* m_messageHandler;
 };
 

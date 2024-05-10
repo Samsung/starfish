@@ -29,6 +29,7 @@ namespace Starfish {
 class SharedWorker;
 class IPCMessageSerializer;
 class IPCMessageDeserializer;
+class SharedWorkerMessagePortConnection;
 
 namespace SharedWorkerMessage {
 
@@ -68,6 +69,29 @@ namespace SharedWorkerMessage {
         size_t m_sharedWorkerKey;
         std::string m_name;
         WorkerHostInitData m_workerHostInitData;
+    };
+
+    class ResponseGetSharedWorker : public IPCMessage {
+    public:
+        static const char* messageID()
+        {
+            return "responseGetSharedWorker";
+        }
+
+        ResponseGetSharedWorker() = default;
+        ResponseGetSharedWorker(SharedWorkerMessagePortConnection* connection);
+
+        IPCMessageSerializer* serialize() override;
+        void deserialize(IPCMessageDeserializer* deserializer) override;
+
+        DEFINE_GETTER(uint32_t, identifier);
+        DEFINE_GETTER(uint32_t, clientID);
+        DEFINE_GETTER(const std::string&, ipcAddress);
+
+    private:
+        uint32_t m_identifier;
+        uint32_t m_clientID;
+        std::string m_ipcAddress;
     };
 
 } // namespace SharedWorkerMessage
