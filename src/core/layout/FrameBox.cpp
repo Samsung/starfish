@@ -2122,7 +2122,10 @@ void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
                                const LayoutLocation& p5,
                                const LayoutLocation& p6, BoxSide side)
 {
-    std::vector<double> dashes{ 2.0, 1.0 };
+    GCAtomicVector<double> dashes;
+    dashes.emplace_back(2.0);
+    dashes.emplace_back(1.0);
+
     int ndash = sizeof(dashes) / sizeof(dashes[0]);
     double offset = 0.0;
 

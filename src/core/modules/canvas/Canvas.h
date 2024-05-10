@@ -139,7 +139,7 @@ public:
     CanvasCompositeOperator m_compositeOperator;
     CanvasBlendMode m_blendMode;
     double m_dashOffset;
-    std::vector<double> m_dashes;
+    GCAtomicVector<double> m_dashes;
     CanvasTextAlign m_canvasTextAlign;
     CanvasTextBaseline m_canvasTextBaseline;
     CanvasDirection m_canvasDirection;
@@ -442,8 +442,8 @@ public:
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom
 
-    virtual void setDash(const std::vector<double>& dashes) = 0;
-    virtual std::vector<double> dash() = 0;
+    virtual void setDash(const GCAtomicVector<double>& dashes) = 0;
+    virtual GCAtomicVector<double> dash() = 0;
     virtual double dashOffset() = 0;
     virtual void setDashOffset(double offset) = 0;
 
