@@ -1850,11 +1850,6 @@ public:
                                                    size_t dirtyWidth,
                                                    size_t dirtyHeight) override
     {
-        if (m_isFrameBuffer) {
-            // NOTE: Unmapping the buffer isn't needed since the frame buffer
-            // is already stored in GPU memory.
-            return;
-        }
         STARFISH_ASSERT(m_wTextureCount != 0);
         STARFISH_ASSERT(m_hTextureCount != 0);
         STARFISH_ASSERT(m_textureTileSize != 0);
