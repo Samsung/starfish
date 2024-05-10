@@ -18,33 +18,36 @@
  */
 
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
-#ifndef __StarfishSharedWorkerConnection__
-#define __StarfishSharedWorkerConnection__
+#ifndef __StarfishSharedWorkerMessagePortConnection__
+#define __StarfishSharedWorkerMessagePortConnection__
 
-#include "core/modules/worker/util/network/Connection.h"
+#include "core/modules/sharedworker/IPCConnection.h"
 
 namespace Starfish {
 
 class PerProcess;
+class MessagePort;
 
-class SharedWorkerConnection : public Connection {
+class SharedWorkerMessagePortConnection final : public IPCConnection {
 public:
-    enum class State { None, Start, Stop };
+    SharedWorkerMessagePortConnection(PerProcess* perProcess,
+                                      MessagePort* m_messagePort,
+                                      uint32_t identifier, uint32_t clientID,
+                                      const std::string& ipcAddress);
 
-    SharedWorkerConnection(PerProcess* perProcess,
-                           const std::string& ipcAddress, int protocol);
+    ~SharedWorkerMessagePortConnection();
 
-    bool bind();
+    void onReceived(Socket* socket, const char* data, size_t size) override;
 
-    bool connect();
+    IMessageLoop* messageLoop() override;
 
-    void close();
+    DEFINE_GETTER(uint32_t, identifier);
+    DEFINE_GETTER(uint32_t, clientID);
 
-protected:
-    PerProcess* m_perProcess;
-    const std::string m_ipcAddress;
-    State m_state;
-    int m_endpointId;
+private:
+    MessagePort* m_messagePort;
+    uint32_t m_identifier;
+    uint32_t m_clientID;
 };
 
 } // namespace Starfish

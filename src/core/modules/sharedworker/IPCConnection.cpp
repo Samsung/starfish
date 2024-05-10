@@ -24,13 +24,12 @@
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/util/network/SocketNN.h"
-#include "core/modules/sharedworker/SharedWorkerConnection.h"
+#include "core/modules/sharedworker/IPCConnection.h"
 
 namespace Starfish {
 
-SharedWorkerConnection::SharedWorkerConnection(PerProcess* perProcess,
-                                               const std::string& ipcAddress,
-                                               int protocol)
+IPCConnection::IPCConnection(PerProcess* perProcess,
+                             const std::string& ipcAddress, int protocol)
     : Connection(protocol)
     , m_perProcess(perProcess)
     , m_ipcAddress(ipcAddress)
@@ -39,7 +38,9 @@ SharedWorkerConnection::SharedWorkerConnection(PerProcess* perProcess,
 {
 }
 
-bool SharedWorkerConnection::bind()
+IPCConnection::~IPCConnection() = default;
+
+bool IPCConnection::bind()
 {
     STARFISH_ASSERT(m_state == State::None);
 
@@ -60,7 +61,7 @@ bool SharedWorkerConnection::bind()
     return true;
 }
 
-bool SharedWorkerConnection::connect()
+bool IPCConnection::connect()
 {
     STARFISH_ASSERT(m_state == State::None);
 
@@ -81,7 +82,7 @@ bool SharedWorkerConnection::connect()
     return true;
 }
 
-void SharedWorkerConnection::close()
+void IPCConnection::close()
 {
     if (m_state != State::Start) {
         return;

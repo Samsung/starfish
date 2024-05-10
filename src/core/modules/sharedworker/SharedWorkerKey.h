@@ -26,8 +26,10 @@
 namespace Starfish {
 
 class SharedWorker;
+class SharedWorkerMessagePortConnection;
 
 using SharedWorkerClientID = Id<SharedWorker>;
+using SharedWorkerIdentifier = Id<SharedWorkerMessagePortConnection>;
 
 struct SharedWorkerKey {
     SharedWorkerKey(const String* storageKey, const String* url,

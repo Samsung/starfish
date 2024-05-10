@@ -21,23 +21,31 @@
 #ifndef __StarfishSharedWorkerAgentServer__
 #define __StarfishSharedWorkerAgentServer__
 
-#include "core/modules/sharedworker/SharedWorkerConnection.h"
+#include "core/modules/sharedworker/IPCConnection.h"
 
 namespace Starfish {
 
 class IPCMessageHandler;
 class PerProcess;
 
-class SharedWorkerAgentServer final : public SharedWorkerConnection {
+class SharedWorkerAgentServer final : public IPCConnection {
 public:
     SharedWorkerAgentServer(PerProcess* perProcess, const std::string& address);
+
+    ~SharedWorkerAgentServer();
 
     void start();
 
     void onReceived(Socket* socket, const char* data, size_t len) override;
 
+    void responseShareWorkerConnection(
+        SharedWorkerMessagePortConnection* connection);
+
+    void responseStartMessagePort(uint32_t clientID);
+
 private:
     void initMessageReceiveHandlers();
+
     IPCMessageHandler* m_messageHandler;
 };
 

@@ -28,13 +28,30 @@ namespace Starfish {
 
 class SharedWorkerAgentServer;
 class SharedWorkerThread;
+class SharedWorkerGlobalScope;
+class SharedWorkerMessagePortConnection;
 class Starfish;
 class WorkerIPCAddress;
 class MessageLoop;
+class Mutex;
 
 namespace SharedWorkerMessage {
     class RequestGetSharedWorker;
 }
+
+struct MessagePortConnectionInfo : public gc {
+    MessagePortConnectionInfo(uint32_t identifier_, uint32_t clientID_,
+                              SharedWorkerThread* thread_)
+        : identifier(identifier_)
+        , clientID(clientID_)
+        , thread(thread_)
+    {
+    }
+
+    uint32_t identifier;
+    uint32_t clientID;
+    SharedWorkerThread* thread;
+};
 
 class SharedWorkerAgent final : public WorkerAgent {
     friend class WorkerAgent;
@@ -46,20 +63,37 @@ public:
 
     void destroy() override;
 
-    void connectSharedWorker(
+    void connectWorkerThread(
         const SharedWorkerMessage::RequestGetSharedWorker& message);
+
+    void didGlobalScopeConnected(SharedWorkerGlobalScope* globalScope,
+                                 SharedWorkerMessagePortConnection* connection);
+
+    Nullable<MessagePortConnectionInfo*> getConnectionInfo(uint32_t identifier);
+
+    DEFINE_GETTER(WorkerIPCAddress*, ipcAddress);
+    DEFINE_GETTER(MessageLoop*, messageLoop);
 
 private:
     SharedWorkerAgent(Starfish* starfish);
 
+    uint32_t createIdentifier();
+
     SharedWorkerThread* getWorkerThread(
         const SharedWorkerMessage::RequestGetSharedWorker& message);
+
+    MessagePortConnectionInfo* createConnectionInfo(uint32_t clientID,
+                                                    SharedWorkerThread* thread);
+
+    DEFINE_GETTER(SharedWorkerAgentServer*, server);
 
     static SharedWorkerAgent* m_instance;
     MessageLoop* m_messageLoop;
     SharedWorkerAgentServer* m_server;
     WorkerIPCAddress* m_ipcAddress;
     GCUnorderedMap<size_t, SharedWorkerThread*> m_workerThreads;
+    GCVector<MessagePortConnectionInfo*> m_connectionInfos;
+    Mutex* m_mutex;
 };
 } // namespace Starfish
 

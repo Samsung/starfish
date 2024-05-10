@@ -20,7 +20,9 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/sharedworker/host/SharedWorkerThread.h"
 
@@ -32,6 +34,7 @@ SharedWorkerThread::SharedWorkerThread(
     : WorkerThread(starfish, messageLoop, workerHostInitData)
     , m_globalScope(nullptr)
     , m_name(name)
+    , m_initialIdentifier(0)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -54,7 +57,35 @@ WorkerGlobalScope* SharedWorkerThread::createWorkerGlobalScope(
 
     m_globalScope->initialize(m_name);
 
+    Nullable<MessagePortConnectionInfo*> connectionInfo =
+        SharedWorkerAgent::instance()->getConnectionInfo(m_initialIdentifier);
+    STARFISH_ASSERT(connectionInfo.hasValue());
+
+    m_globalScope->requestConnection(connectionInfo.getValue());
+
     return m_globalScope;
+}
+
+void SharedWorkerThread::startWithIdentifier(uint32_t identifier)
+{
+    TRACE(SHAREDWORKER, identifier);
+
+    m_initialIdentifier = identifier;
+
+    start();
+}
+
+void SharedWorkerThread::requestSharedWorkerConnection(
+    MessagePortConnectionInfo* info)
+{
+    TRACE(SHAREDWORKER, info->identifier);
+
+    m_globalScope->postTask(
+        [](SharedWorkerGlobalScope* globalScope, void* data) {
+            globalScope->requestConnection(
+                static_cast<MessagePortConnectionInfo*>(data));
+        },
+        info);
 }
 
 } // namespace Starfish

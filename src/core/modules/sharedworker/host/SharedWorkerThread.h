@@ -31,6 +31,7 @@ class WorkerGlobalScope;
 class WebWorker;
 class WorkerHost;
 class SharedWorkerGlobalScope;
+class MessagePortConnectionInfo;
 struct WorkerHostInitData;
 
 class SharedWorkerThread : public WorkerThread {
@@ -44,11 +45,16 @@ public:
     WorkerGlobalScope* createWorkerGlobalScope(WebWorker* webWorker,
                                                WorkerHost* workerHost) override;
 
+    void startWithIdentifier(uint32_t identifier);
+
+    void requestSharedWorkerConnection(MessagePortConnectionInfo* info);
+
     DEFINE_GETTER(SharedWorkerGlobalScope*, globalScope);
 
 private:
     SharedWorkerGlobalScope* m_globalScope;
     const std::string m_name;
+    uint32_t m_initialIdentifier;
 };
 
 } // namespace Starfish

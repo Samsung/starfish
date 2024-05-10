@@ -25,6 +25,8 @@
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/sharedworker/SharedWorker.h"
+#include "core/modules/sharedworker/SharedWorkerMessage.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 
@@ -91,19 +93,75 @@ void SharedWorkerProcessManager::addSharedWorkerObject(
     m_sharedWorkers.insert({ sharedWorker->clientID(), sharedWorker });
 }
 
+Nullable<SharedWorker*> SharedWorkerProcessManager::getSharedWorkerObject(
+    int32_t clientID)
+{
+    const auto& iter = m_sharedWorkers.find(clientID);
+    if (iter != m_sharedWorkers.end()) {
+        return iter->second;
+    }
+
+    return Nullable<SharedWorker*>();
+}
+
 void SharedWorkerProcessManager::destroy()
 {
     if (!m_isStarted) {
         return;
     }
 
+    for (const auto& connection : m_connections) {
+        connection->close();
+    }
+
     for (const auto& iter : m_sharedWorkers) {
         m_client->requestClose(iter.second);
     }
 
+    m_client->~SharedWorkerClient();
+    m_client = nullptr;
+
     m_sharedWorkers.clear();
 
     m_instance = nullptr;
+}
+
+SharedWorkerMessagePortConnection*
+SharedWorkerProcessManager::createMessagePortConnection(
+    SharedWorker* sharedWorker,
+    const SharedWorkerMessage::ResponseGetSharedWorker& message)
+{
+    SharedWorkerMessagePortConnection* connection =
+        new SharedWorkerMessagePortConnection(
+            SharedWorkerProcessManager::instance()->perProcess(),
+            sharedWorker->port(), message.identifier(), message.clientID(),
+            message.ipcAddress());
+
+    m_connections.push_back(connection);
+
+    return connection;
+}
+
+void SharedWorkerProcessManager::startMessagePortConnection(
+    const SharedWorkerMessage::ResponseGetSharedWorker& message)
+{
+    TRACE(SHAREDWORKER, message.ipcAddress());
+
+    Nullable<SharedWorker*> sharedWorker =
+        SharedWorkerProcessManager::instance()->getSharedWorkerObject(
+            message.clientID());
+
+    if (!sharedWorker.hasValue()) {
+        TRACE(SHAREDWORKER, "shared worker closed.");
+        return;
+    }
+
+    SharedWorkerMessagePortConnection* connection =
+        createMessagePortConnection(sharedWorker.value(), message);
+
+    connection->connect();
+
+    // TODO: start message port
 }
 
 } // namespace Starfish

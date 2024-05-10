@@ -29,9 +29,13 @@ class WebWorker;
 class ResourceURL;
 class String;
 class ScriptBindingInstance;
+class SharedWorkerMessagePortConnection;
+class MessagePortConnectionInfo;
 
 class SharedWorkerGlobalScope final : public WorkerGlobalScope {
 public:
+    using PostTaskCallback = void (*)(SharedWorkerGlobalScope*, void*);
+
     SharedWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
                             String* charSet);
 
@@ -45,13 +49,27 @@ public:
 
     void initialize(const std::string& name);
 
+    void postTask(PostTaskCallback task, void* data);
+
+    void requestConnection(MessagePortConnectionInfo* info);
+
     String* name()
     {
         return m_name;
     }
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(connect);
+#undef VIRTUAL
+#undef OVERRIDE
+
 private:
+    SharedWorkerMessagePortConnection* createMessagePortConnection(
+        MessagePortConnectionInfo* info, MessagePort* messagePort);
+
     String* m_name;
+    GCUnorderedMap<uint32_t, SharedWorkerMessagePortConnection*> m_connections;
 };
 
 } // namespace Starfish
