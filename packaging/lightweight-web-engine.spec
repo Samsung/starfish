@@ -414,9 +414,12 @@ echo "Building for: " %{rpm}
 %define binding_src_path binding_generator/pip_archive
 %define binding_install_path out_tizen/binding_generator_python_packages
 
-unzip -o %{binding_src_path}/Jinja2-3.1.2-py3-none-any.whl -d %{binding_install_path}
-unzip -o %{binding_src_path}/ply-3.11-py2.py3-none-any.whl -d %{binding_install_path}
-unzip -o %{binding_src_path}/MarkupSafe-2.1.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl -d %{binding_install_path}
+if [ ! -f "%{binding_install_path}/DONE" ]; then
+ unzip -o %{binding_src_path}/Jinja2-3.1.2-py3-none-any.whl -d %{binding_install_path}
+ unzip -o %{binding_src_path}/ply-3.11-py2.py3-none-any.whl -d %{binding_install_path}
+ unzip -o %{binding_src_path}/MarkupSafe-2.1.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl -d %{binding_install_path}
+ touch %{binding_install_path}/DONE
+fi
 export PYTHONPATH=$PWD/%{binding_install_path}
 
 CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
