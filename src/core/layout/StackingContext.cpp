@@ -2980,7 +2980,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         }
     }
 
-    if (!thereIsNoBufferBecauseThereIsNoVisibleContent) {
+    auto contentSurface = owner()->contentSurface();
+    if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface) {
         owner()->willCompsiteStackingContext(compositor);
 
         bool hasFilterEffect = false;
@@ -3061,9 +3062,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             compositor->translate(-minX, -minY);
         }
 
-        auto contentSurface = owner()->contentSurface();
         if (contentSurface) {
             compositor->save();
+
+            // there is only background-color on video or canvas element, we should not make graphics buffer
+            // since we can draw background color property with compositor
+            if (thereIsNoBufferBecauseThereIsNoVisibleContent) {
+                auto clr = owner()->style()->backgroundColor();
+                if (!clr.isTransparent()) {
+                    compositor->setFillColor(clr);
+                    compositor->drawRect(LayoutRect(0, 0, owner()->width(),
+                            owner()->height()));
+                }
+            }
             auto dx = owner()->borderLeft() + owner()->paddingLeft();
             auto dy = owner()->borderTop() + owner()->paddingTop();
             compositor->translate(dx, dy);
