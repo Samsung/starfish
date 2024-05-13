@@ -233,7 +233,7 @@ public:
     void clearingBeforePaint(T canvas);
     void paintWindowBackground(Canvas* canvas);
 
-    std::pair<bool, Unit::Color> hasWindowBackgroundColor();
+    std::pair<Nullable<Element*>, Unit::Color> hasWindowBackgroundColor();
     bool rootStackingContextNeedsGraphicsBuffer();
 
     bool isTopLevelBrowsingContext()

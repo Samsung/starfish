@@ -3955,7 +3955,19 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     bool boxHasDrawableContents = true;
     bool drawableContentsInStyle = true;
     if (ctx.isVisibleRectCollapsible) {
-        drawableContentsInStyle = cs && styleHasDrawableContents(cs, this);
+        bool shouldCareBackgroundColor = true;
+        if (node() && (node()->isHTMLHtmlElement() || node()->isHTMLBodyElement())) {
+            auto bgColor = node()->document()->browsingContext()->hasWindowBackgroundColor();
+            if (bgColor.first.hasValue() && bgColor.first.value() == node()) {
+                shouldCareBackgroundColor = false;
+            }
+        } else if (!isScrollingPurpose && contentSurface()) {
+            // there is only background-color on video or canvas element, we should not make graphics buffer
+            // since we can draw background color property with compositor
+            shouldCareBackgroundColor = false;
+        }
+
+        drawableContentsInStyle = cs && styleHasDrawableContents(cs, this, shouldCareBackgroundColor);
     }
     if (isFrameBlockBox() && !drawableContentsInStyle) {
         boxHasDrawableContents = false;
@@ -3987,13 +3999,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                 boxHasDrawableContents = drawableContentsInStyle;
             }
         } else {
-            if (drawableContentsInStyle && !isScrollingPurpose && contentSurface()) {
-                // there is only background-color on video or canvas element, we should not make graphics buffer
-                // since we can draw background color property with compositor
-                boxHasDrawableContents = styleHasDrawableContents(cs, this, false);
-            } else {
-                boxHasDrawableContents = drawableContentsInStyle;
-            }
+            boxHasDrawableContents = drawableContentsInStyle;
         }
     }
 
