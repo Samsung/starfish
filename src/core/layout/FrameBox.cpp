@@ -3747,7 +3747,7 @@ LayoutRect FrameBox::frameScrollingRect()
     return out;
 }
 
-static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
+static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b, bool checkBackgroundColor = true)
 {
     StyleBackgroundData* background = nullptr;
     OutlineData* outline = nullptr;
@@ -3783,7 +3783,7 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
         }
     }
 
-    if (background && !background->color().isTransparent()) {
+    if (checkBackgroundColor && background && !background->color().isTransparent()) {
         return true;
     }
 
@@ -3972,18 +3972,28 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                 boxHasDrawableContents = drawableContentsInStyle;
             }
         }
-    } else if (isFrameReplaced() && asFrameReplaced()->isFrameReplacedImage()) {
-        NativeImageData* id = node()->asHTMLImageElement()->imageData();
-        if (id) {
-            if (id->width() < ExtraSmallNativeImageSize &&
-                id->height() < ExtraSmallNativeImageSize &&
-                id->isEmptyImage()) {
-                boxHasDrawableContents = drawableContentsInStyle;
+    } else if (isFrameReplaced()) {
+        if (asFrameReplaced()->isFrameReplacedImage()) {
+            NativeImageData* id = node()->asHTMLImageElement()->imageData();
+            if (id) {
+                if (id->width() < ExtraSmallNativeImageSize &&
+                    id->height() < ExtraSmallNativeImageSize &&
+                    id->isEmptyImage()) {
+                    boxHasDrawableContents = drawableContentsInStyle;
+                } else {
+                    boxHasDrawableContents = true;
+                }
             } else {
-                boxHasDrawableContents = true;
+                boxHasDrawableContents = drawableContentsInStyle;
             }
         } else {
-            boxHasDrawableContents = drawableContentsInStyle;
+            if (drawableContentsInStyle && !isScrollingPurpose && contentSurface()) {
+                // there is only background-color on video or canvas element, we should not make graphics buffer
+                // since we can draw background color property with compositor
+                boxHasDrawableContents = styleHasDrawableContents(cs, this, false);
+            } else {
+                boxHasDrawableContents = drawableContentsInStyle;
+            }
         }
     }
 
