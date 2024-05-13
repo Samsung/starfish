@@ -710,7 +710,8 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
     }
 }
 
-std::pair<bool, Unit::Color> BrowsingContext::hasWindowBackgroundColor()
+std::pair<Nullable<Element*>, Unit::Color>
+BrowsingContext::hasWindowBackgroundColor()
 {
     if (hasRootElementBackground() || hasBodyElementBackground()) {
         if (hasRootElementBackground() && !document()
@@ -719,15 +720,15 @@ std::pair<bool, Unit::Color> BrowsingContext::hasWindowBackgroundColor()
                                                ->backgroundColor()
                                                .isTransparent()) {
             HTMLHtmlElement* root = document()->rootElement();
-            return std::make_pair(true, root->style()->backgroundColor());
+            return std::make_pair(root, root->style()->backgroundColor());
         } else {
             HTMLBodyElement* body = document()->rootElement()->body();
             if (body && !body->style()->backgroundColor().isTransparent()) {
-                return std::make_pair(true, body->style()->backgroundColor());
+                return std::make_pair(body, body->style()->backgroundColor());
             }
         }
     }
-    return std::make_pair(false, Unit::Color());
+    return std::make_pair(nullptr, Unit::Color());
 }
 
 bool BrowsingContext::rootStackingContextNeedsGraphicsBuffer()
