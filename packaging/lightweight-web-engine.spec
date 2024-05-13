@@ -56,6 +56,10 @@ Requires(postun): /sbin/ldconfig
 %define skip_dali_build 0
 %endif
 
+%if %{?skip_config:0}%{!?skip_config:1}
+%define skip_config 0
+%endif
+
 %if 0%{?tizen_version_major:1}
 %else
 %define tizen_version_major 4
@@ -517,6 +521,7 @@ ninja -C %{out_tizen} starfish_api.shared_library
 %endif
 
 # For Cairo
+%if "%{?skip_config}" == "0"
 %if 0%{?build_option:1}
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
@@ -538,6 +543,8 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DASAN='%{asan}' %{?extra_cmake_options} \
   -G Ninja
 %endif
+%endif
+
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 %if "%{?disable_shell}" == "0"
