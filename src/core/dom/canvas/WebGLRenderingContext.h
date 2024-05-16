@@ -67,6 +67,8 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGLRenderingContext);
 
+    void preInitialize(ScriptValue contextAttributes);
+
     void initialize() override;
     void flush() override;
     void onResize() override;

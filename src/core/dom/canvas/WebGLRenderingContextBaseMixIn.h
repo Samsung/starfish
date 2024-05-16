@@ -82,6 +82,7 @@ protected:
     CanvasSurface* m_canvasSurface;
     std::shared_ptr<FramebufferTexture> m_framebufferTexture;
     GLContext m_context;
+    bool m_isContextAttributesChecked;
 };
 } // namespace Starfish
 #endif

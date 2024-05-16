@@ -111,6 +111,61 @@ ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
+{
+    STARFISH_ASSERT(m_isContextAttributesChecked == false);
+
+    // Check context attributes
+    m_isContextAttributesChecked = true;
+
+    if (contextAttributes->isObject()) {
+#define SET_ATTRIBUTE(str, attribute)                           \
+    {                                                           \
+        auto key = StringRef::createFromASCII(#str);            \
+        if (object->has(state, key)) {                          \
+            ValueRef* value = object->get(state, key);          \
+            if (value->isBoolean()) {                           \
+                TRACE(WEBGL, #str, ":", value->asBoolean());    \
+                attributes->set##attribute(value->asBoolean()); \
+            }                                                   \
+        }                                                       \
+    }
+
+        Evaluator::EvaluatorResult evaluated = Evaluator::execute(
+            scriptBindingInstance()->scriptContext(),
+            [](ExecutionStateRef* state, ObjectRef* object,
+               WebGLContextAttributes* attributes) -> ValueRef* {
+                // powerPreference: string
+                auto key = StringRef::createFromASCII("powerPreference");
+                if (object->has(state, key)) {
+                    ValueRef* value = object->get(state, key);
+                    if (value->isString()) {
+                        std::string powerPreference =
+                            value->asString()->toStdUTF8String();
+                        TRACE(WEBGL, KV(powerPreference));
+                        attributes->setPowerPreference(String::fromUTF8(
+                            powerPreference.c_str(), powerPreference.length()));
+                    }
+                }
+
+                // the others: bool
+                SET_ATTRIBUTE(alpha, Alpha);
+                SET_ATTRIBUTE(depth, Depth);
+                SET_ATTRIBUTE(stencil, Stencil);
+                SET_ATTRIBUTE(antialias, Antialias);
+                SET_ATTRIBUTE(premultipliedAlpha, PremultipliedAlpha);
+                SET_ATTRIBUTE(preserveDrawingBuffer, PreserveDrawingBuffer);
+                SET_ATTRIBUTE(desynchronized, Desynchronized);
+                SET_ATTRIBUTE(failIfMajorPerformanceCaveat,
+                              FailIfMajorPerformanceCaveat);
+                return ValueRef::createUndefined();
+            },
+            contextAttributes->asObject(), &m_attributes);
+
+#undef SET_ATTRIBUTE
+    }
+}
+
 void WebGLRenderingContext::initialize()
 {
     WebGLRenderingContextBaseMixIn::initialize();
