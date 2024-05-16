@@ -110,7 +110,10 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
 #if defined(STARFISH_ENABLE_WEBGL)
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextModeWebGL;
-            m_canvasRenderingContext = new WebGLRenderingContext(this);
+            auto context = new WebGLRenderingContext(this);
+            context->preInitialize(arguments.empty() ? scriptUndefined()
+                                                     : arguments[0]);
+            m_canvasRenderingContext = context;
             m_canvasRenderingContext->initialize();
             m_canvasRenderingContext->setOriginCleanFlag(true);
         }

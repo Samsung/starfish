@@ -35,6 +35,7 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
     : CanvasRenderingContext(ownerHTMLCanvasElement->executionContext())
     , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
     , m_canvasSurface(nullptr)
+    , m_isContextAttributesChecked(false)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -50,6 +51,7 @@ void WebGLRenderingContextBaseMixIn::initialize()
 {
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(!m_context.isValid());
+    STARFISH_ASSERT(m_isContextAttributesChecked);
 
     m_context = GLContext(m_ownerHTMLCanvasElement->webView()->renderer());
 
