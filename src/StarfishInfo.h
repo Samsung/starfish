@@ -25,7 +25,7 @@
 #define PRODUCT_NAME "Gecko"
 #define STARFISH_NAME "Starfish"
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
-#define VERSION "1.0.0/"
+#define VERSION STARFISH_VERSION_STR
 #define USER_AGENT(STARFISH_NAME, VERSION) \
     "Mozilla/5.0 (like Gecko/54.0 Firefox/54.0) " STARFISH_NAME "/" VERSION
 #define USER_AGENT_MAXIMUM_DATE_VALUE 8.64e15

@@ -31,6 +31,8 @@ ELSE()
     SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/bin)
 ENDIF()
 
+
+
 #######################################################
 # DEFINITION
 #######################################################
@@ -69,7 +71,7 @@ ENDIF()
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
-SET (LWE_DEFINES_DEFAULT)
+SET (LWE_DEFINES_DEFAULT -DSTARFISH_VERSION_STR="${LWE_VERSION}")
 
 IF (${DOCKER} STREQUAL "1")
     SET (LWE_DEFINES_DEFAULT

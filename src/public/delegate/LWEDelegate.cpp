@@ -245,6 +245,13 @@ unsigned char LWE::GetGCFrequency()
     STARFISH_RELEASE_ASSERT(IsInitialized());
     return g_starfishInstance->gcFrequency();
 }
+
+void LWE::GetVersion(int* major, int* minor, int* patch)
+{
+    STARFISH_RELEASE_ASSERT(IsInitialized());
+    g_starfishInstance->version(major, minor, patch);
+}
+
 } // namespace LWEDelegate
 
 extern "C" {
@@ -276,5 +283,10 @@ unsigned char LWEDelegate_LWE_GetGCFrequency()
 void LWEDelegate_LWE_SetGCFrequency(unsigned char freq)
 {
     LWEDelegate::LWE::SetGCFrequency(freq);
+}
+
+void LWEDelegate_LWE_GetVersion(int* major, int* minor, int* patch)
+{
+    LWEDelegate::LWE::GetVersion(major, minor, patch);
 }
 }

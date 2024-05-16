@@ -101,6 +101,8 @@ public:
         GC_set_free_space_divisor(c);
     }
 
+    void version(int* major, int* minor, int* patch);
+
     std::string backend()
     {
         return m_backend;
