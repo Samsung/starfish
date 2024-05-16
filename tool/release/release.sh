@@ -47,7 +47,7 @@ today=`date +%y%m%d`
 cd ../$repo
 mkdir -p .git
 
-sed -i "s/\(VERSION \".*\"\)/\1 \"$today\_$hash\"/g" src/StarfishInfo.h
+sed -i "s/\(VERSION STARFISH_VERSION_STR\)/\1 \"\/$today\_$hash\"/g" src/StarfishInfo.h
 
 if [ "$version" == "5.0" ]; then
     cp -f $ROOT/compat/tizen_5.0/inc/LWEWebView.h inc/LWEWebView.h

@@ -39,8 +39,10 @@ PROCESSORCOUNT (NPROCS)
 # INCLUDE CMAKE FILES
 
 IF (${HOST} MATCHES "windows")
+    INCLUDE (build/version.cmake)
     INCLUDE (build/windows.cmake)
 ELSE ()
+    INCLUDE (build/version.cmake)
     INCLUDE (build/config.cmake)
     INCLUDE (build/third_party.cmake)
     INCLUDE (build/starfish.cmake)

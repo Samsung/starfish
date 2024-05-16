@@ -91,9 +91,11 @@ bool LWEDelegateLoader::loadLWEProcTable()
     kLWEProcTable.SetGCFrequency =
         reinterpret_cast<void (*)(unsigned char freq)>(
             dlsym(m_handle, "LWEDelegate_LWE_SetGCFrequency"));
+    kLWEProcTable.GetVersion = reinterpret_cast<void (*)(int*, int*, int*)>(
+        dlsym(m_handle, "LWEDelegate_LWE_GetVersion"));
     return kLWEProcTable.Initialize && kLWEProcTable.IsInitialized &&
            kLWEProcTable.Finalize && kLWEProcTable.GetGCFrequency &&
-           kLWEProcTable.SetGCFrequency;
+           kLWEProcTable.SetGCFrequency && kLWEProcTable.GetVersion;
 }
 
 bool LWEDelegateLoader::loadResourceErrorProcTable()
@@ -108,7 +110,7 @@ bool LWEDelegateLoader::loadSettingsProcTable()
 {
     kSettingsProcTable.Create =
         reinterpret_cast<uintptr_t (*)(const char* defaultUA, const char* ua)>(
-            dlsym(m_handle, "LWEDelegate_ResourceError_Create"));
+            dlsym(m_handle, "LWEDelegate_Settings_Create"));
     kSettingsProcTable.CreateEmpty = reinterpret_cast<uintptr_t (*)()>(
         dlsym(m_handle, "LWEDelegate_Settings_Create_Empty"));
     kSettingsProcTable.CreateFromOther = reinterpret_cast<uintptr_t (*)(void*)>(
@@ -163,7 +165,7 @@ void LWEDelegateLoader::unloadCookieManagerProcTable()
 
 void LWEDelegateLoader::unloadLWEProcTable()
 {
-    kLWEProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr };
+    kLWEProcTable = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 }
 
 void LWEDelegateLoader::unloadResourceErrorProcTable()

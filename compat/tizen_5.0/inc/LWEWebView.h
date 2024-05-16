@@ -103,6 +103,11 @@ public:
      * you can increase this value.
      */
     static void SetGCFrequency(unsigned char freq);
+
+    /**
+     * \brief Returns LWE version number if the parameter is not null.
+     */
+    static void GetVersion(int* major, int* minor, int* patch);
 };
 
 #define LWE_DEFAULT_FONT_SIZE 16

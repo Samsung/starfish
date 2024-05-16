@@ -91,6 +91,10 @@ bool MiniBrowser::init(const MiniBrowserInitOption& initOption)
     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
                          "/tmp/Starfish_Cookies.txt", cacheDir().c_str());
 
+    int major, minor, patch;
+    LWE::LWE::GetVersion(&major, &minor, &patch);
+    printf("LWE Version: %d.%d.%d\n", major, minor, patch);
+
     const char* gcFrequency = getenv("GC_FREQUENCY");
     if (gcFrequency && strlen(gcFrequency)) {
         LWE::LWE::SetGCFrequency(std::atoi(gcFrequency));

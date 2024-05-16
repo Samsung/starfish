@@ -109,6 +109,16 @@ void LWE::SetGCFrequency(unsigned char freq)
 #endif
 }
 
+void LWE::GetVersion(int* major, int* minor, int* patch)
+{
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEDelegateLoader::getInstance()->kLWEProcTable.GetVersion(
+        major, minor, patch);
+#else
+    return LWEDelegate::LWE::GetVersion(major, minor, patch);
+#endif
+}
+
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
 {

@@ -35,6 +35,8 @@ public:
     static unsigned char GetGCFrequency();
 
     static void SetGCFrequency(unsigned char freq);
+
+    static void GetVersion(int* major, int* minor, int* patch);
 };
 
 } // namespace LWEDelegate
@@ -53,12 +55,16 @@ unsigned char EXPORT_UNMANAGED_API LWEDelegate_LWE_GetGCFrequency();
 
 void EXPORT_UNMANAGED_API LWEDelegate_LWE_SetGCFrequency(unsigned char freq);
 
+void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
+                                                     int* patch);
+
 typedef struct {
     void (*Initialize)(const char*, const char*, const char*);
     bool (*IsInitialized)();
     void (*Finalize)();
     unsigned char (*GetGCFrequency)();
     void (*SetGCFrequency)(unsigned char);
+    void (*GetVersion)(int*, int*, int*);
 } LWEProcTable;
 }
 #endif

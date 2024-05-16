@@ -176,6 +176,24 @@ void Starfish::removePointerFromRootSet(void* ptr)
     }
 }
 
+void Starfish::version(int* major, int* minor, int* patch)
+{
+    std::stringstream ss(STARFISH_VERSION_STR);
+    int mj, mn, p;
+    char dot;
+    ss >> mj >> dot >> mn >> dot >> p;
+
+    if (major) {
+        *major = mj;
+    }
+    if (minor) {
+        *minor = mn;
+    }
+    if (patch) {
+        *patch = p;
+    }
+}
+
 #ifndef NDEBUG
 size_t Starfish::countPointersInRootSet(void* ptr)
 {
