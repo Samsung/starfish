@@ -31,6 +31,12 @@ namespace Starfish {
 class Renderer;
 class GL;
 
+struct FrameBufferAttributes {
+    bool antialias = true;
+    bool depth = true;
+    bool stencil = false;
+};
+
 /**
  * @brief Create a texture for offscreen rendering with a depth buffer
  */
@@ -54,10 +60,17 @@ public:
         return m_fbo;
     }
 
+    void setAttributes(FrameBufferAttributes attributes)
+    {
+        m_attributes = attributes;
+    }
+
 private:
     GLuint m_fbo{ 0 };
     GLuint m_textureId{ 0 };
-    GLuint m_rbo{ 0 };
+    GLuint m_rboDepth{ 0 };
+    GLuint m_rboStencil{ 0 };
+    FrameBufferAttributes m_attributes;
     Renderer* m_renderer{ nullptr };
     GL* m_gl{ nullptr };
 };
