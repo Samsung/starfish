@@ -72,9 +72,13 @@ void WebGLExtensionRegistry::initialize(GL* gl)
                   return a < b;
               });
 #endif
+#if defined(STARFISH_TIZEN)
+    STARFISH_LOG_INFO("GL_EXTENSIONS =\n%s",
+                      StringUtils::createAlignedString(tokens, 3).c_str());
+#else
     TRACEF(WEBGL, "GL_EXTENSIONS =\n%s",
            StringUtils::createAlignedString(tokens, 3));
-
+#endif
     std::unordered_set<std::string> glExtensions;
     for (const std::string& token : tokens) {
         glExtensions.emplace(token);
@@ -85,6 +89,7 @@ void WebGLExtensionRegistry::initialize(GL* gl)
 #define SUPPORTED_GL_EXTENSIONS(V) \
     V(OES_texture_float)           \
     V(OES_texture_half_float)      \
+    V(OES_standard_derivatives)    \
     V(OES_texture_float_linear)    \
     V(EXT_blend_minmax)
 

@@ -13,6 +13,12 @@ interface OES_texture_half_float {
   const GLenum HALF_FLOAT_OES = 0x8D61;
 };
 
+// 4. OES_standard_derivatives
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface OES_standard_derivatives {
+    const GLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B;
+};
+
 // 20. OES_texture_float_linear
 [STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface OES_texture_float_linear { };
