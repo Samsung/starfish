@@ -85,6 +85,8 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     m_unpackPremultiplyAlpha = false;
     m_unpackColorspaceConversion = kBROWSER_DEFAULT_WEBGL;
     m_isContextLost = false;
+    m_hasPendingJobsBetweenFrames = false;
+    m_pendingClearMask = 0;
     m_unpackColorSpace = String::createASCIIString("srgb");
     m_drawingBufferColorSpace = String::createASCIIString("srgb");
     m_state = new WebGLRenderingContextState();
@@ -187,10 +189,6 @@ void WebGLRenderingContext::initialize()
 
 void WebGLRenderingContext::flush()
 {
-    // Before the drawing buffer is presented for compositing the implementation
-    // shall ensure that all rendering operations have been flushed to the
-    // drawing buffer.
-
     WebGLRenderingContextBaseMixIn::flush();
 
     GLRevertableContextScope scope(
@@ -199,26 +197,15 @@ void WebGLRenderingContext::flush()
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
 
-    /*
-    +---------+--------------+----------------------+---------------------+
-    | Buffer  | Clear value  | Minimum size         | Defined by default? |
-    +---------+--------------+----------------------+---------------------+
-    | Color   | (0, 0, 0, 0) | 8 bits per component | yes                 |
-    | Depth   | 1.0          | 16 bit integer       | yes                 |
-    | Stencil | 0            | 8 bits               | no                  |
-    +---------+--------------+----------------------+---------------------+
-    */
+    // NOTE: According to the specification, the content of the drawing buffer
+    // should be cleared with default values after the end of the composition.
+    // However, as of now, it's difficult to know when the composition ends and
+    // the GL rendering actually ends, so we leave the clearing as a pending job
+    // and let it be done lazily. The assumption here is that the engine will
+    // get this `flush()` invoked every frame after we call `setNeedsComposite`.
 
-    // TODO: According to the specification, by default, after compositing the
-    // contents of the drawing buffer shall be cleared to their default values,
-    // as shown in the table above.
-    //
-    // Once a TC for the above is found, test if the code uncommented below is
-    // valid. We may need to handle this without using gl APIs. The code is as
-    // of now intentionally commented out to avoid unintended side effects.
-    //
-    // glClearColor(0, 0, 0, 0); // In EGL, the initial values are all 0.
-    // glClearDepthf(1.0);       // In EGL, the initial value is 1.
+    m_hasPendingJobsBetweenFrames = true;
+    m_pendingClearMask = 0;
 }
 
 void WebGLRenderingContext::onResize()
@@ -390,6 +377,67 @@ GLint WebGLRenderingContext::getCurrentProgram()
     return program;
 }
 
+void WebGLRenderingContext::completePendingJobs()
+{
+    /*
+        +---------+--------------+----------------------+---------------------+
+        | Buffer  | Clear value  | Minimum size         | Defined by default? |
+        +---------+--------------+----------------------+---------------------+
+        | Color   | (0, 0, 0, 0) | 8 bits per component | yes                 |
+        | Depth   | 1.0          | 16 bit integer       | yes                 |
+        | Stencil | 0            | 8 bits               | no                  |
+        +---------+--------------+----------------------+---------------------+
+
+        By default, after compositing the contents of the drawing buffer shall
+        be cleared to their default values, as shown in the table above. This
+        default behavior can be changed by setting the `preserveDrawingBuffer`
+        attribute of the WebGLContextAttributes object.
+    */
+
+    if (m_hasPendingJobsBetweenFrames) {
+        // If `preserveDrawingBuffer` is true, the contents of the drawing
+        // buffer shall be preserved until the author either clears or
+        // overwrites them.
+        if (!m_attributes.preserveDrawingBuffer()) {
+            uint32_t mask = 0;
+
+            // NOTE: If a bit of m_pendingClearMask is 1, it means that users
+            // have already set a value corresponding to that bit. Therefore, we
+            // will keep the value set by users instead of the default value.
+
+            if (!(m_pendingClearMask & GL_COLOR_BUFFER_BIT)) {
+                m_gl->clearColor(0, 0, 0, 0);
+                mask |= GL_COLOR_BUFFER_BIT;
+            }
+
+            if (m_attributes.depth()) {
+                if (!(m_pendingClearMask & GL_DEPTH_BUFFER_BIT)) {
+                    m_gl->clearDepthf(1.0);
+                    mask |= GL_DEPTH_BUFFER_BIT;
+                }
+            }
+
+            if (m_attributes.stencil()) {
+                if (!(m_pendingClearMask & GL_STENCIL_BUFFER_BIT)) {
+                    m_gl->clearStencil(0);
+                    mask |= GL_STENCIL_BUFFER_BIT;
+                }
+            }
+
+            if (mask != 0) {
+                m_gl->clear(mask);
+            }
+        }
+        m_hasPendingJobsBetweenFrames = false;
+        m_pendingClearMask = 0;
+    }
+}
+
+void WebGLRenderingContext::setPendingClearMask(uint32_t mask)
+{
+    m_pendingClearMask |= mask;
+}
+
 Nullable<ScriptObject> WebGLRenderingContext::getExtension(
     String* requestedName)
 {
@@ -472,7 +520,6 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
             return;
         }
 
-        TRACE(WEBGL, KV(hex(target)), value->glObject());
         m_gl->bindBuffer(target, value->glObject());
         m_state->setBoundBuffer(target, value);
 
@@ -481,7 +528,6 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
         value->setTargetOnce(target);
     } else {
         // If the buffer is null then any buffer currently bound is unbound.
-        TRACE(WEBGL, KV(hex(target)), 0);
         m_gl->bindBuffer(target, 0);
         m_state->setBoundBuffer(target, nullptr);
     }
@@ -563,7 +609,6 @@ void WebGLRenderingContext::bindTexture(GLenum target,
         }
 
         m_gl->bindTexture(target, texture->glObject());
-        TRACE(WEBGL, KV(hex(target)), KV(texture->glObject()));
         m_boundTextures[target] = texture->glObject();
     } else {
         m_gl->bindTexture(target, 0);
@@ -624,23 +669,7 @@ void WebGLRenderingContext::clear(uint32_t mask)
 {
     ENTER_CONTEXT_SCOPE();
 
-    static uint32_t maskHistory = 0;
-
-    // NOTE: Seeing the spec (2.2 The Drawing Buffer) and the behavior of
-    // examples, it seems like that both color and depth of the drawing buffer
-    // should be cleared by default. This behavior seems different from native
-    // opengl, which is confusing.
-
-    if ((maskHistory & GL_COLOR_BUFFER_BIT) == 0 &&
-        (mask & GL_COLOR_BUFFER_BIT) == 0) {
-        mask |= GL_COLOR_BUFFER_BIT;
-    }
-    if ((maskHistory & GL_DEPTH_BUFFER_BIT) == 0 &&
-        (mask & GL_DEPTH_BUFFER_BIT) == 0) {
-        mask |= GL_DEPTH_BUFFER_BIT;
-    }
-
-    maskHistory |= mask;
+    completePendingJobs();
 
     m_gl->clear(mask);
     m_ownerHTMLCanvasElement->setNeedsComposite();
@@ -651,21 +680,40 @@ void WebGLRenderingContext::clearColor(float red, float green, float blue,
 {
     ENTER_CONTEXT_SCOPE();
 
+    setPendingClearMask(GL_COLOR_BUFFER_BIT);
+
     m_gl->clearColor(red, green, blue, alpha);
+
+    TRACE(WEBGL_V, KV(red), KV(green), KV(blue), KV(alpha));
 }
 
 void WebGLRenderingContext::clearDepth(GLclampf depth)
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!m_attributes.depth()) {
+        return;
+    }
+
+    setPendingClearMask(GL_DEPTH_BUFFER_BIT);
+
     m_gl->clearDepthf(depth);
+
+    TRACE(WEBGL_V, KV(depth));
 }
 
 void WebGLRenderingContext::clearStencil(GLint s)
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (!m_attributes.stencil()) {
+        return;
+    }
+
+    setPendingClearMask(GL_STENCIL_BUFFER_BIT);
+
     m_gl->clearStencil(s);
+    TRACE(WEBGL_V, KV(s));
 }
 
 void WebGLRenderingContext::colorMask(GLboolean red, GLboolean green,
@@ -834,6 +882,8 @@ void WebGLRenderingContext::drawArrays(GLenum mode, GLint first, GLsizei count)
 {
     ENTER_CONTEXT_SCOPE();
 
+    completePendingJobs();
+
     if (first < 0) {
         // If first is negative, an INVALID_VALUE error will be generated.
         setGLError(GL_INVALID_VALUE);
@@ -854,6 +904,8 @@ void WebGLRenderingContext::drawElements(GLenum mode, GLsizei count,
                                          GLenum type, GLintptr offset)
 {
     ENTER_CONTEXT_SCOPE();
+
+    completePendingJobs();
 
     if (count > 0) {
         // TODO: verify a non-null WebGLBuffer is bound to the
@@ -901,6 +953,8 @@ void WebGLRenderingContext::finish()
 {
     ENTER_CONTEXT_SCOPE();
 
+    completePendingJobs();
+
     m_gl->finish();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
@@ -908,6 +962,8 @@ void WebGLRenderingContext::finish()
 void WebGLRenderingContext::flushWebGL()
 {
     ENTER_CONTEXT_SCOPE();
+
+    completePendingJobs();
 
     m_gl->flush();
     m_ownerHTMLCanvasElement->setNeedsComposite();
@@ -2443,6 +2499,9 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
         */
 
         GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
+
+        // completePendingJobs() is not related as this function is a read
+        // operation.
         m_gl->readPixels(x, y, width, height, format, type, data);
     } else {
         // If pixels is null, an INVALID_VALUE error is generated.

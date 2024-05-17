@@ -274,6 +274,11 @@ private:
     bool isDefaultFramebufferBound();
     GLuint getCurrentFBO();
     GLint getCurrentProgram();
+    void completePendingJobs();
+    void setPendingClearMask(uint32_t mask);
+
+    bool m_hasPendingJobsBetweenFrames;
+    uint32_t m_pendingClearMask;
 
     GLErrorSet m_GLErrors;
     GLTextureMap m_boundTextures;
