@@ -107,6 +107,9 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
         m_framebufferTexture = std::make_shared<FramebufferTexture>(
             m_ownerHTMLCanvasElement->webView()->renderer());
 
+        STARFISH_ASSERT(m_isContextAttributesChecked);
+        m_framebufferTexture->setAttributes(m_frameBufferAttributes);
+
         // Set the SurfaceCreationScope with a framebufferTexture. When
         // CanvasSurface::create detects that a SurfaceCreationScope is
         // specified, it sets the required information to framebufferTexture.
@@ -130,7 +133,6 @@ void WebGLRenderingContextBaseMixIn::resetSurface()
 void WebGLRenderingContextBaseMixIn::finalize()
 {
     if (m_context.isValid()) {
-        // Unlike EGL, EvasGL requires context setting before resource release.
         m_context.setCurrent();
         m_framebufferTexture.reset();
         m_context.destory();

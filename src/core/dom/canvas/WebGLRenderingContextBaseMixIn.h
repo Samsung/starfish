@@ -83,6 +83,7 @@ protected:
     std::shared_ptr<FramebufferTexture> m_framebufferTexture;
     GLContext m_context;
     bool m_isContextAttributesChecked;
+    FrameBufferAttributes m_frameBufferAttributes;
 };
 } // namespace Starfish
 #endif
