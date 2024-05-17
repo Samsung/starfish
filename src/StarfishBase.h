@@ -943,6 +943,17 @@ class GCUnorderedSet : public HashSet<T, Hasher, Predicate, Allocator>,
 
 #endif // NO_EXPOSE_GC
 
+inline void markHashTable(GC_word* desc, size_t base)
+{
+#if defined(COMPILER_MSVC) || defined(COMPILER_CLANG_CL)
+    GC_set_bit(desc, base + 2); // m_ht.m_buckets_data
+    GC_set_bit(desc, base + 5); // m_ht.m_buckets
+#else
+    GC_set_bit(desc, base + 1); // m_ht.m_buckets_data
+    GC_set_bit(desc, base + 4); // m_ht.m_buckets
+#endif
+}
+
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
 {

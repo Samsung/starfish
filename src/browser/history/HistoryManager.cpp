@@ -35,14 +35,14 @@ namespace Starfish {
 HistoryManager::HistoryManager(WebView* webView)
     : m_owner(HistoryManagerOwner::OwnerIsWebView)
     , m_webView(webView)
-    , m_curEntry(m_historyEntries.end())
+    , m_curEntry(0)
 {
 }
 
 HistoryManager::HistoryManager(HTMLIFrameElement* element)
     : m_owner(HistoryManagerOwner::OwnerIsHTMLIFrame)
     , m_iframe(element)
-    , m_curEntry(m_historyEntries.end())
+    , m_curEntry(0)
 {
 }
 
@@ -62,8 +62,9 @@ void HistoryManager::push(Document* document, ResourceURL* url)
         Serializer::serialize(document->executionContext(), scriptNull());
     ScriptValue state = scriptNull();
     if (!m_historyEntries.empty()) {
-        m_historyEntries.erase(std::next(m_curEntry, 1),
-                               m_historyEntries.end());
+        if (m_curEntry + 1 < m_historyEntries.size()) {
+            m_historyEntries.erase(m_curEntry + 1, m_historyEntries.size());
+        }
     }
     addHistoryEntry(
         new HistoryEntry(serializedState, String::emptyString, url));
@@ -90,7 +91,7 @@ bool HistoryManager::checkHistoryEntry(int delta, bool changeCurrentEntry)
     int count = delta;
     auto itr = m_curEntry;
     if (delta > 0) {
-        auto lastItem = --(m_historyEntries.end());
+        auto lastItem = m_historyEntries.size() - 1;
         while (itr != lastItem) {
             if (count == 0) {
                 break;
@@ -100,7 +101,7 @@ bool HistoryManager::checkHistoryEntry(int delta, bool changeCurrentEntry)
             }
         }
     } else {
-        while (itr != m_historyEntries.begin()) {
+        while (itr != 0) {
             if (count == 0) {
                 break;
             } else {
@@ -153,7 +154,7 @@ bool HistoryManager::canGo(int delta)
 void HistoryManager::clear()
 {
     m_historyEntries.clear();
-    m_curEntry = m_historyEntries.end();
+    m_curEntry = 0;
 }
 
 uint32_t HistoryManager::length()
@@ -203,8 +204,9 @@ void HistoryManager::pushReplaceStateInternal(Document* document,
     auto serializedState =
         Serializer::serialize(document->executionContext(), state);
     if (type == OperationType::kPush) {
-        m_historyEntries.erase(std::next(m_curEntry, 1),
-                               m_historyEntries.end());
+        if (m_curEntry + 1 < m_historyEntries.size()) {
+            m_historyEntries.erase(m_curEntry + 1, m_historyEntries.size());
+        }
         addHistoryEntry(new HistoryEntry(serializedState, title, newURL));
     } else {
         if (currentEntry()) {
@@ -237,22 +239,22 @@ ResourceURL* HistoryManager::resolveURL(Document* document,
 
 HistoryManager::HistoryEntry* HistoryManager::currentEntry()
 {
-    if (m_curEntry == m_historyEntries.end()) {
+    if (m_curEntry == m_historyEntries.size()) {
         return nullptr;
     } else {
-        return *m_curEntry;
+        return m_historyEntries[m_curEntry];
     }
 }
 
 void HistoryManager::addHistoryEntry(HistoryEntry* entry)
 {
     if (m_historyEntries.size() == MAX_ENTRY_SIZE) {
-        m_historyEntries.pop_front();
+        m_historyEntries.erase(m_historyEntries.begin());
     }
     m_historyEntries.push_back(entry);
 
     if (m_historyEntries.size() == 1) {
-        m_curEntry = m_historyEntries.end();
+        m_curEntry = m_historyEntries.size();
         --m_curEntry;
     } else {
         ++m_curEntry;

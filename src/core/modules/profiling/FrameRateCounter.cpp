@@ -74,16 +74,17 @@ void FrameRateCounter::drawFps(Compositor* compositor)
 {
     compositor->save();
     compositor->resetMatrixAndClip();
-    if (!m_surface && !m_canvas) {
+    if (!m_surface) {
         m_surface = CanvasSurface::create(
             m_webView->renderer(), 50, 50, 1,
             CanvasSurface::PreferRetainCPUBufferWhenUnmap);
-        m_canvas = Canvas::create(m_webView, m_surface);
     }
+    Canvas* canvas = Canvas::create(m_webView, m_surface);
     LayoutRect updateArea = m_updateArea;
-    m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
-    drawFps(m_canvas);
-    m_canvas->flush();
+    canvas->clearColor(Unit::Color(0, 0, 0, 0));
+    drawFps(canvas);
+    delete canvas;
+
     updateArea.unite(m_updateArea);
     m_surface->unmapBufferAndNotifyUpdatedRegion(
         0, 0, updateArea.width().toUnsigned(),

@@ -104,6 +104,9 @@ public:
         String* builtinPolyfillPathString = String::emptyString);
     void destroy();
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     bool isWebView() const override
     {
         return true;

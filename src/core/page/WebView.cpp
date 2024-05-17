@@ -367,6 +367,86 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
 }
 
+void* WebView::operator new(size_t size)
+{
+    static thread_local bool typeInited = false;
+    static thread_local GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(WebView)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_starfish));
+
+        markHashTable(desc, GC_WORD_OFFSET(WebView, m_urlBlobStore));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_timezoneID));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_customUserAgentString));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_messageLoop));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_timer));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_threadPool));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_console));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_renderer));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_topLevelBrowsingContext));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_scriptEngineInstance));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_storageNamespaceProvider));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_localStorageNamespace));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_sessionStorageNamespace));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_historyManager));
+
+        markHashTable(desc, GC_WORD_OFFSET(WebView, m_urlMediaSourceBlobStore));
+        markHashTable(desc,
+                      GC_WORD_OFFSET(WebView, m_prevDrawnStackingContextInfo));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView,
+                                        m_stackingContextsNeedsGraphicsBuffer));
+
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WebView, m_browsingContextsNeedsLayout));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_browsingContextsDidLayout));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_rootStackingContext));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_activeAnimationExecutor));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WebView, m_parallelJobExecutorThreadPool));
+
+#ifdef STARFISH_ENABLE_TTS
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_tts));
+#endif
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_avplay));
+#endif
+#if defined(STARFISH_ENABLE_INSPECTOR)
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_inspector));
+#endif
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_platformFontSelector));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_platformFontCache));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_initialFontFamilyDatas));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_frameRateCounter));
+
+        markHashTable(desc,
+                      GC_WORD_OFFSET(WebView, m_boxShadowCachePerRendering));
+
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WebView, m_globalPointingEventListener));
+        markHashTable(desc, GC_WORD_OFFSET(WebView, m_activeScrollingSet));
+
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_imageDecodeThreadPool));
+#endif
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WebView, m_activeImageURLsInRenderingMutex));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_builtinPolyfillPathString));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(WebView, m_jsInterfaceList));
+
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(WebView));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
 {
     if (m_idleModeCheckIntervalInMS != i) {
@@ -725,7 +805,21 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
     m_browsingContextsDidLayout.clear();
     m_repaintRegionInRendering.clear();
     m_globalPointingEventListener.clear();
+    GCUnorderedSet<Scrolling*>().swap(m_activeScrollingSet);
     m_repaintRegionTrackerContext.clear();
+    m_stackingContextsNeedsGraphicsBuffer.clear();
+    PrevDrawnStackingContextInfoMap().swap(m_prevDrawnStackingContextInfo);
+
+    m_frameRateCounter->releaseResource();
+#ifdef STARFISH_ENABLE_TTS
+    if (m_tts) {
+        m_tts->destroy();
+    }
+    m_tts = new TTS(this);
+#endif
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    m_avplay = new Avplay(this);
+#endif
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
@@ -1640,6 +1734,9 @@ RenderResult WebView::rendering(bool force)
             iter++;
         }
         m_boxShadowCachePerRendering.clear();
+        GCUnorderedMap<std::pair<FrameBox*, size_t>, BufferedNativeImageData*,
+                       pair_hash<FrameBox*, size_t>>()
+            .swap(m_boxShadowCachePerRendering);
     }
 
     m_needsRendering = false;
