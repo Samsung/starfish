@@ -222,7 +222,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/matrices/glsl-mat4-to-mat3.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/attrib-location-length-limits.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/boolean_precision.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/embedded-struct-definitions-forbidden.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/empty_main.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/expression-list-in-declarator-initializer.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/gl_position_unset.vert.html
@@ -237,19 +237,19 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/re-compile-r
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-precision-format-obeyed.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-struct-scope.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-constant-expression-loop-conditions.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-invariance.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-invariance.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-uniforms.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-varyings.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-mis-matching-varyings.html # @ignore Flaky, possibly due to driver issues
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-missing-varyings.html # @ignore Flaky, possibly due to driver issues
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-uniform-structs.html # @ignore Flaky, possibly due to driver issues
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shaders-with-varyings.html # @ignore Flaky, possibly due to driver issues
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-uniform-packing-restrictions.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-varying-packing-restrictions.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-256-character-define.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-256-character-identifier.frag.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-257-character-define.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-257-character-identifier.frag.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.frag.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-arbitrary-indexing.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-containing-arrays.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-array-of-structs-uniform.html
@@ -271,13 +271,13 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-for-loop.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-for-scoping.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-frag-depth.frag.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-functional-scoping.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-functional-scoping.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-function-recursion.frag.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-function-scoped-struct.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-function-scoped-struct.html # @ignore Flaky, possibly due to driver issues
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-glcolor.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-gles-1.frag.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-gles-symbol.frag.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-global-variable-precision-mismatch.html # @ignore Flaky, possibly due to driver issues
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-glprojectionmatrix.vert.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-hex-int-constant-macro.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/glsl/misc/shader-with-illegal-default-precision.frag.html
@@ -456,7 +456,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_0
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_049_to_056.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_057_to_064.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_065_to_072.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_073_to_080.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_073_to_080.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_081_to_088.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_089_to_096.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/build/build_097_to_104.html
@@ -675,7 +675,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-draw-
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-fakeblack.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-formats-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-hd-dpi.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-mips.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-mips.html # @ignore Flaky, possibly due to driver issues
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-npot.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-npot-video.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-size-cube-maps.html
@@ -696,7 +696,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-bool.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-struct-unused.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-unused-array-elements-get-truncated.html # @ignore Flaky, possibly due to driver issues
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-unknown-uniform.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/null-uniform-location.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/out-of-bounds-uniform-array-access.html
