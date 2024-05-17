@@ -25,8 +25,8 @@ namespace Starfish {
 class Starfish;
 class String;
 
-typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
-                           GCUtil::gc_malloc_allocator<String*>>
+typedef GCUnorderedSet<String*, std::hash<String*>, std::equal_to<String*>,
+                       GCUtil::gc_malloc_allocator<String*>>
     AtomicStringMap;
 
 class AtomicString {

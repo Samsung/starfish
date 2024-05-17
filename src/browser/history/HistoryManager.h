@@ -120,8 +120,8 @@ private:
         HTMLIFrameElement* m_iframe;
     };
 
-    GCList<HistoryEntry*> m_historyEntries;
-    GCList<HistoryEntry*>::iterator m_curEntry;
+    GCVector<HistoryEntry*> m_historyEntries;
+    size_t m_curEntry;
 };
 } // namespace Starfish
 

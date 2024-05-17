@@ -64,6 +64,9 @@ class Starfish : public gc {
 public:
     Starfish(const StarfishConfiguration& config);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     void destroy();
 
     StaticStrings* staticStrings()

@@ -53,6 +53,11 @@ public:
     void drawFps(Canvas* canvas);
     void drawFps(Compositor* canvas);
 
+    void releaseResource()
+    {
+        m_font = nullptr;
+    }
+
 private:
     ~FrameRateCounter() = default;
     FrameRateCounter(const FrameRateCounter&) = delete;
@@ -67,7 +72,6 @@ private:
     LayoutRect m_updateArea;
 
     CanvasSurface* m_surface = nullptr;
-    Canvas* m_canvas = nullptr;
     WebView* m_webView = nullptr;
     Observer m_observer = nullptr;
 };

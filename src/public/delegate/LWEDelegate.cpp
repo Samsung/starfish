@@ -40,6 +40,7 @@ using namespace Escargot;
 namespace LWEDelegate {
 
 Starfish::Starfish* g_starfishInstance;
+Starfish::Starfish** g_starfishInstanceHolder;
 
 class EscargotStarfishPlatform : public Escargot::PlatformRef {
 public:
@@ -196,7 +197,10 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         config.rendererType = rendererType;
 
         Escargot::Globals::initialize(new EscargotStarfishPlatform());
-        g_starfishInstance = new (NoGC) Starfish::Starfish(config);
+        g_starfishInstanceHolder = reinterpret_cast<Starfish::Starfish**>(
+            GC_MALLOC_UNCOLLECTABLE(sizeof(Starfish::Starfish**)));
+        g_starfishInstance = *g_starfishInstanceHolder =
+            new Starfish::Starfish(config);
         // add gc event listener
         Escargot::Memory::removeGCEventListener(
             Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
@@ -215,6 +219,8 @@ void LWE::Finalize()
 
         g_starfishInstance->destroy();
         g_starfishInstance = nullptr;
+        GC_FREE(g_starfishInstanceHolder);
+        g_starfishInstanceHolder = nullptr;
 
         clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 

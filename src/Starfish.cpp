@@ -111,6 +111,33 @@ Starfish::Starfish(const StarfishConfiguration& config)
 #endif
 }
 
+void* Starfish::operator new(size_t size)
+{
+    static thread_local bool typeInited = false;
+    static thread_local GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(Starfish)] = { 0 };
+
+        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_staticStrings));
+        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_lineBreakIteratorPool));
+        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_localStorageDataFilePath));
+        markHashTable(desc, GC_WORD_OFFSET(Starfish, m_rootMap));
+        markHashTable(desc, GC_WORD_OFFSET(Starfish, m_atomicStringMap));
+        markHashTable(desc, GC_WORD_OFFSET(Starfish, m_caseInsensitiveAttrSet));
+
+#if defined(STARFISH_ENABLE_HTTPCACHE)
+        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_httpCache));
+#endif
+#if defined(STARFISH_USE_WORKER_PROCESS)
+        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_workerManager));
+#endif
+
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(Starfish));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void Starfish::destroy()
 {
     STARFISH_LOG_INFO("Starfish::destroy");
