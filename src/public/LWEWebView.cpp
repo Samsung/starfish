@@ -459,7 +459,6 @@ static CookieManager* g_instance = nullptr;
 
 CookieManager* CookieManager::GetInstance()
 {
-    g_instance = nullptr;
     if (!g_instance) {
 #ifdef STARFISH_API_ENABLE_LOADER
         LWEDelegate::CookieManager* delegate =

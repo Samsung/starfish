@@ -50,7 +50,6 @@ private:
     void initEFL();
     bool createSimpleWindow(const char* appName, int width, int height);
 
-    int m_isVisible = 1;
     Evas_Object* m_window = nullptr;
 };
 

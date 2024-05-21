@@ -37,6 +37,7 @@ public:
 
 private:
     int runMiniBrowser(int argc, char* argv[]);
+    int runUnitTest(int argc, char* argv[]);
 
 #if defined(SHELL_ENABLE_BACKTRACE)
     void setBacktraceHandler();
