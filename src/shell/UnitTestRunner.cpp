@@ -17,43 +17,28 @@
  *  USA
  */
 
-#ifndef __StarfishShell__
-#define __StarfishShell__
+#include "ShellConfig.h"
+#include "UnitTestRunner.h"
 
-#include <string>
-#include <cstdint>
-
-#include "PlatformIntegrationData.h"
-#include "MiniBrowser.h"
+#include "gtest/gtest.h"
 
 namespace StarfishShell {
 
-class Shell {
-public:
-    Shell();
-    ~Shell();
+UnitTestRunner::UnitTestRunner()
+{
+}
 
-    int run(int argc, char* argv[]);
+UnitTestRunner::~UnitTestRunner()
+{
+}
 
-private:
-    int runMiniBrowser(int argc, char* argv[]);
-    int runUnitTest(int argc, char* argv[]);
+void UnitTestRunner::initialize(int argc, char* argv[])
+{
+    testing::InitGoogleTest(&argc, argv);
+}
 
-#if defined(SHELL_ENABLE_BACKTRACE)
-    void setBacktraceHandler();
-#endif
-    void printUsage();
-
-    void runCrashTestThread();
-    void runTimeoutThread(int timeout);
-
-    int runMainLoop();
-    void stopMainLoop();
-    void onTimeout();
-
-    int getExitCode();
-};
-
+int UnitTestRunner::runAllTests()
+{
+    return testing::UnitTest::GetInstance()->Run();
+}
 } // namespace StarfishShell
-
-#endif

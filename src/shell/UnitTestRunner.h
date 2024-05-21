@@ -17,41 +17,20 @@
  *  USA
  */
 
-#ifndef __StarfishShell__
-#define __StarfishShell__
-
-#include <string>
-#include <cstdint>
-
-#include "PlatformIntegrationData.h"
-#include "MiniBrowser.h"
+#ifndef __StarfishShellUnitTestRunner__
+#define __StarfishShellUnitTestRunner__
 
 namespace StarfishShell {
 
-class Shell {
+class UnitTestRunner {
 public:
-    Shell();
-    ~Shell();
+    UnitTestRunner();
+    ~UnitTestRunner();
 
-    int run(int argc, char* argv[]);
+    void initialize(int argc, char* argv[]);
+    int runAllTests();
 
 private:
-    int runMiniBrowser(int argc, char* argv[]);
-    int runUnitTest(int argc, char* argv[]);
-
-#if defined(SHELL_ENABLE_BACKTRACE)
-    void setBacktraceHandler();
-#endif
-    void printUsage();
-
-    void runCrashTestThread();
-    void runTimeoutThread(int timeout);
-
-    int runMainLoop();
-    void stopMainLoop();
-    void onTimeout();
-
-    int getExitCode();
 };
 
 } // namespace StarfishShell

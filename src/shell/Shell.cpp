@@ -23,6 +23,7 @@
 
 #include "LWEWebView.h"
 #include "MiniBrowser.h"
+#include "UnitTestRunner.h"
 
 #if defined(SHELL_ENABLE_BACKTRACE)
 #include <execinfo.h>
@@ -65,16 +66,26 @@ Shell::~Shell()
 
 int Shell::run(int argc, char* argv[])
 {
-#if defined(SHELL_ENABLE_BACKTRACE)
-    setBacktraceHandler();
-#endif
-
     if (argc == 1) {
         printUsage();
         return false;
     }
 
-    return runMiniBrowser(argc, argv);
+    if (strstr(argv[1], "--run-unit-test")) {
+        return runUnitTest(argc, argv);
+    } else {
+#if defined(SHELL_ENABLE_BACKTRACE)
+        setBacktraceHandler();
+#endif
+        return runMiniBrowser(argc, argv);
+    }
+}
+
+int Shell::runUnitTest(int argc, char* argv[])
+{
+    UnitTestRunner runner;
+    runner.initialize(argc, argv);
+    return runner.runAllTests();
 }
 
 int Shell::runMiniBrowser(int argc, char* argv[])

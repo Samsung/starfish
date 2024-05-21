@@ -58,6 +58,12 @@ ENDIF()
 
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 
+# gtest
+SET (BUILD_GMOCK OFF)
+SET (INSTALL_GTEST OFF)
+ADD_SUBDIRECTORY (third_party/googletest)
+SET(STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} gtest)
+
 ADD_EXECUTABLE (starfish.executable ${STARFISH_SHELL_SRC})
 ADD_DEPENDENCIES (starfish.executable starfish_api.shared_library)
 
