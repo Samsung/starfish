@@ -42,6 +42,7 @@
 namespace {
 constexpr uint32_t kDefaultWidth = 1920;
 constexpr uint32_t kDefaultHeight = 1080;
+
 } // namespace
 
 namespace StarfishShell {
@@ -56,8 +57,6 @@ Shell::Shell()
     // for big chunk ex) packets for MSE
     mallopt(M_MMAP_THRESHOLD, 2048);
     mallopt(M_MMAP_MAX, 1024 * 1024);
-
-    m_initOption.geometry = { 0, 0, kDefaultWidth, kDefaultHeight };
 }
 
 Shell::~Shell()
@@ -75,29 +74,40 @@ int Shell::run(int argc, char* argv[])
         return false;
     }
 
-    parseArg(argc, argv);
-    setEnv();
+    return runMiniBrowser(argc, argv);
+}
 
-    m_browser = new MiniBrowser();
-    if (!m_browser->init(m_initOption)) {
+int Shell::runMiniBrowser(int argc, char* argv[])
+{
+    MiniBrowser::EnvironmentValues env;
+    MiniBrowser::InitOption init;
+    MiniBrowser::Settings settings;
+    MiniBrowser::OtherOptions others;
+
+    init.geometry = { 0, 0, kDefaultWidth, kDefaultHeight };
+    MiniBrowser::parseArgs(argc, argv, env, init, settings, others);
+
+    MiniBrowser::setEnvironmentValues(env);
+
+    MiniBrowser* browser = new MiniBrowser();
+    if (!browser->init(init)) {
         return false;
     }
 
-    m_browser->setSettings(m_settings);
-    m_browser->loadURL(m_url);
-    m_browser->focus();
+    browser->setSettings(settings);
+    browser->loadURL(argv[1]);
+    browser->focus();
 
-    if (!m_shellOptions.disableConsole) {
-        m_console = Console::create(m_browser);
-        m_console->run();
+    if (!others.disableConsole) {
+        browser->runConsole();
     }
 
-    if (m_shellOptions.crashTest) {
+    if (others.crashTest) {
         runCrashTestThread();
     }
 
-    if (m_shellOptions.timeout > 0) {
-        runTimeoutThread();
+    if (others.timeout > 0) {
+        runTimeoutThread(others.timeout);
     }
 
     int ret = runMainLoop();
@@ -105,11 +115,8 @@ int Shell::run(int argc, char* argv[])
         return ret;
     }
 
-    if (m_console) {
-        delete m_console;
-    }
-    if (m_browser) {
-        delete m_browser;
+    if (browser) {
+        delete browser;
     }
 
     stopMainLoop();
@@ -187,150 +194,6 @@ void Shell::printUsage()
     puts("please specify url");
 }
 
-void Shell::parseArg(int argc, char* argv[])
-{
-    m_url = argv[1];
-    for (int i = 2; i < argc; i++) {
-        if (strcmp(argv[i], "--dump-computed-style") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableComputedStyleDump;
-        } else if (strcmp(argv[i], "--dump-frame-tree") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableFrameTreeDump;
-        } else if (strcmp(argv[i], "--dump-stacking-context") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableStackingContextDump;
-        } else if (strcmp(argv[i], "--dump-hittest") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableHitTestDump;
-        } else if (strcmp(argv[i], "--debug-graphics-layer") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableDebugGraphicsLayer;
-        } else if (strcmp(argv[i], "--debug-repaint-region") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableDebugRepaintRegion;
-        } else if (strcmp(argv[i], "--pixel-test") == 0) {
-#ifdef SHELL_ENABLE_TEST
-            m_envOptions.pixelTest = true;
-#endif
-        } else if (strcmp(argv[i], "--ref-test") == 0) {
-#ifdef SHELL_ENABLE_TEST
-            m_envOptions.referenceTestState = true;
-#endif
-        } else if (strstr(argv[i], "--width=") == argv[i]) {
-            m_initOption.geometry.width =
-                std::atoi(argv[i] + strlen("--width="));
-        } else if (strstr(argv[i], "--height=") == argv[i]) {
-            m_initOption.geometry.height =
-                std::atoi(argv[i] + strlen("--height="));
-        } else if (strcmp(argv[i], "--regression-test") == 0) {
-            m_envOptions.flag |= StarfishStartUpFlag::enableRegressionTest;
-        } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
-            m_envOptions.screenShot = argv[i] + strlen("--screen-shot=");
-        } else if (strstr(argv[i], "--screen-shot-width=") == argv[i]) {
-            m_envOptions.screenShotWidth =
-                (argv[i] + strlen("--screen-shot-width="));
-        } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {
-            m_envOptions.screenShotHeight =
-                argv[i] + strlen("--screen-shot-height=");
-        } else if (strcmp(argv[i], "--hide-window") == 0) {
-            // regression test, pixel test only
-            m_envOptions.hideWindow = true;
-            m_envOptions.flag |= StarfishStartUpFlag::enableRegressionTest;
-        } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
-            m_envOptions.networkLogVerbose = true;
-        } else if (strstr(argv[i], "--posX=") == argv[i]) {
-            m_initOption.geometry.x = std::atoi(argv[i] + strlen("--posX="));
-        } else if (strstr(argv[i], "--posY=") == argv[i]) {
-            m_initOption.geometry.y = std::atoi(argv[i] + strlen("--posY="));
-        } else if (strstr(argv[i], "--device-pixel-ratio=") == argv[i]) {
-            m_initOption.scaleFactor =
-                std::atof(argv[i] + strlen("--device-pixel-ratio="));
-        } else if (strstr(argv[i], "--useragent=") == argv[i]) {
-            m_settings.customUserAgentString = argv[i] + strlen("--useragent=");
-        } else if (strcmp(argv[i], "--disable-web-security") == 0) {
-            m_settings.enableSecurity = false;
-        } else if (strcmp(argv[i], "--tts-forced") == 0) {
-            m_settings.ttsMode = LWE::TTSMode::Forced;
-        } else if (strcmp(argv[i], "--crash-test") == 0) {
-            m_shellOptions.crashTest = true;
-        } else if (strstr(argv[i], "--needs-download-webfont-early") ==
-                   argv[i]) {
-            m_settings.needsDownloadWebFontsEarly = true;
-        } else if (strcmp(argv[i], "--disable-console") == 0) {
-            m_shellOptions.disableConsole = true;
-        } else if (strstr(argv[i],
-                          "--needs-downscale-image-resource-larger-than=") ==
-                   argv[i]) {
-            m_settings.needsDownScaleImageResourceLargerThan = std::atoi(
-                argv[i] +
-                strlen("--needs-downscale-image-resource-larger-than="));
-        } else if (strstr(argv[i], "--scrollbar-unvisible")) {
-            m_settings.scrollbarVisible = false;
-        } else if (strstr(argv[i], "--use-external-popup")) {
-            m_settings.useExternalPopup = true;
-        } else if (strstr(argv[i], "--use-spatial-navigation")) {
-            m_settings.useSpatialNavigation = true;
-        } else if (strcmp(argv[i], "--use-http2") == 0) {
-            m_settings.useHTTP2 = true;
-        } else if (strstr(argv[i], "--tts-language=") == argv[i]) {
-            m_settings.language = argv[i] + strlen("--tts-language=");
-        } else if (strstr(argv[i], "--timeout=") == argv[i]) {
-            m_shellOptions.timeout = std::atoi(argv[i] + strlen("--timeout="));
-        } else if (strstr(argv[i], "--ignore-ssl-verify")) {
-            m_envOptions.starfishIgnoreSSLVerify = true;
-        } else if (strstr(argv[i], "--gl-compositor-scale=") == argv[i]) {
-            // this is secret feature for testing(working on gl + efl webview)
-            m_envOptions.glCompositorScale =
-                argv[i] + strlen("--gl-compositor-scale=");
-        } else if (strstr(argv[i], "--show-fps") == argv[i]) {
-            m_settings.showFps = true;
-        }
-    }
-}
-
-void Shell::setEnv()
-{
-    if (m_envOptions.screenShot.length()) {
-        setenv("SCREEN_SHOT", m_envOptions.screenShot.data(), 1);
-        setenv("SCREEN_SHOT_FILE", m_envOptions.screenShot.c_str(), 1);
-        setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
-    }
-
-    if (m_envOptions.screenShotWidth.length()) {
-        setenv("SCREEN_SHOT_WIDTH", m_envOptions.screenShotWidth.c_str(), 1);
-    }
-
-    if (m_envOptions.screenShotHeight.length()) {
-        setenv("SCREEN_SHOT_HEIGHT", m_envOptions.screenShotHeight.c_str(), 1);
-    }
-
-    if (m_envOptions.hideWindow) {
-        setenv("HIDE_WINDOW", "1", 1);
-    }
-
-    if (m_envOptions.networkLogVerbose) {
-        setenv("NETWORK_LOG_VERBOSE", "1", 1);
-    }
-
-    if (m_envOptions.starfishIgnoreSSLVerify) {
-        setenv("IGNORE_SSL_VERIFY", "1", 1);
-    }
-
-    if (m_envOptions.glCompositorScale.length()) {
-        setenv("LWE_GL_COMPOSITOR_SCALE",
-               m_envOptions.glCompositorScale.c_str(), 1);
-    }
-
-    if (m_envOptions.pixelTest) {
-        setenv("PIXEL_TEST", "1", 1);
-    }
-
-    if (m_envOptions.referenceTestState) {
-        setenv("REF_TEST_STATE", "1", 1);
-        setenv("HIDE_WINDOW", "1", 1);
-    }
-
-    std::string startUpFlag = std::to_string(m_envOptions.flag);
-    setenv("START_UP_FLAG", startUpFlag.c_str(), 1);
-    setenv("SHELL_DONE_FLAG", "0", 1);
-    setenv("EXIT_CODE", "0", 1);
-}
-
 void Shell::runCrashTestThread()
 {
     pthread_t t;
@@ -350,7 +213,7 @@ void Shell::runCrashTestThread()
         nullptr);
 }
 
-void Shell::runTimeoutThread()
+void Shell::runTimeoutThread(int timeout)
 {
     struct Param {
         std::future<int> future;
@@ -358,9 +221,8 @@ void Shell::runTimeoutThread()
     };
     Param* param = new Param();
 
-    param->future = std::async(std::launch::async, [this]() {
-        std::this_thread::sleep_for(
-            std::chrono::seconds(this->m_shellOptions.timeout));
+    param->future = std::async(std::launch::async, [timeout]() {
+        std::this_thread::sleep_for(std::chrono::seconds(timeout));
         return 1;
     });
     param->shell = this;

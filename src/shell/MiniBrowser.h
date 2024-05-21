@@ -33,6 +33,7 @@ class WebView;
 namespace StarfishShell {
 
 class Window;
+class Console;
 
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11) || \
     defined(STARFISH_SHELL_EFL_HEADLESS)
@@ -41,45 +42,71 @@ typedef LWE::WebContainer* LWEType;
 typedef LWE::WebView* LWEType;
 #endif
 
-struct MiniBrowserGeometry {
-    MiniBrowserGeometry() = default;
-    MiniBrowserGeometry(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-        : x(x)
-        , y(y)
-        , width(width)
-        , height(height)
-    {
-    }
-
-    uint32_t x = 0, y = 0, width = 0, height = 0;
-};
-
-struct MiniBrowserInitOption {
-    MiniBrowserGeometry geometry;
-    float scaleFactor = 1;
-};
-
-struct MiniBrowserSettings {
-    bool enableSecurity = true;
-    bool needsDownloadWebFontsEarly = false;
-    bool scrollbarVisible = true;
-    bool useExternalPopup = false;
-    bool useSpatialNavigation = false;
-    bool useHTTP2 = false;
-    bool showFps = false;
-    uint32_t needsDownScaleImageResourceLargerThan = 0;
-    LWE::TTSMode ttsMode = LWE::TTSMode::Default;
-    std::string customUserAgentString;
-    std::string language;
-};
-
 class MiniBrowser {
 public:
+    struct Geometry {
+        Geometry() = default;
+        Geometry(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+            : x(x)
+            , y(y)
+            , width(width)
+            , height(height)
+        {
+        }
+
+        uint32_t x = 0, y = 0, width = 0, height = 0;
+    };
+
+    struct InitOption {
+        Geometry geometry;
+        float scaleFactor = 1;
+    };
+
+    struct EnvironmentValues {
+        bool pixelTest = false;
+        bool referenceTestState = false;
+        bool hideWindow = false;
+        bool networkLogVerbose = false;
+        bool starfishIgnoreSSLVerify = false;
+        int flag = 0;
+        std::string screenShot;
+        std::string screenShotWidth;
+        std::string screenShotHeight;
+        std::string glCompositorScale;
+    };
+
+    struct Settings {
+        bool enableSecurity = true;
+        bool needsDownloadWebFontsEarly = false;
+        bool scrollbarVisible = true;
+        bool useExternalPopup = false;
+        bool useSpatialNavigation = false;
+        bool useHTTP2 = false;
+        bool showFps = false;
+        uint32_t needsDownScaleImageResourceLargerThan = 0;
+        LWE::TTSMode ttsMode = LWE::TTSMode::Default;
+        std::string customUserAgentString;
+        std::string language;
+    };
+
+    struct OtherOptions {
+        bool crashTest = false;
+        bool disableConsole = false;
+        int timeout = 0;
+    };
+
+    static void parseArgs(int argc, char* argv[],
+                          MiniBrowser::EnvironmentValues& env,
+                          MiniBrowser::InitOption& init,
+                          MiniBrowser::Settings& settings,
+                          MiniBrowser::OtherOptions& others);
+    static void setEnvironmentValues(const EnvironmentValues& env);
+
     MiniBrowser();
     ~MiniBrowser();
 
-    bool init(const MiniBrowserInitOption& initOption);
-    void setSettings(const MiniBrowserSettings& settings);
+    bool init(const InitOption& initOption);
+    void setSettings(const Settings& settings);
 
     void loadURL(const std::string& url);
 
@@ -91,20 +118,26 @@ public:
 
     void setRotate(int degree);
 
-private:
-    bool createWindow();
+    void runConsole();
 
-    bool createLWE();
+    void runCrashTestThread();
+
+    void runTimeoutThread(int timeout);
+
+private:
+    bool createWindow(const InitOption& initOption);
+
+    bool createLWE(const InitOption& initOption);
 
     std::string cacheDir();
 
-    MiniBrowserInitOption m_initOption;
-    MiniBrowserSettings m_settings;
+    InitOption m_initOption;
 
     bool m_isMouseLbuttonDown = false;
 
     Window* m_window = nullptr;
     LWEType m_lwe = nullptr;
+    Console* m_console = nullptr;
 };
 } // namespace StarfishShell
 
