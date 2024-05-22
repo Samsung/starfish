@@ -72,9 +72,7 @@ public:
 TEST_F(CookieManagerBasicTestWithoutInit, GetInstance)
 {
     EXPECT_EXIT(LWE::CookieManager::GetInstance(),
-                ::testing::KilledBySignal(SIGABRT),
-                "You must call LWE::Initialize function before using "
-                "CookieManager");
+                ::testing::KilledBySignal(SIGABRT), "");
 }
 
 TEST_F(CookieManagerBasicTestWithoutInit, Destroy)

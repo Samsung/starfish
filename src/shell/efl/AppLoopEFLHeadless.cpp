@@ -26,34 +26,70 @@
 
 namespace StarfishShell {
 
-AppLoop::AppLoop()
+class AppLoopEFLHeadless : public AppLoop {
+public:
+    AppLoopEFLHeadless();
+    ~AppLoopEFLHeadless();
+
+    virtual void init() override;
+    virtual int start(double timeoutInSec = 0) override;
+    virtual void stop() override;
+    virtual void deinit() override;
+
+private:
+    Ecore_Timer* m_timerID = nullptr;
+};
+
+AppLoopEFLHeadless::AppLoopEFLHeadless()
 {
 }
 
-AppLoop::~AppLoop()
+AppLoopEFLHeadless::~AppLoopEFLHeadless()
 {
 }
 
-void AppLoop::init()
+void AppLoopEFLHeadless::init()
 {
     ecore_init();
 }
 
-int AppLoop::start()
+int AppLoopEFLHeadless::start(double timeoutInSec)
 {
+    if (timeoutInSec) {
+        m_timerID = ecore_timer_add(
+            timeoutInSec,
+            [](void* data) -> Eina_Bool {
+                AppLoopEFLHeadless* self =
+                    static_cast<AppLoopEFLHeadless*>(data);
+                self->stop();
+                self->m_timerID = nullptr;
+                return ECORE_CALLBACK_DONE;
+            },
+            this);
+    }
     ecore_main_loop_begin();
     return 0;
 }
 
-void AppLoop::stop()
+void AppLoopEFLHeadless::stop()
 {
+    if (m_timerID) {
+        ecore_timer_freeze(m_timerID);
+        ecore_timer_del(m_timerID);
+    }
     ecore_main_loop_quit();
 }
 
-void AppLoop::deinit()
+void AppLoopEFLHeadless::deinit()
 {
     ecore_shutdown();
 }
+
+std::unique_ptr<AppLoop> AppLoop::create()
+{
+    return std::unique_ptr<AppLoopEFLHeadless>(new AppLoopEFLHeadless());
+}
+
 } // namespace StarfishShell
 
 #endif
