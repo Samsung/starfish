@@ -19,61 +19,42 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
-#include "Shell.h"
+#if defined(STARFISH_SHELL_EFL)
 
-#include <uv.h>
+#include "AppLoop.h"
 
-#include <stdio.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <memory.h>
-
-namespace {
-
-volatile sig_atomic_t doneFlag = 0;
-
-void updateDoneFlagFromENV()
-{
-    if (getenv("SHELL_DONE_FLAG") && (atoi(getenv("SHELL_DONE_FLAG")) == 1)) {
-        doneFlag = 1;
-    }
-}
-
-void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
-{
-    doneFlag = 1;
-}
-
-} // namespace
+#include <Elementary.h>
 
 namespace StarfishShell {
 
-int Shell::runMainLoop()
+AppLoop::AppLoop()
 {
-    struct sigaction act;
-    memset(&act, '\0', sizeof(act));
-    act.sa_sigaction = setDoneFlag;
-    act.sa_flags = SA_SIGINFO;
+}
 
-    if (sigaction(SIGINT, &act, NULL) < 0) {
-        perror("sigaction");
-        return 1;
-    }
+AppLoop::~AppLoop()
+{
+}
 
-    while (!doneFlag) {
-        usleep(100);
-        updateDoneFlagFromENV();
-    }
+void AppLoop::init()
+{
+    elm_init(0, 0);
+}
 
+int AppLoop::start()
+{
+    elm_run();
     return 0;
 }
 
-void Shell::stopMainLoop()
+void AppLoop::stop()
 {
-    doneFlag = 1;
+    elm_exit();
 }
 
+void AppLoop::deinit()
+{
+    elm_shutdown();
+}
 } // namespace StarfishShell
 
 #endif

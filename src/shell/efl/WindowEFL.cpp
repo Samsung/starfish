@@ -30,6 +30,7 @@ namespace StarfishShell {
 class WindowEFL final : public Window {
 public:
     WindowEFL();
+    ~WindowEFL();
     bool init(const char* appName, int width, int height) override;
 
     void terminate() override;
@@ -47,7 +48,7 @@ public:
     virtual void setRotate(int degree) override;
 
 private:
-    void initEFL();
+    void initConfig();
     bool createSimpleWindow(const char* appName, int width, int height);
 
     Evas_Object* m_window = nullptr;
@@ -57,9 +58,15 @@ WindowEFL::WindowEFL()
 {
 }
 
+WindowEFL::~WindowEFL()
+{
+    m_appLoop.deinit();
+}
+
 bool WindowEFL::init(const char* appName, int width, int height)
 {
-    initEFL();
+    m_appLoop.init();
+    initConfig();
 
     if (!createSimpleWindow(appName, width, height)) {
         exit(-1);
@@ -85,9 +92,8 @@ bool WindowEFL::init(const char* appName, int width, int height)
     return true;
 }
 
-void WindowEFL::initEFL()
+void WindowEFL::initConfig()
 {
-    elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
     const char* defaultEngine = "gl";
@@ -188,6 +194,7 @@ LWE::KeyValue Window::convertKeyCode(const unsigned long key, INPUT action,
 {
     return LWE::KeyValue::UnidentifiedKey;
 }
+
 } // namespace StarfishShell
 
 #endif

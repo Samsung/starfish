@@ -17,25 +17,21 @@
  *  USA
  */
 
-#include "ShellConfig.h"
-
-#if defined(STARFISH_SHELL_EFL_HEADLESS)
-#include "Shell.h"
-
-#include <Ecore.h>
+#ifndef __StarfishShellSimpleLoop__
+#define __StarfishShellSimpleLoop__
 
 namespace StarfishShell {
 
-int Shell::runMainLoop()
-{
-    ecore_main_loop_begin();
-    return 0;
-}
+class AppLoop {
+public:
+    AppLoop();
+    ~AppLoop();
 
-void Shell::stopMainLoop()
-{
-    ecore_shutdown();
-}
+    void init();
+    int start();
+    void stop();
+    void deinit();
+};
 
 } // namespace StarfishShell
 
