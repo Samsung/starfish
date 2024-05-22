@@ -108,9 +108,9 @@ public:
 
     virtual void setRotate(int degree){};
 
-    AppLoop& appLoop()
+    AppLoop* appLoop()
     {
-        return m_appLoop;
+        return m_appLoop.get();
     }
 
 protected:
@@ -124,7 +124,7 @@ protected:
     ExitEventHandler m_exitEventHandler;
     FocusInHandler m_focusInHandler;
 
-    AppLoop m_appLoop;
+    std::unique_ptr<AppLoop> m_appLoop;
     int m_isVisible = 1;
 };
 } // namespace StarfishShell

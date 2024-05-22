@@ -27,34 +27,71 @@
 
 namespace StarfishShell {
 
-AppLoop::AppLoop()
+class AppLoopEFL : public AppLoop {
+public:
+    AppLoopEFL();
+    ~AppLoopEFL();
+
+    virtual void init() override;
+    virtual int start(double timeoutInSec = 0) override;
+    virtual void stop() override;
+    virtual void deinit() override;
+
+private:
+    Ecore_Timer* m_timerID = nullptr;
+};
+
+AppLoopEFL::AppLoopEFL()
 {
 }
 
-AppLoop::~AppLoop()
+AppLoopEFL::~AppLoopEFL()
 {
 }
 
-void AppLoop::init()
+void AppLoopEFL::init()
 {
     elm_init(0, 0);
 }
 
-int AppLoop::start()
+int AppLoopEFL::start(double timeoutInSec)
 {
+    if (timeoutInSec) {
+        m_timerID = ecore_timer_add(
+            timeoutInSec,
+            [](void* data) -> Eina_Bool {
+                AppLoopEFL* self = static_cast<AppLoopEFL*>(data);
+                self->stop();
+                self->m_timerID = nullptr;
+                return ECORE_CALLBACK_DONE;
+            },
+            this);
+    }
     elm_run();
     return 0;
 }
 
-void AppLoop::stop()
+void AppLoopEFL::stop()
 {
+    if (m_timerID) {
+        ecore_timer_freeze(m_timerID);
+        ecore_timer_del(m_timerID);
+    }
     elm_exit();
 }
 
-void AppLoop::deinit()
+void AppLoopEFL::deinit()
 {
-    elm_shutdown();
+    // FIXME: Occasionally, crash occur on elm_shutdown with this error
+    // Error: corrupted double-linked list
+    // elm_shutdown();
 }
+
+std::unique_ptr<AppLoop> AppLoop::create()
+{
+    return std::unique_ptr<AppLoopEFL>(new AppLoopEFL());
+}
+
 } // namespace StarfishShell
 
 #endif

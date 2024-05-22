@@ -133,10 +133,12 @@ private:
 
 WindowGLFW::WindowGLFW()
 {
+    m_appLoop = AppLoop::create();
 }
 
 WindowGLFW::~WindowGLFW()
 {
+    m_appLoop->deinit();
 }
 
 bool WindowGLFW::init(const char* appName, int width, int height)

@@ -29,6 +29,8 @@
 #include <memory.h>
 #include <stdio.h>
 
+#include <sys/time.h>
+
 namespace {
 
 volatile sig_atomic_t doneFlag = 0;
@@ -45,25 +47,57 @@ void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
     doneFlag = 1;
 }
 
+uint64_t timestamp()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000UL + tv.tv_usec / 1000UL;
+}
+
 } // namespace
 
 namespace StarfishShell {
 
-AppLoop::AppLoop()
+class AppLoopSimple : public AppLoop {
+public:
+    AppLoopSimple();
+    ~AppLoopSimple();
+
+    virtual void init() override;
+    virtual int start(double timeoutInSec = 0) override;
+    virtual void stop() override;
+    virtual void deinit() override;
+
+private:
+    uint64_t m_timeoutInMs = 0;
+    uint64_t m_startTimeInMs = 0;
+};
+
+AppLoopSimple::AppLoopSimple()
 {
 }
 
-AppLoop::~AppLoop()
+AppLoopSimple::~AppLoopSimple()
 {
 }
 
-void AppLoop::init()
+void AppLoopSimple::init()
 {
     // Do nothing.
 }
 
-int AppLoop::start()
+int AppLoopSimple::start(double timeout)
 {
+    doneFlag = 0;
+    m_timeoutInMs = 0;
+    m_startTimeInMs = 0;
+
+    setenv("SHELL_DONE_FLAG", "0", 1);
+    if (timeout) {
+        m_timeoutInMs = static_cast<uint64_t>(timeout) * 1000;
+        m_startTimeInMs = timestamp();
+    }
+
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
     act.sa_sigaction = setDoneFlag;
@@ -77,19 +111,30 @@ int AppLoop::start()
     while (!doneFlag) {
         usleep(100);
         updateDoneFlagFromENV();
+        if (m_timeoutInMs) {
+            uint64_t current = timestamp();
+            if (current - m_startTimeInMs >= m_timeoutInMs) {
+                doneFlag = 1;
+            }
+        }
     }
 
     return 0;
 }
 
-void AppLoop::stop()
+void AppLoopSimple::stop()
 {
     doneFlag = 1;
 }
 
-void AppLoop::deinit()
+void AppLoopSimple::deinit()
 {
     // Do nothing.
+}
+
+std::unique_ptr<AppLoop> AppLoop::create()
+{
+    return std::unique_ptr<AppLoopSimple>(new AppLoopSimple());
 }
 
 } // namespace StarfishShell

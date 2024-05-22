@@ -17,20 +17,25 @@
  *  USA
  */
 
-#ifndef __StarfishShellSimpleLoop__
-#define __StarfishShellSimpleLoop__
+#ifndef __StarfishShellAppLoop__
+#define __StarfishShellAppLoop__
+
+#include <memory>
 
 namespace StarfishShell {
 
 class AppLoop {
 public:
-    AppLoop();
-    ~AppLoop();
+    static std::unique_ptr<AppLoop> create();
 
-    void init();
-    int start();
-    void stop();
-    void deinit();
+    virtual ~AppLoop() = default;
+    virtual void init() = 0;
+    virtual int start(double timeoutInSec = 0) = 0;
+    virtual void stop() = 0;
+    virtual void deinit() = 0;
+
+protected:
+    AppLoop() = default;
 };
 
 } // namespace StarfishShell

@@ -265,6 +265,7 @@ bool RendererDelegateEGL::isSupportedExtension(const char* extension)
 class WindowX11 final : public Window {
 public:
     WindowX11();
+    ~WindowX11();
 
     bool init(const char* appName, int width, int height) override;
     void pollEvent() override;
@@ -290,6 +291,12 @@ private:
 
 WindowX11::WindowX11()
 {
+    m_appLoop = AppLoop::create();
+}
+
+WindowX11::~WindowX11()
+{
+    m_appLoop->deinit();
 }
 
 bool WindowX11::init(const char* appName, int width, int height)

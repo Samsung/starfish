@@ -56,16 +56,17 @@ private:
 
 WindowEFL::WindowEFL()
 {
+    m_appLoop = AppLoop::create();
 }
 
 WindowEFL::~WindowEFL()
 {
-    m_appLoop.deinit();
+    m_appLoop->deinit();
 }
 
 bool WindowEFL::init(const char* appName, int width, int height)
 {
-    m_appLoop.init();
+    m_appLoop->init();
     initConfig();
 
     if (!createSimpleWindow(appName, width, height)) {

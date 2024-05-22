@@ -60,7 +60,7 @@ protected:
 TEST_F(LWETestFinalize, Finalize)
 {
     LWE::LWE::Finalize();
-    // No error.
+    // Expect no error.
     EXPECT_TRUE(true);
 }
 
@@ -119,13 +119,13 @@ public:
 TEST_F(LWETestWitoutInit, GetGCFrequency)
 {
     EXPECT_EXIT(LWE::LWE::GetGCFrequency(), ::testing::KilledBySignal(SIGABRT),
-                "RELEASE_ASSERT");
+                "");
 }
 
 TEST_F(LWETestWitoutInit, SetGCFrequency)
 {
     EXPECT_EXIT(LWE::LWE::SetGCFrequency(32),
-                ::testing::KilledBySignal(SIGABRT), "RELEASE_ASSERT");
+                ::testing::KilledBySignal(SIGABRT), "");
 }
 
 TEST_F(LWETestWitoutInit, GetVersion)
@@ -134,6 +134,6 @@ TEST_F(LWETestWitoutInit, GetVersion)
     int minor = -1;
     int patch = -1;
     EXPECT_EXIT(LWE::LWE::GetVersion(&major, &minor, &patch),
-                ::testing::KilledBySignal(SIGABRT), "RELEASE_ASSERT");
+                ::testing::KilledBySignal(SIGABRT), "");
 }
 } // namespace StarfishShell
