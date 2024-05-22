@@ -37,15 +37,6 @@ void Shell::stopMainLoop()
     ecore_shutdown();
 }
 
-void Shell::onTimeout()
-{
-    ecore_main_loop_thread_safe_call_sync(
-        [](void* data) -> void* {
-            ecore_main_loop_quit();
-            return nullptr;
-        },
-        nullptr);
-}
 } // namespace StarfishShell
 
 #endif

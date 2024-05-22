@@ -92,7 +92,6 @@ public:
     struct OtherOptions {
         bool crashTest = false;
         bool disableConsole = false;
-        int timeout = 0;
     };
 
     static void parseArgs(int argc, char* argv[],

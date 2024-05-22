@@ -74,11 +74,6 @@ void Shell::stopMainLoop()
     doneFlag = 1;
 }
 
-void Shell::onTimeout()
-{
-    doneFlag = 1;
-}
-
 } // namespace StarfishShell
 
 #endif
