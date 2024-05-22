@@ -158,8 +158,6 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             settings.useHTTP2 = true;
         } else if (strstr(argv[i], "--tts-language=") == argv[i]) {
             settings.language = argv[i] + strlen("--tts-language=");
-        } else if (strstr(argv[i], "--timeout=") == argv[i]) {
-            others.timeout = std::atoi(argv[i] + strlen("--timeout="));
         } else if (strstr(argv[i], "--ignore-ssl-verify")) {
             env.starfishIgnoreSSLVerify = true;
         } else if (strstr(argv[i], "--gl-compositor-scale=") == argv[i]) {

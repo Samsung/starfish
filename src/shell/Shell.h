@@ -45,11 +45,9 @@ private:
     void printUsage();
 
     void runCrashTestThread();
-    void runTimeoutThread(int timeout);
 
     int runMainLoop();
     void stopMainLoop();
-    void onTimeout();
 
     int getExitCode();
 };

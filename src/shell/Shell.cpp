@@ -71,12 +71,9 @@ int Shell::run(int argc, char* argv[])
         return false;
     }
 
-    if (strstr(argv[1], "--run-unit-test")) {
+    if (strstr(argv[1], "unit-test")) {
         return runUnitTest(argc, argv);
     } else {
-#if defined(SHELL_ENABLE_BACKTRACE)
-        setBacktraceHandler();
-#endif
         return runMiniBrowser(argc, argv);
     }
 }
@@ -90,6 +87,10 @@ int Shell::runUnitTest(int argc, char* argv[])
 
 int Shell::runMiniBrowser(int argc, char* argv[])
 {
+#if defined(SHELL_ENABLE_BACKTRACE)
+    setBacktraceHandler();
+#endif
+
     MiniBrowser::EnvironmentValues env;
     MiniBrowser::InitOption init;
     MiniBrowser::Settings settings;
@@ -115,10 +116,6 @@ int Shell::runMiniBrowser(int argc, char* argv[])
 
     if (others.crashTest) {
         runCrashTestThread();
-    }
-
-    if (others.timeout > 0) {
-        runTimeoutThread(others.timeout);
     }
 
     int ret = runMainLoop();
@@ -222,53 +219,6 @@ void Shell::runCrashTestThread()
             return NULL;
         },
         nullptr);
-}
-
-void Shell::runTimeoutThread(int timeout)
-{
-    struct Param {
-        std::future<int> future;
-        Shell* shell;
-    };
-    Param* param = new Param();
-
-    param->future = std::async(std::launch::async, [timeout]() {
-        std::this_thread::sleep_for(std::chrono::seconds(timeout));
-        return 1;
-    });
-    param->shell = this;
-
-    pthread_t t;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_create(
-        &t, &attr,
-        [](void* data) -> void* {
-            Param* param = reinterpret_cast<Param*>(data);
-            std::future_status status;
-            do {
-                status = param->future.wait_for(std::chrono::seconds(1));
-                switch (status) {
-                case std::future_status::deferred:
-                    puts("deferred");
-                    break;
-                case std::future_status::timeout:
-                    puts("timeout");
-                    break;
-                case std::future_status::ready:
-                    puts("ready!");
-                    break;
-                default:
-                    puts("default!");
-                    break;
-                }
-            } while (status != std::future_status::ready);
-
-            param->shell->onTimeout();
-            delete param;
-            return nullptr;
-        },
-        param);
 }
 
 int Shell::getExitCode()
