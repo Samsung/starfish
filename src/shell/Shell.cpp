@@ -30,14 +30,10 @@
 #endif
 
 #include <cstring>
-#include <thread>
-#include <future>
+#include <memory>
 #include <pthread.h>
-#include <stdio.h>
 #include <malloc.h>
 #include <unistd.h>
-#include <string>
-#include <chrono>
 #include <signal.h>
 
 namespace {
@@ -101,7 +97,7 @@ int Shell::runMiniBrowser(int argc, char* argv[])
 
     MiniBrowser::setEnvironmentValues(env);
 
-    MiniBrowser* browser = new MiniBrowser();
+    auto browser = std::unique_ptr<MiniBrowser>(new MiniBrowser());
     if (!browser->init(init)) {
         return false;
     }
@@ -118,16 +114,10 @@ int Shell::runMiniBrowser(int argc, char* argv[])
         runCrashTestThread();
     }
 
-    int ret = runMainLoop();
+    int ret = browser->runMainLoop();
     if (ret != 0) {
         return ret;
     }
-
-    if (browser) {
-        delete browser;
-    }
-
-    stopMainLoop();
 
     return getExitCode();
 }

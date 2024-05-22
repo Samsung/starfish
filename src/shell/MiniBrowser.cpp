@@ -330,6 +330,11 @@ void MiniBrowser::setRotate(int degree)
     m_window->setRotate(degree);
 }
 
+int MiniBrowser::runMainLoop()
+{
+    return m_window->appLoop().start();
+}
+
 void MiniBrowser::runConsole()
 {
     m_console = Console::create(this);

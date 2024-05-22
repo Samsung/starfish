@@ -117,11 +117,11 @@ public:
 
     void setRotate(int degree);
 
+    int runMainLoop();
+
     void runConsole();
 
     void runCrashTestThread();
-
-    void runTimeoutThread(int timeout);
 
 private:
     bool createWindow(const InitOption& initOption);

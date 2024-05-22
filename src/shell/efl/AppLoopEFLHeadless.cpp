@@ -19,24 +19,41 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_EFL)
-#include "Shell.h"
+#if defined(STARFISH_SHELL_EFL_HEADLESS)
 
-#include <Elementary.h>
+#include "AppLoop.h"
+#include <Ecore.h>
 
 namespace StarfishShell {
 
-int Shell::runMainLoop()
+AppLoop::AppLoop()
 {
-    elm_run();
+}
+
+AppLoop::~AppLoop()
+{
+}
+
+void AppLoop::init()
+{
+    ecore_init();
+}
+
+int AppLoop::start()
+{
+    ecore_main_loop_begin();
     return 0;
 }
 
-void Shell::stopMainLoop()
+void AppLoop::stop()
 {
-    elm_shutdown();
+    ecore_main_loop_quit();
 }
 
+void AppLoop::deinit()
+{
+    ecore_shutdown();
+}
 } // namespace StarfishShell
 
 #endif

@@ -46,9 +46,6 @@ private:
 
     void runCrashTestThread();
 
-    int runMainLoop();
-    void stopMainLoop();
-
     int getExitCode();
 };
 

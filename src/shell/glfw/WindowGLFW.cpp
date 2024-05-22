@@ -108,6 +108,7 @@ bool RendererDelegateGLFW::isSupportedExtension(const char* extension)
 class WindowGLFW final : public Window {
 public:
     WindowGLFW();
+    ~WindowGLFW();
     bool init(const char* appName, int width, int height) override;
     void pollEvent() override;
     void terminate() override;
@@ -131,6 +132,10 @@ private:
 };
 
 WindowGLFW::WindowGLFW()
+{
+}
+
+WindowGLFW::~WindowGLFW()
 {
 }
 

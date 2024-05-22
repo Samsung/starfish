@@ -27,6 +27,7 @@
 #include "WindowKeyType.h"
 #include "PlatformIntegrationData.h"
 #include "RendererDelegate.h"
+#include "AppLoop.h"
 
 namespace StarfishShell {
 
@@ -107,6 +108,11 @@ public:
 
     virtual void setRotate(int degree){};
 
+    AppLoop& appLoop()
+    {
+        return m_appLoop;
+    }
+
 protected:
     Window() = default;
 
@@ -118,6 +124,7 @@ protected:
     ExitEventHandler m_exitEventHandler;
     FocusInHandler m_focusInHandler;
 
+    AppLoop m_appLoop;
     int m_isVisible = 1;
 };
 } // namespace StarfishShell

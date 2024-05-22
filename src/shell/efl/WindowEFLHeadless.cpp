@@ -23,8 +23,6 @@
 
 #include "Window.h"
 
-#include <Ecore.h>
-
 namespace StarfishShell {
 
 class WindowEFLHeadless final : public Window {
@@ -33,9 +31,14 @@ public:
     {
     }
 
+    ~WindowEFLHeadless()
+    {
+        m_appLoop.deinit();
+    }
+
     bool init(const char* appName, int width, int height) override
     {
-        ecore_init();
+        m_appLoop.init();
         return true;
     }
 
