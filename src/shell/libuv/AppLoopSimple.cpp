@@ -86,15 +86,15 @@ void AppLoopSimple::init()
     // Do nothing.
 }
 
-int AppLoopSimple::start(double timeout)
+int AppLoopSimple::start(double timeoutInSec)
 {
     doneFlag = 0;
     m_timeoutInMs = 0;
     m_startTimeInMs = 0;
 
     setenv("SHELL_DONE_FLAG", "0", 1);
-    if (timeout) {
-        m_timeoutInMs = static_cast<uint64_t>(timeout) * 1000;
+    if (timeoutInSec > 0) {
+        m_timeoutInMs = static_cast<uint64_t>(timeoutInSec) * 1000;
         m_startTimeInMs = timestamp();
     }
 
@@ -111,7 +111,7 @@ int AppLoopSimple::start(double timeout)
     while (!doneFlag) {
         usleep(100);
         updateDoneFlagFromENV();
-        if (m_timeoutInMs) {
+        if (m_timeoutInMs > 0) {
             uint64_t current = timestamp();
             if (current - m_startTimeInMs >= m_timeoutInMs) {
                 doneFlag = 1;
