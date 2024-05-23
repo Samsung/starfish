@@ -206,6 +206,12 @@ BuildRequires: pkgconfig(openssl)
   %endif
 %endif
 
+%if "%{rpm}" == "prod_tv" && "%{tizen_version}" < "7.5"
+BuildRequires: pkgconfig(gtest_gmock)
+%else
+BuildRequires: gtest-devel
+%endif
+
 BuildRequires: pkgconfig(libpulse)
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
