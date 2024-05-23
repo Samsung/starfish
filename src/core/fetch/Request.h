@@ -30,7 +30,7 @@ namespace Starfish {
 class RequestOrUSVString;
 typedef RequestOrUSVString RequestInfo;
 
-class Request : public ScriptWrappable, public Body {
+class Request : public ScriptWrappable {
 public:
     Request(ExecutionContext* executionContext, RequestInfo& input);
     Request(ExecutionContext* executionContext, RequestInfo& input,
@@ -61,7 +61,57 @@ public:
 
     RequestData* requestData()
     {
-        return &m_data;
+        return m_data;
+    }
+
+    Body* requestBody() const
+    {
+        return m_body;
+    }
+
+    Nullable<BodyInit> bodyInit() const
+    {
+        return m_body->bodyInit();
+    }
+
+    ExecutionContext* executionContext()
+    {
+        return m_body->executionContext();
+    }
+
+    void createReadableStream()
+    {
+        return m_body->createReadableStream();
+    }
+
+    // IDL Body getters
+    Promise* arrayBuffer()
+    {
+        return m_body->arrayBuffer();
+    }
+    Promise* blob()
+    {
+        return m_body->blob();
+    }
+    Promise* formData()
+    {
+        return m_body->formData();
+    }
+    Promise* json()
+    {
+        return m_body->json();
+    }
+    Promise* text()
+    {
+        return m_body->text();
+    }
+    bool bodyUsed()
+    {
+        return m_body->bodyUsed();
+    }
+    ReadableStream* body()
+    {
+        return m_body->body();
     }
 
 private:
@@ -72,8 +122,9 @@ private:
     void checkMethodCanHaveBody();
 
 protected:
-    RequestData m_data;
-    Headers m_headers;
+    RequestData* m_data;
+    Headers* m_headers;
+    Body* m_body;
 };
 } // namespace Starfish
 

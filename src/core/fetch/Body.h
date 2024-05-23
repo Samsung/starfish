@@ -42,8 +42,13 @@ enum class BodyType {
     Text,
 };
 
-class Body : public ResourceRequestClient {
+class Body : public gc {
+    friend class BodyResourceRequestClient;
+
 public:
+    Body(ExecutionContext* executionContext);
+    Body(ExecutionContext* executionContext, Nullable<BodyInit>& bodyInitValue);
+
     Promise* arrayBuffer();
     Promise* blob();
     Promise* formData();
@@ -70,10 +75,6 @@ public:
     }
 
     void copyBody(Body* body);
-
-    void onProgressEvent(ResourceRequest* request, bool isExplicitAction);
-    void onReadyStateChange(ResourceRequest* request, bool fromExplicit);
-
     void createReadableStream();
     ReadableStream* body()
     {
@@ -94,9 +95,6 @@ private:
     String* extractTextFromBodyInit();
 
 protected:
-    Body(ExecutionContext* executionContext);
-    Body(ExecutionContext* executionContext, Nullable<BodyInit>& bodyInitValue);
-
     ExecutionContext* m_executionContext;
     Nullable<BodyInit> m_bodyInit;
     String* m_contentType;

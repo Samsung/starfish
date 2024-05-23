@@ -33,6 +33,51 @@ namespace Starfish {
 // TODO: find where the mine type should be placed
 static const char kTextPlainContentType[] = "text/plain;charset=UTF-8";
 
+class BodyResourceRequestClient : public ResourceRequestClient {
+public:
+    BodyResourceRequestClient(Body* body)
+        : m_body(body)
+    {
+    }
+
+    // NOTE: consider creating `ResourceRequestClient` class for Body
+    virtual void onProgressEvent(ResourceRequest* request,
+                                 bool isExplicitAction) override
+    {
+        ProgressState progState = request->progressState();
+
+        if (progState == ProgressState::InError) {
+            auto error = scriptTypeError(
+                m_body->executionContext()->scriptBindingInstance(),
+                String::fromUTF8("Body is locked"));
+
+            m_body->m_promise->reject(createScriptValue(error));
+        }
+    }
+
+    virtual void onReadyStateChange(ResourceRequest* request,
+                                    bool fromExplicit) override
+    {
+        if (fromExplicit) {
+            if (request->readyState() == ReadyState::Done) {
+                BodyInit body = m_body->m_bodyInit.getValue();
+
+                if (body.isBlobValue()) {
+                    String* text = String::fromUTF8(
+                        m_body->m_resourceRequest->response().data(),
+                        m_body->m_resourceRequest->response().size());
+                    m_body->m_promise->fulfill(createScriptValue(text));
+                    m_body->m_resourceRequest->response().clear();
+                    m_body->m_resourceRequest->response().shrink_to_fit();
+                }
+            }
+        }
+    }
+
+private:
+    Body* m_body;
+};
+
 Body::Body(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
     , m_bodyInit(nullptr)
@@ -232,7 +277,8 @@ Promise* Body::text()
                 if (!m_resourceRequest) {
                     m_resourceRequest = new ResourceRequest(executionContext());
                 }
-                m_resourceRequest->addResourceRequestClient(this);
+                m_resourceRequest->addResourceRequestClient(
+                    new BodyResourceRequestClient(this));
 
                 RequestData* reqData = new RequestData();
                 reqData->m_url = new ResourceURL(
@@ -326,38 +372,6 @@ String* Body::extractTextFromBodyInit()
     return String::emptyString;
 }
 
-// NOTE: consider creating `ResourceRequestClient` class for Body
-void Body::onProgressEvent(ResourceRequest* request, bool isExplicitAction)
-{
-    ProgressState progState = request->progressState();
-
-    if (progState == ProgressState::InError) {
-        auto error =
-            scriptTypeError(executionContext()->scriptBindingInstance(),
-                            String::fromUTF8("Body is locked"));
-
-        m_promise->reject(createScriptValue(error));
-    }
-}
-
-void Body::onReadyStateChange(ResourceRequest* request, bool fromExplicit)
-{
-    if (fromExplicit) {
-        if (request->readyState() == ReadyState::Done) {
-            BodyInit body = m_bodyInit.getValue();
-
-            if (body.isBlobValue()) {
-                String* text =
-                    String::fromUTF8(m_resourceRequest->response().data(),
-                                     m_resourceRequest->response().size());
-                m_promise->fulfill(createScriptValue(text));
-                m_resourceRequest->response().clear();
-                m_resourceRequest->response().shrink_to_fit();
-            }
-        }
-    }
-}
-
 Nullable<BodyInit> Body::bodyInit() const
 {
     // TODO: in case that m_bodyUsed is True
@@ -368,19 +382,22 @@ void Body::setBodyInit(const Nullable<BodyInit>& bodyInitValue)
 {
     m_bodyInit = bodyInitValue;
 
+    if (!m_bodyInit.hasValue()) {
+        m_readableStream = nullptr;
+        return;
+    }
+
     // extract Body : https://fetch.spec.whatwg.org/#body-mixin
     createReadableStream();
     m_readableStream->releaseLock();
 
-    if (bodyInitValue.hasValue()) {
-        auto bodyInit = bodyInitValue.getValue();
-        if (bodyInit.isUSVStringValue()) {
-            m_contentType = String::createASCIIString(kTextPlainContentType);
-        } else if (bodyInit.isBlobValue()) {
-            m_contentType = bodyInit.getBlobValue()->type();
-        } else {
-            STARFISH_UNIMPLEMENTED();
-        }
+    auto bodyInit = m_bodyInit.getValue();
+    if (bodyInit.isUSVStringValue()) {
+        m_contentType = String::createASCIIString(kTextPlainContentType);
+    } else if (bodyInit.isBlobValue()) {
+        m_contentType = bodyInit.getBlobValue()->type();
+    } else {
+        STARFISH_UNIMPLEMENTED();
     }
 }
 

@@ -451,13 +451,14 @@ public:
     {
         m_isSettled = true;
         if (m_onSettled) {
-            m_onSettled();
+            m_onSettled(m_onSettledData);
         }
     }
 
-    void setOnSettled(const std::function<void()>& onSettled)
+    void setOnSettled(void (*onSettled)(void*), void* data)
     {
         m_onSettled = onSettled;
+        m_onSettledData = data;
     }
 
     bool isSettled()
@@ -468,7 +469,8 @@ public:
 protected:
     ScriptValue m_scriptValue = nullptr;
     ScriptBindingInstance* m_instance = nullptr;
-    std::function<void()> m_onSettled;
+    void (*m_onSettled)(void*) = nullptr;
+    void* m_onSettledData = nullptr;
     bool m_isSettled = false;
 };
 

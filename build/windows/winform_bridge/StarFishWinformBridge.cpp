@@ -132,11 +132,24 @@ extern "C" size_t LWE_EXPORT __stdcall createWebViewInstance(
     ::LWE::LWE::Initialize(localStorage.data(), cookieStorage.data(),
                            httpCacheStorage.data());
 
-    ::LWE::WebContainer* wv = ::LWE::WebContainer::CreateGL(
-        initialWidth, initialHeight,
-        [](::LWE::WebContainer*) { wglMakeCurrent(g_hDC, g_hrc); },
-        [](::LWE::WebContainer*, bool) { SwapBuffers(g_hDC); }, 1, "sans-serif",
-        "ko-KR", "Asia/Seoul");
+    ::LWE::WebContainer::WebContainerArguments args =
+    {
+         initialWidth, initialHeight,
+         1, "sans-serif",
+        "ko-KR", "Asia/Seoul"
+    };
+
+    ::LWE::WebContainer::RendererGLConfiguration glConf;
+    glConf.onMakeCurrent = [](::LWE::WebContainer*) { wglMakeCurrent(g_hDC, g_hrc); };
+    glConf.onSwapBuffers = [](::LWE::WebContainer*, bool) { SwapBuffers(g_hDC); };
+    glConf.onGetProcAddress = [](::LWE::WebContainer*, const char* name) -> void* {
+        return wglGetProcAddress(name);
+    };
+    glConf.onIsSupportedExtension = [](::LWE::WebContainer*, const char* name) -> bool {
+        return wglewIsSupported(name);
+    };
+
+    ::LWE::WebContainer* wv = ::LWE::WebContainer::CreateGL(args, glConf);
     wv->RegisterOnPageStartedHandler(
         [](::LWE::WebContainer* wv, const std::string& url) {
             void* buffer = LocalAlloc(LMEM_FIXED, url.size() + 1);
