@@ -73,6 +73,7 @@ public class LweWebViewImpl implements LweWebView {
             System.loadLibrary("ssl");
             System.loadLibrary("nghttp2");
             System.loadLibrary("curl");
+            System.loadLibrary("websockets");
             try {
                 System.loadLibrary("icudata");
                 System.loadLibrary("icuuc");

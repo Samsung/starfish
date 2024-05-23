@@ -197,7 +197,7 @@ Profiler::~Profiler()
 
 void Profiler::Update(ProfileKind kind, float elapsedTimeInMS)
 {
-    m_records[kind] += elapsedTimeInMS;
+    m_records[static_cast<unsigned>(kind)] += elapsedTimeInMS;
     m_totalElapsedTime += elapsedTimeInMS;
 }
 
@@ -207,8 +207,10 @@ void Profiler::report()
     STARFISH_LOG_INFO("Total elapsed time: %f ms", m_totalElapsedTime);
     for (const auto kind : allProfileKinds) {
         STARFISH_LOG_INFO("  Elapsed time for %s in %f ms (%.2f%%)",
-                          profileKindToString(kind), m_records[kind],
-                          m_records[kind] / m_totalElapsedTime * 100.0f);
+                          profileKindToString(kind),
+                          m_records[static_cast<unsigned>(kind)],
+                          m_records[static_cast<unsigned>(kind)] /
+                              m_totalElapsedTime * 100.0f);
     }
     STARFISH_LOG_INFO("================================================");
 }
@@ -217,7 +219,7 @@ void Profiler::init()
 {
     m_totalElapsedTime = 0;
     for (auto &kind : allProfileKinds) {
-        m_records[kind] = 0;
+        m_records[static_cast<unsigned>(kind)] = 0;
     }
 }
 

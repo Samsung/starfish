@@ -97,7 +97,7 @@ private:
 
     bool m_isStarted = false;
     float m_totalElapsedTime = 0.0f;
-    std::unordered_map<ProfileKind, float> m_records;
+    std::unordered_map<unsigned, float> m_records;
 };
 
 #ifdef STARFISH_ENABLE_PROFILING
