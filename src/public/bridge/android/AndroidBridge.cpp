@@ -28,6 +28,8 @@
 #include <android/bitmap.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 struct WindowGlue {
     JNIEnv* m_env;
@@ -649,10 +651,27 @@ Java_com_samsung_android_lightweightwebengine_internal_LweWebViewImpl_create(
                              cachePathString);
     }
 
-    LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
-        w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
-        [](LWE::WebContainer* wc, bool mayNeedsSync) { glSwapBuffers(wc); },
-        devicePixelRatio, "serif", localeString, timezoneIDString);
+    ::LWE::WebContainer::WebContainerArguments args = {
+        w, h, devicePixelRatio, "serif", localeString, timezoneIDString
+    };
+
+    ::LWE::WebContainer::RendererGLConfiguration glConf;
+    glConf.onMakeCurrent = [](::LWE::WebContainer* wc) { glMakeCurrent(wc); };
+    glConf.onSwapBuffers = [](::LWE::WebContainer* wc, bool) {
+        glSwapBuffers(wc);
+    };
+    glConf.onGetProcAddress = [](::LWE::WebContainer*,
+                                 const char* name) -> void* {
+        return reinterpret_cast<void*>(eglGetProcAddress(name));
+    };
+    glConf.onIsSupportedExtension = [](::LWE::WebContainer*,
+                                       const char* name) -> bool {
+        return strstr(eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS),
+                      name) != nullptr;
+    };
+
+    ::LWE::WebContainer* webContainer =
+        ::LWE::WebContainer::CreateGL(args, glConf);
 
     auto settings = webContainer->GetSettings();
     settings.SetIdleModeJob(LWE::IdleModeJob::ForceGC);
