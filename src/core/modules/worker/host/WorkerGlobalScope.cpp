@@ -268,6 +268,8 @@ Performance* WorkerGlobalScope::performance()
     return Performance::create(executionContext());
 }
 
+DEFINE_EVENT_LISTENER(WorkerGlobalScope, error);
+
 } // namespace Starfish
 
 #endif /* STARFISH_ENABLE_WORKER */

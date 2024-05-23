@@ -36,7 +36,9 @@ WorkerProxy::WorkerProxy(ExecutionContext* executionContext,
     : m_ownerExecutionContext(executionContext)
     , m_workerThread(workerThread)
     , m_entangledEventTarget(nullptr)
+    , m_entangledWorkerProxy(nullptr)
     , m_wasTerminated(false)
+    , m_isClosed(false)
 {
 }
 
@@ -46,9 +48,15 @@ void WorkerProxy::onPostMessageDone(
     WorkerProxy->removeSerializedMessage(serializedMessage);
 }
 
+void WorkerProxy::entangleTarget(EventTarget* eventTarget, WorkerProxy* proxy)
+{
+    m_entangledEventTarget = eventTarget;
+    m_entangledWorkerProxy = proxy;
+}
+
 void WorkerProxy::postTask(PostTask task, void* data)
 {
-    if (isTargetClosed()) {
+    if (m_isClosed) {
         return;
     }
 
@@ -81,7 +89,7 @@ void WorkerProxy::postMessageToEntangledEventTarget(
 {
     STARFISH_ASSERT(m_entangledEventTarget);
 
-    if (isTargetClosed()) {
+    if (m_isClosed) {
         return;
     }
 
@@ -89,7 +97,8 @@ void WorkerProxy::postMessageToEntangledEventTarget(
         m_workerThread->workerMessageLoopGlobalScope(),
         [](size_t handle, void* data, void* data1) {
             auto* proxy = static_cast<WorkerProxy*>(data);
-            if (proxy->isTargetClosed()) {
+
+            if (proxy->entangledWorkerProxy()->isClosed()) {
                 return;
             }
 
@@ -97,11 +106,13 @@ void WorkerProxy::postMessageToEntangledEventTarget(
                 static_cast<SerializeWithTransferResult*>(data1);
 
             STARFISH_ASSERT(proxy->targetExecutionContext()->isContextThread());
-
             MessageEvent* event = new MessageEvent(
                 proxy->targetExecutionContext(), serializedMessage);
-
             proxy->entangledEventTarget()->dispatchEventByUA(event);
+
+            if (proxy->isClosed()) {
+                return;
+            }
 
             // Free serializedMessage in thread where this variable was created.
             proxy->ownerExecutionContext()
@@ -177,6 +188,23 @@ void WorkerProxy::clearPendingPostTask()
 {
     m_ownerExecutionContext->webBase()->messageLoop()->clearPendingIdlers(
         m_workerThread->workerMessageLoopGlobalScope());
+}
+
+void WorkerProxy::close()
+{
+    m_isClosed = true;
+}
+
+EventTarget* WorkerProxy::entangledEventTarget() const
+{
+    STARFISH_ASSERT(m_entangledEventTarget);
+    return m_entangledEventTarget;
+}
+
+WorkerProxy* WorkerProxy::entangledWorkerProxy() const
+{
+    STARFISH_ASSERT(m_entangledWorkerProxy);
+    return m_entangledWorkerProxy;
 }
 
 } // namespace Starfish

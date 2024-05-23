@@ -30,6 +30,8 @@ public:
     WorkerIPCAddress(WorkerSettings *settings,
                      const std::string &resourceDirPath);
 
+    virtual ~WorkerIPCAddress();
+
     virtual const std::string getIPCHandlePath(const std::string &last = "");
 
     virtual const std::string createIPCAddress(const std::string &last = "");

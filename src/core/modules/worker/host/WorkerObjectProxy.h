@@ -50,7 +50,6 @@ private:
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;
-    bool isTargetClosed() override;
 
     void postSerializedMessage(
         SerializeWithTransferResult* serializedMessage) override;
