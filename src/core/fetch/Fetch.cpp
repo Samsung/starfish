@@ -88,10 +88,10 @@ void Fetch::start()
         m_request->method()->equals("HEAD")) {
         // This is a method that cannot have a body
         m_resourceRequest->send();
-    } else if (m_request->isTextType()) {
+    } else if (m_request->requestBody()->isTextType()) {
         // Currently, it is possible only in case of text because resource
         // request supports only string type.
-        m_resourceRequest->send(m_request->extract());
+        m_resourceRequest->send(m_request->requestBody()->extract());
     } else {
         STARFISH_UNIMPLEMENTED();
     }
@@ -108,7 +108,7 @@ void Fetch::success(ResourceRequest* request)
     m_response->setMimeType(request->responseMimeType());
     m_response->setUrl(request->url()->urlString());
     m_response->setHeadersFromHeaderMap(request->responseHeaderMap());
-    m_response->pushResponseData(request);
+    m_response->responseBody()->pushResponseData(request);
     m_promise->fulfill(m_response->scriptValue());
 }
 

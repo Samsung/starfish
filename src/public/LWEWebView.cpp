@@ -584,22 +584,6 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     return instance;
 }
 
-WebContainer* WebContainer::CreateGL(
-    unsigned width, unsigned height,
-    const std::function<void(WebContainer*)>& onMakeCurrent,
-    const std::function<void(WebContainer*, bool mayNeedsSync)>& onSwapBuffers,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
-{
-    // This is legacy API, forward to new API.
-    WebContainerArguments args = { width,           height, devicePixelRatio,
-                                   defaultFontName, locale, timezoneID };
-    RendererGLConfiguration config;
-    config.onMakeCurrent = onMakeCurrent;
-    config.onSwapBuffers = onSwapBuffers;
-    return WebContainer::CreateGL(args, config);
-}
-
 WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                      const RendererGLConfiguration& config)
 {

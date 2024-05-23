@@ -48,7 +48,7 @@ private:
 
 class ScriptWrappable;
 
-class Response final : public ScriptWrappable, public Body {
+class Response final : public ScriptWrappable {
 public:
     Response(ExecutionContext* executionContext);
     Response(ExecutionContext* executionContext, Nullable<BodyInit>& body);
@@ -91,7 +91,7 @@ public:
 
     Headers* headers()
     {
-        return &m_headers;
+        return m_headers;
     }
 
     void setHeadersFromHeaderMap(const HeaderMap& map);
@@ -99,12 +99,61 @@ public:
     Response* cloneWithoutBody();
     Response* clone();
 
+    Nullable<BodyInit> bodyInit() const
+    {
+        return m_body->bodyInit();
+    }
     void setBody(String* string);
+    Body* responseBody() const
+    {
+        return m_body;
+    }
+
+    ExecutionContext* executionContext()
+    {
+        return m_body->executionContext();
+    }
+
+    void createReadableStream()
+    {
+        return m_body->createReadableStream();
+    }
+
+    // IDL Body getters
+    Promise* arrayBuffer()
+    {
+        return m_body->arrayBuffer();
+    }
+    Promise* blob()
+    {
+        return m_body->blob();
+    }
+    Promise* formData()
+    {
+        return m_body->formData();
+    }
+    Promise* json()
+    {
+        return m_body->json();
+    }
+    Promise* text()
+    {
+        return m_body->text();
+    }
+    bool bodyUsed()
+    {
+        return m_body->bodyUsed();
+    }
+    ReadableStream* body()
+    {
+        return m_body->body();
+    }
 
 private:
     ExecutionContext* m_executionContext;
-    Headers m_headers;
+    Headers* m_headers;
     ResponseData* m_responseData;
+    Body* m_body;
 
     void handleBodyInit(Nullable<BodyInit>& body);
     void copyResponseData(Response* destResponse);

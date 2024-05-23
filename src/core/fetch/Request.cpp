@@ -60,8 +60,9 @@ static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
 
 Request::Request(ExecutionContext* executionContext, RequestInfo& input)
     : ScriptWrappable(this)
-    , Body(executionContext)
-    , m_headers(Headers(executionContext))
+    , m_data(new RequestData())
+    , m_headers(new Headers(executionContext))
+    , m_body(new Body(executionContext))
 {
     initialize(&input);
 }
@@ -69,17 +70,18 @@ Request::Request(ExecutionContext* executionContext, RequestInfo& input)
 Request::Request(ExecutionContext* executionContext, RequestInfo& input,
                  RequestInit& init)
     : ScriptWrappable(this)
-    , Body(executionContext)
-    , m_headers(Headers(executionContext))
+    , m_data(new RequestData())
+    , m_headers(new Headers(executionContext))
+    , m_body(new Body(executionContext))
 {
     initialize(&input, &init);
 }
 
 Request::Request(ExecutionContext* executionContext, RequestData* data)
     : ScriptWrappable(this)
-    , Body(executionContext)
-    , m_data(*data)
-    , m_headers(Headers(executionContext))
+    , m_data(new RequestData(*data))
+    , m_headers(new Headers(executionContext))
+    , m_body(new Body(executionContext))
 {
 }
 
@@ -124,31 +126,31 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
     // check input is string or Request
     if (input->isRequestValue()) {
         Request* request = input->getRequestValue();
-        RequestData* data = &request->m_data;
+        RequestData* data = request->m_data;
 
-        m_data.m_method = data->m_method;
-        m_data.m_referrer = data->m_referrer;
-        m_data.m_mode = data->m_mode;
-        m_data.m_credentials = data->m_credentials;
-        m_data.m_cache = data->m_cache;
-        m_data.m_redirect = data->m_redirect;
-        m_data.m_integrity = data->m_integrity;
-        m_data.m_keepalive = data->m_keepalive;
+        m_data->m_method = data->m_method;
+        m_data->m_referrer = data->m_referrer;
+        m_data->m_mode = data->m_mode;
+        m_data->m_credentials = data->m_credentials;
+        m_data->m_cache = data->m_cache;
+        m_data->m_redirect = data->m_redirect;
+        m_data->m_integrity = data->m_integrity;
+        m_data->m_keepalive = data->m_keepalive;
 
         if (!init || init->headers()->isUndefinedOrNull()) {
-            m_headers.copyHeaders(&request->m_headers);
+            m_headers->copyHeaders(request->m_headers);
         }
 
-        if (bodyDisturbedOrLocked()) {
+        if (m_body->bodyDisturbedOrLocked()) {
             throw new DOMException(executionContext(),
                                    DOMException::Code::SCRIPT_TYPE_ERR,
                                    "Request input is disturbed or locked");
         }
-        copyBody(request);
+        m_body->copyBody(request->requestBody());
 
     } else {
         if (input->isUSVStringValue()) {
-            m_data.m_url =
+            m_data->m_url =
                 new ResourceURL(input->getUSVStringValue(),
                                 executionContext()->baseURL()->baseURI());
             fallbackMode = String::createASCIIString("cors");
@@ -162,33 +164,33 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
     } else {
         if (input->isUSVStringValue()) {
             fallbackMode = String::createASCIIString("cors");
-            m_data.m_mode = RequestData::requestModeFromString(fallbackMode);
+            m_data->m_mode = RequestData::requestModeFromString(fallbackMode);
         }
     }
 }
 
 void Request::buildRequestInit(RequestInit* init, String* fallbackMode)
 {
-    if (m_data.m_mode == RequestMode::Navigate) {
-        m_data.m_mode = RequestMode::SameOrigin;
+    if (m_data->m_mode == RequestMode::Navigate) {
+        m_data->m_mode = RequestMode::SameOrigin;
     }
 
     // TODO: Unset reload-navigation and history-navigation flag
 
     if (init->hasReferrer()) {
-        m_data.m_referrer =
+        m_data->m_referrer =
             computeReferrer(init->referrer(), executionContext());
     }
 
     if (init->hasReferrerPolicy()) {
         if (ReferrerURL::isValidPolicy(init->referrerPolicy())) {
-            m_data.m_referrer->SetPolicy(
+            m_data->m_referrer->SetPolicy(
                 ReferrerURL::policyFromString(init->referrerPolicy()));
         }
     }
 
-    if (!HeadersData::isValidHTTPToken(m_data.m_method) ||
-        FetchUtils::isForbiddenMethod(m_data.m_method)) {
+    if (!HeadersData::isValidHTTPToken(m_data->m_method) ||
+        FetchUtils::isForbiddenMethod(m_data->m_method)) {
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "SCRIPT_TYPE_ERR");
@@ -206,35 +208,35 @@ void Request::buildRequestInit(RequestInit* init, String* fallbackMode)
     }
 
     if (!mode->isEmpty()) {
-        m_data.m_mode = RequestData::requestModeFromString(mode);
+        m_data->m_mode = RequestData::requestModeFromString(mode);
     }
 
     if (init->hasCredentials()) {
-        m_data.m_credentials =
+        m_data->m_credentials =
             RequestData::requestCredentialsFromString(init->credentials());
     }
 
     if (init->hasCache()) {
-        m_data.m_cache = RequestData::requestCacheFromString(init->cache());
+        m_data->m_cache = RequestData::requestCacheFromString(init->cache());
     }
 
-    if (m_data.m_cache == RequestCache::OnlyIfCached &&
-        m_data.m_mode != RequestMode::SameOrigin) {
+    if (m_data->m_cache == RequestCache::OnlyIfCached &&
+        m_data->m_mode != RequestMode::SameOrigin) {
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR);
     }
 
     if (init->hasRedirect()) {
-        m_data.m_redirect =
+        m_data->m_redirect =
             RequestData::requestRedirectFromString(init->redirect());
     }
 
     if (init->hasIntegrity()) {
-        m_data.m_integrity = init->integrity();
+        m_data->m_integrity = init->integrity();
     }
 
     if (init->hasKeepalive()) {
-        m_data.m_keepalive = init->keepalive();
+        m_data->m_keepalive = init->keepalive();
     }
 
     if (init->hasMethod()) {
@@ -243,31 +245,31 @@ void Request::buildRequestInit(RequestInit* init, String* fallbackMode)
             throw new DOMException(executionContext(),
                                    DOMException::SCRIPT_TYPE_ERR);
         }
-        m_data.m_method = FetchUtils::normalizeMethod(init->method());
+        m_data->m_method = FetchUtils::normalizeMethod(init->method());
     }
 
     if (init->hasHeaders()) {
-        m_headers.fill(init->headers());
+        m_headers->fill(init->headers());
     }
 
     // Set body
     if (init->hasBody() && init->body().hasValue()) {
         checkMethodCanHaveBody();
 
-        setBodyInit(init->body().value());
+        m_body->setBodyInit(init->body().value());
     } else {
-        setBodyInit(nullptr);
+        m_body->setBodyInit(nullptr);
     }
 
-    if (!m_contentType->isEmpty() &&
-        !m_headers.noCheckValidHas("content-type")) {
-        m_headers.noCheckValidSet("content-type", CSTR(m_contentType));
+    if (!m_body->contentType()->isEmpty() &&
+        !m_headers->noCheckValidHas("content-type")) {
+        m_headers->noCheckValidSet("content-type", CSTR(m_body->contentType()));
     }
 }
 
 void Request::checkMethodCanHaveBody()
 {
-    if (m_data.m_method->equals("GET") || m_data.m_method->equals("HEAD")) {
+    if (m_data->m_method->equals("GET") || m_data->m_method->equals("HEAD")) {
         throw new DOMException(executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "Request cannot have a body");
@@ -287,17 +289,17 @@ Request* Request::clone()
 
 Headers* Request::headers()
 {
-    return &m_headers;
+    return m_headers;
 }
 
 String* Request::method()
 {
-    return m_data.m_method;
+    return m_data->m_method;
 }
 
 String* Request::url()
 {
-    return m_data.m_url->urlString();
+    return m_data->m_url->urlString();
 }
 
 String* Request::destination()
@@ -307,7 +309,7 @@ String* Request::destination()
 
 String* Request::referrer()
 {
-    auto referrerString = m_data.m_referrer->urlString();
+    auto referrerString = m_data->m_referrer->urlString();
     if (referrerString->equals("no-referrer") ||
         referrerString->equals("about:blank")) {
         return String::emptyString;
@@ -315,17 +317,17 @@ String* Request::referrer()
         return referrerString;
     }
 
-    return m_data.m_referrer->serialize();
+    return m_data->m_referrer->serialize();
 }
 
 String* Request::referrerPolicy()
 {
-    return m_data.m_referrer->referrerPolicyString();
+    return m_data->m_referrer->referrerPolicyString();
 }
 
 String* Request::mode()
 {
-    switch (m_data.m_mode) {
+    switch (m_data->m_mode) {
     case RequestMode::Navigate:
         return String::createASCIIString("navigate");
     case RequestMode::SameOrigin:
@@ -344,7 +346,7 @@ String* Request::mode()
 
 String* Request::credentials()
 {
-    switch (m_data.m_credentials) {
+    switch (m_data->m_credentials) {
     case RequestCredentials::Omit:
         return String::createASCIIString("omit");
     case RequestCredentials::SameOrigin:
@@ -361,7 +363,7 @@ String* Request::credentials()
 
 String* Request::cache()
 {
-    switch (m_data.m_cache) {
+    switch (m_data->m_cache) {
     case RequestCache::Default:
         return String::createASCIIString("default");
     case RequestCache::NoStore:
@@ -384,7 +386,7 @@ String* Request::cache()
 
 String* Request::redirect()
 {
-    switch (m_data.m_redirect) {
+    switch (m_data->m_redirect) {
     case RequestRedirect::Follow:
         return String::createASCIIString("follow");
     case RequestRedirect::Error:
@@ -401,12 +403,12 @@ String* Request::redirect()
 
 String* Request::integrity()
 {
-    return m_data.m_integrity;
+    return m_data->m_integrity;
 }
 
 bool Request::keepalive()
 {
-    return m_data.m_keepalive;
+    return m_data->m_keepalive;
 }
 
 bool Request::isReloadNavigation()

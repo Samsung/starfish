@@ -280,13 +280,6 @@ public:
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
-    static WebContainer* CreateGL(
-        unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onMakeCurrent,
-        const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onSwapBuffers,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID);
     static WebContainer* CreateGL(const WebContainerArguments& args,
                                   const RendererGLConfiguration& config);
 

@@ -29,12 +29,12 @@ namespace Starfish {
 
 Response::Response(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , Body(executionContext)
     , m_executionContext(executionContext)
-    , m_headers(Headers(executionContext))
+    , m_headers(new Headers(executionContext))
     , m_responseData(new ResponseData())
+    , m_body(new Body(executionContext))
 {
-    m_headers.setGuard(Guard::Response);
+    m_headers->setGuard(Guard::Response);
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -48,12 +48,12 @@ Response::Response(ExecutionContext* executionContext)
 
 Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
     : ScriptWrappable(this)
-    , Body(executionContext, body)
     , m_executionContext(executionContext)
-    , m_headers(Headers(executionContext))
+    , m_headers(new Headers(executionContext))
     , m_responseData(new ResponseData())
+    , m_body(new Body(executionContext))
 {
-    m_headers.setGuard(Guard::Response);
+    m_headers->setGuard(Guard::Response);
     handleBodyInit(body);
     setStatusText(String::createASCIIString("OK"));
 
@@ -71,12 +71,12 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
 Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
                    ResponseInit& init)
     : ScriptWrappable(this)
-    , Body(executionContext, body)
     , m_executionContext(executionContext)
-    , m_headers(Headers(executionContext))
+    , m_headers(new Headers(executionContext))
     , m_responseData(new ResponseData())
+    , m_body(new Body(executionContext, body))
 {
-    m_headers.setGuard(Guard::Response);
+    m_headers->setGuard(Guard::Response);
 
     if (init.status() < 200 || init.status() > 599) {
         throw new DOMException(executionContext,
@@ -92,12 +92,12 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
     setStatusText(init.statusText());
 
     if (init.hasHeaders() && !isNullOrUndefinedScriptValue(init.headers())) {
-        m_headers.fill(init.headers());
+        m_headers->fill(init.headers());
     }
 
     handleBodyInit(body);
 
-    setMimeType(m_headers.extractMIMEType());
+    setMimeType(m_headers->extractMIMEType());
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -118,7 +118,7 @@ Response::~Response()
 
 ScriptBindingInstance* Response::scriptBindingInstance()
 {
-    return executionContext()->scriptBindingInstance();
+    return m_body->executionContext()->scriptBindingInstance();
 }
 
 void Response::handleBodyInit(Nullable<BodyInit>& body)
@@ -130,11 +130,11 @@ void Response::handleBodyInit(Nullable<BodyInit>& body)
                                    DOMException::Code::SCRIPT_TYPE_ERR);
         }
 
-        setBodyInit(body.getValue());
+        m_body->setBodyInit(body.getValue());
 
-        if (m_headers.noCheckValidHas("content-type") == false) {
-            m_headers.noCheckValidSet("content-type",
-                                      m_contentType->toUTF8NonGCString());
+        if (m_headers->noCheckValidHas("content-type") == false) {
+            m_headers->noCheckValidSet(
+                "content-type", m_body->contentType()->toUTF8NonGCString());
         }
     }
 }
@@ -161,7 +161,7 @@ Response* Response::error(ExecutionContext* executionContext)
     response->setStatus(0);
     response->setStatusText(String::emptyString);
     response->setType(ResponseType::Error);
-    response->m_bodyInit = nullptr;
+    response->m_body->setBodyInit(nullptr);
     response->headers()->setGuard(Guard::Immutable);
 
     return response;
@@ -205,19 +205,19 @@ Response* Response::cloneWithoutBody()
 {
     Response* clonedResponse = new Response(executionContext());
     clonedResponse->copyResponseData(this);
-    clonedResponse->m_headers.copyHeaders(&m_headers);
+    clonedResponse->m_headers->copyHeaders(m_headers);
     return clonedResponse;
 }
 
 Response* Response::clone()
 {
-    if (bodyDisturbedOrLocked()) {
+    if (m_body->bodyDisturbedOrLocked()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
     Response* clonedResponse = cloneWithoutBody();
-    clonedResponse->copyBody(this);
+    clonedResponse->responseBody()->copyBody(m_body);
     return clonedResponse;
 }
 
@@ -314,7 +314,7 @@ void Response::setHeadersFromHeaderMap(const HeaderMap& map)
             String::createASCIIString(pair.first.c_str(), pair.first.length());
         auto value = String::createASCIIString(pair.second.c_str(),
                                                pair.second.length());
-        m_headers.append(key, value);
+        m_headers->append(key, value);
     }
 }
 
