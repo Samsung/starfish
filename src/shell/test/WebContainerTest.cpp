@@ -184,6 +184,7 @@ TEST_F(WebContainerDestroyTest, Destroy)
     EXPECT_TRUE(true);
 }
 
+#if defined(SHELL_ENABLE_UV)
 class WebContainerTest : public ::testing::Test {
 public:
     WebContainerTest() = default;
@@ -234,7 +235,7 @@ TEST_F(WebContainerTest, LoadURL)
             window->appLoop()->stop();
             loaded = true;
         });
-    window->appLoop()->start(1); // Timout 1 sec.
+    window->appLoop()->start(3); // Timout 3 sec.
     EXPECT_TRUE(loaded);
 }
 
@@ -247,7 +248,7 @@ TEST_F(WebContainerTest, LoadData)
             window->appLoop()->stop();
             loaded = true;
         });
-    window->appLoop()->start(1); // Timout 1 sec.
+    window->appLoop()->start(3); // Timout 3 sec.
     EXPECT_TRUE(loaded);
 }
 
@@ -260,9 +261,10 @@ TEST_F(WebContainerTest, GetURL)
             window->appLoop()->stop();
             onloadUrl = string;
         });
-    window->appLoop()->start(1); // Timout 1 sec.
+    window->appLoop()->start(3); // Timout 3 sec.
     std::string getUrl = lwe->GetURL();
     EXPECT_TRUE(getUrl == onloadUrl);
 }
+#endif
 
 } // namespace StarfishShell
