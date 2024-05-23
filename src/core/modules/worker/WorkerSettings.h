@@ -33,6 +33,8 @@ public:
     WorkerSettings();
     WorkerSettings(const std::string& dataDirectoryPath);
 
+    ~WorkerSettings();
+
     void setDataDirectoryPath(const std::string& path);
     const std::string dataDirectoryPath()
     {

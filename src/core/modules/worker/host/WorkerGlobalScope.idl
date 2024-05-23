@@ -11,7 +11,7 @@ interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerNavigator navigator;
   [RaisesException] void importScripts(USVString... urls);
 
-  [Unimplemented] attribute EventHandler onerror;
+  attribute EventHandler onerror;
   [Unimplemented] attribute EventHandler onlanguagechange;
   [Unimplemented] attribute EventHandler onoffline;
   [Unimplemented] attribute EventHandler ononline;

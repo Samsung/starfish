@@ -29,7 +29,7 @@ std::string WorkerSettings::getDefaultDataDirectoryPath()
 {
     std::string dataDirectoryPath;
 
-    const char *homeDirectoryPath = getenv("HOME");
+    const char* homeDirectoryPath = getenv("HOME");
     if (!homeDirectoryPath || strlen(homeDirectoryPath) == 0) {
         dataDirectoryPath = "/tmp";
     } else {
@@ -43,19 +43,29 @@ std::string WorkerSettings::getDefaultDataDirectoryPath()
 }
 
 WorkerSettings::WorkerSettings()
-    : m_dataDirectoryPath(getDefaultDataDirectoryPath())
+    : WorkerSettings(getDefaultDataDirectoryPath())
 {
 }
 
-WorkerSettings::WorkerSettings(const std::string &dataDirectoryPath)
+WorkerSettings::WorkerSettings(const std::string& dataDirectoryPath)
     : m_dataDirectoryPath(dataDirectoryPath)
 {
     if (m_dataDirectoryPath.empty()) {
         m_dataDirectoryPath = getDefaultDataDirectoryPath();
     }
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            WorkerSettings* self = castTo<WorkerSettings*>(obj);
+            self->~WorkerSettings();
+        },
+        NULL, NULL, NULL);
 }
 
-void WorkerSettings::setDataDirectoryPath(const std::string &path)
+WorkerSettings::~WorkerSettings() = default;
+
+void WorkerSettings::setDataDirectoryPath(const std::string& path)
 {
     if (m_dataDirectoryPath == path) {
         return;

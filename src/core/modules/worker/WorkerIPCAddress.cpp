@@ -33,7 +33,16 @@ WorkerIPCAddress::WorkerIPCAddress(WorkerSettings* settings,
     : m_workerSettings(settings)
     , m_resourceDirPath(resourceDirPath)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            WorkerIPCAddress* self = castTo<WorkerIPCAddress*>(obj);
+            self->~WorkerIPCAddress();
+        },
+        NULL, NULL, NULL);
 }
+
+WorkerIPCAddress::~WorkerIPCAddress() = default;
 
 const std::string WorkerIPCAddress::getIPCHandlePath(const std::string& last)
 {

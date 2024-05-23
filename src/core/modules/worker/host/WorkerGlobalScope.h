@@ -140,6 +140,12 @@ public:
     CustomStorage* workerStorage();
     void initCacheStorage();
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(error);
+#undef VIRTUAL
+#undef OVERRIDE
+
 protected:
     WorkerGlobalScope(WebWorker* webWorker);
 

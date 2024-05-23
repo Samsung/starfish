@@ -25,6 +25,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/Worker.h"
 #include "core/modules/worker/WorkerThread.h"
+#include "core/modules/worker/WorkerHostProxy.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerObjectProxy.h"
 
@@ -35,7 +36,7 @@ WorkerObjectProxy::WorkerObjectProxy(ExecutionContext* executionContext,
     : WorkerProxy(executionContext, worker->workerThread())
     , m_workerObject(worker)
 {
-    setEntangledEventTarget(m_workerObject);
+    entangleTarget(m_workerObject, m_workerObject->workerHostProxy());
 
     addChildWorker();
 }
@@ -48,11 +49,6 @@ MessageLoop* WorkerObjectProxy::targetMessageLoop()
 ExecutionContext* WorkerObjectProxy::targetExecutionContext()
 {
     return m_workerObject->executionContext();
-}
-
-bool WorkerObjectProxy::isTargetClosed()
-{
-    return m_workerObject->wasTerminated();
 }
 
 String* WorkerObjectProxy::workerName() const
@@ -68,6 +64,8 @@ void WorkerObjectProxy::postSerializedMessage(
 
 void WorkerObjectProxy::terminateWorker()
 {
+    close();
+
     postTask(
         [](void* data) {
             auto* workerObjectProxy = static_cast<WorkerObjectProxy*>(data);
@@ -101,10 +99,12 @@ void WorkerObjectProxy::removeChildWorker()
 {
     Nullable<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
     if (parent.hasValue()) {
-        parent->asDedicatedWorkerGlobalScope()
-            ->workerObjectProxy()
-            ->workerThread()
-            ->removeChildThread(workerThread());
+        if (!parent->asDedicatedWorkerGlobalScope()->isClosing()) {
+            parent->asDedicatedWorkerGlobalScope()
+                ->workerObjectProxy()
+                ->workerThread()
+                ->removeChildThread(workerThread());
+        }
     }
 }
 

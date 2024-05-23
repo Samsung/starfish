@@ -53,12 +53,6 @@ ExecutionContext* WorkerHostProxy::targetExecutionContext()
     return m_workerHost->globalScope()->executionContext();
 }
 
-bool WorkerHostProxy::isTargetClosed()
-{
-    STARFISH_ASSERT(m_workerHost);
-    return m_workerHost->globalScope()->isClosing();
-}
-
 void WorkerHostProxy::onScriptLoadFinished()
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());

@@ -39,31 +39,30 @@ public:
         WorkerProxy* WorkerProxy,
         SerializeWithTransferResult* serializedMessage);
 
-    WorkerProxy(ExecutionContext* executionContext, WorkerThread* workerThread);
-
     virtual void terminate();
+
+    void entangleTarget(EventTarget* eventTarget, WorkerProxy* proxy);
 
     void postTask(PostTask task, void* data);
 
     void postMessage(ScriptValue message,
                      const GCAtomicVector<ScriptObject>& transfer);
 
+    void close();
+
     DEFINE_GETTER(bool, wasTerminated);
     DEFINE_GETTER(ExecutionContext*, ownerExecutionContext);
     DEFINE_GETTER(WorkerThread*, workerThread);
-    DEFINE_GETTER_SETTER(EventTarget*, entangledEventTarget,
-                         EntangledEventTarget);
+    DEFINE_GETTER(bool, isClosed);
+
+    EventTarget* entangledEventTarget() const;
+    WorkerProxy* entangledWorkerProxy() const;
 
 protected:
-    ExecutionContext* m_ownerExecutionContext;
-    WorkerThread* m_workerThread;
-    EventTarget* m_entangledEventTarget;
-    bool m_wasTerminated;
-    std::vector<SerializeWithTransferResult*> m_serializedMessages;
+    WorkerProxy(ExecutionContext* executionContext, WorkerThread* workerThread);
 
     virtual MessageLoop* targetMessageLoop() = 0;
     virtual ExecutionContext* targetExecutionContext() = 0;
-    virtual bool isTargetClosed() = 0;
 
     virtual void postSerializedMessage(
         SerializeWithTransferResult* serializedMessage) = 0;
@@ -77,6 +76,14 @@ protected:
     void clearSerializedMessages();
 
     void clearPendingPostTask();
+
+    ExecutionContext* m_ownerExecutionContext;
+    WorkerThread* m_workerThread;
+    EventTarget* m_entangledEventTarget;
+    WorkerProxy* m_entangledWorkerProxy;
+    bool m_wasTerminated;
+    std::atomic_bool m_isClosed;
+    GCAtomicVector<SerializeWithTransferResult*> m_serializedMessages;
 };
 
 } // namespace Starfish

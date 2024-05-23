@@ -144,18 +144,17 @@ void* WorkerThread::workerMainThreadWork(void* data,
 
 void WorkerThread::start()
 {
-    Locker<Mutex> locker(*m_mutex);
-
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
-    m_mainThread->run(m_messageLoop, workerMainThreadWork, this);
-
     m_state = State::Running;
+
+    Locker<Mutex> locker(*m_mutex);
+
+    m_mainThread->run(m_messageLoop, workerMainThreadWork, this);
 }
 
 void WorkerThread::terminate()
 {
-    Locker<Mutex> locker(*m_mutex);
     TRACE(WORKER);
 
     if (m_state != State::Running) {
@@ -163,6 +162,8 @@ void WorkerThread::terminate()
     }
 
     m_state = State::Terminated;
+
+    Locker<Mutex> locker(*m_mutex);
 
     stopWorkerRunLoop();
     m_mainThread->stop();
