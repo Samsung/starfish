@@ -29,12 +29,10 @@ class WindowEFLHeadless final : public Window {
 public:
     WindowEFLHeadless()
     {
-        m_appLoop = AppLoop::create();
     }
 
     ~WindowEFLHeadless()
     {
-        m_appLoop->deinit();
     }
 
     bool init(const char* appName, int width, int height) override

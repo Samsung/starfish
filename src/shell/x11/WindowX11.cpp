@@ -291,12 +291,10 @@ private:
 
 WindowX11::WindowX11()
 {
-    m_appLoop = AppLoop::create();
 }
 
 WindowX11::~WindowX11()
 {
-    m_appLoop->deinit();
 }
 
 bool WindowX11::init(const char* appName, int width, int height)
