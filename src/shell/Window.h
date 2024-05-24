@@ -49,7 +49,11 @@ public:
     static LWE::KeyValue convertKeyCode(const unsigned long key, INPUT action,
                                         unsigned mods);
 
-    virtual ~Window() = default;
+    virtual ~Window()
+    {
+        m_appLoop->deinit();
+        m_appLoop = nullptr;
+    }
 
     void setMotionEventHandler(const MotionEventHandler& handler)
     {
@@ -114,7 +118,10 @@ public:
     }
 
 protected:
-    Window() = default;
+    Window()
+    {
+        m_appLoop = AppLoop::create();
+    }
 
     MotionEventHandler m_motionEventHandler;
     ButtonEventHandler m_buttonEventHandler;
