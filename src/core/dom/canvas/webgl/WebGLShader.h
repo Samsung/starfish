@@ -17,21 +17,21 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLProgram__
-#define __StarfishWebGLProgram__
+#ifndef __StarfishWebGLShader__
+#define __StarfishWebGLShader__
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "core/dom/canvas/WebGLObject.h"
+#include "core/dom/canvas/webgl/WebGLObject.h"
 
 namespace Starfish {
 
-class WebGLProgram : public WebGLObject {
+class WebGLShader : public WebGLObject {
 public:
-    WebGLProgram(ScriptBindingInstance* instance,
-                 WebGLRenderingContext* context, GLuint object);
+    WebGLShader(ScriptBindingInstance* instance, WebGLRenderingContext* context,
+                GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
-    bool isWebGLProgram() const override;
+    bool isWebGLShader() const override;
 };
 } // namespace Starfish
 

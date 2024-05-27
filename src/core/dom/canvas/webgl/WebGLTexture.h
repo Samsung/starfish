@@ -17,34 +17,23 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLUtils__
-#define __StarfishWebGLUtils__
+#ifndef __StarfishWebGLTexture__
+#define __StarfishWebGLTexture__
 
-#include <string>
-#include "core/util/String.h"
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
+
+#include "core/dom/canvas/webgl/WebGLObject.h"
 
 namespace Starfish {
 
-struct CaseInsensitiveHash {
-    size_t operator()(const std::string& str) const
-    {
-        size_t hash = 0;
-        for (unsigned char c : str) {
-            hash = hash * 31 + std::tolower(c);
-        }
-        return hash;
-    }
+class WebGLTexture : public WebGLObject {
+public:
+    WebGLTexture(ScriptBindingInstance* instance,
+                 WebGLRenderingContext* context, GLuint object);
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    bool isWebGLTexture() const override;
 };
-
-struct CaseInsensitiveEqual {
-    bool operator()(const std::string& a, const std::string& b) const
-    {
-        return StringUtils::equalsIgnoreCase(a, b);
-    }
-};
-
-const char* webglErrorString(unsigned int code);
-
 } // namespace Starfish
 
+#endif
 #endif

@@ -23,8 +23,8 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "platform/canvas/webgl/GLUtil.h"
-#include "platform/canvas/webgl/GLContext.h"
+#include "core/dom/canvas/webgl/gl/FramebufferTexture.h"
+#include "core/dom/canvas/webgl/gl/GLContext.h"
 #include <memory>
 
 namespace Starfish {

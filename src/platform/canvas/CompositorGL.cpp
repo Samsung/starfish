@@ -32,7 +32,7 @@
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/CompositorFactory.h"
-#include "platform/canvas/webgl/SurfaceCreationScope.h"
+#include "core/dom/canvas/webgl/gl/SurfaceCreationScope.h"
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>

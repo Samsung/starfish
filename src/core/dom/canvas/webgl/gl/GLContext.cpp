@@ -21,7 +21,7 @@
 
 #if defined(STARFISH_ENABLE_WEBGL)
 
-#include "platform/canvas/webgl/GLContext.h"
+#include "core/dom/canvas/webgl/gl/GLContext.h"
 #include "core/modules/renderer/Renderer.h"
 
 namespace Starfish {

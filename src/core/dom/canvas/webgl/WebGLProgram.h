@@ -17,24 +17,23 @@
  *  USA
  */
 
-#include "StarfishBase.h"
-#include "platform/canvas/webgl/SurfaceCreationScope.h"
+#ifndef __StarfishWebGLProgram__
+#define __StarfishWebGLProgram__
+
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
+
+#include "core/dom/canvas/webgl/WebGLObject.h"
 
 namespace Starfish {
 
-std::shared_ptr<TextureCreationDelegate> SurfaceCreationScope::m_delegate;
-
-SurfaceCreationScope::SurfaceCreationScope(
-    std::shared_ptr<TextureCreationDelegate> delegate)
-{
-    STARFISH_ASSERT(m_delegate == nullptr);
-    STARFISH_ASSERT(delegate != nullptr);
-    m_delegate = delegate;
-}
-
-SurfaceCreationScope::~SurfaceCreationScope()
-{
-    m_delegate.reset();
-}
-
+class WebGLProgram : public WebGLObject {
+public:
+    WebGLProgram(ScriptBindingInstance* instance,
+                 WebGLRenderingContext* context, GLuint object);
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    bool isWebGLProgram() const override;
+};
 } // namespace Starfish
+
+#endif
+#endif

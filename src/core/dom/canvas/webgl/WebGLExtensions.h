@@ -23,7 +23,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
-#include "core/dom/canvas/WebGLUtils.h"
+#include "core/dom/canvas/webgl/WebGLUtils.h"
 #include "StarfishBase.h" // Optional, GCVector
 
 namespace Escargot {

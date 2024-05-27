@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,21 +17,24 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLTexture__
-#define __StarfishWebGLTexture__
+#ifndef __StarfishWebGLFramebuffer__
+#define __StarfishWebGLFramebuffer__
 
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "core/dom/canvas/WebGLObject.h"
+#include "core/dom/canvas/webgl/WebGLObject.h"
 
 namespace Starfish {
 
-class WebGLTexture : public WebGLObject {
+class WebGLFramebuffer : public WebGLObject {
 public:
-    WebGLTexture(ScriptBindingInstance* instance,
-                 WebGLRenderingContext* context, GLuint object);
+    WebGLFramebuffer(ScriptBindingInstance* instance,
+                     WebGLRenderingContext* context, GLuint object)
+        : WebGLObject(instance, context, object)
+    {
+    }
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
-    bool isWebGLTexture() const override;
+    bool isWebGLFramebuffer() const override;
 };
 } // namespace Starfish
 
