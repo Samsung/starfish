@@ -563,6 +563,14 @@ ScriptValue createScriptValue(ScriptUint8ClampedArray array)
     return array;
 }
 
+ScriptValue createScriptValue(bool value) {
+    return ValueRef::create(value);
+}
+
+ScriptValue createScriptValue(int32_t value) {
+    return ValueRef::create(value);
+}
+
 ScriptValue createScriptValue(uint32_t value)
 {
     return ValueRef::create((unsigned long)value);

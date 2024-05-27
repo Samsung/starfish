@@ -17,43 +17,31 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-#ifndef __StarfishIPCConnection__
-#define __StarfishIPCConnection__
+#if defined(STARFISH_ENABLE_SHARED_WORKER) && \
+    !defined(__StarfishIPCMessagePort__)
+#define __StarfishIPCMessagePort__
 
-#include "core/modules/worker/util/network/Connection.h"
+#include "core/dom/MessagePort.h"
 
 namespace Starfish {
 
-class PerProcess;
+class ExecutionContext;
+class IPCConnection;
 
-class IPCConnection : public Connection {
+class IPCMessagePort final : public MessagePort {
 public:
-    enum class State { None, Start, Stop };
+    IPCMessagePort(ExecutionContext* executionContext,
+                   IPCConnection* connection);
+    IPCMessagePort(ExecutionContext* executionContext);
 
-    bool bind();
+    void registerDispatchMessageTask(
+        SerializeWithTransferResult* serializedMessage) override;
 
-    bool connect();
+    DEFINE_GETTER_SETTER(IPCConnection*, connection, Connection);
 
-    void close();
-
-    bool isRunning();
-
-    DEFINE_GETTER(const std::string&, ipcAddress);
-
-protected:
-    IPCConnection(PerProcess* perProcess, const std::string& ipcAddress,
-                  int protocol);
-
-    virtual ~IPCConnection();
-
-    PerProcess* m_perProcess;
-    const std::string m_ipcAddress;
-    State m_state;
-    int m_endpointId;
+private:
+    IPCConnection* m_connection;
 };
 
 } // namespace Starfish
-
-#endif
 #endif

@@ -18,13 +18,18 @@
  */
 
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
-#ifndef __StarfishIPCMessageSerializer__
-#define __StarfishIPCMessageSerializer__
+#ifndef __StarfishIPCSerializer__
+#define __StarfishIPCSerializer__
+
+#include "binding/ScriptWrappable.h"
+#include "core/page/Serializer.h"
 
 namespace Starfish {
 
 class IPCBufferWriter;
 class IPCBufferReader;
+class SerializeWithTransferResult;
+class DeserializeWithTransferResult;
 
 enum class IPCMessageTag : char {
     kUndefine = 0,
@@ -74,6 +79,57 @@ public:
 private:
     IPCBufferReader* m_reader;
     std::string m_messageID;
+};
+
+class IPCSerializedVectorData : public SerializedRawScriptValueDataInternal {
+public:
+    IPCSerializedVectorData();
+
+    const char* data() const override
+    {
+        return m_vectorData->data();
+    }
+
+    size_t size() const override
+    {
+        return m_vectorData->size();
+    }
+
+    DEFINE_GETTER(GCVector<char>*, vectorData);
+
+private:
+    GCVector<char>* m_vectorData;
+};
+
+class IPCSerializedData : public SerializedRawScriptValueDataInternal {
+public:
+    IPCSerializedData(const char* data, size_t size);
+
+    const char* data() const override
+    {
+        return m_data;
+    }
+
+    size_t size() const override
+    {
+        return m_size;
+    }
+
+private:
+    const char* m_data;
+    size_t m_size;
+};
+
+class IPCSerializer {
+public:
+    static void serializeWithTransfer(
+        ExecutionContext* executionContext, ScriptValue value,
+        const GCAtomicVector<ScriptObject>& transferValues,
+        SerializeWithTransferResult& result);
+
+    static void deserializeWithTransfer(ExecutionContext* executionContext,
+                                        SerializeWithTransferResult& serialized,
+                                        DeserializeWithTransferResult& result);
 };
 
 } // namespace Starfish

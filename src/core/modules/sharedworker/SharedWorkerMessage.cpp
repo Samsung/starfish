@@ -23,7 +23,7 @@
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/sharedworker/SharedWorker.h"
-#include "core/modules/sharedworker/IPCMessageSerializer.h"
+#include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 

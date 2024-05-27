@@ -45,7 +45,8 @@ public:
         m_innerQueue.clear();
         m_innerQueue.shrink_to_fit();
     }
-    void addTask(MessagePort* target, MessageEvent* event);
+    void addTask(MessagePort* target,
+                 SerializeWithTransferResult* serializedMessage);
     void enableBy(MessagePort* target);
     bool enabled()
     {
@@ -53,11 +54,8 @@ public:
     }
 
 protected:
-    void registerTaskToMessageLoop(MessagePort* target, MessageEvent* event);
-
-protected:
     bool m_enabled;
-    GCVector<MessageEvent*> m_innerQueue;
+    GCVector<SerializeWithTransferResult*> m_innerQueue;
 };
 
 class MessagePort : public EventTarget, public Transferable {
@@ -76,6 +74,9 @@ public:
     virtual void transferReceive(TransferedData* transfered) override;
 
     virtual ExecutionContext* executionContext() const override;
+
+    virtual void registerDispatchMessageTask(
+        SerializeWithTransferResult* serializedMessage);
 
     void postMessage(ScriptValue message);
     void postMessage(ScriptValue message,
@@ -117,13 +118,16 @@ public:
         return m_portMessageQueue;
     }
 
-    void dispatchMessageEvent(MessageEvent* event);
+    void dispatchMessageEvent(SerializeWithTransferResult* serializedMessage);
+
+    DEFINE_GETTER_SETTER(ScriptValueSerializer, serializer, Serializer);
 
 protected:
     ExecutionContext* m_executionContext;
     MessagePort* m_entangledPort;
     bool m_hasBeenShipped;
     PortMessageQueue* m_portMessageQueue;
+    ScriptValueSerializer m_serializer;
 };
 
 class TransferedMessagePort : public TransferedPlatformObjectData {

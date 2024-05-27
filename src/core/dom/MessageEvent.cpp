@@ -43,8 +43,9 @@ MessageEvent::MessageEvent(ExecutionContext* executionContext,
 
     DeserializeWithTransferResult deserializedRecord;
     try {
-        Serializer::deserializeWithTransfer(executionContext, *serializedRecord,
-                                            deserializedRecord);
+        STARFISH_ASSERT(serializedRecord->m_deserializer);
+        serializedRecord->m_deserializer(executionContext, *serializedRecord,
+                                         deserializedRecord);
     } catch (DOMException* exc) {
         setType(staticStrings->m_messageerror.localName());
         return;

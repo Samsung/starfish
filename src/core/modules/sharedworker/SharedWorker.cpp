@@ -23,10 +23,11 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/MessagePort.h"
 #include "core/dom/WebOrigin.h"
 #include "core/storage/StorageInternal.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerKey.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 
@@ -60,7 +61,9 @@ SharedWorker::SharedWorker(ExecutionContext* executionContext,
     // ID to distinguish SharedWorker object in the client process.
     m_clientID = hash(SharedWorkerClientID::generate());
 
-    MessagePort::entangle(m_messagePort, new MessagePort(m_executionContext));
+    m_messagePort->setSerializer(IPCSerializer::serializeWithTransfer);
+    MessagePort::entangle(m_messagePort,
+                          new IPCMessagePort(m_executionContext));
 
     SharedWorkerProcessManager::instance()->requestConnection(this);
 }
