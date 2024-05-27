@@ -588,6 +588,9 @@ public:
     QualifiedName m_statechange;
     QualifiedName m_updatefound;
 #endif
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    QualifiedName m_connect;
+#endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     QualifiedName m_fetch;
 #endif

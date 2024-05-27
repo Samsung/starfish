@@ -46,8 +46,6 @@ WorkerClientManager::WorkerClientManager()
 
 void WorkerClientManager::destroy()
 {
-    WorkerManager::destroy();
-
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
     if (m_sharedWorkerProcessManager) {
         m_sharedWorkerProcessManager->destroy();
@@ -61,6 +59,8 @@ void WorkerClientManager::destroy()
         m_serviceWorkerProcessManager = nullptr;
     }
 #endif
+
+    WorkerManager::destroy();
 }
 
 } // namespace Starfish

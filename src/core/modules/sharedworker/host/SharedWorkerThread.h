@@ -49,12 +49,13 @@ public:
 
     void requestSharedWorkerConnection(MessagePortConnectionInfo* info);
 
-    DEFINE_GETTER(SharedWorkerGlobalScope*, globalScope);
+    void createdWorkerGlobalScope(SharedWorkerGlobalScope* globalScope);
 
 private:
     SharedWorkerGlobalScope* m_globalScope;
     const std::string m_name;
     uint32_t m_initialIdentifier;
+    GCAtomicVector<MessagePortConnectionInfo*> m_pendingConnectionInfos;
 };
 
 } // namespace Starfish

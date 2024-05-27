@@ -25,7 +25,9 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/WebOrigin.h"
 #include "core/storage/StorageInternal.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerKey.h"
@@ -66,6 +68,18 @@ SharedWorker::SharedWorker(ExecutionContext* executionContext,
                           new IPCMessagePort(m_executionContext));
 
     SharedWorkerProcessManager::instance()->requestConnection(this);
+}
+
+void SharedWorker::didSharedWorkerConnected(
+    SharedWorkerMessagePortConnection* connection)
+{
+    TRACE(SHAREDWORKER, connection->clientID());
+
+    reinterpret_cast<IPCMessagePort*>(m_messagePort->entangledPort())
+        ->setConnection(connection);
+
+    m_messagePort->start();
+    m_messagePort->entangledPort()->start();
 }
 
 MessagePort* SharedWorker::port() const

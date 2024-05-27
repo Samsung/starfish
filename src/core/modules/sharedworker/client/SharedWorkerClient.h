@@ -45,7 +45,14 @@ public:
 private:
     void initMessageReceiveHandlers();
 
+    void sendMessage(IPCMessage& message);
+
+    void sendPendingMessage();
+
     IPCMessageHandler* m_messageHandler;
+
+    bool m_requestFlag;
+    std::deque<std::pair<void*, size_t>> m_requestMessages;
 };
 
 } // namespace Starfish

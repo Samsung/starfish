@@ -20,13 +20,16 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/MessagePort.h"
+#include "core/dom/MessageEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
+#include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
@@ -128,19 +131,47 @@ void SharedWorkerGlobalScope::requestConnection(MessagePortConnectionInfo* info)
 
     MessagePort* messagePort = new MessagePort(m_executionContext);
 
-    // TODO: entangle target MessagePort and emit onConnectMessage
-
     SharedWorkerMessagePortConnection* connection =
         createMessagePortConnection(info, messagePort);
     connection->bind();
 
+    IPCMessagePort* targetMessagePort =
+        new IPCMessagePort(m_executionContext, connection);
+
+    messagePort->setSerializer(IPCSerializer::serializeWithTransfer);
+    MessagePort::entangle(messagePort, targetMessagePort);
+
+    // dispatch 'connect' event
+    MessageEvent* event = createConnectMessageEvent(messagePort);
+    dispatchEventByUA(event);
+
     SharedWorkerAgent::instance()->didGlobalScopeConnected(this, connection);
+
+    messagePort->start();
+    targetMessagePort->start();
+}
+
+MessageEvent* SharedWorkerGlobalScope::createConnectMessageEvent(
+    MessagePort* messagePort)
+{
+    MessageEvent* event = new MessageEvent(
+        m_executionContext,
+        m_webWorker->starfish()->staticStrings()->m_connect.localName());
+
+    GCVector<MessagePort*> ports;
+    ports.push_back(messagePort);
+    event->setPorts(ports);
+    event->setSource(MessageEventSource::createMessagePort(messagePort));
+
+    return event;
 }
 
 ScriptBindingInstance* SharedWorkerGlobalScope::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
+
+DEFINE_EVENT_LISTENER(SharedWorkerGlobalScope, connect);
 
 } // namespace Starfish
 

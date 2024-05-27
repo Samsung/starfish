@@ -28,6 +28,7 @@ namespace Starfish {
 
 class ExecutionContext;
 class MessagePort;
+class SharedWorkerMessagePortConnection;
 
 class SharedWorker : public AbstractWorker {
 public:
@@ -41,6 +42,9 @@ public:
     {
         return m_executionContext;
     }
+
+    void didSharedWorkerConnected(
+        SharedWorkerMessagePortConnection* connection);
 
     MessagePort* port() const;
 

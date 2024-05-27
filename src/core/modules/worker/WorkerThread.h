@@ -76,6 +76,7 @@ public:
     ResourceURL* createScriptURL();
 
     DEFINE_GETTER(Starfish*, starfish);
+    DEFINE_GETTER(MessageLoop*, messageLoop);
     DEFINE_GETTER(RunLoop*, runLoop);
     DEFINE_GETTER(GlobalScope*, workerMessageLoopGlobalScope);
     DEFINE_GETTER(const WorkerHostInitData&, workerHostInitData);
