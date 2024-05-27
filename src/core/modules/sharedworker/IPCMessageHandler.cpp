@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/util/network/Connection.h"
-#include "core/modules/sharedworker/IPCMessageSerializer.h"
+#include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/IPCMessageHandler.h"
 
 namespace Starfish {

@@ -36,6 +36,7 @@ MessagePort::MessagePort(ExecutionContext* executionContext)
     , m_entangledPort(nullptr)
     , m_hasBeenShipped(false)
     , m_portMessageQueue(new PortMessageQueue())
+    , m_serializer(Serializer::serializeWithTransfer)
 {
 }
 
@@ -129,8 +130,7 @@ void MessagePort::postMessage(ScriptValue message,
     SerializeWithTransferResult* serializedRecord =
         new (GC) SerializeWithTransferResult();
     // TODO use memoryMap to check targetPort has been transfered
-    Serializer::serializeWithTransfer(executionContext(), message, transfer,
-                                      *serializedRecord);
+    m_serializer(executionContext(), message, transfer, *serializedRecord);
     // If there is no targetPort (i.e. if this MessagePort is not entangled),
     // or if doomed is true, then return.
     if (!targetPort || doomed) {
@@ -144,12 +144,27 @@ void MessagePort::postMessage(ScriptValue message,
             SerializeWithTransferResult* serializedRecord =
                 (SerializeWithTransferResult*)data1;
 
-            MessageEvent* e =
-                new MessageEvent(self->executionContext(), serializedRecord);
-
-            self->entangledPort()->dispatchMessageEvent(e);
+            self->entangledPort()->dispatchMessageEvent(serializedRecord);
         },
         this, serializedRecord);
+}
+
+void MessagePort::registerDispatchMessageTask(
+    SerializeWithTransferResult* serializedMessage)
+{
+    executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext()->globalScope(),
+        [](size_t, void* data, void* data1) {
+            MessagePort* self = static_cast<MessagePort*>(data);
+            SerializeWithTransferResult* serializedMessage =
+                static_cast<SerializeWithTransferResult*>(data1);
+
+            MessageEvent* event =
+                new MessageEvent(self->executionContext(), serializedMessage);
+
+            self->dispatchEventByUA(event);
+        },
+        this, serializedMessage);
 }
 
 void MessagePort::start()
@@ -199,17 +214,19 @@ void MessagePort::setOnmessageerror(EventListener* listener)
     }
 }
 
-void MessagePort::dispatchMessageEvent(MessageEvent* event)
+void MessagePort::dispatchMessageEvent(
+    SerializeWithTransferResult* serializedMessage)
 {
-    m_portMessageQueue->addTask(this, event);
+    m_portMessageQueue->addTask(this, serializedMessage);
 }
 
-void PortMessageQueue::addTask(MessagePort* target, MessageEvent* event)
+void PortMessageQueue::addTask(MessagePort* target,
+                               SerializeWithTransferResult* serializedMessage)
 {
     if (m_enabled) {
-        registerTaskToMessageLoop(target, event);
+        target->registerDispatchMessageTask(serializedMessage);
     } else {
-        m_innerQueue.push_back(event);
+        m_innerQueue.push_back(serializedMessage);
     }
 }
 
@@ -218,7 +235,7 @@ void PortMessageQueue::enableBy(MessagePort* target)
     if (!m_enabled) {
         m_enabled = true;
         for (size_t i = 0; i < m_innerQueue.size(); i++) {
-            registerTaskToMessageLoop(target, m_innerQueue[i]);
+            target->registerDispatchMessageTask(m_innerQueue[i]);
         }
         clearAllTasks();
 #ifndef NDEBUG
@@ -226,20 +243,6 @@ void PortMessageQueue::enableBy(MessagePort* target)
         STARFISH_ASSERT(m_innerQueue.size() == 0);
 #endif
     }
-}
-
-void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
-                                                 MessageEvent* event)
-{
-    STARFISH_ASSERT(m_enabled);
-    target->executionContext()->webBase()->messageLoop()->addIdler(
-        target->executionContext()->globalScope(),
-        [](size_t, void* data, void* data1) {
-            MessagePort* target = (MessagePort*)data;
-            MessageEvent* event = (MessageEvent*)data1;
-            target->dispatchEventByUA(event);
-        },
-        target, event);
 }
 
 ScriptWrappable* TransferedMessagePort::createTransferReceivingInstance(

@@ -136,6 +136,24 @@ void* SerializedTypedData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void* SerializedRawScriptValueData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SerializedRawScriptValueData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedRawScriptValueData)] = {
+            0
+        };
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(SerializedRawScriptValueData, m_internal));
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(SerializedRawScriptValueData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 SerializedArrayBufferData::SerializedArrayBufferData(
     ExecutionContext* executionContext, ScriptArrayBuffer arrayBuffer)
 {
@@ -225,6 +243,12 @@ ScriptArrayBufferView SerializedArrayBufferViewData::createDeserializedValue(
                                m_arrayLength);
 
     return arrayBufferView;
+}
+
+SerializedRawScriptValueData::SerializedRawScriptValueData(
+    SerializedRawScriptValueDataInternal* internal)
+    : m_internal(internal)
+{
 }
 
 static SerializedTypedData* serializeInternal(
@@ -670,6 +694,7 @@ void Serializer::serializeWithTransfer(
         }
     }
     result.m_serialized = serialized;
+    result.m_deserializer = Serializer::deserializeWithTransfer;
 }
 
 void Serializer::deserializeWithTransfer(

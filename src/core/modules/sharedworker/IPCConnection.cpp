@@ -99,6 +99,11 @@ void IPCConnection::close()
     m_state = State::Stop;
 }
 
+bool IPCConnection::isRunning()
+{
+    return m_state == State::Start;
+}
+
 } // namespace Starfish
 
 #endif

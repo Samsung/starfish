@@ -37,6 +37,8 @@ public:
 
     void close();
 
+    bool isRunning();
+
     DEFINE_GETTER(const std::string&, ipcAddress);
 
 protected:

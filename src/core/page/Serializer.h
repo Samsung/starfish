@@ -39,11 +39,23 @@ class SerializedObjectData;
 class SerializedTypedData;
 class SerializedArrayBufferData;
 class SerializedArrayBufferViewData;
+class SerializedRawScriptValueData;
+class SerializeWithTransferResult;
+class DeserializeWithTransferResult;
 class TransferedPlatformObjectData;
 class TransferedTypedData;
 
 typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
 typedef GCUnorderedMap<void*, ScriptValue> DeserializingMap;
+
+using ScriptValueSerializer = void (*)(ExecutionContext*, ScriptValue,
+                                       const GCAtomicVector<ScriptObject>&,
+                                       SerializeWithTransferResult&);
+
+using ScriptValueDeserializer = void (*)(ExecutionContext*,
+                                         SerializeWithTransferResult&,
+                                         DeserializeWithTransferResult&);
+
 class Serializable {
 public:
     virtual ~Serializable()
@@ -99,6 +111,11 @@ public:
         return false;
     }
 
+    virtual bool isSerializedRawScriptValueData() const
+    {
+        return false;
+    }
+
     SerializedPrimitiveValueData* asSerializedPrimitiveValueData() const
     {
         STARFISH_ASSERT(isSerializedValueData());
@@ -145,6 +162,12 @@ public:
     {
         STARFISH_ASSERT(isSerializedArrayBufferViewData());
         return (SerializedArrayBufferViewData*)this;
+    }
+
+    SerializedRawScriptValueData* asSerializedRawScriptValueData() const
+    {
+        STARFISH_ASSERT(isSerializedRawScriptValueData());
+        return (SerializedRawScriptValueData*)this;
     }
 };
 
@@ -394,6 +417,36 @@ protected:
     size_t m_arrayLength{ 0 };
 };
 
+// ScriptValue is stored in a char buffer. This is used when transmitting
+// ScriptValue via IPC.
+class SerializedRawScriptValueDataInternal : public gc {
+public:
+    virtual const char* data() const = 0;
+    virtual size_t size() const = 0;
+};
+
+class SerializedRawScriptValueData : public SerializedData {
+public:
+    SerializedRawScriptValueData(
+        SerializedRawScriptValueDataInternal* internal);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    bool isSerializedRawScriptValueData() const override
+    {
+        return true;
+    }
+
+    SerializedRawScriptValueDataInternal* internal()
+    {
+        return m_internal;
+    }
+
+protected:
+    SerializedRawScriptValueDataInternal* m_internal;
+};
+
 class SerializedTypedData : public gc {
 public:
     SerializedTypedData(uint8_t type, SerializedData* data)
@@ -517,6 +570,11 @@ public:
         return m_type == Object;
     }
 
+    bool isRawScriptValue() const
+    {
+        return m_type == RawScriptValue;
+    }
+
     SerializedData* data() const
     {
         return m_data;
@@ -549,6 +607,7 @@ public:
         Array,
         PlatformObject,
         Object,
+        RawScriptValue,
     };
 
 protected:
@@ -636,8 +695,9 @@ protected:
 
 class SerializeWithTransferResult : public gc {
 public:
-    SerializedTypedData* m_serialized;
+    SerializedTypedData* m_serialized{ nullptr };
     GCVector<TransferedTypedData*> m_serializedTransfer;
+    ScriptValueDeserializer m_deserializer{ nullptr };
 };
 
 class DeserializeWithTransferResult : public gc {
