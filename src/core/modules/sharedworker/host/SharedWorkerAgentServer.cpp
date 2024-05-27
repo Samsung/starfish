@@ -60,6 +60,8 @@ static void onSharedWorkerMessageTest(IPCMessageDeserializer* deserializer)
 {
     SharedWorkerMessage::SharedWorkerMessageTest message;
     message.deserialize(deserializer);
+
+    SharedWorkerAgent::instance()->server()->send("0", 1);
 }
 #endif
 

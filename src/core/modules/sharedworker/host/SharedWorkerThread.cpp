@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
@@ -50,42 +51,78 @@ SharedWorkerThread::~SharedWorkerThread() = default;
 WorkerGlobalScope* SharedWorkerThread::createWorkerGlobalScope(
     WebWorker* webWorker, WorkerHost* workerHost)
 {
-    STARFISH_ASSERT(!m_globalScope);
+    STARFISH_ASSERT(!m_messageLoop->calledOnValidThread());
 
-    m_globalScope = webWorker->createGlobalScope<SharedWorkerGlobalScope>(
-        createScriptURL());
+    SharedWorkerGlobalScope* globalScope =
+        webWorker->createGlobalScope<SharedWorkerGlobalScope>(
+            createScriptURL());
 
-    m_globalScope->initialize(m_name);
+    globalScope->initialize(m_name);
 
     Nullable<MessagePortConnectionInfo*> connectionInfo =
         SharedWorkerAgent::instance()->getConnectionInfo(m_initialIdentifier);
     STARFISH_ASSERT(connectionInfo.hasValue());
 
-    m_globalScope->requestConnection(connectionInfo.getValue());
+    globalScope->requestConnection(connectionInfo.getValue());
 
-    return m_globalScope;
+    connectionInfo->thread->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t handle, void* data, void* data1) {
+            auto* self = static_cast<SharedWorkerThread*>(data);
+            auto* globalScope = static_cast<SharedWorkerGlobalScope*>(data1);
+
+            self->createdWorkerGlobalScope(globalScope);
+        },
+        this, globalScope);
+
+    return globalScope;
 }
 
 void SharedWorkerThread::startWithIdentifier(uint32_t identifier)
 {
     TRACE(SHAREDWORKER, identifier);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
     m_initialIdentifier = identifier;
 
     start();
 }
 
+static void requestConnectionToGlobalScope(SharedWorkerGlobalScope* globalScope,
+                                           void* data)
+{
+    globalScope->requestConnection(
+        static_cast<MessagePortConnectionInfo*>(data));
+}
+
 void SharedWorkerThread::requestSharedWorkerConnection(
     MessagePortConnectionInfo* info)
 {
     TRACE(SHAREDWORKER, info->identifier);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
 
-    m_globalScope->postTask(
-        [](SharedWorkerGlobalScope* globalScope, void* data) {
-            globalScope->requestConnection(
-                static_cast<MessagePortConnectionInfo*>(data));
-        },
-        info);
+    if (!m_globalScope) {
+        m_pendingConnectionInfos.push_back(info);
+        return;
+    }
+
+    m_globalScope->postTask(requestConnectionToGlobalScope, info);
+}
+
+void SharedWorkerThread::createdWorkerGlobalScope(
+    SharedWorkerGlobalScope* globalScope)
+{
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
+
+    STARFISH_ASSERT(!m_globalScope);
+    m_globalScope = globalScope;
+
+    for (const auto& info : m_pendingConnectionInfos) {
+        m_globalScope->postTask(requestConnectionToGlobalScope, info);
+    }
+
+    m_pendingConnectionInfos.clear();
+    m_pendingConnectionInfos.shrink_to_fit();
 }
 
 } // namespace Starfish

@@ -11,5 +11,5 @@
 
     [Unimplemented] undefined close();
 
-    [Unimplemented] attribute EventHandler onconnect;
+    attribute EventHandler onconnect;
 };

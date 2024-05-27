@@ -590,7 +590,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_updatefound = QualifiedName(
         AtomicString::createAtomicString(starfish, "updatefound"));
 #endif
-
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    m_connect =
+        QualifiedName(AtomicString::createAtomicString(starfish, "connect"));
+#endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     m_fetch =
         QualifiedName(AtomicString::createAtomicString(starfish, "fetch"));

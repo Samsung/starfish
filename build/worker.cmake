@@ -194,7 +194,7 @@ FILE (GLOB STARFISH_WORKER_BINDING_SRC
     ${STARFISH_BINDING_GENERATED_DIR}/EventInitBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/RequestOrUSVStringBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/RegistrationOptionsBinding.cpp
-    ${STARFISH_BINDING_GENERATED_DIR}/WindowOrServiceWorkerBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/WindowOrMessagePortOrServiceWorkerBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/MessageEventInitBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/DOMStringOrSequenceBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/PushSubscriptionOptionsInitBinding.cpp

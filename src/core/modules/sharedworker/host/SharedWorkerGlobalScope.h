@@ -53,6 +53,8 @@ public:
 
     void requestConnection(MessagePortConnectionInfo* info);
 
+    MessageEvent* createConnectMessageEvent(MessagePort* messagePort);
+
     String* name()
     {
         return m_name;

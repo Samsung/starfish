@@ -104,7 +104,7 @@ SharedWorkerThread* SharedWorkerAgent::getWorkerThread(
     const auto& iter = m_workerThreads.find(message.sharedWorkerKey());
     if (iter != m_workerThreads.end()) {
         SharedWorkerThread* thread = iter->second;
-        if (!thread->wasTerminated() && !thread->globalScope()->isClosing()) {
+        if (!thread->wasTerminated()) {
             return iter->second;
         } else {
             m_workerThreads.erase(iter);

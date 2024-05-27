@@ -26,6 +26,7 @@
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"
 
@@ -35,11 +36,20 @@ SharedWorkerClient::SharedWorkerClient(PerProcess* perProcess,
                                        const std::string& ipcAddress)
     : IPCConnection(perProcess, ipcAddress, SocketNN::kRequestProtocol)
     , m_messageHandler(new IPCMessageHandler())
+    , m_requestFlag(false)
 {
     initMessageReceiveHandlers();
 }
 
-SharedWorkerClient::~SharedWorkerClient() = default;
+SharedWorkerClient::~SharedWorkerClient()
+{
+    for (const auto& iter : m_requestMessages) {
+        free(iter.first);
+    }
+
+    m_requestMessages.clear();
+    m_requestMessages.shrink_to_fit();
+}
 
 void SharedWorkerClient::start()
 {
@@ -54,13 +64,17 @@ void SharedWorkerClient::start()
 void SharedWorkerClient::onReceived(Socket* socket, const char* data,
                                     size_t len)
 {
+    m_requestFlag = false;
+    sendPendingMessage();
+
     m_messageHandler->onReceiveMessage(data, len);
 }
 
 void SharedWorkerClient::requestConnection(SharedWorker* sharedWorker)
 {
     SharedWorkerMessage::RequestGetSharedWorker message(sharedWorker);
-    m_messageHandler->sendMessage(this, message);
+    TRACE(SHAREDWORKER, message.clientID());
+    sendMessage(message);
 }
 
 void SharedWorkerClient::requestClose(SharedWorker* sharedWorker)
@@ -86,6 +100,38 @@ void SharedWorkerClient::initMessageReceiveHandlers()
     m_messageHandler->setMessageReceiveHandler(
         SharedWorkerMessage::ResponseGetSharedWorker::messageID(),
         onResponseGetSharedWorker);
+}
+
+void SharedWorkerClient::sendMessage(IPCMessage& message)
+{
+    Nullable<IPCMessageSerializer*> serializer =
+        m_messageHandler->serialize(message);
+
+    if (m_requestFlag) {
+        void* buffer = malloc(serializer->size());
+        memcpy(buffer, serializer->data(), serializer->size());
+        m_requestMessages.push_back({ buffer, serializer->size() });
+    } else {
+        send(serializer->data(), serializer->size());
+    }
+
+    m_requestFlag = true;
+}
+
+void SharedWorkerClient::sendPendingMessage()
+{
+    STARFISH_ASSERT(!m_requestFlag);
+
+    if (m_requestMessages.empty()) {
+        return;
+    }
+
+    auto message = m_requestMessages.front();
+    send(static_cast<const char*>(message.first), message.second);
+    free(message.first);
+    m_requestMessages.pop_front();
+
+    m_requestFlag = true;
 }
 
 } // namespace Starfish

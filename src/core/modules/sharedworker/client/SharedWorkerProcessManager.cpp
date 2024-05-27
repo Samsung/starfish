@@ -118,6 +118,7 @@ void SharedWorkerProcessManager::destroy()
         m_client->requestClose(iter.second);
     }
 
+    m_client->close();
     m_client->~SharedWorkerClient();
     m_client = nullptr;
 
@@ -152,7 +153,7 @@ void SharedWorkerProcessManager::startMessagePortConnection(
             message.clientID());
 
     if (!sharedWorker.hasValue()) {
-        TRACE(SHAREDWORKER, "shared worker closed.");
+        TRACE(SHAREDWORKER, "shared worker closed");
         return;
     }
 
@@ -161,7 +162,7 @@ void SharedWorkerProcessManager::startMessagePortConnection(
 
     connection->connect();
 
-    // TODO: start message port
+    sharedWorker->didSharedWorkerConnected(connection);
 }
 
 } // namespace Starfish

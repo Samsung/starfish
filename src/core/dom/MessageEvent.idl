@@ -28,4 +28,4 @@ dictionary MessageEventInit : EventInit {
 };
 
 // typedef (WindowProxy or MessagePort or ServiceWorker) MessageEventSource;
-typedef (Window or ServiceWorker) MessageEventSource;
+typedef (Window or MessagePort or ServiceWorker) MessageEventSource;

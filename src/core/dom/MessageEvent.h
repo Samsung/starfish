@@ -21,11 +21,11 @@
 #define __StarfishMessageEvent__
 
 #include "Event.h"
-#include "binding/generated/WindowOrServiceWorkerUnion.h"
+#include "binding/generated/WindowOrMessagePortOrServiceWorkerUnion.h"
 
 namespace Starfish {
 
-typedef WindowOrServiceWorker MessageEventSource;
+typedef WindowOrMessagePortOrServiceWorker MessageEventSource;
 
 class SerializeWithTransferResult;
 class MessagePort;

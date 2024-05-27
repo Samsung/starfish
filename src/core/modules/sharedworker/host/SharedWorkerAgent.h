@@ -73,6 +73,7 @@ public:
 
     DEFINE_GETTER(WorkerIPCAddress*, ipcAddress);
     DEFINE_GETTER(MessageLoop*, messageLoop);
+    DEFINE_GETTER(SharedWorkerAgentServer*, server);
 
 private:
     SharedWorkerAgent(Starfish* starfish);
@@ -84,8 +85,6 @@ private:
 
     MessagePortConnectionInfo* createConnectionInfo(uint32_t clientID,
                                                     SharedWorkerThread* thread);
-
-    DEFINE_GETTER(SharedWorkerAgentServer*, server);
 
     static SharedWorkerAgent* m_instance;
     MessageLoop* m_messageLoop;
