@@ -23,9 +23,9 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "platform/canvas/gl/GLTypes.h"
-#include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
-#include "core/dom/canvas/WebGLUtils.h"
-#include "core/dom/canvas/WebGLContextAttributes.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContextBaseMixIn.h"
+#include "core/dom/canvas/webgl/WebGLUtils.h"
+#include "core/dom/canvas/webgl/WebGLContextAttributes.h"
 #include "core/util/GCDescriptor.h"
 
 #include <unordered_set>

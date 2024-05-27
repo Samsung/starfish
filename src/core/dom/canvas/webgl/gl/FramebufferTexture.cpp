@@ -21,7 +21,7 @@
 
 #if defined(STARFISH_ENABLE_WEBGL)
 
-#include "GLUtil.h"
+#include "FramebufferTexture.h"
 #include "GLContext.h"
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
@@ -152,51 +152,6 @@ bool FramebufferTexture::destory()
     m_gl->deleteFramebuffers(1, &m_fbo);
     return true;
 };
-
-size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
-{
-    // Format      Type                Bytes per Pixel
-    // ------------------------------------------------
-    // RGBA        UNSIGNED_BYTE            4
-    // RGB         UNSIGNED_BYTE            3
-    // RGBA        UNSIGNED_SHORT_4_4_4_4   2
-    // RGBA        UNSIGNED_SHORT_5_5_5_1   2
-    // RGB         UNSIGNED_SHORT_5_6_5     2
-    // LUMINANCE_ALPHA  UNSIGNED_BYTE       2
-    // LUMINANCE   UNSIGNED_BYTE            1
-    // ALPHA       UNSIGNED_BYTE            1
-    //
-    // Refs: Table 3.4: Valid pixel format and type combinations.
-    // https://registry.khronos.org/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
-
-    if (type == GL_UNSIGNED_BYTE || type == GL_FLOAT) {
-        if (format == GL_RGBA || format == GL_BGRA_EXT) {
-            return 4;
-        } else if (format == GL_RGB) {
-            return 3;
-        } else if (format == GL_LUMINANCE_ALPHA) {
-            return 2;
-        } else if (format == GL_LUMINANCE || format == GL_ALPHA) {
-            return 1;
-        }
-    } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-        if (format == GL_RGBA || format == GL_BGRA_EXT) {
-            return 2;
-        }
-    } else if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-        if (format == GL_RGBA || format == GL_BGRA_EXT) {
-            return 2;
-        }
-    } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
-        if (format == GL_RGB) {
-            return 2;
-        }
-    }
-
-    STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
-    STARFISH_ASSERT_NOT_REACHED();
-    return 0;
-}
 
 } // namespace Starfish
 

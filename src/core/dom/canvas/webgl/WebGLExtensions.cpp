@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <EscargotPublic.h>
 #include "binding/ScriptBindingInstance.h"
-#include "core/dom/canvas/WebGLOES_VertexArrayObject.h"
+#include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"

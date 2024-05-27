@@ -23,7 +23,7 @@
 #define __StarfishGLUtil__
 
 #include "platform/canvas/gl/GLTypes.h"
-#include "platform/canvas/webgl/SurfaceCreationScope.h"
+#include "core/dom/canvas/webgl/gl/SurfaceCreationScope.h"
 #include <memory>
 
 namespace Starfish {
@@ -73,11 +73,6 @@ private:
     FrameBufferAttributes m_attributes;
     Renderer* m_renderer{ nullptr };
     GL* m_gl{ nullptr };
-};
-
-class Pixel {
-public:
-    static size_t getBytesPerPixel(GLenum format, GLenum type);
 };
 
 } // namespace Starfish

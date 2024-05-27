@@ -17,33 +17,31 @@
  *  USA
  */
 
+#ifndef __StarfishWebGLBuffer__
+#define __StarfishWebGLBuffer__
+
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
-#include "StarfishConfig.h"
-#include "WebGLUtils.h"
-#include "platform/canvas/gl/IncludeGL.h"
+#include "core/dom/canvas/webgl/WebGLObject.h"
 
 namespace Starfish {
 
-const char* webglErrorString(unsigned int code)
-{
-    switch (code) {
-    case GL_NO_ERROR:
-        return "NO_ERROR";
-    case GL_INVALID_ENUM:
-        return "INVALID_ENUM";
-    case GL_INVALID_VALUE:
-        return "INVALID_VALUE";
-    case GL_INVALID_OPERATION:
-        return "INVALID_OPERATION";
-    case GL_OUT_OF_MEMORY:
-        return "OUT_OF_MEMORY";
-    default:
-        return "UNDEFINED_ERROR";
-    }
-    return "";
-}
+class WebGLRenderingContext;
 
+class WebGLBuffer : public WebGLObject {
+public:
+    WebGLBuffer(ScriptBindingInstance* instance, WebGLRenderingContext* context,
+                GLuint object);
+    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
+    bool isWebGLBuffer() const override;
+
+    void setTargetOnce(GLenum target);
+    GLenum target();
+
+private:
+    GLenum m_target = GL_NONE;
+};
 } // namespace Starfish
 
+#endif
 #endif

@@ -17,23 +17,40 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLShader__
-#define __StarfishWebGLShader__
+#ifndef __StarfishWebGLUtils__
+#define __StarfishWebGLUtils__
 
-#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
-
-#include "core/dom/canvas/WebGLObject.h"
+#include <string>
+#include "platform/canvas/gl/GLTypes.h"
+#include "core/util/String.h"
 
 namespace Starfish {
 
-class WebGLShader : public WebGLObject {
-public:
-    WebGLShader(ScriptBindingInstance* instance, WebGLRenderingContext* context,
-                GLuint object);
-    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
-    bool isWebGLShader() const override;
+struct CaseInsensitiveHash {
+    size_t operator()(const std::string& str) const
+    {
+        size_t hash = 0;
+        for (unsigned char c : str) {
+            hash = hash * 31 + std::tolower(c);
+        }
+        return hash;
+    }
 };
+
+struct CaseInsensitiveEqual {
+    bool operator()(const std::string& a, const std::string& b) const
+    {
+        return StringUtils::equalsIgnoreCase(a, b);
+    }
+};
+
+const char* webglErrorString(unsigned int code);
+
+class Pixel {
+public:
+    static size_t getBytesPerPixel(GLenum format, GLenum type);
+};
+
 } // namespace Starfish
 
-#endif
 #endif

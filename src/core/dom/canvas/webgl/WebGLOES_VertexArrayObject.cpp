@@ -22,8 +22,8 @@
 #include "StarfishConfig.h"
 #include "WebGLOES_VertexArrayObject.h"
 #include "core/modules/worker/util/Trace.h"
-#include "core/dom/canvas/WebGLRenderingContext.h"
-#include "core/dom/canvas/WebGLRenderingContextState.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContext.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"

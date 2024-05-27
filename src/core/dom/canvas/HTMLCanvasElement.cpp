@@ -27,7 +27,7 @@
 #include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/ImageEncoder.h"
-#include "core/dom/canvas/WebGLRenderingContext.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/ImageBitmapRenderingContext.h"
 #include "core/dom/DOMException.h"

@@ -17,31 +17,24 @@
  *  USA
  */
 
-#ifndef __StarfishWebGLBuffer__
-#define __StarfishWebGLBuffer__
-
-#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
-
-#include "core/dom/canvas/WebGLObject.h"
+#include "StarfishBase.h"
+#include "core/dom/canvas/webgl/gl/SurfaceCreationScope.h"
 
 namespace Starfish {
 
-class WebGLRenderingContext;
+std::shared_ptr<TextureCreationDelegate> SurfaceCreationScope::m_delegate;
 
-class WebGLBuffer : public WebGLObject {
-public:
-    WebGLBuffer(ScriptBindingInstance* instance, WebGLRenderingContext* context,
-                GLuint object);
-    void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
-    bool isWebGLBuffer() const override;
+SurfaceCreationScope::SurfaceCreationScope(
+    std::shared_ptr<TextureCreationDelegate> delegate)
+{
+    STARFISH_ASSERT(m_delegate == nullptr);
+    STARFISH_ASSERT(delegate != nullptr);
+    m_delegate = delegate;
+}
 
-    void setTargetOnce(GLenum target);
-    GLenum target();
+SurfaceCreationScope::~SurfaceCreationScope()
+{
+    m_delegate.reset();
+}
 
-private:
-    GLenum m_target = GL_NONE;
-};
 } // namespace Starfish
-
-#endif
-#endif
