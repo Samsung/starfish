@@ -256,14 +256,14 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
             true, false, true,                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                STARFISH_UNIMPLEMENTED("Unimplemented module \"%s\"",          \
+                STARFISH_UNSUPPORTED("module \"%s\"",          \
                                        #exportName);                           \
                 return ValueRef::createUndefined();                            \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
-                STARFISH_UNIMPLEMENTED("Unimplemented module \"%s\"",          \
+                STARFISH_UNSUPPORTED("module \"%s\"",          \
                                        #exportName);                           \
                 return false;                                                  \
             });                                                                \

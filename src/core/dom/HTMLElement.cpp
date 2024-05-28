@@ -317,7 +317,7 @@ String* HTMLElement::innerText()
 {
     // TODO
     // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("HTMLElement property: innerText");
     auto v = textContent();
     return v.hasValue() ? v.getValue() : String::emptyString;
 }

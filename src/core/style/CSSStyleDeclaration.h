@@ -118,7 +118,7 @@ public:
 #ifndef NDEBUG
                 if (params->result.first ==
                     CSSStyleValuePair::KeyKind::Unknown) {
-                    STARFISH_LOG_ERROR("Unsupported property: %s", buf);
+                    STARFISH_LOG_ERROR("Unsupported css property: %s", buf);
                 }
 #endif
                 return 0;

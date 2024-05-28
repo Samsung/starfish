@@ -513,6 +513,11 @@ const char* getWindowsTempDir();
         STARFISH_LOG_WARN("UNIMPLEMENTED! " __VA_ARGS__); \
     } while (0)
 
+#define STARFISH_UNSUPPORTED(...)                      \
+    do {                                               \
+        STARFISH_LOG_WARN("Unsupported " __VA_ARGS__); \
+    } while (0)
+
 #define DEFINE_GETTER(Type, MemberName) \
     Type MemberName() const             \
     {                                   \
