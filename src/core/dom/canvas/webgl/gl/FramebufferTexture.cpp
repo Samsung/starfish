@@ -29,59 +29,62 @@
 
 namespace Starfish {
 
-static GLuint createFrameBufferTexture2D(GL* gl, const unsigned width,
-                                         const unsigned height)
-{
-    GLuint textureUnitId;
-    gl->genTextures(1, &textureUnitId);
-    gl->bindTexture(GL_TEXTURE_2D, textureUnitId);
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                   GL_UNSIGNED_BYTE, nullptr);
-
-    gl->bindTexture(GL_TEXTURE_2D, 0);
-    return textureUnitId;
-}
-
-/**
- * @param width of texture
- * @param height of texture
- * @param outFbo frame buffer object
- * @param outTextureId texture unit id (rgb) of frame buffer object
- * @param outRbo render buffer object (depth) of frame buffer object
- *
- * @return result
- */
 static bool createFrameBufferObject(GL* gl, const unsigned width,
-                                    const unsigned height, GLuint& outTextureId,
-                                    GLuint& outFbo, GLuint& outRboDepth,
-                                    GLuint& outRboStencil,
-                                    const FrameBufferAttributes& attr)
+                                    const unsigned height, GLuint& outFbo,
+                                    GLuint& outTextureId, GLuint& outRboDepth,
+                                    GLuint& outRboOrTextureIdForDepthStencil,
+                                    const bool needDepthBuffer,
+                                    const bool needStencilBuffer)
 {
     // 1. Create a framebuffer object
     gl->genFramebuffers(1, &outFbo);
     gl->bindFramebuffer(GL_FRAMEBUFFER, outFbo);
 
-    // 2. Attach a "color buffer" attachment
-    outTextureId = createFrameBufferTexture2D(gl, width, height);
+    // 2. Generate a texture and bind it
+    gl->genTextures(1, &outTextureId);
     gl->bindTexture(GL_TEXTURE_2D, outTextureId);
+
+    // 3. Attach a "color buffer" attachment
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, nullptr);
+
     gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                              GL_TEXTURE_2D, outTextureId, 0);
 
-    // 3. Attach a "depth buffer" attachment
-    if (attr.depth) {
+    if (needDepthBuffer && !needStencilBuffer) {
+        // 4-a. Attach a "depth buffer" rbo
         gl->genRenderbuffers(1, &outRboDepth);
         gl->bindRenderbuffer(GL_RENDERBUFFER, outRboDepth);
         gl->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width,
                                 height);
         gl->framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                     GL_RENDERBUFFER, outRboDepth);
-    }
+    } else if (needStencilBuffer) {
+        // 4-b. Attach "depth & stencil buffer" texture or rbo
+#if !defined(USE_TEXTURE_FOR_DEPTH_STENCIL)
 
-    // 4. Attach a "stencil buffer" attachment
-    if (attr.stencil) {
-        STARFISH_UNIMPLEMENTED("Attach a stencil buffer attachment");
+        // NOTE: If we don't need to read either depth or stencil buffer values,
+        // using a renderbuffer object is better for performance. Otherwise,
+        // enable USE_TEXTURE_FOR_DEPTH_STENCIL to attach a texture.
+
+        gl->genRenderbuffers(1, &outRboOrTextureIdForDepthStencil);
+        gl->bindRenderbuffer(GL_RENDERBUFFER, outRboOrTextureIdForDepthStencil);
+        gl->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                                height);
+        gl->framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                    GL_RENDERBUFFER,
+                                    outRboOrTextureIdForDepthStencil);
+#else
+        gl->genTextures(1, &outRboOrTextureIdForDepthStencil);
+        gl->bindTexture(GL_TEXTURE_2D, outRboOrTextureIdForDepthStencil);
+        gl->texImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0,
+                       GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+        gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                 GL_TEXTURE_2D,
+                                 outRboOrTextureIdForDepthStencil, 0);
+#endif
     }
 
     // 5. Verify that setting fbo is complete
@@ -117,22 +120,24 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
     GLRevertableContextScope scope(GLContextScope::getCurrentGLContext(),
                                    m_renderer);
 
-    if (!createFrameBufferObject(m_gl, bufferWidth, bufferHeight, m_textureId,
-                                 m_fbo, m_rboDepth, m_rboStencil,
-                                 m_attributes)) {
-        // TODO: Handle this error handling.
-        STARFISH_ASSERT(false);
+    if (!createFrameBufferObject(m_gl, bufferWidth, bufferHeight, m_fbo,
+                                 m_textureId, m_rboDepth,
+                                 m_rboOrTextureIdForDepthStencil,
+                                 m_attributes.depth, m_attributes.stencil)) {
+        STARFISH_LOG_ERROR("No frame buffer assigned.");
+        return false;
     }
 
     outTextureId = m_textureId;
 
-    if (m_attributes.depth && m_rboDepth == 0) {
-        STARFISH_LOG_WARN("No depth buffer assigned.");
+    if (!m_attributes.stencil && (m_attributes.depth && m_rboDepth == 0)) {
+        STARFISH_LOG_ERROR("No depth buffer assigned.");
+        return false;
+    } else if (m_attributes.stencil && m_rboOrTextureIdForDepthStencil == 0) {
+        STARFISH_LOG_ERROR("No stencil buffer assigned.");
         return false;
     }
-    if (m_attributes.stencil && m_rboStencil == 0) {
-        // TODO: STARFISH_LOG_WARN("No stencil buffer assigned.");
-    }
+
     return true;
 };
 
@@ -146,8 +151,13 @@ bool FramebufferTexture::destory()
     if (m_rboDepth != 0) {
         m_gl->deleteRenderbuffers(1, &m_rboDepth);
     }
-    if (m_rboStencil != 0) {
-        m_gl->deleteRenderbuffers(1, &m_rboStencil);
+
+    if (m_rboOrTextureIdForDepthStencil != 0) {
+#if !defined(USE_TEXTURE_FOR_DEPTH_STENCIL)
+        m_gl->deleteRenderbuffers(1, &m_rboOrTextureIdForDepthStencil);
+#else
+        m_gl->deleteTextures(1, &m_rboOrTextureIdForDepthStencil);
+#endif
     }
     m_gl->deleteFramebuffers(1, &m_fbo);
     return true;

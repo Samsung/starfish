@@ -86,23 +86,25 @@ void WebGLExtensionRegistry::initialize(GL* gl)
 
     // 2. Add generators for extensions not requiring binding to native objects
 
-#define SUPPORTED_GL_EXTENSIONS(V) \
-    V(OES_texture_float)           \
-    V(OES_texture_half_float)      \
-    V(OES_standard_derivatives)    \
-    V(OES_texture_float_linear)    \
-    V(EXT_blend_minmax)
+#define SUPPORTED_GL_EXTENSIONS(V)                        \
+    V(OES_texture_float, OES_texture_float)               \
+    V(OES_texture_half_float, OES_texture_half_float)     \
+    V(OES_standard_derivatives, OES_standard_derivatives) \
+    V(OES_texture_float_linear, OES_texture_float_linear) \
+    V(OES_depth_texture, WEBGL_depth_texture)             \
+    V(EXT_blend_minmax, EXT_blend_minmax)
 
-#define V(name)                                                              \
+#define V(name, spec)                                                        \
     if (glExtensions.find(#name) != glExtensions.end()) {                    \
-        m_interfaceGenerators[#name] =                                       \
+        m_interfaceGenerators[#spec] =                                       \
             [](ScriptBindingInstance* instance,                              \
                WebGLRenderingContext*) -> Escargot::ObjectRef* {             \
-            return createScriptObject(instance, instance->fn##name(), #name, \
+            return createScriptObject(instance, instance->fn##spec(), #spec, \
                                       nullptr);                              \
         };                                                                   \
     } else {                                                                 \
-        STARFISH_LOG_WARN(#name " is not supported on this device");         \
+        STARFISH_LOG_INFO("WebGL supports " #spec                            \
+                          ", but this device does not. (Not an error.)");    \
     }
     SUPPORTED_GL_EXTENSIONS(V);
 #undef V

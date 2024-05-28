@@ -69,7 +69,7 @@ private:
     GLuint m_fbo{ 0 };
     GLuint m_textureId{ 0 };
     GLuint m_rboDepth{ 0 };
-    GLuint m_rboStencil{ 0 };
+    GLuint m_rboOrTextureIdForDepthStencil{ 0 };
     FrameBufferAttributes m_attributes;
     Renderer* m_renderer{ nullptr };
     GL* m_gl{ nullptr };
