@@ -812,12 +812,12 @@ ScriptBindingInstance* DOMMatrixReadOnly::scriptBindingInstance()
 
 SerializedData* DOMMatrixReadOnly::serialize(SerializingMap& memory)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("DOMMatrixReadOnly property: serialize");
     return nullptr;
 }
 void DOMMatrixReadOnly::deserialize(SerializedData* serialized,
                                     DeserializingMap& memory) const
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("DOMMatrixReadOnly property: deserialize");
 }
 } // namespace Starfish

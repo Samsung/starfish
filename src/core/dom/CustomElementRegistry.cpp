@@ -41,7 +41,7 @@ CustomElementRegistry::CustomElementRegistry(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(executionContext->scriptBindingInstance())
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("interface: CustomElementRegistry");
 }
 
 ScriptBindingInstance* CustomElementRegistry::scriptBindingInstance()
@@ -53,19 +53,19 @@ void CustomElementRegistry::define(String* name,
                                    CustomElementConstructor* constructor,
                                    ElementDefinitionOptions options)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("interface: CustomElementRegistry");
 }
 
 CustomElementConstructor* CustomElementRegistry::get(String* name)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("interface: CustomElementRegistry");
     return new CustomElementConstructor(scriptUndefined());
 }
 
 Nullable<String*> CustomElementRegistry::getName(
     CustomElementConstructor* constructor)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("interface: CustomElementRegistry");
     return nullptr;
 }
 
