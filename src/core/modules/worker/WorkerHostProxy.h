@@ -29,24 +29,28 @@ class MessageLoop;
 class SerializeWithTransferResult;
 class WorkerThread;
 class WorkerHost;
+class Mutex;
 
 class WorkerHostProxy final : public WorkerProxy {
 public:
     WorkerHostProxy(ExecutionContext* executionContext,
                     WorkerThread* workerThread);
 
-    void workerHostCreated(WorkerHost* workerHost);
+    bool initialize(WorkerHost* workerHost);
 
     void onScriptLoadFinished();
 
     void terminateWorkerGlobalScope();
 
     DEFINE_GETTER(WorkerThread*, workerThread);
+    DEFINE_GETTER(bool, askedToTerminate);
 
 private:
     WorkerHost* m_workerHost;
     bool m_wasWorkerScriptLoaded;
+    bool m_askedToTerminate;
     GCVector<SerializeWithTransferResult*> m_queuedEarlyMessages;
+    Mutex* m_mutex;
 
     MessageLoop* targetMessageLoop() override;
     ExecutionContext* targetExecutionContext() override;

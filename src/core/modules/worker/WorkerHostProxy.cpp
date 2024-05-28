@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_WORKER)
 
 #include "StarfishConfig.h"
+#include "core/modules/threading/Locker.h"
+#include "core/modules/threading/Mutex.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerHost.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
@@ -32,13 +34,23 @@ WorkerHostProxy::WorkerHostProxy(ExecutionContext* executionContext,
     : WorkerProxy(executionContext, workerThread)
     , m_workerHost(nullptr)
     , m_wasWorkerScriptLoaded(false)
+    , m_askedToTerminate(false)
+    , m_mutex(new Mutex())
 {
 }
 
-void WorkerHostProxy::workerHostCreated(WorkerHost* workerHost)
+bool WorkerHostProxy::initialize(WorkerHost* workerHost)
 {
+    Locker<Mutex> locker(*m_mutex);
+
+    if (m_askedToTerminate) {
+        return false;
+    }
+
     STARFISH_ASSERT(!m_workerHost);
     m_workerHost = workerHost;
+
+    return true;
 }
 
 MessageLoop* WorkerHostProxy::targetMessageLoop()
@@ -68,7 +80,17 @@ void WorkerHostProxy::onScriptLoadFinished()
 
 void WorkerHostProxy::terminateWorkerGlobalScope()
 {
-    STARFISH_ASSERT(m_workerHost);
+    Locker<Mutex> locker(*m_mutex);
+
+    if (m_askedToTerminate) {
+        return;
+    }
+    m_askedToTerminate = true;
+
+    if (!m_workerHost) {
+        return;
+    }
+
     postTask(
         [](void* data) {
             WorkerHost* workerHost = static_cast<WorkerHost*>(data);

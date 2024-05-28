@@ -56,7 +56,12 @@ void DedicatedWorkerGlobalScope::initialize(
 
     WorkerHostProxy* hostProxy =
         m_workerObjectProxy->workerObject()->workerHostProxy();
-    hostProxy->workerHostCreated(workerHost);
+
+    if (!hostProxy->initialize(workerHost)) {
+        m_workerObjectProxy->close();
+        return;
+    }
+
     hostProxy->entangleTarget(this, workerObjectProxy);
 
     if (loadMainScript()) {
