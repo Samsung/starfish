@@ -2958,24 +2958,23 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             StackingContext* childCtx = m_childContexts[0]->at(0);
             STARFISH_ASSERT(childCtx != nullptr);
 
-            if (childCtx->needsGraphicsBuffer()) {
-                auto bc = m_owner->node()
-                              ->asHTMLIFrameElement()
-                              ->contentDocument()
-                              ->browsingContext();
-                auto bgColor = bc->hasWindowBackgroundColor();
-                if (bgColor.first) {
-                    StateRestorer<Compositor> r(compositor, this,
-                                                parent()->owner());
+            auto bc = m_owner->node()
+                          ->asHTMLIFrameElement()
+                          ->contentDocument()
+                          ->browsingContext();
+            auto bgColor = bc->hasWindowBackgroundColor();
 
-                    compositor->save();
-                    compositor->setFillColor(bgColor.second);
-                    compositor->drawRect(LayoutRect(
-                        m_owner->borderLeft() + m_owner->paddingLeft(),
-                        m_owner->borderTop() + m_owner->paddingTop(),
-                        m_owner->contentWidth(), m_owner->contentHeight()));
-                    compositor->restore();
-                }
+            if (bgColor.first || visibleRect.isEmpty()) {
+                StateRestorer<Compositor> r(compositor, this,
+                                            parent()->owner());
+
+                compositor->save();
+                compositor->setFillColor(bgColor.second);
+                compositor->drawRect(LayoutRect(
+                    m_owner->borderLeft() + m_owner->paddingLeft(),
+                    m_owner->borderTop() + m_owner->paddingTop(),
+                    m_owner->contentWidth(), m_owner->contentHeight()));
+                compositor->restore();
             }
         }
     }
