@@ -127,7 +127,8 @@ void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
         if (object->has(state, key)) {                          \
             ValueRef* value = object->get(state, key);          \
             if (value->isBoolean()) {                           \
-                TRACE(WEBGL, #str, ":", value->asBoolean());    \
+                STARFISH_LOG_INFO("%s : %d", #str,              \
+                                  value->asBoolean() ? 1 : 0);  \
                 attributes->set##attribute(value->asBoolean()); \
             }                                                   \
         }                                                       \
@@ -144,7 +145,8 @@ void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
                     if (value->isString()) {
                         std::string powerPreference =
                             value->asString()->toStdUTF8String();
-                        TRACE(WEBGL, KV(powerPreference));
+                        STARFISH_LOG_INFO("powerPreference : %s",
+                                          powerPreference.c_str());
                         attributes->setPowerPreference(String::fromUTF8(
                             powerPreference.c_str(), powerPreference.length()));
                     }
@@ -208,7 +210,6 @@ void WebGLRenderingContext::flush()
     // get this `flush()` invoked every frame after we call `setNeedsComposite`.
 
     m_hasPendingJobsBetweenFrames = true;
-    m_pendingClearMask = 0;
 }
 
 void WebGLRenderingContext::onResize()
@@ -402,7 +403,7 @@ void WebGLRenderingContext::completePendingJobs()
         // buffer shall be preserved until the author either clears or
         // overwrites them.
         if (!m_attributes.preserveDrawingBuffer()) {
-            uint32_t mask = 0;
+            uint32_t mask = GL_COLOR_BUFFER_BIT;
 
             // NOTE: If a bit of m_pendingClearMask is 1, it means that users
             // have already set a value corresponding to that bit. Therefore, we
@@ -410,21 +411,20 @@ void WebGLRenderingContext::completePendingJobs()
 
             if (!(m_pendingClearMask & GL_COLOR_BUFFER_BIT)) {
                 m_gl->clearColor(0, 0, 0, 0);
-                mask |= GL_COLOR_BUFFER_BIT;
             }
 
             if (m_attributes.depth()) {
                 if (!(m_pendingClearMask & GL_DEPTH_BUFFER_BIT)) {
                     m_gl->clearDepthf(1.0);
-                    mask |= GL_DEPTH_BUFFER_BIT;
                 }
+                mask |= GL_DEPTH_BUFFER_BIT;
             }
 
             if (m_attributes.stencil()) {
                 if (!(m_pendingClearMask & GL_STENCIL_BUFFER_BIT)) {
                     m_gl->clearStencil(0);
-                    mask |= GL_STENCIL_BUFFER_BIT;
                 }
+                mask |= GL_STENCIL_BUFFER_BIT;
             }
 
             if (mask != 0) {
@@ -432,7 +432,6 @@ void WebGLRenderingContext::completePendingJobs()
             }
         }
         m_hasPendingJobsBetweenFrames = false;
-        m_pendingClearMask = 0;
     }
 }
 
