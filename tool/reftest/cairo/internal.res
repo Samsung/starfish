@@ -638,6 +638,7 @@ test/cairo/internal-test/canvas/clearColor.html
 test/cairo/internal-test/canvas/canvasSatus_lineDash.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 #test/cairo/internal-test/iframe/iframe-hittest.html
+test/cairo/internal-test/iframe/webgl-blend-in-iframe.html
 test/cairo/internal-test/iframe/postmessage-typedarray.html
 test/cairo/internal-test/canvas/transform.html
 test/cairo/internal-test/css/overflow/scroll-test.html
