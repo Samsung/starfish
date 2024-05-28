@@ -375,7 +375,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
             offset = flexibleBox->contentWidth() - outerWidth();
             break;
         default:
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css property (flex): align-items %d",alignSelf);
             break;
         }
     }
@@ -409,7 +409,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
             offset = flexibleBox->contentHeight() - outerHeight();
             break;
         default:
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css property (flex): align-items %d",alignSelf);
             break;
         }
     } else {
@@ -542,7 +542,7 @@ void FrameBox::paintOutline(Canvas* canvas)
         rect.setHeight(rect.height() + offset * 2);
 
         if (s != BorderStyleValue::SolidBorderStyleValue) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css property: border (solid only)");
         }
 
         canvas->setFillColor(style()->outlineColor());

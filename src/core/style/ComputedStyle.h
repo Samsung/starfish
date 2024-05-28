@@ -2636,7 +2636,7 @@ public:
 
     void setBorderImageSource(CSSGradientValue* gradient)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: border-image-source with gradient");
     }
 
     void setBorderImageSlices(BorderImageLengthBox slices)

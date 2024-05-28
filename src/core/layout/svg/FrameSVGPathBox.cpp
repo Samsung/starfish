@@ -349,7 +349,7 @@ Path* FrameSVGPathBox::path()
                 } else if (token.equals("V")) {
                     TO_WAIT_COORDS_MODE('V');
                 } else {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED("SVGPath token: %s", token.data());
                     // error
                     break;
                 }
