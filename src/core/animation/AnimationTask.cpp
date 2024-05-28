@@ -944,7 +944,7 @@ void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
         style->setTextDecorationColor(Unit::Color(r, g, b, a));
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css animation property: %d", m_property);
     }
 }
 
@@ -976,7 +976,7 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
         return newStyle->textDecorationColor() ==
                currentAnimatedToValue()->getColor();
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css animation property: %d", m_property);
     }
     return false;
 }

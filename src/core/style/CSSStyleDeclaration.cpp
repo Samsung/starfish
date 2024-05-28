@@ -5314,7 +5314,7 @@ void CSSStyleDeclaration::removeAnimation()
 String* CSSStyleDeclaration::Mask()
 {
     // Mask is only supported as SVG attribute.
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("css property: mask");
     return String::emptyString;
 }
 

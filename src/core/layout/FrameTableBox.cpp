@@ -558,7 +558,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(parentContentWidth);
         } else if (width.isCalc()) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
         }
     }
 
@@ -621,7 +621,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             if (width.isPercent()) {
                 sumOfWidthPercentage += width.percent();
             } else if (width.isCalc()) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
             }
         }
 
@@ -644,7 +644,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         sumOfWidthPercentage;
                     col.cellWidth = specifiedWidth;
                 } else if (width.isCalc()) {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
                 }
                 sumOfSpecifiedCellWidths += col.cellWidth;
             }
@@ -1352,7 +1352,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(ctx.parentContentWidth(this));
         } else if (width.isCalc()) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
         }
 
         tableContentWidth = std::max(

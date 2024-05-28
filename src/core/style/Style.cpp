@@ -2732,7 +2732,8 @@ static void applyTransitionProperty(Element* element, ComputedStyle* style,
         style->setTransitionProperty(item.cssPropertyNameValue(), layer);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: transition with %d",
+                             item.valueKind());
     }
 }
 
@@ -2770,7 +2771,8 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: transition-duration with %d",
+                             item.valueKind());
     }
 }
 
@@ -2805,7 +2807,8 @@ static void applyTransitionTimingFunction(Element* element,
                                            layer);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: transition-timing-function with %d",
+                             item.valueKind());
     }
 }
 
@@ -2843,7 +2846,8 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: transition-delay with %d",
+                             item.valueKind());
     }
 }
 
@@ -2870,7 +2874,8 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
         style->setAnimationName(item.stringValue(), index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-name with %d",
+                             item.valueKind());
     }
 }
 
@@ -2907,7 +2912,8 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-duration with %d",
+                             item.valueKind());
     }
 }
 
@@ -2944,7 +2950,8 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-delay with %d",
+                             item.valueKind());
     }
 }
 
@@ -2977,7 +2984,8 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
                                           index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-timing-function with %d",
+                             item.valueKind());
     }
 }
 
@@ -3006,7 +3014,8 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
         style->setAnimationIterationCount(item.numberValue(), index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-iteration-count with %d",
+                             item.valueKind());
     }
 }
 
@@ -3034,7 +3043,8 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
         style->setAnimationDirection(item.animationDirectionValue(), index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-direction with %d",
+                             item.valueKind());
     }
 }
 
@@ -3062,7 +3072,8 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
         style->setAnimationPlayState(item.animationPlayStateValue(), index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-play-state with %d",
+                             item.valueKind());
     }
 }
 
@@ -3090,7 +3101,8 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
         style->setAnimationFillMode(item.animationFillModeValue(), index);
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css property: animation-fill-mode with %d",
+                             item.valueKind());
     }
 }
 
@@ -4561,7 +4573,8 @@ void StyleResolver::applyProperty(
                         item.gradientValue()->convertToGradientData());
                     style->setMaskImage(imageValue, i);
                 } else {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED("css property: mask-image with %d",
+                                         item.valueKind());
                 }
             }
         }
@@ -8409,7 +8422,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         pseudoLogMap[selector->pseudoType()] = true;
     }
 #endif
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css pseudo-element: %d", selector->pseudoType());
         break;
     }
     return false;
@@ -11115,7 +11128,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
         } else if (value.equals("space")) {
             pair.setBorderImageRepeatValue(BorderImageRepeatValue::SpaceValue);
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css property: border-image-repeat with %s",
+                                 value.data());
             return false;
         }
         values->push_back(pair);
@@ -12482,7 +12496,7 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
         if (repeatType == "auto-fit") {
             autoRepeatType = AutoRepeatType::kAutoFit;
         } else if (repeatType == "auto-fill") {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css function: repeat with auto-fill");
             // autoRepeatType = AutoRepeatType::kAutoFill;
             return false;
         } else {

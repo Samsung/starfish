@@ -268,10 +268,10 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                                              maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
                 // TODO : Need Implement Here
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("css property: vertical-align with sub");
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
                 // TODO : Need Implement Here
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("css property: vertical-align with super");
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 maxDescenderSoFar =
                     std::min(ascender - outerHeight, maxDescenderSoFar);

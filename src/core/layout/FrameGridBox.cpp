@@ -1093,7 +1093,7 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
             remainArea -= repeatedTrakSize;
         }
     } else if (autoRepeatType == AutoRepeatType::kAutoFill) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("css grid function: repeat with auto-fill");
     }
 }
 
@@ -1926,7 +1926,7 @@ void GridFormattingContext::applyAlignItems()
         } break;
         default:
             // Other values are not supported.
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("css property (grid): align-items with stretch");
             break;
         }
     }

@@ -313,7 +313,7 @@ Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
         gradientDrawingInfo = makeRadialGradientDrawingInfo(
             matchingSvg->asSVGRadialGradientElement(), layoutRect, this);
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("SVG Gradient type");
     }
 
     return gradientDrawingInfo;
@@ -495,10 +495,10 @@ CanvasFillStrokeSource* FrameSVGBox::makeCanvasFillStrokeSource(String* url)
             }
         } else if (matchingSvg->isSVGRadialGradientElement()) {
             // RadialGradient implementation required.
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("SVG RadialGradient");
             return nullptr;
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("SVG Gradient type");
             return nullptr;
         }
 
