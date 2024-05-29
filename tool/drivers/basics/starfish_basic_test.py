@@ -6,6 +6,7 @@ from . import utils
 from subprocess import Popen, PIPE
 import time
 import fcntl
+import threading
 from basics.constants import ENVOPTS
 
 try:
@@ -55,20 +56,32 @@ class __BasicTestOpts():
 
 
 def open_subprocess(command, timeout=None):
-    process = Popen(command, stdout=PIPE, stderr=PIPE)
+    cmd = command
+    process = None
+    stdout = None
+    stderr = None
 
     start_time = time.time()
-    if timeout:
-        while process.poll() is None:
-            elapsed_time = time.time() - start_time
-            if elapsed_time > timeout:
-                process.terminate()
-                process.wait()
-                raise TimeoutError("Process timed out")
-            time.sleep(0.1)
 
-    # Use timeout of communicate if v3.3 is available.
-    stdout, stderr = process.communicate()
+    if timeout:
+
+        def target():
+            nonlocal process, stdout, stderr
+            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = process.communicate()
+
+        # Set timeout in process.communicate if v3.3 is available. Here uses a
+        # separate thread as a workaround.
+        thread = threading.Thread(target=target)
+        thread.start()
+        thread.join(timeout)
+        if thread.is_alive():
+            process.terminate()
+            thread.join()
+    else:
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
     return stdout, stderr, time.time() - start_time
 
 
