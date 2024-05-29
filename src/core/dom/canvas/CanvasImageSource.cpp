@@ -84,7 +84,8 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
         return true;
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
     } else if (image.isHTMLVideoElementValue()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("video type is not supported (%s)",
+                             __PRETTY_FUNCTION__);
 #endif
     } else {
         STARFISH_ASSERT(image.isNoneValue());
@@ -139,7 +140,7 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
         nativeImageData = imageBitmap->nativeImageData();
         clean = imageBitmap->originCleanFlag();
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Unsupported image type(%s)", __PRETTY_FUNCTION__);
     }
 
     return std::make_pair(nativeImageData, clean);

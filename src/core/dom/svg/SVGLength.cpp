@@ -141,7 +141,8 @@ float SVGLength::value()
         } else if (m_unitType == SVG_LENGTHTYPE_PC) {
             return UnitHelper::convertFromPcToPx(valueInSpecifiedUnits());
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
+                                 (int)m_unitType);
         }
     }
     return 0;
@@ -165,7 +166,8 @@ void SVGLength::setValue(float v)
     } else if (m_unitType == SVG_LENGTHTYPE_PC) {
         setValueInSpecifiedUnits(UnitHelper::convertFromPxToPc(v));
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
+                             (int)m_unitType);
     }
 }
 
@@ -217,7 +219,8 @@ String* SVGLength::valueAsString()
     } else if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
         str = str->concat("%");
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
+                             (int)m_unitType);
     }
 
     return str;
@@ -255,7 +258,9 @@ void SVGLength::setValueAsString(String* valueAsString)
                 } else if (pair.cssLengthValue().kind() == CSSLength::PT) {
                     setUnitType(SVG_LENGTHTYPE_PT);
                 } else {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED(
+                        "Unsupported unit type in svg (type: %d)",
+                        (int)pair.cssLengthValue().kind());
                     setUnitType(SVG_LENGTHTYPE_PX);
                 }
                 setValueInSpecifiedUnits(pair.cssLengthValue().value());

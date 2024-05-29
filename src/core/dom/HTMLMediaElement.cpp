@@ -629,7 +629,7 @@ TimeRanges* HTMLMediaElement::buffered()
 
 String* HTMLMediaElement::canPlayType(String* type)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     // TODO We need get informaton from media-player
     MimeType mt = MimeType::parseFromString(type);
     if (mt.type()->equals("video")) {
@@ -676,13 +676,13 @@ bool HTMLMediaElement::paused()
 
 double HTMLMediaElement::defaultPlaybackRate()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     return 1;
 }
 
 double HTMLMediaElement::playbackRate()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     return 1;
 }
 
@@ -898,12 +898,12 @@ void HTMLMediaElement::setOfficialPlaybackPosition(double time)
 
 void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 void HTMLMediaElement::setPlaybackRate(double playbackRate)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 void HTMLMediaElement::setAutoplay(bool autoplay)

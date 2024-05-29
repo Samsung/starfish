@@ -36,22 +36,22 @@ public:
     virtual bool isImageBitmapRenderingContext() const override;
     virtual void initialize() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
     virtual void flush() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
     virtual void onResize() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
     virtual CanvasSurface* surface() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
         return nullptr;
     }
 

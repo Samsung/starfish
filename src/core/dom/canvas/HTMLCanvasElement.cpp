@@ -163,7 +163,9 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
                 Base64Utils::encodeBase64(ImageEncoder::encodeJPEG(
                     canvasSurface->mapBuffer(), width, height, colorSpace));
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("Unsupported data type %s(%s)",
+                                 type->toUTF8NonGCString().data(),
+                                 __PRETTY_FUNCTION__);
         }
     }
     return String::fromUTF8(result.data(), result.size());
