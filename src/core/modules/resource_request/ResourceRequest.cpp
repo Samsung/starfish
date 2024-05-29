@@ -466,9 +466,9 @@ String* ResourceRequest::encodeFormDataSet(
             result = result->concat(value);
         }
     } else if (formEnctype == EncodeType::MultiPartFormData) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Handling multi part formdata encoding type");
     } else if (formEnctype == EncodeType::TextPlain) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Handling plain text encoding type");
     }
 
     return result;

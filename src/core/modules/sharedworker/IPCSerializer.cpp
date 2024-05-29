@@ -345,7 +345,7 @@ private:
             throw new DOMException(m_executionContext,
                                    DOMException::DATA_CLONE_ERR);
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("Serializing values of unsupported types");
             throw new DOMException(m_executionContext,
                                    DOMException::DATA_CLONE_ERR);
         }

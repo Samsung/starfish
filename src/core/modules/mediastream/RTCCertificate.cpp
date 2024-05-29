@@ -40,7 +40,7 @@ ScriptBindingInstance* RTCCertificate::scriptBindingInstance()
 
 bool RTCCertificate::equals(RTCCertificate* certificate)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("RTC Certificate identity verification");
     return false;
 }
 } // namespace Starfish

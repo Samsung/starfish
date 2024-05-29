@@ -47,7 +47,7 @@ namespace Starfish {
 #ifdef STARFISH_ENABLE_TEST
 void screenShotInRendering(WebView*, char const*, std::function<void()>)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Capture a screenshot for internal test build");
 }
 #endif
 

@@ -63,7 +63,7 @@ ScriptValue RTCStats::createScriptValueFromMediaRTCStats(
                                      toValueRefFromRTCPeerConnectionStats);
     } else {
         // TODO: Implement other stats derived from RTCStats.
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Stats types other than peer-connection");
         return scriptUndefined();
     }
 }
