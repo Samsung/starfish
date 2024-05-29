@@ -21,7 +21,7 @@ NON_REGRESSION_OPT = ""
 DEFAULT_WIDTH_OPT = WIDTH_OPT_PREFIX + "800"
 DEFAULT_HEIGHT_OPT = HEIGHT_OPT_PREFIX + "600"
 DEFAULT_REGRESSION_OPT = NON_REGRESSION_OPT
-TEST_RESULT_FILE = None
+TEST_RESULT_PASS_FILE = TEST_RESULT_FAIL_FILE = None
 
 RE_PASS = re.compile(r"PASS")
 RE_FAIL = re.compile(r"FAIL")
@@ -133,8 +133,13 @@ def run_parallel(list_file, nproc=None, width=None, height=None, regression=None
                                   result_handler=result_handler)
 
 if os.environ.get(ENVOPTS.TEST_RESULT_FILE):
-    TEST_RESULT_FILE = os.environ.get(ENVOPTS.TEST_RESULT_FILE)
-    with open(TEST_RESULT_FILE, 'w'):
+    test_result_file = os.environ.get(ENVOPTS.TEST_RESULT_FILE)
+    file_name, file_extension = os.path.splitext(test_result_file)
+    TEST_RESULT_PASS_FILE = test_result_file
+    TEST_RESULT_FAIL_FILE = file_name + "_fail" + file_extension
+    with open(TEST_RESULT_PASS_FILE, 'w'):
+        pass
+    with open(TEST_RESULT_FAIL_FILE, 'w'):
         pass
 
 def time_string(raw):
@@ -152,8 +157,8 @@ def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
     if word_pass != 0 and word_fail == 0:
         if show_progress:
             print(f"{utils.Strings.PASS_SIGN}{tc_file} {time_string(elapsed_time)}")
-        if TEST_RESULT_FILE:
-            with open(TEST_RESULT_FILE, 'a') as file:
+        if TEST_RESULT_PASS_FILE:
+            with open(TEST_RESULT_PASS_FILE, 'a') as file:
                 fcntl.flock(file, fcntl.LOCK_EX)
                 file.write(tc_file + '\n')
                 fcntl.flock(file, fcntl.LOCK_UN)
@@ -163,6 +168,11 @@ def default_tc_handler(tc_file, output, err, show_progress=True, **kwargs):
             print(utils.Strings.FAIL_SIGN + tc_file)
             print("starfish output  =>")
             print(output)
+        if TEST_RESULT_FAIL_FILE:
+            with open(TEST_RESULT_FAIL_FILE, 'a') as file:
+                fcntl.flock(file, fcntl.LOCK_EX)
+                file.write(tc_file + '\n')
+                fcntl.flock(file, fcntl.LOCK_UN)
         return False
 
 
