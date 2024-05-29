@@ -152,7 +152,7 @@ Promise* Body::arrayBuffer()
                               arrayValue.getArrayBufferViewValue());
                 m_promise->fulfill(value);
             } else {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("null BodyInit");
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -191,7 +191,7 @@ Promise* Body::blob()
 
                 m_promise->fulfill(blob->scriptValue());
             } else {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("null BodyInit");
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -225,7 +225,7 @@ Promise* Body::json()
                               body.getUSVStringValue());
                 m_promise->fulfill(jsonObject);
             } else {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("null BodyInit");
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -239,7 +239,7 @@ Promise* Body::json()
 
 Promise* Body::formData()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("A Promise that resolves with a FormData object.");
     return nullptr;
 }
 
@@ -287,7 +287,7 @@ Promise* Body::text()
                 m_resourceRequest->open(reqData, new HeadersData());
                 m_resourceRequest->send();
             } else {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("null BodyInit");
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -337,11 +337,11 @@ String* Body::extract()
         // request supports only string type.
         result = extractText();
     } else if (isArrayBufferType()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Resolving body as ArrayBuffer");
     } else if (isArrayBufferViewType()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Resolving body as ArrayBufferView");
     } else if (isBlobType()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Resolving body as Blob");
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
@@ -397,7 +397,7 @@ void Body::setBodyInit(const Nullable<BodyInit>& bodyInitValue)
     } else if (bodyInit.isBlobValue()) {
         m_contentType = bodyInit.getBlobValue()->type();
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("BodyInit for types other than String and Blob");
     }
 }
 
@@ -427,7 +427,7 @@ void Body::copyBody(Body* body)
             m_bodyInit = BodyInit::createUSVString(String::fromUTF8(
                 bodyValueString.data(), bodyValueString.size()));
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("null BodyInit");
         }
     } else {
         if (body->body()) {

@@ -286,13 +286,13 @@ void PeerConnectionObserver::OnAddTrack(
         streams,
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("OnAddTrack event");
 }
 
 void PeerConnectionObserver::OnRemoveTrack(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("OnRemoveTrack event");
 }
 
 // https://w3c.github.io/webrtc-pc/#event-datachannel
@@ -456,13 +456,13 @@ void PeerConnectionObserver::OnIceCandidate(
 void PeerConnectionObserver::OnAddStream(
     libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> stream)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("OnAddStream event");
 };
 
 void PeerConnectionObserver::OnRemoveStream(
     libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> stream)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("OnRemoveStream event");
 };
 
 CreateOfferAnswerObserver::CreateOfferAnswerObserver(
@@ -671,7 +671,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
 {
     if (!configuration.certificates().empty()) {
         // TODO
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Handling empty certificate");
     } else {
     }
 
@@ -1180,7 +1180,7 @@ RTCSessionDescription* RTCPeerConnection::localDescription()
 RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
 {
     // TODO:FIX ME!!
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Returning current local RTC session description");
     return nullptr;
 }
 
@@ -1290,14 +1290,14 @@ RTCSessionDescription* RTCPeerConnection::remoteDescription()
 RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
 {
     // TODO:FIX ME!!
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Returning current remote RTC session description");
     return remoteDescription();
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
 {
     // TODO:FIX ME!!
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Returning pending remote RTC session description");
     return remoteDescription();
 }
 
@@ -1412,7 +1412,7 @@ GCVector<RTCIceServer> RTCPeerConnection::getDefaultIceServers()
 {
     // FIXME: IceServer is browser specific. Update as
     // IceServers become available
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("No Server for ICE");
     GCVector<RTCIceServer> iceServers;
     return std::move(iceServers);
 }
@@ -2090,7 +2090,7 @@ GCVector<MediaStream*> RTCPeerConnection::getRemoteStreams()
 {
     GCVector<MediaStream*> streams;
     // TODO:FIX ME!!
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Getting remote streams");
     return streams;
 }
 

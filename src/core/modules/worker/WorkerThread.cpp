@@ -181,7 +181,7 @@ void WorkerThread::initializeWorkerThread()
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 #else
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Unsupported platform");
 #endif
 }
 
@@ -190,7 +190,7 @@ void WorkerThread::destroyWorkerThread()
 #if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
     pthread_cancel(m_workerThread.native_handle());
 #else
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Unsupported platform");
 #endif
 }
 

@@ -233,7 +233,7 @@ VideoStreamTrack::VideoStreamTrackObserver::VideoStreamTrackObserver(
 void VideoStreamTrack::VideoStreamTrackObserver::OnFrame(
     libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("OnFrame event on VideoStream");
 }
 
 WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext,

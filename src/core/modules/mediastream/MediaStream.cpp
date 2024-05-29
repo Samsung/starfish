@@ -68,7 +68,7 @@ MediaStream::AudioTrackObserver::~AudioTrackObserver()
 
 void MediaStream::AudioTrackObserver::setSize(int size)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Set size on this AudioTrack");
     // if (m_numberOfFrames == size) {
     //     return;
     // }
@@ -97,17 +97,17 @@ void MediaStream::AudioTrackObserver::UpdateFrame(int id, uint32_t timestamp,
 
 void MediaStream::AudioTrackObserver::CopyFrom(const AudioFrame& src)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Copy from a AudioFrame");
 }
 
 void MediaStream::AudioTrackObserver::Add(const AudioFrame& frameToAdd)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Add a AudioFrame to this AudioTrack");
 }
 
 void MediaStream::AudioTrackObserver::Mute()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Mute this AudioTrack");
 }
 
 void MediaStream::AudioTrackObserver::stop()
@@ -267,7 +267,7 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
                          MediaStream& mediaStream)
     : MediaStream(executionContext)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("creating a MediaStream using another mediaStream");
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,

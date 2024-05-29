@@ -118,7 +118,7 @@ public:
 
     std::string id() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Returning id of AudioStreamTrack");
         return std::string();
     }
 
@@ -169,7 +169,7 @@ public:
 
     std::string id() override
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Returning id of VideoStreamTrack");
         return std::string();
     }
 

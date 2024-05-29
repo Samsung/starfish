@@ -322,7 +322,7 @@ Cryptographic::Cryptographic(CryptoAlgorithmType hashType)
         m_algorithm = new CryptoAlgorithmSHA512();
         break;
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Hash types other than Sha256, Sha384, or Sha512");
         break;
     }
 }
@@ -350,7 +350,7 @@ std::string Cryptographic::digest(
         output = Base64Utils::encodeBase64(hash);
         break;
     case DigestEncodingType::Hex:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Generates a hex encoded digest");
         break;
     default:
         output = hash;

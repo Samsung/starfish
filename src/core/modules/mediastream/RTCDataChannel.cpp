@@ -195,27 +195,28 @@ String* RTCDataChannel::label()
 
 bool RTCDataChannel::ordered()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED(
+        "Indicates messages in the same order where they are sent");
     return false;
 }
 
 Nullable<uint32_t> RTCDataChannel::maxPacketLifeTime()
 {
     Nullable<uint32_t> ret;
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Indicates max number of ms for packet life time");
     return ret;
 }
 
 Nullable<uint32_t> RTCDataChannel::maxRetransmits()
 {
     Nullable<uint32_t> ret;
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Indicates max number of times to retransmits");
     return ret;
 }
 
 bool RTCDataChannel::negotiated()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Indicates this data channel is negotiated in-band");
     return false;
 }
 

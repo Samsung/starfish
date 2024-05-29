@@ -62,7 +62,7 @@ String* RTCErrorInit::errorDetail() const
     case RTCErrorDetailType::HardwareEncoderError:
         return String::createASCIIString("hardware-encoder-error");
     default:
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Unknown error detail");
     }
 
     return String::emptyString;

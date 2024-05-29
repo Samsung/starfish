@@ -118,7 +118,7 @@ std::vector<uint8_t> ImageEncoder::encodeJPEG(const uint8_t* src, size_t w,
     free(jpegBuffer);
 #else
 
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("encodeJPEG on Windows");
 
 #endif
     return result;
