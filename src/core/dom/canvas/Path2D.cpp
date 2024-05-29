@@ -48,7 +48,7 @@ void Path2D::initFromPath2DOrDOMString(Path2DOrDOMString& path)
     if (path.isPath2DValue()) {
         m_canvasPath->path()->copy(path.getPath2DValue()->m_canvasPath->path());
     } else if (path.isDOMStringValue()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("init Path2D from DOMString is not supported");
     }
 }
 

@@ -80,13 +80,13 @@ void HTMLVideoElement::setHeight(uint32_t height)
 
 String* HTMLVideoElement::poster()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     return String::emptyString;
 }
 
 void HTMLVideoElement::setPoster(String* poster)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 } // namespace Starfish
 

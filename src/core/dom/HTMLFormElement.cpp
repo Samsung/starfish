@@ -693,7 +693,9 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         if (url->isHTTPFamilyURL() || url->isFileURL()) {
             submitData(url, formDataSet, formEnctype, formMethod, formTarget);
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED(
+                "only submit to http family url or file are supported (%s)",
+                __PRETTY_FUNCTION__);
         }
     }
 }
@@ -708,7 +710,8 @@ void HTMLFormElement::submitData(ResourceURL* url,
     } else if (method->equals("POST")) {
         submitAsEntityBody(url, formDataSet, enctype, method, target);
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("only GET or POST method are supported (%s)",
+                             __PRETTY_FUNCTION__);
     }
 }
 
@@ -808,9 +811,11 @@ void HTMLFormElement::submitAsEntityBody(
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
             window(), fn, this, urlToOpen, targetElement);
     } else if (enctype == EncodeType::MultiPartFormData) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("MultiPartFormData is not supported (%s)",
+                             __PRETTY_FUNCTION__);
     } else if (enctype == EncodeType::TextPlain) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("TextPlain is not supported (%s)",
+                             __PRETTY_FUNCTION__);
     } else {
         // Do nothing for an invalid enctype
     }
@@ -917,7 +922,8 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         } else if (field->isHTMLInputElement() &&
                    field->type()->equals("file")) {
             // TODO: file upload, object
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("field type file is not supported (%s)",
+                                 __PRETTY_FUNCTION__);
         } else {
             formDataSet->push_back(new FormDataSetItem(
                 field->domName(), field->value(), field->type()));

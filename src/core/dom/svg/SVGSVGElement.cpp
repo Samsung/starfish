@@ -166,12 +166,12 @@ SVGTransform* SVGSVGElement::createSVGTransform()
 
 void SVGSVGElement::pauseAnimations()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 void SVGSVGElement::unpauseAnimations()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 } // namespace Starfish

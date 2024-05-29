@@ -271,6 +271,10 @@ typedef unsigned int uint;
 #endif
 #endif
 
+#if !defined(__PRETTY_FUNCTION__) && defined(COMPILER_MSVC)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 #define DEFAULT_CLEAR_STACK_SIZE 102400
 #define ELABORATE_CLEAR_STACK_SIZE DEFAULT_CLEAR_STACK_SIZE * 4
 
@@ -516,6 +520,11 @@ const char* getWindowsTempDir();
 #define STARFISH_UNSUPPORTED(...)                      \
     do {                                               \
         STARFISH_LOG_WARN("Unsupported " __VA_ARGS__); \
+    } while (0)
+
+#define STARFISH_UNSUPPORTED_METHOD()                                       \
+    do {                                                                    \
+        STARFISH_UNSUPPORTED("Unsupported method %s", __PRETTY_FUNCTION__); \
     } while (0)
 
 #define DEFINE_GETTER(Type, MemberName) \

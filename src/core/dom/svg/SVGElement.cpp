@@ -177,7 +177,8 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
             SET_PARV(xMaxYMax)
             else
             {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("Unsupported svg attribute align value %s",
+                                     align->toUTF8NonGCString().data());
             }
 #undef SET_PARV
 

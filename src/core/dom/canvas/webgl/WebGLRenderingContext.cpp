@@ -1229,7 +1229,8 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
                                                      values);
     }
     default:
-        STARFISH_UNIMPLEMENTED("pname: 0x%04X", pname);
+        STARFISH_UNSUPPORTED("unsupported pname: 0x%04X(%s)", pname,
+                             __PRETTY_FUNCTION__);
         return scriptNull();
     }
     return scriptNull();

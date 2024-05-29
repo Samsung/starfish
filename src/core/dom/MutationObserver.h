@@ -67,17 +67,17 @@ public:
 
     void observe(Node* node)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
     void observe(Node* node, MutationObserverInit options)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
     void disconnect()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED_METHOD();
     }
 
 private:

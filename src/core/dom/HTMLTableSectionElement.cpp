@@ -122,7 +122,9 @@ String* HTMLTableSectionElement::ch()
     }
     // TODO : Set defualt Value that is the decimal point character for the
     // current language as set by the lang attribute
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED(
+        "default ch other than english lang is unsupported(%s)",
+        __PRETTY_FUNCTION__);
     return String::createASCIIString(".");
 }
 

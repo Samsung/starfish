@@ -327,7 +327,7 @@ WindowProxy* Document::open(String* url, String* name, String* features)
 {
     // TODO If this Document object is not an active document, then throw an
     // "InvalidStateError" DOMException exception.
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     return nullptr;
 }
 
@@ -1321,7 +1321,7 @@ String* Document::dir()
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
 void Document::setDir(String* dir)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 bool Document::hidden() const
@@ -1836,7 +1836,7 @@ Element* Document::activeElement()
 
 bool Document::hasFocus() const
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
     return true;
 }
 
@@ -1913,7 +1913,7 @@ String* Document::domain()
 
 void Document::setDomain(String* domain)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED_METHOD();
 }
 
 Nullable<HTMLOrSVGScriptElement> Document::currentScript()
@@ -1983,13 +1983,16 @@ Event* Document::createEvent(String* type)
         break;
     case 9:
         if (type->equals("dragevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("DragEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("svgevents")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("SVGEvents is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("textevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("TextEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
@@ -1997,13 +2000,15 @@ Event* Document::createEvent(String* type)
         switch (type->charAt(0)) {
         case 'c':
             if (type->equals("closeevent")) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("CloseEvent is unsupported(%s)",
+                                     __PRETTY_FUNCTION__);
                 e = new Event(executionContext());
             }
             break;
         case 'e':
             if (type->equals("errorevent")) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("ErrorEvent is unsupported(%s)",
+                                     __PRETTY_FUNCTION__);
                 e = new Event(executionContext());
             }
             break;
@@ -2014,7 +2019,8 @@ Event* Document::createEvent(String* type)
             break;
         case 'h':
             if (type->equals("htmlevents")) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("HTMLEvents is unsupported(%s)",
+                                     __PRETTY_FUNCTION__);
                 e = new Event(executionContext());
             }
             break;
@@ -2027,13 +2033,15 @@ Event* Document::createEvent(String* type)
             if (type->equals("touchevent")) {
                 e = new TouchEvent(this);
             } else if (type->equals("trackevent")) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("TrackEvent is unsupported(%s)",
+                                     __PRETTY_FUNCTION__);
                 e = new Event(executionContext());
             }
             break;
         case 'w':
             if (type->equals("wheelevent")) {
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED("WheelEvent is unsupported(%s)",
+                                     __PRETTY_FUNCTION__);
                 e = new Event(executionContext());
             }
             break;
@@ -2050,10 +2058,12 @@ Event* Document::createEvent(String* type)
         break;
     case 12:
         if (type->equals("messageevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("MessageEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("storageevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("StorageEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
@@ -2061,58 +2071,70 @@ Event* Document::createEvent(String* type)
         if (type->equals("keyboardevent")) {
             e = new KeyboardEvent(executionContext());
         } else if (type->equals("popstateevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("PopStateEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("mutationevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("MutationEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 14:
         if (type->equals("animationevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("AnimationEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("mutationevents")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("MutationEvents is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 15:
         if (type->equals("hashchangeevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("HashChangeEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("transitionevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("TransitionEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 17:
         if (type->equals("beforeunloadevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("BeforeUnloadEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("devicemotionevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("DeviceMotionEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         } else if (type->equals("webglcontextevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("WebGLContextEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 19:
         if (type->equals("pagetransitionevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("PageTransitionEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 21:
         if (type->equals("idbversionchangeevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("IDBVersionChangeEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
     case 22:
         if (type->equals("deviceorientationevent")) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("DeviceOrientationEvent is unsupported(%s)",
+                                 __PRETTY_FUNCTION__);
             e = new Event(executionContext());
         }
         break;
