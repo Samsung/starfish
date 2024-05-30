@@ -59,6 +59,9 @@ using TexImageSource =
 
 using GLErrorSet = std::unordered_set<GLenum>;
 using GLTextureMap = std::unordered_map<GLenum, GLuint>;
+using GLExtensionMap =
+    GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
+                   CaseInsensitiveEqual>;
 
 class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
 public:
@@ -257,9 +260,10 @@ public:
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderingContext,
                                      WebGLRenderingContextBaseMixIn);
-    FILL_GC_DESC(WebGLRenderingContext, m_state);
-    FILL_GC_DESC(WebGLRenderingContext, m_unpackColorSpace);
-    FILL_GC_DESC(WebGLRenderingContext, m_drawingBufferColorSpace);
+    FILL_GC_POINTER(WebGLRenderingContext, m_state);
+    FILL_GC_POINTER(WebGLRenderingContext, m_unpackColorSpace);
+    FILL_GC_POINTER(WebGLRenderingContext, m_drawingBufferColorSpace);
+    FILL_GC_COLLECTION(WebGLRenderingContext, m_enabledExtensions);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
@@ -282,18 +286,18 @@ private:
 
     GLErrorSet m_GLErrors;
     GLTextureMap m_boundTextures;
-    GCUnorderedMap<std::string, ScriptObject, CaseInsensitiveHash,
-                   CaseInsensitiveEqual>
-        m_enabledExtensions;
     bool m_unpackFlipY;
     bool m_unpackPremultiplyAlpha;
     GLenum m_unpackColorspaceConversion;
     WebGLContextAttributes m_attributes;
-    WebGLRenderingContextState* m_state;
     bool m_isContextLost;
+    GL* m_gl;
+
+    // The followings are gc managed.
+    WebGLRenderingContextState* m_state;
     String* m_unpackColorSpace;
     String* m_drawingBufferColorSpace;
-    GL* m_gl;
+    GLExtensionMap m_enabledExtensions;
 };
 } // namespace Starfish
 
