@@ -1501,7 +1501,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     // MouseEventEnter/MouseEventOut are not supported yet
     if (kind >= MouseEventKind::MouseEventEnter) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("MouseEvent: MouseEventEnter, MouseEventOut");
         return false;
     }
 

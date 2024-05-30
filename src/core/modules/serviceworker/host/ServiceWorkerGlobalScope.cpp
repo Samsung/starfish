@@ -111,7 +111,7 @@ ServiceWorker* ServiceWorkerGlobalScope::serviceWorker()
 
     // TODO: `getting the service worker object`
 
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("ServiceWorkerGlobalScope property: serviceWorker");
     return nullptr;
 }
 

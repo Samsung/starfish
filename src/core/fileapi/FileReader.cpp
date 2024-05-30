@@ -64,7 +64,7 @@ void FileReader::readAsArrayBuffer(Blob* blob)
 
 void FileReader::readAsBinaryString(Blob* blob)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("FileReader function: readAsBinaryString");
 }
 
 void FileReader::readAsText(Blob* blob)
@@ -79,7 +79,7 @@ void FileReader::readAsText(Blob* blob, String* encoding)
 
 void FileReader::readAsDataURL(Blob* blob)
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("FileReader function: readAsDataURL");
 }
 
 void FileReader::abort()

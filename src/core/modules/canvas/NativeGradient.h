@@ -55,12 +55,12 @@ public:
 
     virtual void addColorStop(const double& offset, const Unit::Color& color)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasGradient function: addColorStop");
     }
 
     virtual bool isZeroSize()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasGradient: isZeroSize");
         return false;
     }
 

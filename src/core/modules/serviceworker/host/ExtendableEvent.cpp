@@ -114,7 +114,9 @@ void ExtendableEvent::enqueueWaitUntilMicrotask()
             // with registration.
             if (!registration) {
                 // TODO: jobHandler->tryClearRegistration(registration);
-                STARFISH_UNIMPLEMENTED();
+                STARFISH_UNSUPPORTED(
+                    "ExtendableEvent waitUntil function: unregistered "
+                    "registration");
                 return;
             }
 

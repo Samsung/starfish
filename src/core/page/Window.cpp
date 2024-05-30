@@ -407,12 +407,12 @@ void Window::resize(uint32_t w, uint32_t h)
 
 void Window::focus()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Window function: focus");
 }
 
 void Window::blur()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Window function: blur");
 }
 
 float Window::devicePixelRatio()

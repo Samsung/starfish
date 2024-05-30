@@ -174,7 +174,7 @@ private:
             initializePatternToRadialGradient(info->x1, info->y1, info->r1,
                                               info->x2, info->y2, info->r2);
         } else {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("Canvas: unsupported gradient type");
         }
 
         size_t size = info->colorStops.size();

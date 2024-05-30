@@ -250,7 +250,8 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
         // 5.2. Invoke Run Job with jobQueue.
         runJob(jobQueue);
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED(
+            "ServiceWorker: schedule job when there is a job in the queue");
 
         // 6. Else:
         // 6.1 Let lastJob be the element at the back of jobQueue.

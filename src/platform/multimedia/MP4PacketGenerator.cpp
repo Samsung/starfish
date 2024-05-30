@@ -239,7 +239,7 @@ bool MP4PacketGenerator::generateForHEVC(DemuxerSource* from,
                                          MediaPacket& packet)
 {
     STARFISH_ASSERT(m_codec == MediaCodecVideoHEVC);
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Media: HEVC codec is not supported");
     return false;
 }
 
@@ -282,7 +282,7 @@ void MP4PacketGenerator::setAVCExtraData(H264SPSVector& spsVector,
 void MP4PacketGenerator::setHEVCExtraData(std::vector<uint8_t>& extraData)
 {
     STARFISH_ASSERT(m_codec == MediaCodecVideoHEVC);
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("Media: HEVC codec is not supported");
     return;
 }
 } // namespace Starfish

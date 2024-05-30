@@ -524,26 +524,26 @@ public:
 
     virtual bool canRejectPainting(const LayoutRect& rect)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: canRejectPainting");
         return false;
     }
 
     // Generic canvas functions
     virtual void beginPath()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: beginPath");
     }
     virtual void closePath()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: closePath");
     }
     virtual void moveTo(float x, float y)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: moveTo");
     }
     virtual void lineTo(float x, float y)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: lineTo");
     }
     void rect(const Unit::Rect& rt)
     {
@@ -556,86 +556,87 @@ public:
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: curveTo");
     }
     virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: quadraticCurveTo");
     }
     virtual void arc(double xc, double yc, double radius, double angle1,
                      double angle2)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: arc");
     }
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
                              double angle2)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: arcNegative");
     }
     virtual void stroke()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: stroke");
     }
     virtual void strokePreserve()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: strokePreserve");
     }
     virtual void strokePath(Path* path)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: strokePath");
     }
     virtual void setFillRule(bool shouldUseNonZeroFillRule = true)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: setFillRule");
     }
     virtual void fill()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: fill");
     }
     virtual void fillPreserve()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: fillPreserve");
     }
     virtual void fillPath(Path* path)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: fillPath");
     }
     virtual void clipPath()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: clipPath");
     }
     virtual void clipPath(Path* path)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: clipPath(Path)");
     }
     virtual void clipPathPreserve()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: clipPathPreserve");
     }
     virtual float lineWidth()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath property: lineWidth");
         return 1.0f;
     }
     virtual void setLineWidth(float width)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: setLineWidth");
     }
     virtual void setNeedsNoneAntialias()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: setNeedsNoneAntialias");
     }
     virtual void setNeedsFastAntialias()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: setNeedsFastAntialias");
     }
     virtual void setNeedsGoodQualityAntialias()
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED(
+            "CanvasPath function: setNeedsGoodQualityAntialias");
     }
     virtual void markDirtyRect(const Unit::Rect& rt)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: markDirtyRect");
     }
     CanvasRenderTargetInfo& renderTargetInfo()
     {
@@ -644,7 +645,7 @@ public:
     virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst,
                                  bool removeImmediately = true)
     {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("CanvasPath function: fillPreserve");
     }
 #if defined(STARFISH_ENABLE_TEST)
     virtual void dump(const char* path)
