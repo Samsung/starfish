@@ -17,10 +17,12 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+
 #if defined(STARFISH_ENABLE_TTS) && \
     (!defined(STARFISH_TIZEN) ||    \
      (defined(STARFISH_TIZEN_PROD_TV) && !defined(PORT_WEBVIEW_BRIDGE_EFL)))
-#include "StarfishConfig.h"
+
 #include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/modules/threading/Thread.h"
