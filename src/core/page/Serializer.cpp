@@ -200,7 +200,9 @@ SerializedArrayBufferViewData::SerializedArrayBufferViewData(
     } else if (arrayBufferView->isUint32ArrayObject()) {
         m_type = Type::Uint32Array;
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED(
+            "serialize: BigInt64Array, BigUint64Array, Float32Array, "
+            "Float64Array, Uint8ClampedArray");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                "Data clone error");
     }
@@ -231,7 +233,9 @@ ScriptArrayBufferView SerializedArrayBufferViewData::createDeserializedValue(
     } else if (m_type == Type::Uint32Array) {
         arrayBufferView = Uint32ArrayObjectRef::create(state);
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED(
+            "deserialize: BigInt64Array, BigUint64Array, Float32Array, "
+            "Float64Array, Uint8ClampedArray");
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                "Data clone error");
     }
@@ -410,7 +414,7 @@ static SerializedTypedData* serializeInternal(
             data = new SerializedPrimitiveValueData(
                 obj->asDateObject()->primitiveValue());
         } else if (obj->isRegExpObject()) {
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("serialize: RegExpObject");
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
@@ -537,7 +541,7 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
         result = dateObj;
     } else if (value->isRegExp()) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("deserialize: RegExpObject");
         result = ValueRef::createUndefined();
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
@@ -562,7 +566,7 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
             value->data()->asArrayBufferViewData()->createDeserializedValue(
                 executionContext, state);
     } else {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("deserialize: unsupported value");
     }
     if (result) {
         memory.insert(std::make_pair(value, result));
@@ -670,7 +674,7 @@ void Serializer::serializeWithTransfer(
             }
         } else if (item->isArrayBufferObject()) {
             // TODO Handle SharedArrayBuffer case (ECMAScript2018)
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("serialize: transfer ArrayBuffer");
         }
     }
     SerializedTypedData* serialized =

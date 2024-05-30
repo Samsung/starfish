@@ -344,7 +344,7 @@ static bool handleMetAVC(StreamInfoMP4* stream, MP4PacketGenerator* generator)
     }
     if (!generator->isCodec(MediaCodecUnknown) &&
         !generator->isCodec(MediaCodecVideoH264)) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Media: unsupported codec");
         DEMUXERMP4_LOG("Unexpected structure of MP4");
         DEMUXERMP4_LOG("> AVC1/AVC3: OTHER -> MP4H264");
         return false;
@@ -364,7 +364,7 @@ static bool handleMetHVC(StreamInfoMP4* stream, MP4PacketGenerator* generator)
     if (generator->isCodec(MediaCodecUnknown)) {
         generator->setCodec(MediaCodecVideoHEVC);
     } else if (!generator->isCodec(MediaCodecVideoHEVC)) {
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Media: unsupported codec");
         DEMUXERMP4_LOG("Unexpected structure of MP4");
         DEMUXERMP4_LOG("> HVC1/HEV1: OTHER -> MP4HEVC");
         return false;
@@ -707,7 +707,7 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
                     (size_t)stream.codedTimeToMilliseconds(duration);
 
                 if (!m_packetGenerator->generate(source, sampleSize, packet)) {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED("Media: unsupported codec");
                     DEMUXERMP4_LOG("Unexpected structure of MP4");
                     DEMUXERMP4_LOG("> MDAT");
                     return false;

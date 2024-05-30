@@ -280,7 +280,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
                     job->data()->scopeURL);
             swConnection->scheduleJob(job);
 #else
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("ServiceWorker: schedule job on host");
 #endif
         },
         job);
@@ -400,7 +400,9 @@ Promise* ServiceWorkerContainer::getRegistrations()
     auto promise = new Promise(scriptBindingInstance());
 
     // TODO: Send and receive data from Job handler
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED(
+        "ServiceWorkerContainer getRegistration function: send and receive "
+        "data from Job handler");
 
     auto registrationsObjects =
         createScriptArrayBuffer(scriptBindingInstance(), 0);
@@ -445,7 +447,7 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
 
             swConnection->matchRegistration(swrequest, urlString);
 #else
-            STARFISH_UNIMPLEMENTED();
+            STARFISH_UNSUPPORTED("ServiceWorker: match registration on host");
 #endif
         },
         request, clientURL->urlString());

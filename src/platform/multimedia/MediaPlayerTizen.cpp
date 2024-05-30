@@ -1653,7 +1653,7 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     } else {
         // TODO
         media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_MP3);
-        STARFISH_UNIMPLEMENTED();
+        STARFISH_UNSUPPORTED("Media: unsupported audio codec");
     }
 
     media_format_set_audio_channel(mediaFormat, (int)info->audioChannels());

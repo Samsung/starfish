@@ -102,7 +102,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
                             formSubmitData->m_enctype);
                     }
                 } else {
-                    STARFISH_UNIMPLEMENTED();
+                    STARFISH_UNSUPPORTED("Resource: unsupported url type");
                 }
             }
             m_resourceRequest->m_requestData->m_url = url;

@@ -102,7 +102,7 @@ Promise* PushManager::subscribe()
         },
         this, promise);
 #else
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("PushManager function: subscribe on host");
 #endif
     return promise;
 }
@@ -148,7 +148,7 @@ Promise* PushManager::getSubscription()
         },
         this, promise);
 #else
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_UNSUPPORTED("PushManager function: getSubscription on host");
 #endif
     return promise;
 }
