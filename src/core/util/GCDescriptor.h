@@ -49,7 +49,10 @@ protected:                                                        \
     _VA_MACRO(__VA_ARGS__, _NEW_WITH_GC_DESC_ARG2, _NEW_WITH_GC_DESC_ARG1) \
     (__VA_ARGS__)
 
-#define FILL_GC_DESC(Class, name) GC_set_bit(desc, GC_WORD_OFFSET(Class, name));
+#define FILL_GC_POINTER(Class, name) \
+    GC_set_bit(desc, GC_WORD_OFFSET(Class, name));
+#define FILL_GC_COLLECTION(Class, name) \
+    markHashTable(desc, GC_WORD_OFFSET(Class, name));
 
 #define END_IMPLEMENT_NEW_WITH_GC_DESC() }
 

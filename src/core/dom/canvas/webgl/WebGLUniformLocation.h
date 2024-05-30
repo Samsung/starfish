@@ -51,7 +51,7 @@ public:
     DEFINE_GETTER(GLint, location);
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLUniformLocation);
-    FILL_GC_DESC(WebGLUniformLocation, m_program);
+    FILL_GC_POINTER(WebGLUniformLocation, m_program);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
 private:
