@@ -20,7 +20,9 @@
 #include "ShellConfig.h"
 #include "UnitTestRunner.h"
 
+#ifndef STARFISH_TIZEN
 #include "gtest/gtest.h"
+#endif
 
 namespace StarfishShell {
 
@@ -34,11 +36,17 @@ UnitTestRunner::~UnitTestRunner()
 
 void UnitTestRunner::initialize(int argc, char* argv[])
 {
+#ifndef STARFISH_TIZEN
     testing::InitGoogleTest(&argc, argv);
+#endif
 }
 
 int UnitTestRunner::runAllTests()
 {
+#ifndef STARFISH_TIZEN
     return testing::UnitTest::GetInstance()->Run();
+#else
+    return 0;
+#endif
 }
 } // namespace StarfishShell

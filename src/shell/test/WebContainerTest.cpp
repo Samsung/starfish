@@ -229,12 +229,12 @@ LWE::WebContainer* WebContainerTest::lwe = nullptr;
 TEST_F(WebContainerTest, LoadURL)
 {
     bool loaded = false;
-    lwe->LoadURL("about:blank");
     lwe->RegisterOnPageLoadedHandler(
         [&loaded](LWE::WebContainer* wc, const std::string& string) {
             window->appLoop()->stop();
             loaded = true;
         });
+    lwe->LoadURL("about:blank");
     window->appLoop()->start(3); // Timout 3 sec.
     EXPECT_TRUE(loaded);
 }
@@ -242,12 +242,12 @@ TEST_F(WebContainerTest, LoadURL)
 TEST_F(WebContainerTest, LoadData)
 {
     bool loaded = false;
-    lwe->LoadData("<html><body>Hello World!</body></html>");
     lwe->RegisterOnPageLoadedHandler(
         [&loaded](LWE::WebContainer* wc, const std::string& string) {
             window->appLoop()->stop();
             loaded = true;
         });
+    lwe->LoadData("<html><body>Hello World!</body></html>");
     window->appLoop()->start(3); // Timout 3 sec.
     EXPECT_TRUE(loaded);
 }
@@ -255,12 +255,12 @@ TEST_F(WebContainerTest, LoadData)
 TEST_F(WebContainerTest, GetURL)
 {
     std::string onloadUrl;
-    lwe->LoadURL("about:blank");
     lwe->RegisterOnPageLoadedHandler(
         [&onloadUrl](LWE::WebContainer* wc, const std::string& string) {
             window->appLoop()->stop();
             onloadUrl = string;
         });
+    lwe->LoadURL("about:blank");
     window->appLoop()->start(3); // Timout 3 sec.
     std::string getUrl = lwe->GetURL();
     EXPECT_TRUE(getUrl == onloadUrl);
