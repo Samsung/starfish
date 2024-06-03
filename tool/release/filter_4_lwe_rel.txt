@@ -3,6 +3,7 @@ P /.github
 P /.circleci
 
 - /.github
+- /src/shell/test
 - /src/public/bridge/android
 - /inspector
 + /build/test
