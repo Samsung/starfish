@@ -235,7 +235,7 @@ static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
-
+static size_t g_screenStencilBufferSize = 0;
 static void checkError(GL* gl)
 {
     volatile auto error = gl->getError();
@@ -1233,6 +1233,11 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         STARFISH_RELEASE_ASSERT(CanvasSurface::g_canvasSurfaceTileSize <=
                                 g_maxTextureSize);
         STARFISH_RELEASE_ASSERT(MIN_MAX_TEXTURE_SIZE <= siz);
+
+        siz = 0;
+        gl->getIntegerv(GL_STENCIL_BITS, &siz);
+        STARFISH_LOG_INFO("screenStencilBufferSize %d", siz);
+        g_screenStencilBufferSize = siz;
 
         bool isOpenGLES3 = true;
         int major;
@@ -2919,6 +2924,7 @@ public:
         bool stencilClippingEnabled = false;
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
+        bool fboStencilClipingEnabled = false;
         Unit::Rect visibleArea =
             Unit::Rect(0, 0, screenWidth(), screenHeight());
 
@@ -3025,9 +3031,32 @@ public:
                             visibleArea.unite(boundingRect(result[i]));
                         }
 
+                        float diffXDueToStencilCliping = 0;
+                        float diffYDueToStencilCliping = 0;
                         stencilClippingEnabled = true;
 
+                        if (!g_screenStencilBufferSize) {
+                            fboStencilClipingEnabled = true;
+                            pushFBOContext(visibleArea.width(),
+                                           visibleArea.height(), true,
+                                           LayoutRect(0, 0, visibleArea.width(),
+                                                      visibleArea.height()));
+                            diffXDueToStencilCliping = -visibleArea.x();
+                            diffYDueToStencilCliping = -visibleArea.y();
+
+                            screenWidth = visibleArea.width();
+                            screenHeight = visibleArea.height();
+                            screenMatrix = SkMatrix::I();
+
+                            ctm.preTranslate(diffXDueToStencilCliping,
+                                             diffYDueToStencilCliping);
+
+                            gl()->clearColor(0, 0, 0, 0);
+                            gl()->clear(GL_COLOR_BUFFER_BIT);
+                        }
+
                         gl()->enable(GL_STENCIL_TEST);
+                        STARFISH_ASSERT(gl()->isEnabled(GL_STENCIL_TEST));
                         gl()->clearStencil(0);
                         gl()->clear(GL_STENCIL_BUFFER_BIT);
                         gl()->colorMask(false, false, false, false);
@@ -3039,15 +3068,20 @@ public:
                         std::vector<N> indices = mapbox::earcut<N>(polygon);
 
                         position.reserve((indices.size() / 3) * 6);
-
                         for (size_t i = 0; i < indices.size(); i += 3) {
                             float trianglePoints[6] = {
-                                (float)pointPerIndex[indices[i]][0],
-                                (float)pointPerIndex[indices[i]][1],
-                                (float)pointPerIndex[indices[i + 1]][0],
-                                (float)pointPerIndex[indices[i + 1]][1],
-                                (float)pointPerIndex[indices[i + 2]][0],
-                                (float)pointPerIndex[indices[i + 2]][1]
+                                (float)pointPerIndex[indices[i]][0] +
+                                    diffXDueToStencilCliping,
+                                (float)pointPerIndex[indices[i]][1] +
+                                    diffYDueToStencilCliping,
+                                (float)pointPerIndex[indices[i + 1]][0] +
+                                    diffXDueToStencilCliping,
+                                (float)pointPerIndex[indices[i + 1]][1] +
+                                    diffYDueToStencilCliping,
+                                (float)pointPerIndex[indices[i + 2]][0] +
+                                    diffXDueToStencilCliping,
+                                (float)pointPerIndex[indices[i + 2]][1] +
+                                    diffYDueToStencilCliping
                             };
 
                             mapPointsByMatrix(trianglePoints[0],
@@ -3079,7 +3113,8 @@ public:
 
                         gl()->bindBuffer(GL_ARRAY_BUFFER,
                                          m_compositorContext->m_drawPosBuffer);
-                        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
+                        gl()->bufferData(GL_ARRAY_BUFFER,
+                                         sizeof(float) * position.size(),
                                          position.data(), GL_DYNAMIC_DRAW);
                         gl()->vertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
@@ -3092,12 +3127,14 @@ public:
                             Unit::Color(255, 255, 255, 255).G(),
                             Unit::Color(255, 255, 255, 255).B(),
                             Unit::Color(255, 255, 255, 255).A());
-                        gl()->drawArrays(GL_TRIANGLES, 0, position.size() / 2);
+
+                        gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
                         checkError(gl());
 
                         gl()->colorMask(true, true, true, true);
                         gl()->stencilFunc(GL_EQUAL, 1, 1);
                         gl()->stencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                        checkError(gl());
                     }
                 } else {
                     shouldSkipTexturePainting = true;
@@ -3210,6 +3247,91 @@ public:
 
         if (stencilClippingEnabled) {
             gl()->disable(GL_STENCIL_TEST);
+            if (fboStencilClipingEnabled) {
+                GLuint fboTex = popFBOContext();
+
+                m_compositorContext->texShaderProgram();
+
+                float dest[4][2]; // order is LB, LT, RB, RT
+                dest[0][0] = visibleArea.x();
+                dest[0][1] = visibleArea.maxY();
+                dest[1][0] = visibleArea.x();
+                dest[1][1] = visibleArea.y();
+                dest[2][0] = visibleArea.maxX();
+                dest[2][1] = visibleArea.maxY();
+                dest[3][0] = visibleArea.maxX();
+                dest[3][1] = visibleArea.y();
+
+                mapPointsByMatrix(dest[0][0], dest[0][1],
+                                  screenMatrix); // using screenMatrix because
+                                                 // screenMatrix is always
+                                                 // SkMatrix::I in this path
+                mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
+                mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
+                mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
+
+                mapPointsByMatrix(dest[0][0], dest[0][1], m_screenMatrix);
+                mapPointsByMatrix(dest[1][0], dest[1][1], m_screenMatrix);
+                mapPointsByMatrix(dest[2][0], dest[2][1], m_screenMatrix);
+                mapPointsByMatrix(dest[3][0], dest[3][1], m_screenMatrix);
+
+                float hw = 2.f / this->screenWidth();
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+                float hh = 2.f / this->screenHeight();
+
+                float position[8];
+                position[0] = dest[0][0] * hw - 1;
+                position[1] = dest[0][1] * hh - 1;
+
+                position[2] = dest[1][0] * hw - 1;
+                position[3] = dest[1][1] * hh - 1;
+
+                position[4] = dest[2][0] * hw - 1;
+                position[5] = dest[2][1] * hh - 1;
+
+                position[6] = dest[3][0] * hw - 1;
+                position[7] = dest[3][1] * hh - 1;
+#else
+                float hh = -2.f / this->screenHeight();
+
+                float position[8];
+                position[0] = dest[0][0] * hw - 1;
+                position[1] = dest[0][1] * hh + 1;
+
+                position[2] = dest[1][0] * hw - 1;
+                position[3] = dest[1][1] * hh + 1;
+
+                position[4] = dest[2][0] * hw - 1;
+                position[5] = dest[2][1] * hh + 1;
+
+                position[6] = dest[3][0] * hw - 1;
+                position[7] = dest[3][1] * hh + 1;
+#endif
+                gl()->bindTexture(GL_TEXTURE_2D, fboTex);
+                checkError(gl());
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                 m_compositorContext->m_drawPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                                 GL_DYNAMIC_DRAW);
+                gl()->vertexAttribPointer(
+                    m_compositorContext->m_texShaderProgramPosition, 2,
+                    GL_FLOAT, false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                checkError(gl());
+
+                gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                auto errChk = gl()->getError();
+                if (errChk == 1286) {
+                    STARFISH_LOG_ERROR("fbo stencil clipping got error 1286");
+                } else if (errChk) {
+                    STARFISH_LOG_ERROR(
+                        "fbo stencil clipping got fatal error %d", errChk);
+                }
+
+                m_compositorContext->putGenericTextureToCache(
+                    fboTex, visibleArea.width(), visibleArea.height());
+            }
         }
         if (scissorClippingEnabled) {
             gl()->disable(GL_SCISSOR_TEST);
