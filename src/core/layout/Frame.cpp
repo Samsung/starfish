@@ -2031,7 +2031,7 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
         LengthData offset = style->offset();
         if (style->height().isAuto() && isAbsolutePositioned() &&
             offset.top().isSpecified() && offset.bottom().isSpecified()) {
-            if (containerHeightMayBeChanged) {
+            if (containerHeightMayBeChanged || containingBox != layoutParent()) {
                 return true;
             }
 
