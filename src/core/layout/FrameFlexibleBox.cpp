@@ -1210,32 +1210,42 @@ bool FrameFlexibleBox::shouldLayout(LayoutContext& ctx,
 }
 
 struct MinMaxWidthHeightRestorer {
-    MinMaxWidthHeightRestorer(FrameBox* b)
+    MinMaxWidthHeightRestorer(FrameBox* b, bool isMainAxisInInlineAxis)
         : m_box(b)
+        , m_isMainAxisInInlineAxis(isMainAxisInInlineAxis)
     {
         ComputedStyle* style = b->style();
-        m_minWidth = style->minWidth();
-        m_maxWidth = style->maxWidth();
-        m_minHeight = style->minHeight();
-        m_maxHeight = style->maxHeight();
+        if (m_isMainAxisInInlineAxis) {
+            m_minWidth = style->minWidth();
+            m_maxWidth = style->maxWidth();
+        } else {
+            m_minHeight = style->minHeight();
+            m_maxHeight = style->maxHeight();
+        }
     }
 
     void initValues()
     {
         ComputedStyle* style = m_box->style();
-        style->setMinWidth(Length(Length::Fixed, 0));
-        style->setMaxWidth(Length());
-        style->setMinHeight(Length(Length::Fixed, 0));
-        style->setMaxHeight(Length());
+        if (m_isMainAxisInInlineAxis) {
+            style->setMinWidth(Length(Length::Fixed, 0));
+            style->setMaxWidth(Length());
+        } else {
+            style->setMinHeight(Length(Length::Fixed, 0));
+            style->setMaxHeight(Length());
+        }
     }
 
     ~MinMaxWidthHeightRestorer()
     {
         ComputedStyle* style = m_box->style();
-        style->setMinWidth(m_minWidth);
-        style->setMaxWidth(m_maxWidth);
-        style->setMinHeight(m_minHeight);
-        style->setMaxHeight(m_maxHeight);
+        if (m_isMainAxisInInlineAxis) {
+            style->setMinWidth(m_minWidth);
+            style->setMaxWidth(m_maxWidth);
+        } else {
+            style->setMinHeight(m_minHeight);
+            style->setMaxHeight(m_maxHeight);
+        }
     }
 
     FrameBox* m_box;
@@ -1243,6 +1253,7 @@ struct MinMaxWidthHeightRestorer {
     Length m_maxWidth;
     Length m_minHeight;
     Length m_maxHeight;
+    bool m_isMainAxisInInlineAxis;
 };
 
 static void computeBorderMarginPaddingWithinFlexContext(
@@ -1266,7 +1277,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     bool isMainAxisInInlineAxis = this->isMainAxisInInlineAxis();
     LayoutUnit basisSize = intMaxForLayoutUnit;
     FlexBasisData flexBasis = flexItem->style()->flexBasis();
-    MinMaxWidthHeightRestorer restorer(flexItem);
+    MinMaxWidthHeightRestorer restorer(flexItem, isMainAxisInInlineAxis);
     restorer.initValues();
     MBPRestorer restorer2(flexItem);
     bool applyLineClamp = shouldApplyLineClamp(flexItem);
