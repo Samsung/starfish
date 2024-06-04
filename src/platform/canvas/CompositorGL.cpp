@@ -2928,7 +2928,6 @@ public:
         Unit::Rect visibleArea =
             Unit::Rect(0, 0, screenWidth(), screenHeight());
 
-        SkMatrix screenMatrix = m_screenMatrix;
         SkMatrix ctm = lastState.matrix;
         size_t screenWidth = this->screenWidth();
         size_t screenHeight = this->screenHeight();
@@ -3046,10 +3045,9 @@ public:
 
                             screenWidth = visibleArea.width();
                             screenHeight = visibleArea.height();
-                            screenMatrix = SkMatrix::I();
 
-                            ctm.preTranslate(diffXDueToStencilCliping,
-                                             diffYDueToStencilCliping);
+                            ctm.postTranslate(diffXDueToStencilCliping,
+                                              diffYDueToStencilCliping);
 
                             gl()->clearColor(0, 0, 0, 0);
                             gl()->clear(GL_COLOR_BUFFER_BIT);
@@ -3084,12 +3082,17 @@ public:
                                     diffYDueToStencilCliping
                             };
 
-                            mapPointsByMatrix(trianglePoints[0],
-                                              trianglePoints[1], screenMatrix);
-                            mapPointsByMatrix(trianglePoints[2],
-                                              trianglePoints[3], screenMatrix);
-                            mapPointsByMatrix(trianglePoints[4],
-                                              trianglePoints[5], screenMatrix);
+                            if (!fboStencilClipingEnabled) {
+                                mapPointsByMatrix(trianglePoints[0],
+                                                  trianglePoints[1],
+                                                  m_screenMatrix);
+                                mapPointsByMatrix(trianglePoints[2],
+                                                  trianglePoints[3],
+                                                  m_screenMatrix);
+                                mapPointsByMatrix(trianglePoints[4],
+                                                  trianglePoints[5],
+                                                  m_screenMatrix);
+                            }
 
                             float hw = 2.f / screenWidth;
 #if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
@@ -3158,8 +3161,9 @@ public:
                                               std::abs(maxY - minY));
                 if (screenBoundingRect.intersects(visibleArea)) {
                     float texPosition[8];
-                    computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
-                                           screenHeight, texPosition);
+                    computeTexturePosition(dst, ctm, m_screenMatrix,
+                                           screenWidth, screenHeight,
+                                           texPosition);
                     drawTexture(csGL, texPosition,
                                 csGL->m_textureFragments[0].textureID,
                                 GL_TEXTURE_EXTERNAL_OES, -1,
@@ -3229,7 +3233,7 @@ public:
                                 GLuint tid = (GLuint)fragment.textureID;
                                 float texPosition[8];
                                 computeTexturePosition(
-                                    newDst, ctm, screenMatrix, screenWidth,
+                                    newDst, ctm, m_screenMatrix, screenWidth,
                                     screenHeight, texPosition);
                                 drawTexture(csGL, texPosition, tid,
                                             GL_TEXTURE_2D, GL_TEXTURE0,
@@ -3261,14 +3265,6 @@ public:
                 dest[2][1] = visibleArea.maxY();
                 dest[3][0] = visibleArea.maxX();
                 dest[3][1] = visibleArea.y();
-
-                mapPointsByMatrix(dest[0][0], dest[0][1],
-                                  screenMatrix); // using screenMatrix because
-                                                 // screenMatrix is always
-                                                 // SkMatrix::I in this path
-                mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
-                mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
-                mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
 
                 mapPointsByMatrix(dest[0][0], dest[0][1], m_screenMatrix);
                 mapPointsByMatrix(dest[1][0], dest[1][1], m_screenMatrix);
