@@ -263,7 +263,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             contentHeight = layoutInline(ctx);
         }
 
-        if (isFrameTableCellBox() || isFlexItem() || isFrameButtonBox()) {
+        if (!ctx.inComputingBasisSize() &&
+               (isFrameTableCellBox() || isFlexItem() || isFrameButtonBox())) {
             ctx.registerContentHeight(this, contentHeight);
         }
 
@@ -490,6 +491,10 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
     if (!needToEstablishKindsOfFormattingContext()) {
         Frame::quickLayout(ctx);
+    }
+
+    if (isFrameTableCellBox() || isFlexItem() || isFrameButtonBox()) {
+        ctx.registerContentHeight(this, contentHeight());
     }
 
     if (hasBlockFlow()) {
