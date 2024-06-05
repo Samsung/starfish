@@ -28,7 +28,11 @@ public:
           const int line);
 };
 
-#if defined(NDEBUG)
+#if !defined(NDEBUG)
+#define ENABLE_TRACE
+#endif
+
+#if !defined(ENABLE_TRACE)
 
 #define TRACE(id, ...)
 #define TRACE0(id, ...)

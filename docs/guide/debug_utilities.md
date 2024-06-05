@@ -1,17 +1,23 @@
-# Utilities
+# Debug Utilities
 
-This module uses a custom logging utility defined in `Logger.h`.
+## Trace macros
 
-## Macros
+This module provides macros defined in `Trace.h`. All macros can be toggled with
+the `TRACE=value` environment variable. Types inheriting from std::stream are
+supported. Each macro checks the current thread and adds a human-readable thread
+ID prefix (e.g., `[1]`).
 
-This module provides a few macros defined in `Trace.h`.
-All macros can be turned on/off via the enviroment variable, `TRACE=value`. Types inheriting `std::stream` are supported.
-The macros check on which thread they are being used and add a prefix as a human-readable thread ID. (e.g `[1]`)
+`TRACE` is enabled in debug builds. Defining `ENABLE_TRACE` in a build will also enable it in release builds.
+
+```shell
+CXXFLAGS="-DENABLE_TRACE=1" cmake CMakeLists.txt ...
+```
 
 ### `TRACE(identifier[,data][,...args])`
-* identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
-* data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
-* ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
+
+- identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
+- data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
+- ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
 
 ```cpp
 // Test.cpp
@@ -35,6 +41,7 @@ class Test {
 ```
 
 Usage:
+
 ```shell
 $ export TRACE=ID1,ID3
 $ ./Starfish
@@ -57,11 +64,11 @@ $ ./Starfish
 // print nothing
 ```
 
-
 ### `TRACE_SCOPE(identifier[,data][,...args])`
-* identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
-* data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
-* ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
+
+- identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
+- data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
+- ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
 
 A stack scope-based logger mainly for printing function call graphs.
 
@@ -88,6 +95,7 @@ class Test {
 ```
 
 Usage:
+
 ```shell
 $ export TRACE=ID1
 $ ./Starfish
@@ -99,9 +107,10 @@ $ ./Starfish
 ```
 
 ### `TRACE0(identifier[,data][,...args])`
-* identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
-* data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
-* ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
+
+- identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
+- data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
+- ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
 
 This behaves similar to `TRACE` but doesn't print the code location.
 
@@ -118,6 +127,7 @@ class Test {
 ```
 
 Usage:
+
 ```shell
 $ export TRACE=*
 $ ./Starfish
