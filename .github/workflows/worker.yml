@@ -1,0 +1,69 @@
+name: Build Starfish (worker)
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
+
+jobs:
+  build_x64_workers:
+    # After the firewall registraion is done, a code runner should also be added to test work.
+    # runs-on:  [ code-linux, code-2xlarge ]
+    runs-on:  [ legacy-rat6 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    strategy:
+      fail-fast: false
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+
+      - name: Clean workspace
+        run: |
+          git clean -xdf
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Checkout Testcase..
+        run: |
+          git submodule init
+          git submodule update test
+
+      - name: Configuration
+        run: |
+          cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
+            -DHOST=linux -DARCH=x64 -DDOCKER=1 \
+            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw\
+            -DWORKER=1 -DSHARED_WORKER=1 -DSERVICE_WORKER=1
+      - name: Build Starfish
+        run: ninja -C uv_cairo_gl/debug starfish.executable
+      - name: Build SharedWorker
+        run: ninja -C uv_cairo_gl/debug starfish.sharedworker.executable
+      - name: Build ServiceWorker
+        run: ninja -C uv_cairo_gl/debug starfish.serviceworker.executable
+
+      - name: Prepare Test
+        run: |
+          chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish
+          chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker
+          ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish Starfish
+          ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker Starfish-sharedworker
+          /root/workspace/set_up_hosts.sh
+      - name: Run Test
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_worker || exit 1        

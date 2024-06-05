@@ -33,19 +33,6 @@ class SharedWorkerMessagePortConnection;
 
 namespace SharedWorkerMessage {
 
-#if defined(STARFISH_ENABLE_TEST)
-    class SharedWorkerMessageTest : public IPCMessage {
-    public:
-        static const char* messageID()
-        {
-            return "sharedWorkerMessageTest";
-        }
-
-        IPCMessageSerializer* serialize() override;
-        void deserialize(IPCMessageDeserializer* deserializer) override;
-    };
-#endif
-
     class RequestGetSharedWorker : public IPCMessage {
     public:
         static const char* messageID()

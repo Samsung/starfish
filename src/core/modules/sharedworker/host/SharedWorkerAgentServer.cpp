@@ -55,16 +55,6 @@ void SharedWorkerAgentServer::onReceived(Socket* socket, const char* data,
     m_messageHandler->onReceiveMessage(data, len);
 }
 
-#if defined(STARFISH_ENABLE_TEST)
-static void onSharedWorkerMessageTest(IPCMessageDeserializer* deserializer)
-{
-    SharedWorkerMessage::SharedWorkerMessageTest message;
-    message.deserialize(deserializer);
-
-    SharedWorkerAgent::instance()->server()->send("0", 1);
-}
-#endif
-
 static void onRequestSharedWorkerMessage(IPCMessageDeserializer* deserializer)
 {
     SharedWorkerMessage::RequestGetSharedWorker message;
@@ -108,12 +98,6 @@ static void onRequestCloseSharedWorkerMessage(
 
 void SharedWorkerAgentServer::initMessageReceiveHandlers()
 {
-#if defined(STARFISH_ENABLE_TEST)
-    m_messageHandler->setMessageReceiveHandler(
-        SharedWorkerMessage::SharedWorkerMessageTest::messageID(),
-        onSharedWorkerMessageTest);
-#endif
-
     m_messageHandler->setMessageReceiveHandler(
         SharedWorkerMessage::RequestGetSharedWorker::messageID(),
         onRequestSharedWorkerMessage);

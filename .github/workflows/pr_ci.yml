@@ -74,9 +74,9 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
     secrets: inherit
 
-  serviceworker:
+  worker:
     needs: [ squash_thirdparty ]
-    uses: ./.github/workflows/serviceworker.yml
+    uses: ./.github/workflows/worker.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
     secrets: inherit

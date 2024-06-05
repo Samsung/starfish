@@ -54,11 +54,6 @@ SharedWorkerClient::~SharedWorkerClient()
 void SharedWorkerClient::start()
 {
     connect();
-
-#if defined(STARFISH_ENABLE_TEST)
-    SharedWorkerMessage::SharedWorkerMessageTest message;
-    m_messageHandler->sendMessage(this, message);
-#endif
 }
 
 void SharedWorkerClient::onReceived(Socket* socket, const char* data,

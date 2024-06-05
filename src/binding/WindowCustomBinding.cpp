@@ -31,6 +31,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/renderer/Renderer.h"
+#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -587,9 +588,9 @@ static ValueRef* simulateMouseUpFunction(ExecutionStateRef* state,
 }
 
 static ValueRef* simulateMouseMoveFunction(ExecutionStateRef* state,
-                                         ValueRef* thisValue, size_t argc,
-                                         NULLABLE ValueRef** argv,
-                                         bool isNewExpression)
+                                           ValueRef* thisValue, size_t argc,
+                                           NULLABLE ValueRef** argv,
+                                           bool isNewExpression)
 {
     GENERATE_WINDOW();
 
@@ -671,6 +672,12 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
                                     ValueRef** argv, bool isNewExpression)
 {
     puts("wptTestEnd() called");
+
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    // must notify the server that the connection has ended.
+    SharedWorkerProcessManager::instance()->closeConnection();
+#endif
+
     if (gotTestAssert) {
         puts("[PASS]");
         STARFISH_LOG_ERROR("%s", "[PASS]");
