@@ -33,6 +33,8 @@ public:
     Connection();
     Connection(int protocol);
 
+    virtual ~Connection();
+
     void send(const char* data, size_t len);
     void onReceived(Socket* socket, const char* data, size_t len) override;
     void onStopped() override;

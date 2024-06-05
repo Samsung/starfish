@@ -17,7 +17,8 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SHARED_WORKER) || \
+    defined(STARFISH_ENABLE_SERVICE_WORKER)
 
 #include "StarfishConfig.h"
 

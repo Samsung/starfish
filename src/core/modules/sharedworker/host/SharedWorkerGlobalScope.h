@@ -47,13 +47,17 @@ public:
 
     void dispose() override;
 
-    void initialize(const std::string& name);
+    void initialize(const std::string& name, size_t sharedWorkerKey);
 
     void postTask(PostTaskCallback task, void* data);
 
     void requestConnection(MessagePortConnectionInfo* info);
 
     MessageEvent* createConnectMessageEvent(MessagePort* messagePort);
+
+    void closeConnection(uint32_t pid);
+
+    void close();
 
     String* name()
     {
@@ -71,7 +75,8 @@ private:
         MessagePortConnectionInfo* info, MessagePort* messagePort);
 
     String* m_name;
-    GCUnorderedMap<uint32_t, SharedWorkerMessagePortConnection*> m_connections;
+    size_t m_sharedWorkerKey;
+    GCVector<SharedWorkerMessagePortConnection*> m_connections;
 };
 
 } // namespace Starfish

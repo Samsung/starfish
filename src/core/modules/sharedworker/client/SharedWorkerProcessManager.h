@@ -43,6 +43,8 @@ public:
 
     void requestConnection(SharedWorker* sharedWorker);
 
+    void closeConnection();
+
     void destroy();
 
     void startMessagePortConnection(

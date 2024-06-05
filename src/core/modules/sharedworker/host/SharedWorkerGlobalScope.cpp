@@ -41,6 +41,7 @@ SharedWorkerGlobalScope::SharedWorkerGlobalScope(WebWorker* webWorker,
                                                  String* charSet)
     : WorkerGlobalScope(webWorker)
     , m_name(String::emptyString)
+    , m_sharedWorkerKey(0)
 {
     m_scriptBindingInstance =
         new ScriptBindingWorkerInstance<SharedWorkerGlobalScope>(
@@ -49,15 +50,17 @@ SharedWorkerGlobalScope::SharedWorkerGlobalScope(WebWorker* webWorker,
     initGlobalScope(url, charSet);
 }
 
-void SharedWorkerGlobalScope::initialize(const std::string& name)
+void SharedWorkerGlobalScope::initialize(const std::string& name,
+                                         size_t sharedWorkerKey)
 {
     STARFISH_ASSERT(m_executionContext->isContextThread());
 
     m_name = String::fromUTF8(name.data(), name.size());
+    m_sharedWorkerKey = sharedWorkerKey;
 
-    if (loadMainScript()) {
-    } else {
-        // TODO: terminate worker
+    if (!loadMainScript()) {
+        SharedWorkerAgent::instance()->terminateWorkerThreadInOtherThread(
+            m_sharedWorkerKey);
     }
 }
 
@@ -66,7 +69,7 @@ void SharedWorkerGlobalScope::dispose()
     STARFISH_ASSERT(m_executionContext->isContextThread());
 
     for (const auto& connection : m_connections) {
-        connection.second->close();
+        connection->close();
     }
 
     WorkerGlobalScope::dispose();
@@ -115,11 +118,11 @@ SharedWorkerGlobalScope::createMessagePortConnection(
 {
     auto* agent = SharedWorkerAgent::instance();
     auto* connection = new SharedWorkerMessagePortConnection(
-        agent->perProcess(), messagePort, info->identifier, info->clientID,
+        agent->perProcess(), messagePort, info->clientID, info->pid,
         agent->ipcAddress()->createIPCAddress(
             std::to_string(info->identifier)));
 
-    m_connections.insert({ info->identifier, connection });
+    m_connections.push_back(connection);
 
     return connection;
 }
@@ -164,6 +167,40 @@ MessageEvent* SharedWorkerGlobalScope::createConnectMessageEvent(
     event->setSource(MessageEventSource::createMessagePort(messagePort));
 
     return event;
+}
+
+void SharedWorkerGlobalScope::closeConnection(uint32_t pid)
+{
+    TRACE(SHAREDWORKER, pid);
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+
+    m_connections.erase(
+        std::remove_if(m_connections.begin(), m_connections.end(),
+                       [pid](SharedWorkerMessagePortConnection* connection) {
+                           if (connection->pid() == pid) {
+                               connection->close();
+                               connection->~SharedWorkerMessagePortConnection();
+                               return true;
+                           }
+                           return false;
+                       }),
+        m_connections.end());
+
+    if (m_connections.empty()) {
+        SharedWorkerAgent::instance()->terminateWorkerThreadInOtherThread(
+            m_sharedWorkerKey);
+    }
+}
+
+void SharedWorkerGlobalScope::close()
+{
+    for (const auto& iter : m_connections) {
+        iter->close();
+    }
+    m_connections.clear();
+
+    SharedWorkerAgent::instance()->terminateWorkerThreadInOtherThread(
+        m_sharedWorkerKey);
 }
 
 ScriptBindingInstance* SharedWorkerGlobalScope::scriptBindingInstance()

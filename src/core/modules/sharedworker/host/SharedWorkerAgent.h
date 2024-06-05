@@ -41,15 +41,20 @@ namespace SharedWorkerMessage {
 
 struct MessagePortConnectionInfo : public gc {
     MessagePortConnectionInfo(uint32_t identifier_, uint32_t clientID_,
+                              uint32_t pid, size_t sharedWorkerKey,
                               SharedWorkerThread* thread_)
         : identifier(identifier_)
         , clientID(clientID_)
+        , pid(pid)
+        , sharedWorkerKey(sharedWorkerKey)
         , thread(thread_)
     {
     }
 
     uint32_t identifier;
     uint32_t clientID;
+    uint32_t pid;
+    size_t sharedWorkerKey;
     SharedWorkerThread* thread;
 };
 
@@ -71,6 +76,10 @@ public:
 
     Nullable<MessagePortConnectionInfo*> getConnectionInfo(uint32_t identifier);
 
+    void closeSharedWorker(uint32_t pid);
+
+    void terminateWorkerThreadInOtherThread(size_t sharedWorkerKey);
+
     DEFINE_GETTER(WorkerIPCAddress*, ipcAddress);
     DEFINE_GETTER(MessageLoop*, messageLoop);
     DEFINE_GETTER(SharedWorkerAgentServer*, server);
@@ -84,7 +93,14 @@ private:
         const SharedWorkerMessage::RequestGetSharedWorker& message);
 
     MessagePortConnectionInfo* createConnectionInfo(uint32_t clientID,
+                                                    uint32_t pid,
+                                                    size_t sharedWorkerKey,
                                                     SharedWorkerThread* thread);
+
+    void terminateWorkerThread(size_t sharedWorkerKey);
+
+    void removeConnectionInfoByPid(uint32_t pid);
+    void removeConnectionInfoBySharedWorkerKey(size_t sharedWorkerKey);
 
     static SharedWorkerAgent* m_instance;
     MessageLoop* m_messageLoop;

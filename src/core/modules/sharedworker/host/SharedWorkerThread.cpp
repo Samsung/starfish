@@ -31,10 +31,11 @@ namespace Starfish {
 
 SharedWorkerThread::SharedWorkerThread(
     Starfish* starfish, MessageLoop* messageLoop, const std::string& name,
-    const WorkerHostInitData& workerHostInitData)
+    size_t sharedWorkerKey, const WorkerHostInitData& workerHostInitData)
     : WorkerThread(starfish, messageLoop, workerHostInitData)
     , m_globalScope(nullptr)
     , m_name(name)
+    , m_sharedWorkerKey(sharedWorkerKey)
     , m_initialIdentifier(0)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -57,11 +58,14 @@ WorkerGlobalScope* SharedWorkerThread::createWorkerGlobalScope(
         webWorker->createGlobalScope<SharedWorkerGlobalScope>(
             createScriptURL());
 
-    globalScope->initialize(m_name);
+    globalScope->initialize(m_name, m_sharedWorkerKey);
 
     Nullable<MessagePortConnectionInfo*> connectionInfo =
         SharedWorkerAgent::instance()->getConnectionInfo(m_initialIdentifier);
-    STARFISH_ASSERT(connectionInfo.hasValue());
+    if (!connectionInfo.hasValue()) {
+        TRACE(SHAREDWORKER, "GlobalScope will be closed");
+        return globalScope;
+    }
 
     globalScope->requestConnection(connectionInfo.getValue());
 
@@ -118,11 +122,55 @@ void SharedWorkerThread::createdWorkerGlobalScope(
     m_globalScope = globalScope;
 
     for (const auto& info : m_pendingConnectionInfos) {
+        for (const auto& pid : m_pendingClosePids) {
+            if (info->pid == pid) {
+                continue;
+            }
+        }
+
         m_globalScope->postTask(requestConnectionToGlobalScope, info);
     }
 
     m_pendingConnectionInfos.clear();
     m_pendingConnectionInfos.shrink_to_fit();
+
+    for (const auto& pid : m_pendingClosePids) {
+        requestCloseToGlobalScope(pid);
+    }
+
+    m_pendingClosePids.clear();
+    m_pendingClosePids.shrink_to_fit();
+}
+
+void SharedWorkerThread::requestCloseToGlobalScope(uint32_t pid)
+{
+    struct Param {
+        size_t pid;
+    };
+    Param* p = new Param();
+    p->pid = pid;
+
+    m_globalScope->postTask(
+        [](SharedWorkerGlobalScope* globalScope, void* data) {
+            auto* p = static_cast<Param*>(data);
+            globalScope->closeConnection(p->pid);
+
+            delete p;
+        },
+        p);
+}
+
+void SharedWorkerThread::closeSharedWorkerConnection(uint32_t pid)
+{
+    TRACE(SHAREDWORKER, pid);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
+
+    if (!m_globalScope) {
+        m_pendingClosePids.push_back(pid);
+        return;
+    }
+
+    requestCloseToGlobalScope(pid);
 }
 
 } // namespace Starfish

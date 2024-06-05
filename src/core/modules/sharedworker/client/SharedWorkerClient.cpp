@@ -77,9 +77,10 @@ void SharedWorkerClient::requestConnection(SharedWorker* sharedWorker)
     sendMessage(message);
 }
 
-void SharedWorkerClient::requestClose(SharedWorker* sharedWorker)
+void SharedWorkerClient::requestClose()
 {
-    // TODO: Request a close to the server.
+    SharedWorkerMessage::RequestCloseSharedWorker message;
+    sendMessage(message, true);
 }
 
 static void onResponseGetSharedWorker(IPCMessageDeserializer* deserializer)
@@ -102,10 +103,15 @@ void SharedWorkerClient::initMessageReceiveHandlers()
         onResponseGetSharedWorker);
 }
 
-void SharedWorkerClient::sendMessage(IPCMessage& message)
+void SharedWorkerClient::sendMessage(IPCMessage& message, bool force)
 {
     Nullable<IPCMessageSerializer*> serializer =
         m_messageHandler->serialize(message);
+
+    if (force) {
+        send(serializer->data(), serializer->size());
+        return;
+    }
 
     if (m_requestFlag) {
         void* buffer = malloc(serializer->size());

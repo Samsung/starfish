@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "core/page/WebBase.h"
+#include "platform/process/base/Process.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
@@ -75,6 +76,7 @@ namespace SharedWorkerMessage {
         WebBase* webBase = sharedWorker->executionContext()->webBase();
 
         m_clientID = sharedWorker->clientID();
+        m_pid = ProcessUtil::getCurrentProcId();
         m_sharedWorkerKey = sharedWorker->sharedWorkerKey();
         m_name = sharedWorker->workerOptions().name()->toUTF8NonGCString();
         m_workerHostInitData.baseURL =
@@ -94,6 +96,7 @@ namespace SharedWorkerMessage {
             new IPCMessageSerializer(messageID());
 
         serializer->writeUInt32(m_clientID);
+        serializer->writeUInt32(m_pid);
         serializer->writeSize(m_sharedWorkerKey);
         serializer->writeString(m_name);
         serializer->writeString(m_workerHostInitData.baseURL);
@@ -108,6 +111,7 @@ namespace SharedWorkerMessage {
         IPCMessageDeserializer* deserializer)
     {
         m_clientID = deserializer->readUInt32();
+        m_pid = deserializer->readUInt32();
         m_sharedWorkerKey = deserializer->readSize();
         m_name = deserializer->readString();
         m_workerHostInitData.baseURL = deserializer->readString();
@@ -119,8 +123,8 @@ namespace SharedWorkerMessage {
 
     ResponseGetSharedWorker::ResponseGetSharedWorker(
         SharedWorkerMessagePortConnection* connection)
-        : m_identifier(connection->identifier())
-        , m_clientID(connection->clientID())
+        : m_clientID(connection->clientID())
+        , m_pid(connection->pid())
         , m_ipcAddress(connection->ipcAddress())
     {
     }
@@ -130,8 +134,8 @@ namespace SharedWorkerMessage {
         IPCMessageSerializer* serializer =
             new IPCMessageSerializer(messageID());
 
-        serializer->writeUInt32(m_identifier);
         serializer->writeUInt32(m_clientID);
+        serializer->writeUInt32(m_pid);
         serializer->writeString(m_ipcAddress);
 
         return serializer;
@@ -140,9 +144,30 @@ namespace SharedWorkerMessage {
     void ResponseGetSharedWorker::deserialize(
         IPCMessageDeserializer* deserializer)
     {
-        m_identifier = deserializer->readUInt32();
         m_clientID = deserializer->readUInt32();
+        m_pid = deserializer->readUInt32();
         m_ipcAddress = deserializer->readString();
+    }
+
+    RequestCloseSharedWorker::RequestCloseSharedWorker()
+        : m_pid(ProcessUtil::getCurrentProcId())
+    {
+    }
+
+    IPCMessageSerializer* RequestCloseSharedWorker::serialize()
+    {
+        IPCMessageSerializer* serializer =
+            new IPCMessageSerializer(messageID());
+
+        serializer->writeUInt32(m_pid);
+
+        return serializer;
+    }
+
+    void RequestCloseSharedWorker::deserialize(
+        IPCMessageDeserializer* deserializer)
+    {
+        m_pid = deserializer->readUInt32();
     }
 
 } // namespace SharedWorkerMessage

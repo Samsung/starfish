@@ -9,7 +9,7 @@
 ] interface SharedWorkerGlobalScope : WorkerGlobalScope {
     [Replaceable] readonly attribute DOMString name;
 
-    [Unimplemented] undefined close();
+    undefined close();
 
     attribute EventHandler onconnect;
 };

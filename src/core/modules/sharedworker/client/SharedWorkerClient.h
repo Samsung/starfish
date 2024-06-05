@@ -28,7 +28,7 @@ namespace Starfish {
 class IPCMessageHandler;
 class PerProcess;
 
-class SharedWorkerClient : public IPCConnection {
+class SharedWorkerClient final : public IPCConnection {
 public:
     SharedWorkerClient(PerProcess* perProcess, const std::string& ipcAddress);
 
@@ -40,12 +40,12 @@ public:
 
     void requestConnection(SharedWorker* sharedWorker);
 
-    void requestClose(SharedWorker* sharedWorker);
+    void requestClose();
 
 private:
     void initMessageReceiveHandlers();
 
-    void sendMessage(IPCMessage& message);
+    void sendMessage(IPCMessage& message, bool force = false);
 
     void sendPendingMessage();
 

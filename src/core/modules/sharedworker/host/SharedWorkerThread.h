@@ -34,10 +34,10 @@ class SharedWorkerGlobalScope;
 class MessagePortConnectionInfo;
 struct WorkerHostInitData;
 
-class SharedWorkerThread : public WorkerThread {
+class SharedWorkerThread final : public WorkerThread {
 public:
     SharedWorkerThread(Starfish* starfish, MessageLoop* messageLoop,
-                       const std::string& name,
+                       const std::string& name, size_t sharedWorkerKey,
                        const WorkerHostInitData& workerHostInitData);
 
     ~SharedWorkerThread();
@@ -51,11 +51,17 @@ public:
 
     void createdWorkerGlobalScope(SharedWorkerGlobalScope* globalScope);
 
+    void closeSharedWorkerConnection(uint32_t pid);
+
 private:
     SharedWorkerGlobalScope* m_globalScope;
     const std::string m_name;
+    size_t m_sharedWorkerKey;
     uint32_t m_initialIdentifier;
     GCAtomicVector<MessagePortConnectionInfo*> m_pendingConnectionInfos;
+    GCAtomicVector<uint32_t> m_pendingClosePids;
+
+    void requestCloseToGlobalScope(uint32_t pid);
 };
 
 } // namespace Starfish

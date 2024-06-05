@@ -35,21 +35,13 @@
 namespace Starfish {
 
 SharedWorkerMessagePortConnection::SharedWorkerMessagePortConnection(
-    PerProcess* perProcess, MessagePort* messagePort, uint32_t identifier,
-    uint32_t clientID, const std::string& ipcAddress)
+    PerProcess* perProcess, MessagePort* messagePort, uint32_t clientID,
+    uint32_t pid, const std::string& ipcAddress)
     : IPCConnection(perProcess, ipcAddress, SocketNN::kPairProtocol)
     , m_messagePort(messagePort)
-    , m_identifier(identifier)
     , m_clientID(clientID)
+    , m_pid(pid)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            SharedWorkerMessagePortConnection* self =
-                castTo<SharedWorkerMessagePortConnection*>(obj);
-            self->~SharedWorkerMessagePortConnection();
-        },
-        NULL, NULL, NULL);
 }
 
 SharedWorkerMessagePortConnection::~SharedWorkerMessagePortConnection() =
@@ -61,6 +53,10 @@ void SharedWorkerMessagePortConnection::onReceived(Socket* socket,
 {
     TRACE(SHAREDWORKER, size);
     STARFISH_ASSERT(m_messagePort->executionContext()->isContextThread());
+
+    if (!isRunning()) {
+        return;
+    }
 
     SerializeWithTransferResult* serialized = new SerializeWithTransferResult();
     serialized->m_serialized = new SerializedTypedData(
