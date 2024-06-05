@@ -34,7 +34,7 @@ namespace Starfish {
 
 SharedWorkerClient::SharedWorkerClient(PerProcess* perProcess,
                                        const std::string& ipcAddress)
-    : IPCConnection(perProcess, ipcAddress, SocketNN::kRequestProtocol)
+    : IPCConnection(perProcess, ipcAddress, SocketNN::kBusProtocol)
     , m_messageHandler(new IPCMessageHandler())
     , m_requestFlag(false)
 {

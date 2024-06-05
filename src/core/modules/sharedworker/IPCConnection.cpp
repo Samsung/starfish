@@ -69,6 +69,10 @@ bool IPCConnection::connect()
 
     try {
         m_socket->connect(m_ipcAddress.c_str());
+
+        // wait for connection
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
         TRACE(IPC, "connect:", m_ipcAddress);
     } catch (const Socket::Exception& e) {
         m_perProcess->ioRunnable()->removeClient(this);

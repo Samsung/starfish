@@ -36,7 +36,7 @@ namespace Starfish {
 
 SharedWorkerAgentServer::SharedWorkerAgentServer(PerProcess* perProcess,
                                                  const std::string& address)
-    : IPCConnection(perProcess, address, SocketNN::kReplyProtocol)
+    : IPCConnection(perProcess, address, SocketNN::kBusProtocol)
     , m_messageHandler(new IPCMessageHandler())
 {
     initMessageReceiveHandlers();

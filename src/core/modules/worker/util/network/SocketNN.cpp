@@ -26,13 +26,13 @@
 #include <nanomsg/pipeline.h>
 #include <nanomsg/pubsub.h>
 #include <nanomsg/reqrep.h>
+#include <nanomsg/bus.h>
 
 #include "core/modules/worker/util/network/SocketNN.h"
 
 namespace Starfish {
 
-const int SocketNN::kReplyProtocol = NN_REP;
-const int SocketNN::kRequestProtocol = NN_REQ;
+const int SocketNN::kBusProtocol = NN_BUS;
 const int SocketNN::kPairProtocol = NN_PAIR;
 
 SocketNN::Exception::Exception()
@@ -59,7 +59,8 @@ SocketNN::SocketNN(int domain, int protocol)
         m_events = NN_POLLIN | NN_POLLOUT;
     } else if (protocol == NN_PUB || protocol == NN_PUSH) {
         m_events = NN_POLLOUT;
-    } else if (protocol == NN_SUB || protocol == NN_PULL) {
+    } else if (protocol == NN_SUB || protocol == NN_PULL ||
+               protocol == NN_BUS) {
         m_events = NN_POLLIN;
     } else {
         STARFISH_ASSERT_NOT_REACHED();
@@ -115,6 +116,7 @@ int SocketNN::connect(const char *addr)
     if (UNLIKELY(res < 0)) {
         throw SocketNN::Exception();
     }
+
     return res;
 }
 
