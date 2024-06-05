@@ -16,9 +16,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if !defined(NDEBUG)
 
 #include "core/modules/worker/util/Trace.h"
+
+#if defined(ENABLE_TRACE)
+
 #include "StarfishBase.h"
 #include <unistd.h> // getpid()
 #include <iomanip>  // setfill and setw

@@ -32,7 +32,11 @@ GlobalOptions& GlobalOptions::instance()
 
 GlobalOptions::GlobalOptions()
 {
-#if !defined(NDEBUG)
+#if defined(NDEBUG)
+#if defined(ENABLE_TRACE)
+    readEnvironmentValue("TRACE");
+#endif
+#else
     readEnvironmentValue("TRACE");
     readEnvironmentValue("CACHE_MODULE_PATH");
     readEnvironmentValue("DEBUG_CAST");
