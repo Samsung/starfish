@@ -75,8 +75,9 @@ static void onRequestSharedWorkerMessage(IPCMessageDeserializer* deserializer)
         return;
     }
 
-    TRACE(SHAREDWORKER, message.sharedWorkerKey(), message.clientID(),
-          message.name(), message.workerHostInitData().baseURL,
+    TRACE(SHAREDWORKER, message.pid(), message.sharedWorkerKey(),
+          message.clientID(), message.name(),
+          message.workerHostInitData().baseURL,
           message.workerHostInitData().url);
 
     SharedWorkerAgent::instance()->connectWorkerThread(message);
@@ -87,6 +88,22 @@ void SharedWorkerAgentServer::responseShareWorkerConnection(
 {
     SharedWorkerMessage::ResponseGetSharedWorker message(connection);
     m_messageHandler->sendMessage(this, message);
+}
+
+static void onRequestCloseSharedWorkerMessage(
+    IPCMessageDeserializer* deserializer)
+{
+    SharedWorkerMessage::RequestCloseSharedWorker message;
+    message.deserialize(deserializer);
+    if (deserializer->isError()) {
+        TRACE(SHAREDWORKER,
+              "failed to deserialize RequestCloseSharedWorker message");
+        return;
+    }
+
+    TRACE(SHAREDWORKER, message.pid());
+
+    SharedWorkerAgent::instance()->closeSharedWorker(message.pid());
 }
 
 void SharedWorkerAgentServer::initMessageReceiveHandlers()
@@ -100,6 +117,10 @@ void SharedWorkerAgentServer::initMessageReceiveHandlers()
     m_messageHandler->setMessageReceiveHandler(
         SharedWorkerMessage::RequestGetSharedWorker::messageID(),
         onRequestSharedWorkerMessage);
+
+    m_messageHandler->setMessageReceiveHandler(
+        SharedWorkerMessage::RequestCloseSharedWorker::messageID(),
+        onRequestCloseSharedWorkerMessage);
 }
 
 } // namespace Starfish

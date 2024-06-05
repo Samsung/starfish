@@ -52,6 +52,11 @@ Connection::Connection(int protocol)
     STARFISH_ASSERT(m_socket != nullptr);
 }
 
+Connection::~Connection()
+{
+    m_socket->~Socket();
+}
+
 void Connection::send(const char* data, size_t len)
 {
     STARFISH_ASSERT(data != nullptr);

@@ -20,6 +20,11 @@
 #ifndef __StarfishProcess__
 #define __StarfishProcess__
 
+#if defined(STARFISH_ENABLE_SHARED_WORKER) || \
+    defined(STARFISH_ENABLE_SERVICE_WORKER)
+
+#include "platform/process/base/ProcessType.h"
+
 namespace Starfish {
 
 class ProcessUtil {
@@ -34,4 +39,5 @@ public:
 
 } // namespace Starfish
 
+#endif
 #endif

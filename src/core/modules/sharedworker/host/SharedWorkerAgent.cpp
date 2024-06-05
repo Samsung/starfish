@@ -111,9 +111,9 @@ SharedWorkerThread* SharedWorkerAgent::getWorkerThread(
         }
     }
 
-    SharedWorkerThread* thread =
-        new SharedWorkerThread(m_starfish, m_messageLoop, message.name(),
-                               message.workerHostInitData());
+    SharedWorkerThread* thread = new SharedWorkerThread(
+        m_starfish, m_messageLoop, message.name(), message.sharedWorkerKey(),
+        message.workerHostInitData());
 
     m_workerThreads.insert({ message.sharedWorkerKey(), thread });
 
@@ -135,10 +135,12 @@ uint32_t SharedWorkerAgent::createIdentifier()
 }
 
 MessagePortConnectionInfo* SharedWorkerAgent::createConnectionInfo(
-    uint32_t clientID, SharedWorkerThread* thread)
+    uint32_t clientID, uint32_t pid, size_t sharedWorkerKey,
+    SharedWorkerThread* thread)
 {
     uint32_t identifier = createIdentifier();
-    auto* info = new MessagePortConnectionInfo(identifier, clientID, thread);
+    auto* info = new MessagePortConnectionInfo(identifier, clientID, pid,
+                                               sharedWorkerKey, thread);
 
     {
         Locker<Mutex> lock(*m_mutex);
@@ -156,8 +158,8 @@ void SharedWorkerAgent::connectWorkerThread(
     SharedWorkerThread* thread =
         SharedWorkerAgent::instance()->getWorkerThread(message);
 
-    MessagePortConnectionInfo* info =
-        createConnectionInfo(message.clientID(), thread);
+    MessagePortConnectionInfo* info = createConnectionInfo(
+        message.clientID(), message.pid(), message.sharedWorkerKey(), thread);
     if (!thread->isRunning()) {
         thread->startWithIdentifier(info->identifier);
     } else {
@@ -200,6 +202,85 @@ Nullable<MessagePortConnectionInfo*> SharedWorkerAgent::getConnectionInfo(
     }
 
     return Nullable<MessagePortConnectionInfo*>();
+}
+
+void SharedWorkerAgent::closeSharedWorker(uint32_t pid)
+{
+    TRACE(SHAREDWORKER, pid);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
+
+    for (const auto& iter : m_workerThreads) {
+        iter.second->closeSharedWorkerConnection(pid);
+    }
+
+    removeConnectionInfoByPid(pid);
+}
+
+void SharedWorkerAgent::removeConnectionInfoByPid(uint32_t pid)
+{
+    Locker<Mutex> lock(*m_mutex);
+
+    m_connectionInfos.erase(
+        std::remove_if(m_connectionInfos.begin(), m_connectionInfos.end(),
+                       [pid](MessagePortConnectionInfo* info) {
+                           return info->pid == pid;
+                       }),
+        m_connectionInfos.end());
+}
+
+void SharedWorkerAgent::removeConnectionInfoBySharedWorkerKey(
+    size_t sharedWorkerKey)
+{
+    Locker<Mutex> lock(*m_mutex);
+
+    m_connectionInfos.erase(
+        std::remove_if(m_connectionInfos.begin(), m_connectionInfos.end(),
+                       [sharedWorkerKey](MessagePortConnectionInfo* info) {
+                           return info->sharedWorkerKey == sharedWorkerKey;
+                       }),
+        m_connectionInfos.end());
+}
+
+void SharedWorkerAgent::terminateWorkerThreadInOtherThread(
+    size_t sharedWorkerKey)
+{
+    TRACE(SHAREDWORKER, sharedWorkerKey);
+    STARFISH_ASSERT(!m_messageLoop->calledOnValidThread());
+
+    struct Param {
+        size_t sharedWorkerKey;
+    };
+    Param* p = new Param();
+    p->sharedWorkerKey = sharedWorkerKey;
+
+    m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t handle, void* data) {
+            auto* p = static_cast<Param*>(data);
+
+            SharedWorkerAgent::instance()->terminateWorkerThread(
+                p->sharedWorkerKey);
+
+            delete p;
+        },
+        p);
+}
+
+void SharedWorkerAgent::terminateWorkerThread(size_t sharedWorkerKey)
+{
+    TRACE(SHAREDWORKER, sharedWorkerKey);
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
+
+    const auto& iter = m_workerThreads.find(sharedWorkerKey);
+    if (iter == m_workerThreads.end()) {
+        return;
+    }
+
+    iter->second->terminate();
+
+    m_workerThreads.erase(iter);
+
+    removeConnectionInfoBySharedWorkerKey(sharedWorkerKey);
 }
 
 } // namespace Starfish

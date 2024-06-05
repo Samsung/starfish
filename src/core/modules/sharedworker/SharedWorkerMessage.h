@@ -60,12 +60,14 @@ namespace SharedWorkerMessage {
         void deserialize(IPCMessageDeserializer* deserializer) override;
 
         DEFINE_GETTER(uint32_t, clientID);
+        DEFINE_GETTER(uint32_t, pid);
         DEFINE_GETTER(size_t, sharedWorkerKey);
         DEFINE_GETTER(const std::string&, name);
         DEFINE_GETTER(const WorkerHostInitData&, workerHostInitData);
 
     private:
         uint32_t m_clientID;
+        uint32_t m_pid;
         size_t m_sharedWorkerKey;
         std::string m_name;
         WorkerHostInitData m_workerHostInitData;
@@ -84,14 +86,32 @@ namespace SharedWorkerMessage {
         IPCMessageSerializer* serialize() override;
         void deserialize(IPCMessageDeserializer* deserializer) override;
 
-        DEFINE_GETTER(uint32_t, identifier);
         DEFINE_GETTER(uint32_t, clientID);
+        DEFINE_GETTER(uint32_t, pid);
         DEFINE_GETTER(const std::string&, ipcAddress);
 
     private:
-        uint32_t m_identifier;
         uint32_t m_clientID;
+        uint32_t m_pid;
         std::string m_ipcAddress;
+    };
+
+    class RequestCloseSharedWorker : public IPCMessage {
+    public:
+        static const char* messageID()
+        {
+            return "requestCloseSharedWorker";
+        }
+
+        RequestCloseSharedWorker();
+
+        IPCMessageSerializer* serialize() override;
+        void deserialize(IPCMessageDeserializer* deserializer) override;
+
+        DEFINE_GETTER(uint32_t, pid);
+
+    private:
+        uint32_t m_pid;
     };
 
 } // namespace SharedWorkerMessage

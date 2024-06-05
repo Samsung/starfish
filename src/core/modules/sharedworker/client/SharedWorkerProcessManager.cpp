@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 
+#include "platform/process/base/Process.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
@@ -87,6 +88,20 @@ void SharedWorkerProcessManager::requestConnection(SharedWorker* sharedWorker)
     addSharedWorkerObject(sharedWorker);
 }
 
+void SharedWorkerProcessManager::closeConnection()
+{
+    if (!m_sharedWorkers.empty()) {
+        m_client->requestClose();
+    }
+    m_sharedWorkers.clear();
+
+    for (const auto& connection : m_connections) {
+        connection->close();
+        connection->~SharedWorkerMessagePortConnection();
+    }
+    m_connections.clear();
+}
+
 void SharedWorkerProcessManager::addSharedWorkerObject(
     SharedWorker* sharedWorker)
 {
@@ -110,19 +125,11 @@ void SharedWorkerProcessManager::destroy()
         return;
     }
 
-    for (const auto& connection : m_connections) {
-        connection->close();
-    }
-
-    for (const auto& iter : m_sharedWorkers) {
-        m_client->requestClose(iter.second);
-    }
+    closeConnection();
 
     m_client->close();
     m_client->~SharedWorkerClient();
     m_client = nullptr;
-
-    m_sharedWorkers.clear();
 
     m_instance = nullptr;
 }
@@ -135,7 +142,7 @@ SharedWorkerProcessManager::createMessagePortConnection(
     SharedWorkerMessagePortConnection* connection =
         new SharedWorkerMessagePortConnection(
             SharedWorkerProcessManager::instance()->perProcess(),
-            sharedWorker->port(), message.identifier(), message.clientID(),
+            sharedWorker->port(), message.clientID(), message.pid(),
             message.ipcAddress());
 
     m_connections.push_back(connection);
@@ -147,6 +154,11 @@ void SharedWorkerProcessManager::startMessagePortConnection(
     const SharedWorkerMessage::ResponseGetSharedWorker& message)
 {
     TRACE(SHAREDWORKER, message.ipcAddress());
+
+    if (static_cast<unsigned>(ProcessUtil::getCurrentProcId()) !=
+        message.pid()) {
+        return;
+    }
 
     Nullable<SharedWorker*> sharedWorker =
         SharedWorkerProcessManager::instance()->getSharedWorkerObject(

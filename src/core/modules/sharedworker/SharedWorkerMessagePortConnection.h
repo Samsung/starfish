@@ -32,7 +32,7 @@ class SharedWorkerMessagePortConnection final : public IPCConnection {
 public:
     SharedWorkerMessagePortConnection(PerProcess* perProcess,
                                       MessagePort* m_messagePort,
-                                      uint32_t identifier, uint32_t clientID,
+                                      uint32_t clientID, uint32_t pid,
                                       const std::string& ipcAddress);
 
     ~SharedWorkerMessagePortConnection();
@@ -41,13 +41,13 @@ public:
 
     IMessageLoop* messageLoop() override;
 
-    DEFINE_GETTER(uint32_t, identifier);
     DEFINE_GETTER(uint32_t, clientID);
+    DEFINE_GETTER(uint32_t, pid);
 
 private:
     MessagePort* m_messagePort;
-    uint32_t m_identifier;
     uint32_t m_clientID;
+    uint32_t m_pid;
 };
 
 } // namespace Starfish
