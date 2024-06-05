@@ -136,17 +136,8 @@ void MessagePort::postMessage(ScriptValue message,
     if (!targetPort || doomed) {
         return;
     }
-    // NOTE addIder would hold serializedRecord
-    executionContext()->webBase()->messageLoop()->addIdler(
-        executionContext()->globalScope(),
-        [](size_t handle, void* data, void* data1) {
-            MessagePort* self = (MessagePort*)data;
-            SerializeWithTransferResult* serializedRecord =
-                (SerializeWithTransferResult*)data1;
 
-            self->entangledPort()->dispatchMessageEvent(serializedRecord);
-        },
-        this, serializedRecord);
+    targetPort->dispatchMessageEvent(serializedRecord);
 }
 
 void MessagePort::registerDispatchMessageTask(
