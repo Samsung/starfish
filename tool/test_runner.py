@@ -24,6 +24,7 @@ from argparse import ArgumentParser
 from difflib import unified_diff
 from os.path import join, relpath, splitext
 from drivers.basics.constants import ENVOPTS, ERRORCODE
+from execution_worker import WorkerRunner
 
 script_path = "./tool/drivers/run_test.py"
 working_directory = os.path.dirname(os.path.abspath(__file__)) + "/../"
@@ -50,7 +51,7 @@ def run_test(argv_input, env=None):
         if ".res" in x:
             name = x
             break
-    print_table("Runnung test", name)
+    print_table("Running test", name)
 
     argv = [script_path]
     argv.extend(argv_input)
@@ -209,8 +210,6 @@ def wpt_others():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/cors.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/cookies.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/worker.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/serviceworker.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fileAPI.res", "cairo"])
 
 
@@ -232,6 +231,13 @@ def wpt_webrtc():
 
 def wpt_intersection_observer():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/intersection-observer.res", "cairo"])
+
+def wpt_worker():
+    runner = WorkerRunner('Starfish-sharedworker')
+    runner.run()
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/worker.res", "cairo"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/serviceworker.res", "cairo"])
+    runner.terminate()
 
 def wpt_all():
     wpt_css_all()

@@ -32,43 +32,6 @@ namespace Starfish {
 
 namespace SharedWorkerMessage {
 
-#if defined(STARFISH_ENABLE_TEST)
-    IPCMessageSerializer* SharedWorkerMessageTest::serialize()
-    {
-        IPCMessageSerializer* serializer =
-            new IPCMessageSerializer(messageID());
-        serializer->writeUInt32(123456789);
-        serializer->writeString("Hello World");
-        serializer->writeBool(true);
-        serializer->writeSize(128);
-
-        if (serializer->isError()) {
-            STARFISH_LOG_ERROR("failed to serialize the IPC test message\n");
-        }
-
-        return serializer;
-    }
-
-    void SharedWorkerMessageTest::deserialize(
-        IPCMessageDeserializer* deserializer)
-    {
-        uint32_t uint32Value = deserializer->readUInt32();
-        STARFISH_ASSERT(uint32Value == 123456789);
-
-        std::string stringValue = deserializer->readString();
-        STARFISH_ASSERT(stringValue == "Hello World");
-
-        bool boolValue = deserializer->readBool();
-        STARFISH_ASSERT(boolValue == true);
-
-        size_t sizeValue = deserializer->readSize();
-        STARFISH_ASSERT(sizeValue == 128);
-
-        STARFISH_ASSERT(!deserializer->isError());
-    }
-
-#endif
-
     // RequestGetSharedWorker
     RequestGetSharedWorker::RequestGetSharedWorker(SharedWorker* sharedWorker)
     {
