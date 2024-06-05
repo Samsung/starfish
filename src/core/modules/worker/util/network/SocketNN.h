@@ -30,8 +30,7 @@ namespace Starfish {
 
 class SocketNN : public Socket {
 public:
-    static const int kReplyProtocol;
-    static const int kRequestProtocol;
+    static const int kBusProtocol;
     static const int kPairProtocol;
 
     class Exception : public Socket::Exception {

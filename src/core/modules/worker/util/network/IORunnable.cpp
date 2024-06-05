@@ -93,19 +93,17 @@ void IORunnable::run()
         std::unique_lock<std::mutex> lock(m_mutex);
 
         try {
-            if (m_cv.wait_for(lock, timeout) == std::cv_status::timeout) {
-                // When no event comes while polling sockets, clients can
-                // not be updated during the timeout, m_rcvtimeout.
-                if (m_isFdUpdateNeeded == true) {
-                    nSockets = m_clients.size();
-                    for (int i = 0; i < nSockets; ++i) {
-                        pfd[i].fd = m_clients[i]->socket()->getFd();
-                        pfd[i].events = m_clients[i]->socket()->getEvents();
-                    }
-                    m_isFdUpdateNeeded = false;
-                    if (nSockets > 0) {
-                        TRACE(SOCKET, "Sockets", nSockets);
-                    }
+            m_cv.wait_for(lock, timeout);
+
+            if (m_isFdUpdateNeeded == true) {
+                nSockets = m_clients.size();
+                for (int i = 0; i < nSockets; ++i) {
+                    pfd[i].fd = m_clients[i]->socket()->getFd();
+                    pfd[i].events = m_clients[i]->socket()->getEvents();
+                }
+                m_isFdUpdateNeeded = false;
+                if (nSockets > 0) {
+                    TRACE(SOCKET, "Sockets", nSockets);
                 }
             }
 
