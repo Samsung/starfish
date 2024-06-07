@@ -133,7 +133,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
 
             if (width.isFitContent()) {
                 PreferredWidthContext p(ctx, nullptr, this, this,
-                        lastKnownWidth);
+                                        lastKnownWidth);
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             } else if (isAbsolutePositioned() && width.isAuto() &&
@@ -151,7 +151,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 LengthData margin = style()->margin();
                 if (isFlexItem() &&
                     (margin.left().isAuto() || margin.right().isAuto())) {
-                    PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
+                    PreferredWidthContext p(ctx, nullptr, this, this,
+                                            lastKnownWidth);
                     p.computePreferredWidth();
                     contentWidth = p.preferredWidth();
                 } else {
@@ -159,7 +160,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                         containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
                 }
             } else {
-                PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
+                PreferredWidthContext p(ctx, nullptr, this, this,
+                                        lastKnownWidth);
                 p.computePreferredWidth();
                 contentWidth = p.preferredWidth();
             }
@@ -539,11 +541,12 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
     }
 }
 
-static bool absolutePositionIgnorableFlexJustifyContentValue(JustifyContentValue value)
+static bool absolutePositionIgnorableFlexJustifyContentValue(
+    JustifyContentValue value)
 {
     if (value == JustifyContentValue::StartJustifyContentValue ||
-            value == JustifyContentValue::FlexStartJustifyContentValue ||
-            value == JustifyContentValue::SpaceBetweenJustifyContentValue) {
+        value == JustifyContentValue::FlexStartJustifyContentValue ||
+        value == JustifyContentValue::SpaceBetweenJustifyContentValue) {
         return false;
     }
     return true;
@@ -754,7 +757,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     // layout absolute positioned blocks
-    ctx.layoutRegisteredAbsolutePositionedBoxes(this);
+    if (!(ctx.inComputingBasisSize() || ctx.isModifiedStyleFlexItem(this))) {
+        ctx.layoutRegisteredAbsolutePositionedBoxes(this);
+    }
 
     // layout relative positioned blocks
     ctx.layoutRegisteredRelativePositionedBoxes(this);

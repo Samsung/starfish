@@ -701,35 +701,42 @@ struct MainSizeFixer {
         : m_flexItem(flexItem)
         , m_isMainAxisInInlineAxis(isMainAxisInInlineAxis)
     {
-        if (m_isMainAxisInInlineAxis) {
-            FrameBox* cb = containingBlock(flexItem);
+    }
 
-            m_maxHeightBackup = flexItem->style()->maxHeight();
+    ~MainSizeFixer()
+    {
+    }
+
+    void fix()
+    {
+        if (m_isMainAxisInInlineAxis) {
+            FrameBox* cb = containingBlock(m_flexItem);
+            m_maxHeightBackup = m_flexItem->style()->maxHeight();
             if (cb->style()->flexWrap() == FlexWrapValue::NoWrapFlexWrapValue) {
                 Length maxHeight = cb->style()->maxHeight();
                 if (maxHeight.isFixed()) {
                     if (m_maxHeightBackup.isAuto() ||
                         (m_maxHeightBackup.isFixed() &&
                          maxHeight.fixed() < m_maxHeightBackup.fixed())) {
-                        flexItem->style()->setMaxHeight(
+                        m_flexItem->style()->setMaxHeight(
                             cb->style()->maxHeight());
                     }
                 }
             }
 
-            m_mainSizeBackup = flexItem->style()->width();
-            m_mainSizeLayoutBackup = flexItem->width();
-            flexItem->style()->setWidth(
+            m_mainSizeBackup = m_flexItem->style()->width();
+            m_mainSizeLayoutBackup = m_flexItem->width();
+            m_flexItem->style()->setWidth(
                 Length(Length::Fixed, m_mainSizeLayoutBackup));
         } else {
-            m_mainSizeBackup = flexItem->style()->height();
-            m_mainSizeLayoutBackup = flexItem->height();
-            flexItem->style()->setHeight(
+            m_mainSizeBackup = m_flexItem->style()->height();
+            m_mainSizeLayoutBackup = m_flexItem->height();
+            m_flexItem->style()->setHeight(
                 Length(Length::Fixed, m_mainSizeLayoutBackup));
         }
     }
 
-    ~MainSizeFixer()
+    void restore()
     {
         if (m_isMainAxisInInlineAxis) {
             m_flexItem->style()->setWidth(m_mainSizeBackup);
@@ -748,20 +755,75 @@ struct MainSizeFixer {
     bool m_isMainAxisInInlineAxis;
 };
 
-static void callingLayoutForFlexItem(FrameBox* flexItem,
-                                     LayoutContext& layoutContext,
-                                     Frame::LayoutWantToResolve resolveWhat)
+struct CrossSizeFixer {
+    CrossSizeFixer(FrameBox* flexItem, bool isMainAxisInInlineAxis)
+        : m_flexItem(flexItem)
+        , m_isMainAxisInInlineAxis(isMainAxisInInlineAxis)
+
+    {
+    }
+    ~CrossSizeFixer()
+    {
+    }
+
+    void fix(LayoutUnit crossSize)
+    {
+        if (m_isMainAxisInInlineAxis) {
+            m_flexItem->style()->setHeight(
+                Length(Length::Fixed, crossSize.toInt()));
+        } else {
+            m_flexItem->style()->setWidth(
+                Length(Length::Fixed, crossSize.toInt()));
+        }
+    }
+
+    void restoreToAuto()
+    {
+        if (m_isMainAxisInInlineAxis) {
+            m_flexItem->style()->setHeight(Length());
+        } else {
+            m_flexItem->style()->setWidth(Length());
+        }
+    }
+
+    FrameBox* m_flexItem;
+    bool m_isMainAxisInInlineAxis;
+};
+
+void FlexFormattingContext::layoutFlexItem(
+    FrameBox* flexItem, Frame::LayoutWantToResolve resolveWhat,
+    Optional<LayoutUnit> crossSize)
 {
     STARFISH_ASSERT(flexItem != nullptr);
+    flexItem->markNeedsLayout();
+
+    MainSizeFixer mainSizeFixer(flexItem, m_isMainAxisInInlineAxis);
+    mainSizeFixer.fix();
+    CrossSizeFixer crossSizeFixer(flexItem, m_isMainAxisInInlineAxis);
+    if (crossSize.hasValue()) {
+        crossSizeFixer.fix(crossSize.value());
+    }
+    m_layoutContext.registerModifiedStyleFlexItem(flexItem);
 
     if ((resolveWhat & Frame::ResolveWidth) != 0) {
-        flexItem->layout(layoutContext, Frame::ResolveWidth);
+        flexItem->layout(m_layoutContext, Frame::ResolveWidth);
     }
 
     if ((resolveWhat & Frame::ResolveHeight) != 0) {
         flexItem->markContentWidthDamaged();
-        flexItem->layout(layoutContext, Frame::ResolveHeight);
+        flexItem->layout(m_layoutContext, Frame::ResolveHeight);
         flexItem->clearContentWidthDamaged();
+    }
+
+    m_layoutContext.unregisterModifiedStyleFlexItem(flexItem);
+    if (crossSize.hasValue()) {
+        crossSizeFixer.restoreToAuto();
+    }
+    mainSizeFixer.restore();
+
+    if (flexItem->isFrameBlockBox()) {
+        m_layoutContext.layoutRegisteredAbsolutePositionedBoxes(
+            flexItem->asFrameBlockBox());
     }
 }
 
@@ -809,22 +871,18 @@ void FlexFormattingContext::computeCrossSize()
 
             flexItem->markNeedsLayout();
             if (m_isMainAxisInInlineAxis) {
-                MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
                 if (flexItem->isFrameReplaced()) {
                     // height of FrameReplaced is computed at ResolveWidth
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                callingLayoutForFlexItem(flexItem, m_layoutContext,
-                                         resolveWhat);
+                layoutFlexItem(flexItem, resolveWhat);
             } else {
-                MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveWidth;
                 if (!isStretchFlexItem) {
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                callingLayoutForFlexItem(flexItem, m_layoutContext,
-                                         resolveWhat);
+                layoutFlexItem(flexItem, resolveWhat);
             }
 
             if (shouldAlignAtFirstBaseline) {
@@ -900,71 +958,42 @@ void FlexFormattingContext::computeCrossSize()
         m_layoutContext.registerContentHeight(flexItem, intMaxForLayoutUnit);
         FlexLine& flexLine = m_flexLines[lineIdx];
         ComputedStyle* style = flexItem->style();
-
         if (m_isMainAxisInInlineAxis) {
             bool shouldResizeFlexItem = false;
+            LayoutUnit newCrossSize;
             if (style->boxSizing() ==
                 BoxSizingValue::ContentBoxBoxSizingValue) {
+                newCrossSize = flexLine.m_lineHeight - flexItem->mbpHeight();
                 shouldResizeFlexItem =
-                    flexItem->contentHeight() !=
-                    (flexLine.m_lineHeight - flexItem->mbpHeight());
+                    flexItem->contentHeight() != newCrossSize;
             } else {
-                shouldResizeFlexItem =
-                    flexItem->height() !=
-                    (flexLine.m_lineHeight - flexItem->marginHeight());
+                newCrossSize = flexLine.m_lineHeight - flexItem->marginHeight();
+                shouldResizeFlexItem = flexItem->height() != newCrossSize;
             }
 
             if (shouldResizeFlexItem) {
-                MainSizeFixer fixer(flexItem, true);
-                if (style->boxSizing() ==
-                    BoxSizingValue::ContentBoxBoxSizingValue) {
-                    style->setHeight(
-                        Length(Length::Fixed,
-                               flexLine.m_lineHeight - flexItem->mbpHeight()));
-                } else {
-                    style->setHeight(
-                        Length(Length::Fixed, flexLine.m_lineHeight -
-                                                  flexItem->marginHeight()));
-                }
-                flexItem->markNeedsLayout();
-                callingLayoutForFlexItem(
-                    flexItem, m_layoutContext,
-                    Frame::LayoutWantToResolve::ResolveHeight);
-                style->setHeight(Length());
+                layoutFlexItem(flexItem,
+                               Frame::LayoutWantToResolve::ResolveHeight,
+                               newCrossSize);
             }
         } else {
             bool shouldResizeFlexItem = false;
+            LayoutUnit newCrossSize;
             if (style->boxSizing() ==
                 BoxSizingValue::ContentBoxBoxSizingValue) {
-                shouldResizeFlexItem =
-                    flexItem->contentWidth() !=
-                    (flexLine.m_lineHeight - flexItem->mbpWidth());
+                newCrossSize = flexLine.m_lineHeight - flexItem->mbpWidth();
+                shouldResizeFlexItem = flexItem->contentWidth() != newCrossSize;
             } else {
-                shouldResizeFlexItem =
-                    flexItem->width() !=
-                    (flexLine.m_lineHeight - flexItem->marginWidth());
+                newCrossSize = flexLine.m_lineHeight - flexItem->marginWidth();
+                shouldResizeFlexItem = flexItem->width() != newCrossSize;
             }
 
             if (shouldResizeFlexItem) {
-                MainSizeFixer fixer(flexItem, false);
-                if (style->boxSizing() ==
-                    BoxSizingValue::ContentBoxBoxSizingValue) {
-                    style->setWidth(
-                        Length(Length::Fixed,
-                               flexLine.m_lineHeight - flexItem->mbpWidth()));
-                } else {
-                    style->setWidth(
-                        Length(Length::Fixed, flexLine.m_lineHeight -
-                                                  flexItem->marginWidth()));
-                }
-                flexItem->markNeedsLayout();
-                callingLayoutForFlexItem(
-                    flexItem, m_layoutContext,
-                    Frame::LayoutWantToResolve::ResolveAll);
-                style->setWidth(Length());
+                layoutFlexItem(flexItem, Frame::LayoutWantToResolve::ResolveAll,
+                               newCrossSize);
             } else {
-                MainSizeFixer fixer(flexItem, false);
-                flexItem->layout(m_layoutContext, Frame::ResolveAll);
+                layoutFlexItem(flexItem,
+                               Frame::LayoutWantToResolve::ResolveAll);
             }
         }
     }

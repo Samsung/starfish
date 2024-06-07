@@ -93,6 +93,9 @@ public:
 
     static bool doesParticipateInFlexFormattingContext(Frame* flexItem);
     Nullable<LayoutUnit> firstLineBoxYPosition(FrameBox* flexItem) const;
+    void layoutFlexItem(FrameBox* flexItem,
+                        Frame::LayoutWantToResolve resolveWhat,
+                        Optional<LayoutUnit> crossSize = nullptr);
 
 private:
     LayoutContext& m_layoutContext;

@@ -657,6 +657,9 @@ public:
     void registerToGridItemPreferredWidthCache(Frame* gridItem,
                                                LayoutUnit availableWidth,
                                                LayoutUnit preferredWidth);
+    void registerModifiedStyleFlexItem(Frame* flexItem);
+    void unregisterModifiedStyleFlexItem(Frame* flexItem);
+    bool isModifiedStyleFlexItem(Frame* flexItem);
 
 private:
     struct BlockFormattingContext {
@@ -750,6 +753,7 @@ private:
         std::tuple<LayoutUnit, CachedBasisSizeFlags, LayoutUnit>>
         CachedBasisSizeVector;
     std::unordered_map<Frame*, CachedBasisSizeVector> m_basisSizeCache;
+    std::vector<Frame*> m_modifiedStyleFlexItems;
 
     // <availableWidth, result>
     typedef std::vector<std::tuple<LayoutUnit, LayoutUnit>>
