@@ -596,6 +596,7 @@ test/cairo/internal-test/css/flex/flex_column-gap_15.html
 test/cairo/internal-test/css/flex/flex_pseudo_after.html
 test/cairo/internal-test/css/flex/flex_with_-webkit-box_prefix.html
 test/cairo/internal-test/css/flex/flex_flex_left_right_abs_pos.html
+test/cairo/internal-test/css/flex/flex_flex_top_bottom_abs_pos.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/svg_03.html

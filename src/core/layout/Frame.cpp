@@ -1071,6 +1071,32 @@ void LayoutContext::registerToGridItemPreferredWidthCache(
     }
 }
 
+void LayoutContext::registerModifiedStyleFlexItem(Frame* flexItem)
+{
+    STARFISH_ASSERT(flexItem->isFlexItem());
+    m_modifiedStyleFlexItems.push_back(flexItem);
+}
+
+void LayoutContext::unregisterModifiedStyleFlexItem(Frame* flexItem)
+{
+    STARFISH_ASSERT(flexItem->isFlexItem());
+    auto iter = std::find(m_modifiedStyleFlexItems.begin(),
+                          m_modifiedStyleFlexItems.end(), flexItem);
+    if (iter != m_modifiedStyleFlexItems.end()) {
+        m_modifiedStyleFlexItems.erase(iter);
+    }
+}
+
+bool LayoutContext::isModifiedStyleFlexItem(Frame* flexItem)
+{
+    auto iter = std::find(m_modifiedStyleFlexItems.begin(),
+                          m_modifiedStyleFlexItems.end(), flexItem);
+    if (iter != m_modifiedStyleFlexItems.end()) {
+        return true;
+    }
+    return false;
+}
+
 PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
 {
     PreferredWidthContext* c = this;
@@ -2031,7 +2057,7 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
         LengthData offset = style->offset();
         if (style->height().isAuto() && isAbsolutePositioned() &&
             offset.top().isSpecified() && offset.bottom().isSpecified()) {
-            if (containerHeightMayBeChanged || containingBox != layoutParent()) {
+            if (containerHeightMayBeChanged) {
                 return true;
             }
 
