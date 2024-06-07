@@ -333,6 +333,36 @@ void FlexFormattingContext::applyFlexFactor()
         }
 
         LayoutUnit remainingFreeSpace = initialFreeSpace;
+        if (remainingFreeSpace < 0) {
+            bool hasNonOverflowVisibleItem = false;
+            bool everyItemHaveNonLengthFlexBasis = true;
+            for (size_t j = 0; j < flexItems.size(); j++) {
+                OverflowValue of;
+                if (m_isMainAxisInInlineAxis) {
+                    of = flexItems[j]->appliedOverflowX();
+                } else {
+                    of = flexItems[j]->appliedOverflowY();
+                }
+                if (of != OverflowValue::VisibleOverflow) {
+                    hasNonOverflowVisibleItem = true;
+                }
+                everyItemHaveNonLengthFlexBasis &= !flexItems[j]->style()->flexBasis().isWidth();
+            }
+            if (hasNonOverflowVisibleItem && everyItemHaveNonLengthFlexBasis) {
+                for (size_t j = 0; j < flexItems.size(); j++) {
+                    OverflowValue of;
+                    if (m_isMainAxisInInlineAxis) {
+                        of = flexItems[j]->appliedOverflowX();
+                    } else {
+                        of = flexItems[j]->appliedOverflowY();
+                    }
+                    if (of == OverflowValue::VisibleOverflow) {
+                        isFrozens[j] = true;
+                        isAllFrozen &= isFrozens[j];
+                    }
+                }
+            }
+        }
 
         while (!isAllFrozen) {
             LayoutUnit unclampedSize;
