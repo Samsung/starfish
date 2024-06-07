@@ -696,7 +696,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::FlexBasis: {
         CSSStyleValuePair p;
         FlexBasisData flexBasis = style->flexBasis();
-        if (flexBasis.isContent()) {
+        if (flexBasis.isAuto()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::FlexBasisValueKind);
+            p.setValue(FlexBasisValue::AutoFlexBasisValue);
+        } else if (flexBasis.isContent()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::FlexBasisValueKind);
             p.setValue(FlexBasisValue::ContentFlexBasisValue);
         } else {

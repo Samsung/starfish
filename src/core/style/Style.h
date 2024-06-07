@@ -205,7 +205,10 @@ enum AlignContentValue ENSURE_ENUM_UNSIGNED {
     StretchAlignContentValue,
 };
 
-enum FlexBasisValue ENSURE_ENUM_UNSIGNED { ContentFlexBasisValue };
+enum FlexBasisValue ENSURE_ENUM_UNSIGNED {
+    AutoFlexBasisValue,
+    ContentFlexBasisValue
+};
 
 enum VerticalAlignValue ENSURE_ENUM_UNSIGNED {
     BaselineVAlignValue,

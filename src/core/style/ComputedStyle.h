@@ -3714,7 +3714,7 @@ public:
     FlexBasisData flexBasis()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return FlexBasisData(false);
+            return FlexBasisData();
         }
 
         FlexBasisData* flexBasis = m_rareComputedStyleData.flexBasis();
@@ -3722,7 +3722,7 @@ public:
             return *flexBasis;
         }
 
-        return FlexBasisData(false);
+        return FlexBasisData();
     }
 
     ContentDataGroup* content()
