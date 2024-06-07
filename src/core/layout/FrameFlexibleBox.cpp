@@ -1391,8 +1391,8 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         containingBlockOfFlexItem->markContentWidthDamaged();
 
         Length oldWidth = flexItem->style()->width(), width;
-        if (flexBasis.isWidth()) {
-            if (flexBasis.width().isAuto()) {
+        if (flexBasis.isAuto() || flexBasis.isWidth()) {
+            if (flexBasis.isAuto() || flexBasis.width().isAuto()) {
                 width = oldWidth;
                 seenPercentageBasisSize |= width.isPercent();
 
@@ -1427,8 +1427,8 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         }
 
         Length oldHeight = flexItem->style()->height(), height;
-        if (flexBasis.isWidth()) {
-            if (flexBasis.width().isAuto()) {
+        if (flexBasis.isAuto() || flexBasis.isWidth()) {
+            if (flexBasis.isAuto() || flexBasis.width().isAuto()) {
                 height = oldHeight;
                 seenPercentageBasisSize |= height.isPercent();
             } else {

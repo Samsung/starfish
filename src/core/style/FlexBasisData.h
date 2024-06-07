@@ -24,26 +24,24 @@
 
 namespace Starfish {
 class FlexBasisData : public gc {
-    enum Type { Content, Width };
-
-    Type m_type;
-    Length m_width;
-
 public:
+    enum Type { Auto, Content, Width };
+
     FlexBasisData()
-        : m_type(Content)
+        : m_type(FlexBasisData::Auto)
         , m_width(Length())
     {
     }
 
-    FlexBasisData(bool isContent, Length width = Length())
-        : m_width(width)
+    FlexBasisData(Type type, Length width = Length())
+        : m_type(type)
+        , m_width(width)
     {
-        if (isContent) {
-            m_type = Content;
-        } else {
-            m_type = Width;
-        }
+    }
+
+    bool isAuto() const
+    {
+        return m_type == Auto;
     }
 
     bool isContent() const
@@ -78,6 +76,10 @@ public:
     {
         return !operator==(o);
     }
+
+private:
+    Type m_type;
+    Length m_width;
 };
 } // namespace Starfish
 

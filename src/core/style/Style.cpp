@@ -2244,6 +2244,8 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::FlexBasisValueKind:
         switch (flexBasisValue()) {
+        case AutoFlexBasisValue:
+            return String::fromUTF8("auto");
         case ContentFlexBasisValue:
             return String::fromUTF8("content");
         default:
@@ -6410,36 +6412,38 @@ void StyleResolver::applyProperty(
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
             newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset ||
             newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-            style->setFlexBasis(FlexBasisData(false));
+            style->setFlexBasis(FlexBasisData());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
             style->setFlexBasis(parentStyle->flexBasis());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
-            style->setFlexBasis(FlexBasisData(true));
+            style->setFlexBasis(FlexBasisData(FlexBasisData::Width));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Length) {
             Length length = newCssValue.cssLengthValue().toLength();
             if (length.isAuto()) {
-                style->setFlexBasis(FlexBasisData(false));
+                style->setFlexBasis(FlexBasisData(FlexBasisData::Width));
             } else {
-                style->setFlexBasis(FlexBasisData(false, length));
+                style->setFlexBasis(
+                    FlexBasisData(FlexBasisData::Width, length));
             }
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Percentage) {
             Length length =
                 Length(Length::Percent, newCssValue.percentageValue());
-            style->setFlexBasis(FlexBasisData(false, length));
+            style->setFlexBasis(FlexBasisData(FlexBasisData::Width, length));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::CalcValueKind) {
             Nullable<Length> maybeLength = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (maybeLength) {
-                style->setFlexBasis(FlexBasisData(false, maybeLength.value()));
-            } else {
                 style->setFlexBasis(
-                    FlexBasisData(false, Length(Length::Fixed, 0)));
+                    FlexBasisData(FlexBasisData::Width, maybeLength.value()));
+            } else {
+                style->setFlexBasis(FlexBasisData(FlexBasisData::Width,
+                                                  Length(Length::Fixed, 0)));
             }
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -14659,6 +14663,9 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
     if (value.equals("content")) {
         m_valueKind = CSSStyleValuePair::ValueKind::FlexBasisValueKind;
         m_value.m_flexBasis = FlexBasisValue::ContentFlexBasisValue;
+    } else if (value.equals("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::FlexBasisValueKind;
+        m_value.m_flexBasis = FlexBasisValue::AutoFlexBasisValue;
     } else {
         return updateValueUnitLengthOrCalc(value,
                                            CSSPropertyParser::AllowPercent |
