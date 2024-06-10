@@ -44,12 +44,12 @@ struct CaseInsensitiveEqual {
     }
 };
 
-const char* webglErrorString(unsigned int code);
-
 class Pixel {
 public:
     static size_t getBytesPerPixel(GLenum format, GLenum type);
 };
+
+std::string glValueString(uint32_t value);
 
 } // namespace Starfish
 

@@ -224,11 +224,14 @@ void WebGLRenderingContext::onResize()
 #define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...) \
     GLContextScope contextScope_(m_context);        \
     if (contextScope_.hasError()) {                 \
-        TRACE(WEBGL, "GL Context error detected."); \
+        TRACE(WEBGL,                                \
+              "\033[33m"                            \
+              "GL Context error detected."          \
+              "\033[0m");                           \
         return bailoutValue;                        \
     }
 
-#ifdef NDEBUG
+#if defined(NDEBUG) and !defined(ENABLE_TRACE)
 #define ENTER_CONTEXT_SCOPE(bailoutValue, ...) \
     ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);
 #else
@@ -236,7 +239,10 @@ void WebGLRenderingContext::onResize()
     ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);          \
     auto onScopeLeave = OnScopeLeave::create([&]() { \
         if (hasGLError()) {                          \
-            TRACE(WEBGL, "GL error detected.");      \
+            TRACE(WEBGL,                             \
+                  "\033[33m"                         \
+                  "GL error detected."               \
+                  "\033[0m");                        \
         }                                            \
     });
 #endif
@@ -262,7 +268,7 @@ void WebGLRenderingContext::updateGLError()
 {
     GLenum code = m_gl->getError();
     if (code != GL_NO_ERROR) {
-        TRACE(WEBGL, "Error:", hex(code));
+        TRACE(WEBGL, "Error:", glValueString(code));
         setGLError(code);
     }
 }
@@ -285,7 +291,7 @@ void WebGLRenderingContext::setGLError(GLenum code, const char* message)
 {
     m_GLErrors.insert(code);
     if (message) {
-        TRACE(WEBGL, "Error(%s): %s", webglErrorString(code), message);
+        TRACE(WEBGL, "Error(%s): %s", glValueString(code), message);
     }
 }
 
