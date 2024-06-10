@@ -914,6 +914,46 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
+Nullable<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* box)
+{
+    bool exists = false;
+    LayoutUnit result = 0;
+    box->iterateChildFrameBoxOnCondition([&](FrameBox* child) -> bool {
+        if (child->isAbsolutePositioned()) {
+            return false;
+        }
+        if (box != child && child->style() && child->style()->height().isDefinite(false)) {
+            LayoutUnit height = child->style()->height().specifiedValue(0, child);
+            height = child->contentHeightAfterApplyingBoxSizing(height);
+            auto pt = child->absolutePoint(box);
+            result = std::max(result, pt.y() + height);
+            exists = true;
+        }
+        if (child->isFrameReplaced()) {
+            auto siz = child->asFrameReplaced()->intrinsicSize();
+            auto pt = child->absolutePoint(box);
+            result = std::max(result, pt.y() + siz.m_intrinsicContentSize.height());
+            exists = true;
+            return false;
+        }
+        if (child->isFrameBlockBox()) {
+            auto blockBox = child->asFrameBlockBox();
+            if (blockBox->lineBoxes().size()) {
+                auto rt = blockBox->lineBoxes()[0]->absoluteRect(box);
+                result = std::max(result, rt.maxY());
+                exists = true;
+            }
+        }
+        return true;
+    });
+
+    if (exists) {
+        return Nullable<LayoutUnit>(result);
+    }
+
+    return nullptr;
+}
+
 void LayoutContext::pushIntoLineBoxPool(LineBox* b)
 {
     memset(b, 0, sizeof(LineBox));

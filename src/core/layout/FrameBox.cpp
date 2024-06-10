@@ -4117,16 +4117,12 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
         if (!underComputingPreferredWidth &&
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
-            if (isFrameReplaced()) {
-                STARFISH_UNIMPLEMENTED();
-            } else {
-                if (style->width().isSpecified()) {
-                    LayoutUnit width =
-                        style->width().specifiedValue(parentWidth, this);
-                    width = contentWidthAfterApplyingBoxSizing(width);
+            if (!isFrameReplaced() && style->width().isSpecified()) {
+                LayoutUnit width =
+                    style->width().specifiedValue(parentWidth, this);
+                width = contentWidthAfterApplyingBoxSizing(width);
 
-                    minWidth = width;
-                }
+                minWidth = width;
             }
 
             PreferredWidthContext p(ctx, nullptr, this, this,
@@ -4176,23 +4172,15 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         }
     } else if (isFlexItem()) {
         LayoutUnit minHeight = intMaxForLayoutUnit;
-        auto FlexibleBox = layoutParent()->asFrameFlexibleBox();
+        auto flexibleBox = layoutParent()->asFrameFlexibleBox();
 
-        if (!FlexibleBox->shouldApplyLineClamp(this) &&
-            !FlexibleBox->isMainAxisInInlineAxis() &&
+        if (!flexibleBox->shouldApplyLineClamp(this) &&
+            !flexibleBox->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
-            if (isFrameReplaced()) {
-                STARFISH_UNIMPLEMENTED();
-            } else {
-                if (style->height().isDefinite(parentHasFixedValue)) {
-                    LayoutUnit h = LayoutUnit(
-                        style->height().specifiedValue(parentHeight, this));
-                    h = contentHeightAfterApplyingBoxSizing(h);
-
-                    minHeight = h;
-                }
+            auto result = ctx.lookupFirstLineOrDefiniteHeight(this);
+            if (result) {
+                minHeight = std::min(contentHeight(), result.value());
             }
-            minHeight = std::min(minHeight, ctx.contentHeight(this));
         }
 
         if (minHeight != intMaxForLayoutUnit && minHeight > height) {

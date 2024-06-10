@@ -544,6 +544,8 @@ public:
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
 
+    Nullable<LayoutUnit> lookupFirstLineOrDefiniteHeight(FrameBox* box);
+
     void pushIntoLineBoxPool(LineBox* b);
 
     bool hasItemInLineBoxPool()
