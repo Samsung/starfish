@@ -73,6 +73,29 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
     return 0;
 }
 
+bool Pixel::isTwoBytesPerPixel(GLenum type)
+{
+    return (type == GL_UNSIGNED_SHORT_5_5_5_1 ||
+            type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+            type == GL_UNSIGNED_SHORT_5_6_5);
+}
+
+GLushort Pixel::makePixel5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    return (((r >> 3) & 0x1F) << 11) | (((g >> 3) & 0x1F) << 6) |
+           (((b >> 3) & 0x1F) << 1) | (a & 0x01);
+}
+
+GLushort Pixel::makePixel4444(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    r = (r > 15) ? (r >> 4) : r;
+    g = (g > 15) ? (g >> 4) : g;
+    b = (b > 15) ? (b >> 4) : b;
+    a = (a > 15) ? (a >> 4) : a;
+
+    return ((r & 0xF) << 12) | ((g & 0xF) << 8) | ((b & 0xF) << 4) | (a & 0xF);
+}
+
 std::string glValueString(uint32_t value)
 {
 #if defined(ENABLE_TRACE)

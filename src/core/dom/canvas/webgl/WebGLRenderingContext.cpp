@@ -2404,8 +2404,72 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         m_gl->texImage2D(target, level, internalFormat, width, height, 0,
                          format, type, image.data());
     } else {
+        // Refs: conformance/resources/tex-image-and-sub-image-2d-with-image.js,
+        // initializing the texture to black by gl.texImage2D(..., null).
+
+        const size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
+        size_t byteLengthOfPixels = width * height * bytesPerPixel;
+
+        TRACE(WEBGL_V, KV(glValueString(format)), KV(glValueString(type)));
+        TRACE(WEBGL_V, KV(bytesPerPixel), KV(byteLengthOfPixels));
+
+        static size_t maxTextureSize = 0;
+        if (maxTextureSize == 0) {
+            m_gl->getIntegerv(GL_MAX_TEXTURE_SIZE,
+                              reinterpret_cast<GLint*>(&maxTextureSize));
+            TRACE(WEBGL_V, KV(maxTextureSize));
+        }
+
+        if (Pixel::isTwoBytesPerPixel(type)) {
+            std::vector<GLushort> blackData;
+            if (byteLengthOfPixels <= maxTextureSize) {
+                if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
+                    std::vector<GLushort> blackData;
+                    blackData.resize(byteLengthOfPixels,
+                                     Pixel::makePixel5551(0, 0, 0, 0x1));
+                } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
+                    blackData.resize(byteLengthOfPixels,
+                                     Pixel::makePixel4444(0, 0, 0, 0xF));
+                } else {
+                    // format == GL_RGB
+                    STARFISH_ASSERT(type == GL_UNSIGNED_SHORT_5_6_5);
+                    blackData.resize(byteLengthOfPixels, 0);
+                }
+            }
+            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
+                             format, type, blackData.data());
+            return;
+        }
+
+        std::vector<GLubyte> blackData;
+        if (byteLengthOfPixels <= maxTextureSize) {
+            if (format == GL_ALPHA) {
+                blackData.resize(byteLengthOfPixels, 255);
+            } else if (format == GL_LUMINANCE_ALPHA || format == GL_RGBA) {
+                blackData.resize(byteLengthOfPixels, 0);
+                size_t alphaIndex = bytesPerPixel - 1;
+                for (size_t i = 0; i < byteLengthOfPixels; i += bytesPerPixel) {
+                    blackData[i + alphaIndex] = 255;
+                }
+            } else {
+                blackData.resize(byteLengthOfPixels, 0);
+            }
+        }
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        if (format == GL_RGBA) {
+            if (WebGLExtensionRegistry::instance()
+                    .hasEXT_texture_format_BGRA8888()) {
+                // According to OpenGL ES specification, the format must match
+                // the base internal format (no conversions from one format to
+                // another during texture image processing are supported.)
+                internalFormat = GL_BGRA_EXT;
+                format = GL_BGRA_EXT;
+            }
+        }
+#endif
         m_gl->texImage2D(target, level, internalFormat, width, height, 0,
-                         format, type, nullptr);
+                         format, type, blackData.data());
     }
 }
 
