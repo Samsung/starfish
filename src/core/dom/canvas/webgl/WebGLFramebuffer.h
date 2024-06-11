@@ -26,6 +26,9 @@
 
 namespace Starfish {
 
+class WebGLTexture;
+class WebGLRenderbuffer;
+
 class WebGLFramebuffer : public WebGLObject {
 public:
     WebGLFramebuffer(ScriptBindingInstance* instance,
@@ -35,6 +38,14 @@ public:
     }
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLFramebuffer() const override;
+
+    DEFINE_GETTER_SETTER(WebGLTexture*, attachedTexture, AttachedTexture);
+    DEFINE_GETTER_SETTER(WebGLRenderbuffer*, attachedRenderBuffer,
+                         AttachedRenderBuffer);
+
+private:
+    WebGLTexture* m_attachedTexture = nullptr;
+    WebGLRenderbuffer* m_attachedRenderBuffer = nullptr;
 };
 } // namespace Starfish
 

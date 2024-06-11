@@ -151,6 +151,9 @@ public:
     ScriptValue getBufferParameter(GLenum target, GLenum pname);
     ScriptValue getParameter(GLenum pname);
     GLenum getError();
+    ScriptValue getFramebufferAttachmentParameter(GLenum target,
+                                                  GLenum attachment,
+                                                  GLenum pname);
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
     String* getProgramInfoLog(WebGLProgram* program);
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
