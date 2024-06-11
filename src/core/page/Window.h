@@ -107,10 +107,7 @@ public:
         return m_history;
     }
 
-    CustomElementRegistry* customElements()
-    {
-        return m_customElementRegistry;
-    }
+    CustomElementRegistry* customElements();
 
     Navigator* navigator()
     {
@@ -270,14 +267,7 @@ public:
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
     Performance* performance();
-
-    Crypto* crypto()
-    {
-        if (!m_crypto) {
-            m_crypto = Crypto::create(executionContext());
-        }
-        return m_crypto;
-    }
+    Crypto* crypto();
 
     void registerDisposer(void* holder, Disposer function);
 
@@ -406,11 +396,11 @@ private:
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;
-    Screen* m_screen;
+    Nullable<Screen*> m_screen;
     Scrolling* m_scrolling;
-    Performance* m_performance;
-    CustomElementRegistry* m_customElementRegistry;
-    Crypto* m_crypto;
+    Nullable<Performance*> m_performance;
+    Nullable<CustomElementRegistry*> m_customElementRegistry;
+    Nullable<Crypto*> m_crypto;
 
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
@@ -419,8 +409,8 @@ private:
     uint32_t m_width;
     uint32_t m_height;
 
-    Node* m_cssTarget;
-    NodeList* m_frames;
+    Nullable<Node*> m_cssTarget;
+    Nullable<NodeList*> m_frames;
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* m_currentDispatchingEvent;
 #endif

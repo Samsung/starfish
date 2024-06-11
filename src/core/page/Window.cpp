@@ -39,6 +39,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/dom/Scrolling.h"
 #include "core/extra/Console.h"
+#include "core/extra/Performance.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -57,6 +58,7 @@
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
 #include "core/modules/renderer/Renderer.h"
+#include "core/modules/crypto/Crypto.h"
 #include "binding/ScriptBindingSecurity.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -87,13 +89,9 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     , m_history(nullptr)
     , m_navigator(nullptr)
     , m_location(nullptr)
-    , m_screen(nullptr)
     , m_scrolling(new Scrolling(this))
-    , m_crypto(nullptr)
     , m_width(initialWidth)
     , m_height(initialHeight)
-    , m_cssTarget(nullptr)
-    , m_frames(nullptr)
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     , m_currentDispatchingEvent(nullptr)
 #endif
@@ -126,8 +124,6 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
     m_scriptBindingInstance->initBinding();
-    m_customElementRegistry = new CustomElementRegistry(executionContext());
-    m_performance = Performance::create(executionContext());
 
 #if defined(STARFISH_ENABLE_TTS)
     m_speechSynthesis = new SpeechSynthesis(m_document);
@@ -341,7 +337,7 @@ Screen* Window::screen()
     if (!m_screen) {
         m_screen = new Screen(m_document);
     }
-    return m_screen;
+    return m_screen.value();
 }
 
 int32_t Window::innerWidth()
@@ -778,7 +774,26 @@ Promise* Window::fetch(RequestInfo& input, RequestInit& init)
 
 Performance* Window::performance()
 {
-    return m_performance;
+    if (!m_performance) {
+        m_performance = Performance::create(executionContext());
+    }
+    return m_performance.value();
+}
+
+Crypto* Window::crypto()
+{
+    if (!m_crypto) {
+        m_crypto = Crypto::create(executionContext());
+    }
+    return m_crypto.value();
+}
+
+CustomElementRegistry* Window::customElements()
+{
+    if (!m_customElementRegistry) {
+        m_customElementRegistry = new CustomElementRegistry(executionContext());
+    }
+    return m_customElementRegistry.value();
 }
 
 DEFINE_EVENT_LISTENER(Window, abort);
@@ -923,7 +938,7 @@ NodeList* Window::ensureFrames()
         m_frames =
             new NodeList(document(), gatherFrames, staticStrings(), true);
     }
-    return m_frames;
+    return m_frames.value();
 }
 
 #ifdef STARFISH_ENABLE_TEST
