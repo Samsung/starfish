@@ -26,12 +26,24 @@
 
 namespace Starfish {
 
+class WebGLShader;
+
 class WebGLProgram : public WebGLObject {
 public:
     WebGLProgram(ScriptBindingInstance* instance,
                  WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLProgram() const override;
+    void addAttachedShader(WebGLShader* shader);
+    void removeDetachedShader(WebGLShader* shader);
+
+    const GCVector<WebGLShader*>& getWebGLShaders() const
+    {
+        return m_webGLShaders;
+    }
+
+private:
+    GCVector<WebGLShader*> m_webGLShaders;
 };
 } // namespace Starfish
 

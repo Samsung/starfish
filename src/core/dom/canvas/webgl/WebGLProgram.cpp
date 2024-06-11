@@ -30,6 +30,22 @@ WebGLProgram::WebGLProgram(ScriptBindingInstance* instance,
 {
 }
 
+void WebGLProgram::addAttachedShader(WebGLShader* shader)
+{
+    if (std::find(m_webGLShaders.begin(), m_webGLShaders.end(), shader) ==
+        m_webGLShaders.end()) {
+        m_webGLShaders.push_back(shader);
+    }
+}
+
+void WebGLProgram::removeDetachedShader(WebGLShader* shader)
+{
+    auto it = std::find(m_webGLShaders.begin(), m_webGLShaders.end(), shader);
+    if (it != m_webGLShaders.end()) {
+        m_webGLShaders.erase(it);
+    }
+}
+
 } // namespace Starfish
 
 #endif
