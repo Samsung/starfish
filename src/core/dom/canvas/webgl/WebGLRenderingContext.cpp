@@ -985,6 +985,8 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 {
     ENTER_CONTEXT_SCOPE();
 
+    Nullable<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
+
     if (maybeRenderbuffer.hasValue()) {
         WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
 
@@ -994,9 +996,15 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 
         m_gl->framebufferRenderbuffer(target, attachment, renderbuffertarget,
                                       renderBuffer->glObject());
+        if (webGLFramebuffer) {
+            webGLFramebuffer->setAttachedRenderBuffer(renderBuffer);
+        }
     } else {
         m_gl->framebufferRenderbuffer(target, attachment, renderbuffertarget,
                                       0);
+        if (webGLFramebuffer) {
+            webGLFramebuffer->setAttachedRenderBuffer(nullptr);
+        }
         if (isDefaultFramebufferBound()) {
             setGLError(GL_INVALID_OPERATION);
         }
@@ -1008,6 +1016,8 @@ void WebGLRenderingContext::framebufferTexture2D(
     Nullable<WebGLTexture*> maybeTexture, GLint level)
 {
     ENTER_CONTEXT_SCOPE();
+
+    Nullable<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
 
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
@@ -1024,8 +1034,14 @@ void WebGLRenderingContext::framebufferTexture2D(
         GLuint textureId = texture->glObject();
         m_gl->framebufferTexture2D(target, attachment, textarget, textureId,
                                    level);
+        if (webGLFramebuffer) {
+            webGLFramebuffer->setAttachedTexture(texture);
+        }
     } else {
         m_gl->framebufferTexture2D(target, attachment, textarget, 0, level);
+        if (webGLFramebuffer) {
+            webGLFramebuffer->setAttachedTexture(nullptr);
+        }
         if (isDefaultFramebufferBound()) {
             setGLError(GL_INVALID_OPERATION);
         }
@@ -1348,6 +1364,67 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
     }
 
     return m_gl->getAttribLocation(program->glObject(), CSTR(name));
+}
+
+ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
+    GLenum target, GLenum attachment, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (attachment != GL_COLOR_ATTACHMENT0 &&
+        attachment != GL_DEPTH_ATTACHMENT &&
+        attachment != GL_STENCIL_ATTACHMENT &&
+        attachment != GL_DEPTH_STENCIL_ATTACHMENT) {
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+
+    GLint params = 0;
+    m_gl->getFramebufferAttachmentParameteriv(target, attachment, pname,
+                                              &params);
+
+    if (hasGLError()) {
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE: {
+        return params != 0
+                   ? Escargot::ValueRef::create(static_cast<GLenum>(params))
+                   : scriptNull();
+    }
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        return Escargot::ValueRef::create(params);
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
+        Nullable<WebGLFramebuffer*> webGLFramebuffer =
+            m_state->webGLFramebuffer();
+        if (!webGLFramebuffer) {
+            return scriptNull();
+        }
+        GLint rboOrTextureID;
+        m_gl->getFramebufferAttachmentParameteriv(
+            target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+            &rboOrTextureID);
+
+        GLint type;
+        m_gl->getFramebufferAttachmentParameteriv(
+            target, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &type);
+        if (type == GL_RENDERBUFFER) {
+            return webGLFramebuffer->attachedRenderBuffer()->scriptValue();
+        } else if (type == GL_TEXTURE) {
+            return webGLFramebuffer->attachedTexture()->scriptValue();
+        } else {
+            STARFISH_LOG_DEBUG("Unknown type %d", type);
+            return scriptNull();
+        }
+        return Escargot::ValueRef::create(params);
+    }
+    default:
+        setGLError(GL_INVALID_ENUM);
+        break;
+    }
+    return scriptNull();
 }
 
 ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
