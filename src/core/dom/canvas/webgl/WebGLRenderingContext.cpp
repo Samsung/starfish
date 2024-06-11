@@ -493,6 +493,7 @@ void WebGLRenderingContext::attachShader(WebGLProgram* program,
     ENTER_CONTEXT_SCOPE();
 
     m_gl->attachShader(program->glObject(), shader->glObject());
+    program->addAttachedShader(shader);
 }
 
 void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
@@ -870,6 +871,7 @@ void WebGLRenderingContext::detachShader(WebGLProgram* program,
     STARFISH_ASSERT(shader != nullptr);
 
     m_gl->detachShader(program->glObject(), shader->glObject());
+    program->removeDetachedShader(shader);
 }
 
 void WebGLRenderingContext::disable(GLenum cap)
@@ -1298,6 +1300,29 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
 
     return new WebGLActiveInfo(scriptBindingInstance(), size, type,
                                String::createASCIIString(name.data(), length));
+}
+
+Nullable<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
+    WebGLProgram* program)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    if (!checkWebGLObject(program)) {
+        return nullptr;
+    }
+
+    const GCVector<WebGLShader*>& webGLShaders = program->getWebGLShaders();
+#if !defined(NDEBUG)
+    GLint maxCount;
+    m_gl->getProgramiv(program->glObject(), GL_ATTACHED_SHADERS, &maxCount);
+
+    GLsizei returnedCount;
+    std::vector<GLuint> shaders(maxCount);
+    m_gl->getAttachedShaders(program->glObject(), maxCount, &returnedCount,
+                             shaders.data());
+    STARFISH_ASSERT(shaders.size() == webGLShaders.size());
+#endif
+    return webGLShaders;
 }
 
 GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,

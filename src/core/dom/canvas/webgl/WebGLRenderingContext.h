@@ -146,6 +146,7 @@ public:
     void generateMipmap(GLenum target);
     WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
     WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
+    Nullable<GCVector<WebGLShader*>> getAttachedShaders(WebGLProgram* program);
     GLint getAttribLocation(WebGLProgram* program, String* name);
     ScriptValue getBufferParameter(GLenum target, GLenum pname);
     ScriptValue getParameter(GLenum pname);
