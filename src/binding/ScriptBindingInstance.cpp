@@ -31,6 +31,11 @@
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #endif
 
+#if defined(STARFISH_ENABLE_WASM)
+#include "core/fetch/Response.h"
+#include "core/fetch/ResponseData.h"
+#endif
+
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
 #endif
@@ -44,6 +49,161 @@
 namespace Starfish {
 
 using namespace Escargot;
+
+#ifdef STARFISH_ENABLE_WASM
+static ValueRef* compilePotentialWASMResponse(ExecutionStateRef* state,
+                                              ValueRef* thisValue, size_t argc,
+                                              ValueRef** argv,
+                                              bool isNewExpression)
+{
+    // Upon fulfillment of source with value unwrappedSource:
+    // Let response be unwrappedSource's response.
+    CHECK_TYPEOF(argv[0], Response);
+    Response* response = (Response*)(argv[0]->asObject()->extraData());
+
+    // Let mimeType be the result of extracting a MIME type from response's
+    // header list. If mimeType is not `application/wasm`, reject returnValue
+    // with a TypeError and abort these substeps.
+    // TODO update application/wasm category
+    /*
+    String* mimeType = response->headers()->extractMIMEType();
+    if (!mimeType->equals("application/wasm")) {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
+    }
+    */
+
+    // If response is not CORS-same-origin, reject returnValue with a TypeError
+    // and abort these substeps.
+    ResponseType responseType = response->typeValue();
+    if (responseType != ResponseType::Basic &&
+        responseType != ResponseType::Cors &&
+        responseType != ResponseType::Default) {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
+    }
+
+    // If response's status is not an ok status, reject returnValue with a
+    // TypeError and abort these substeps.
+    if (!response->ok()) {
+        THROW_EXCEPTION(ILLEGAL_INVOKE);
+    }
+
+    // consume response's body as an ArrayBuffer, and let bodyPromise be the
+    // result.
+    PromiseObjectRef* bodyPromise =
+        response->arrayBuffer()->scriptValue()->asPromiseObject();
+
+    // Note) bodyPromise is already resolved or rejected
+    STARFISH_ASSERT(bodyPromise->state() == PromiseObjectRef::FulFilled ||
+                    bodyPromise->state() == PromiseObjectRef::Rejected);
+
+    // Upon fulfillment of bodyPromise with value bodyArrayBuffer:
+    if (bodyPromise->state() == PromiseObjectRef::FulFilled) {
+        // Let stableBytes be a copy of the bytes held by the buffer
+        // bodyArrayBuffer.
+        ValueRef* bodyArrayBuffer = bodyPromise->promiseResult();
+        ValueRef* stableBytes =
+            WASMOperationsRef::copyStableBufferBytes(state, bodyArrayBuffer);
+
+        // Asynchronously compile the WebAssembly module stableBytes using the
+        // networking task source and resolve returnValue with the result.
+        return WASMOperationsRef::asyncCompileModule(state, stableBytes);
+    }
+
+    // Upon rejection of bodyPromise with reason reason:
+    // Reject returnValue with reason.
+    STARFISH_ASSERT(bodyPromise->state() == PromiseObjectRef::Rejected);
+    state->throwException(bodyPromise->promiseResult());
+
+    return nullptr;
+}
+
+// https://webassembly.github.io/spec/web-api/#dom-webassembly-compilestreaming
+static ValueRef* compileStreamingWASMFunction(ExecutionStateRef* state,
+                                              ValueRef* thisValue, size_t argc,
+                                              ValueRef** argv,
+                                              bool isNewExpression)
+{
+    ValueRef* source = argv[0];
+    if (!source->isPromiseObject()) {
+        // check `source` argument type
+        PromiseObjectRef* returnValue = PromiseObjectRef::create(state);
+
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH, "0", "source", "Promise");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "compileStreaming",
+                        "WebAssembly", reason);
+        ValueRef* error = ErrorObjectRef::create(
+            state, ErrorObjectRef::TypeError,
+            StringRef::createFromASCII(msg, strlen(msg)));
+
+        returnValue->reject(state, error);
+        return returnValue;
+    }
+
+    // returns the result of compiling a potential WebAssembly response with
+    // source
+    auto compiler = FunctionObjectRef::create(
+        state, FunctionObjectRef::NativeFunctionInfo(
+                   AtomicStringRef::emptyAtomicString(),
+                   compilePotentialWASMResponse, 1, true, false));
+    return source->asPromiseObject()->then(state, compiler);
+}
+
+// https://webassembly.github.io/spec/web-api/index.html#dom-webassembly-instantiatestreaming
+static ValueRef* instantiateStreamingWASMFunction(ExecutionStateRef* state,
+                                                  ValueRef* thisValue,
+                                                  size_t argc, ValueRef** argv,
+                                                  bool isNewExpression)
+{
+    ValueRef* source = argv[0];
+    ValueRef* importObject = argv[1];
+
+    if (!source->isObject() ||
+        (!source->isPromiseObject() &&
+         (!source->asObject()->extraData() ||
+          !((ScriptWrappable*)source->asObject()->extraData())
+               ->isResponse()))) {
+        // check `source` argument type
+        COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH, "0", "source",
+                        "Response or Promise");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "instantiateStreaming",
+                        "WebAssembly", reason);
+        ValueRef* error = ErrorObjectRef::create(
+            state, ErrorObjectRef::TypeError,
+            StringRef::createFromASCII(msg, strlen(msg)));
+
+        PromiseObjectRef* sourceReturn = PromiseObjectRef::create(state);
+        sourceReturn->reject(state, error);
+        return sourceReturn;
+    }
+
+    PromiseObjectRef* promiseOfModule = nullptr;
+
+    // Let promiseOfModule be the result of compiling a potential WebAssembly
+    // response with source.
+    auto compiler = FunctionObjectRef::create(
+        state, FunctionObjectRef::NativeFunctionInfo(
+                   AtomicStringRef::emptyAtomicString(),
+                   compilePotentialWASMResponse, 1, true, false));
+
+    if (source->isPromiseObject()) {
+        promiseOfModule =
+            source->asPromiseObject()->then(state, compiler)->asPromiseObject();
+    } else {
+        STARFISH_ASSERT(
+            ((ScriptWrappable*)source->asObject()->extraData())->isResponse());
+        PromiseObjectRef* sourceReturn = PromiseObjectRef::create(state);
+        sourceReturn->fulfill(state, source);
+
+        promiseOfModule =
+            sourceReturn->then(state, compiler)->asPromiseObject();
+    }
+
+    // Return the result of instantiating the promise of a module
+    // promiseOfModule with imports importObject.
+    return WASMOperationsRef::instantiatePromiseOfModuleWithImportObject(
+        state, promiseOfModule, importObject);
+}
+#endif
 
 ScriptBindingInstance::ScriptBindingInstance(
     ScriptEngineInstance* engineInstance)
@@ -288,5 +448,27 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
     globalObject->defineDataProperty(state,
                                      StringRef::createFromASCII("console"),
                                      console, true, true, true);
+
+#ifdef STARFISH_ENABLE_WASM
+    ValueRef* wasm = globalObject->getOwnProperty(
+        state, StringRef::createFromASCII("WebAssembly"));
+    STARFISH_ASSERT(wasm->isObject());
+
+    wasm->asObject()->defineDataProperty(
+        state, StringRef::createFromASCII("compileStreaming"),
+        FunctionObjectRef::createBuiltinFunction(
+            state, FunctionObjectRef::NativeFunctionInfo(
+                       AtomicStringRef::create(context, "compileStreaming"),
+                       compileStreamingWASMFunction, 1, true, false)),
+        true, true, true);
+
+    wasm->asObject()->defineDataProperty(
+        state, StringRef::createFromASCII("instantiateStreaming"),
+        FunctionObjectRef::createBuiltinFunction(
+            state, FunctionObjectRef::NativeFunctionInfo(
+                       AtomicStringRef::create(context, "instantiateStreaming"),
+                       instantiateStreamingWASMFunction, 2, true, false)),
+        true, true, true);
+#endif
 }
 } // namespace Starfish
