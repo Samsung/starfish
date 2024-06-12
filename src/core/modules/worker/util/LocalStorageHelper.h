@@ -41,6 +41,7 @@ namespace LocalStorageHelper {
         };
         static bool exists(const std::string& path);
         static void mkdirIfNotExists(const std::string& path);
+        static void createClearDirectory(const std::string& path);
         static void remove(const std::string& path);
         static bool getFileNamesInDirectory(std::vector<std::string>& result,
                                             const std::string& path, Type type);

@@ -32,6 +32,6 @@
 #define PATH_SHARED_WORKER_IPC_DIR "/.ipc-shared-worker"
 
 // NAMES
-#define WORKER_IPC_PROCESS_NAME ".ipc"
+#define WORKER_IPC_PROCESS_NAME "ipc"
 
 #endif
