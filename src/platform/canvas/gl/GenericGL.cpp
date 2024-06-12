@@ -441,6 +441,12 @@ public:
         return glGetString(name);
     }
 
+    virtual void getTexParameteriv(GLenum target, GLenum pname,
+                                   GLint *params) override
+    {
+        return glGetTexParameteriv(target, pname, params);
+    }
+
     virtual void getUniformfv(GLuint program, GLint location,
                               GLfloat *params) override
     {
