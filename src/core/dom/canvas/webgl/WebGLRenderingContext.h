@@ -160,6 +160,7 @@ public:
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
     String* getShaderInfoLog(WebGLShader* shader);
     String* getShaderSource(WebGLShader* shader);
+    ScriptValue getTexParameter(GLenum target, GLenum pname);
     ScriptValue getUniform(WebGLProgram* program,
                            WebGLUniformLocation* location);
     WebGLUniformLocation* getUniformLocation(WebGLProgram* program,

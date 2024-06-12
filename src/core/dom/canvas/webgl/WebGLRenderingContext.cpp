@@ -1586,6 +1586,41 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     return String::fromUTF8(buffer.data(), length);
 }
 
+ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+
+    if (pname != GL_TEXTURE_MAG_FILTER && pname != GL_TEXTURE_MIN_FILTER &&
+        pname != GL_TEXTURE_WRAP_S && pname != GL_TEXTURE_WRAP_T) {
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+
+    GLint params = 0;
+    m_gl->getTexParameteriv(target, pname, &params);
+
+    if (hasGLError()) {
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_TEXTURE_MAG_FILTER:
+    case GL_TEXTURE_MIN_FILTER:
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T:
+        return createScriptValue(static_cast<GLenum>(params));
+    default:
+        setGLError(GL_INVALID_ENUM);
+        break;
+    }
+    return scriptNull();
+}
+
 ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
                                               WebGLUniformLocation* location)
 {
