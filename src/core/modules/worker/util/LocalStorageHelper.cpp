@@ -51,8 +51,23 @@ namespace LocalStorageHelper {
         TRACE(LOCALSTORAGE, path.data());
 
         if (mkdir(path.data(), 0755) != 0) {
-            STARFISH_LOG_ERROR("cannot mkDir: %s", path.data());
+            STARFISH_LOG_ERROR("cannot mkdir: %s", path.data());
         }
+    }
+
+    void File::createClearDirectory(const std::string& path)
+    {
+        if (!LocalStorageHelper::File::exists(path)) {
+            if (mkdir(path.data(), 0755) != 0) {
+                STARFISH_LOG_ERROR("cannot mkdir: %s", path.data());
+            }
+            return;
+        }
+
+        PlatformDirectory* dir = PlatformDirectory::create();
+        dir->open(String::fromUTF8(path.data(), path.length()));
+        dir->clearDir();
+        dir->close();
     }
 
     void File::remove(const std::string& path)

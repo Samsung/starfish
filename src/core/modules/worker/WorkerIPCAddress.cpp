@@ -70,12 +70,12 @@ void WorkerIPCAddress::acquire()
     LocalStorageHelper::File::mkdirIfNotExists(
         m_workerSettings->dataDirectoryPath());
 
-    LocalStorageHelper::File::mkdirIfNotExists(getIPCHandlePath());
+    LocalStorageHelper::File::createClearDirectory(getIPCHandlePath());
 
     m_workerSettings->addOnChangeDataDirectoryPathCallback(
         [this](const std::string& curPath, const std::string& newPath) {
             LocalStorageHelper::File::remove(curPath);
-            LocalStorageHelper::File::mkdirIfNotExists(newPath);
+            LocalStorageHelper::File::createClearDirectory(newPath);
 
             LocalStorageHelper::File::mkdirIfNotExists(getIPCHandlePath());
             TRACE(IPC, "Create", getIPCHandlePath());
