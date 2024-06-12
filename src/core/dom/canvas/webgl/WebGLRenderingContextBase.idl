@@ -588,7 +588,7 @@ interface WebGLRenderingContextBase
                                           GLenum pname);
     any getProgramParameter(WebGLProgram program, GLenum pname);
     DOMString? getProgramInfoLog(WebGLProgram program);
-    [Unimplemented] any getRenderbufferParameter(GLenum target, GLenum pname);
+    any getRenderbufferParameter(GLenum target, GLenum pname);
     any getShaderParameter(WebGLShader shader, GLenum pname);
     [Unimplemented] WebGLShaderPrecisionFormat? getShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
     DOMString? getShaderInfoLog(WebGLShader shader);

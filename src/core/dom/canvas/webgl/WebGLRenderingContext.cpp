@@ -1484,6 +1484,37 @@ String* WebGLRenderingContext::getProgramInfoLog(WebGLProgram* program)
     return String::fromUTF8(buffer.data(), length);
 }
 
+ScriptValue WebGLRenderingContext::getRenderbufferParameter(GLenum target,
+                                                            GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    GLint params = 0;
+    m_gl->getRenderbufferParameteriv(target, pname, &params);
+
+    if (hasGLError()) {
+        return scriptNull();
+    }
+
+    switch (pname) {
+    case GL_RENDERBUFFER_INTERNAL_FORMAT:
+        return createScriptValue(static_cast<GLenum>(params));
+    case GL_RENDERBUFFER_WIDTH:
+    case GL_RENDERBUFFER_HEIGHT:
+    case GL_RENDERBUFFER_RED_SIZE:
+    case GL_RENDERBUFFER_GREEN_SIZE:
+    case GL_RENDERBUFFER_BLUE_SIZE:
+    case GL_RENDERBUFFER_ALPHA_SIZE:
+    case GL_RENDERBUFFER_DEPTH_SIZE:
+    case GL_RENDERBUFFER_STENCIL_SIZE:
+        return createScriptValue(params);
+    default:
+        setGLError(GL_INVALID_ENUM);
+        break;
+    }
+    return scriptNull();
+}
+
 ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
                                                       GLenum pname)
 {

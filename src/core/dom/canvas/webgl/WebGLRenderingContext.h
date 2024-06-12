@@ -156,6 +156,7 @@ public:
                                                   GLenum pname);
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
     String* getProgramInfoLog(WebGLProgram* program);
+    ScriptValue getRenderbufferParameter(GLenum target, GLenum pname);
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
     String* getShaderInfoLog(WebGLShader* shader);
     String* getShaderSource(WebGLShader* shader);
