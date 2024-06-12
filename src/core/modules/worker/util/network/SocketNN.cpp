@@ -145,6 +145,8 @@ int SocketNN::recv(void *buf, size_t len, int flags)
 {
     int res = nn_recv(m_fd, buf, len, flags);
     if (UNLIKELY(res < 0)) {
+        STARFISH_LOG_INFO("cannot receive message: %s\n",
+                          nn_strerror(nn_errno()));
         if (UNLIKELY(nn_errno() != EAGAIN)) {
             throw SocketNN::Exception();
         }

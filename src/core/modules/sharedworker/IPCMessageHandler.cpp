@@ -43,6 +43,7 @@ void IPCMessageHandler::sendMessage(Connection* connection, IPCMessage& message)
 {
     Nullable<IPCMessageSerializer*> serializer = serialize(message);
     if (serializer.hasValue()) {
+        serializer->writeTerminator();
         connection->send(serializer->data(), serializer->size());
     }
 }

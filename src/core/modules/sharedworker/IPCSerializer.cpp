@@ -69,6 +69,11 @@ public:
         return m_isError;
     }
 
+    void writeTerminator()
+    {
+        write<char>('\0');
+    }
+
 private:
     GCVector<char>* m_buffer;
     size_t m_size;
@@ -196,6 +201,11 @@ void IPCMessageSerializer::writeString(const std::string& value)
     m_writer->write<char>(value.data(), value.length());
 }
 
+void IPCMessageSerializer::writeTerminator()
+{
+    m_writer->writeTerminator();
+}
+
 const char* IPCMessageSerializer::data() const
 {
     return m_writer->buffer()->data();
@@ -307,6 +317,7 @@ public:
     SerializedTypedData* serialize(ScriptValue value)
     {
         serializeScriptValue(value);
+        m_writer->writeTerminator();
 
         auto* data = new SerializedRawScriptValueData(m_data);
         return new SerializedTypedData(

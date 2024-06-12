@@ -119,6 +119,11 @@ void IORunnable::run()
                     if (pfd[i].revents & NN_POLLIN) {
                         auto socket = m_clients[i]->socket();
                         rc = socket->recv(&buffer, NN_MSG, NN_DONTWAIT);
+
+                        if (rc < 0) {
+                            continue;
+                        }
+
                         /*
                         NOTE: addIdlerWithNoGCRootingInOtherThread
                         guarantees that the given idler should be invoked

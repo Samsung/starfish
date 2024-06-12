@@ -47,6 +47,7 @@ public:
     void writeUInt32(const uint32_t value);
     void writeSize(const size_t value);
     void writeString(const std::string& value);
+    void writeTerminator();
 
     const char* data() const;
 
