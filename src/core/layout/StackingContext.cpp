@@ -1004,8 +1004,12 @@ void StackingContext::computeStackingContextProperties(
     m_screenExtent = selfExtent;
 
     bool compositedBySelf =
-        selfNeedsGraphicsBuffer ||
-        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
+        selfNeedsGraphicsBuffer;
+
+    if (m_owner->node() && m_owner->node()->isElement()) {
+        compositedBySelf |= m_owner->node()->window()->webView()->hasActiveAnimationExecutor(
+                m_owner->node()->asElement());
+    }
 
 #if !defined(STARFISH_ENABLE_TEST)
     if (m_owner->isRootElement()) {

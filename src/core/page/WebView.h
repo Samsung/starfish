@@ -241,6 +241,8 @@ public:
         return m_activeAnimationExecutor.size();
     }
 
+    bool hasActiveAnimationExecutor(Element* e);
+
     GCVector<AnimationExecutor*>& activeAnimationExecutor()
     {
         return m_activeAnimationExecutor;
