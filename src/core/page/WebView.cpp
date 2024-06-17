@@ -2309,6 +2309,28 @@ Nullable<BufferedNativeImageData*> WebView::isThereImageInBoxShadowCache(
     return data;
 }
 
+bool WebView::hasActiveAnimationExecutor(Element* e)
+{
+    for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
+        auto& transitions = m_activeAnimationExecutor[i]->activeTransitions();
+        for (auto task : transitions) {
+            if (task->targetElement() == e) {
+                return true;
+            }
+        }
+
+        auto& animations = m_activeAnimationExecutor[i]->activeAnimations();
+        for (auto& animation : animations) {
+            for (auto task : animation.second) {
+                if (task->targetElement() == e) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
 void WebView::setupInspector(uint32_t portNumber)
 {
