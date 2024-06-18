@@ -37,7 +37,7 @@ interface WebGLRenderingContextOverloads
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
                          GLenum format, GLenum type, TexImageSource source); // May throw DOMException
 
-    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                             GLsizei width, GLsizei height,
                             GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
     [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,

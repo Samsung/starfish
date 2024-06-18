@@ -50,6 +50,7 @@ class ArrayBufferOrSharedArrayBufferOrArrayBufferView;
 class
     ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
 class GL;
+class TexImageHelper;
 
 using Float32List = Float32ArrayOrSequenceOfGLfloat;
 using Int32List = Int32ArrayOrSequenceOfGLint;
@@ -235,11 +236,24 @@ public:
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     Nullable<ScriptArrayBufferView> pixels);
+
+private:
+    void handleTexImageWithArrayBufferView(
+        GLenum target, GLint level, GLsizei width, GLsizei height,
+        GLenum format, GLenum type, Nullable<ScriptArrayBufferView> pixels,
+        std::function<void(const TexImageHelper*)> updateImage,
+        std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
+        std::function<void(const std::vector<GLushort>&)>
+            updateTwoBytesBlackImage);
+public:
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
                     GLenum type, Nullable<ScriptArrayBufferView> pixels);
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLenum format, GLenum type, TexImageSource source);
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height, GLenum format,
+                       GLenum type, Nullable<ScriptArrayBufferView> pixels);
 
     void uniform1fv(WebGLUniformLocation* location, Float32List v);
     void uniform2fv(WebGLUniformLocation* location, Float32List v);
