@@ -43,6 +43,7 @@ class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class WebGLRenderingContextState;
+class WebGLShaderPrecisionFormat;
 class String;
 class Float32ArrayOrSequenceOfGLfloat;
 class Int32ArrayOrSequenceOfGLint;
@@ -159,6 +160,8 @@ public:
     String* getProgramInfoLog(WebGLProgram* program);
     ScriptValue getRenderbufferParameter(GLenum target, GLenum pname);
     ScriptValue getShaderParameter(WebGLShader* shader, GLenum pname);
+    WebGLShaderPrecisionFormat* getShaderPrecisionFormat(GLenum shadertype,
+                                                         GLenum precisiontype);
     String* getShaderInfoLog(WebGLShader* shader);
     String* getShaderSource(WebGLShader* shader);
     ScriptValue getTexParameter(GLenum target, GLenum pname);

@@ -1,0 +1,8 @@
+// https://registry.khronos.org/webgl/specs/latest/1.0/#5.10
+
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker)]
+interface WebGLShaderPrecisionFormat {
+    readonly attribute GLint rangeMin;
+    readonly attribute GLint rangeMax;
+    readonly attribute GLint precision;
+};
