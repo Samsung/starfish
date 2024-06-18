@@ -159,6 +159,9 @@ public:
                                    GLint *params) = 0;
     virtual void getVertexAttribPointerv(GLuint index, GLenum pname,
                                          void **pointer) = 0;
+    virtual void getShaderPrecisionFormat(GLenum shaderType,
+                                          GLenum precisionType, GLint *range,
+                                          GLint *precision) = 0;
     virtual void hint(GLenum target, GLenum mode) = 0;
     virtual void lineWidth(GLfloat width) = 0;
     virtual void linkProgram(GLuint program) = 0;

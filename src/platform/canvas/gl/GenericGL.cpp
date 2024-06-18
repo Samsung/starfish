@@ -482,6 +482,13 @@ public:
         glGetVertexAttribPointerv(index, pname, pointer);
     }
 
+    virtual void getShaderPrecisionFormat(GLenum shaderType,
+                                          GLenum precisionType, GLint *range,
+                                          GLint *precision) override
+    {
+        glGetShaderPrecisionFormat(shaderType, precisionType, range, precision);
+    }
+
     virtual void hint(GLenum target, GLenum mode) override
     {
         glHint(target, mode);
