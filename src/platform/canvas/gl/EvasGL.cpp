@@ -474,6 +474,14 @@ public:
         m_evasGLAPI->glGetVertexAttribPointerv(index, pname, pointer);
     }
 
+    virtual void getShaderPrecisionFormat(GLenum shaderType,
+                                          GLenum precisionType, GLint *range,
+                                          GLint *precision) override
+    {
+        m_evasGLAPI->glGetShaderPrecisionFormat(shaderType, precisionType,
+                                                range, precision);
+    }
+
     virtual void hint(GLenum target, GLenum mode) override
     {
         m_evasGLAPI->glHint(target, mode);
