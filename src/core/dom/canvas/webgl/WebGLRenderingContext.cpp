@@ -49,6 +49,7 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
+#include "core/dom/canvas/webgl/WebGLShaderPrecisionFormat.h"
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 
@@ -1546,6 +1547,24 @@ ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
         break;
     }
     return scriptNull();
+}
+
+WebGLShaderPrecisionFormat* WebGLRenderingContext::getShaderPrecisionFormat(
+    GLenum shadertype, GLenum precisiontype)
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLint range[2];
+    GLint precision;
+
+    m_gl->getShaderPrecisionFormat(shadertype, precisiontype, range,
+                                   &precision);
+    if (hasGLError()) {
+        return nullptr;
+    }
+
+    return new WebGLShaderPrecisionFormat(scriptBindingInstance(), range[0],
+                                          range[1], precision);
 }
 
 String* WebGLRenderingContext::getShaderInfoLog(WebGLShader* shader)

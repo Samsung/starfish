@@ -362,7 +362,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/instanceof-test.h
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/is-object.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/null-object-behaviour.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/object-deletion-behaviour.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/shader-precision-format.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/shader-precision-format.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/type-conversion-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/uninitialized-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/webgl-specific.html
