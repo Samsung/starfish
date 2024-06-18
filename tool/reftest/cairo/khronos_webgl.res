@@ -634,7 +634,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/default-textu
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/gl-teximage.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/mipmap-fbo.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/origin-clean-conformance.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html
+# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-array-buffer-view.html # Failed with unpackAlignments as 8
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgb565.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-canvas-rgba4444.html
@@ -643,7 +643,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/mipmap-fbo.ht
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgb565.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba4444.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-data-rgba5551.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgb565.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba4444.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/tex-image-and-sub-image-2d-with-image-rgba5551.html

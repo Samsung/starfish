@@ -2793,40 +2793,11 @@ void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
     }
 }
 
-void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
-                                       GLint internalFormat, GLenum format,
-                                       GLenum type, TexImageSource source)
+void WebGLRenderingContext::handleTexImageWithImageSource(
+    const GLenum format, const GLenum type, const TexImageSource& source,
+    std::function<void(const TexImageHelper*)> updateImage)
 {
-    ENTER_CONTEXT_SCOPE();
-
-    // TODO: handle DOM exception with referring to CanvasImageSource. If this
-    // function is called with an HTMLImageElement or HTMLVideoElement whose
-    // origin differs from the origin of the containing Document, or with an
-    // HTMLCanvasElement, ImageBitmap or OffscreenCanvas whose bitmap's
-    // origin-clean flag is set to false, a SECURITY_ERR exception must be
-    // thrown. See Origin Restrictions.
-
-    if (m_boundTextures.find(target) == m_boundTextures.end() &&
-        !isBoundCubeMapTexture(target)) {
-        setGLError(
-            GL_INVALID_OPERATION,
-            StringUtils::formatString("target (0x%04X) is not bound.", target)
-                .c_str());
-        return;
-    }
-
-    if (static_cast<GLenum>(internalFormat) != format) {
-        // The format, in WebGL 1, must be the same as internalformat. See:
-        // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
-        // TODO: add an identifier for WebGL version and use it.
-        setGLError(GL_INVALID_OPERATION,
-                   StringUtils::formatString(
-                       "The given parameters, internal format (0x%0fX) and "
-                       "format (0x%04X) are not same.",
-                       internalFormat, format)
-                       .c_str());
-        return;
-    }
+    STARFISH_ASSERT(updateImage != nullptr);
 
     GLsizei width = 0;
     GLsizei height = 0;
@@ -2877,13 +2848,74 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    STARFISH_ASSERT(imageData != nullptr);
+    size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
+    size_t byteLengthOfPixels = width * height * bytesPerPixel;
+    stride = bytesPerPixel * width;
 
     // Handle WebGL-specific pixel storage parameters that affect the behavior
     // of this function.
     TexImageHelper image(imageData, format);
-    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha);
+    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type);
 
+    TRACE(WEBGL_V, "source:", KV(width), KV(height), KV(stride),
+          KV(byteLengthOfPixels), KV(imageData));
+
+    updateImage(&image);
+}
+
+void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
+                                       GLint internalFormat, GLenum format,
+                                       GLenum type, TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    // TODO: handle DOM exception with referring to CanvasImageSource. If this
+    // function is called with an HTMLImageElement or HTMLVideoElement whose
+    // origin differs from the origin of the containing Document, or with an
+    // HTMLCanvasElement, ImageBitmap or OffscreenCanvas whose bitmap's
+    // origin-clean flag is set to false, a SECURITY_ERR exception must be
+    // thrown. See Origin Restrictions.
+
+    if (m_boundTextures.find(target) == m_boundTextures.end() &&
+        !isBoundCubeMapTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (static_cast<GLenum>(internalFormat) != format) {
+        // The format, in WebGL 1, must be the same as internalformat. See:
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+        // TODO: add an identifier for WebGL version and use it.
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString(
+                       "The given parameters, internal format (0x%0fX) and "
+                       "format (0x%04X) are not same.",
+                       internalFormat, format)
+                       .c_str());
+        return;
+    }
+
+    handleTexImageWithImageSource(
+        format, type, source, [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+
+            TRACE(WEBGL_V, KV(glValueString(internalFormat)),
+                  KV(glValueString(
+                      helper->dataFormat().valueOr(internalFormat))));
+            TRACE(WEBGL_V, KV(glValueString(format)),
+                  KV(glValueString(helper->dataFormat().valueOr(format))));
+            TRACE(WEBGL_V, KV(glValueString(type)));
+
+            // Uploads the given image data to the currently bound texture.
+            m_gl->texImage2D(
+                target, level, helper->dataFormat().valueOr(internalFormat),
+                helper->sourceImage().width, helper->sourceImage().height, 0,
+                helper->dataFormat().valueOr(format), type, helper->data());
+        });
+}
 
 void WebGLRenderingContext::texSubImage2D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
@@ -2921,6 +2953,27 @@ void WebGLRenderingContext::texSubImage2D(
         });
 }
 
+void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
+                                          GLint xoffset, GLint yoffset,
+                                          GLenum format, GLenum type,
+                                          TexImageSource source)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    handleTexImageWithImageSource(
+        format, type, source, [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+
+            TRACE(WEBGL_V, KV(glValueString(format)),
+                  KV(glValueString(helper->dataFormat().valueOr(format))));
+            TRACE(WEBGL_V, KV(glValueString(type)));
+
+            // Uploads the given image data to the currently bound texture.
+            m_gl->texSubImage2D(
+                target, level, xoffset, yoffset, helper->sourceImage().width,
+                helper->sourceImage().height,
+                helper->dataFormat().valueOr(format), type, helper->data());
+        });
 }
 
 #define IMPLEMENT_UNIFORM_NFV(N, Suffix, SrcType)                           \
