@@ -168,6 +168,7 @@ void WebGLRenderingContext::preInitialize(ScriptValue contextAttributes)
             contextAttributes->asObject(), &m_attributes);
 
 #undef SET_ATTRIBUTE
+        m_frameBufferAttributes.alpha = m_attributes.alpha();
         m_frameBufferAttributes.antialias = m_attributes.antialias();
         m_frameBufferAttributes.depth = m_attributes.depth();
         m_frameBufferAttributes.stencil = m_attributes.stencil();

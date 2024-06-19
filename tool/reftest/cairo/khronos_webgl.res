@@ -626,7 +626,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/gl-geterror.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/gl-object-get-calls.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/state/state-uneffected-after-compositing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/compressed-tex-image.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/copy-tex-image-2d-formats.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/copy-tex-image-2d-formats.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/copy-tex-image-and-sub-image-2d.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/default-texture.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/gl-get-tex-parameter.html

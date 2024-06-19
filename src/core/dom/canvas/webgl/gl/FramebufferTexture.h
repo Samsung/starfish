@@ -32,6 +32,7 @@ class Renderer;
 class GL;
 
 struct FrameBufferAttributes {
+    bool alpha = true;
     bool antialias = true;
     bool depth = true;
     bool stencil = false;

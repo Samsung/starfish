@@ -33,6 +33,7 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
                                     const unsigned height, GLuint& outFbo,
                                     GLuint& outTextureId, GLuint& outRboDepth,
                                     GLuint& outRboOrTextureIdForDepthStencil,
+                                    const bool needAlphaBuffer,
                                     const bool needDepthBuffer,
                                     const bool needStencilBuffer)
 {
@@ -47,8 +48,13 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
     // 3. Attach a "color buffer" attachment
     gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                   GL_UNSIGNED_BYTE, nullptr);
+    if (needAlphaBuffer) {
+        gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                       GL_UNSIGNED_BYTE, nullptr);
+    } else {
+        gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                       GL_UNSIGNED_BYTE, nullptr);
+    }
 
     gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                              GL_TEXTURE_2D, outTextureId, 0);
@@ -120,10 +126,10 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
     GLRevertableContextScope scope(GLContextScope::getCurrentGLContext(),
                                    m_renderer);
 
-    if (!createFrameBufferObject(m_gl, bufferWidth, bufferHeight, m_fbo,
-                                 m_textureId, m_rboDepth,
-                                 m_rboOrTextureIdForDepthStencil,
-                                 m_attributes.depth, m_attributes.stencil)) {
+    if (!createFrameBufferObject(
+            m_gl, bufferWidth, bufferHeight, m_fbo, m_textureId, m_rboDepth,
+            m_rboOrTextureIdForDepthStencil, m_attributes.alpha,
+            m_attributes.depth, m_attributes.stencil)) {
         STARFISH_LOG_ERROR("No frame buffer assigned.");
         return false;
     }
