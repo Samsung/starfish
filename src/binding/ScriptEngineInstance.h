@@ -40,6 +40,7 @@ public:
     }
 
     void dispose();
+    void enterIdleMode();
 
 protected:
     ScriptEngine m_engineInstance;

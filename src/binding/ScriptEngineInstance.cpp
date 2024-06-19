@@ -62,4 +62,9 @@ void ScriptEngineInstance::dispose()
 {
     m_engineInstance = nullptr;
 }
+
+void ScriptEngineInstance::enterIdleMode()
+{
+    m_engineInstance->enterIdleMode();
+}
 } // namespace Starfish
