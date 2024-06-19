@@ -529,10 +529,10 @@ interface WebGLRenderingContextBase
     undefined colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
     undefined compileShader(WebGLShader shader);
 
-    [Unimplemented] undefined copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+    undefined copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
                              GLint x, GLint y, GLsizei width, GLsizei height,
                              GLint border);
-    [Unimplemented] undefined copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+    undefined copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                 GLint x, GLint y, GLsizei width, GLsizei height);
 
     WebGLBuffer? createBuffer();
