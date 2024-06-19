@@ -510,9 +510,14 @@ void WebView::enterIdleMode()
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {
         LongTaskFinder f("force gc when entering idle mode");
-        GC_gcollect();
-        GC_gcollect();
-        GC_gcollect_and_unmap();
+        if (m_scriptEngineInstance) {
+            // this operation includes GC
+            m_scriptEngineInstance->enterIdleMode();
+        } else {
+            GC_gcollect();
+            GC_gcollect();
+            GC_gcollect_and_unmap();
+        }
     }
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::DropDecodedImageBuffer)) {
