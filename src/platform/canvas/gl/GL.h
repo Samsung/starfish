@@ -85,6 +85,13 @@ public:
                                          GLsizei width, GLsizei height,
                                          GLenum format, GLsizei imageSize,
                                          const void *data) = 0;
+    virtual void copyTexImage2D(GLenum target, GLint level,
+                                GLenum internalformat, GLint x, GLint y,
+                                GLsizei width, GLsizei height,
+                                GLint border) = 0;
+    virtual void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                   GLint yoffset, GLint x, GLint y,
+                                   GLsizei width, GLsizei height) = 0;
     virtual GLuint createProgram(void) = 0;
     virtual GLuint createShader(GLenum type) = 0;
     virtual void cullFace(GLenum mode) = 0;
