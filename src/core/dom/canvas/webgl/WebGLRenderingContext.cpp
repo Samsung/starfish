@@ -745,6 +745,37 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
     m_gl->compileShader(shader->glObject());
 }
 
+void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
+                                           GLenum internalformat, GLint x,
+                                           GLint y, GLsizei width,
+                                           GLsizei height, GLint border)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    m_gl->copyTexImage2D(target, level, internalformat, x, y, width, height,
+                         border);
+}
+
+void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
+                                              GLint xoffset, GLint yoffset,
+                                              GLint x, GLint y, GLsizei width,
+                                              GLsizei height)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    m_gl->copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width,
+                            height);
+}
+
 WebGLBuffer* WebGLRenderingContext::createBuffer()
 {
     ENTER_CONTEXT_SCOPE(nullptr);

@@ -113,6 +113,14 @@ public:
     void colorMask(GLboolean red, GLboolean green, GLboolean blue,
                    GLboolean alpha);
     void compileShader(WebGLShader* shader);
+
+    void copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                        GLint x, GLint y, GLsizei width, GLsizei height,
+                        GLint border);
+    void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                           GLint yoffset, GLint x, GLint y, GLsizei width,
+                           GLsizei height);
+
     WebGLBuffer* createBuffer();
     WebGLFramebuffer* createFramebuffer();
     WebGLProgram* createProgram();
