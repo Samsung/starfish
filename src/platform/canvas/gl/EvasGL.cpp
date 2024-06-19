@@ -188,6 +188,23 @@ public:
                                                data);
     }
 
+    virtual void copyTexImage2D(GLenum target, GLint level,
+                                GLenum internalformat, GLint x, GLint y,
+                                GLsizei width, GLsizei height,
+                                GLint border) override
+    {
+        m_evasGLAPI->glCopyTexImage2D(target, level, internalformat, x, y,
+                                      width, height, border);
+    }
+
+    virtual void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                   GLint yoffset, GLint x, GLint y,
+                                   GLsizei width, GLsizei height) override
+    {
+        m_evasGLAPI->glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y,
+                                         width, height);
+    }
+
     virtual GLuint createProgram(void) override
     {
         return m_evasGLAPI->glCreateProgram();
