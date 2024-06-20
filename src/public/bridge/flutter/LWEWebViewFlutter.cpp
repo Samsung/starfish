@@ -20,6 +20,18 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "LWEWebView.h"
+#ifdef STARFISH_API_ENABLE_LOADER
+#include "LWEDelegateLoader.h"
+#else
+#include "public/delegate/LWEDelegate.h"
+#include "public/delegate/ResourceErrorDelegate.h"
+#include "public/delegate/SettingsDelegate.h"
+#include "public/delegate/CookieManagerDelegate.h"
+// #include "public/delegate/LWEWebContainerDelegate.h"
+#include "public/delegate/LWEWebViewDelegate.h"
+#endif
+
 #include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/delegate/LWEWebContainerDelegate.h"
@@ -46,11 +58,6 @@
 #define ANNOTATE_CHANNEL_END(channel)
 #define ANNOTATE_GREEN 0x00ff001b
 #endif
-
-namespace Starfish {
-extern int g_portWindowBackend;
-extern int g_portCompositorBackend;
-}; // namespace Starfish
 
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
@@ -93,98 +100,123 @@ public:
         , m_lastInputTime(0)
     {
         ::LWEDelegate::WebContainer* webContainer;
-        if (m_useSWBackend) {
-            Starfish::g_portWindowBackend =
-                static_cast<int>(PORT_WINDOW_BACKEND::GB);
-            Starfish::g_portCompositorBackend =
-                static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
-        } else {
-            Starfish::g_portWindowBackend =
-                static_cast<int>(PORT_WINDOW_BACKEND::GL);
-            Starfish::g_portCompositorBackend =
-                static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+        float glScale = 1;
+        if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
+            glScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
         }
+        if (glScale != 1) {
+            width = (unsigned)(width / glScale);
+            height = (unsigned)(height / glScale);
+            devicePixelRatio = 1 / glScale;
+        }
+
+        WebContainer::WebContainerArguments args{
+            width,           height, devicePixelRatio,
+            defaultFontName, locale, timezoneID,
+        };
+
         if (!useSWBackend) {
             initEGL();
-
             eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                            EGL_NO_CONTEXT);
+
+            WebContainer::RendererGLConfiguration config;
+
+            config.onMakeCurrent = [this](WebContainer* wc) {
+                if (m_isBufferSwapped) {
+                    if (m_fence) {
+                        Starfish::LongTaskFinder p(
+                            "WebViewFlutter - eglClientWaitSyncKHRProc", 1);
+                        EGLint result = g_eglClientWaitSyncKHRProc(
+                            m_display, m_fence, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
+                            EGL_FOREVER_KHR);
+                        if (result == EGL_FALSE) {
+                            STARFISH_LOG_INFO(
+                                "EGL FENCE: error waiting for fence: "
+                                "%d",
+                                (int)eglGetError());
+                        }
+                        g_eglDestroySyncKHRProc(m_display, m_fence);
+                        m_fence = nullptr;
+                    }
+                    m_isBufferSwapped = false;
+                }
+                {
+                    Starfish::LongTaskFinder p(
+                        "WebViewFlutter - eglMakeCurrent", 1);
+                    if (!eglMakeCurrent(m_display, m_surface, m_surface,
+                                        m_context)) {
+                        auto eglError = eglGetError();
+                        STARFISH_LOG_ERROR("Made current failed error -> %d",
+                                           (int)eglError);
+                    }
+                }
+            };
+            config.onSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
+                Starfish::LongTaskFinder p("WebViewFlutter - eglSwapBuffers",
+                                           2);
+                if (!eglSwapBuffers(m_display, m_surface)) {
+                    auto eglError = eglGetError();
+                    STARFISH_LOG_ERROR("Made current failed error -> %d",
+                                       (int)eglError);
+                }
+                if (m_lastInputTime) {
+                    ANNOTATE_SETUP;
+                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                           "response time");
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+                    uint64_t end = Starfish::longTickCount();
+                    float time = (float)((end - m_lastInputTime) / 1000.f);
+                    STARFISH_LOG_INFO("response time is %f ms", time);
+#endif
+                    m_lastInputTime = 0;
+                    ANNOTATE_CHANNEL_END(3002);
+                }
+                if (mayNeedsSync) {
+                    m_fence = g_eglCreateSyncKHRProc(m_display,
+                                                     EGL_SYNC_FENCE_KHR, NULL);
+                    if (!m_fence) {
+                        STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
+                                          (int)eglGetError());
+                    }
+                }
+                m_isBufferSwapped = true;
+            };
+
+            config.onCreateSharedContext = [](WebContainer* wc) -> uintptr_t {
+                return 0;
+            };
+
+            config.onDestroyContext = [](WebContainer* wc,
+                                         uintptr_t context) -> bool {
+                return false;
+            };
+
+            config.onClearCurrentContext = [](WebContainer* wc) -> bool {
+                return false;
+            };
+
+            config.onMakeCurrentWithContext = [](WebContainer* wc,
+                                                 uintptr_t context) -> bool {
+                return false;
+            };
+
+            config.onGetProcAddress = [this](WebContainer* wc,
+                                             const char* name) -> void* {
+                return (void*)eglGetProcAddress(name);
+            };
+
+            config.onIsSupportedExtension =
+                [this](WebContainer* wc, const char* extension) -> bool {
+                return false;
+            };
+
             webContainer =
                 ::LWEDelegate::WebContainer::CreateGLWithPlatformImage(
-                    width, height,
-                    [this](WebContainer* wc) {
-                        if (m_isBufferSwapped) {
-                            if (m_fence) {
-                                Starfish::LongTaskFinder p(
-                                    "WebViewFlutter - eglClientWaitSyncKHRProc",
-                                    1);
-                                EGLint result = g_eglClientWaitSyncKHRProc(
-                                    m_display, m_fence,
-                                    EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
-                                    EGL_FOREVER_KHR);
-                                if (result == EGL_FALSE) {
-                                    STARFISH_LOG_INFO(
-                                        "EGL FENCE: error waiting for fence: "
-                                        "%d",
-                                        (int)eglGetError());
-                                }
-                                g_eglDestroySyncKHRProc(m_display, m_fence);
-                                m_fence = nullptr;
-                            }
-                            m_isBufferSwapped = false;
-                        }
-                        {
-                            Starfish::LongTaskFinder p(
-                                "WebViewFlutter - eglMakeCurrent", 1);
-                            if (!eglMakeCurrent(m_display, m_surface, m_surface,
-                                                m_context)) {
-                                auto eglError = eglGetError();
-                                STARFISH_LOG_ERROR(
-                                    "Made current failed error -> %d",
-                                    (int)eglError);
-                            }
-                        }
-                    },
-                    [this](WebContainer* wc, bool mayNeedsSync) {
-                        {
-                            Starfish::LongTaskFinder p(
-                                "WebViewFlutter - eglSwapBuffers", 2);
-                            if (!eglSwapBuffers(m_display, m_surface)) {
-                                auto eglError = eglGetError();
-                                STARFISH_LOG_ERROR(
-                                    "Made current failed error -> %d",
-                                    (int)eglError);
-                            }
-                        }
-                        if (m_lastInputTime) {
-                            ANNOTATE_SETUP;
-                            ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
-                                                   "response time");
-#ifdef STARFISH_ENABLE_PROFILE_TIMER
-                            uint64_t end = Starfish::longTickCount();
-                            float time =
-                                (float)((end - m_lastInputTime) / 1000.f);
-                            STARFISH_LOG_INFO("response time is %f ms", time);
-#endif
-                            m_lastInputTime = 0;
-                            ANNOTATE_CHANNEL_END(3002);
-                        }
-                        if (mayNeedsSync) {
-                            m_fence = g_eglCreateSyncKHRProc(
-                                m_display, EGL_SYNC_FENCE_KHR, NULL);
-                            if (!m_fence) {
-                                STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
-                                                  (int)eglGetError());
-                            }
-                        }
-                        m_isBufferSwapped = true;
-                    },
-                    prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
-                    locale, timezoneID);
+                    args, config, prepareImageCb, flushCb);
         } else {
             webContainer = ::LWEDelegate::WebContainer::CreateWithPlatformImage(
-                width, height, prepareImageCb, flushCb, devicePixelRatio,
-                defaultFontName, locale, timezoneID);
+                args, prepareImageCb, flushCb);
         }
         SetWebContainer(webContainer);
     }
@@ -374,7 +406,7 @@ public:
     static EGLContext m_context;
     EGLSyncKHR m_fence;
     static Ecore_Wl2_Display* m_ecoreWlDisplay;
-};
+}; // namespace LWEDelegate
 
 EGLDisplay WebViewFlutter::m_display = nullptr;
 EGLContext WebViewFlutter::m_context = nullptr;
@@ -398,5 +430,20 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
         [](WebContainer* c, bool needsFlush) {});
 }
 } // namespace LWEDelegate
-
+extern "C" size_t __attribute__((visibility("default"))) createWebViewInstance(
+    unsigned x, unsigned y, unsigned width, unsigned height,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID,
+    const std::function<::LWEDelegate::WebContainer::ExternalImageInfo(void)>&
+        prepareImageCb,
+    const std::function<void(::LWEDelegate::WebContainer*, bool needsFlush)>&
+        flushCb,
+    bool useSWBackend)
+{
+    ::LWEDelegate::WebViewFlutter* wv = new ::LWEDelegate::WebViewFlutter(
+        x, y, width, height, devicePixelRatio, defaultFontName, locale,
+        timezoneID, prepareImageCb, flushCb, useSWBackend);
+    return (size_t)::LWE::WebContainer::CreateWebContainer(
+        static_cast<void*>(wv->FetchWebContainer()));
+}
 #endif

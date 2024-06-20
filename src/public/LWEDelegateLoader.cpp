@@ -127,16 +127,14 @@ bool LWEDelegateLoader::loadWebContainerProcTable()
     kWebContainerProcTable.CreateWithBuffer = reinterpret_cast<uintptr_t (*)(
         void*, unsigned, unsigned, unsigned, float, const char*, const char*,
         const char*)>(dlsym(m_handle, "LWEDelegate_WebContainer_Create"));
-    kWebContainerProcTable.CreateWithPlatformImage = reinterpret_cast<
-        uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, float,
-                      const char*, const char*, const char*)>(
-        dlsym(m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
+    kWebContainerProcTable.CreateWithPlatformImage =
+        reinterpret_cast<uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t)>(dlsym(
+            m_handle, "LWEDelegate_WebContainer_Create_With_PlatformImage"));
     kWebContainerProcTable.CreateGL =
         reinterpret_cast<uintptr_t (*)(uintptr_t, uintptr_t)>(
             dlsym(m_handle, "LWEDelegate_WebContainer_CreateGL"));
     kWebContainerProcTable.CreateGLWithPlatformImage = reinterpret_cast<
-        uintptr_t (*)(unsigned, unsigned, uintptr_t, uintptr_t, uintptr_t,
-                      uintptr_t, float, const char*, const char*, const char*)>(
+        uintptr_t (*)(uintptr_t, uintptr_t, uintptr_t, uintptr_t)>(
         dlsym(m_handle, "LWEDelegate_WebContainer_CreateGLWithPlatformImage"));
     kWebContainerProcTable.CreateHeadless = reinterpret_cast<uintptr_t (*)(
         unsigned, unsigned, float, const char*, const char*, const char*)>(

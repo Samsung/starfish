@@ -544,12 +544,14 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
 #endif
 
 WebContainer* WebContainer::CreateWithPlatformImage(
-    unsigned width, unsigned height,
+    const WebContainerArguments& args,
     const std::function<ExternalImageInfo(void)>& prepareImageCb,
-    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
 {
+    LWEDelegate::WebContainer::WebContainerArguments arguments{
+        args.width,           args.height, args.devicePixelRatio,
+        args.defaultFontName, args.locale, args.timezoneID
+    };
     WebContainer* instance = new WebContainer();
     const LWEDelegate::WebContainer::OnPrepareImage prepareImageCbWrapper =
         [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
@@ -567,14 +569,12 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
         LWEDelegateLoader::getInstance()
             ->kWebContainerProcTable.CreateWithPlatformImage(
-                width, height,
+                reinterpret_cast<uintptr_t>(&arguments),
                 reinterpret_cast<uintptr_t>(&prepareImageCbWrapper),
-                reinterpret_cast<uintptr_t>(&flushCbWrapper), devicePixelRatio,
-                defaultFontName, locale, timezoneID));
+                reinterpret_cast<uintptr_t>(&flushCbWrapper)));
 #else
     auto delegate = LWEDelegate::WebContainer::CreateWithPlatformImage(
-        width, height, prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
-        defaultFontName, locale, timezoneID);
+        arguments, prepareImageCbWrapper, flushCbWrapper);
 #endif
     instance->m_delegate =
         LWEDelegateRef(static_cast<void*>(delegate), [](void* ptr) {
@@ -693,31 +693,109 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
     return instance;
 }
 
-WebContainer* WebContainer::CreateGLWithPlatformImage(
-    unsigned width, unsigned height,
-    const std::function<void(WebContainer*)>& onMakeCurrent,
-    const std::function<void(WebContainer*, bool mayNeedsSync)>& onSwapBuffers,
-    const std::function<ExternalImageInfo(void)>& prepareImageCb,
-    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID)
+WebContainer* WebContainer::CreateWebContainer(void* delegate)
 {
     WebContainer* instance = new WebContainer();
-    const LWEDelegate::WebContainer::OnMakeCurrent onMakeCurrentWrapper =
-        [instance,
-         onMakeCurrent](LWEDelegate::WebContainer* container) -> void {
-        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
-                       instance->m_delegate.get()) == container);
-        onMakeCurrent(instance);
+    instance->m_delegate = LWEDelegateRef(delegate, [](void* ptr) {});
+    return instance;
+}
+
+WebContainer* WebContainer::CreateGLWithPlatformImage(
+    const WebContainerArguments& args, const RendererGLConfiguration& config,
+    const std::function<ExternalImageInfo(void)>& prepareImageCb,
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
+{
+    WebContainer* instance = new WebContainer();
+
+    LWEDelegate::WebContainer::WebContainerArguments arguments{
+        args.width,           args.height, args.devicePixelRatio,
+        args.defaultFontName, args.locale, args.timezoneID
     };
 
-    const LWEDelegate::WebContainer::OnSwapBuffers onSwapBuffersWrapper =
-        [instance, onSwapBuffers](LWEDelegate::WebContainer* container,
-                                  bool mayNeedsSync) -> void {
+    const LWEDelegate::WebContainer::OnMakeCurrent onMakeCurrentWrapper =
+        [instance, config](LWEDelegate::WebContainer* container) -> void {
         LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
                        instance->m_delegate.get()) == container);
-        onSwapBuffers(instance, mayNeedsSync);
+        config.onMakeCurrent(instance);
     };
+    const LWEDelegate::WebContainer::OnSwapBuffers onSwapBuffersWrapper =
+        [instance, config](LWEDelegate::WebContainer* container,
+                           bool mayNeedsSync) -> void {
+        LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                       instance->m_delegate.get()) == container);
+        config.onSwapBuffers(instance, mayNeedsSync);
+    };
+    LWEDelegate::WebContainer::RendererGLConfiguration configration;
+    configration.onMakeCurrent = onMakeCurrentWrapper;
+    configration.onSwapBuffers = onSwapBuffersWrapper;
+
+    // Optional callbacks for webgl.
+    if (config.onCreateSharedContext) {
+        const LWEDelegate::WebContainer::OnCreateSharedContext
+            onCreateSharedContextWrapper =
+                [instance,
+                 config](LWEDelegate::WebContainer* container) -> uintptr_t {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onCreateSharedContext(instance);
+        };
+        configration.onCreateSharedContext = onCreateSharedContextWrapper;
+    }
+    if (config.onDestroyContext) {
+        const LWEDelegate::WebContainer::OnDestroyContext
+            onDestroyContextWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   uintptr_t context) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onDestroyContext(instance, context);
+        };
+        configration.onDestroyContext = onDestroyContextWrapper;
+    }
+    if (config.onClearCurrentContext) {
+        const LWEDelegate::WebContainer::OnClearCurrentContext
+            onClearCurrentContextWrapper =
+                [instance,
+                 config](LWEDelegate::WebContainer* container) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onClearCurrentContext(instance);
+        };
+        configration.onClearCurrentContext = onClearCurrentContextWrapper;
+    }
+    if (config.onMakeCurrentWithContext) {
+        const LWEDelegate::WebContainer::OnMakeCurrentWithContext
+            onMakeCurrentWithContextWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   uintptr_t context) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onMakeCurrentWithContext(instance, context);
+        };
+        configration.onMakeCurrentWithContext = onMakeCurrentWithContextWrapper;
+    }
+    if (config.onGetProcAddress) {
+        const LWEDelegate::WebContainer::OnGetProcAddress
+            onGetProcAddressWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   const char* name) -> void* {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onGetProcAddress(instance, name);
+        };
+        configration.onGetProcAddress = onGetProcAddressWrapper;
+    }
+    if (config.onIsSupportedExtension) {
+        const LWEDelegate::WebContainer::OnIsSupportedExtension
+            onIsSupportedExtensionWrapper =
+                [instance, config](LWEDelegate::WebContainer* container,
+                                   const char* extension) -> bool {
+            LWE_ASSERT(toImpl<LWEDelegate::WebContainer>(
+                           instance->m_delegate.get()) == container);
+            return config.onIsSupportedExtension(instance, extension);
+        };
+        configration.onIsSupportedExtension = onIsSupportedExtensionWrapper;
+    }
 
     const LWEDelegate::WebContainer::OnPrepareImage prepareImageCbWrapper =
         [prepareImageCb](void) -> LWEDelegate::WebContainer::ExternalImageInfo {
@@ -735,17 +813,13 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
         LWEDelegateLoader::getInstance()
             ->kWebContainerProcTable.CreateGLWithPlatformImage(
-                width, height,
-                reinterpret_cast<uintptr_t>(&onMakeCurrentWrapper),
-                reinterpret_cast<uintptr_t>(&onSwapBuffersWrapper),
+                reinterpret_cast<uintptr_t>(&arguments),
+                reinterpret_cast<uintptr_t>(&configration),
                 reinterpret_cast<uintptr_t>(&prepareImageCbWrapper),
-                reinterpret_cast<uintptr_t>(&flushCbWrapper), devicePixelRatio,
-                defaultFontName, locale, timezoneID));
+                reinterpret_cast<uintptr_t>(&flushCbWrapper)));
 #else
     auto delegate = LWEDelegate::WebContainer::CreateGLWithPlatformImage(
-        width, height, onMakeCurrentWrapper, onSwapBuffersWrapper,
-        prepareImageCbWrapper, flushCbWrapper, devicePixelRatio,
-        defaultFontName, locale, timezoneID);
+        arguments, configration, prepareImageCbWrapper, flushCbWrapper);
 #endif
 
     instance->m_delegate =

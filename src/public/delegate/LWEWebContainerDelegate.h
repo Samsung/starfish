@@ -125,10 +125,8 @@ public:
     using OnPrepareImage = std::function<ExternalImageInfo(void)>;
     using OnFlush = std::function<void(WebContainer*, bool needsFlush)>;
     static WebContainer* CreateWithPlatformImage(
-        unsigned width, unsigned height, const OnPrepareImage& prepareImageCb,
-        const OnFlush& flushCb, float devicePixelRatio,
-        const char* defaultFontName, const char* locale,
-        const char* timezoneID);
+        const WebContainerArguments& args, const OnPrepareImage& prepareImageCb,
+        const OnFlush& flushCb);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
@@ -136,11 +134,9 @@ public:
                                   const RendererGLConfiguration& config);
 
     static WebContainer* CreateGLWithPlatformImage(
-        unsigned width, unsigned height, const OnMakeCurrent& onMakeCurrent,
-        const OnSwapBuffers& onSwapBuffers,
-        const OnPrepareImage& prepareImageCb, const OnFlush& flushCb,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID);
+        const WebContainerArguments& args,
+        const RendererGLConfiguration& config,
+        const OnPrepareImage& prepareImageCb, const OnFlush& flushCb);
 
     // <--- end of function set for render with OpenGL
 
@@ -319,19 +315,16 @@ uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateWithBuffer(
 
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_WebContainer_Create_With_PlatformImage(
-    unsigned width, unsigned height, uintptr_t prepareImageCb,
-    uintptr_t flushCb, float devicePixelRatio, const char* defaultFontName,
-    const char* locale, const char* timezoneID);
+    uintptr_t webContainerArguments, uintptr_t prepareImageCb,
+    uintptr_t flushCb);
 
 uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateGL(
     uintptr_t webContainerArguments, uintptr_t rendererGLConfiguration);
 
 uintptr_t EXPORT_UNMANAGED_API
 LWEDelegate_WebContainer_CreateGLWithPlatformImage(
-    unsigned width, unsigned height, uintptr_t onMakeCurrent,
-    uintptr_t onSwapBuffers, uintptr_t prepareImageCb, uintptr_t flushCb,
-    float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID);
+    uintptr_t webContainerArguments, uintptr_t rendererGLConfiguration,
+    uintptr_t prepareImageCb, uintptr_t flushCb);
 
 uintptr_t EXPORT_UNMANAGED_API LWEDelegate_WebContainer_CreateHeadless(
     unsigned width, unsigned height, float devicePixelRatio,
@@ -342,14 +335,10 @@ typedef struct {
                         const char*);
     uintptr_t (*CreateWithBuffer)(void*, unsigned, unsigned, unsigned, float,
                                   const char*, const char*, const char*);
-    uintptr_t (*CreateWithPlatformImage)(unsigned, unsigned, uintptr_t,
-                                         uintptr_t, float, const char*,
-                                         const char*, const char*);
+    uintptr_t (*CreateWithPlatformImage)(uintptr_t, uintptr_t, uintptr_t);
     uintptr_t (*CreateGL)(uintptr_t, uintptr_t);
-    uintptr_t (*CreateGLWithPlatformImage)(unsigned, unsigned, uintptr_t,
-                                           uintptr_t, uintptr_t, uintptr_t,
-                                           float, const char*, const char*,
-                                           const char*);
+    uintptr_t (*CreateGLWithPlatformImage)(uintptr_t, uintptr_t, uintptr_t,
+                                           uintptr_t);
     uintptr_t (*CreateHeadless)(unsigned, unsigned, float, const char*,
                                 const char*, const char*);
 

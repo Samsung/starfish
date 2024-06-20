@@ -273,11 +273,9 @@ public:
                       unsigned stride);
 
     static WebContainer* CreateWithPlatformImage(
-        unsigned width, unsigned height,
+        const WebContainerArguments& args,
         const std::function<ExternalImageInfo(void)>& prepareImageCb,
-        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID);
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
@@ -285,15 +283,12 @@ public:
                                   const RendererGLConfiguration& config);
 
     static WebContainer* CreateGLWithPlatformImage(
-        unsigned width, unsigned height,
-        const std::function<void(WebContainer*)>& onMakeCurrent,
-        const std::function<void(WebContainer*, bool mayNeedsSync)>&
-            onSwapBuffers,
+        const WebContainerArguments& args,
+        const RendererGLConfiguration& config,
         const std::function<ExternalImageInfo(void)>& prepareImageCb,
-        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID);
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb);
 
+    static WebContainer* CreateWebContainer(void* delegate);
     // <--- end of function set for render with OpenGL
 
     // Function set for headless
