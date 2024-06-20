@@ -32,6 +32,9 @@ jobs:
           repository: mh-byun/starfish_window_build
           ref: ${{ inputs.pr_number }}
 
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
       - name: Clean workspace
         run: |
           git clean -xdf
