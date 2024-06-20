@@ -1285,6 +1285,12 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
                                                      values);
     }
+    case GL_COMPRESSED_TEXTURE_FORMATS: {
+        STARFISH_ASSERT(WebGLExtensionRegistry::instance()
+                            .hasTextureCompressionExtension() == false);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     std::vector<int>());
+    }
     default:
         STARFISH_UNSUPPORTED("unsupported pname: 0x%04X(%s)", pname,
                              __PRETTY_FUNCTION__);
@@ -2399,6 +2405,44 @@ void WebGLRenderingContext::bufferSubData(GLenum target, GLintptr offset,
     } else {
         setGLError(GL_INVALID_VALUE);
     }
+}
+
+void WebGLRenderingContext::compressedTexImage2D(GLenum target, GLint level,
+                                                 GLenum internalformat,
+                                                 GLsizei width, GLsizei height,
+                                                 GLint border,
+                                                 ScriptArrayBufferView data)
+{
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    STARFISH_ASSERT(
+        WebGLExtensionRegistry::instance().hasTextureCompressionExtension() ==
+        false);
+
+    // The core WebGL specification does not define any supported compressed
+    // texture formats. By default, these methods generate an INVALID_ENUM error
+    // and return immediately. See Compressed Texture Support.
+
+    setGLError(GL_INVALID_ENUM);
+}
+
+void WebGLRenderingContext::compressedTexSubImage2D(
+    GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+    GLsizei height, GLenum format, ScriptArrayBufferView data)
+{
+    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    STARFISH_ASSERT(
+        WebGLExtensionRegistry::instance().hasTextureCompressionExtension() ==
+        false);
+
+    setGLError(GL_INVALID_ENUM);
 }
 
 class TexImageHelper final {

@@ -16,10 +16,10 @@ interface WebGLRenderingContextOverloads
     undefined bufferData(GLenum target, AllowSharedBufferSource? data, GLenum usage);
     undefined bufferSubData(GLenum target, GLintptr offset, AllowSharedBufferSource data);
 
-    [Unimplemented] undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+    undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                                    GLsizei width, GLsizei height, GLint border,
                                    [AllowShared] ArrayBufferView data);
-    [Unimplemented] undefined compressedTexSubImage2D(GLenum target, GLint level,
+    undefined compressedTexSubImage2D(GLenum target, GLint level,
                                       GLint xoffset, GLint yoffset,
                                       GLsizei width, GLsizei height, GLenum format,
                                       [AllowShared] ArrayBufferView data);
