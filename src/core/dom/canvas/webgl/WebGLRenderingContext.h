@@ -244,6 +244,14 @@ public:
                     GLenum usage);
     void bufferSubData(GLenum target, GLintptr offset,
                        AllowSharedBufferSource data);
+
+    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                              GLsizei width, GLsizei height, GLint border,
+                              ScriptArrayBufferView data);
+    void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
+                                 GLint yoffset, GLsizei width, GLsizei height,
+                                 GLenum format, ScriptArrayBufferView data);
+
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     Nullable<ScriptArrayBufferView> pixels);

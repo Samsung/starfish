@@ -63,6 +63,12 @@ public:
         return m_hasEXT_texture_format_BGRA8888;
     }
 
+    bool hasTextureCompressionExtension()
+    {
+        // NOTE: Currently verifiable targets don't support this feature.
+        return false;
+    }
+
 private:
     WebGLExtensionRegistry();
 
