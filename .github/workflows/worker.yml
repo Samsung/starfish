@@ -36,9 +36,6 @@ jobs:
         run: |
           git clean -xdf
 
-      - name: Add safe directory
-        run: git config --global --add safe.directory /__w/starfish/starfish
-
       - name: Checkout Testcase..
         run: |
           git submodule init
