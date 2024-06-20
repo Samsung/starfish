@@ -874,6 +874,55 @@ void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
         attrName, targetObject);
 }
 
+static StringRef* createCompressibleScriptString(Escargot::VMInstanceRef* instance, String* str)
+{
+    STARFISH_ASSERT(StringRef::isCompressibleStringEnabled());
+    auto data = str->bufferAccessData();
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        return StringRef::createFromASCIIToCompressibleString(instance, data.asciiData(), data.length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        return StringRef::createFromUTF16ToCompressibleString(instance, data.utf16Data(), data.length);
+    } else {
+        size_t u16Length = 0;
+        auto bad = str->bufferAccessData();
+        for (size_t i = 0; i < bad.length; i++) {
+            char32_t src = bad.charAt(i);
+            if (src <= 0xffff) {
+                u16Length += 1;
+            } else if (src <= 0x10ffff) {
+                u16Length += 2;
+            } else {
+                u16Length += 1;
+            }
+        }
+
+        char16_t* buf = reinterpret_cast<char16_t*>(
+                StringRef::allocateStringDataBufferForCompressibleString(u16Length * 2));
+        char16_t* bufStart = buf;
+        for (size_t i = 0; i < bad.length; i++) {
+            char32_t src = bad.charAt(i);
+
+            char16_t dst[2];
+            int ret = utf32ToUtf16(src, dst);
+
+            if (ret == 1) {
+                *buf = src;
+                buf++;
+            } else if (ret == 2) {
+                *buf = dst[0];
+                buf++;
+                *buf = dst[1];
+                buf++;
+            } else {
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        }
+
+        STARFISH_ASSERT(buf == bufStart + u16Length);
+        return StringRef::createFromAlreadyAllocatedBufferToCompressibleString(instance, bufStart, u16Length, false);
+    }
+}
+
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
@@ -946,12 +995,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 
     ContextRef* ctx = instance->scriptContext();
 
-    StringRef* source = toJSString(string);
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
     size_t parseStart = longTickCount();
 #endif
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
+    StringRef* source = toJSString(string);
     std::string fileNameForDebugger;
 
     if (fileName->length()) {
@@ -968,6 +1017,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         source, toJSString(String::fromUTF8(fileNameForDebugger.data(),
                                             fileNameForDebugger.length())));
 #else
+    StringRef* source;
+    if (StringRef::isCompressibleStringEnabled() && string->length() > 1024 * 512) {
+        source = createCompressibleScriptString(ctx->vmInstance(), string);
+    } else {
+        source = toJSString(string);
+    }
     auto scriptRef =
         ctx->scriptParser()->initializeScript(source, toJSString(fileName));
 #endif
