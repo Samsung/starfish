@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
     strategy:
-      fail-fast: false
+        fail-fast: false
     timeout-minutes: 30
 
     steps:
@@ -37,18 +37,12 @@ jobs:
 
       - name: Clean workspace
         run: |
-          git clean -xdf
-
-      - name: Checkout Testcase..
-        run: |
-          git submodule init
-          git submodule update test
-
+            git clean -xdf
       - name: Configuration
         run: |
-          cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
+            cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw\
+            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw \
             -DWORKER=1 -DSHARED_WORKER=1 -DSERVICE_WORKER=1
       - name: Build Starfish
         run: ninja -C uv_cairo_gl/debug starfish.executable
@@ -57,13 +51,55 @@ jobs:
       - name: Build ServiceWorker
         run: ninja -C uv_cairo_gl/debug starfish.serviceworker.executable
 
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish-x64_glfw_worker
+          path: |
+            ./uv_cairo_gl/debug/bin/*
+            ./uv_cairo_gl/debug/lib/*
+            ./build.ninja
+            ./rules.ninja
+
+  test:
+    needs: build_x64_workers
+    timeout-minutes: 60
+    # After the firewall registraion is done, a code runner should also be added to test work.
+    # runs-on: [ code-linux ]
+    runs-on: [ legacy-rat6 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Checkout Testcase..
+        run: |
+          git submodule init
+          git submodule update test
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_glfw_worker
+
       - name: Prepare Test
         run: |
-          chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish
-          chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker
-          ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish Starfish
-          ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker Starfish-sharedworker
-          /root/workspace/set_up_hosts.sh
+            chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish
+            chmod a+x $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker
+            ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish Starfish
+            ln -s -f $PWD/uv_cairo_gl/debug/bin/Starfish-sharedworker Starfish-sharedworker
+            /root/workspace/set_up_hosts.sh
+
       - name: Run Test
         run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_worker || exit 1        
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_worker || exit 1
