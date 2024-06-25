@@ -71,12 +71,14 @@ public:
     }
 
     FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
-                      uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0)
+                      uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0,
+                      Nullable<UTF8StringDataNonGCStd> path = nullptr)
     {
         m_dataBuffer = dataBuffer;
         m_dataBufferSize = dataBufferSize;
         m_face = face;
         m_hbFace = hbFace;
+        m_path = path;
 
         FT_Error error;
         FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
@@ -105,18 +107,16 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]",
-                                  m, m->m_dataBuffer);
+                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p]", m);
                 hb_font_destroy(m->m_hbFace);
                 FT_Done_Face(m->m_face);
                 if (m->m_dataBuffer) {
-                    delete[] m->m_dataBuffer;
+                    delete[] m->m_dataBuffer.value();
+                    m->m_dataBuffer = nullptr;
                 }
                 GlyphIndexCache().swap(m->m_glyphIndexCache);
             },
             NULL, NULL, NULL);
-
-        clearCache();
     }
 
     virtual FontMetrics metrics(float size)
@@ -169,8 +169,13 @@ public:
 
     virtual void clearCache()
     {
-        if (m_face && m_dataBuffer) {
-            GlyphIndexCache().swap(m_glyphIndexCache);
+        STARFISH_LOG_INFO("FontFaceImplCairo clearCache [%p]", this);
+        GlyphIndexCache().swap(m_glyphIndexCache);
+        if (m_face) {
+            hb_font_destroy(m_hbFace);
+            FT_Done_Face(m_face);
+            m_hbFace = nullptr;
+            m_face = nullptr;
         }
     }
 
@@ -249,7 +254,8 @@ public:
         return m_hbFace;
     }
 
-    uint8_t* m_dataBuffer;
+    Nullable<uint8_t*> m_dataBuffer;
+    Nullable<UTF8StringDataNonGCStd> m_path;
     size_t m_dataBufferSize;
     int m_xHeight;
     int m_unitsPerEM;
@@ -265,11 +271,16 @@ private:
     void ensureFonts()
     {
         if (m_face == nullptr) {
-            FT_Error error = FT_New_Memory_Face(
-                g_freeTypeInstance, m_dataBuffer, m_dataBufferSize, 0, &m_face);
-            if (error) {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            FT_Error error;
+            if (m_dataBuffer) {
+                error =
+                    FT_New_Memory_Face(g_freeTypeInstance, m_dataBuffer.value(),
+                                       m_dataBufferSize, 0, &m_face);
+            } else {
+                error = FT_New_Face(g_freeTypeInstance,
+                                    (char*)m_path.value().data(), 0, &m_face);
             }
+            CHECK_ERROR;
             FT_Set_Pixel_Sizes(m_face, 0, 16);
 
             FT_UInt glyph_index = FT_Get_Char_Index(m_face, ' ');
@@ -481,9 +492,19 @@ public:
         STARFISH_LOG_INFO("load system font %s %p %p", path.data(), face,
                           hbFace);
 
-        auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);
+        auto impl = new (PointerFreeGC)
+            FontFaceImplCairo(face, hbFace, nullptr, 0, path);
         m_fontPathToFace.insert(std::make_pair(path, impl));
         return impl;
+    }
+
+    virtual void clearCache()
+    {
+        for (auto& e : m_fontPathToFace) {
+            if (e.second) {
+                e.second->clearCache();
+            }
+        }
     }
 
     GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceImplCairo*> m_fontPathToFace;
