@@ -495,6 +495,15 @@ void WebView::clearDrawnBuffers()
     renderer()->onClearDrawnBuffers();
 }
 
+static void clearDocumentFontCache(BrowsingContext* ctx)
+{
+    if (ctx->window()) {
+        ctx->document()->fontSelector()->clearWholeCache();
+        ctx->iterateChildContext(
+            [](BrowsingContext* ctx) { clearDocumentFontCache(ctx); });
+    }
+}
+
 void WebView::enterIdleMode()
 {
     STARFISH_LOG_INFO("enter idle mode");
@@ -506,6 +515,15 @@ void WebView::enterIdleMode()
     // drop CanvasSurfaces if possible
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers)) {
         clearDrawnBuffers();
+    }
+
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearFontCache)) {
+        LongTaskFinder f("clear font cache");
+        m_platformFontCache->clearFaceCache();
+        m_platformFontSelector->clearCache();
+        if (m_topLevelBrowsingContext) {
+            clearDocumentFontCache(m_topLevelBrowsingContext);
+        }
     }
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {

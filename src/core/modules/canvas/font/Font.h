@@ -244,6 +244,10 @@ public:
         return nullptr;
     }
 
+    virtual void clearCache()
+    {
+    }
+
     WebView* webView()
     {
         return m_webView;
@@ -266,6 +270,14 @@ public:
                               bool& exist);
     void insertFaceCache(const UTF8StringDataNonGCStd& mergredFamilyName,
                          FontFace* face);
+    void clearFaceCache()
+    {
+        for (auto& e : m_loadedPlatformFonts) {
+            if (e.second) {
+                e.second->clearCache();
+            }
+        }
+    }
 
 protected:
     std::unordered_set<UTF8StringDataNonGCStd> m_absencePlatformFontNames;
