@@ -21,6 +21,7 @@
 #define __StarfishReadableStreamBuffer__
 
 #include "ReadableStreamChunk.h"
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
@@ -28,9 +29,11 @@ enum class BodyType;
 class Promise;
 class ExecutionContext;
 
+#define READABLE_STREAM_BUFFER_CHUNK_SIZE 65536
+
 class ReadableStreamBuffer final : public gc {
 public:
-    ReadableStreamBuffer();
+    ReadableStreamBuffer(size_t chunkSize = READABLE_STREAM_BUFFER_CHUNK_SIZE);
     ~ReadableStreamBuffer();
 
     size_t size()
@@ -69,6 +72,11 @@ public:
     }
 
     void push(const char* buffer, size_t length);
+
+    ScriptValue dequeueValue(ScriptBindingInstance* instance);
+
+    bool empty();
+
     void clear();
 
     void resolveWithType(Promise* promise, ExecutionContext* executionContext,
@@ -76,6 +84,7 @@ public:
 
 private:
     ReadableStreamChunk m_buffer;
+    size_t m_chunkSize;
     BodyType m_type;
     String* m_mimeType;
 };

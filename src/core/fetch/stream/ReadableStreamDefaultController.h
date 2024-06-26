@@ -26,6 +26,7 @@ namespace Starfish {
 
 class ExecutionContext;
 class ReadableStream;
+class DefaultReadRequest;
 
 class ReadableStreamDefaultController : public ScriptWrappable {
 public:
@@ -38,13 +39,12 @@ public:
     void enqueue(ScriptValue chunk);
     void close();
     void error();
-    void read(Promise* promise);
-    void resolveRead(Promise* promise, ScriptValue value);
+
+    void pull(DefaultReadRequest* request);
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
     ReadableStream* m_stream;
-    GCDeque<Promise*> m_readPromiseQueue;
     String* m_mimeType;
 };
 } // namespace Starfish

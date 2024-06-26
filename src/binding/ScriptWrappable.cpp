@@ -558,16 +558,23 @@ ScriptValue createScriptValue(ScriptArrayBufferView buffer)
     return buffer;
 }
 
+ScriptValue createScriptValue(ScriptUint8Array array)
+{
+    return array;
+}
+
 ScriptValue createScriptValue(ScriptUint8ClampedArray array)
 {
     return array;
 }
 
-ScriptValue createScriptValue(bool value) {
+ScriptValue createScriptValue(bool value)
+{
     return ValueRef::create(value);
 }
 
-ScriptValue createScriptValue(int32_t value) {
+ScriptValue createScriptValue(int32_t value)
+{
     return ValueRef::create(value);
 }
 
