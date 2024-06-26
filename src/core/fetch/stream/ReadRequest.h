@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,35 +17,25 @@
  *  USA
  */
 
-#ifndef __StarfishReadableStreamDefaultController__
-#define __StarfishReadableStreamDefaultController__
+#ifndef __StarfishReadRequest__
+#define __StarfishReadRequest__
 
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
-class ExecutionContext;
-class ReadableStream;
-class DefaultReadRequest;
+class ScriptBindingInstance;
 
-class ReadableStreamDefaultController : public ScriptWrappable {
+class ReadRequest : public gc {
 public:
-    ReadableStreamDefaultController(ExecutionContext* executionContext);
-    ReadableStreamDefaultController(ExecutionContext* executionContext,
-                                    ReadableStream* stream);
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ReadableStreamDefaultController)
-
-    void enqueue(ScriptValue chunk);
-    void close();
-    void error();
-
-    void pull(DefaultReadRequest* request);
-
-private:
-    ScriptBindingInstance* m_scriptBindingInstance;
-    ReadableStream* m_stream;
-    String* m_mimeType;
+    virtual void chunkSteps(ScriptBindingInstance* instance,
+                            ScriptValue chunk) = 0;
+    virtual void closeSteps(ScriptBindingInstance* instance,
+                            ScriptValue value) = 0;
+    virtual void errorSteps(ScriptBindingInstance* instance,
+                            ScriptValue error) = 0;
 };
+
 } // namespace Starfish
+
 #endif

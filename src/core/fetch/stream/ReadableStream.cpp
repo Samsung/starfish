@@ -35,6 +35,8 @@ ReadableStream::ReadableStream(ExecutionContext* executionContext)
     , m_controller(new ReadableStreamDefaultController(executionContext, this))
     , m_reader(new ReadableStreamDefaultReader(executionContext, this))
     , m_streamBuffer(new ReadableStreamBuffer())
+    , m_state(State::Readable)
+    , m_disturbed(false)
 {
 }
 
@@ -101,9 +103,7 @@ ExecutionContext* ReadableStream::executionContext()
 
 ReadableStreamDefaultReader* ReadableStream::getReader()
 {
-    auto state = m_reader->state();
-    if (state == ReadableStreamState::Closed ||
-        state == ReadableStreamState::Errored || locked()) {
+    if (m_state == State::Closed || m_state == State::Errored || locked()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
@@ -127,14 +127,9 @@ void ReadableStream::releaseLock()
     m_reader->releaseLock();
 }
 
-bool ReadableStream::disturbed()
-{
-    return m_reader->disturbed();
-}
-
 bool ReadableStream::isDisturbedOrLocked()
 {
-    return m_reader->disturbed() || m_reader->locked();
+    return m_disturbed || m_reader->locked();
 }
 
 Promise* ReadableStream::cancel()
@@ -144,7 +139,9 @@ Promise* ReadableStream::cancel()
 
 void ReadableStream::close()
 {
-    m_reader->setState(ReadableStreamState::Closed);
+    m_state = ReadableStream::State::Closed;
+
+    m_reader->runCloseStepsReadRequests();
 }
 
 void ReadableStream::resolveData(Promise* promise,

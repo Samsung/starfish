@@ -27,8 +27,9 @@
 
 namespace Starfish {
 
-ReadableStreamBuffer::ReadableStreamBuffer()
+ReadableStreamBuffer::ReadableStreamBuffer(size_t chunkSize)
     : m_buffer()
+    , m_chunkSize(chunkSize)
     , m_type(BodyType::Empty)
     , m_mimeType(String::emptyString)
 {
@@ -51,6 +52,18 @@ ReadableStreamBuffer::~ReadableStreamBuffer()
 void ReadableStreamBuffer::push(const char* buffer, size_t length)
 {
     m_buffer.insert(m_buffer.end(), &buffer[0], &buffer[length]);
+}
+
+ScriptValue ReadableStreamBuffer::dequeueValue(ScriptBindingInstance* instance)
+{
+    size_t bufferSize = std::min(m_buffer.size(), m_chunkSize);
+    void* buffer = malloc(bufferSize);
+    memcpy(buffer, &m_buffer[0], bufferSize);
+
+    m_buffer.erase(m_buffer.begin(), m_buffer.begin() + bufferSize);
+
+    return createScriptValue(
+        createScriptUint8Array(instance, buffer, bufferSize));
 }
 
 void ReadableStreamBuffer::clear()
@@ -98,4 +111,10 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
         STARFISH_ASSERT_NOT_REACHED();
     }
 }
+
+bool ReadableStreamBuffer::empty()
+{
+    return m_buffer.empty();
+}
+
 } // namespace Starfish

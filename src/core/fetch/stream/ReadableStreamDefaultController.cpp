@@ -35,7 +35,6 @@ ReadableStreamDefaultController::ReadableStreamDefaultController(
     : ScriptWrappable(this)
     , m_scriptBindingInstance(executionContext->scriptBindingInstance())
     , m_stream(new ReadableStream(executionContext))
-    , m_readPromiseQueue()
     , m_mimeType(String::emptyString)
 {
     // This constructor cannot be used directly.
@@ -48,7 +47,6 @@ ReadableStreamDefaultController::ReadableStreamDefaultController(
     : ScriptWrappable(this)
     , m_scriptBindingInstance(executionContext->scriptBindingInstance())
     , m_stream(stream)
-    , m_readPromiseQueue()
     , m_mimeType(String::emptyString)
 {
 }
@@ -63,70 +61,50 @@ void ReadableStreamDefaultController::enqueue(ScriptValue chunk)
     if (chunk->isString()) {
         auto stringObject = chunk->asString();
 
-        if (m_readPromiseQueue.size() > 0) {
-            resolveRead(m_readPromiseQueue.front(), stringObject);
-            m_readPromiseQueue.pop_front();
-        }
+        m_stream->reader()->fulfillReadRequest(chunk, false);
     }
 }
 
 void ReadableStreamDefaultController::close()
 {
-    m_stream->reader()->setState(ReadableStreamState::Closed);
+    m_stream->setState(ReadableStream::State::Closed);
 }
 
 void ReadableStreamDefaultController::error()
 {
-    if (m_stream->reader()->state() != ReadableStreamState::Readable) {
+    if (m_stream->state() != ReadableStream::State::Readable) {
         return;
     }
 
     m_stream->streamBuffer()->clear();
-    m_readPromiseQueue.clear();
 
-    m_stream->reader()->setState(ReadableStreamState::Errored);
+    m_stream->setState(ReadableStream::State::Errored);
 }
 
-void ReadableStreamDefaultController::read(Promise* promise)
+void ReadableStreamDefaultController::pull(DefaultReadRequest* request)
 {
-    auto streamBuffer = m_stream->streamBuffer();
-    size_t bufferSize = streamBuffer->size();
-    if (bufferSize > 0) {
-        void* buffer = calloc(1, bufferSize);
-        memcpy(buffer, streamBuffer->data(), bufferSize);
-        auto scriptArrayBuffer = createScriptArrayBuffer(
-            scriptBindingInstance(), buffer, bufferSize);
-        resolveRead(promise, createScriptValue(scriptArrayBuffer));
+    // https://streams.spec.whatwg.org/#rs-default-controller-private-pull
 
-        streamBuffer->clear();
+    ReadableStreamBuffer* streamBuffer = m_stream->streamBuffer();
+
+    if (!streamBuffer->empty()) {
+        ScriptValue chunk = streamBuffer->dequeueValue(scriptBindingInstance());
+
+        // TODO: 2-2. If this.[[closeRequested]] is true
+        if (streamBuffer->empty()) {
+            m_stream->streamBuffer()->clear();
+            m_stream->close();
+        }
+        // TODO: 2-3. Otherwise, perform !
+        // ReadableStreamDefaultControllerCallPullIfNeeded(this).
+
+        request->chunkSteps(scriptBindingInstance(), chunk);
+
     } else {
-        m_readPromiseQueue.push_back(promise);
+        m_stream->reader()->addDefaultReadRequest(request);
+        // TODO: 3-2.Perform !
+        // ReadableStreamDefaultControllerCallPullIfNeeded(this).
     }
 }
 
-void ReadableStreamDefaultController::resolveRead(Promise* promise,
-                                                  ScriptValue value)
-{
-    ContextRef* context = m_scriptBindingInstance->scriptContext();
-    Evaluator::execute(
-        context,
-        [](ExecutionStateRef* state, ReadableStreamDefaultController* self,
-           Promise* promise, ScriptValue value) -> ValueRef* {
-            ScriptObject obj = ObjectRef::create(state);
-
-            bool result = false;
-            if (self->m_stream->reader()->state() ==
-                ReadableStreamState::Readable) {
-                result = true;
-            }
-
-            obj->set(state, StringRef::createFromASCII("done"),
-                     ValueRef::create(result));
-            obj->set(state, StringRef::createFromASCII("value"), value);
-            promise->fulfill(createScriptValue(obj));
-
-            return ValueRef::createUndefined();
-        },
-        this, promise, value);
-}
 } // namespace Starfish

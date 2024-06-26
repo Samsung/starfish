@@ -151,6 +151,7 @@ ScriptValue createScriptValue(ScriptObject object);
 ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
 ScriptValue createScriptValue(ScriptArrayBufferView buffer);
+ScriptValue createScriptValue(ScriptUint8Array array);
 ScriptValue createScriptValue(ScriptUint8ClampedArray array);
 
 ScriptValue createScriptValue(bool value);

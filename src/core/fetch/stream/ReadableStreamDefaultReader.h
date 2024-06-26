@@ -21,10 +21,24 @@
 #define __StarfishReadableStreamDefaultReader__
 
 #include "binding/ScriptWrappable.h"
+#include "core/fetch/stream/ReadRequest.h"
 
 namespace Starfish {
 
-enum class ReadableStreamState { Readable, Closed, Errored };
+class DefaultReadRequest : public ReadRequest {
+public:
+    DefaultReadRequest(Promise* promise);
+
+    void chunkSteps(ScriptBindingInstance* instance,
+                    ScriptValue chunk) override;
+    void closeSteps(ScriptBindingInstance* instance,
+                    ScriptValue chunk) override;
+    void errorSteps(ScriptBindingInstance* instance,
+                    ScriptValue error) override;
+
+private:
+    Promise* m_promise;
+};
 
 class ReadableStreamDefaultReader : public ScriptWrappable {
 public:
@@ -39,6 +53,13 @@ public:
     }
 
     Promise* read();
+
+    void readDefaultReadRequest(DefaultReadRequest* request);
+
+    void addDefaultReadRequest(DefaultReadRequest* request);
+
+    void fulfillReadRequest(ScriptValue chunk, bool done);
+
     Promise* cancel();
 
     void releaseLock();
@@ -51,37 +72,20 @@ public:
         m_locked = locked;
     }
 
-    bool disturbed()
-    {
-        return m_disturbed;
-    }
-    void setDisturbed(bool disturbed)
-    {
-        m_disturbed = disturbed;
-    }
-
-    ReadableStreamState state()
-    {
-        return m_state;
-    }
-    void setState(ReadableStreamState state)
-    {
-        m_state = state;
-    }
-
     Promise* closed()
     {
         return m_closedPromise;
     }
+
+    void runCloseStepsReadRequests();
 
 private:
     ExecutionContext* m_executionContext;
     ReadableStream* m_stream;
     size_t m_pendingCount;
     bool m_locked;
-    bool m_disturbed;
-    ReadableStreamState m_state;
     Promise* m_closedPromise;
+    GCDeque<DefaultReadRequest*> m_readRequests;
 };
 } // namespace Starfish
 
