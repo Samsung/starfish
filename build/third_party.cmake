@@ -433,7 +433,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     IF(${HOST} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "prod_tv")
         SET (JPEG_OPTION ${JPEG_OPTION}" -DENABLE_COLOR_PICKER=TRUE -DCMAKE_C_FLAGS='-D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV'")
     ENDIF()
-    
+
     ADD_CUSTOM_COMMAND (OUTPUT ${JPEG_LOCAL_TARGET}
                         WORKING_DIRECTORY ${JPEG_DIR}
                         COMMENT "BUILD PNG"
@@ -458,6 +458,41 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${JPEG_BUILD_DIR}/)
 ENDIF()
+
+#######################################################
+# LIBWEBP
+#######################################################
+IF (${USE_CUSTOM_WEBP} STREQUAL "1")
+    SET (WEBP_DIR ${THIRD_PARTY_ROOT}/libwebp)
+    SET (WEBP_BUILD_DIR ${OUTPUT_DIRECTORY}/libwebp/)
+    SET (WEBP_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libwebp/libwebp.so)
+    SET (WEBP_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebp_lwe.so)
+    SET (WEBP_OPTION "-DBUILD_SHARED_LIBS=TRUE")
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${WEBP_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${WEBP_DIR}
+                        COMMENT "BUILD WEBP"
+                        COMMAND cp -r ${WEBP_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND cd ${WEBP_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${CMAKE_COMMAND} ${WEBP_OPTION}
+                        COMMAND cd ${WEBP_BUILD_DIR} && ${CMAKE_COMMAND} --build .
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${WEBP_TARGET}
+                        WORKING_DIRECTORY ${WEBP_BUILD_DIR}
+                        DEPENDS ${WEBP_LOCAL_TARGET}
+                        COMMENT "COPY AND PATCH WEBP"
+                        COMMAND cp ${WEBP_LOCAL_TARGET} ${WEBP_TARGET}
+                        COMMAND patchelf --set-soname libwebp_lwe.so ${WEBP_TARGET}
+    )
+
+    ADD_CUSTOM_TARGET (libwebp_lwe
+                       DEPENDS ${WEBP_TARGET}
+                       COMMENT "WEBP TARGET"
+    )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${WEBP_DIR}/src)
+ENDIF()
+
 
 #######################################################
 # LINK THIRD PARTY LIBRARIES
