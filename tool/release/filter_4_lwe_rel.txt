@@ -52,6 +52,7 @@ P /.circleci
 + /third_party/webrtc/src/libwebrtc/libs/linux/x64/release/libwebrtc.so
 + /third_party/webrtc/src/libwebrtc/libs/tizen/arm64/release/libwebrtc.so
 + /third_party/webrtc/src/libwebrtc/libs/tizen/arm/release/libwebrtc.so
++ /third_party/libwebp
 
 - .git
 - .gitignore

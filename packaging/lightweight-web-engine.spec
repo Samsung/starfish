@@ -181,15 +181,14 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libasound-devel
 
+%if (0%{?tizen_version_major} >= 6) && ("%{rpm}" != "flutter")
+BuildRequires: pkgconfig(libwebp)
+%endif
+
 %if "%{?use_embedded_image_decoder}" == "1"
 %else
 BuildRequires: giflib-devel
 BuildRequires: libjpeg-turbo-devel
-
-%if (0%{?tizen_version_major} >= 6)
-BuildRequires: pkgconfig(libwebp)
-%endif
-
 %endif
 
 %%if (0%{?tizen_version_major} >= 6)

@@ -44,10 +44,11 @@
 #include <png.h>
 #include <gif_lib.h>
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0) &&          \
-    !defined(STARFISH_TIZEN_VERSION_5_5) &&          \
-    !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER) && \
-    !defined(STARFISH_WINDOWS) && !defined(STARFISH_ANDROID)
+#if (!defined(STARFISH_TIZEN_VERSION_5_0) &&                      \
+     !defined(STARFISH_TIZEN_VERSION_5_5) &&                      \
+     !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER) &&             \
+     !defined(STARFISH_WINDOWS) && !defined(STARFISH_ANDROID)) || \
+    defined(USE_CUSTOM_WEBP)
 #include <webp/decode.h>
 #define STARFISH_ENABLE_WEBP
 #endif
