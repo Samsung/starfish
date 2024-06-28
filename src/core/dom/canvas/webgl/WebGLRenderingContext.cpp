@@ -249,32 +249,6 @@ void WebGLRenderingContext::onResize()
     });
 #endif
 
-/*
-Note: Use hasGLError() to internally check for GL errors. When `glGetError` is
-called, the code returned is cleared inside it. If we use `glGetError` directly,
-users would not be able to get error code properly. So, we first store the code
-from `glGetError`, and then use it. The error code stored will be cleared when
-users call gl.getError().
-*/
-bool WebGLRenderingContext::hasGLError()
-{
-    updateGLError();
-
-    if (!m_GLErrors.empty()) {
-        return true;
-    }
-    return false;
-}
-
-void WebGLRenderingContext::updateGLError()
-{
-    GLenum code = m_gl->getError();
-    if (code != GL_NO_ERROR) {
-        TRACE(WEBGL, "Error:", glValueString(code));
-        setGLError(code);
-    }
-}
-
 GLenum WebGLRenderingContext::getError()
 {
     GLContextScope contextScope(m_context);
@@ -287,14 +261,6 @@ GLenum WebGLRenderingContext::getError()
         m_GLErrors.erase(m_GLErrors.begin());
     }
     return code;
-}
-
-void WebGLRenderingContext::setGLError(GLenum code, const char* message)
-{
-    m_GLErrors.insert(code);
-    if (message) {
-        TRACE(WEBGL, "Error(%s): %s", glValueString(code), message);
-    }
 }
 
 GLsizei WebGLRenderingContext::drawingBufferWidth() const
@@ -361,93 +327,6 @@ bool WebGLRenderingContext::isContextLost()
     return m_isContextLost;
 }
 
-bool WebGLRenderingContext::isExtensionEnabled(const char* name)
-{
-    const auto& iter = m_enabledExtensions.find(name);
-    if (iter != m_enabledExtensions.end()) {
-        return true;
-    }
-    return false;
-}
-
-bool WebGLRenderingContext::isDefaultFramebufferBound()
-{
-    return !m_state->hasWebGLFramebuffer();
-}
-
-GLuint WebGLRenderingContext::getCurrentFBO()
-{
-    return m_state->hasWebGLFramebuffer()
-               ? m_state->webGLFramebuffer()->glObject()
-               : m_framebufferTexture->fbo();
-}
-
-GLint WebGLRenderingContext::getCurrentProgram()
-{
-    GLint program = 0;
-    m_gl->getIntegerv(GL_CURRENT_PROGRAM, &program);
-    return program;
-}
-
-void WebGLRenderingContext::completePendingJobs()
-{
-    /*
-        +---------+--------------+----------------------+---------------------+
-        | Buffer  | Clear value  | Minimum size         | Defined by default? |
-        +---------+--------------+----------------------+---------------------+
-        | Color   | (0, 0, 0, 0) | 8 bits per component | yes                 |
-        | Depth   | 1.0          | 16 bit integer       | yes                 |
-        | Stencil | 0            | 8 bits               | no                  |
-        +---------+--------------+----------------------+---------------------+
-
-        By default, after compositing the contents of the drawing buffer shall
-        be cleared to their default values, as shown in the table above. This
-        default behavior can be changed by setting the `preserveDrawingBuffer`
-        attribute of the WebGLContextAttributes object.
-    */
-
-    if (m_hasPendingJobsBetweenFrames) {
-        // If `preserveDrawingBuffer` is true, the contents of the drawing
-        // buffer shall be preserved until the author either clears or
-        // overwrites them.
-        if (!m_attributes.preserveDrawingBuffer()) {
-            uint32_t mask = GL_COLOR_BUFFER_BIT;
-
-            // NOTE: If a bit of m_pendingClearMask is 1, it means that users
-            // have already set a value corresponding to that bit. Therefore, we
-            // will keep the value set by users instead of the default value.
-
-            if (!(m_pendingClearMask & GL_COLOR_BUFFER_BIT)) {
-                m_gl->clearColor(0, 0, 0, 0);
-            }
-
-            if (m_attributes.depth()) {
-                if (!(m_pendingClearMask & GL_DEPTH_BUFFER_BIT)) {
-                    m_gl->clearDepthf(1.0);
-                }
-                mask |= GL_DEPTH_BUFFER_BIT;
-            }
-
-            if (m_attributes.stencil()) {
-                if (!(m_pendingClearMask & GL_STENCIL_BUFFER_BIT)) {
-                    m_gl->clearStencil(0);
-                }
-                mask |= GL_STENCIL_BUFFER_BIT;
-            }
-
-            if (mask != 0) {
-                m_gl->clear(mask);
-            }
-        }
-        m_hasPendingJobsBetweenFrames = false;
-    }
-}
-
-void WebGLRenderingContext::setPendingClearMask(uint32_t mask)
-{
-    m_pendingClearMask |= mask;
-}
-
 Nullable<ScriptObject> WebGLRenderingContext::getExtension(
     String* requestedName)
 {
@@ -488,7 +367,8 @@ void WebGLRenderingContext::activeTexture(GLenum texture)
 void WebGLRenderingContext::attachShader(WebGLProgram* program,
                                          WebGLShader* shader)
 {
-    if (!checkWebGLObject(program) || !checkWebGLObject(shader)) {
+    if (!isFromCurrentContext(program) || !isFromCurrentContext(shader)) {
+        setGLError(GL_INVALID_OPERATION);
         return;
     }
 
@@ -503,7 +383,8 @@ void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return;
     }
 
@@ -552,7 +433,8 @@ void WebGLRenderingContext::bindFramebuffer(
     if (maybeFramebuffer.hasValue()) {
         WebGLFramebuffer* frameBuffer = maybeFramebuffer.value();
 
-        if (!checkWebGLObject(frameBuffer)) {
+        if (!isFromCurrentContext(frameBuffer)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
 
@@ -582,7 +464,8 @@ void WebGLRenderingContext::bindRenderbuffer(
     if (maybeRenderbuffer.hasValue()) {
         WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
 
-        if (!checkWebGLObject(renderBuffer)) {
+        if (!isFromCurrentContext(renderBuffer)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
 
@@ -610,7 +493,8 @@ void WebGLRenderingContext::bindTexture(GLenum target,
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
 
-        if (!checkWebGLObject(texture)) {
+        if (!isFromCurrentContext(texture)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
 
@@ -739,7 +623,8 @@ void WebGLRenderingContext::compileShader(WebGLShader* shader)
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!checkWebGLObject(shader)) {
+    if (!isFromCurrentContext(shader)) {
+        setGLError(GL_INVALID_OPERATION);
         return;
     }
 
@@ -841,7 +726,11 @@ void WebGLRenderingContext::cullFace(GLenum mode)
         ENTER_CONTEXT_SCOPE();                                             \
         if (maybe.hasValue()) {                                            \
             WebGL##Name* value = maybe.value();                            \
-            if (!checkWebGLObject(value) || value->isDeleted()) {          \
+            if (!isFromCurrentContext(value)) {                            \
+                setGLError(GL_INVALID_OPERATION);                          \
+                return;                                                    \
+            }                                                              \
+            if (value->isDeleted()) {                                      \
                 return;                                                    \
             }                                                              \
             GLuint buffer = value->glObject();                             \
@@ -862,7 +751,11 @@ IMPLEMENT_DELETE_BUFFERS(Texture, m_gl->deleteTextures);
         ENTER_CONTEXT_SCOPE();                                             \
         if (maybe.hasValue()) {                                            \
             WebGL##Name* value = maybe.value();                            \
-            if (!checkWebGLObject(value) || value->isDeleted()) {          \
+            if (!isFromCurrentContext(value)) {                            \
+                setGLError(GL_INVALID_OPERATION);                          \
+                return;                                                    \
+            }                                                              \
+            if (value->isDeleted()) {                                      \
                 return;                                                    \
             }                                                              \
             Deleter(value->glObject());                                    \
@@ -1023,7 +916,8 @@ void WebGLRenderingContext::framebufferRenderbuffer(
     if (maybeRenderbuffer.hasValue()) {
         WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
 
-        if (!checkWebGLObject(renderBuffer)) {
+        if (!isFromCurrentContext(renderBuffer)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
 
@@ -1055,7 +949,8 @@ void WebGLRenderingContext::framebufferTexture2D(
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
 
-        if (!checkWebGLObject(texture)) {
+        if (!isFromCurrentContext(texture)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
 
@@ -1362,7 +1257,7 @@ Nullable<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
         return nullptr;
     }
 
@@ -1385,7 +1280,8 @@ GLint WebGLRenderingContext::getAttribLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(-1);
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return -1;
     }
 
@@ -1471,7 +1367,8 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
 
@@ -1559,7 +1456,8 @@ ScriptValue WebGLRenderingContext::getShaderParameter(WebGLShader* shader,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (!checkWebGLObject(shader)) {
+    if (!isFromCurrentContext(shader)) {
+        setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
 
@@ -1683,9 +1581,8 @@ ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    // TODO: rename checkWebGLObject to isFromCurrentContext
-    // TODO: move setting error from checkWebGLObject
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return nullptr;
     }
 
@@ -1706,7 +1603,8 @@ WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return nullptr;
     }
 
@@ -1919,7 +1817,8 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (!checkWebGLObject(program)) {
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
         return;
     }
 
@@ -2204,7 +2103,8 @@ void WebGLRenderingContext::useProgram(Nullable<WebGLProgram*> maybeProgram)
 
     if (maybeProgram.hasValue()) {
         WebGLProgram* program = maybeProgram.value();
-        if (!checkWebGLObject(program)) {
+        if (!isFromCurrentContext(program)) {
+            setGLError(GL_INVALID_OPERATION);
             return;
         }
         m_gl->useProgram(program->glObject());
@@ -2443,6 +2343,115 @@ void WebGLRenderingContext::compressedTexSubImage2D(
         false);
 
     setGLError(GL_INVALID_ENUM);
+}
+
+void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
+                                       GLsizei height, GLenum format,
+                                       GLenum type,
+                                       Nullable<ScriptArrayBufferView> pixels)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (pixels.hasValue()) {
+        ArrayBufferViewRef* pixelsView = pixels.getValue();
+
+        // 1. If the types don't match, an INVALID_OPERATION error is generated.
+        if (type == GL_UNSIGNED_BYTE &&
+            (!pixelsView->isUint8ArrayObject() &&
+             !pixelsView->isUint8ClampedArrayObject())) {
+            // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
+            // must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        } else if ((type == GL_UNSIGNED_SHORT_5_6_5 ||
+                    type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+                    type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+                   !pixelsView->isUint16ArrayObject()) {
+            // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
+            // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        } else if ((type == GL_FLOAT) && !pixelsView->isFloat32ArrayObject()) {
+            // if it is FLOAT, a Float32Array must be supplied.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        // 2. Only two combinations of format and type are accepted. The first
+        //    is format RGBA and type UNSIGNED_BYTE. The second is an
+        //    implementation-chosen format.
+
+        // As for webgl/1.0.3/conformance/reading/read-pixels-test.html:162,
+        // GL_INVALID_ENUM needs to be set for the luminance.
+        if ((format == GL_LUMINANCE || format == GL_LUMINANCE_ALPHA) &&
+            type == GL_UNSIGNED_BYTE) {
+            setGLError(GL_INVALID_ENUM);
+            return;
+        }
+
+        // NOTE: Our implementation-chosen is a combination of RGBA and
+        // UNSIGNED_BYTE. See kIMPLEMENTATION_COLOR_READ_TYPE and
+        // kIMPLEMENTATION_COLOR_READ_FORMAT.
+        if (format != GL_RGBA && type != GL_UNSIGNED_BYTE) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
+        size_t byteLengthOfPixels = width * height * bytesPerPixel;
+        size_t byteLengthOfView = pixels->byteLength();
+
+        TRACEF(WEBGL, "\n%s",
+               StringUtils::createTableString(
+                   20, KV(width), KV(height), KV(bytesPerPixel),
+                   KV(byteLengthOfView), KV(byteLengthOfPixels)));
+
+        if (byteLengthOfView < byteLengthOfPixels) {
+            // If pixels is non-null, but is not large enough to retrieve all of
+            // the pixels in the specified rectangle taking into account pixel
+            // store modes, an INVALID_OPERATION error is generated.
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        /*
+            TODO: 6.28 Reading From a Missing Attachment
+
+            In the OpenGL ES 2.0 API, it is not specified what happens when a
+            command tries to source data from a missing attachment, such as
+            ReadPixels of color data from a complete framebuffer that does not
+            have a color attachment.
+
+            In the WebGL API, any [Read Operations] that require data from an
+            attachment that is missing will generate an INVALID_OPERATION error.
+        */
+
+        /*
+            TODO: 6.29 Drawing To a Missing Attachment
+
+            If this function attempts to read from a complete framebuffer with a
+            missing color attachment, an INVALID_OPERATION error is generated
+            per Reading from a Missing Attachment.
+
+            In the OpenGL ES 2.0 API, it is not specified what happens when a
+            command tries to draw to a missing attachment, such as clearing a
+            draw buffer from a complete framebuffer that does not have a color
+            attachment.
+
+            In the WebGL API, any [Draw Operations] that draw to an attachment
+            that is missing will draw nothing to that attachment. No error is
+            generated.
+        */
+
+        GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
+
+        // completePendingJobs() is not related as this function is a read
+        // operation.
+        m_gl->readPixels(x, y, width, height, format, type, data);
+    } else {
+        // If pixels is null, an INVALID_VALUE error is generated.
+        setGLError(GL_INVALID_VALUE);
+    }
 }
 
 class TexImageHelper final {
@@ -2722,172 +2731,6 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     }
 }
 
-void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
-                                       GLint internalFormat, GLsizei width,
-                                       GLsizei height, GLint border,
-                                       GLenum format, GLenum type,
-                                       Nullable<ScriptArrayBufferView> pixels)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (m_boundTextures.find(target) == m_boundTextures.end() &&
-        !isBoundCubeMapTexture(target)) {
-        setGLError(
-            GL_INVALID_OPERATION,
-            StringUtils::formatString("target (0x%04X) is not bound.", target)
-                .c_str());
-        return;
-    }
-
-    if (static_cast<GLenum>(internalFormat) != format) {
-        setGLError(GL_INVALID_OPERATION,
-                   StringUtils::formatString(
-                       "The given parameters, internal format (0x%0fX) and "
-                       "format (0x%04X) are not same.",
-                       internalFormat, format)
-                       .c_str());
-        return;
-    }
-
-    handleTexImageWithArrayBufferView(
-        target, level, width, height, format, type, pixels,
-        [&](const TexImageHelper* helper) {
-            STARFISH_ASSERT(helper != nullptr);
-            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
-                             format, type, helper->data());
-        },
-        [&](const std::vector<GLubyte>& blackData) {
-#if defined(PORT_PIXEL_ORDER_BGRA)
-            if (format == GL_RGBA) {
-                if (WebGLExtensionRegistry::instance()
-                        .hasEXT_texture_format_BGRA8888()) {
-                    // According to OpenGL ES specification, the format must
-                    // match the base internal format (no conversions from
-                    // one format to another during texture image processing
-                    // are supported.)
-                    internalFormat = GL_BGRA_EXT;
-                    format = GL_BGRA_EXT;
-                }
-            }
-#endif
-            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
-                             format, type, blackData.data());
-        },
-        [&](const std::vector<GLushort>& blackData) {
-            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
-                             format, type, blackData.data());
-        });
-}
-
-void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
-                                       GLsizei height, GLenum format,
-                                       GLenum type,
-                                       Nullable<ScriptArrayBufferView> pixels)
-{
-    ENTER_CONTEXT_SCOPE();
-
-    if (pixels.hasValue()) {
-        ArrayBufferViewRef* pixelsView = pixels.getValue();
-
-        // 1. If the types don't match, an INVALID_OPERATION error is generated.
-        if (type == GL_UNSIGNED_BYTE &&
-            (!pixelsView->isUint8ArrayObject() &&
-             !pixelsView->isUint8ClampedArrayObject())) {
-            // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
-            // must be supplied.
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        } else if ((type == GL_UNSIGNED_SHORT_5_6_5 ||
-                    type == GL_UNSIGNED_SHORT_4_4_4_4 ||
-                    type == GL_UNSIGNED_SHORT_5_5_5_1) &&
-                   !pixelsView->isUint16ArrayObject()) {
-            // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
-            // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        } else if ((type == GL_FLOAT) && !pixelsView->isFloat32ArrayObject()) {
-            // if it is FLOAT, a Float32Array must be supplied.
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        // 2. Only two combinations of format and type are accepted. The first
-        //    is format RGBA and type UNSIGNED_BYTE. The second is an
-        //    implementation-chosen format.
-
-        // As for webgl/1.0.3/conformance/reading/read-pixels-test.html:162,
-        // GL_INVALID_ENUM needs to be set for the luminance.
-        if ((format == GL_LUMINANCE || format == GL_LUMINANCE_ALPHA) &&
-            type == GL_UNSIGNED_BYTE) {
-            setGLError(GL_INVALID_ENUM);
-            return;
-        }
-
-        // NOTE: Our implementation-chosen is a combination of RGBA and
-        // UNSIGNED_BYTE. See kIMPLEMENTATION_COLOR_READ_TYPE and
-        // kIMPLEMENTATION_COLOR_READ_FORMAT.
-        if (format != GL_RGBA && type != GL_UNSIGNED_BYTE) {
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
-        size_t byteLengthOfPixels = width * height * bytesPerPixel;
-        size_t byteLengthOfView = pixels->byteLength();
-
-        TRACEF(WEBGL, "\n%s",
-               StringUtils::createTableString(
-                   20, KV(width), KV(height), KV(bytesPerPixel),
-                   KV(byteLengthOfView), KV(byteLengthOfPixels)));
-
-        if (byteLengthOfView < byteLengthOfPixels) {
-            // If pixels is non-null, but is not large enough to retrieve all of
-            // the pixels in the specified rectangle taking into account pixel
-            // store modes, an INVALID_OPERATION error is generated.
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        }
-
-        /*
-            TODO: 6.28 Reading From a Missing Attachment
-
-            In the OpenGL ES 2.0 API, it is not specified what happens when a
-            command tries to source data from a missing attachment, such as
-            ReadPixels of color data from a complete framebuffer that does not
-            have a color attachment.
-
-            In the WebGL API, any [Read Operations] that require data from an
-            attachment that is missing will generate an INVALID_OPERATION error.
-        */
-
-        /*
-            TODO: 6.29 Drawing To a Missing Attachment
-
-            If this function attempts to read from a complete framebuffer with a
-            missing color attachment, an INVALID_OPERATION error is generated
-            per Reading from a Missing Attachment.
-
-            In the OpenGL ES 2.0 API, it is not specified what happens when a
-            command tries to draw to a missing attachment, such as clearing a
-            draw buffer from a complete framebuffer that does not have a color
-            attachment.
-
-            In the WebGL API, any [Draw Operations] that draw to an attachment
-            that is missing will draw nothing to that attachment. No error is
-            generated.
-        */
-
-        GLvoid* data = pixelsView->rawBuffer() + pixelsView->byteOffset();
-
-        // completePendingJobs() is not related as this function is a read
-        // operation.
-        m_gl->readPixels(x, y, width, height, format, type, data);
-    } else {
-        // If pixels is null, an INVALID_VALUE error is generated.
-        setGLError(GL_INVALID_VALUE);
-    }
-}
-
 void WebGLRenderingContext::handleTexImageWithImageSource(
     const GLenum format, const GLenum type, const TexImageSource& source,
     std::function<void(const TexImageHelper*)> updateImage)
@@ -2956,6 +2799,63 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
           KV(byteLengthOfPixels), KV(imageData));
 
     updateImage(&image);
+}
+
+void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
+                                       GLint internalFormat, GLsizei width,
+                                       GLsizei height, GLint border,
+                                       GLenum format, GLenum type,
+                                       Nullable<ScriptArrayBufferView> pixels)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (m_boundTextures.find(target) == m_boundTextures.end() &&
+        !isBoundCubeMapTexture(target)) {
+        setGLError(
+            GL_INVALID_OPERATION,
+            StringUtils::formatString("target (0x%04X) is not bound.", target)
+                .c_str());
+        return;
+    }
+
+    if (static_cast<GLenum>(internalFormat) != format) {
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString(
+                       "The given parameters, internal format (0x%0fX) and "
+                       "format (0x%04X) are not same.",
+                       internalFormat, format)
+                       .c_str());
+        return;
+    }
+
+    handleTexImageWithArrayBufferView(
+        target, level, width, height, format, type, pixels,
+        [&](const TexImageHelper* helper) {
+            STARFISH_ASSERT(helper != nullptr);
+            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
+                             format, type, helper->data());
+        },
+        [&](const std::vector<GLubyte>& blackData) {
+#if defined(PORT_PIXEL_ORDER_BGRA)
+            if (format == GL_RGBA) {
+                if (WebGLExtensionRegistry::instance()
+                        .hasEXT_texture_format_BGRA8888()) {
+                    // According to OpenGL ES specification, the format must
+                    // match the base internal format (no conversions from
+                    // one format to another during texture image processing
+                    // are supported.)
+                    internalFormat = GL_BGRA_EXT;
+                    format = GL_BGRA_EXT;
+                }
+            }
+#endif
+            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
+                             format, type, blackData.data());
+        },
+        [&](const std::vector<GLushort>& blackData) {
+            m_gl->texImage2D(target, level, internalFormat, width, height, 0,
+                             format, type, blackData.data());
+        });
 }
 
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
@@ -3203,6 +3103,40 @@ IMPLEMENT_UNIFORM_MATRIX_NFV(4)
 
 #undef IMPLEMENT_UNIFORM_MATRIX_NFV
 
+void WebGLRenderingContext::setGLError(GLenum code, const char* message)
+{
+    m_GLErrors.insert(code);
+    if (message) {
+        TRACE(WEBGL, "Error(%s): %s", glValueString(code), message);
+    }
+}
+
+/*
+Note: Use hasGLError() to internally check for GL errors. When `glGetError` is
+called, the code returned is cleared inside it. If we use `glGetError` directly,
+users would not be able to get error code properly. So, we first store the code
+from `glGetError`, and then use it. The error code stored will be cleared when
+users call gl.getError().
+*/
+bool WebGLRenderingContext::hasGLError()
+{
+    updateGLError();
+
+    if (!m_GLErrors.empty()) {
+        return true;
+    }
+    return false;
+}
+
+void WebGLRenderingContext::updateGLError()
+{
+    GLenum code = m_gl->getError();
+    if (code != GL_NO_ERROR) {
+        TRACE(WEBGL, "Error:", glValueString(code));
+        setGLError(code);
+    }
+}
+
 bool WebGLRenderingContext::executeInContextScope(
     std::function<void()> callback)
 {
@@ -3214,24 +3148,6 @@ bool WebGLRenderingContext::executeInContextScope(
 WebGLRenderingContextState* WebGLRenderingContext::getState()
 {
     return m_state;
-}
-
-bool WebGLRenderingContext::checkWebGLObject(WebGLObject* object)
-{
-    if (object->context() != this) {
-        // If object was generated by a different WebGLRenderingContext than
-        // this one, generates an INVALID_OPERATION error.
-        setGLError(GL_INVALID_OPERATION);
-        return false;
-    }
-    return true;
-}
-
-bool WebGLRenderingContext::isFromCurrentContext(WebGLObject* object)
-{
-    STARFISH_ASSERT(object != nullptr);
-
-    return object->context() == this;
 }
 
 bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
@@ -3255,6 +3171,13 @@ bool WebGLRenderingContext::checkAttribOrUniformName(String* name)
     // implementations generally must ensure that the shader source sent to a
     // GLSL driver only contains ASCII for safety.
     return true;
+}
+
+bool WebGLRenderingContext::isFromCurrentContext(WebGLObject* object)
+{
+    STARFISH_ASSERT(object != nullptr);
+
+    return object->context() == this;
 }
 
 bool WebGLRenderingContext::isBoundCubeMapTexture(GLenum target)
@@ -3285,6 +3208,93 @@ bool WebGLRenderingContext::isFromCurrentProgram(WebGLUniformLocation* location)
         return false;
     }
     return true;
+}
+
+bool WebGLRenderingContext::isExtensionEnabled(const char* name)
+{
+    const auto& iter = m_enabledExtensions.find(name);
+    if (iter != m_enabledExtensions.end()) {
+        return true;
+    }
+    return false;
+}
+
+bool WebGLRenderingContext::isDefaultFramebufferBound()
+{
+    return !m_state->hasWebGLFramebuffer();
+}
+
+GLuint WebGLRenderingContext::getCurrentFBO()
+{
+    return m_state->hasWebGLFramebuffer()
+               ? m_state->webGLFramebuffer()->glObject()
+               : m_framebufferTexture->fbo();
+}
+
+GLint WebGLRenderingContext::getCurrentProgram()
+{
+    GLint program = 0;
+    m_gl->getIntegerv(GL_CURRENT_PROGRAM, &program);
+    return program;
+}
+
+void WebGLRenderingContext::completePendingJobs()
+{
+    /*
+        +---------+--------------+----------------------+---------------------+
+        | Buffer  | Clear value  | Minimum size         | Defined by default? |
+        +---------+--------------+----------------------+---------------------+
+        | Color   | (0, 0, 0, 0) | 8 bits per component | yes                 |
+        | Depth   | 1.0          | 16 bit integer       | yes                 |
+        | Stencil | 0            | 8 bits               | no                  |
+        +---------+--------------+----------------------+---------------------+
+
+        By default, after compositing the contents of the drawing buffer shall
+        be cleared to their default values, as shown in the table above. This
+        default behavior can be changed by setting the `preserveDrawingBuffer`
+        attribute of the WebGLContextAttributes object.
+    */
+
+    if (m_hasPendingJobsBetweenFrames) {
+        // If `preserveDrawingBuffer` is true, the contents of the drawing
+        // buffer shall be preserved until the author either clears or
+        // overwrites them.
+        if (!m_attributes.preserveDrawingBuffer()) {
+            uint32_t mask = GL_COLOR_BUFFER_BIT;
+
+            // NOTE: If a bit of m_pendingClearMask is 1, it means that users
+            // have already set a value corresponding to that bit. Therefore, we
+            // will keep the value set by users instead of the default value.
+
+            if (!(m_pendingClearMask & GL_COLOR_BUFFER_BIT)) {
+                m_gl->clearColor(0, 0, 0, 0);
+            }
+
+            if (m_attributes.depth()) {
+                if (!(m_pendingClearMask & GL_DEPTH_BUFFER_BIT)) {
+                    m_gl->clearDepthf(1.0);
+                }
+                mask |= GL_DEPTH_BUFFER_BIT;
+            }
+
+            if (m_attributes.stencil()) {
+                if (!(m_pendingClearMask & GL_STENCIL_BUFFER_BIT)) {
+                    m_gl->clearStencil(0);
+                }
+                mask |= GL_STENCIL_BUFFER_BIT;
+            }
+
+            if (mask != 0) {
+                m_gl->clear(mask);
+            }
+        }
+        m_hasPendingJobsBetweenFrames = false;
+    }
+}
+
+void WebGLRenderingContext::setPendingClearMask(uint32_t mask)
+{
+    m_pendingClearMask |= mask;
 }
 
 GL* WebGLRenderingContext::gl()
