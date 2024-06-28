@@ -28,11 +28,8 @@ interface WebGLRenderingContextOverloads
                          GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
 
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
-                         GLsizei width, GLsizei height, GLint border, GLenum format,
-                         GLenum type, ArrayBufferView? pixels);
-    // [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat,
-    //                     GLsizei width, GLsizei height, GLint border, GLenum format,
-    //                     GLenum type, [AllowShared] ArrayBufferView? pixels);
+                        GLsizei width, GLsizei height, GLint border, GLenum format,
+                        GLenum type, [AllowShared] ArrayBufferView? pixels);
 
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
                          GLenum format, GLenum type, TexImageSource source); // May throw DOMException

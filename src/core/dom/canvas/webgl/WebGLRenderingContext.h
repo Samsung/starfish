@@ -297,10 +297,6 @@ public:
     void uniformMatrix4fv(WebGLUniformLocation* uniform, GLboolean transpose,
                           Float32List value);
 
-    // NOTE: GLError can only be set on WebGLRenderingContext and GLExtensions.
-    void setGLError(GLenum code, const char* message = nullptr);
-    bool executeInContextScope(std::function<void()> callback);
-    WebGLRenderingContextState* getState();
     GL* gl();
 
     BEGIN_IMPLEMENT_NEW_WITH_GC_DESC(WebGLRenderingContext,
@@ -311,12 +307,17 @@ public:
     FILL_GC_COLLECTION(WebGLRenderingContext, m_enabledExtensions);
     END_IMPLEMENT_NEW_WITH_GC_DESC();
 
-private:
-    bool checkWebGLObject(WebGLObject* object);
-    bool isFromCurrentContext(WebGLObject* object);
-    bool checkAttribOrUniformName(String* name);
+public:
+    // Use setGLError only on WebGLRenderingContext and GLExtensions.
+    void setGLError(GLenum code, const char* message = nullptr);
     bool hasGLError();
     void updateGLError();
+    bool executeInContextScope(std::function<void()> callback);
+    WebGLRenderingContextState* getState();
+
+private:
+    bool checkAttribOrUniformName(String* name);
+    bool isFromCurrentContext(WebGLObject* object);
     bool isBoundCubeMapTexture(GLenum target);
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     bool isExtensionEnabled(const char* requestedName);
