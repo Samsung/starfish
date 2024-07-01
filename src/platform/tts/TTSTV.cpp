@@ -41,10 +41,13 @@
 
 // NOTE: Original TTS_MODE_INTERRUPT is defined in tts_internal.h.
 #define TTS_MODE_INTERRUPT 3
+#define TTS_REMOVED_INSTANCE_SIZE 5
 
 namespace Starfish {
 
 int gUtteranceId = 1;
+
+static std::vector<TTS*> gRemovedInstance;
 
 int stringToVoiceType(String* name)
 {
@@ -103,6 +106,17 @@ const char* stateToString(int state)
     default:
         return "Unknown State";
     }
+}
+static bool isValidTTS(TTS* t)
+{
+    if (t != nullptr) {
+        auto iter =
+            std::find(gRemovedInstance.begin(), gRemovedInstance.end(), t);
+        if (iter == gRemovedInstance.end()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static SpeechSynthesisUtterance* findUtterance(TTS* t, int id)
@@ -215,14 +229,16 @@ static void accessibilityChangedCB(keynode_t* keynodeName, void* data)
     if (vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &result) != 0) {
         return;
     }
-    t->setAccessibilityMode(result == 1);
+    if (isValidTTS(t)) {
+        t->setAccessibilityMode(result == 1);
+    }
 }
 
 static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
                            void* data)
 {
     TTS* t = (TTS*)data;
-    if (!t) {
+    if (!isValidTTS(t)) {
         return;
     }
 
@@ -302,7 +318,7 @@ static bool supportedVoiceCB(tts_h handle, const char* language, int voiceType,
                              void* data)
 {
     TTS* t = (TTS*)data;
-    if (t != nullptr) {
+    if (isValidTTS(t)) {
         t->supportedVoiceList().insert(std::make_pair(
             String::fromUTF8(language, strlen(language)), voiceType));
         return true;
@@ -315,7 +331,7 @@ static void defaultVoiceChangedCB(tts_h handle, const char* prevLang,
                                   int curVoiceType, void* data)
 {
     TTS* t = (TTS*)data;
-    if (t != nullptr) {
+    if (isValidTTS(t)) {
         t->changeDefaultVoice(String::fromUTF8(curLang, strlen(curLang)),
                               curVoiceType);
     }
@@ -356,6 +372,9 @@ static int voiceSpeed(tts_h handle, float rate)
 
 void TTS::initialize()
 {
+    gRemovedInstance.erase(
+        std::remove(gRemovedInstance.begin(), gRemovedInstance.end(), this),
+        gRemovedInstance.end());
     m_handle = nullptr;
     int result = 0;
     if (vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &result) != 0) {
@@ -490,6 +509,10 @@ void TTS::destroy()
         }
 
         // STARFISH_LOG_INFO("[TTS] Destroyed successfully");
+        if (gRemovedInstance.size() >= TTS_REMOVED_INSTANCE_SIZE) {
+            gRemovedInstance.erase(gRemovedInstance.begin());
+        }
+        gRemovedInstance.push_back(this);
         m_handle = NULL;
     } else {
         STARFISH_LOG_ERROR("[TTS] handle is null in destroyTTSHandle()");
