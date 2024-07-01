@@ -153,6 +153,8 @@ public:
                                             GLint *params) = 0;
     virtual void getShaderiv(GLuint shader, GLenum pname, GLint *params) = 0;
     virtual const GLubyte *getString(GLenum name) = 0;
+    virtual void getTexParameterfv(GLenum target, GLenum pname,
+                                   GLfloat *params) = 0;
     virtual void getTexParameteriv(GLenum target, GLenum pname,
                                    GLint *params) = 0;
     virtual void getUniformfv(GLuint program, GLint location,
