@@ -86,12 +86,13 @@ void WebGLExtensionRegistry::initialize(GL* gl)
 
     // 2. Add generators for extensions not requiring binding to native objects
 
-#define SUPPORTED_GL_EXTENSIONS(V)                        \
-    V(OES_texture_float, OES_texture_float)               \
-    V(OES_texture_half_float, OES_texture_half_float)     \
-    V(OES_standard_derivatives, OES_standard_derivatives) \
-    V(OES_texture_float_linear, OES_texture_float_linear) \
-    V(OES_depth_texture, WEBGL_depth_texture)             \
+#define SUPPORTED_GL_EXTENSIONS(V)                                    \
+    V(OES_texture_float, OES_texture_float)                           \
+    V(OES_texture_half_float, OES_texture_half_float)                 \
+    V(OES_standard_derivatives, OES_standard_derivatives)             \
+    V(OES_depth_texture, WEBGL_depth_texture)                         \
+    V(EXT_texture_filter_anisotropic, EXT_texture_filter_anisotropic) \
+    V(OES_texture_float_linear, OES_texture_float_linear)             \
     V(EXT_blend_minmax, EXT_blend_minmax)
 
 #define V(name, spec)                                                        \

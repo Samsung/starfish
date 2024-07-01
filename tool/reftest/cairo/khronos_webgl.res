@@ -56,7 +56,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/angle-insta
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-frag-depth.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-shader-texture-lod.html # @ignore Passed due to unsupported extension.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-sRGB.html # @ignore Passed due to unsupported extension.
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/ext-texture-filter-anisotropic.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extension.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-element-index-uint.html # @ignore Passed due to unsupported extension.
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-standard-derivatives.html
