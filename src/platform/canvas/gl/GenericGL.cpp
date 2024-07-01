@@ -458,6 +458,12 @@ public:
         return glGetString(name);
     }
 
+    virtual void getTexParameterfv(GLenum target, GLenum pname,
+                                   GLfloat *params) override
+    {
+        glGetTexParameterfv(target, pname, params);
+    }
+
     virtual void getTexParameteriv(GLenum target, GLenum pname,
                                    GLint *params) override
     {

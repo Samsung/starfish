@@ -450,6 +450,12 @@ public:
         return m_evasGLAPI->glGetString(name);
     }
 
+    virtual void getTexParameterfv(GLenum target, GLenum pname,
+                                   GLfloat *params) override
+    {
+        return m_evasGLAPI->glGetTexParameterfv(target, pname, params);
+    }
+
     virtual void getTexParameteriv(GLenum target, GLenum pname,
                                    GLint *params) override
     {
