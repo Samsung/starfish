@@ -25,6 +25,13 @@ interface WEBGL_depth_texture {
   const GLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;
 };
 
+// 11. EXT_texture_filter_anisotropic
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface EXT_texture_filter_anisotropic {
+  const GLenum TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
+  const GLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
+};
+
 // 20. OES_texture_float_linear
 [STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface OES_texture_float_linear { };

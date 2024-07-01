@@ -1095,6 +1095,15 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         m_gl->getIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
+        if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+            setGLError(GL_INVALID_ENUM);
+            return scriptNull();
+        }
+        std::vector<int> values(1);
+        m_gl->getIntegerv(pname, &values[0]);
+        return ValueRef::create(values[0]);
+    }
     case GL_CURRENT_PROGRAM: {
         GLint value = -1;
         m_gl->getIntegerv(pname, &value);
@@ -1187,8 +1196,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
                                                      std::vector<int>());
     }
     default:
-        STARFISH_UNSUPPORTED("unsupported pname: 0x%04X(%s)", pname,
-                             __PRETTY_FUNCTION__);
+        STARFISH_UNSUPPORTED("pname: 0x%04X(%s)", pname, __PRETTY_FUNCTION__);
         return scriptNull();
     }
     return scriptNull();
@@ -1550,6 +1558,13 @@ ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
         return scriptNull();
     }
 
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
+        isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+        GLfloat params = 0;
+        m_gl->getTexParameterfv(target, pname, &params);
+        return createScriptValue(params);
+    }
+
     if (pname != GL_TEXTURE_MAG_FILTER && pname != GL_TEXTURE_MIN_FILTER &&
         pname != GL_TEXTURE_WRAP_S && pname != GL_TEXTURE_WRAP_T) {
         setGLError(GL_INVALID_ENUM);
@@ -1563,17 +1578,7 @@ ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
         return scriptNull();
     }
 
-    switch (pname) {
-    case GL_TEXTURE_MAG_FILTER:
-    case GL_TEXTURE_MIN_FILTER:
-    case GL_TEXTURE_WRAP_S:
-    case GL_TEXTURE_WRAP_T:
-        return createScriptValue(static_cast<GLenum>(params));
-    default:
-        setGLError(GL_INVALID_ENUM);
-        break;
-    }
-    return scriptNull();
+    return createScriptValue(static_cast<GLenum>(params));
 }
 
 ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
@@ -1910,6 +1915,12 @@ void WebGLRenderingContext::texParameterf(GLenum target, GLenum pname,
 {
     ENTER_CONTEXT_SCOPE();
 
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
+        !isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
     if (m_boundTextures.find(target) == m_boundTextures.end()) {
         // If an attempt is made to call this function with no WebGLTexture
         // bound, an INVALID_OPERATION error is generated.
@@ -1924,6 +1935,12 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
                                           GLint param)
 {
     ENTER_CONTEXT_SCOPE();
+
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
+        !isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
 
     if (m_boundTextures.find(target) == m_boundTextures.end()) {
         // If an attempt is made to call this function with no WebGLTexture
