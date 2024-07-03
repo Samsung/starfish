@@ -90,11 +90,12 @@ Thread::Thread(ThreadClient* client, const char* name)
 
 void Thread::finishUnjoined()
 {
+    Locker<Mutex> l(*m_mutex);
     if (!m_threadData) {
         return;
     }
 
-    STARFISH_ASSERT(m_threadData->m_messageLoop->calledOnValidThread());
+    STARFISH_RELEASE_ASSERT(m_threadData->m_messageLoop->calledOnValidThread());
 
     // NOTE: if this thread is still running, we send it a stop signal. A
     // worker, which possibly lives till here, should use StoppableThreadWorker.
@@ -103,7 +104,6 @@ void Thread::finishUnjoined()
     }
 
     {
-        Locker<Mutex> l(*m_threadData->m_thread->m_mutex);
         m_alive = false;
         if (m_threadData->m_joinHandle != SIZE_MAX) {
             m_threadData->m_messageLoop->removeIdlerWithNoGCRooting(
@@ -223,7 +223,19 @@ void Thread::cleanupHandler(void* data)
 {
     STARFISH_LOG_INFO("Thread::cleanupHandler");
     ThreadData* td = (ThreadData*)data;
-    td->m_thread->joinIfNeeds();
+    if (td && td->m_thread->m_alive) {
+        td->m_thread->m_alive = false;
+        td->m_joinHandle =
+            td->m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t handle, void* data) {
+                    ThreadData* d = (ThreadData*)data;
+                    if (d->m_thread) {
+                        d->m_thread->finishUnjoined();
+                    }
+                },
+                td);
+    }
 }
 
 bool Thread::stop()
