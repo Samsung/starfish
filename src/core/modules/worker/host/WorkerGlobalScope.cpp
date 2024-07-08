@@ -38,6 +38,9 @@
 #include "core/dom/ErrorEvent.h"
 #include "core/dom/DOMException.h"
 
+#include "core/modules/indexeddb/IDBStorageManager.h"
+#include "core/modules/indexeddb/IDBFactory.h"
+
 #include "core/page/WindowOrWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -267,6 +270,18 @@ Performance* WorkerGlobalScope::performance()
     TRACE_SCOPE(HOST);
     return Performance::create(executionContext());
 }
+
+#if defined(STARFISH_ENABLE_IDB)
+IDBFactory* WorkerGlobalScope::indexedDB()
+{
+    if (!m_idbFactory) {
+        IDBStorageManager::instance().start();
+        m_idbFactory = new IDBFactory(executionContext());
+    }
+
+    return m_idbFactory;
+}
+#endif
 
 DEFINE_EVENT_LISTENER(WorkerGlobalScope, error);
 

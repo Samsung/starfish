@@ -1,0 +1,28 @@
+// https://w3c.github.io/IndexedDB/#cursor-interface
+
+[ STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker),
+]
+interface IDBCursor {
+  // [Unimplemented] readonly attribute (IDBObjectStore or IDBIndex) source;
+  [Unimplemented] readonly attribute IDBCursorDirection direction;
+  [Unimplemented] readonly attribute any key;
+  [Unimplemented] readonly attribute any primaryKey;
+  [Unimplemented, SameObject] readonly attribute IDBRequest request;
+
+  [Unimplemented] undefined advance([EnforceRange] unsigned long count);
+  [Unimplemented] undefined continue(optional any key);
+  [Unimplemented] undefined continuePrimaryKey(any key, any primaryKey);
+
+  [Unimplemented, NewObject] IDBRequest update(any value);
+  [Unimplemented, NewObject] IDBRequest delete();
+};
+
+[STARFISH_ENABLE_IDB]
+enum IDBCursorDirection {
+  "next",
+  "nextunique",
+  "prev",
+  "prevunique"
+};

@@ -49,6 +49,7 @@ class WebView;
 class Scrolling;
 class LayoutUnit;
 class CustomElementRegistry;
+class IDBFactory;
 
 typedef void (*TimerHandler)(void* data);
 using Disposer = std::function<void()>;
@@ -276,6 +277,10 @@ public:
     void setEvent(Event* e);
 #endif
 
+#if defined(STARFISH_ENABLE_IDB)
+    IDBFactory* indexedDB();
+#endif
+
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
     void screenShot(std::string filePath, void (*callback)(void*), void* data);
@@ -404,6 +409,10 @@ private:
 
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
+#endif
+
+#if defined(STARFISH_ENABLE_IDB)
+    IDBFactory* m_idbFactory{ nullptr };
 #endif
 
     uint32_t m_width;

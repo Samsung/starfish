@@ -68,6 +68,7 @@ ENDIF()
 # STARFISH_ENABLE_WEBRTC: enable WebRTC
 # STARFISH_ENABLE_WEBSOCKET: enable WebSocket spec
 # STARFISH_ENABLE_WASM : enable WebAssembly
+# STARFISH_ENABLE_IDB : enable IndexedDB
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -105,6 +106,7 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_ANIMATION
         -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_ENABLE_WEBAUDIO
+        -DSTARFISH_ENABLE_IDB
     )
 ENDIF()
 

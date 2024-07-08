@@ -1,0 +1,28 @@
+// https://w3c.github.io/IndexedDB/#index-interface
+
+[
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker),
+]
+interface IDBIndex {
+  attribute DOMString name;
+  [SameObject] readonly attribute IDBObjectStore objectStore;
+  readonly attribute any keyPath;
+  readonly attribute boolean multiEntry;
+  readonly attribute boolean unique;
+
+  [Unimplemented, NewObject] IDBRequest get(any query);
+  [Unimplemented, NewObject] IDBRequest getKey(any query);
+  // [EnforceRange] unsigned long count
+  [Unimplemented, NewObject] IDBRequest getAll(optional any query,
+                                optional unsigned long count);
+  [Unimplemented, NewObject] IDBRequest getAllKeys(optional any query,
+                                    optional unsigned long count);
+  [Unimplemented, NewObject] IDBRequest count(optional any query);
+
+  [Unimplemented, NewObject] IDBRequest openCursor(optional any query,
+                                    optional IDBCursorDirection direction = "next");
+  [Unimplemented, NewObject] IDBRequest openKeyCursor(optional any query,
+                                       optional IDBCursorDirection direction = "next");
+};

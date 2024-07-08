@@ -1,0 +1,23 @@
+// https://w3c.github.io/IndexedDB/#factory-interface
+
+[ 
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker),
+]
+interface IDBFactory {
+  // optional [EnforceRange] unsigned long long version
+  [Unimplemented, NewObject, RaisesException] IDBOpenDBRequest open(DOMString name,
+                                    optional unsigned long long version);
+  [Unimplemented, NewObject] IDBOpenDBRequest deleteDatabase(DOMString name);
+
+  [Unimplemented] Promise<sequence<IDBDatabaseInfo>> databases();
+
+  [Unimplemented] short cmp(any first, any second);
+};
+
+[STARFISH_ENABLE_IDB]
+dictionary IDBDatabaseInfo {
+  DOMString name;
+  unsigned long long version;
+};

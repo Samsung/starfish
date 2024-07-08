@@ -35,6 +35,7 @@ class WorkerLocation;
 class WorkerNavigator;
 class ErrorEventInit;
 class ResourceURL;
+class IDBFactory;
 
 typedef void (*TimerHandler)(void* data);
 
@@ -140,6 +141,10 @@ public:
     CustomStorage* workerStorage();
     void initCacheStorage();
 
+#if defined(STARFISH_ENABLE_IDB)
+    IDBFactory* indexedDB();
+#endif
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(error);
@@ -158,6 +163,10 @@ protected:
     Crypto* m_crypto;
     std::atomic_bool m_closing;
 
+#if defined(STARFISH_ENABLE_IDB)
+    IDBFactory* m_idbFactory{ nullptr };
+#endif
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_webWorker));
@@ -169,6 +178,9 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_crypto));
+#if defined(STARFISH_ENABLE_IDB)
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_idbFactory));
+#endif
     }
 
     void initGlobalScope(ResourceURL* url, String* charSet);
