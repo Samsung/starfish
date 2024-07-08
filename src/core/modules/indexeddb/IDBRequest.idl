@@ -1,0 +1,26 @@
+// https://w3c.github.io/IndexedDB/#request-api
+
+[ 
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker)
+]
+interface IDBRequest : EventTarget {
+  readonly attribute any result;
+  readonly attribute DOMException? error;
+  // any -> (IDBObjectStore or IDBIndex or IDBCursor)?
+  // TODO: Fix the "Enable_XXX" keyword for the union type.
+  readonly attribute any source;
+  readonly attribute IDBTransaction? transaction;
+  readonly attribute IDBRequestReadyState readyState;
+
+  // Event handlers:
+  [Unimplemented] attribute EventHandler onsuccess;
+  [Unimplemented] attribute EventHandler onerror;
+};
+
+[STARFISH_ENABLE_IDB]
+enum IDBRequestReadyState {
+  "pending",
+  "done"
+};

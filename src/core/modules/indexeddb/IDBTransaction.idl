@@ -1,0 +1,30 @@
+// https://w3c.github.io/IndexedDB/#transaction
+
+[
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker)
+]
+interface IDBTransaction : EventTarget {
+  readonly attribute DOMStringList objectStoreNames;
+  readonly attribute IDBTransactionMode mode;
+  readonly attribute IDBTransactionDurability durability;
+  [SameObject] readonly attribute IDBDatabase db;
+  readonly attribute DOMException? error;
+
+  [Unimplemented] IDBObjectStore objectStore(DOMString name);
+  [Unimplemented] undefined commit();
+  [Unimplemented] undefined abort();
+
+  // Event handlers:
+  [Unimplemented] attribute EventHandler onabort;
+  [Unimplemented] attribute EventHandler oncomplete;
+  [Unimplemented] attribute EventHandler onerror;
+};
+
+[STARFISH_ENABLE_IDB]
+enum IDBTransactionMode {
+  "readonly",
+  "readwrite",
+  "versionchange"
+};

@@ -59,6 +59,8 @@
 #include "core/style/MediaQueryListMatcher.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/crypto/Crypto.h"
+#include "core/modules/indexeddb/IDBStorageManager.h"
+#include "core/modules/indexeddb/IDBFactory.h"
 #include "binding/ScriptBindingSecurity.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -133,6 +135,10 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     ServiceWorkerProcessManager::instance()->registerActiveGlobalScope(uid(),
                                                                        this);
 #endif
+
+#if defined(STARFISH_ENABLE_IDB)
+    IDBStorageManager::instance();
+#endif
 }
 
 Starfish* Window::starfish() const
@@ -202,6 +208,10 @@ void Window::dispose()
     }
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     ServiceWorkerProcessManager::instance()->deregisterActiveGlobalScope(uid());
+#endif
+
+#if defined(STARFISH_ENABLE_IDB)
+    IDBStorageManager::instance().dispose();
 #endif
 }
 
@@ -981,4 +991,17 @@ void Window::setEvent(Event* e)
     m_currentDispatchingEvent = e;
 }
 #endif
+
+#if defined(STARFISH_ENABLE_IDB)
+IDBFactory* Window::indexedDB()
+{
+    if (!m_idbFactory) {
+        IDBStorageManager::instance().start();
+        m_idbFactory = new IDBFactory(executionContext());
+    }
+
+    return m_idbFactory;
+}
+#endif
+
 } // namespace Starfish

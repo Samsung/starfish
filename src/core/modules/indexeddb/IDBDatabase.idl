@@ -1,0 +1,43 @@
+// https://w3c.github.io/IndexedDB/#database-interface
+
+[
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker),
+]
+interface IDBDatabase : EventTarget {
+  readonly attribute DOMString name;
+  readonly attribute unsigned long long version;
+  readonly attribute DOMStringList objectStoreNames;
+
+  [Unimplemented, NewObject] IDBTransaction transaction((DOMString or sequence<DOMString>) storeNames,
+                                         optional IDBTransactionMode mode = "readonly",
+                                         optional IDBTransactionOptions options); // options = {}
+  [Unimplemented] undefined close();
+
+
+  [Unimplemented, NewObject] IDBObjectStore createObjectStore(
+    DOMString name,
+    optional IDBObjectStoreParameters options); // options = {}
+  [Unimplemented] undefined deleteObjectStore(DOMString name);
+
+  // Event handlers:
+  [Unimplemented] attribute EventHandler onabort;
+  [Unimplemented] attribute EventHandler onclose;
+  [Unimplemented] attribute EventHandler onerror;
+  [Unimplemented] attribute EventHandler onversionchange;
+};
+
+[STARFISH_ENABLE_IDB]
+enum IDBTransactionDurability { "default", "strict", "relaxed" };
+
+[STARFISH_ENABLE_IDB]
+dictionary IDBTransactionOptions {
+  IDBTransactionDurability durability = "default";
+};
+
+[STARFISH_ENABLE_IDB]
+dictionary IDBObjectStoreParameters {
+  (DOMString or sequence<DOMString>)? keyPath = null;
+  boolean autoIncrement = false;
+};

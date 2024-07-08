@@ -1,0 +1,13 @@
+// https://w3c.github.io/IndexedDB/#factory-interface
+
+// partial interface mixin WindowOrWorkerGlobalScope {
+//   [SameObject] readonly attribute IDBFactory indexedDB;
+// };
+
+partial interface Window {
+  [STARFISH_ENABLE_IDB, SameObject] readonly attribute IDBFactory indexedDB;
+};
+
+partial interface WorkerGlobalScope {
+  [STARFISH_ENABLE_IDB, SameObject] readonly attribute IDBFactory indexedDB;
+};

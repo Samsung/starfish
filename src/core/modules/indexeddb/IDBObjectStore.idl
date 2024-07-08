@@ -1,0 +1,48 @@
+// https://w3c.github.io/IndexedDB/#object-store-interface
+
+[
+  STARFISH_ENABLE_IDB,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker),
+]
+interface IDBObjectStore {
+  attribute DOMString name;
+  readonly attribute any keyPath;
+  readonly attribute DOMStringList indexNames;
+  [SameObject] readonly attribute IDBTransaction transaction;
+  readonly attribute boolean autoIncrement;
+
+  [Unimplemented, NewObject, RaisesException] IDBRequest put(any value, optional any key);
+  [Unimplemented, NewObject, RaisesException] IDBRequest add(any value, optional any key);
+  [Unimplemented, NewObject] IDBRequest delete(any query);
+  [Unimplemented, NewObject] IDBRequest clear();
+  [Unimplemented, NewObject, RaisesException] IDBRequest get(any query);
+  [Unimplemented, NewObject] IDBRequest getKey(any query);
+  // optional [EnforceRange] unsigned long count
+  [Unimplemented, NewObject] IDBRequest getAll(optional any query,
+                                optional unsigned long count);
+  // optional [EnforceRange] unsigned long count
+  [Unimplemented, NewObject] IDBRequest getAllKeys(optional any query,
+                                    optional unsigned long count);
+  [Unimplemented, NewObject] IDBRequest count(optional any query);
+
+  [Unimplemented, NewObject] IDBRequest openCursor(optional any query,
+                                    optional IDBCursorDirection direction = "next");
+  [Unimplemented, NewObject] IDBRequest openKeyCursor(optional any query,
+                                       optional IDBCursorDirection direction = "next");
+
+  [Unimplemented] IDBIndex index(DOMString name);
+
+  // IDBIndexParameters options = {}
+  [Unimplemented, NewObject] IDBIndex createIndex(DOMString name,
+                                   (DOMString or sequence<DOMString>) keyPath,
+                                   optional IDBIndexParameters options);
+  [Unimplemented] undefined deleteIndex(DOMString name);
+
+};
+
+[STARFISH_ENABLE_IDB, Unimplemented]
+dictionary IDBIndexParameters {
+  boolean unique = false;
+  boolean multiEntry = false;
+};
