@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "core/modules/worker/util/Logger.h"
+#include "core/util/debug/Logger.h"
 #include "core/util/GlobalOptions.h"
 
 #include <map>

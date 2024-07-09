@@ -25,7 +25,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/message_loop/MessageLoop.h"

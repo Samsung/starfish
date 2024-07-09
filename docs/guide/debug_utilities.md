@@ -2,7 +2,7 @@
 
 ## Trace macros
 
-This module provides macros defined in `Trace.h`. All macros can be toggled with
+This module provides macros defined in [`Trace.h`](../../src/core/util/debug/Trace.h). All macros can be toggled with
 the `TRACE=value` environment variable. Types inheriting from std::stream are
 supported. Each macro checks the current thread and adds a human-readable thread
 ID prefix (e.g., `[1]`).

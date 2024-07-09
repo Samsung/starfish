@@ -28,7 +28,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerHostManager.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/worker/WorkerSettings.h"

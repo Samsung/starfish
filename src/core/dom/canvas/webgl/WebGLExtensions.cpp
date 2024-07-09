@@ -22,7 +22,7 @@
 #include "WebGLExtensions.h"
 #include "core/util/String.h"
 #include <unordered_set>
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include <iostream>
 #include <sstream>
 #include <vector>

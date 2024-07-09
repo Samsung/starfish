@@ -25,7 +25,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"

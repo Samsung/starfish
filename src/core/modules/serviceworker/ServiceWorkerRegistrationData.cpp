@@ -30,7 +30,7 @@
 
 #include "core/dom/Event.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/host/ExtendableEvent.h"
 

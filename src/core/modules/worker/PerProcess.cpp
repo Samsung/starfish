@@ -24,7 +24,7 @@
 #include "core/util/String.h"
 
 #include "core/modules/worker/WorkerConfig.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/threading/ThreadPool.h"

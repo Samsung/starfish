@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 
 #include "StarfishConfig.h"
+#include "core/util/debug/Trace.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
 #include "core/page/Serializer.h"
@@ -27,7 +28,6 @@
 #include "core/dom/MessageEvent.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"

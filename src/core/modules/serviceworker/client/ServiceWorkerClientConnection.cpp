@@ -53,7 +53,7 @@
 #include "core/modules/serviceworker/client/FetchEventHandler.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/EventTarget.h"

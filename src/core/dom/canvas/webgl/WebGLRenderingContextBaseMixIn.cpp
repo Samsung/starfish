@@ -23,7 +23,7 @@
 #include "WebGLRenderingContextBaseMixIn.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/renderer/Renderer.h"

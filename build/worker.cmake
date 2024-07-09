@@ -131,6 +131,7 @@ FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
 FILE (GLOB STARFISH_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/util/*.cpp
     ${STARFISH_ROOT}/src/core/fileapi/*.cpp
+    ${STARFISH_ROOT}/src/core/util/debug/*.cpp
     ${STARFISH_ROOT}/src/core/extra/Console.cpp
     ${STARFISH_ROOT}/src/core/extra/MimeType.cpp
     ${STARFISH_ROOT}/src/core/page/WebBase.cpp

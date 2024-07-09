@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "WebGLUtils.h"
 #include "platform/canvas/gl/IncludeGL.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/util/String.h"
 #include <unordered_map>
 
