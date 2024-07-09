@@ -23,7 +23,7 @@
 #define __StarfishRTCCertificate__
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 

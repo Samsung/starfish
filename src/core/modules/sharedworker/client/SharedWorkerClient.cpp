@@ -25,7 +25,7 @@
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/modules/sharedworker/IPCMessageSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/client/SharedWorkerClient.h"

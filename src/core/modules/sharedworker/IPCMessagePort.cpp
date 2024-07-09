@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "core/util/debug/Trace.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/serialize/MemorySerializer.h"
 #include "core/modules/sharedworker/IPCConnection.h"
 #include "core/modules/sharedworker/IPCMessagePort.h"
 
@@ -32,7 +32,7 @@ IPCMessagePort::IPCMessagePort(ExecutionContext* executionContext,
     : MessagePort(executionContext)
     , m_connection(connection)
 {
-    m_serializer = IPCSerializer::serializeWithTransfer;
+    m_serializer = MemorySerializer::serializeWithTransfer;
 }
 
 IPCMessagePort::IPCMessagePort(ExecutionContext* executionContext)

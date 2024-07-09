@@ -51,7 +51,7 @@
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "core/page/GlobalScope.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/style/CSSParser.h"

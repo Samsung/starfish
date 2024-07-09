@@ -17,281 +17,101 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
+#if defined(STARFISH_ENABLE_SHARED_WORKER) || defined(STARFISH_ENABLE_IDB)
+
 #include <EscargotPublic.h>
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/util/debug/Trace.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/util/debug/Trace.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
+#include "core/serialize/MemorySerializer.h"
 
 namespace Starfish {
 
-class IPCBufferWriter : public gc {
-public:
-    static const size_t kBufferMaxSize = 128000;
+MemorySerializeWriter::MemorySerializeWriter()
+    : MemorySerializeWriter(new GCVector<char>())
+{
+}
 
-    IPCBufferWriter()
-        : IPCBufferWriter(new GCVector<char>())
-    {
-    }
+MemorySerializeWriter::MemorySerializeWriter(GCVector<char>* buffer)
+    : m_buffer(buffer)
+    , m_size(0)
+    , m_isError(false)
+{
+}
 
-    IPCBufferWriter(GCVector<char>* buffer)
-        : m_buffer(buffer)
-        , m_size(0)
-        , m_isError(false)
-    {
-    }
-
-    template <typename T>
-    void write(T value)
-    {
-        writeBuffer(reinterpret_cast<const char*>(&value), sizeof(T));
-    }
-
-    template <typename T>
-    void write(const T* value, const size_t length)
-    {
-        writeBuffer(reinterpret_cast<const char*>(value), length * sizeof(T));
-    }
-
-    const GCVector<char>* buffer() const
-    {
-        return m_buffer;
-    }
-
-    bool isError() const
-    {
-        return m_isError;
-    }
-
-    void writeTerminator()
-    {
-        write<char>('\0');
-    }
-
-private:
-    GCVector<char>* m_buffer;
-    size_t m_size;
-    bool m_isError;
-
-    bool isOverflown(const size_t size)
-    {
-        if (m_size + size >= kBufferMaxSize) {
-            m_isError = true;
-            TRACE(IPC, "buffer overflow");
-            return true;
-        }
-        return false;
-    }
-
-    void writeBuffer(const char* source, const size_t size)
-    {
-        if (m_isError || isOverflown(size)) {
-            return;
-        }
-
-        m_buffer->insert(m_buffer->end(), source, source + size);
-        m_size += size;
-    }
-};
-
-class IPCBufferReader : public gc {
-public:
-    IPCBufferReader(const char* data, const size_t length)
-        : m_data(data)
-        , m_end(data + length)
-        , m_position(const_cast<char*>(data))
-        , m_isError(false)
-    {
-    }
-
-    template <typename T>
-    void read(T& value)
-    {
-        size_t size = sizeof(T);
-
-        if (m_isError || isOverflown(size)) {
-            return;
-        }
-
-        value = *(reinterpret_cast<T*>(m_position));
-        m_position += size;
-    }
-
-    void readRawBytes(const size_t size, char*& data)
-    {
-        if (m_isError || isOverflown(size)) {
-            return;
-        }
-
-        data = m_position;
-        m_position += size;
-    }
-
-    bool checkValue(const char value)
-    {
-        if (m_isError || isOverflown(sizeof(char))) {
-            return false;
-        }
-
-        if (value != *m_position) {
-            m_isError = true;
-            TRACE(IPC, "value does not match");
-            return false;
-        }
-
+bool MemorySerializeWriter::isOverflown(const size_t size)
+{
+    if (m_size + size >= kBufferMaxSize) {
+        m_isError = true;
+        TRACE(SERIALIZE, "buffer overflow");
         return true;
     }
-
-    bool isError() const
-    {
-        return m_isError;
-    }
-
-private:
-    const char* m_data;
-    const char* const m_end;
-    char* m_position;
-    bool m_isError;
-
-    bool isOverflown(const size_t size)
-    {
-        if (m_position + size > m_end) {
-            m_isError = true;
-            TRACE(IPC, "buffer overflow");
-            return true;
-        }
-        return false;
-    }
-};
-
-IPCMessageSerializer::IPCMessageSerializer(const std::string& messageID)
-    : m_writer(new IPCBufferWriter())
-{
-    writeString(messageID);
-}
-
-void IPCMessageSerializer::writeBool(const bool value)
-{
-    m_writer->write<IPCMessageTag>(IPCMessageTag::kBoolean);
-    m_writer->write<bool>(value);
-}
-
-void IPCMessageSerializer::writeUInt32(const uint32_t value)
-{
-    m_writer->write<IPCMessageTag>(IPCMessageTag::kUInt32);
-    m_writer->write<uint32_t>(value);
-}
-
-void IPCMessageSerializer::writeSize(const size_t value)
-{
-    m_writer->write<IPCMessageTag>(IPCMessageTag::kSizeNumber);
-    m_writer->write<size_t>(value);
-}
-
-void IPCMessageSerializer::writeString(const std::string& value)
-{
-    m_writer->write<IPCMessageTag>(IPCMessageTag::kString);
-    m_writer->write<size_t>(value.length());
-    m_writer->write<char>(value.data(), value.length());
-}
-
-void IPCMessageSerializer::writeTerminator()
-{
-    m_writer->writeTerminator();
-}
-
-const char* IPCMessageSerializer::data() const
-{
-    return m_writer->buffer()->data();
-}
-
-size_t IPCMessageSerializer::size() const
-{
-    return m_writer->buffer()->size();
-}
-
-bool IPCMessageSerializer::isError() const
-{
-    return m_writer->isError();
-}
-
-IPCMessageDeserializer::IPCMessageDeserializer(const char* data,
-                                               const size_t length)
-    : m_reader(new IPCBufferReader(data, length))
-{
-    m_messageID = readString();
-    TRACE(IPC, "received message:", m_messageID.c_str());
-}
-
-bool IPCMessageDeserializer::checkTag(IPCMessageTag tag)
-{
-    if (m_reader->checkValue(static_cast<char>(tag))) {
-        char tag;
-        m_reader->read<char>(tag);
-        return true;
-    }
-
     return false;
 }
 
-bool IPCMessageDeserializer::readBool()
+void MemorySerializeWriter::writeBuffer(const char* source, const size_t size)
 {
-    bool value = false;
-    if (checkTag(IPCMessageTag::kBoolean)) {
-        m_reader->read<bool>(value);
+    if (m_isError || isOverflown(size)) {
+        return;
     }
 
-    return value;
+    m_buffer->insert(m_buffer->end(), source, source + size);
+    m_size += size;
 }
 
-uint32_t IPCMessageDeserializer::readUInt32()
+void MemorySerializeWriter::writeTerminator()
 {
-    uint32_t value = 0;
-    if (checkTag(IPCMessageTag::kUInt32)) {
-        m_reader->read<uint32_t>(value);
+    write<char>('\0');
+}
+
+MemorySerializeReader::MemorySerializeReader(const char* data,
+                                             const size_t length)
+    : m_data(data)
+    , m_end(data + length)
+    , m_position(const_cast<char*>(data))
+    , m_isError(false)
+{
+}
+
+void MemorySerializeReader::readRawBytes(const size_t size, char*& data)
+{
+    if (m_isError || isOverflown(size)) {
+        return;
     }
 
-    return value;
+    data = m_position;
+    m_position += size;
 }
 
-size_t IPCMessageDeserializer::readSize()
+bool MemorySerializeReader::checkValue(const char value)
 {
-    size_t value = 0;
-    if (checkTag(IPCMessageTag::kSizeNumber)) {
-        m_reader->read<size_t>(value);
+    if (m_isError || isOverflown(sizeof(char))) {
+        return false;
     }
 
-    return value;
-}
-
-std::string IPCMessageDeserializer::readString()
-{
-    std::string value;
-    if (checkTag(IPCMessageTag::kString)) {
-        size_t length = 0;
-        m_reader->read<size_t>(length);
-
-        char* data = nullptr;
-        m_reader->readRawBytes(length, data);
-
-        value = std::string(data, length);
+    if (value != *m_position) {
+        m_isError = true;
+        TRACE(SERIALIZE, "value does not match");
+        return false;
     }
 
-    return value;
+    return true;
 }
 
-bool IPCMessageDeserializer::isError() const
+bool MemorySerializeReader::isOverflown(const size_t size)
 {
-    return m_reader->isError();
+    if (m_position + size > m_end) {
+        m_isError = true;
+        TRACE(SERIALIZE, "buffer overflow");
+        return true;
+    }
+    return false;
 }
 
-// Serialize ScriptValue
 enum class ScriptValueSerializerTag : uint8_t {
     Undefined,
     Null,
@@ -309,8 +129,8 @@ class StructuredSerialize : public gc {
 public:
     StructuredSerialize(ExecutionContext* executionContext)
         : m_executionContext(executionContext)
-        , m_data(new IPCSerializedVectorData())
-        , m_writer(new IPCBufferWriter(m_data->vectorData()))
+        , m_data(new MemorySerializedVectorData())
+        , m_writer(new MemorySerializeWriter(m_data->vectorData()))
     {
     }
 
@@ -324,15 +144,15 @@ public:
             SerializedTypedData::Type::RawScriptValue, data);
     }
 
-    IPCBufferWriter* writer()
+    MemorySerializeWriter* writer()
     {
         return m_writer;
     }
 
 private:
     ExecutionContext* m_executionContext;
-    IPCSerializedVectorData* m_data;
-    IPCBufferWriter* m_writer;
+    MemorySerializedVectorData* m_data;
+    MemorySerializeWriter* m_writer;
 
     void serializeScriptValue(ScriptValue value)
     {
@@ -435,7 +255,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    IPCBufferReader m_reader;
+    MemorySerializeReader m_reader;
 
     void deserializeScriptValue(ScriptValue& scriptValue)
     {
@@ -521,18 +341,18 @@ private:
     }
 };
 
-IPCSerializedVectorData::IPCSerializedVectorData()
+MemorySerializedVectorData::MemorySerializedVectorData()
     : m_vectorData(new GCVector<char>())
 {
 }
 
-IPCSerializedData::IPCSerializedData(const char* data, size_t size)
+MemorySerializedData::MemorySerializedData(const char* data, size_t size)
     : m_data(data)
     , m_size(size)
 {
 }
 
-void IPCSerializer::serializeWithTransfer(
+void MemorySerializer::serializeWithTransfer(
     ExecutionContext* executionContext, ScriptValue value,
     const GCAtomicVector<ScriptObject>& transferValues,
     SerializeWithTransferResult& result)
@@ -540,10 +360,10 @@ void IPCSerializer::serializeWithTransfer(
     StructuredSerialize* serializer = new StructuredSerialize(executionContext);
 
     result.m_serialized = serializer->serialize(value);
-    result.m_deserializer = IPCSerializer::deserializeWithTransfer;
+    result.m_deserializer = MemorySerializer::deserializeWithTransfer;
 }
 
-void IPCSerializer::deserializeWithTransfer(
+void MemorySerializer::deserializeWithTransfer(
     ExecutionContext* executionContext, SerializeWithTransferResult& serialized,
     DeserializeWithTransferResult& result)
 {

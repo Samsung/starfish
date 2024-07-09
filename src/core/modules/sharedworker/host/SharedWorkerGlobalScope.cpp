@@ -25,10 +25,10 @@
 #include "core/util/debug/Trace.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/MessageEvent.h"
+#include "core/serialize/MemorySerializer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
@@ -141,7 +141,7 @@ void SharedWorkerGlobalScope::requestConnection(MessagePortConnectionInfo* info)
     IPCMessagePort* targetMessagePort =
         new IPCMessagePort(m_executionContext, connection);
 
-    messagePort->setSerializer(IPCSerializer::serializeWithTransfer);
+    messagePort->setSerializer(MemorySerializer::serializeWithTransfer);
     MessagePort::entangle(messagePort, targetMessagePort);
 
     // dispatch 'connect' event

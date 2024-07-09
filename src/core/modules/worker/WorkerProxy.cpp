@@ -21,7 +21,7 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
 #include "core/page/WebBase.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/MessageEvent.h"

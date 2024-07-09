@@ -21,7 +21,7 @@
 #define __StarfishDOMMatrixReadOnly__
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include <SkMatrix44.h>
 #include "binding/generated/DOMStringOrSequenceOfdoubleUnion.h"
 #include "core/dom/DOMMatrix2DInit.h"

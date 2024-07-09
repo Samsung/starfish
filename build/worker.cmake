@@ -136,7 +136,7 @@ FILE (GLOB STARFISH_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/extra/MimeType.cpp
     ${STARFISH_ROOT}/src/core/page/WebBase.cpp
     ${STARFISH_ROOT}/src/core/page/NavigatorMixin.cpp
-    ${STARFISH_ROOT}/src/core/page/Serializer.cpp
+    ${STARFISH_ROOT}/src/core/serialize/*.cpp
     ${STARFISH_ROOT}/src/core/modules/message_loop/*.cpp
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp

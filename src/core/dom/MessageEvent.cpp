@@ -23,7 +23,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/MessagePort.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "core/page/WebBase.h"
 
 #include "core/dom/MessageEvent.h"
