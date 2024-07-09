@@ -25,7 +25,7 @@
 #include "core/page/WebView.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/page/BrowsingContext.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/WebOrigin.h"
 #include "core/dom/DOMException.h"

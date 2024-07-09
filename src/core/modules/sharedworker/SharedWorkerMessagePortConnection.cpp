@@ -23,13 +23,12 @@
 #include "core/util/debug/Trace.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/MemorySerializer.h"
 #include "core/dom/MessagePort.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/util/network/SocketNN.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 
 namespace Starfish {
@@ -61,8 +60,8 @@ void SharedWorkerMessagePortConnection::onReceived(Socket* socket,
     SerializeWithTransferResult* serialized = new SerializeWithTransferResult();
     serialized->m_serialized = new SerializedTypedData(
         SerializedTypedData::Type::RawScriptValue,
-        new SerializedRawScriptValueData(new IPCSerializedData(data, size)));
-    serialized->m_deserializer = IPCSerializer::deserializeWithTransfer;
+        new SerializedRawScriptValueData(new MemorySerializedData(data, size)));
+    serialized->m_deserializer = MemorySerializer::deserializeWithTransfer;
 
     MessageEvent* event =
         new MessageEvent(m_messagePort->executionContext(), serialized);

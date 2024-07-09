@@ -61,7 +61,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Scrolling.h"
 #include "core/page/PopStateEvent.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceLoader.h"

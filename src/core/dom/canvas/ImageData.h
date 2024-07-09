@@ -23,7 +23,7 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 class ImageData : public ScriptWrappable, public Serializable {

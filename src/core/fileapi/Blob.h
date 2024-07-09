@@ -21,7 +21,7 @@
 #define __StarfishBlob__
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "binding/generated/BufferSourceOrBlobOrDOMStringUnion.h"
 #include "core/fileapi/BlobPropertyBag.h"
 

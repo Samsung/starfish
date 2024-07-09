@@ -17,74 +17,104 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-#ifndef __StarfishIPCSerializer__
-#define __StarfishIPCSerializer__
+#if defined(STARFISH_ENABLE_SHARED_WORKER) || defined(STARFISH_ENABLE_IDB)
+
+#ifndef __StarfishMemorySerializer__
+#define __StarfishMemorySerializer__
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 
-class IPCBufferWriter;
-class IPCBufferReader;
 class SerializeWithTransferResult;
 class DeserializeWithTransferResult;
 
-enum class IPCMessageTag : char {
-    kUndefine = 0,
-    kBoolean,
-    kUInt32,
-    kSizeNumber,
-    kString,
-};
-
-class IPCMessageSerializer : public gc {
+class MemorySerializeWriter : public gc {
 public:
-    IPCMessageSerializer(const std::string& messageID);
+    static const size_t kBufferMaxSize = 128000;
 
-    void writeBool(const bool value);
-    void writeUInt32(const uint32_t value);
-    void writeSize(const size_t value);
-    void writeString(const std::string& value);
-    void writeTerminator();
+    MemorySerializeWriter();
 
-    const char* data() const;
+    MemorySerializeWriter(GCVector<char>* buffer);
 
-    size_t size() const;
-
-    bool isError() const;
-
-private:
-    IPCBufferWriter* m_writer;
-};
-
-class IPCMessageDeserializer : public gc {
-public:
-    IPCMessageDeserializer(const char* data, const size_t length);
-
-    std::string messageID() const
+    template <typename T>
+    void write(T value)
     {
-        return m_messageID;
+        writeBuffer(reinterpret_cast<const char*>(&value), sizeof(T));
     }
 
-    bool checkTag(const IPCMessageTag tag);
+    template <typename T>
+    void write(const T* value, const size_t length)
+    {
+        writeBuffer(reinterpret_cast<const char*>(value), length * sizeof(T));
+    }
 
-    bool readBool();
-    uint32_t readUInt32();
-    size_t readSize();
-    std::string readString();
+    const GCVector<char>* buffer() const
+    {
+        return m_buffer;
+    }
 
-    bool isError() const;
+    bool isError() const
+    {
+        return m_isError;
+    }
+
+    void writeTerminator();
 
 private:
-    IPCBufferReader* m_reader;
-    std::string m_messageID;
+    GCVector<char>* m_buffer;
+    size_t m_size;
+    bool m_isError;
+
+    bool isOverflown(const size_t size);
+
+    void writeBuffer(const char* source, const size_t size);
 };
 
-class IPCSerializedVectorData : public SerializedRawScriptValueDataInternal {
+class MemorySerializeReader : public gc {
 public:
-    IPCSerializedVectorData();
+    MemorySerializeReader(const char* data, const size_t length);
+
+    template <typename T>
+    void read(T& value)
+    {
+        size_t size = sizeof(T);
+
+        if (m_isError || isOverflown(size)) {
+            return;
+        }
+
+        value = *(reinterpret_cast<T*>(m_position));
+        m_position += size;
+    }
+
+    void readRawBytes(const size_t size, char*& data);
+
+    bool checkValue(const char value);
+
+    bool isError() const
+    {
+        return m_isError;
+    }
+
+    void setError()
+    {
+        m_isError = true;
+    }
+
+private:
+    const char* m_data;
+    const char* const m_end;
+    char* m_position;
+    bool m_isError;
+
+    bool isOverflown(const size_t size);
+};
+
+class MemorySerializedVectorData : public SerializedRawScriptValueDataInternal {
+public:
+    MemorySerializedVectorData();
 
     const char* data() const override
     {
@@ -102,9 +132,9 @@ private:
     GCVector<char>* m_vectorData;
 };
 
-class IPCSerializedData : public SerializedRawScriptValueDataInternal {
+class MemorySerializedData : public SerializedRawScriptValueDataInternal {
 public:
-    IPCSerializedData(const char* data, size_t size);
+    MemorySerializedData(const char* data, size_t size);
 
     const char* data() const override
     {
@@ -121,7 +151,7 @@ private:
     size_t m_size;
 };
 
-class IPCSerializer {
+class MemorySerializer {
 public:
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,

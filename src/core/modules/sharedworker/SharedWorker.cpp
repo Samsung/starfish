@@ -26,9 +26,9 @@
 #include "core/dom/WebOrigin.h"
 #include "core/storage/StorageInternal.h"
 #include "core/util/debug/Trace.h"
+#include "core/serialize/MemorySerializer.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
-#include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerKey.h"
 #include "core/modules/sharedworker/SharedWorker.h"
@@ -63,7 +63,7 @@ SharedWorker::SharedWorker(ExecutionContext* executionContext,
     // ID to distinguish SharedWorker object in the client process.
     m_clientID = hash(SharedWorkerClientID::generate());
 
-    m_messagePort->setSerializer(IPCSerializer::serializeWithTransfer);
+    m_messagePort->setSerializer(MemorySerializer::serializeWithTransfer);
     MessagePort::entangle(m_messagePort,
                           new IPCMessagePort(m_executionContext));
 

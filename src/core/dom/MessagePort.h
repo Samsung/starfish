@@ -22,7 +22,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/dom/StructuredSerializeOptions.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 

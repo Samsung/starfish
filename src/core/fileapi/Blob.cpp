@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/fileapi/Blob.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 #include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
 #include "binding/generated/ArrayBufferViewOrArrayBufferUnion.h"

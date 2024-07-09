@@ -23,7 +23,7 @@ using namespace Escargot;
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 

@@ -21,7 +21,7 @@
 #define __StarfishImageBitmap__
 
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
+#include "core/serialize/Serializer.h"
 
 namespace Starfish {
 
