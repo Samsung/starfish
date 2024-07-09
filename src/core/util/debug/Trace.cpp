@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 
 #if defined(ENABLE_TRACE)
 

@@ -20,9 +20,8 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
-
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/WorkerConfig.h"
-#include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/IPCMessageHandler.h"
 #include "core/modules/sharedworker/IPCSerializer.h"

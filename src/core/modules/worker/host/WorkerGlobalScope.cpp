@@ -31,7 +31,7 @@
 #include "core/modules/worker/host/WorkerLocation.h"
 #include "core/modules/worker/host/WorkerNavigator.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 
 #include "core/dom/ExecutionContext.h"

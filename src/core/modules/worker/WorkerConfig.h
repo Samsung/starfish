@@ -22,7 +22,7 @@
 #ifdef STARFISH_ENABLE_WORKER
 
 #include "core/util/GlobalOptions.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 
 // PATHS
 #define PATH_TMP_DIR "/tmp"

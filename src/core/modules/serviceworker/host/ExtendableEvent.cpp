@@ -27,7 +27,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"

@@ -25,7 +25,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/WebOrigin.h"
 #include "core/storage/StorageInternal.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/IPCSerializer.h"

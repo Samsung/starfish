@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 
 #include "core/modules/worker/PerProcess.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/sharedworker/IPCConnection.h"
 

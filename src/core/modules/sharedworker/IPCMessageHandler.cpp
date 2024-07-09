@@ -20,7 +20,7 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 
 #include "StarfishConfig.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
 #include "core/modules/sharedworker/IPCMessageHandler.h"

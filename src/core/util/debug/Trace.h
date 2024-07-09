@@ -17,9 +17,10 @@
  *  USA
  */
 
-#pragma once
+#ifndef __StarfishTrace__
+#define __StarfishTrace__
 
-#include "core/modules/worker/util/Logger.h"
+#include "core/util/debug/Logger.h"
 
 class Trace : public Logger {
 public:
@@ -60,5 +61,7 @@ public:
 
 #define S0(x) #x
 #define KV(x) S0(x), x
+
+#endif
 
 #endif

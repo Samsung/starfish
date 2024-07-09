@@ -28,7 +28,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLExtensions.h"
 #include "core/modules/canvas/image/NativeImageData.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/util/String.h"
 #include "core/dom/canvas/webgl/gl/GLContext.h"
 #include "core/dom/canvas/webgl/WebGLActiveInfo.h"

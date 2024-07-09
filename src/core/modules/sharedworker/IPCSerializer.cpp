@@ -26,7 +26,7 @@
 #include "core/page/Serializer.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/sharedworker/IPCSerializer.h"
 
 namespace Starfish {

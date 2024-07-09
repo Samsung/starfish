@@ -26,7 +26,7 @@
 
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/util/network/SocketNN.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 

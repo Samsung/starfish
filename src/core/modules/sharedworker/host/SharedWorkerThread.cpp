@@ -20,8 +20,8 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER) && defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/worker/util/Trace.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/sharedworker/host/SharedWorkerAgent.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"

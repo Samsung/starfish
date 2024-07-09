@@ -32,7 +32,7 @@
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"

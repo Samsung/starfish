@@ -25,7 +25,7 @@
 #include "core/dom/DOMException.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/host/FetchEvent.h"
 

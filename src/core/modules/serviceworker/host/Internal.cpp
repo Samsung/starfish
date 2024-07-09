@@ -24,7 +24,7 @@
 #include "Internal.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/page/WebBase.h"
-#include "core/modules/worker/util/Trace.h"
+#include "core/util/debug/Trace.h"
 #include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
