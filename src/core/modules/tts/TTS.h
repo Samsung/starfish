@@ -49,18 +49,9 @@ public:
             this,
             [](void* obj, void* cd) {
                 TTS* self = static_cast<TTS*>(obj);
-                self->~TTS();
+                self->destroy();
             },
             nullptr, nullptr, nullptr);
-    }
-
-    ~TTS()
-    {
-#if defined(STARFISH_TIZEN)
-        if (m_handle) {
-            destroy();
-        }
-#endif
     }
 
     bool isAccessibilityMode()
