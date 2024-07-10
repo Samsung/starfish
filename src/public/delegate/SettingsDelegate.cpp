@@ -198,18 +198,8 @@ std::string SettingsImpl::GetTTSLanguage() const
 ::LWE::IdleModeJob SettingsImpl::GetIdleModeJob() const
 {
     std::string value = GetSetting("idleModeJob");
-    if (value.compare("ClearDrawnBuffers") == 0) {
-        return ::LWE::IdleModeJob::ClearDrawnBuffers;
-    } else if (value.compare("ForceGC") == 0) {
-        return ::LWE::IdleModeJob::ForceGC;
-    } else if (value.compare("DropDecodedImageBuffer") == 0) {
-        return ::LWE::IdleModeJob::DropDecodedImageBuffer;
-    } else if (value.compare("IdleModeFull") == 0) {
-        return ::LWE::IdleModeJob::IdleModeFull;
-    } else if (value.compare("IdleModeMiddle") == 0) {
-        return ::LWE::IdleModeJob::IdleModeMiddle;
-    } else if (value.compare("IdleModeNone") == 0) {
-        return ::LWE::IdleModeJob::IdleModeNone;
+    if (value.length()) {
+        return (::LWE::IdleModeJob)std::stoi(value);
     }
     return ::LWE::IdleModeJob::IdleModeDefault;
 }
@@ -406,28 +396,7 @@ void SettingsImpl::SetWebSecurityMode(::LWE::WebSecurityMode value)
 
 void SettingsImpl::SetIdleModeJob(::LWE::IdleModeJob j)
 {
-    std::string value;
-    switch (j) {
-    case ::LWE::IdleModeJob::ClearDrawnBuffers:
-        value = "ClearDrawnBuffers";
-        break;
-    case ::LWE::IdleModeJob::ForceGC:
-        // case IdleModeJob::IdleModeMiddle:
-        value = "ForceGC";
-        break;
-    case ::LWE::IdleModeJob::DropDecodedImageBuffer:
-        value = "DropDecodedImageBuffer";
-        break;
-    case ::LWE::IdleModeJob::IdleModeNone:
-        value = "IdleModeNone";
-        break;
-    case ::LWE::IdleModeJob::IdleModeDefault:
-    // case IdleModeJob::IdleModeFull:
-    default:
-        value = "IdleModeDefault";
-        break;
-    }
-    UpdateSetting("idleModeJob", value);
+    UpdateSetting("idleModeJob", std::to_string((unsigned)j));
 }
 
 void SettingsImpl::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
