@@ -232,6 +232,9 @@ def wpt_webrtc():
 def wpt_intersection_observer():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/intersection-observer.res", "cairo"])
 
+def wpt_idb():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/indexeddb.res", "cairo"])
+
 def wpt_worker():
     runner = WorkerRunner('Starfish-sharedworker')
     runner.run()
@@ -248,6 +251,7 @@ def wpt_all():
     wpt_websocket()
     wpt_xhr()
     wpt_intersection_observer()
+    wpt_idb()
 
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])
