@@ -56,6 +56,11 @@ public:
 
     ~TTS()
     {
+#if defined(STARFISH_TIZEN)
+        if (m_handle) {
+            destroy();
+        }
+#endif
     }
 
     bool isAccessibilityMode()
