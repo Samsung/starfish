@@ -22,13 +22,18 @@
 #ifndef __StarfishIDBStorageManager__
 #define __StarfishIDBStorageManager__
 
+#include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
+
 namespace Starfish {
 
 class IDBTaskQueue;
+class IDBConnection;
 
 class IDBStorageManager {
 public:
     static IDBStorageManager& instance();
+
+    ~IDBStorageManager();
 
     void init();
 
@@ -38,12 +43,19 @@ public:
 
     IDBTaskQueue* taskQueue();
 
+    String* getLocalStoragePath();
+    String* getIDBLocalStoragePath();
+
+    IDBConnection* createConnection(const std::string& name,
+                                    IDBDatabaseIdentifier identifier);
+
 private:
     IDBStorageManager();
 
     bool m_isStared;
     std::mutex m_mutex;
     std::unique_ptr<IDBTaskQueue> m_taskQueue;
+    std::vector<std::unique_ptr<IDBConnection>> m_connections;
 };
 
 } // namespace Starfish

@@ -54,6 +54,10 @@ public:
     IDBObjectStore* objectStore(String* name);
 
     String* mode() const;
+    void setMode(IDBTransactionMode mode)
+    {
+        m_mode = mode;
+    }
 
     String* durability() const;
 

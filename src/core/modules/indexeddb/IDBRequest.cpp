@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
+#include "core/dom/Event.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/IDBObjectStore.h"
 #include "core/modules/indexeddb/IDBTaskQueue.h"
@@ -33,7 +35,7 @@ IDBRequest::IDBRequest(ExecutionContext* executionContext)
     , m_executionContext(executionContext)
     , m_result(scriptUndefined())
     , m_error(nullptr)
-    , m_source(scriptUndefined())
+    , m_source(scriptNull())
     , m_transaction(nullptr)
     , m_readyState(IDBRequestReadyState::Pending)
     , m_processed(false)
@@ -65,6 +67,23 @@ void IDBRequest::executeRequest(IDBObjectStore* source,
     m_transaction->addRequest(this);
 
     IDBStorageManager::instance().taskQueue()->addTask(std::move(operation));
+}
+
+void IDBRequest::dispatchSuccessEvent()
+{
+    Event* event =
+        new Event(m_executionContext, staticStrings()->m_success.localName());
+
+    EventTarget::dispatchEventIdleTimeByUA(event);
+}
+
+void IDBRequest::dispatchErrorEvent()
+{
+    Event* event =
+        new Event(m_executionContext, staticStrings()->m_error.localName(),
+                  EventInit(true, true));
+
+    EventTarget::dispatchEventIdleTimeByUA(event);
 }
 
 } // namespace Starfish

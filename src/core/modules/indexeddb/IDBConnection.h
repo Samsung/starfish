@@ -22,10 +22,14 @@
 #ifndef __StarfishIDBConnection__
 #define __StarfishIDBConnection__
 
+#include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
+
 namespace Starfish {
 
 class StorageInternal;
 class WebOrigin;
+class IDBBackingStore;
+struct OpenDBRequestData;
 
 class IDBConnectionData : public gc {
 public:
@@ -35,6 +39,31 @@ public:
 
 private:
     StorageInternal* m_storageKey;
+};
+
+// NOTE: The IDBConnection class is created from Window and Worker by
+// IDBStorageManager. And This class is not thread-safe. Functions in this class
+// must be called only on the main work thread of IDBTaskQueue.
+
+class IDBConnection {
+public:
+    friend class IDBStorageManager;
+
+    IDBConnection(const std::string& dbName, IDBDatabaseIdentifier identifier);
+
+    static void openDatabase(IDBConnectionData* connectionData,
+                             OpenDBRequestData* data);
+
+    IDBBackingStore* backingStore();
+
+    DEFINE_GETTER(IDBDatabaseIdentifier, dbIdentifier);
+    DEFINE_GETTER_SETTER(unsigned long long, version, Version);
+
+private:
+    std::unique_ptr<IDBBackingStore> m_backingStore;
+    const std::string m_dbName;
+    IDBDatabaseIdentifier m_dbIdentifier;
+    unsigned long long m_version;
 };
 
 } // namespace Starfish

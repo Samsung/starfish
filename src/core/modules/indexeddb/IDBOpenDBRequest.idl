@@ -8,5 +8,5 @@
 interface IDBOpenDBRequest : IDBRequest {
   // Event handlers:
   [Unimplemented] attribute EventHandler onblocked;
-  [Unimplemented] attribute EventHandler onupgradeneeded;
+  attribute EventHandler onupgradeneeded;
 };

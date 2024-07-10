@@ -19,40 +19,29 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBFactory__
-#define __StarfishIDBFactory__
-
-#include "binding/ScriptWrappable.h"
+#include "StarfishConfig.h"
+#include "core/dom/WebOrigin.h"
+#include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
 
 namespace Starfish {
 
-class IDBConnection;
+IDBDatabaseIdentifier::IDBDatabaseIdentifier()
+    : hash(0)
+{
+}
 
-struct IDBDatabaseInfo {
-    DEFINE_GETTER_SETTER(String*, name, Name);
-    DEFINE_GETTER_SETTER(unsigned long long, version, Version);
+IDBDatabaseIdentifier::IDBDatabaseIdentifier(WebOrigin* origin, String* name)
+    : hash(0)
+{
+    hash_combine(hash, origin->serialize()->hashValue());
+    hash_combine(hash, name->hashValue());
+}
 
-    String* m_name;
-    unsigned long long m_version;
-};
-
-class IDBFactory : public ScriptWrappable {
-public:
-    IDBFactory(ExecutionContext* executionContext);
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBFactory)
-
-    IDBOpenDBRequest* open(String* name);
-    IDBOpenDBRequest* open(String* name, unsigned long long version);
-    IDBOpenDBRequest* open(String* name, Nullable<unsigned long long> version);
-
-    DEFINE_GETTER(ExecutionContext*, executionContext);
-
-private:
-    ExecutionContext* m_executionContext;
-};
+bool IDBDatabaseIdentifier::operator==(const IDBDatabaseIdentifier& other) const
+{
+    return hash == other.hash;
+}
 
 } // namespace Starfish
 
-#endif
 #endif

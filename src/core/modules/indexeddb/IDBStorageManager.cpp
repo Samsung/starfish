@@ -21,6 +21,9 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/indexeddb/IDBConfig.h"
+#include "core/modules/indexeddb/MemoryBackingStore.h"
+#include "core/modules/indexeddb/IDBConnection.h"
 #include "core/modules/indexeddb/IDBTaskQueue.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 
@@ -34,8 +37,17 @@ IDBStorageManager& IDBStorageManager::instance()
 
 IDBStorageManager::IDBStorageManager()
     : m_isStared(false)
+    , m_taskQueue(std::make_unique<IDBTaskQueue>())
 {
     STARFISH_ASSERT(isMainThread());
+
+    MemoryBackingStore::createDirectory(getLocalStoragePath());
+    MemoryBackingStore::createDirectory(getIDBLocalStoragePath());
+}
+
+IDBStorageManager::~IDBStorageManager()
+{
+    dispose();
 }
 
 void IDBStorageManager::start()
@@ -52,14 +64,52 @@ void IDBStorageManager::start()
 
 void IDBStorageManager::dispose()
 {
-    STARFISH_ASSERT(isMainThread());
+    std::unique_lock<std::mutex> lock(m_mutex);
 
-    m_taskQueue.release();
+    if (!m_isStared) {
+        return;
+    }
+    m_isStared = false;
+
+    m_taskQueue.reset();
 }
 
 IDBTaskQueue* IDBStorageManager::taskQueue()
 {
     return m_taskQueue.get();
+}
+
+String* IDBStorageManager::getLocalStoragePath()
+{
+    std::string dataDirectoryPath;
+
+    const char* homeDirectoryPath = getenv("HOME");
+    if (!homeDirectoryPath || strlen(homeDirectoryPath) == 0) {
+        dataDirectoryPath = "/tmp";
+    } else {
+        dataDirectoryPath = homeDirectoryPath;
+    }
+
+    // TODO: integrate with other modules that require file storage
+    dataDirectoryPath += "/starfish-data";
+
+    return String::createASCIIString(dataDirectoryPath.c_str(),
+                                     dataDirectoryPath.length());
+}
+
+String* IDBStorageManager::getIDBLocalStoragePath()
+{
+    return getLocalStoragePath()->concat(IDB_LOCAL_STORAGE_DIR_PATH);
+}
+
+IDBConnection* IDBStorageManager::createConnection(
+    const std::string& name, IDBDatabaseIdentifier identifier)
+{
+    auto connection = std::make_unique<IDBConnection>(name, identifier);
+    IDBConnection* result = connection.get();
+    m_connections.push_back(std::move(connection));
+
+    return result;
 }
 
 } // namespace Starfish

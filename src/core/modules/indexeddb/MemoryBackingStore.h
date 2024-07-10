@@ -19,39 +19,29 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBFactory__
-#define __StarfishIDBFactory__
+#ifndef __StarfishMemoryBackingStore__
+#define __StarfishMemoryBackingStore__
 
-#include "binding/ScriptWrappable.h"
+#include "core/modules/indexeddb/IDBBackingStore.h"
 
 namespace Starfish {
 
-class IDBConnection;
+class ExecutionContext;
+class IDBOpenDBRequest;
+class IDBKey;
 
-struct IDBDatabaseInfo {
-    DEFINE_GETTER_SETTER(String*, name, Name);
-    DEFINE_GETTER_SETTER(unsigned long long, version, Version);
+// NOTE: The MemoryBackingStore class is called only on the main work thread of
+// IDBTaskQueue.
 
-    String* m_name;
-    unsigned long long m_version;
-};
-
-class IDBFactory : public ScriptWrappable {
+class MemoryBackingStore : public IDBBackingStore {
 public:
-    IDBFactory(ExecutionContext* executionContext);
+    static void createDirectory(String* path);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBFactory)
-
-    IDBOpenDBRequest* open(String* name);
-    IDBOpenDBRequest* open(String* name, unsigned long long version);
-    IDBOpenDBRequest* open(String* name, Nullable<unsigned long long> version);
-
-    DEFINE_GETTER(ExecutionContext*, executionContext);
+    void open(String* name, unsigned long long version) override;
 
 private:
-    ExecutionContext* m_executionContext;
+    std::string m_openPath;
 };
-
 } // namespace Starfish
 
 #endif

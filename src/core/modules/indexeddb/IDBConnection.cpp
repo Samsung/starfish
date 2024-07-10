@@ -20,7 +20,11 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "core/util/debug/Trace.h"
 #include "core/storage/StorageInternal.h"
+#include "core/modules/indexeddb/IDBStorageManager.h"
+#include "core/modules/indexeddb/MemoryBackingStore.h"
+#include "core/modules/indexeddb/IDBOpenDBRequest.h"
 #include "core/modules/indexeddb/IDBConnection.h"
 
 namespace Starfish {
@@ -40,6 +44,68 @@ StorageInternal* IDBConnectionData::storageKey(WebOrigin* origin)
     }
 
     return m_storageKey;
+}
+
+void IDBConnection::openDatabase(IDBConnectionData* connectionData,
+                                 OpenDBRequestData* data)
+{
+    // https://w3c.github.io/IndexedDB/#open-a-database-connection
+
+    StorageInternal* storageKey = connectionData->storageKey(data->webOrigin);
+
+    // key is name, value is version.
+    Nullable<String*> db = storageKey->getItem(data->name);
+    unsigned long long dbVersion = 1;
+
+    if (db.hasValue()) {
+        std::istringstream iss(CSTR(db.getValue()));
+        iss >> dbVersion;
+    }
+
+    if (!data->version.hasValue()) {
+        data->version = Nullable<unsigned long long>(dbVersion);
+    }
+
+    if (!db.hasValue()) {
+        dbVersion = 0;
+    }
+
+    if (dbVersion > data->version.getValue()) {
+        data->error = OpenDBRequestErrorType::VersionError;
+        return;
+    }
+
+    data->connection = IDBStorageManager::instance().createConnection(
+        data->name->toUTF8NonGCString(), data->identifier);
+    data->connection->setVersion(data->version.getValue());
+
+    if (dbVersion < data->version.getValue()) {
+        // TODO: 10. If db’s version is less than version, then:
+        dbVersion = data->version.getValue();
+        std::string versionString = std::to_string(dbVersion);
+        storageKey->setItem(data->name,
+                            String::createASCIIString(versionString.c_str(),
+                                                      versionString.length()));
+
+        data->upgradeNeeded = true;
+    }
+
+    TRACE(IDB, "dbname:", CSTR(data->name), "version:", dbVersion);
+    data->connection->m_backingStore->open(data->name, dbVersion);
+}
+
+IDBConnection::IDBConnection(const std::string& dbName,
+                             IDBDatabaseIdentifier identifier)
+    : m_backingStore(std::make_unique<MemoryBackingStore>())
+    , m_dbName(dbName)
+    , m_dbIdentifier(identifier)
+    , m_version(0)
+{
+}
+
+IDBBackingStore* IDBConnection::backingStore()
+{
+    return m_backingStore.get();
 }
 
 } // namespace Starfish

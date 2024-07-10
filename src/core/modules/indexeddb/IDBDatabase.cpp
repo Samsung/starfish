@@ -20,8 +20,11 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMStringList.h"
+#include "core/modules/indexeddb/IDBConnection.h"
 #include "core/modules/indexeddb/IDBUtils.h"
+#include "core/modules/indexeddb/IDBTransaction.h"
 #include "core/modules/indexeddb/IDBDatabase.h"
 
 namespace Starfish {
@@ -36,14 +39,28 @@ String* IDBTransactionOptions::durability() const
     return IDBUtils::transactionDurabilityToString(m_durability);
 }
 
-IDBDatabase::IDBDatabase(ExecutionContext* executionContext, String* name,
+IDBDatabase::IDBDatabase(ExecutionContext* executionContext,
+                         IDBConnection* connection, String* name,
                          unsigned long long version)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_connection(connection)
+    , m_versionChangeTransaction(nullptr)
     , m_name(name)
     , m_version(version)
     , m_objectStoreNames(new DOMStringList(executionContext))
 {
+}
+
+IDBTransaction* IDBDatabase::startVersionChangeTransaction()
+{
+    STARFISH_ASSERT(!m_versionChangeTransaction);
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+
+    m_versionChangeTransaction = new IDBTransaction(m_executionContext, this);
+    m_versionChangeTransaction->setMode(IDBTransactionMode::VersionChange);
+
+    return m_versionChangeTransaction;
 }
 
 } // namespace Starfish

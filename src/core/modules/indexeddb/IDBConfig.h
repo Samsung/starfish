@@ -19,38 +19,12 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBFactory__
-#define __StarfishIDBFactory__
-
-#include "binding/ScriptWrappable.h"
+#ifndef __StarfishIDBConfig__
+#define __StarfishIDBConfig__
 
 namespace Starfish {
 
-class IDBConnection;
-
-struct IDBDatabaseInfo {
-    DEFINE_GETTER_SETTER(String*, name, Name);
-    DEFINE_GETTER_SETTER(unsigned long long, version, Version);
-
-    String* m_name;
-    unsigned long long m_version;
-};
-
-class IDBFactory : public ScriptWrappable {
-public:
-    IDBFactory(ExecutionContext* executionContext);
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBFactory)
-
-    IDBOpenDBRequest* open(String* name);
-    IDBOpenDBRequest* open(String* name, unsigned long long version);
-    IDBOpenDBRequest* open(String* name, Nullable<unsigned long long> version);
-
-    DEFINE_GETTER(ExecutionContext*, executionContext);
-
-private:
-    ExecutionContext* m_executionContext;
-};
+#define IDB_LOCAL_STORAGE_DIR_PATH "/indexedDB"
 
 } // namespace Starfish
 

@@ -138,7 +138,9 @@ void IDBTaskQueue::stop()
         m_cond.notify_one();
     }
 
-    m_thread.join();
+    if (m_thread.joinable()) {
+        m_thread.join();
+    }
 }
 
 void IDBTaskQueue::addTask(std::unique_ptr<IDBTaskQueueItem> item)

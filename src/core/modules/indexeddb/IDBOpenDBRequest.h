@@ -23,8 +23,27 @@
 #define __StarfishIDBOpenDBRequest__
 
 #include "core/modules/indexeddb/IDBRequest.h"
+#include "core/modules/indexeddb/IDBTaskQueue.h"
+#include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
 
 namespace Starfish {
+
+class IDBConnection;
+
+enum class OpenDBRequestErrorType : uint8_t {
+    None,
+    VersionError,
+};
+
+struct OpenDBRequestData : public IDBTaskQueueItemData {
+    String* name{ nullptr };
+    Nullable<unsigned long long> version;
+    OpenDBRequestErrorType error{ OpenDBRequestErrorType::None };
+    bool upgradeNeeded{ false };
+    IDBConnection* connection{ nullptr };
+    WebOrigin* webOrigin{ nullptr };
+    IDBDatabaseIdentifier identifier;
+};
 
 class IDBOpenDBRequest : public IDBRequest {
 public:
@@ -34,7 +53,29 @@ public:
                       void* domObjectPointer) override;
     virtual bool isIDBOpenDBRequest() const;
 
+    bool isOpenDBRequest() override
+    {
+        return true;
+    }
+
+    static DOMException* errorCodeToDOMException(
+        ExecutionContext* executionContext, OpenDBRequestErrorType error);
+
+    void successOpenRequest();
+    void failOpenRequest(OpenDBRequestErrorType error);
+
+    void upgradeNeeded();
+
+    DEFINE_GETTER_SETTER(IDBDatabase*, database, Database);
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(upgradeneeded);
+#undef VIRTUAL
+#undef OVERRIDE
+
 private:
+    IDBDatabase* m_database;
 };
 
 } // namespace Starfish

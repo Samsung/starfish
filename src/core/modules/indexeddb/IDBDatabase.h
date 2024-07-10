@@ -27,6 +27,11 @@
 
 namespace Starfish {
 
+class String;
+class DOMStringList;
+class IDBTransaction;
+class IDBConnection;
+
 enum class IDBTransactionDurability : uint8_t {
     Default,
     Strict,
@@ -51,8 +56,8 @@ struct IDBObjectStoreParameters {
 
 class IDBDatabase : public EventTarget {
 public:
-    IDBDatabase(ExecutionContext* executionContext, String* name,
-                unsigned long long version);
+    IDBDatabase(ExecutionContext* executionContext, IDBConnection* connection,
+                String* name, unsigned long long version);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -62,12 +67,17 @@ public:
         return m_executionContext;
     }
 
+    IDBTransaction* startVersionChangeTransaction();
+
+    DEFINE_GETTER(IDBConnection*, connection);
     DEFINE_GETTER(String*, name);
     DEFINE_GETTER(unsigned long long, version);
     DEFINE_GETTER(DOMStringList*, objectStoreNames);
 
 private:
     ExecutionContext* m_executionContext;
+    IDBConnection* m_connection;
+    IDBTransaction* m_versionChangeTransaction;
     String* m_name;
     unsigned long long m_version;
     DOMStringList* m_objectStoreNames;

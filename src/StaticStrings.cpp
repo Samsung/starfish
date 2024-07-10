@@ -747,6 +747,13 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "closing"));
 #endif
 
+#if defined(STARFISH_ENABLE_IDB)
+    m_success =
+        QualifiedName(AtomicString::createAtomicString(starfish, "success"));
+    m_upgradeneeded = QualifiedName(
+        AtomicString::createAtomicString(starfish, "upgradeneeded"));
+#endif
+
 #if defined(OS_WINDOWS)
     m_overflowString = String::fromUTF8("...");
 #else
