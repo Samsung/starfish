@@ -662,6 +662,11 @@ public:
     QualifiedName m_closing;
 #endif
 
+#if defined(STARFISH_ENABLE_IDB)
+    QualifiedName m_success;
+    QualifiedName m_upgradeneeded;
+#endif
+
     String* m_overflowString;
 
 protected:

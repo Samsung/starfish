@@ -7,7 +7,7 @@
 ]
 interface IDBFactory {
   // optional [EnforceRange] unsigned long long version
-  [Unimplemented, NewObject, RaisesException] IDBOpenDBRequest open(DOMString name,
+  [NewObject, RaisesException] IDBOpenDBRequest open(DOMString name,
                                     optional unsigned long long version);
   [Unimplemented, NewObject] IDBOpenDBRequest deleteDatabase(DOMString name);
 

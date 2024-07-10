@@ -49,10 +49,18 @@ public:
         return m_executionContext;
     }
 
+    virtual bool isOpenDBRequest()
+    {
+        return false;
+    }
+
     void executeRequest(IDBObjectStore* source,
                         std::unique_ptr<IDBTaskQueueItem> operation);
 
     String* readyState() const;
+
+    void dispatchSuccessEvent();
+    void dispatchErrorEvent();
 
     DEFINE_GETTER(ScriptValue, result);
     DEFINE_GETTER(DOMException*, error);
@@ -61,7 +69,7 @@ public:
     DEFINE_GETTER_SETTER(bool, processed, Processed);
     DEFINE_GETTER_SETTER(bool, done, Done);
 
-private:
+protected:
     ExecutionContext* m_executionContext;
     ScriptValue m_result;
     DOMException* m_error;

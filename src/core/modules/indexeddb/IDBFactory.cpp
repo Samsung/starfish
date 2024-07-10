@@ -21,6 +21,11 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
+#include "core/modules/indexeddb/IDBStorageManager.h"
+#include "core/modules/indexeddb/IDBConnection.h"
+#include "core/modules/indexeddb/IDBDatabase.h"
+#include "core/modules/indexeddb/IDBOpenDBRequest.h"
 #include "core/modules/indexeddb/IDBFactory.h"
 
 namespace Starfish {
@@ -34,6 +39,76 @@ IDBFactory::IDBFactory(ExecutionContext* executionContext)
 ScriptBindingInstance* IDBFactory::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+IDBOpenDBRequest* IDBFactory::open(String* name)
+{
+    return open(name, Nullable<unsigned long long>());
+}
+
+IDBOpenDBRequest* IDBFactory::open(String* name, unsigned long long version)
+{
+    return open(name, Nullable<unsigned long long>(version));
+}
+
+IDBOpenDBRequest* IDBFactory::open(String* name,
+                                   Nullable<unsigned long long> version)
+{
+    // https://w3c.github.io/IndexedDB/#dom-idbfactory-open
+
+    if (version.hasValue() && version.getValue() == 0) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR);
+    }
+
+    IDBOpenDBRequest* request = new IDBOpenDBRequest(m_executionContext);
+
+    OpenDBRequestData* data = new (NoGC) OpenDBRequestData();
+    data->idbRequest = request;
+    data->name = name;
+    data->version = version;
+    data->webOrigin = m_executionContext->webOrigin();
+    data->identifier =
+        IDBDatabaseIdentifier(m_executionContext->webOrigin(), name);
+
+    auto task = std::make_unique<IDBTaskQueueItem>(
+        [](IDBConnectionData* connectionData, IDBTaskQueueItemData* data) {
+            OpenDBRequestData* requestData =
+                reinterpret_cast<OpenDBRequestData*>(data);
+            IDBConnection::openDatabase(connectionData, requestData);
+        },
+        [](IDBTaskQueueItemData* data) {
+            OpenDBRequestData* requestData =
+                reinterpret_cast<OpenDBRequestData*>(data);
+            IDBOpenDBRequest* request =
+                reinterpret_cast<IDBOpenDBRequest*>(requestData->idbRequest);
+            STARFISH_ASSERT(request->isOpenDBRequest());
+
+            if (requestData->error != OpenDBRequestErrorType::None) {
+                request->failOpenRequest(requestData->error);
+            } else {
+                STARFISH_ASSERT(requestData->version.hasValue());
+
+                IDBDatabase* db = new IDBDatabase(
+                    request->executionContext(), requestData->connection,
+                    requestData->name, requestData->version.getValue());
+
+                request->setDatabase(db);
+
+                if (requestData->upgradeNeeded) {
+                    request->upgradeNeeded();
+                }
+
+                request->successOpenRequest();
+            }
+
+            GC_FREE(requestData);
+        },
+        data);
+
+    IDBStorageManager::instance().taskQueue()->addTask(std::move(task));
+
+    return request;
 }
 
 } // namespace Starfish

@@ -42,6 +42,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBFactory)
 
+    IDBOpenDBRequest* open(String* name);
+    IDBOpenDBRequest* open(String* name, unsigned long long version);
+    IDBOpenDBRequest* open(String* name, Nullable<unsigned long long> version);
+
     DEFINE_GETTER(ExecutionContext*, executionContext);
 
 private:
