@@ -252,6 +252,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
     } else if (isFrameGridBox()) {
         asFrameGridBox()->layoutGrid(ctx);
+        ctx.registerContentHeight(this, contentHeight());
     } else {
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
