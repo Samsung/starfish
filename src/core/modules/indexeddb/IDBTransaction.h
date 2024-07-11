@@ -57,6 +57,9 @@ public:
 
     String* durability() const;
 
+    void addRequest(IDBRequest* request);
+    void removeRequest(IDBRequest* request);
+
     DEFINE_GETTER(DOMStringList*, objectStoreNames);
     DEFINE_GETTER(IDBDatabase*, db);
     DEFINE_GETTER(DOMException*, error);
@@ -70,6 +73,7 @@ private:
     IDBDatabase* m_db;
     DOMException* m_error;
     State m_state;
+    GCVector<IDBRequest*> m_requestList;
 };
 } // namespace Starfish
 

@@ -20,6 +20,10 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "core/modules/indexeddb/IDBStorageManager.h"
+#include "core/modules/indexeddb/IDBObjectStore.h"
+#include "core/modules/indexeddb/IDBTaskQueue.h"
+#include "core/modules/indexeddb/IDBTransaction.h"
 #include "core/modules/indexeddb/IDBRequest.h"
 
 namespace Starfish {
@@ -32,6 +36,8 @@ IDBRequest::IDBRequest(ExecutionContext* executionContext)
     , m_source(scriptUndefined())
     , m_transaction(nullptr)
     , m_readyState(IDBRequestReadyState::Pending)
+    , m_processed(false)
+    , m_done(false)
 {
 }
 
@@ -45,6 +51,20 @@ String* IDBRequest::readyState() const
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
+}
+
+void IDBRequest::executeRequest(IDBObjectStore* source,
+                                std::unique_ptr<IDBTaskQueueItem> operation)
+{
+    // https://w3c.github.io/IndexedDB/#asynchronously-execute-a-request
+
+    m_transaction = source->transaction();
+
+    STARFISH_ASSERT(m_transaction->state() == IDBTransaction::State::Active);
+
+    m_transaction->addRequest(this);
+
+    IDBStorageManager::instance().taskQueue()->addTask(std::move(operation));
 }
 
 } // namespace Starfish

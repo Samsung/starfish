@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+class IDBTaskQueue;
+
 class IDBStorageManager {
 public:
     static IDBStorageManager& instance();
@@ -34,11 +36,14 @@ public:
 
     void dispose();
 
+    IDBTaskQueue* taskQueue();
+
 private:
     IDBStorageManager();
 
     bool m_isStared;
     std::mutex m_mutex;
+    std::unique_ptr<IDBTaskQueue> m_taskQueue;
 };
 
 } // namespace Starfish
