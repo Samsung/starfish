@@ -4832,6 +4832,16 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
         // FIXME
         // Implement own logic without calling layout like flex
         markNeedsLayout();
+
+        Frame* f = firstChild();
+        while (f) {
+            if (!f->isGridItem()) {
+                f = f->next();
+                continue;
+            }
+            f->markNeedsLayout();
+            f = f->next();
+        }
     }
 }
 
