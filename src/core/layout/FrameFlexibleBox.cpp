@@ -842,7 +842,6 @@ void FlexFormattingContext::layoutFlexItem(
     if ((resolveWhat & Frame::ResolveHeight) != 0) {
         flexItem->markContentWidthDamaged();
         flexItem->layout(m_layoutContext, Frame::ResolveHeight);
-        flexItem->clearContentWidthDamaged();
     }
 
     m_layoutContext.unregisterModifiedStyleFlexItem(flexItem);
@@ -851,9 +850,12 @@ void FlexFormattingContext::layoutFlexItem(
     }
     mainSizeFixer.restore();
 
-    if (flexItem->isFrameBlockBox()) {
-        m_layoutContext.layoutRegisteredAbsolutePositionedBoxes(
-            flexItem->asFrameBlockBox());
+    if ((resolveWhat & Frame::ResolveHeight) != 0) {
+        if (flexItem->isFrameBlockBox()) {
+            m_layoutContext.layoutRegisteredAbsolutePositionedBoxes(
+                flexItem->asFrameBlockBox());
+        }
+        flexItem->clearContentWidthDamaged();
     }
 }
 
