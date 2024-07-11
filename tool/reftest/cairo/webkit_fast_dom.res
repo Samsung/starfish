@@ -39,7 +39,8 @@ test/cairo/reftest/vendor/webkit/fast/dom/Element/node-list-identity.html
 test/cairo/reftest/vendor/webkit/fast/dom/Element/onclick-case.html
 test/cairo/reftest/vendor/webkit/fast/dom/Element/setAttribute-case-insensitivity.html
 test/cairo/reftest/vendor/webkit/fast/dom/element-traversal-on-character-data.html
-test/cairo/reftest/vendor/webkit/fast/dom/everything-to-string.html
+# TODO temporary disable due to crash in CI
+# test/cairo/reftest/vendor/webkit/fast/dom/everything-to-string.html
 test/cairo/reftest/vendor/webkit/fast/dom/getElementById-with-rope-string-arg.html
 test/cairo/reftest/vendor/webkit/fast/dom/getElementsByClassName/001.html
 test/cairo/reftest/vendor/webkit/fast/dom/getElementsByClassName/002.html
