@@ -19,31 +19,22 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBStorageManager__
-#define __StarfishIDBStorageManager__
+#ifndef __StarfishIDBConnection__
+#define __StarfishIDBConnection__
 
 namespace Starfish {
 
-class IDBTaskQueue;
+class StorageInternal;
+class WebOrigin;
 
-class IDBStorageManager {
+class IDBConnectionData : public gc {
 public:
-    static IDBStorageManager& instance();
+    IDBConnectionData();
 
-    void init();
-
-    void start();
-
-    void dispose();
-
-    IDBTaskQueue* taskQueue();
+    StorageInternal* storageKey(WebOrigin* origin);
 
 private:
-    IDBStorageManager();
-
-    bool m_isStared;
-    std::mutex m_mutex;
-    std::unique_ptr<IDBTaskQueue> m_taskQueue;
+    StorageInternal* m_storageKey;
 };
 
 } // namespace Starfish

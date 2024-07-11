@@ -20,7 +20,7 @@ jobs:
       options: --user root
     strategy:
       matrix:
-        options: ["-DWEBGL=1 -DWORKER=1"]
+        options: ["-DWEBGL=1 -DWORKER=1 -DIDB=1"]
 
     # Set reasonable timeout value.
     timeout-minutes: 30

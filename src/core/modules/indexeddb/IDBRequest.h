@@ -28,7 +28,9 @@ namespace Starfish {
 
 class ExecutionContext;
 class DOMException;
+class IDBObjectStore;
 class IDBTransaction;
+class IDBTaskQueueItem;
 
 enum class IDBRequestReadyState : uint8_t {
     Pending,
@@ -47,12 +49,17 @@ public:
         return m_executionContext;
     }
 
+    void executeRequest(IDBObjectStore* source,
+                        std::unique_ptr<IDBTaskQueueItem> operation);
+
+    String* readyState() const;
+
     DEFINE_GETTER(ScriptValue, result);
     DEFINE_GETTER(DOMException*, error);
     DEFINE_GETTER(ScriptValue, source);
     DEFINE_GETTER(IDBTransaction*, transaction);
-
-    String* readyState() const;
+    DEFINE_GETTER_SETTER(bool, processed, Processed);
+    DEFINE_GETTER_SETTER(bool, done, Done);
 
 private:
     ExecutionContext* m_executionContext;
@@ -61,6 +68,8 @@ private:
     ScriptValue m_source;
     IDBTransaction* m_transaction;
     IDBRequestReadyState m_readyState;
+    bool m_processed;
+    bool m_done;
 };
 } // namespace Starfish
 

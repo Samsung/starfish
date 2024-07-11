@@ -55,6 +55,18 @@ String* IDBTransaction::durability() const
     return IDBUtils::transactionDurabilityToString(m_durability);
 }
 
+void IDBTransaction::addRequest(IDBRequest* request)
+{
+    m_requestList.push_back(request);
+}
+
+void IDBTransaction::removeRequest(IDBRequest* request)
+{
+    m_requestList.erase(
+        std::remove(m_requestList.begin(), m_requestList.end(), request),
+        m_requestList.end());
+}
+
 } // namespace Starfish
 
 #endif

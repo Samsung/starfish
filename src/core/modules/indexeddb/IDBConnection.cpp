@@ -19,34 +19,29 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBStorageManager__
-#define __StarfishIDBStorageManager__
+#include "StarfishConfig.h"
+#include "core/storage/StorageInternal.h"
+#include "core/modules/indexeddb/IDBConnection.h"
 
 namespace Starfish {
 
-class IDBTaskQueue;
+IDBConnectionData::IDBConnectionData()
+    : m_storageKey(nullptr)
+{
+}
 
-class IDBStorageManager {
-public:
-    static IDBStorageManager& instance();
+StorageInternal* IDBConnectionData::storageKey(WebOrigin* origin)
+{
+    if (m_storageKey == nullptr) {
+        // TODO: change to persistent storage
+        // resolve the issues when multiple processes modify the same storage
+        // key.
+        m_storageKey = new StorageMemory(StorageType::Local, origin);
+    }
 
-    void init();
-
-    void start();
-
-    void dispose();
-
-    IDBTaskQueue* taskQueue();
-
-private:
-    IDBStorageManager();
-
-    bool m_isStared;
-    std::mutex m_mutex;
-    std::unique_ptr<IDBTaskQueue> m_taskQueue;
-};
+    return m_storageKey;
+}
 
 } // namespace Starfish
 
-#endif
 #endif

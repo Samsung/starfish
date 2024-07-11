@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/indexeddb/IDBTaskQueue.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 
 namespace Starfish {
@@ -44,17 +45,21 @@ void IDBStorageManager::start()
     if (m_isStared) {
         return;
     }
-
-    // TODO: start request queue
-
     m_isStared = true;
+
+    m_taskQueue->run();
 }
 
 void IDBStorageManager::dispose()
 {
     STARFISH_ASSERT(isMainThread());
 
-    // TODO: stop request queue
+    m_taskQueue.release();
+}
+
+IDBTaskQueue* IDBStorageManager::taskQueue()
+{
+    return m_taskQueue.get();
 }
 
 } // namespace Starfish
