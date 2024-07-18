@@ -219,6 +219,19 @@ public:
                 args, prepareImageCb, flushCb);
         }
         SetWebContainer(webContainer);
+        webContainer->RegisterGetScreenMatrixHandler(
+            [this, args](::LWEDelegate::WebContainer*)
+                -> ::LWEDelegate::WebContainer::TransformationMatrix {
+                ::LWEDelegate::WebContainer::TransformationMatrix result;
+                result = {
+                    1.0, 0.0, 0.0, 0.0, 1.0, 0.0, // y
+                    0.0, 0.0, 1.0                 // perspective
+                };
+                result.scaleX = 1;
+                result.scaleY = -1;
+                result.translateY = args.height * args.devicePixelRatio;
+                return result;
+            });
     }
     void initEGL()
     {
