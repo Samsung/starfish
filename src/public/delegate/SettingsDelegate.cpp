@@ -107,7 +107,9 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
     UpdateSetting("backgroundColor", "255, 255, 255, 255");
     UpdateSetting("foregroundColor", "0, 0, 0, 255");
     UpdateSetting("webSecurityMode", "Enable");
-    UpdateSetting("idleModeJob", "IdleModeDefault");
+    UpdateSetting(
+        "idleModeJob",
+        std::to_string((unsigned)::LWE::IdleModeJob::IdleModeDefault));
     UpdateSetting("idleModeCheckIntervalInMS",
                   std::to_string(::LWE::IdleModeCheckDefaultIntervalInMS));
     UpdateSetting("needsDownloadWebFontsEarly", "False");
