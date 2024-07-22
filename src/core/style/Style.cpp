@@ -12568,6 +12568,10 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 token, CSSPropertyParser::AllowNegative |
                            CSSPropertyParser::AllowPercent |
                            CSSPropertyParser::AllowAuto)) {
+            if (legnthOrCalc.valueKind() ==
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+                return false;
+            }
             Nullable<Length> maybeLength = convertValueToLength(
                 legnthOrCalc.valueKind(), legnthOrCalc.value());
             if (!maybeLength.hasValue()) {
