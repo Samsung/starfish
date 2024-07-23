@@ -153,6 +153,9 @@ private:
 
 class MemorySerializer {
 public:
+    static SerializedTypedData* serialize(ExecutionContext* executionContext,
+                                          ScriptValue value);
+
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,
         const GCAtomicVector<ScriptObject>& transferValues,

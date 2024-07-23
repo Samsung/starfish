@@ -71,7 +71,7 @@ void IDBConnection::openDatabase(IDBConnectionData* connectionData,
     }
 
     if (dbVersion > data->version.getValue()) {
-        data->error = OpenDBRequestErrorType::VersionError;
+        data->error = IDBRequestErrorType::VersionError;
         return;
     }
 
@@ -101,6 +101,15 @@ IDBConnection::IDBConnection(const std::string& dbName,
     , m_dbIdentifier(identifier)
     , m_version(0)
 {
+}
+
+IDBRequestErrorType IDBConnection::storeRecode(String* name, const char* data,
+                                               size_t dataSize, IDBKey* key,
+                                               bool noOverwrite)
+{
+    // TODO:
+    // https://w3c.github.io/IndexedDB/#store-a-record-into-an-object-store
+    return m_backingStore->addOrPut(name, data, dataSize, key, noOverwrite);
 }
 
 IDBBackingStore* IDBConnection::backingStore()

@@ -84,7 +84,7 @@ IDBOpenDBRequest* IDBFactory::open(String* name,
                 reinterpret_cast<IDBOpenDBRequest*>(requestData->idbRequest);
             STARFISH_ASSERT(request->isOpenDBRequest());
 
-            if (requestData->error != OpenDBRequestErrorType::None) {
+            if (requestData->error != IDBRequestErrorType::None) {
                 request->failOpenRequest(requestData->error);
             } else {
                 STARFISH_ASSERT(requestData->version.hasValue());

@@ -22,6 +22,8 @@
 #ifndef __StarfishIDBTaskQueue__
 #define __StarfishIDBTaskQueue__
 
+#include "core/modules/indexeddb/IDBRequest.h"
+
 namespace Starfish {
 
 class Thread;
@@ -32,7 +34,7 @@ class IDBRequest;
 
 struct IDBTaskQueueItemData : public gc {
     IDBRequest* idbRequest{ nullptr };
-    bool result{ false };
+    IDBRequestErrorType error{ IDBRequestErrorType::None };
 };
 
 struct IDBTaskQueueItem {

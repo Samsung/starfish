@@ -39,6 +39,10 @@ public:
 
     void open(String* name, unsigned long long version) override;
 
+    IDBRequestErrorType addOrPut(String* name, const char* data,
+                                 size_t dataSize, IDBKey* key,
+                                 bool noOverwrite) override;
+
 private:
     std::string m_openPath;
 };

@@ -99,7 +99,7 @@ ScriptValue EventListener::call(Event* event)
         // NOTE: non-standard, but many browsers do this.
         // https://www.w3.org/TR/DOM-Level-3-Events/#event-flow
         if (isAttribute() && event->cancelable() &&
-            scriptValueIsBoolean(value) && !scriptValueAsBoolean(value)) {
+            isBooleanScriptValue(value) && !scriptValueAsBoolean(value)) {
             event->preventDefault();
         }
     }

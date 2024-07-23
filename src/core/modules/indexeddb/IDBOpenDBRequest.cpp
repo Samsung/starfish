@@ -23,7 +23,6 @@
 #include "Starfish.h"
 #include "core/util/debug/Trace.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
 #include "core/modules/indexeddb/IDBDatabase.h"
 #include "core/modules/indexeddb/IDBOpenDBRequest.h"
@@ -33,24 +32,6 @@ namespace Starfish {
 IDBOpenDBRequest::IDBOpenDBRequest(ExecutionContext* executionContext)
     : IDBRequest(executionContext)
 {
-}
-
-DOMException* IDBOpenDBRequest::errorCodeToDOMException(
-    ExecutionContext* executionContext, OpenDBRequestErrorType error)
-{
-    if (error == OpenDBRequestErrorType::None) {
-        return new DOMException(executionContext, DOMException::DOM_EXCEPTION,
-                                "Unknown Error");
-    } else if (error == OpenDBRequestErrorType::VersionError) {
-        return new DOMException(
-            executionContext,
-            String::createASCIIString(
-                "The requested version is less than the existing version."),
-            String::createASCIIString("VersionError"));
-    }
-
-    STARFISH_ASSERT_NOT_REACHED();
-    return nullptr;
 }
 
 void IDBOpenDBRequest::successOpenRequest()
@@ -64,7 +45,7 @@ void IDBOpenDBRequest::successOpenRequest()
     dispatchSuccessEvent();
 }
 
-void IDBOpenDBRequest::failOpenRequest(OpenDBRequestErrorType error)
+void IDBOpenDBRequest::failOpenRequest(IDBRequestErrorType error)
 {
     STARFISH_ASSERT(m_executionContext->isContextThread());
     TRACE(IDB);

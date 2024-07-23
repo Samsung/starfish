@@ -22,7 +22,6 @@
 #ifndef __StarfishIDBOpenDBRequest__
 #define __StarfishIDBOpenDBRequest__
 
-#include "core/modules/indexeddb/IDBRequest.h"
 #include "core/modules/indexeddb/IDBTaskQueue.h"
 #include "core/modules/indexeddb/IDBDatabaseIdentifier.h"
 
@@ -30,15 +29,9 @@ namespace Starfish {
 
 class IDBConnection;
 
-enum class OpenDBRequestErrorType : uint8_t {
-    None,
-    VersionError,
-};
-
 struct OpenDBRequestData : public IDBTaskQueueItemData {
     String* name{ nullptr };
     Nullable<unsigned long long> version;
-    OpenDBRequestErrorType error{ OpenDBRequestErrorType::None };
     bool upgradeNeeded{ false };
     IDBConnection* connection{ nullptr };
     WebOrigin* webOrigin{ nullptr };
@@ -58,11 +51,8 @@ public:
         return true;
     }
 
-    static DOMException* errorCodeToDOMException(
-        ExecutionContext* executionContext, OpenDBRequestErrorType error);
-
     void successOpenRequest();
-    void failOpenRequest(OpenDBRequestErrorType error);
+    void failOpenRequest(IDBRequestErrorType error);
 
     void upgradeNeeded();
 

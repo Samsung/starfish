@@ -21,7 +21,9 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/Event.h"
+#include "core/dom/DOMException.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/IDBObjectStore.h"
 #include "core/modules/indexeddb/IDBTaskQueue.h"
@@ -41,6 +43,30 @@ IDBRequest::IDBRequest(ExecutionContext* executionContext)
     , m_processed(false)
     , m_done(false)
 {
+}
+
+DOMException* IDBRequest::errorCodeToDOMException(
+    ExecutionContext* executionContext, IDBRequestErrorType error)
+{
+    if (error == IDBRequestErrorType::Unknown) {
+        return new DOMException(executionContext,
+                                DOMException::Code::DOM_EXCEPTION,
+                                "Unknown Error");
+    } else if (error == IDBRequestErrorType::VersionError) {
+        return new DOMException(
+            executionContext,
+            String::createASCIIString(
+                "The requested version is less than the existing version."),
+            String::createASCIIString("VersionError"));
+    } else if (error == IDBRequestErrorType::OverWriteError) {
+        return new DOMException(
+            executionContext,
+            String::createASCIIString("The data cannot be overwritten."),
+            String::createASCIIString("ConstraintError"));
+    }
+
+    STARFISH_ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
 String* IDBRequest::readyState() const
@@ -67,6 +93,53 @@ void IDBRequest::executeRequest(IDBObjectStore* source,
     m_transaction->addRequest(this);
 
     IDBStorageManager::instance().taskQueue()->addTask(std::move(operation));
+}
+
+void IDBRequest::success(ScriptValue result)
+{
+    // https://w3c.github.io/IndexedDB/#fire-a-success-event
+
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+
+    m_result = result;
+    // TODO: Set request’s error to undefined.
+
+    STARFISH_ASSERT(m_transaction);
+    if (m_transaction->state() == IDBTransaction::State::Inactive) {
+        m_transaction->setState(IDBTransaction::State::Active);
+    }
+
+    dispatchSuccessEvent();
+
+    m_transaction->setState(IDBTransaction::State::Inactive);
+
+    // TODO: 8-3. If transaction’s request list is empty, then run commit a
+    // transaction with transaction.
+}
+
+void IDBRequest::fail(DOMException* result)
+{
+    // https://w3c.github.io/IndexedDB/#fire-an-error-event
+
+    STARFISH_ASSERT(m_executionContext->isContextThread());
+    m_result = scriptUndefined();
+    m_error = result;
+
+    STARFISH_ASSERT(m_transaction);
+    if (m_transaction->state() == IDBTransaction::State::Inactive) {
+        m_transaction->setState(IDBTransaction::State::Active);
+    }
+
+    dispatchErrorEvent();
+
+    m_transaction->setState(IDBTransaction::State::Inactive);
+
+    // TODO: 8-3. If event’s canceled flag is false, then run abort a
+    // transaction using transaction and request's error, and terminate these
+    // steps.
+
+    // TODO: 8-4. If transaction’s request list is empty, then run commit a
+    // transaction with transaction.
 }
 
 void IDBRequest::dispatchSuccessEvent()
