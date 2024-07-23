@@ -32,6 +32,13 @@ class IDBObjectStore;
 class IDBTransaction;
 class IDBTaskQueueItem;
 
+enum class IDBRequestErrorType : uint8_t {
+    None,
+    Unknown,
+    VersionError,
+    OverWriteError,
+};
+
 enum class IDBRequestReadyState : uint8_t {
     Pending,
     Done,
@@ -54,10 +61,16 @@ public:
         return false;
     }
 
+    static DOMException* errorCodeToDOMException(
+        ExecutionContext* executionContext, IDBRequestErrorType error);
+
     void executeRequest(IDBObjectStore* source,
                         std::unique_ptr<IDBTaskQueueItem> operation);
 
     String* readyState() const;
+
+    void success(ScriptValue result);
+    void fail(DOMException* result);
 
     void dispatchSuccessEvent();
     void dispatchErrorEvent();

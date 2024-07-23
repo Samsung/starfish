@@ -29,7 +29,9 @@ namespace Starfish {
 class StorageInternal;
 class WebOrigin;
 class IDBBackingStore;
+class IDBKey;
 struct OpenDBRequestData;
+enum class IDBRequestErrorType : uint8_t;
 
 class IDBConnectionData : public gc {
 public:
@@ -53,6 +55,10 @@ public:
 
     static void openDatabase(IDBConnectionData* connectionData,
                              OpenDBRequestData* data);
+
+    IDBRequestErrorType storeRecode(String* name, const char* value,
+                                    size_t valueSize, IDBKey* key,
+                                    bool noOverwrite);
 
     IDBBackingStore* backingStore();
 

@@ -21,7 +21,10 @@
 
 #include "StarfishConfig.h"
 #include "platform/file/PlatformDirectory.h"
+#include "platform/file/PlatformFile.h"
 #include "core/util/debug/Trace.h"
+#include "core/modules/indexeddb/IDBKey.h"
+#include "core/modules/indexeddb/IDBRequest.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/MemoryBackingStore.h"
 
@@ -60,6 +63,38 @@ void MemoryBackingStore::open(String* name, unsigned long long version)
     createDirectory(openPath);
 
     TRACE(IDB, m_openPath);
+}
+
+IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
+                                                 size_t dataSize, IDBKey* key,
+                                                 bool noOverwrite)
+{
+    Nullable<String*> keyString = key->toString();
+    if (!keyString.hasValue()) {
+        return IDBRequestErrorType::Unknown;
+    }
+
+    String* hashString = String::fromInt64(keyString->hashValue());
+    String* path = joinPath(
+        String::fromUTF8(m_openPath.c_str(), m_openPath.length()), name);
+    createDirectory(path);
+
+    path = joinPath(path, hashString);
+    auto out = PlatformFile::open(path, PlatformFile::FileMode::Write);
+
+    if (!out) {
+        return IDBRequestErrorType::Unknown;
+    }
+
+    if (noOverwrite && out->size() != 0) {
+        return IDBRequestErrorType::OverWriteError;
+    }
+
+    TRACE(CSTR(path));
+    size_t size = out->write((void*)data, sizeof(char), dataSize);
+
+    return size == dataSize ? IDBRequestErrorType::None
+                            : IDBRequestErrorType::Unknown;
 }
 
 } // namespace Starfish

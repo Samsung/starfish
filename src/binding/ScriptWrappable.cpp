@@ -60,9 +60,34 @@ ScriptValue scriptStringToScriptValue(ScriptString s)
     return ValueRef::create(s);
 }
 
-bool scriptValueIsBoolean(ScriptValue v)
+bool isCallableScriptValue(ScriptValue v)
+{
+    return v->isCallable();
+}
+
+bool isObjectScriptValue(ScriptValue v)
+{
+    return v->isObject();
+}
+
+bool isNumberScriptValue(ScriptValue v)
+{
+    return v->isNumber();
+}
+
+bool isBooleanScriptValue(ScriptValue v)
 {
     return v->isBoolean();
+}
+
+bool isNullOrUndefinedScriptValue(ScriptValue v)
+{
+    return v->isNull() || v->isUndefined();
+}
+
+bool isStringScriptValue(ScriptValue v)
+{
+    return v->isString();
 }
 
 bool scriptValueAsBoolean(ScriptValue v)
@@ -73,6 +98,11 @@ bool scriptValueAsBoolean(ScriptValue v)
 unsigned scriptValueAsNumber(ScriptValue v)
 {
     return v->asNumber();
+}
+
+ScriptObject scriptValueAsObject(ScriptValue v)
+{
+    return v->asObject();
 }
 
 ScriptObject scriptError(ScriptBindingInstance* instance, String* msg)
@@ -756,6 +786,25 @@ ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
         result = sbresult.result;
     }
     return result;
+}
+
+ScriptValue getScriptObjectOwnProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key)
+{
+    auto sbresult = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptObject object,
+           ScriptValue key) -> ValueRef* {
+            return object->getOwnProperty(state, key);
+        },
+        object, key);
+
+    if (sbresult.error.hasValue()) {
+        STARFISH_ASSERT_NOT_REACHED();
+        return scriptUndefined();
+    }
+
+    return sbresult.result;
 }
 
 ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
@@ -1449,44 +1498,6 @@ String* timeToUTCString(ScriptBindingInstance* instance, int64_t value)
                       },
                       value)
                       .result);
-}
-
-bool isCallableScriptValue(ScriptValue v)
-{
-    return v->isCallable();
-}
-
-bool isObjectScriptValue(ScriptValue v)
-{
-    if (v->isObject()) {
-        return true;
-    }
-    return false;
-}
-
-bool isNumberScriptValue(ScriptValue v)
-{
-    if (v->isNumber()) {
-        return true;
-    }
-    return false;
-}
-
-bool isBooleanScriptValue(ScriptValue v)
-{
-    if (v->isBoolean()) {
-        return true;
-    }
-    return false;
-}
-
-bool isNullOrUndefinedScriptValue(ScriptValue v)
-{
-    if (v->isNull() || v->isUndefined()) {
-        return true;
-    }
-
-    return false;
 }
 
 #ifdef STARFISH_ENABLE_TEST

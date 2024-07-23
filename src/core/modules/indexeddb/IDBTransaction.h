@@ -58,6 +58,10 @@ public:
     {
         m_mode = mode;
     }
+    IDBTransactionMode modeEnum() const
+    {
+        return m_mode;
+    }
 
     String* durability() const;
 
@@ -67,7 +71,7 @@ public:
     DEFINE_GETTER(DOMStringList*, objectStoreNames);
     DEFINE_GETTER(IDBDatabase*, db);
     DEFINE_GETTER(DOMException*, error);
-    DEFINE_GETTER(State, state);
+    DEFINE_GETTER_SETTER(State, state, State);
 
 private:
     ExecutionContext* m_executionContext;

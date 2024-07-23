@@ -99,9 +99,16 @@ typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
 ScriptValue scriptStringToScriptValue(ScriptString s);
-bool scriptValueIsBoolean(ScriptValue v);
+
+bool isCallableScriptValue(ScriptValue v);
+bool isObjectScriptValue(ScriptValue v);
+bool isNumberScriptValue(ScriptValue v);
+bool isBooleanScriptValue(ScriptValue v);
+bool isNullOrUndefinedScriptValue(ScriptValue v);
+bool isStringScriptValue(ScriptValue v); 
 bool scriptValueAsBoolean(ScriptValue v);
 unsigned scriptValueAsNumber(ScriptValue v);
+ScriptObject scriptValueAsObject(ScriptValue v);
 
 ScriptObject scriptError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptEvalError(ScriptBindingInstance*, String* msg);
@@ -191,6 +198,9 @@ ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
                                     ScriptValue key, ScriptValue value,
                                     ScriptValue thisValue);
 
+ScriptValue getScriptObjectOwnProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key);
+
 void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
                                              String* attrName,
                                              ScriptValue targetObject);
@@ -234,12 +244,6 @@ double parseDate(ScriptBindingInstance* instance, String* date);
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);
 
 void throwScriptTypeError(String* message);
-
-bool isCallableScriptValue(ScriptValue v);
-bool isObjectScriptValue(ScriptValue v);
-bool isNumberScriptValue(ScriptValue v);
-bool isBooleanScriptValue(ScriptValue v);
-bool isNullOrUndefinedScriptValue(ScriptValue v);
 
 uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer);
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);

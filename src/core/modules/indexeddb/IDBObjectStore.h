@@ -28,6 +28,8 @@ namespace Starfish {
 
 class DOMStringList;
 class IDBTransaction;
+class IDBKeyPath;
+class IDBRequest;
 
 class IDBObjectStore : public ScriptWrappable {
 public:
@@ -36,8 +38,15 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBObjectStore)
 
+    IDBRequest* put(ScriptValue value, ScriptValue key);
+    IDBRequest* put(ScriptValue value);
+
+    IDBRequest* add(ScriptValue value, ScriptValue key);
+    IDBRequest* add(ScriptValue value);
+
+    IDBRequest* addOrPut(ScriptValue value, ScriptValue key, bool noOverwrite);
+
     DEFINE_GETTER_SETTER(String*, name, Name);
-    DEFINE_GETTER(ScriptValue, keyPath);
     DEFINE_GETTER(DOMStringList*, indexNames);
     DEFINE_GETTER(IDBTransaction*, transaction);
     DEFINE_GETTER(bool, autoIncrement);
@@ -45,10 +54,11 @@ public:
 private:
     ExecutionContext* m_executionContext;
     String* m_name;
-    ScriptValue m_keyPath;
     DOMStringList* m_indexNames;
     IDBTransaction* m_transaction;
     bool m_autoIncrement;
+    bool m_deleted;
+    Nullable<IDBKeyPath*> m_keyPath;
 };
 } // namespace Starfish
 

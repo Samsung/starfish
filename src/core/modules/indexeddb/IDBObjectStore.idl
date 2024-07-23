@@ -7,13 +7,13 @@
 ]
 interface IDBObjectStore {
   attribute DOMString name;
-  readonly attribute any keyPath;
+  [Unimplemented] readonly attribute any keyPath;
   readonly attribute DOMStringList indexNames;
   [SameObject] readonly attribute IDBTransaction transaction;
   readonly attribute boolean autoIncrement;
 
-  [Unimplemented, NewObject, RaisesException] IDBRequest put(any value, optional any key);
-  [Unimplemented, NewObject, RaisesException] IDBRequest add(any value, optional any key);
+  [NewObject, RaisesException] IDBRequest put(any value, optional any key);
+  [NewObject, RaisesException] IDBRequest add(any value, optional any key);
   [Unimplemented, NewObject] IDBRequest delete(any query);
   [Unimplemented, NewObject] IDBRequest clear();
   [Unimplemented, NewObject, RaisesException] IDBRequest get(any query);

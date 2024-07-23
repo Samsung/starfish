@@ -19,32 +19,54 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishMemoryBackingStore__
-#define __StarfishMemoryBackingStore__
+#ifndef __StarfishIDBKey__
+#define __StarfishIDBKey__
 
-#include "core/modules/indexeddb/IDBBackingStore.h"
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
-class ExecutionContext;
-class IDBOpenDBRequest;
-class IDBKey;
-
-// NOTE: The MemoryBackingStore class is called only on the main work thread of
-// IDBTaskQueue.
-
-class MemoryBackingStore : public IDBBackingStore {
+class IDBKey : public gc {
 public:
-    static void createDirectory(String* path);
+    enum class Type : uint8_t {
+        Invalid,
+        Array,
+        Binary,
+        String,
+        Date,
+        Number,
+        Null,
+    };
 
-    void open(String* name, unsigned long long version) override;
+    static IDBKey* convertValueToKey(
+        ScriptBindingInstance* scriptBindingInstance, ScriptValue value);
 
-    IDBRequestErrorType addOrPut(String* name, const char* data,
-                                 size_t dataSize, IDBKey* key,
-                                 bool noOverwrite) override;
+    IDBKey(Type type);
+    IDBKey(String* stringValue);
+    IDBKey(double numberValue);
+
+    bool isInvalid()
+    {
+        return m_type == Type::Invalid;
+    }
+
+    DEFINE_GETTER(Type, type);
+
+    String* getString();
+    double getNumber();
+
+    Nullable<String*> toString();
+
+    void checkInvalid(ExecutionContext* executionContext);
 
 private:
-    std::string m_openPath;
+    Type m_type;
+    union Value {
+        String* m_string;
+        double m_number;
+    };
+
+    Value m_value;
 };
 } // namespace Starfish
 

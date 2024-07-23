@@ -19,33 +19,41 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishMemoryBackingStore__
-#define __StarfishMemoryBackingStore__
+#include "binding/generated/DOMStringOrSequenceOfDOMStringUnion.h"
 
-#include "core/modules/indexeddb/IDBBackingStore.h"
+#ifndef __StarfishIDBKeyPath__
+#define __StarfishIDBKeyPath__
 
 namespace Starfish {
 
-class ExecutionContext;
-class IDBOpenDBRequest;
 class IDBKey;
 
-// NOTE: The MemoryBackingStore class is called only on the main work thread of
-// IDBTaskQueue.
-
-class MemoryBackingStore : public IDBBackingStore {
+class IDBKeyPath : public gc {
 public:
-    static void createDirectory(String* path);
+    enum class Type : uint8_t {
+        Null,
+        String,
+    };
 
-    void open(String* name, unsigned long long version) override;
+    IDBKeyPath(ScriptBindingInstance* instance);
+    IDBKeyPath(ScriptBindingInstance* instance,
+               const DOMStringOrSequenceOfDOMString& keyPath);
 
-    IDBRequestErrorType addOrPut(String* name, const char* data,
-                                 size_t dataSize, IDBKey* key,
-                                 bool noOverwrite) override;
+    bool isValid();
+
+    const GCVector<String*>& strings()
+    {
+        return m_strings;
+    }
+
+    IDBKey* extractKey(ScriptValue value);
 
 private:
-    std::string m_openPath;
+    ScriptBindingInstance* m_instance;
+    GCVector<String*> m_strings;
+    Type m_type;
 };
+
 } // namespace Starfish
 
 #endif

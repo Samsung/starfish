@@ -352,6 +352,13 @@ MemorySerializedData::MemorySerializedData(const char* data, size_t size)
 {
 }
 
+SerializedTypedData* MemorySerializer::serialize(
+    ExecutionContext* executionContext, ScriptValue value)
+{
+    StructuredSerialize serializer(executionContext);
+    return serializer.serialize(value);
+}
+
 void MemorySerializer::serializeWithTransfer(
     ExecutionContext* executionContext, ScriptValue value,
     const GCAtomicVector<ScriptObject>& transferValues,
