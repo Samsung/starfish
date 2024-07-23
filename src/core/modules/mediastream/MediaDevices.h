@@ -24,6 +24,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
+#include "core/modules/mediastream/MediaTrackConstraints.h"
 #include "binding/generated/booleanOrMediaTrackConstraintsUnion.h"
 
 namespace Starfish {

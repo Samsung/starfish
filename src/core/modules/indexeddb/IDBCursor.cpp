@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/modules/indexeddb/IDBCursor.h"
 
 namespace Starfish {
@@ -28,6 +29,11 @@ IDBCursor::IDBCursor(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
+}
+
+ScriptBindingInstance* IDBCursor::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 } // namespace Starfish

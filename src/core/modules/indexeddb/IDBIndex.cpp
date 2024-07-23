@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/modules/indexeddb/IDBIndex.h"
 
 namespace Starfish {
@@ -31,6 +32,11 @@ IDBIndex::IDBIndex(ExecutionContext* executionContext, String* name,
     , m_name(name)
     , m_objectStore(objectStore)
 {
+}
+
+ScriptBindingInstance* IDBIndex::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 } // namespace Starfish

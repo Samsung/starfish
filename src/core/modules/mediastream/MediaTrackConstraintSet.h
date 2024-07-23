@@ -22,6 +22,7 @@
 #define __StarfishMediaTrackConstraintSet__
 
 #include "binding/ScriptWrappable.h"
+#include "core/modules/mediastream/ConstrainLongRange.h"
 #include "binding/generated/unsignedlongOrConstrainULongRangeUnion.h"
 
 namespace Starfish {
