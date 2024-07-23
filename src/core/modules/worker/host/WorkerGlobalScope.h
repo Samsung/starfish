@@ -41,8 +41,6 @@ typedef void (*TimerHandler)(void* data);
 
 class WorkerGlobalScope : public EventTarget, public GlobalScope {
 public:
-    WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWorkerGlobalScope() const override;

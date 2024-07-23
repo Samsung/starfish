@@ -55,27 +55,6 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     STARFISH_ASSERT(webWorker != nullptr);
 }
 
-WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
-                                     String* charSet)
-    : EventTarget()
-    , GlobalScope(webWorker)
-    , m_webWorker(webWorker)
-    , m_crypto(nullptr)
-    , m_closing(false)
-{
-    TRACE_SCOPE(HOST);
-
-    STARFISH_ASSERT(webWorker != nullptr);
-    STARFISH_ASSERT(url != nullptr);
-    STARFISH_ASSERT(charSet != nullptr);
-
-    m_scriptBindingInstance =
-        new ScriptBindingWorkerInstance<WorkerGlobalScope>(
-            webWorker->scriptEngineInstance(), this);
-
-    initGlobalScope(url, charSet);
-}
-
 void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
 {
     STARFISH_ASSERT(url != nullptr);

@@ -596,50 +596,54 @@ void ChainedPromiseManager::AddChain(ChainedOperation chainedOperation)
 {
     STARFISH_ASSERT(isMainThread());
     // Set onSettled to execute next chained operation.
-    chainedOperation.first->setOnSettled([](void* data) {
-        ChainedPromiseManager* self =
-            reinterpret_cast<ChainedPromiseManager*>(data);
-        // Abort all chained operations if connection is closed.
-        if (self->m_peerConnection->isClosed()) {
-            for (const auto& chainedOperation : self->m_chainedOperations) {
-                if (!chainedOperation.first->isSettled()) {
-                    auto exception = new DOMException(
-                        self->m_peerConnection->executionContext(),
-                        DOMException::INVALID_STATE_ERR,
-                        "The peer connection is closed.");
-                    // Reject promise.
-                    chainedOperation.first->reject(exception->scriptValue());
+    chainedOperation.first->setOnSettled(
+        [](void* data) {
+            ChainedPromiseManager* self =
+                reinterpret_cast<ChainedPromiseManager*>(data);
+            // Abort all chained operations if connection is closed.
+            if (self->m_peerConnection->isClosed()) {
+                for (const auto& chainedOperation : self->m_chainedOperations) {
+                    if (!chainedOperation.first->isSettled()) {
+                        auto exception = new DOMException(
+                            self->m_peerConnection->executionContext(),
+                            DOMException::INVALID_STATE_ERR,
+                            "The peer connection is closed.");
+                        // Reject promise.
+                        chainedOperation.first->reject(
+                            exception->scriptValue());
 
-                    // Remove the promise from the observer it registered with.
-                    chainedOperation.second.first->removePromise(
-                        chainedOperation.first);
+                        // Remove the promise from the observer it registered
+                        // with.
+                        chainedOperation.second.first->removePromise(
+                            chainedOperation.first);
+                    }
                 }
+                self->m_chainedOperations.clear();
+                return;
             }
-            self->m_chainedOperations.clear();
-            return;
-        }
 
-        // Remove last executed operaton.
-        STARFISH_ASSERT(self->m_lastExecutedPromise ==
-                        self->m_chainedOperations.front().first);
-        STARFISH_ASSERT(self->m_lastExecutedPromise->isSettled());
-        self->m_chainedOperations.erase(self->m_chainedOperations.begin());
+            // Remove last executed operaton.
+            STARFISH_ASSERT(self->m_lastExecutedPromise ==
+                            self->m_chainedOperations.front().first);
+            STARFISH_ASSERT(self->m_lastExecutedPromise->isSettled());
+            self->m_chainedOperations.erase(self->m_chainedOperations.begin());
 
-        self->m_lastExecutedPromise = nullptr;
-        if (!self->m_chainedOperations.size()) {
-            // End of chaining operations call.
-            return;
-        }
+            self->m_lastExecutedPromise = nullptr;
+            if (!self->m_chainedOperations.size()) {
+                // End of chaining operations call.
+                return;
+            }
 
-        // Execute next chained operatoin.
-        const auto& nextChain = self->m_chainedOperations.front();
-        STARFISH_ASSERT(!nextChain.first->isSettled());
-        // the operation will call async method of libwebrtc.
-        // this asnyc method ends, it will call call a callback method of
-        // observers. and the promise will settled in that callback.
-        self->m_lastExecutedPromise = nextChain.first;
-        nextChain.second.second();
-    });
+            // Execute next chained operatoin.
+            const auto& nextChain = self->m_chainedOperations.front();
+            STARFISH_ASSERT(!nextChain.first->isSettled());
+            // the operation will call async method of libwebrtc.
+            // this asnyc method ends, it will call call a callback method of
+            // observers. and the promise will settled in that callback.
+            self->m_lastExecutedPromise = nextChain.first;
+            nextChain.second.second();
+        },
+        this);
 
     // Add operation to chain.
     m_chainedOperations.push_back(chainedOperation);
