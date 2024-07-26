@@ -456,6 +456,15 @@ static bool needsRepaintingWhenScrolling(StackingContext* sc)
         return true;
     }
 
+    if (sc->owner()->node()->isElement()) {
+        if (sc->owner()->node()->asElement()->scrollWidth() !=
+                visibleRect.width().toUnsigned() ||
+            sc->owner()->node()->asElement()->scrollHeight() !=
+                visibleRect.height().toUnsigned()) {
+            return true;
+        }
+    }
+
     return false;
 }
 
