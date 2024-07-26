@@ -333,6 +333,40 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
         }
     }
 
+    if (!parentHasFixedHeight && height.isPercent() && !isFlexItem()) {
+        FrameBox* parent = containingBlock(this);
+        float percent = height.percent();
+        bool everyAscendentHavePercentBeforeMeetFixedMaxHeight = true;
+        LayoutUnit fixedHeight;
+        while (true) {
+            auto parentHeight = parent->style()->height();
+            auto parentMaxHeight = parent->style()->maxHeight();
+
+            if (parentHeight.isPercent()) {
+                percent *= parentHeight.percent();
+            } else if (parentMaxHeight.isPercent()) {
+                percent *= parentMaxHeight.percent();
+            } else if(parentMaxHeight.isFixed()) {
+                fixedHeight = parentMaxHeight.fixed();
+                break;
+            } else {
+                everyAscendentHavePercentBeforeMeetFixedMaxHeight = false;
+                break;
+            }
+
+            parent = containingBlock(parent);
+            if (!parent) {
+                everyAscendentHavePercentBeforeMeetFixedMaxHeight = false;
+                break;
+            }
+        }
+        if (percent && everyAscendentHavePercentBeforeMeetFixedMaxHeight &&
+            fixedHeight < contentHeight) {
+            parentHasFixedHeight = true;
+            parentHeight = fixedHeight * percent;
+        }
+    }
+
     // This code ignores the percent for the grid itme.
     // Because the grid item don't need parent's height
     // to compute the height of the grid item.
