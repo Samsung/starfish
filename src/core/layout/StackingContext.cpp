@@ -3108,6 +3108,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             case NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation:
                 compositor->setFillColor(Unit::Color(0, 255, 255, 64));
                 break;
+            case NeedsGraphicsLayerReasonNeedsScroll:
+                compositor->setFillColor(Unit::Color(255, 0, 255, 64));
+                break;
             default:
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
