@@ -235,8 +235,11 @@ TEST_F(WebContainerTest, LoadURL)
             loaded = true;
         });
     lwe->LoadURL("about:blank");
-    window->appLoop()->start(3); // Timout 3 sec.
+    window->appLoop()->start(1);
     EXPECT_TRUE(loaded);
+
+    lwe->RegisterOnPageLoadedHandler(
+        [](LWE::WebContainer*, const std::string&) {});
 }
 
 TEST_F(WebContainerTest, LoadData)
@@ -248,8 +251,11 @@ TEST_F(WebContainerTest, LoadData)
             loaded = true;
         });
     lwe->LoadData("<html><body>Hello World!</body></html>");
-    window->appLoop()->start(3); // Timout 3 sec.
+    window->appLoop()->start(1);
     EXPECT_TRUE(loaded);
+
+    lwe->RegisterOnPageLoadedHandler(
+        [](LWE::WebContainer*, const std::string&) {});
 }
 
 TEST_F(WebContainerTest, GetURL)
@@ -261,10 +267,130 @@ TEST_F(WebContainerTest, GetURL)
             onloadUrl = string;
         });
     lwe->LoadURL("about:blank");
-    window->appLoop()->start(3); // Timout 3 sec.
+    window->appLoop()->start(1);
     std::string getUrl = lwe->GetURL();
     EXPECT_TRUE(getUrl == onloadUrl);
+
+    lwe->RegisterOnPageLoadedHandler(
+        [](LWE::WebContainer*, const std::string&) {});
 }
+
+TEST_F(WebContainerTest, ResizeAndWidthHeight)
+{
+    std::string onloadUrl;
+    lwe->ResizeTo(640, 480);
+    window->appLoop()->start(1);
+    size_t width = lwe->Width();
+    size_t height = lwe->Height();
+    EXPECT_EQ(width, 640);
+    EXPECT_EQ(height, 480);
+
+    lwe->ResizeTo(800, 600);
+    window->appLoop()->start(1);
+    width = lwe->Width();
+    height = lwe->Height();
+    EXPECT_EQ(width, 800);
+    EXPECT_EQ(height, 600);
+}
+
+TEST_F(WebContainerTest, ScrollTo)
+{
+    std::string onloadUrl;
+    lwe->LoadData(
+        "<html><head><style> body { overflow-x: scroll; overflow-y: scroll; "
+        "width: 2000px; height: 2000px; } </style></head><body> "
+        "</body></html>");
+    window->appLoop()->start(1);
+    lwe->ScrollTo(100, 100);
+    int x = lwe->GetScrollX();
+    int y = lwe->GetScrollY();
+    EXPECT_EQ(x, 100);
+    EXPECT_EQ(y, 100);
+}
+
+TEST_F(WebContainerTest, JavaScriptInterfaceAndEvaluateJavaScript)
+{
+    lwe->LoadURL("about:blank");
+    lwe->AddJavaScriptInterface(
+        "TEST", "echo", [](std::string param) -> std::string { return param; });
+    window->appLoop()->start(1);
+    std::string result = lwe->EvaluateJavaScript("TEST.echo('test')");
+    EXPECT_TRUE(result == "test");
+
+    lwe->RemoveJavascriptInterface("TEST", "echo");
+    window->appLoop()->start(1);
+    result = lwe->EvaluateJavaScript("TEST.echo('test')");
+    EXPECT_TRUE(result != "test");
+}
+
+TEST_F(WebContainerTest, Reload)
+{
+    int cnt = 0;
+    lwe->RegisterOnPageLoadedHandler(
+        [&cnt](LWE::WebContainer* wc, const std::string& string) {
+            window->appLoop()->stop();
+            cnt++;
+        });
+    lwe->LoadURL("about:blank");
+    window->appLoop()->start(1);
+    lwe->Reload();
+    window->appLoop()->start(1);
+    EXPECT_EQ(cnt, 2);
+    lwe->RegisterOnPageLoadedHandler(
+        [](LWE::WebContainer*, const std::string&) {});
+}
+
+TEST_F(WebContainerTest, DevicePixelRatio)
+{
+    int cnt = 0;
+    lwe->LoadURL("about:blank");
+    EXPECT_EQ(lwe->GetDevicePixelRatio(), 1);
+    lwe->SetDevicePixelRatio(2);
+    EXPECT_EQ(lwe->GetDevicePixelRatio(), 2);
+    lwe->SetDevicePixelRatio(1);
+    EXPECT_EQ(lwe->GetDevicePixelRatio(), 1);
+}
+
+TEST_F(WebContainerTest, AddIdleCallback)
+{
+    int called = false;
+    lwe->AddIdleCallback(
+        [](void* data) {
+            int* called = static_cast<int*>(data);
+            *called = true;
+            window->appLoop()->stop();
+        },
+        &called);
+    lwe->LoadURL("about:blank");
+    window->appLoop()->start(3);
+    EXPECT_EQ(called, true);
+    lwe->AddIdleCallback([](void* data) {}, nullptr);
+}
+
+TEST_F(WebContainerTest, PauseResume)
+{
+    std::string result = "";
+    lwe->AddJavaScriptInterface("TEST", "setResult",
+                                [&result](std::string param) -> std::string {
+                                    result = param;
+                                    return param;
+                                });
+    lwe->LoadData(
+        "<html><head></head><body></"
+        "body><script>document.addEventListener('visibilitychange',() => {  "
+        "TEST.setResult(document.visibilityState);});</script></html>");
+    window->appLoop()->start(1);
+    lwe->Pause();
+    window->appLoop()->start(1);
+    EXPECT_EQ(result, "hidden");
+
+    lwe->Resume();
+    window->appLoop()->start(1);
+    EXPECT_EQ(result, "visible");
+
+    lwe->RemoveJavascriptInterface("TEST", "setResult");
+}
+
 #endif
 
 } // namespace StarfishShell
