@@ -1,55 +1,55 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
-SET(PACKAGE_ID "org.tizen.lightweight-web-engine-shell")
+SET(SHELL_PACKAGE_ID "org.tizen.lightweight-web-engine-shell")
 SET(TIZEN_VERSION "${TIZEN_MAJOR_VERSION}.${TIZEN_MINOR_VERSION}")
-SET(TPK_ROOT ${OUTPUT_DIRECTORY}/tpk_root)
-SET(TPK_VERSOIN 0.0.1)
-SET(TPK_NAME ${PACKAGE_ID}-${TPK_VERSOIN}.${ARCH}.tpk)
+SET(SHELL_TPK_ROOT ${OUTPUT_DIRECTORY}/shell_tpk_root)
+SET(SHELL_TPK_VERSOIN 0.0.1)
+SET(SHELL_TPK_NAME ${SHELL_PACKAGE_ID}-${SHELL_TPK_VERSOIN}.${ARCH}.tpk)
 SET(HASH_SIGNER_SH "/usr/bin/hash-signer.sh")
 GET_TARGET_PROPERTY(STARFISH_API_OUTPUT_NAME starfish_api.shared_library OUTPUT_NAME)
 
-CONFIGURE_FILE(build/tizen/tpk/tizen-manifest.xml.in ${OUTPUT_DIRECTORY}/tizen-manifest.xml)
+CONFIGURE_FILE(build/tizen/tpk/shell_tizen-manifest.xml.in ${OUTPUT_DIRECTORY}/shell_tizen-manifest.xml)
 
-ADD_CUSTOM_TARGET (tpk_root
+ADD_CUSTOM_TARGET (shell_tpk_root
     COMMAND echo "Make tpk root..."
-    COMMAND rm -rf ${TPK_ROOT}
-    COMMAND install -d ${TPK_ROOT}
-    COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/tizen-manifest.xml ${TPK_ROOT}/tizen-manifest.xml
-    COMMAND install -d ${TPK_ROOT}/bin
-    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/${TARGETNAME} ${TPK_ROOT}/bin/
-    COMMAND install -d ${TPK_ROOT}/lib/
-    COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/lib/*.so* ${TPK_ROOT}/lib/
-    COMMAND strip -v --strip-all ${TPK_ROOT}/lib/*.so
-    COMMAND mv ${TPK_ROOT}/lib/lib${TARGETNAME}.so ${TPK_ROOT}/lib/liblightweight-web-engine.so.1
+    COMMAND rm -rf ${SHELL_TPK_ROOT}
+    COMMAND install -d ${SHELL_TPK_ROOT}
+    COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/shell_tizen-manifest.xml ${SHELL_TPK_ROOT}/tizen-manifest.xml
+    COMMAND install -d ${SHELL_TPK_ROOT}/bin
+    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/${TARGETNAME} ${SHELL_TPK_ROOT}/bin/
+    COMMAND install -d ${SHELL_TPK_ROOT}/lib/
+    COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/lib/*.so* ${SHELL_TPK_ROOT}/lib/
+    COMMAND strip -v --strip-all ${SHELL_TPK_ROOT}/lib/*.so
+    COMMAND mv ${SHELL_TPK_ROOT}/lib/lib${TARGETNAME}.so ${SHELL_TPK_ROOT}/lib/liblightweight-web-engine.so.1
     COMMAND echo "Done."
 )
 
-ADD_CUSTOM_TARGET(kuep_signed_files
+ADD_CUSTOM_TARGET(kuep_signed_files_shell
     COMMAND echo "Sign files using kuep_signer..."
-    COMMAND kuep_signer.sh -tizen_major_ver ${TIZEN_MAJOR_VERSION} ${TPK_ROOT}/bin/${TARGETNAME}
-    COMMAND find ${TPK_ROOT}/lib/ -name *.so* -exec kuep_signer.sh -tizen_major_ver ${TIZEN_MAJOR_VERSION} {} "\\;"
+    COMMAND kuep_signer.sh -tizen_major_ver ${TIZEN_MAJOR_VERSION} ${SHELL_TPK_ROOT}/bin/${TARGETNAME}
+    COMMAND find ${SHELL_TPK_ROOT}/lib/ -name *.so* -exec kuep_signer.sh -tizen_major_ver ${TIZEN_MAJOR_VERSION} {} "\\;"
     COMMAND echo "Done."
 )
 
-ADD_CUSTOM_TARGET(signed_tpk_root
+ADD_CUSTOM_TARGET(signed_shell_tpk_root
     COMMAND echo "Sign tpk_root using hash-signer..."
-    COMMAND ${HASH_SIGNER_SH} -a -d -p platform ${TPK_ROOT}
+    COMMAND ${HASH_SIGNER_SH} -a -d -p platform ${SHELL_TPK_ROOT}
     COMMAND echo "Done."
 )
 
-ADD_CUSTOM_TARGET(tpk
+ADD_CUSTOM_TARGET(shell_tpk
     COMMAND echo "Packge tpk_root.."
     COMMAND rm -f ${OUTPUT_DIRECTORY}/*.tpk
-    COMMAND pushd ${TPK_ROOT}
-    COMMAND zip -yr ${TPK_NAME} *
-    COMMAND mv ${TPK_NAME} ../
+    COMMAND pushd ${SHELL_TPK_ROOT}
+    COMMAND zip -yr ${SHELL_TPK_NAME} *
+    COMMAND mv ${SHELL_TPK_NAME} ../
     COMMAND popd
     COMMAND echo "Done."
 )
 
-ADD_CUSTOM_TARGET(resigned_tpk
+ADD_CUSTOM_TARGET(resigned_shell_tpk
     COMMAND echo "Resign tpk using tpkresigner..."
-    COMMAND tpkresigner -a -d -p platform -n ${PACKAGE_ID} ${OUTPUT_DIRECTORY}/${TPK_NAME}
+    COMMAND tpkresigner -a -d -p platform -n ${SHELL_PACKAGE_ID} ${OUTPUT_DIRECTORY}/${SHELL_TPK_NAME}
     COMMAND echo "Done."
 )
 
@@ -58,15 +58,15 @@ ADD_CUSTOM_TARGET (starfish.executable.tpk
 )
 
 IF (${CUSTOM} STREQUAL "prod_tv")
-    ADD_DEPENDENCIES (starfish.executable.tpk resigned_tpk)
-    ADD_DEPENDENCIES (resigned_tpk tpk)
-    ADD_DEPENDENCIES (tpk signed_tpk_root)
-    ADD_DEPENDENCIES (signed_tpk_root kuep_signed_files)
-    ADD_DEPENDENCIES (kuep_signed_files tpk_root)
-    ADD_DEPENDENCIES (tpk_root starfish.executable)
+    ADD_DEPENDENCIES (starfish.executable.tpk resigned_shell_tpk)
+    ADD_DEPENDENCIES (resigned_shell_tpk shell_tpk)
+    ADD_DEPENDENCIES (shell_tpk signed_shell_tpk_root)
+    ADD_DEPENDENCIES (signed_shell_tpk_root kuep_signed_files_shell)
+    ADD_DEPENDENCIES (kuep_signed_files_shell shell_tpk_root)
+    ADD_DEPENDENCIES (shell_tpk_root starfish.executable)
 ELSE()
-    ADD_DEPENDENCIES (starfish.executable.tpk tpk)
-    ADD_DEPENDENCIES (tpk signed_tpk_root)
-    ADD_DEPENDENCIES (signed_tpk_root tpk_root)
-    ADD_DEPENDENCIES (tpk_root starfish.executable)
+    ADD_DEPENDENCIES (starfish.executable.tpk shell_tpk)
+    ADD_DEPENDENCIES (shell_tpk signed_shell_tpk_root)
+    ADD_DEPENDENCIES (signed_shell_tpk_root shell_tpk_root)
+    ADD_DEPENDENCIES (shell_tpk_root starfish.executable)
 ENDIF()
