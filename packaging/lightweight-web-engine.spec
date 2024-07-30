@@ -709,6 +709,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/unified_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -718,6 +719,7 @@ cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bi
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/prod_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
@@ -732,6 +734,7 @@ cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
 mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
+cp -fr out_tizen/headless/release/VERSION %{buildroot}%{_libdir}/lwe/headless
 %endif
 %if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
@@ -741,6 +744,7 @@ cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/unified_mobile/release/VERSION %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
@@ -750,6 +754,7 @@ cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroo
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/unified_wearable/release/VERSION %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
@@ -759,6 +764,7 @@ cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buil
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/flutter/release/VERSION %{buildroot}%{_libdir}/lwe/flutter
 %endif
 
 # for devel files
@@ -953,6 +959,7 @@ exit 0
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/tv/*.so*
+%{_libdir}/lwe/tv/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
@@ -963,6 +970,7 @@ exit 0
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/headless/*.so*
+%{_libdir}/lwe/headless/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
@@ -973,6 +981,7 @@ exit 0
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/mobile/*.so*
+%{_libdir}/lwe/mobile/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
@@ -983,6 +992,7 @@ exit 0
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/wearable/*.so*
+%{_libdir}/lwe/wearable/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
@@ -993,6 +1003,7 @@ exit 0
 %{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/flutter/*.so*
+%{_libdir}/lwe/flutter/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
