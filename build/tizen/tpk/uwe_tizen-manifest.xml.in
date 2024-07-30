@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" api-version="@TIZEN_VERSION@" package="@UWE_PACKAGE_ID@" version="@UWE_TPK_VERSION@">
+    <label>Lightweight web engine</label>
+    <author href="www.samsung.com">SamsungResearch</author>
+    <description>Lightweight web engine</description>
+    <ui-application appid="@UWE_PACKAGE_ID@" exec="@TARGETNAME@" hw-acceleration="on" nodisplay="true" multiple="false" type="c++app" taskmanage="false">
+        <label>Lightweight web engine</label>
+        <label xml:lang="en-us">Lightweight web engine</label>
+    </ui-application>
+    <privileges>
+        <privilege>http://tizen.org/privilege/internet</privilege>
+    </privileges>
+</manifest>

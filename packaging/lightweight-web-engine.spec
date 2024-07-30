@@ -238,8 +238,9 @@ BuildRequires: libasan
 
 BuildRequires: pkgconfig(bundle)
 
-%if "%{?build_shell_tpk}" == "1"
+%if "%{?build_shell_tpk}" == "1" || "%{?build_uwe_tpk}" == "1"
 BuildRequires: hash-signer, zip
+BuildRequires: squashfs
   %if "%{rpm}" == "prod_tv"
 BuildRequires: app-signer
 BuildRequires: sdk-core
@@ -495,6 +496,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish.executable
 
+%if "%{?build_uwe_tpk}" == "1"
+ninja -C %{out_tizen} starfish.uwe.tpk
+%endif
+
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
@@ -553,6 +558,10 @@ ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 %endif
 
+%if "%{?build_uwe_tpk}" == "1"
+ninja -C %{out_tizen} starfish.uwe.tpk
+%endif
+
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
@@ -589,6 +598,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
+
+%if "%{?build_uwe_tpk}" == "1"
+ninja -C %{out_tizen} starfish.uwe.tpk
+%endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
@@ -628,6 +641,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
+
+%if "%{?build_uwe_tpk}" == "1"
+ninja -C %{out_tizen} starfish.uwe.tpk
+%endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
@@ -669,6 +686,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
+
+%if "%{?build_uwe_tpk}" == "1"
+ninja -C %{out_tizen} starfish.uwe.tpk
+%endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk

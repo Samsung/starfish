@@ -55,6 +55,7 @@ ELSE ()
     ENDIF ()
     IF (${HOST} STREQUAL "tizen")
         INCLUDE (build/starfish_shell_tpk.cmake)
+        INCLUDE (build/starfish_uwe_tpk.cmake)
     ENDIF()
 
     CONFIGURE_FILE(lightweight-web-engine-dali-plugin.pc.in lightweight-web-engine-dali-plugin.pc @ONLY)
