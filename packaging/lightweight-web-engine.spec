@@ -163,6 +163,7 @@ BuildRequires: patchelf
 BuildRequires: python
 BuildRequires: python3
 BuildRequires: unzip
+BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(evas)
 BuildRequires: pkgconfig(ecore-evas)
@@ -479,7 +480,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen \
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=dali \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 %endif
@@ -491,7 +492,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish.executable
@@ -520,7 +521,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' \
   -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DTARGETNAME=lightweight-web-engine.prod.dali.tv \
+  -DTARGETNAME=lightweight-web-engine.prod.dali.tv -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -537,7 +538,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 %else # 0%{?build_option:1}
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -547,7 +548,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 %endif
 %endif
@@ -593,7 +594,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
   -DBACKEND=efl_headless -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -623,7 +624,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -635,7 +636,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.mobile \
-  -DWEBRTC='%{enable_webrtc}' \
+  -DWEBRTC='%{enable_webrtc}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -669,7 +670,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -681,7 +682,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -708,7 +709,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major
   -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter \
   -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DTARGETNAME=lightweight-web-engine.flutter \
+  -DTARGETNAME=lightweight-web-engine.flutter -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -725,12 +726,16 @@ ninja -C %{out_tizen} starfish_api.shared_library
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}/lwe
 mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_unitdir}
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -743,6 +748,9 @@ cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "prod_tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -756,6 +764,9 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/VERSION %{buildroot}%{_libdir}/lwe/headless
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
@@ -766,6 +777,9 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/VERSION %{buildroot}%{_libdir}/lwe/mobile
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
@@ -776,6 +790,9 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/VERSION %{buildroot}%{_libdir}/lwe/wearable
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
@@ -982,6 +999,9 @@ exit 0
 %{_libdir}/lwe/tv/*.so*
 %{_libdir}/lwe/tv/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%{_unitdir}/lightweight-web-engine-update.service
+%{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
+%{_datadir}/lwe/update
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
@@ -993,6 +1013,9 @@ exit 0
 %{_libdir}/lwe/headless/*.so*
 %{_libdir}/lwe/headless/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%{_unitdir}/lightweight-web-engine-update.service
+%{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
+%{_datadir}/lwe/update
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
@@ -1004,6 +1027,9 @@ exit 0
 %{_libdir}/lwe/mobile/*.so*
 %{_libdir}/lwe/mobile/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%{_unitdir}/lightweight-web-engine-update.service
+%{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
+%{_datadir}/lwe/update
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
@@ -1015,6 +1041,9 @@ exit 0
 %{_libdir}/lwe/wearable/*.so*
 %{_libdir}/lwe/wearable/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%{_unitdir}/lightweight-web-engine-update.service
+%{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
+%{_datadir}/lwe/update
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
