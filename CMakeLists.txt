@@ -29,6 +29,8 @@ SET (ENABLE_WASM "0" CACHE STRING "WEBASSEMBLY")
 SET (ENABLE_DEBUGGER "0" CACHE STRING "DEBUGGER")
 SET (ENABLE_TEST "0" CACHE STRING "ENABLE_TEST")
 SET (ENABLE_PROFILE "0" CACHE STRING "ENABLE_PROFILE")
+SET (TIZEN_RW_APP_DIR "./" CACHE STRING "TIZEN_RW_APP_DIR")
+SET (TIZEN_DATA_DIR "./" CACHE STRING "TIZEN_DATA_ROOT_DIR")
 
 # Expreimental flags for UWE
 SET (ENABLE_DYNAMIC_LOADER "0" CACHE STRING "ENABLE_DYNAMIC_LOADER")
@@ -55,7 +57,10 @@ ELSE ()
     ENDIF ()
     IF (${HOST} STREQUAL "tizen")
         INCLUDE (build/starfish_shell_tpk.cmake)
+
+        SET(UWE_PACKAGE_ID "org.tizen.lightweight-web-engine")
         INCLUDE (build/starfish_uwe_tpk.cmake)
+        INCLUDE (build/starfish_uwe_service.cmake)
     ENDIF()
 
     CONFIGURE_FILE(lightweight-web-engine-dali-plugin.pc.in lightweight-web-engine-dali-plugin.pc @ONLY)

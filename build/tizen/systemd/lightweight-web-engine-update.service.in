@@ -1,0 +1,13 @@
+[Unit]
+Description=Lightweight web engine update daemon
+ConditionPathExists=@UWE_PACKAGE_DIR@/res/lwe_update.img
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/mount -s @UWE_PACKAGE_DIR@/res/lwe_update.img @UWE_MOUNT_PATH@ -t squashfs -o loop,ro
+ExecStop=/bin/umount -dl @UWE_MOUNT_PATH@
+SmackProcessLabel=System::Privileged
+
+[Install]
+WantedBy=multi-user.target
