@@ -33,7 +33,7 @@ ADD_CUSTOM_TARGET(signed_uwe_tpk_root
 
 ADD_CUSTOM_TARGET(uwe_tpk
     COMMAND echo "Packge uwe_tpk_root.."
-    COMMAND rm -f ${OUTPUT_DIRECTORY}/*.tpk
+    COMMAND rm -f ${OUTPUT_DIRECTORY}/${UWE_TPK_NAME}
     COMMAND pushd ${UWE_TPK_ROOT}
     COMMAND zip -yr ${UWE_TPK_NAME} *
     COMMAND mv ${UWE_TPK_NAME} ../
