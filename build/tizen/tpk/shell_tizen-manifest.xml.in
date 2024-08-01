@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns="http://tizen.org/ns/packages" api-version="@TIZEN_VERSION@" package="@SHELL_PACKAGE_ID@" version="@SHELL_TPK_VERSOIN@">
+<manifest xmlns="http://tizen.org/ns/packages" api-version="@TIZEN_VERSION@" package="@SHELL_PACKAGE_ID@" version="@SHELL_TPK_VERSION@">
     <label>Lightweight web engine</label>
     <author href="www.samsung.com">SamsungResearch</author>
     <description>Shell of Lightweight web engine</description>
