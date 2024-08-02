@@ -29,6 +29,8 @@ P /.circleci
 - /third_party/escargot/tools
 + /third_party/libwebsockets
 - /third_party/openssl
+- /third_party/googletest
+- /third_party/libwebp
 - /third_party/webrtc/src/resources
 + /third_party/webrtc/src/test
 + /third_party/webrtc/src/api/test
