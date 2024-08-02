@@ -50,7 +50,10 @@ ELSE ()
     INCLUDE (build/third_party.cmake)
     INCLUDE (build/starfish.cmake)
     INCLUDE (build/starfish_public_api.cmake)
-    INCLUDE (build/test/prepare_test.cmake)
+
+    IF (${HOST} STREQUAL "linux" OR ${ENABLE_TEST} STREQUAL "1")
+        INCLUDE (build/test/prepare_test.cmake)
+    ENDIF()
 
     IF (SHELL)
         INCLUDE (build/starfish_shell.cmake)
