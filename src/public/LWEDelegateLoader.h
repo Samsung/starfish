@@ -48,7 +48,12 @@ public:
     LWEDelegateLoader(LWEDelegateLoader&& other) = delete;
     LWEDelegateLoader& operator=(const LWEDelegateLoader& other) = delete;
 
-    bool load(std::string path);
+    void setVersionPreference(bool preferUpdatedVersion)
+    {
+        m_preferUpdatedVersion = preferUpdatedVersion;
+    }
+
+    bool load();
     void unload();
 
 private:
@@ -75,6 +80,7 @@ private:
     void unloadWebViewProcTable();
 
     void* m_handle = nullptr;
+    bool m_preferUpdatedVersion = false;
 };
 
 } // namespace LWE

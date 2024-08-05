@@ -51,6 +51,16 @@ namespace LWE {
 class LWE_EXPORT LWE {
 public:
     /**
+     * \brief Sets the preference for the engine version to be used.
+     *
+     * \param preferUpdatedVersion If true, an updated engine version will be
+     * used if available.
+     *
+     * \remark Must be called before the Initialize.
+     */
+    static void SetVersionPreference(bool preferUpdatedVersion);
+
+    /**
      * \brief Initialize a lightweight web engine.
      * It performs tasks (thread initialization, GC preparation) necessary for
      * the operation of a lightweight web engine. You must call Initialize

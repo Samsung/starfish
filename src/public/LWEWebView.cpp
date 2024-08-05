@@ -54,10 +54,19 @@ T* toImpl(void* ptr)
     return static_cast<T*>(ptr);
 }
 
+void LWE::SetVersionPreference(bool preferUpdatedVersion)
+{
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEDelegateLoader::getInstance()->setVersionPreference(
+        preferUpdatedVersion);
+#endif
+    // Supported only when using a loader.
+}
+
 void LWE::Initialize(const char* storageDirectoryPath)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    if (!LWEDelegateLoader::getInstance()->load(STARFISH_API_TARGET_NAME)) {
+    if (!LWEDelegateLoader::getInstance()->load()) {
         LWE_ASSERT(false);
     }
     LWEDelegateLoader::getInstance()->kLWEProcTable.Initialize(

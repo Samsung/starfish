@@ -15,9 +15,10 @@ ADD_CUSTOM_TARGET (uwe_tpk_root
     COMMAND install -d ${UWE_TPK_ROOT}
     COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/uwe_tizen-manifest.xml ${UWE_TPK_ROOT}/tizen-manifest.xml
     COMMAND install -d ${UWE_TPK_ROOT}/bin
-    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/VERSION ${UWE_TPK_ROOT}
     COMMAND install -d ${UWE_TPK_ROOT}/lib/
+    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/VERSION ${UWE_TPK_ROOT}/lib/
     COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/lib/*.so* ${UWE_TPK_ROOT}/lib/
+    COMMAND rm ${UWE_TPK_ROOT}/lib/lib${TARGETNAME}.so
     COMMAND strip -v --strip-all ${UWE_TPK_ROOT}/lib/*.so
     COMMAND install -d ${UWE_TPK_ROOT}/res/
     COMMAND mksquashfs ${UWE_TPK_ROOT}/lib/ ${UWE_TPK_ROOT}/res/lwe_update.img -all-root
@@ -56,10 +57,10 @@ IF (${CUSTOM} STREQUAL "prod_tv")
     ADD_DEPENDENCIES (resigned_uwe_tpk uwe_tpk)
     ADD_DEPENDENCIES (uwe_tpk signed_uwe_tpk_root)
     ADD_DEPENDENCIES (signed_uwe_tpk_root uwe_tpk_root)
-    ADD_DEPENDENCIES (uwe_tpk_root starfish.executable)
+    ADD_DEPENDENCIES (uwe_tpk_root starfish.shared_library)
 ELSE()
     ADD_DEPENDENCIES (starfish.uwe.tpk uwe_tpk)
     ADD_DEPENDENCIES (uwe_tpk signed_uwe_tpk_root)
     ADD_DEPENDENCIES (signed_uwe_tpk_root uwe_tpk_root)
-    ADD_DEPENDENCIES (uwe_tpk_root starfish.executable)
+    ADD_DEPENDENCIES (uwe_tpk_root starfish.shared_library)
 ENDIF()

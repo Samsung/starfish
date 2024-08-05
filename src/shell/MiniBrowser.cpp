@@ -246,6 +246,7 @@ bool MiniBrowser::init(const InitOption& initOption)
         return false;
     }
 
+    LWE::LWE::SetVersionPreference(true);
     LWE::LWE::Initialize(storageDir().c_str());
 
     int major, minor, patch;
