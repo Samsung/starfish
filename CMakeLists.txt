@@ -50,7 +50,6 @@ ELSE ()
     INCLUDE (build/third_party.cmake)
     INCLUDE (build/starfish.cmake)
     INCLUDE (build/starfish_public_api.cmake)
-
     IF (${HOST} STREQUAL "linux" OR ${ENABLE_TEST} STREQUAL "1")
         INCLUDE (build/test/prepare_test.cmake)
     ENDIF()
@@ -58,9 +57,9 @@ ELSE ()
     IF (SHELL)
         INCLUDE (build/starfish_shell.cmake)
     ENDIF ()
+
     IF (${HOST} STREQUAL "tizen")
         INCLUDE (build/starfish_shell_tpk.cmake)
-
         SET(UWE_PACKAGE_ID "org.tizen.lightweight-web-engine")
         INCLUDE (build/starfish_uwe_tpk.cmake)
         INCLUDE (build/starfish_uwe_service.cmake)

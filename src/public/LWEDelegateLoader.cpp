@@ -19,6 +19,8 @@
 
 #ifdef STARFISH_API_ENABLE_LOADER
 
+#define CONCAT_STR(a, b) a b
+
 #include "LWEDelegateLoader.h"
 
 namespace LWE {
@@ -39,9 +41,19 @@ LWEDelegateLoader* LWEDelegateLoader::getInstance()
     return instance;
 }
 
-bool LWEDelegateLoader::load(std::string path)
+bool LWEDelegateLoader::load()
 {
-    m_handle = dlopen(path.c_str(), RTLD_LAZY);
+    if (m_preferUpdatedVersion) {
+        m_handle = dlopen(
+            CONCAT_STR(STARFISH_API_UWE_MOUNT_PATH, STARFISH_API_TARGET_NAME),
+            RTLD_LAZY);
+    }
+
+    if (!m_handle) {
+        // Try to open defalut version.
+        m_handle = dlopen(STARFISH_API_TARGET_NAME, RTLD_LAZY);
+    }
+
     if (!m_handle) {
         std::cerr << "Failed to open library: " << dlerror() << std::endl;
         return false;
