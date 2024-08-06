@@ -33,7 +33,8 @@ public:
     SVGLinearGradientElement(Document* document, const QualifiedName& qname)
         : SVGGradientElement(document, qname)
     {
-        x2()->baseVal()->setValueAsString(String::createASCIIString("100%"));
+        x2()->baseVal()->setValueAsString(String::createASCIIString("100%"),
+                                          false);
     }
 
     virtual void init(ScriptBindingInstance* instance,

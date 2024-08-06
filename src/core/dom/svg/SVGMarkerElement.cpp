@@ -64,7 +64,7 @@ void SVGMarkerElement::didAttributeChanged(QualifiedName name, String* old,
             } else {
                 m_orientType->setBaseValWithoutUpdateAttribute(
                     SVG_MARKER_ORIENT_ANGLE);
-                m_orientAngle->baseVal()->setValueAsString(str);
+                m_orientAngle->baseVal()->setValueAsString(str, false);
             }
         }
     } else if (ss->m_markerUnits == name) {

@@ -149,7 +149,8 @@ String* SVGAngle::valueAsString()
     return str;
 }
 
-void SVGAngle::setValueAsString(String* valueAsString)
+void SVGAngle::setValueAsString(String* valueAsString,
+                                bool throwDOMExceptionOnFailure)
 {
     if (valueAsString->length()) {
         auto s = valueAsString->toUTF8NonGCString();
@@ -168,19 +169,27 @@ void SVGAngle::setValueAsString(String* valueAsString)
             } else if (pair.angleValue().kind() == CSSAngle::GRAD) {
                 setUnitType(SVG_ANGLETYPE_GRAD);
             } else {
-                throw new DOMException(m_sourceElement->executionContext(),
-                                       DOMException::Code::NOT_SUPPORTED_ERR,
-                                       "Not Supported error");
+                if (throwDOMExceptionOnFailure) {
+                    throw new DOMException(
+                        m_sourceElement->executionContext(),
+                        DOMException::Code::NOT_SUPPORTED_ERR,
+                        "Not Supported error");
+                }
             }
             setValueInSpecifiedUnits(pair.angleValue().value());
         } else {
+            if (throwDOMExceptionOnFailure) {
+                throw new DOMException(m_sourceElement->executionContext(),
+                                       DOMException::Code::SYNTAX_ERR,
+                                       "SyntaxError");
+            }
+        }
+    } else {
+        if (throwDOMExceptionOnFailure) {
             throw new DOMException(m_sourceElement->executionContext(),
                                    DOMException::Code::SYNTAX_ERR,
                                    "SyntaxError");
         }
-    } else {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::Code::SYNTAX_ERR, "SyntaxError");
     }
 }
 

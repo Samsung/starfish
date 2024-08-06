@@ -51,7 +51,8 @@ public:
     float valueInSpecifiedUnits();
     void setValueInSpecifiedUnits(float v);
     String* valueAsString();
-    void setValueAsString(String* valueAsString);
+    void setValueAsString(String* valueAsString,
+                          bool throwDOMExceptionOnFailure = true);
 
     void newValueSpecifiedUnits(unsigned short unitType,
                                 float valueInSpecifiedUnits);
