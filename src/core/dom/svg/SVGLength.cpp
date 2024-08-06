@@ -226,7 +226,8 @@ String* SVGLength::valueAsString()
     return str;
 }
 
-void SVGLength::setValueAsString(String* valueAsString)
+void SVGLength::setValueAsString(String* valueAsString,
+                                 bool throwDOMExceptionOnFailure)
 {
     valueAsString = valueAsString->toLower();
 
@@ -268,18 +269,26 @@ void SVGLength::setValueAsString(String* valueAsString)
                 setUnitType(SVG_LENGTHTYPE_PERCENTAGE);
                 setValueInSpecifiedUnits(pair.percentageValue() * 100);
             } else {
-                throw new DOMException(m_sourceElement->executionContext(),
-                                       DOMException::Code::NOT_SUPPORTED_ERR,
-                                       "Not Supported error");
+                if (throwDOMExceptionOnFailure) {
+                    throw new DOMException(
+                        m_sourceElement->executionContext(),
+                        DOMException::Code::NOT_SUPPORTED_ERR,
+                        "Not Supported error");
+                }
             }
         } else {
+            if (throwDOMExceptionOnFailure) {
+                throw new DOMException(m_sourceElement->executionContext(),
+                                       DOMException::Code::SYNTAX_ERR,
+                                       "SyntaxError");
+            }
+        }
+    } else {
+        if (throwDOMExceptionOnFailure) {
             throw new DOMException(m_sourceElement->executionContext(),
                                    DOMException::Code::SYNTAX_ERR,
                                    "SyntaxError");
         }
-    } else {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::Code::SYNTAX_ERR, "SyntaxError");
     }
 }
 

@@ -53,19 +53,19 @@ void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_x1 == name) {
         if (value->equals(x1()->baseVal()->valueAsString()) == false) {
-            x1()->baseVal()->setValueAsString(value);
+            x1()->baseVal()->setValueAsString(value, false);
         }
     } else if (ss->m_y1 == name) {
         if (value->equals(y1()->baseVal()->valueAsString()) == false) {
-            y1()->baseVal()->setValueAsString(value);
+            y1()->baseVal()->setValueAsString(value, false);
         }
     } else if (ss->m_x2 == name) {
         if (value->equals(x2()->baseVal()->valueAsString()) == false) {
-            x2()->baseVal()->setValueAsString(value);
+            x2()->baseVal()->setValueAsString(value, false);
         }
     } else if (ss->m_y2 == name) {
         if (value->equals(y2()->baseVal()->valueAsString()) == false) {
-            y2()->baseVal()->setValueAsString(value);
+            y2()->baseVal()->setValueAsString(value, false);
         }
     }
 }

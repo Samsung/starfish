@@ -51,15 +51,15 @@ void SVGRadialGradientElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_cx == name) {
         if (value->equals(cx()->baseVal()->valueAsString()) == false) {
-            cx()->baseVal()->setValueAsString(value);
+            cx()->baseVal()->setValueAsString(value, false);
         }
     } else if (ss->m_cy == name) {
         if (value->equals(cy()->baseVal()->valueAsString()) == false) {
-            cy()->baseVal()->setValueAsString(value);
+            cy()->baseVal()->setValueAsString(value, false);
         }
     } else if (ss->m_r == name) {
         if (value->equals(r()->baseVal()->valueAsString()) == false) {
-            r()->baseVal()->setValueAsString(value);
+            r()->baseVal()->setValueAsString(value, false);
         }
     }
 }
