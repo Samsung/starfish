@@ -79,9 +79,8 @@ bool LWEDelegateLoader::loadCookieManagerProcTable()
 
 bool LWEDelegateLoader::loadLWEProcTable()
 {
-    kLWEProcTable.Initialize =
-        reinterpret_cast<void (*)(const char*, const char*, const char*)>(
-            dlsym(m_handle, "LWEDelegate_LWE_Initialize"));
+    kLWEProcTable.Initialize = reinterpret_cast<void (*)(const char*)>(
+        dlsym(m_handle, "LWEDelegate_LWE_Initialize"));
     kLWEProcTable.IsInitialized = reinterpret_cast<bool (*)()>(
         dlsym(m_handle, "LWEDelegate_LWE_IsInitialized"));
     kLWEProcTable.Finalize = reinterpret_cast<void (*)()>(

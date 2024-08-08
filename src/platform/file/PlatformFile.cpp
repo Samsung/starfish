@@ -143,6 +143,21 @@ Nullable<std::string> PlatformFileUtil::absolutePath(
 #endif
 }
 
+static inline char separator()
+{
+#if defined(OS_WINDOWS)
+    return '\\';
+#else
+    return '/';
+#endif
+}
+
+std::string PlatformFileUtil::joinPath(const std::string& dirPath,
+                                       const std::string& name)
+{
+    return dirPath + separator() + name;
+}
+
 class PlatformFilePosix : public PlatformFile {
 public:
     PlatformFilePosix(FILE* fp, const std::string& filePath)

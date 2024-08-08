@@ -24,9 +24,7 @@
 namespace LWEDelegate {
 class EXPORT_UNMANAGED_API LWE {
 public:
-    static void Initialize(const char* localStorageDataFilePath,
-                           const char* cookieStoreDataFilePath,
-                           const char* httpCacheDataDirectorypath);
+    static void Initialize(const char* storageDirectoryPath);
 
     static bool IsInitialized();
 
@@ -43,9 +41,8 @@ public:
 
 // C wrappers used for dlopen/dlsym.
 extern "C" {
-void EXPORT_UNMANAGED_API LWEDelegate_LWE_Initialize(
-    const char* localStorageDataFilePath, const char* cookieStoreDataFilePath,
-    const char* httpCacheDataDirectorypath);
+void EXPORT_UNMANAGED_API
+LWEDelegate_LWE_Initialize(const char* storageDirectoryPath);
 
 bool EXPORT_UNMANAGED_API LWEDelegate_LWE_IsInitialized();
 
@@ -59,7 +56,7 @@ void EXPORT_UNMANAGED_API LWEDelegate_LWE_GetVersion(int* major, int* minor,
                                                      int* patch);
 
 typedef struct {
-    void (*Initialize)(const char*, const char*, const char*);
+    void (*Initialize)(const char*);
     bool (*IsInitialized)();
     void (*Finalize)();
     unsigned char (*GetGCFrequency)();

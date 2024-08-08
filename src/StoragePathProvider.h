@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,43 +17,23 @@
  *  USA
  */
 
-#ifndef __StarfishPaltformDirectory__
-#define __StarfishPaltformDirectory__
-
-#include <GCUtil.h>
+#ifndef __StarfishStoragePathProvider__
+#define __StarfishStoragePathProvider__
 
 namespace Starfish {
-class String;
 
-class PlatformDirectoryUtil {
+class StoragePathProvider {
 public:
-    static bool createDirectory(String* path);
+    StoragePathProvider(const char* storageDirectoryPath);
+
+    std::string getLocalStorageDataFilePath() const;
+    std::string getCookieStoreDataFilePath() const;
+    std::string getHttpCacheDataDirectoryPath() const;
+
+private:
+    std::string m_storageDirectoryPath;
 };
 
-class PlatformDirectory : public gc_cleanup {
-public:
-    static PlatformDirectory* create();
-    static PlatformDirectory* createInNonGCArea();
-    PlatformDirectory()
-        : m_path(String::emptyString)
-        , m_isOpen(false)
-    {
-    }
-    virtual ~PlatformDirectory()
-    {
-    }
-
-    virtual bool open(String* path) = 0;
-    virtual bool mkDir() = 0;
-    virtual bool close() = 0;
-    virtual void removeDir() = 0;
-    virtual void clearDir() = 0;
-    virtual bool isOpen() = 0;
-    virtual size_t fileCount() = 0;
-
-protected:
-    String* m_path;
-    bool m_isOpen;
-};
 } // namespace Starfish
+
 #endif

@@ -50,9 +50,7 @@ Profiler g_profiler;
 static bool g_starfishGlobalInit = false;
 
 Starfish::Starfish(const StarfishConfiguration& config)
-    : m_localStorageDataFilePath(
-          String::fromUTF8(config.localStorageDataFilePath,
-                           strlen(config.localStorageDataFilePath)))
+    : m_storagePathProvider(config.storageDirectoryPath)
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , m_httpCache(nullptr)
 #endif
@@ -61,10 +59,6 @@ Starfish::Starfish(const StarfishConfiguration& config)
     , m_backend(config.backend)
     , m_rendererType(config.rendererType)
 {
-    STARFISH_RELEASE_ASSERT(config.localStorageDataFilePath != nullptr);
-    STARFISH_RELEASE_ASSERT(config.cookieStoreDataFilePath != nullptr);
-    STARFISH_RELEASE_ASSERT(config.httpCacheDataDirectorypath != nullptr);
-
     if (!g_starfishGlobalInit) {
         g_starfishGlobalInit = true;
 
@@ -90,16 +84,17 @@ Starfish::Starfish(const StarfishConfiguration& config)
     m_atomicStringMap.insert(String::emptyString);
     m_staticStrings = new StaticStrings(this);
 
-    initNetworkSharedResourceManager(config.cookieStoreDataFilePath);
+    initNetworkSharedResourceManager();
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (strlen(config.httpCacheDataDirectorypath) != 0) {
-        auto nullable = HTTPCache::getInstance(
-            (String::fromUTF8(config.httpCacheDataDirectorypath,
-                              strlen(config.httpCacheDataDirectorypath))));
-        if (nullable.hasValue()) {
-            m_httpCache = nullable.getValue();
-        }
+    std::string httpCacheDataDirectoryPath =
+        m_storagePathProvider.getHttpCacheDataDirectoryPath();
+
+    auto nullable = HTTPCache::getInstance((String::fromUTF8(
+        httpCacheDataDirectoryPath.data(), httpCacheDataDirectoryPath.size())));
+    if (nullable.hasValue()) {
+        m_httpCache = nullable.getValue();
     }
+
 #endif
 
 #if defined(STARFISH_USE_WORKER_PROCESS)
@@ -120,7 +115,6 @@ void* Starfish::operator new(size_t size)
 
         GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_staticStrings));
         GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_lineBreakIteratorPool));
-        GC_set_bit(desc, GC_WORD_OFFSET(Starfish, m_localStorageDataFilePath));
         markHashTable(desc, GC_WORD_OFFSET(Starfish, m_rootMap));
         markHashTable(desc, GC_WORD_OFFSET(Starfish, m_atomicStringMap));
         markHashTable(desc, GC_WORD_OFFSET(Starfish, m_caseInsensitiveAttrSet));
@@ -168,16 +162,16 @@ void Starfish::destroy()
     GC_FREE(this);
 }
 
-void Starfish::initNetworkSharedResourceManager(
-    const char* cookieStoreDataFilePath)
+void Starfish::initNetworkSharedResourceManager()
 {
-    // NetworkSharedResourceManager is singleton, So do not hold the instance.
-    if (cookieStoreDataFilePath) {
-        // Disable to store cookies as a file If m_cookieStoreDataFilePath is
-        // nullptr or empty string
-        NetworkSharedResourceManager::getInstance()->setCookieStoreFilePath(
-            cookieStoreDataFilePath);
-    }
+    std::string cookieStoreDataFilePath =
+        m_storagePathProvider.getCookieStoreDataFilePath();
+
+    // NetworkSharedResourceManager is singleton, So do not hold the
+    // instance.
+    NetworkSharedResourceManager::getInstance()->setCookieStoreFilePath(
+        cookieStoreDataFilePath);
+
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
 
@@ -265,6 +259,13 @@ void Starfish::printEveryReachableGCObjects()
         nullptr);
     GC_enable();
     STARFISH_LOG_ERROR("<-- end of print reachable pointers");
+}
+
+String* Starfish::localStorageFilePath()
+{
+    std::string pathStdString =
+        m_storagePathProvider.getLocalStorageDataFilePath();
+    return String::fromUTF8(pathStdString.data(), pathStdString.size());
 }
 
 #ifdef STARFISH_ENABLE_HTTPCACHE

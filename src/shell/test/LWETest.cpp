@@ -37,9 +37,7 @@ protected:
 
 TEST_F(LWETestInitialize, Initialize)
 {
-    LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                         "/tmp/starfish_cookieStore.txt",
-                         "/tmp/starfish_cache/");
+    LWE::LWE::Initialize("/tmp/starfish_storage/");
     // No error.
     EXPECT_TRUE(true);
 }
@@ -51,9 +49,7 @@ public:
 protected:
     void SetUp() override
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
     }
 };
 
@@ -71,9 +67,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
     }
 
     static void TearDownTestCase()

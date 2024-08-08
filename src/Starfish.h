@@ -21,6 +21,7 @@
 #define __Starfish__
 
 #include "StaticStrings.h"
+#include "StoragePathProvider.h"
 
 namespace Starfish {
 
@@ -46,9 +47,7 @@ enum class StarfishRendererType {
 };
 
 struct StarfishConfiguration {
-    const char* localStorageDataFilePath = nullptr;
-    const char* cookieStoreDataFilePath = nullptr;
-    const char* httpCacheDataDirectorypath = nullptr;
+    const char* storageDirectoryPath = nullptr;
     unsigned char gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
     bool isThreadMode = false;
     const char* backend = nullptr;
@@ -79,10 +78,7 @@ public:
         return m_lineBreakIteratorPool;
     }
 
-    String* localStorageFilePath()
-    {
-        return m_localStorageDataFilePath;
-    }
+    String* localStorageFilePath();
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
     Nullable<HTTPCache*> httpCache();
@@ -128,7 +124,7 @@ public:
 protected:
     StaticStrings* m_staticStrings = nullptr;
     LineBreakIteratorPool* m_lineBreakIteratorPool = nullptr;
-    String* m_localStorageDataFilePath = nullptr;
+    StoragePathProvider m_storagePathProvider;
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
@@ -153,7 +149,7 @@ protected:
     StarfishRendererType m_rendererType = StarfishRendererType::kOpenGL;
 
 private:
-    void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
+    void initNetworkSharedResourceManager();
 };
 
 #if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_PROFILE)

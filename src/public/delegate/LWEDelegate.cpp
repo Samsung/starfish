@@ -159,9 +159,7 @@ static void StarfishGCMemoryLogger(void* data)
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
 
-void LWE::Initialize(const char* localStorageDataFilePath,
-                     const char* cookieStoreDataFilePath,
-                     const char* httpCacheDataDirectorypath)
+void LWE::Initialize(const char* storageDirectoryPath)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
 
@@ -186,9 +184,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         FcInitLoadConfigAndFonts();
 #endif
         Starfish::StarfishConfiguration config;
-        config.localStorageDataFilePath = localStorageDataFilePath;
-        config.cookieStoreDataFilePath = cookieStoreDataFilePath;
-        config.httpCacheDataDirectorypath = httpCacheDataDirectorypath;
+        config.storageDirectoryPath = storageDirectoryPath;
         config.gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
         config.isThreadMode = isThreadMode;
         config.backend = STARFISH_BACKEND_STR;
@@ -259,14 +255,10 @@ void LWE::GetVersion(int* major, int* minor, int* patch)
 } // namespace LWEDelegate
 
 extern "C" {
-void LWEDelegate_LWE_Initialize(const char* localStorageDataFilePath,
-                                const char* cookieStoreDataFilePath,
-                                const char* httpCacheDataDirectorypath)
+void LWEDelegate_LWE_Initialize(const char* storageDirectoryPath)
 
 {
-    LWEDelegate::LWE::Initialize(localStorageDataFilePath,
-                                 cookieStoreDataFilePath,
-                                 httpCacheDataDirectorypath);
+    LWEDelegate::LWE::Initialize(storageDirectoryPath);
 }
 
 bool LWEDelegate_LWE_IsInitialized()

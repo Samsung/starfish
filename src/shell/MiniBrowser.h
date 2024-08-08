@@ -128,7 +128,7 @@ private:
 
     bool createLWE(const InitOption& initOption);
 
-    std::string cacheDir();
+    std::string storageDir();
 
     InitOption m_initOption;
 
