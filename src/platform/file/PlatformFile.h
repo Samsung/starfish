@@ -26,6 +26,8 @@ class PlatformFileUtil {
 public:
     static bool removeFile(const std::string& filePath);
     static Nullable<std::string> absolutePath(const std::string& filePath);
+    static std::string joinPath(const std::string& dirPath,
+                                const std::string& name);
 };
 
 class PlatformFile {

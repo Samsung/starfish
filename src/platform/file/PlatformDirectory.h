@@ -25,6 +25,11 @@
 namespace Starfish {
 class String;
 
+class PlatformDirectoryUtil {
+public:
+    static bool createDirectory(String* path);
+};
+
 class PlatformDirectory : public gc_cleanup {
 public:
     static PlatformDirectory* create();

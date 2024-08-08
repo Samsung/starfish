@@ -31,9 +31,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
     }
 
     static void TearDownTestCase()
@@ -89,9 +87,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
     }
 
     static void TearDownTestCase()

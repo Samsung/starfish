@@ -119,6 +119,7 @@ FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/public/delegate/LWEDelegate.cpp
     ${STARFISH_ROOT}/src/public/delegate/ThreadedCallHelper.cpp
     ${STARFISH_ROOT}/src/StaticStrings.cpp
+    ${STARFISH_ROOT}/src/StoragePathProvider.cpp
     ${STARFISH_ROOT}/src/Starfish.cpp
     ${STARFISH_ROOT}/src/platform/loader/ResourceURL.cpp
     ${STARFISH_ROOT}/src/platform/message_loop/*.cpp

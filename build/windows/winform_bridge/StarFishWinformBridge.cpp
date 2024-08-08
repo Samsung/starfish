@@ -120,17 +120,7 @@ extern "C" size_t LWE_EXPORT __stdcall createWebViewInstance(
 {
     FcInitLoadConfig();
 
-    std::string localStorage = getWindowsTempDir();
-    localStorage += "\\StarfishLocalStorage.txt";
-
-    std::string cookieStorage = getWindowsTempDir();
-    cookieStorage += "\\StarfishLocalCookie.txt";
-
-    std::string httpCacheStorage = getWindowsTempDir();
-    httpCacheStorage += "\\StarfishHttpCache\\";
-
-    ::LWE::LWE::Initialize(localStorage.data(), cookieStorage.data(),
-                           httpCacheStorage.data());
+    ::LWE::LWE::Initialize(getWindowsTempDir());
 
     ::LWE::WebContainer::WebContainerArguments args =
     {

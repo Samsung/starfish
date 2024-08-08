@@ -36,9 +36,7 @@ public:
 protected:
     void SetUp() override
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
         m_window = Window::create();
         m_window->setInitHint(HINT_VISIBLE, 0);
         m_window->init("Starfish", 800, 600);
@@ -77,9 +75,7 @@ public:
 protected:
     void SetUp() override
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
         m_window = Window::create();
         m_window->setInitHint(HINT_VISIBLE, 0);
         m_window->init("Starfish", 800, 600);
@@ -116,9 +112,7 @@ public:
 protected:
     static void SetUpTestCase()
     {
-        LWE::LWE::Initialize("/tmp/starfish_localStorage.txt",
-                             "/tmp/starfish_cookieStore.txt",
-                             "/tmp/starfish_cache/");
+        LWE::LWE::Initialize("/tmp/starfish_storage/");
         window = Window::create();
         window->setInitHint(HINT_VISIBLE, 0);
         window->init("Starfish", 800, 600);

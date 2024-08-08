@@ -246,8 +246,7 @@ bool MiniBrowser::init(const InitOption& initOption)
         return false;
     }
 
-    LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
-                         "/tmp/Starfish_Cookies.txt", cacheDir().c_str());
+    LWE::LWE::Initialize(storageDir().c_str());
 
     int major, minor, patch;
     LWE::LWE::GetVersion(&major, &minor, &patch);
@@ -471,14 +470,14 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
     return true;
 }
 
-std::string MiniBrowser::cacheDir()
+std::string MiniBrowser::storageDir()
 {
     std::string cacheDir = "/tmp";
     const char* homeDir = getenv("HOME");
     if (homeDir && strlen(homeDir)) {
         cacheDir = homeDir;
     }
-    cacheDir += "/Starfish-cache";
+    cacheDir += "/Starfish-storage";
     return cacheDir;
 }
 

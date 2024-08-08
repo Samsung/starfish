@@ -64,12 +64,10 @@ static void initializeWorkerProcess(const std::string &dataDirectoryPath,
             Starfish::WorkerSettings::getDefaultDataDirectoryPath();
     }
 
+    // TODO: use StoragePathProvider class to get the path of worker directory.
     std::string workerResourceDirPath =
         dataDirectoryPath + resourceDirectoryPath;
-    LWEDelegate::LWE::Initialize(
-        (workerResourceDirPath + "/starfish-local-storage.txt").c_str(),
-        (workerResourceDirPath + "/starfish-cookie.txt").c_str(),
-        (workerResourceDirPath + "/starfish-http-cache").c_str());
+    LWEDelegate::LWE::Initialize(workerResourceDirPath.data());
 
     LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
         [workerDataDirPath]() -> void {

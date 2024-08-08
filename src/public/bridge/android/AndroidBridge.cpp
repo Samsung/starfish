@@ -637,18 +637,14 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_com_samsung_android_lightweightwebengine_internal_LweWebViewImpl_create(
     JNIEnv* env, jobject thiz, jobject assetManager, jint w, jint h,
     jfloat devicePixelRatio, jstring jua, jstring locale, jstring timezoneID,
-    jstring localstoragePath, jstring cookiePath, jstring cachePath)
+    jstring storagePath)
 {
     const char* localeString = env->GetStringUTFChars(locale, 0);
     const char* timezoneIDString = env->GetStringUTFChars(timezoneID, 0);
-    const char* localstoragePathString =
-        env->GetStringUTFChars(localstoragePath, 0);
-    const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
-    const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
+    const char* storagePathString = env->GetStringUTFChars(storagePath, 0);
 
     if (!LWE::LWE::IsInitialized()) {
-        LWE::LWE::Initialize(localstoragePathString, cookiePathString,
-                             cachePathString);
+        LWE::LWE::Initialize(storagePathString);
     }
 
     ::LWE::WebContainer::WebContainerArguments args = {

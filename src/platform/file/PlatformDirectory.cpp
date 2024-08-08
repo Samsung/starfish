@@ -168,6 +168,21 @@ void rewinddir(DIR* dir)
 
 namespace Starfish {
 
+bool PlatformDirectoryUtil::createDirectory(String* path)
+{
+    PlatformDirectory* dir = PlatformDirectory::create();
+    if (dir->open(path)) {
+        dir->close();
+    } else {
+        if (!dir->mkDir()) {
+            STARFISH_LOG_ERROR("Failed to create directory(%s)", CSTR(path));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 class PlatformDirectoryPosix : public PlatformDirectory {
 public:
     PlatformDirectoryPosix()
