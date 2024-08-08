@@ -164,6 +164,7 @@ protected:
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_fillSource));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_strokeSource));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_font));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_dashes));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(CanvasState, m_canvasFontOrginalStr));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_maskPatternData));
