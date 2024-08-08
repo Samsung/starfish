@@ -728,14 +728,17 @@ mkdir -p %{buildroot}%{_libdir}/lwe
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_unitdir}
 
+%if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all" || "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
+install -d %{buildroot}%{_datadir}/lwe/update
+%install_service multi-user.target.wants lightweight-web-engine-update.service
+%endif
+
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
-install -d %{buildroot}%{_datadir}/lwe/update
-%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -748,9 +751,6 @@ cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
-install -d %{buildroot}%{_datadir}/lwe/update
-%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "prod_tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -764,9 +764,6 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/VERSION %{buildroot}%{_libdir}/lwe/headless
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
-install -d %{buildroot}%{_datadir}/lwe/update
-%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
@@ -777,9 +774,6 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/VERSION %{buildroot}%{_libdir}/lwe/mobile
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
-install -d %{buildroot}%{_datadir}/lwe/update
-%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
@@ -790,9 +784,6 @@ mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/VERSION %{buildroot}%{_libdir}/lwe/wearable
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
-install -d %{buildroot}%{_datadir}/lwe/update
-%install_service multi-user.target.wants lightweight-web-engine-update.service
 %endif
 %if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
