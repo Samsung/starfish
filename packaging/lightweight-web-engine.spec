@@ -738,7 +738,7 @@ install -d %{buildroot}%{_datadir}/lwe/update
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/unified_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/unified_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
@@ -748,7 +748,7 @@ cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bi
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/prod_tv/release/VERSION %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/prod_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
@@ -763,7 +763,7 @@ cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
 mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
-cp -fr out_tizen/headless/release/VERSION %{buildroot}%{_libdir}/lwe/headless
+cp -fr out_tizen/headless/release/lib/VERSION %{buildroot}%{_libdir}/lwe/headless
 %endif
 %if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
@@ -773,7 +773,7 @@ cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr out_tizen/unified_mobile/release/VERSION %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/unified_mobile/release/lib/VERSION %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
@@ -783,7 +783,7 @@ cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroo
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr out_tizen/unified_wearable/release/VERSION %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/unified_wearable/release/lib/VERSION %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
@@ -793,7 +793,7 @@ cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buil
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
 cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
-cp -fr out_tizen/flutter/release/VERSION %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/flutter/release/lib/VERSION %{buildroot}%{_libdir}/lwe/flutter
 %endif
 
 # for devel files
@@ -849,6 +849,7 @@ for FILE in `ls tv/*.so* | grep -v 'tv.so'`; do
 done
 %if "%{rpm}" == "tv"
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
+ln -sf tv/VERSION VERSION
 %if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
 %endif
@@ -858,6 +859,7 @@ ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine
 %endif # "%{rpm}" == "tv"
 %if "%{rpm}" == "prod_tv"
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
+ln -sf tv/VERSION VERSION
 %if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine.prod.dali.tv.so liblightweight-web-engine-dali-plugin.so.1
 %endif
@@ -895,6 +897,7 @@ for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
+ln -sf headless/VERSION VERSION
 %if "%{?enable_serviceworker}" == "1"
 ln -s headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -916,6 +919,7 @@ for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
+ln -sf mobile/VERSION VERSION
 %if "%{?skip_dali_build}" == "0"
 ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so.1
 %endif
@@ -940,6 +944,7 @@ for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
     ln -sf "$FILE" .
 done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
+ln -sf wearable/VERSION VERSION
 %if "%{?skip_dali_build}" == "0"
 ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so.1
 %endif
@@ -964,6 +969,7 @@ for FILE in `ls flutter/*.so* | grep -v 'flutter.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf flutter/liblightweight-web-engine.flutter.so liblightweight-web-engine.so.1
+ln -sf flutter/VERSION VERSION
 popd
 %endif
 %if "%{rpm}" == "flutter"

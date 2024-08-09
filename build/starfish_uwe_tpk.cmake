@@ -16,7 +16,7 @@ ADD_CUSTOM_TARGET (uwe_tpk_root
     COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/uwe_tizen-manifest.xml ${UWE_TPK_ROOT}/tizen-manifest.xml
     COMMAND install -d ${UWE_TPK_ROOT}/bin
     COMMAND install -d ${UWE_TPK_ROOT}/lib/
-    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/VERSION ${UWE_TPK_ROOT}/lib/
+    COMMAND install -m 0755 ${OUTPUT_DIRECTORY}/lib/VERSION ${UWE_TPK_ROOT}/lib/
     COMMAND install -m 0644 ${OUTPUT_DIRECTORY}/lib/*.so* ${UWE_TPK_ROOT}/lib/
     COMMAND rm ${UWE_TPK_ROOT}/lib/lib${TARGETNAME}.so
     COMMAND strip -v --strip-all ${UWE_TPK_ROOT}/lib/*.so
