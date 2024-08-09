@@ -497,16 +497,7 @@ public class LweWebViewImpl implements LweWebView {
             mDpr = arr.getFloat(R.styleable.SemWebView_devicePixelRatio, mDpr);
         }
 
-        String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
-        String cookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
-
-        File cachedDir = appContext.getCacheDir();
-        String cachePath = "";
-        if (cachedDir != null) {
-            cachePath = cachedDir.getAbsolutePath() + "/Starfish-cache";
-        } else {
-            cachePath = "/data/local/tmp/Starfish-cache";
-        }
+        String storagePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-storage/";
 
         init();
 
@@ -675,7 +666,7 @@ public class LweWebViewImpl implements LweWebView {
                 create(mLWEView.getResources().getAssets(),
                         mWindowWidth, mWindowHeight, mDpr,
                         initialUAString, sLocale, sTimezone,
-                        localStoragePath, cookiePath, cachePath);
+                        storagePath);
     }
 
     private void showDropdownMenu(final String[] list, final int checkedPosition) {
@@ -983,8 +974,7 @@ public class LweWebViewImpl implements LweWebView {
     native private void loadData(long starfish, String data);
     native private long create(AssetManager am, int width, int height,
                                float devicePixelRatio, String userAgentString, String locale,
-                               String timezoneID, String localstoragePath, String cookiePath,
-                               String cachePath);
+                               String timezoneID, String storagePath);
     native private void destroy(long starfish);
     native private void goBack(long starfish);
     native private void goForward(long starfish);

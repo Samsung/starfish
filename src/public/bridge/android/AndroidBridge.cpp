@@ -723,9 +723,7 @@ Java_com_samsung_android_lightweightwebengine_internal_LweWebViewImpl_create(
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
-    env->ReleaseStringUTFChars(localstoragePath, localstoragePathString);
-    env->ReleaseStringUTFChars(cookiePath, cookiePathString);
-    env->ReleaseStringUTFChars(cachePath, cachePathString);
+    env->ReleaseStringUTFChars(storagePath, storagePathString);
 
     registerWebContainerHandler(webContainer);
 
