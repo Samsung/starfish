@@ -23,6 +23,72 @@
 
 #include "LWEDelegateLoader.h"
 
+#include <dlfcn.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+namespace {
+
+std::string getThisSharedLibraryPath()
+{
+    Dl_info dl_info;
+    dladdr((void*)getThisSharedLibraryPath, &dl_info);
+    return std::string(dl_info.dli_fname);
+}
+
+std::string getDirectory(const std::string& path)
+{
+    size_t found = path.find_last_of("/\\");
+    return found == std::string::npos ? "" : path.substr(0, found + 1);
+}
+
+std::string getDefaultVersionFilePath()
+{
+    std::string loaderPath = getThisSharedLibraryPath();
+    std::string path = getDirectory(loaderPath);
+    std::cout << "default version file path: " << path << std::endl;
+    return path;
+}
+
+int compareVersions(const std::string& version1, const std::string& version2)
+{
+    std::istringstream iss1(version1);
+    std::istringstream iss2(version2);
+
+    int major1, minor1, patch1;
+    int major2, minor2, patch2;
+    char dot;
+
+    iss1 >> major1 >> dot >> minor1 >> dot >> patch1;
+    iss2 >> major2 >> dot >> minor2 >> dot >> patch2;
+
+    if (major1 != major2) {
+        return major1 - major2;
+    }
+    if (minor1 != minor2) {
+        return minor1 - minor2;
+    }
+    return patch1 - patch2;
+}
+
+std::string readVersion(const std::string& path)
+{
+    const std::string versionFileName = "VERSION";
+    std::ifstream versionFile(path + versionFileName);
+
+    std::string versionString = "0.0.0";
+    if (!versionFile.is_open()) {
+        return versionString;
+    }
+
+    getline(versionFile, versionString);
+    return versionString;
+}
+
+} // namespace
+
 namespace LWE {
 
 CookieManagerProcTable LWEDelegateLoader::kCookieManagerProcTable;
@@ -44,18 +110,31 @@ LWEDelegateLoader* LWEDelegateLoader::getInstance()
 bool LWEDelegateLoader::load()
 {
     if (m_preferUpdatedVersion) {
-        m_handle = dlopen(
-            CONCAT_STR(STARFISH_API_UWE_MOUNT_PATH, STARFISH_API_TARGET_NAME),
-            RTLD_LAZY);
+        std::string defaultVersion = readVersion(getDefaultVersionFilePath());
+        std::string uweVersion = readVersion(STARFISH_API_UWE_MOUNT_PATH);
+        std::cout << "default version: " << defaultVersion << std::endl;
+        std::cout << "uwe version: " << uweVersion << std::endl;
+
+        if (compareVersions(uweVersion, defaultVersion) > 0) {
+            std::cout << "Try to load updated LWE..." << std::endl;
+            m_handle = dlopen(CONCAT_STR(STARFISH_API_UWE_MOUNT_PATH,
+                                         STARFISH_API_TARGET_NAME),
+                              RTLD_LAZY);
+            if (!m_handle) {
+                std::cerr << "Failed to load updated LWE: " << dlerror()
+                          << std::endl;
+            }
+        }
     }
 
     if (!m_handle) {
         // Try to open defalut version.
+        std::cout << "Try to load default LWE..." << std::endl;
         m_handle = dlopen(STARFISH_API_TARGET_NAME, RTLD_LAZY);
     }
 
     if (!m_handle) {
-        std::cerr << "Failed to open library: " << dlerror() << std::endl;
+        std::cerr << "Failed to load default LWE: " << dlerror() << std::endl;
         return false;
     }
 

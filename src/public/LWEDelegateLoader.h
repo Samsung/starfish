@@ -29,9 +29,6 @@
 #include "public/delegate/LWEWebContainerDelegate.h"
 #include "public/delegate/LWEWebViewDelegate.h"
 
-#include <dlfcn.h>
-#include <iostream>
-
 namespace LWE {
 
 class LWEDelegateLoader {
