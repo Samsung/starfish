@@ -69,7 +69,7 @@ void LWE::Initialize(const char* storageDirectoryPath)
     if (!LWEDelegateLoader::getInstance()->load()) {
         LWE_ASSERT(false);
     }
-    LWEDelegateLoader::getInstance()->kLWEProcTable.Initialize(
+    LWEDelegateLoader::getSafeInstance()->kLWEProcTable.Initialize(
         storageDirectoryPath);
 #else
     LWEDelegate::LWE::Initialize(storageDirectoryPath);
@@ -79,7 +79,7 @@ void LWE::Initialize(const char* storageDirectoryPath)
 bool LWE::IsInitialized()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    return LWEDelegateLoader::getInstance()->kLWEProcTable.IsInitialized();
+    return LWEDelegateLoader::getSafeInstance()->kLWEProcTable.IsInitialized();
 #else
     return LWEDelegate::LWE::IsInitialized();
 #endif
@@ -88,8 +88,8 @@ bool LWE::IsInitialized()
 void LWE::Finalize()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    LWEDelegateLoader::getInstance()->kLWEProcTable.Finalize();
-    LWEDelegateLoader::getInstance()->unload();
+    LWEDelegateLoader::getSafeInstance()->kLWEProcTable.Finalize();
+    LWEDelegateLoader::getSafeInstance()->unload();
 #else
     LWEDelegate::LWE::Finalize();
 #endif
@@ -98,7 +98,7 @@ void LWE::Finalize()
 unsigned char LWE::GetGCFrequency()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    return LWEDelegateLoader::getInstance()->kLWEProcTable.GetGCFrequency();
+    return LWEDelegateLoader::getSafeInstance()->kLWEProcTable.GetGCFrequency();
 #else
     return LWEDelegate::LWE::GetGCFrequency();
 #endif
@@ -107,7 +107,7 @@ unsigned char LWE::GetGCFrequency()
 void LWE::SetGCFrequency(unsigned char freq)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    LWEDelegateLoader::getInstance()->kLWEProcTable.SetGCFrequency(freq);
+    LWEDelegateLoader::getSafeInstance()->kLWEProcTable.SetGCFrequency(freq);
 #else
     LWEDelegate::LWE::SetGCFrequency(freq);
 #endif
@@ -116,7 +116,7 @@ void LWE::SetGCFrequency(unsigned char freq)
 void LWE::GetVersion(int* major, int* minor, int* patch)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-    return LWEDelegateLoader::getInstance()->kLWEProcTable.GetVersion(
+    return LWEDelegateLoader::getSafeInstance()->kLWEProcTable.GetVersion(
         major, minor, patch);
 #else
     return LWEDelegate::LWE::GetVersion(major, minor, patch);
@@ -129,8 +129,9 @@ ResourceError::ResourceError(int code, const std::string& description,
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::ResourceError* resourceError =
         reinterpret_cast<LWEDelegate::ResourceError*>(
-            LWEDelegateLoader::getInstance()->kResourceErrorProcTable.Create(
-                code, description.c_str(), url.c_str()));
+            LWEDelegateLoader::getSafeInstance()
+                ->kResourceErrorProcTable.Create(code, description.c_str(),
+                                                 url.c_str()));
 #else
     LWEDelegate::ResourceError* resourceError =
         LWEDelegate::ResourceError::Create(code, description, url);
@@ -146,9 +147,10 @@ ResourceError::ResourceError(const ResourceError& other)
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::ResourceError* resourceError =
         reinterpret_cast<LWEDelegate::ResourceError*>(
-            LWEDelegateLoader::getInstance()->kResourceErrorProcTable.Create(
-                other.GetErrorCode(), other.GetDescription().c_str(),
-                other.GetUrl().c_str()));
+            LWEDelegateLoader::getSafeInstance()
+                ->kResourceErrorProcTable.Create(other.GetErrorCode(),
+                                                 other.GetDescription().c_str(),
+                                                 other.GetUrl().c_str()));
 #else
     LWEDelegate::ResourceError* resourceError =
         LWEDelegate::ResourceError::Create(
@@ -185,7 +187,7 @@ Settings::Settings()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
-        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+        LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.CreateEmpty());
 #else
     LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
 #endif
@@ -198,7 +200,7 @@ Settings::Settings(const std::string& defaultUA, const std::string& ua)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
-        LWEDelegateLoader::getInstance()->kSettingsProcTable.Create(
+        LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.Create(
             defaultUA.c_str(), ua.c_str()));
 #else
     LWEDelegate::Settings* delegate =
@@ -213,8 +215,8 @@ Settings::Settings(const Settings& other)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
-        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateFromOther(
-            other.m_delegate.get()));
+        LWEDelegateLoader::getSafeInstance()
+            ->kSettingsProcTable.CreateFromOther(other.m_delegate.get()));
 #else
     LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create(
         toImpl<LWEDelegate::Settings>(other.m_delegate.get()));
@@ -467,7 +469,7 @@ CookieManager* CookieManager::GetInstance()
 #ifdef STARFISH_API_ENABLE_LOADER
         LWEDelegate::CookieManager* delegate =
             reinterpret_cast<LWEDelegate::CookieManager*>(
-                LWEDelegateLoader::getInstance()
+                LWEDelegateLoader::getSafeInstance()
                     ->kCookieManagerProcTable.GetInstance());
 #else
         LWEDelegate::CookieManager* delegate =
@@ -489,7 +491,7 @@ void CookieManager::Destroy()
 {
     if (g_instance) {
 #ifdef STARFISH_API_ENABLE_LOADER
-        LWEDelegateLoader::getInstance()->kCookieManagerProcTable.Destroy();
+        LWEDelegateLoader::getSafeInstance()->kCookieManagerProcTable.Destroy();
 #else
         LWEDelegate::CookieManager::Destroy();
 #endif
@@ -508,7 +510,7 @@ WebContainer* WebContainer::Create(void* buffer, unsigned bufferWidth,
     WebContainer* instance = new WebContainer();
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()
+        LWEDelegateLoader::getSafeInstance()
             ->kWebContainerProcTable.CreateWithBuffer(
                 buffer, bufferWidth, bufferHeight, bufferStride,
                 devicePixelRatio, defaultFontName, locale, timezoneID));
@@ -532,7 +534,7 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
     WebContainer* instance = new WebContainer();
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()->kWebContainerProcTable.Create(
+        LWEDelegateLoader::getSafeInstance()->kWebContainerProcTable.Create(
             width, height, devicePixelRatio, defaultFontName, locale,
             timezoneID));
 #else
@@ -571,7 +573,7 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()
+        LWEDelegateLoader::getSafeInstance()
             ->kWebContainerProcTable.CreateWithPlatformImage(
                 reinterpret_cast<uintptr_t>(&arguments),
                 reinterpret_cast<uintptr_t>(&prepareImageCbWrapper),
@@ -683,7 +685,7 @@ WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
 
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateGL(
+        LWEDelegateLoader::getSafeInstance()->kWebContainerProcTable.CreateGL(
             reinterpret_cast<uintptr_t>(&arguments),
             reinterpret_cast<uintptr_t>(&configration)));
 #else
@@ -815,7 +817,7 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
         };
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()
+        LWEDelegateLoader::getSafeInstance()
             ->kWebContainerProcTable.CreateGLWithPlatformImage(
                 reinterpret_cast<uintptr_t>(&arguments),
                 reinterpret_cast<uintptr_t>(&configration),
@@ -842,9 +844,10 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
     WebContainer* instance = new WebContainer();
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
-        LWEDelegateLoader::getInstance()->kWebContainerProcTable.CreateHeadless(
-            width, height, devicePixelRatio, defaultFontName, locale,
-            timezoneID));
+        LWEDelegateLoader::getSafeInstance()
+            ->kWebContainerProcTable.CreateHeadless(
+                width, height, devicePixelRatio, defaultFontName, locale,
+                timezoneID));
 #else
     auto delegate = LWEDelegate::WebContainer::CreateHeadless(
         width, height, devicePixelRatio, defaultFontName, locale, timezoneID);
@@ -1061,7 +1064,7 @@ void WebContainer::SetSettings(const Settings& settings)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
-        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+        LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.CreateEmpty());
 #else
     LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
 #endif
@@ -1502,7 +1505,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebView*>(
-        LWEDelegateLoader::getInstance()->kWebViewProcTable.Create(
+        LWEDelegateLoader::getSafeInstance()->kWebViewProcTable.Create(
             win, x, y, width, height, devicePixelRatio, defaultFontName, locale,
             timezoneID));
 #else
@@ -1623,7 +1626,7 @@ void WebView::SetSettings(const Settings& settings)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
-        LWEDelegateLoader::getInstance()->kSettingsProcTable.CreateEmpty());
+        LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.CreateEmpty());
 #else
     LWEDelegate::Settings* delegate = LWEDelegate::Settings::Create();
 #endif
