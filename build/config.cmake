@@ -351,7 +351,7 @@ ELSEIF (${COMPILER} STREQUAL "clang")
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
-    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-class-memaccess -Wno-deprecated-copy -Wno-cast-function-type -Wno-stringop-truncation -Wno-pessimizing-move -Wno-strict-aliasing -Wno-stringop-overflow -Wno-overloaded-virtual -Wno-mismatched-new-delete -Wno-builtin-macro-redefined)
+    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-aggressive-loop-optimizations -Wno-attributes -Wno-class-memaccess -Wno-deprecated-copy -Wno-cast-function-type -Wno-stringop-truncation -Wno-pessimizing-move -Wno-strict-aliasing -Wno-stringop-overflow -Wno-overloaded-virtual -Wno-mismatched-new-delete -Wno-builtin-macro-redefined)
 endif()
 
 #IF (${HOST} STREQUAL "tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
