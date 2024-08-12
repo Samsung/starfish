@@ -180,7 +180,6 @@ TEST_F(WebContainerDestroyTest, Destroy)
     EXPECT_TRUE(true);
 }
 
-#if defined(SHELL_ENABLE_UV)
 class WebContainerTest : public ::testing::Test {
 public:
     WebContainerTest() = default;
@@ -201,6 +200,10 @@ protected:
 
     static void TearDownTestCase()
     {
+        if (window) {
+            window->appLoop()->start(1); // ensure calling all pending jobs.
+        }
+
         if (lwe) {
             lwe->Destroy();
             lwe = nullptr;
@@ -384,7 +387,5 @@ TEST_F(WebContainerTest, PauseResume)
 
     lwe->RemoveJavascriptInterface("TEST", "setResult");
 }
-
-#endif
 
 } // namespace StarfishShell

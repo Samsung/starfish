@@ -34,6 +34,10 @@ namespace LWE {
 class LWEDelegateLoader {
 public:
     static LWEDelegateLoader* getInstance();
+
+    // If called without loading, an assertion will be raised.
+    static LWEDelegateLoader* getSafeInstance();
+
     static CookieManagerProcTable kCookieManagerProcTable;
     static LWEProcTable kLWEProcTable;
     static ResourceErrorProcTable kResourceErrorProcTable;

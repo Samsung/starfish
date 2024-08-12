@@ -28,6 +28,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <assert.h>
 
 namespace {
 
@@ -103,6 +104,15 @@ LWEDelegateLoader* LWEDelegateLoader::getInstance()
     static LWEDelegateLoader* instance = nullptr;
     if (!instance) {
         instance = new LWEDelegateLoader();
+    }
+    return instance;
+}
+
+LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
+{
+    LWEDelegateLoader* instance = LWEDelegateLoader::getInstance();
+    if (!instance->m_handle) {
+        assert(false);
     }
     return instance;
 }
