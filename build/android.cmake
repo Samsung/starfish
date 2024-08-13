@@ -81,7 +81,6 @@ FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SUB_SRC
         ${STARFISH_SHELL_SRC}
         )
-list(REMOVE_ITEM STARFISH_SUB_SRC "${STARFISH_ROOT}/src/public/bridge/dali/LWEWebViewDALi.cpp")
 
 file(GLOB DOUBLEC_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/double_conversion/*.cc" )
 file(GLOB YARR_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/yarr/*.cpp" )

@@ -18,7 +18,6 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#if !defined(STARFISH_DALI)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 #ifndef __StarfishMediaPlayerTizen__
 #define __StarfishMediaPlayerTizen__
@@ -49,7 +48,7 @@
 
 #define STARFISH_RUN_MSE_THREAD
 
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
 #if !defined(STARFISH_TIZEN_TV)
 #define STARFISH_MM_OUTPUT_WITH_GL
 #endif
@@ -287,7 +286,6 @@ protected:
 };
 } // namespace Starfish
 
-#endif
 #endif
 #endif
 #endif

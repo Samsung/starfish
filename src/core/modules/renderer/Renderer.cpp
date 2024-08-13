@@ -63,10 +63,7 @@ const TransformationMatrix& TransformationMatrix::identityMatrix()
 Renderer* Renderer::create(Starfish* starfish, uint32_t width, uint32_t height)
 {
     StarfishRendererType rendererType = starfish->rendererType();
-#if defined(STARFISH_DALI)
-    STARFISH_ASSERT(rendererType == StarfishRendererType::kSoftware);
-    return RendererFactory::createSoftware(starfish, width, height);
-#elif defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_EFL_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return RendererFactory::createHeadless(starfish, width, height);
 #else
@@ -99,7 +96,7 @@ Renderer::Renderer(Starfish* starfish)
 {
 }
 
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
 GL* Renderer::gl()
 {
     if (!m_gl) {
@@ -162,7 +159,7 @@ void Renderer::destroy()
     m_isDestroyed = true;
     clearResources();
     clearNativeHandlers();
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
     m_gl = nullptr;
 #endif
 }

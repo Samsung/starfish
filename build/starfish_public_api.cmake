@@ -36,8 +36,6 @@ TARGET_INCLUDE_DIRECTORIES (${STARFISH_API_OBJECT_LIBRARY} PUBLIC ${STARFISH_API
 IF (${HOST} STREQUAL "tizen")
     IF (${BACKEND} STREQUAL "efl_cairo_gl")
         SET (STARFISH_API_LDFLAGS ${STARFISH_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine.so.1)
-    ELSEIF (${BACKEND} STREQUAL "dali")
-        SET (STARFISH_API_LDFLAGS ${STARFISH_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
     ENDIF()
 ENDIF()
 

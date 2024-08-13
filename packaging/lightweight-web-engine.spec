@@ -51,11 +51,6 @@ Requires(postun): /sbin/ldconfig
 %define use_embedded_image_decoder 0
 %endif
 
-%if 0%{?skip_dali_build:1}
-%else
-%define skip_dali_build 0
-%endif
-
 %if %{?skip_config:0}%{!?skip_config:1}
 %define skip_config 0
 %endif
@@ -209,15 +204,6 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: pkgconfig(libpulse)
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
-  %if (0%{?tizen_version_major} >= 6)
-#BuildRequires: pkgconfig(dali2-core)
-#BuildRequires: pkgconfig(dali2-toolkit)
-#BuildRequires: pkgconfig(dali2-adaptor)
-  %else
-BuildRequires: pkgconfig(dali-core)
-BuildRequires: pkgconfig(dali-toolkit)
-BuildRequires: pkgconfig(dali-adaptor)
-  %endif
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-device)
 %endif
@@ -473,18 +459,6 @@ CXXFLAGS+=' -fno-lto '
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %define out_tizen out_tizen/unified_tv/release
 
-%if "%{?skip_dali_build}" == "0"
-# For Dali
-cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-  -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen \
-  -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=dali \
-  -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-%endif
-
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
@@ -513,20 +487,6 @@ ninja -C %{out_tizen} starfish.serviceworker.shared_library
 
 %if "%{rpm}" == "prod_tv"
 %define out_tizen out_tizen/prod_tv/release
-
-%if "%{?skip_dali_build}" == "0"
-# For Dali
-cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-  -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' \
-  -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
-  -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DTARGETNAME=lightweight-web-engine.prod.dali.tv -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-%endif
 
 # For Cairo
 %if "%{?skip_config}" == "0"
@@ -579,12 +539,6 @@ ninja -C %{out_tizen} starfish.serviceworker.shared_library
 %if "%{rpm}" == "headless"
 %define out_tizen out_tizen/headless/release
 
-%if "%{?skip_dali_build}" == "0"
-# For Dali
-#cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.headless -G Ninja
-#ninja -C %{out_tizen} starfish.shared_library
-%endif
-
 # For Cairo
 #CFLAGS+=' -marm '
 #CXXFLAGS+=' -marm '
@@ -617,18 +571,6 @@ ninja -C %{out_tizen} starfish.serviceworker.shared_library
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %define out_tizen out_tizen/unified_mobile/release
-
-%if "%{?skip_dali_build}" == "0"
-# For Dali
-cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-  -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
-  -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-%endif
 
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -663,18 +605,6 @@ ninja -C %{out_tizen} starfish.serviceworker.shared_library
 
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
-
-%if "%{?skip_dali_build}" == "0"
-# For Dali
-cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-  -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
-  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
-  -DBACKEND=dali -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
-  -G Ninja
-ninja -C %{out_tizen} starfish.shared_library
-ninja -C %{out_tizen} starfish_api.shared_library
-%endif
 
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -802,9 +732,6 @@ cp inc/*.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp %{out_tizen}/lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
-%if "%{?skip_dali_build}" == "0"
-cp %{out_tizen}/lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
-%endif
 %if "%{?enable_serviceworker}" == "1"
 cp %{out_tizen}/lightweight-web-engine-serviceworker.pc %{buildroot}%{_libdir}/pkgconfig/
 %endif
@@ -815,9 +742,6 @@ cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 pushd %{buildroot}%{_libdir}/lwe
 rm -fr *.so*
 ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
-%if "%{?skip_dali_build}" == "0"
-ln -s liblightweight-web-engine-dali-plugin.so.1 liblightweight-web-engine-dali-plugin.so
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s liblightweight-web-engine-serviceworker.so.1 liblightweight-web-engine-serviceworker.so
 %endif
@@ -825,9 +749,6 @@ popd
 
 pushd %{buildroot}%{_libdir}
 ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
-%if "%{?skip_dali_build}" == "0"
-ln -s lwe/liblightweight-web-engine-dali-plugin.so liblightweight-web-engine-dali-plugin.so
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s lwe/liblightweight-web-engine-serviceworker.so liblightweight-web-engine-serviceworker.so
 %endif
@@ -850,9 +771,6 @@ done
 %if "%{rpm}" == "tv"
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
-%if "%{?skip_dali_build}" == "0"
-ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -860,9 +778,6 @@ ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine
 %if "%{rpm}" == "prod_tv"
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
-%if "%{?skip_dali_build}" == "0"
-ln -sf tv/liblightweight-web-engine.prod.dali.tv.so liblightweight-web-engine-dali-plugin.so.1
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s tv/liblightweight-web-engine.prod.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -920,9 +835,6 @@ for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
 done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
 ln -sf mobile/VERSION VERSION
-%if "%{?skip_dali_build}" == "0"
-ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so.1
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -945,9 +857,6 @@ for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
 done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
 ln -sf wearable/VERSION VERSION
-%if "%{?skip_dali_build}" == "0"
-ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so.1
-%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif

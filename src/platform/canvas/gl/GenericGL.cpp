@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
 #include "GL.h"
 #include "IncludeGL.h"
 
