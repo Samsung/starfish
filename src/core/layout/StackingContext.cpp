@@ -1003,11 +1003,11 @@ void StackingContext::computeStackingContextProperties(
     auto selfExtent = compositingState.screenExtentPerLayer(this);
     m_screenExtent = selfExtent;
 
-    bool compositedBySelf =
-        selfNeedsGraphicsBuffer;
+    bool compositedBySelf = selfNeedsGraphicsBuffer;
 
     if (m_owner->node() && m_owner->node()->isElement()) {
-        compositedBySelf |= m_owner->node()->window()->webView()->hasActiveAnimationExecutor(
+        compositedBySelf |=
+            m_owner->node()->window()->webView()->hasActiveAnimationExecutor(
                 m_owner->node()->asElement());
     }
 
@@ -1051,12 +1051,15 @@ void StackingContext::computeStackingContextProperties(
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
     } else {
         bool nonVisibleOverflowValueApplied =
-               m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
-               m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
-        if (nonVisibleOverflowValueApplied && m_owner->node() && m_owner->node()->isElement()) {
-            if (m_owner->node()->asElement()->scrollLeft(false) || m_owner->node()->asElement()->scrollTop(false)) {
+            m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
+            m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
+        if (nonVisibleOverflowValueApplied && m_owner->node() &&
+            m_owner->node()->isElement()) {
+            if (m_owner->node()->asElement()->scrollLeft(false) ||
+                m_owner->node()->asElement()->scrollTop(false)) {
                 compositedBySelf = true;
-                reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNeedsScroll;
+                reason = NeedsGraphicsLayerReason::
+                    NeedsGraphicsLayerReasonNeedsScroll;
             }
         }
         compositingState.compositeFlagInfoBecauseSelf[this] = compositedBySelf;
@@ -1308,8 +1311,8 @@ void StackingContext::applyStackingContextProperties(
         iter++;
     }
 
-    bool inAnimation =
-        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
+    bool inAnimation = m_owner->node()->isRunningOpacityAnimation() ||
+                       m_owner->node()->isRunningTransformAnimation();
     auto& prevDrawnMap =
         m_owner->node()->webView()->prevDrawnStackingContextInfo();
     bool compositedBefore = false;
@@ -1324,7 +1327,7 @@ void StackingContext::applyStackingContextProperties(
     bool willBeComposited = ctx.compositeFlagInfo[this];
     bool willBeCompositedDueToSelf = ctx.compositeFlagInfoBecauseSelf[this];
 
-    if (inAnimation && compositedBefore && !willBeComposited) {
+    if (inAnimation || (compositedBefore && !willBeComposited)) {
         willBeComposited = true;
     }
 
@@ -1404,11 +1407,11 @@ void StackingContext::applyStackingContextProperties(
             }
         }
 
-
         if (m_rareData->m_visibleRect.width() == 0 &&
             m_rareData->m_visibleRect.height() == 0 &&
             !m_owner->isRootElement() && !inAnimation &&
-            m_needsGraphicsBufferReason != NeedsGraphicsLayerReasonNeedsScroll) {
+            m_needsGraphicsBufferReason !=
+                NeedsGraphicsLayerReasonNeedsScroll) {
             willBeComposited = false;
         }
 
@@ -1474,8 +1477,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
         const float minScale = 1;
         const float maxScale = 4;
 
-        if (m_owner->node() &&
-            m_owner->node()->isRunningTransformAnimation()) {
+        if (m_owner->node() && m_owner->node()->isRunningTransformAnimation()) {
             float transformScaleMaxValue = 1;
 
             auto& transitions = m_owner->node()
@@ -1512,8 +1514,8 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
             } else if (transformScaleMaxValue > maxScale) {
                 transformScaleMaxValue = maxScale;
             }
-            m_rareData->m_additionalPixelRatio = std::max(
-                ctx.baseAdditionalPixelRatio, transformScaleMaxValue);
+            m_rareData->m_additionalPixelRatio =
+                std::max(ctx.baseAdditionalPixelRatio, transformScaleMaxValue);
             ctx.baseAdditionalPixelRatio =
                 std::max(ctx.baseAdditionalPixelRatio,
                          m_rareData->m_additionalPixelRatio);
@@ -1541,8 +1543,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                  (visibleHeight > windowHeight * minimumScale))) {
                 int m = std::max(visibleWidth / windowWidth,
                                  visibleHeight / windowHeight);
-                float scale =
-                    std::min(matrix.getScaleX(), matrix.getScaleY());
+                float scale = std::min(matrix.getScaleX(), matrix.getScaleY());
                 scale = std::min(1.f / m, scale);
                 // respect org scale
                 m_rareData->m_additionalPixelRatio =
@@ -1552,8 +1553,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                              m_rareData->m_additionalPixelRatio);
             } else {
 #endif
-                float scale =
-                    std::max(matrix.getScaleX(), matrix.getScaleY());
+                float scale = std::max(matrix.getScaleX(), matrix.getScaleY());
                 if (scale < minScale) {
                     scale = minScale;
                 } else if (scale > maxScale) {
@@ -1570,9 +1570,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
 #endif
         }
         if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
-            m_owner->node()
-                ->webView()
-                ->markNeedsPaintingConsiderInRendering();
+            m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
         }
     } else {
         if (m_rareData) {
@@ -2072,11 +2070,10 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
         if (bufferWidth && bufferHeight) {
             ensureRareData();
             if (!m_rareData->m_graphicsBufferHolder) {
-                m_rareData->m_graphicsBufferHolder =
-                    new GraphicsBufferHolder(
-                        bufferWidth, bufferHeight,
-                        m_owner->node()->window()->innerWidth(),
-                        m_owner->node()->window()->innerHeight(), this);
+                m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(
+                    bufferWidth, bufferHeight,
+                    m_owner->node()->window()->innerWidth(),
+                    m_owner->node()->window()->innerHeight(), this);
             }
 
             size_t wTileSize =
@@ -2116,8 +2113,8 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                     LayoutRect tileExtent = computeBoxExtent(
                         LayoutRect(minX + (LayoutUnit)tileDataX,
-                                   minY + (LayoutUnit)tileDataY,
-                                   tileDataWidth, tileDataHeight),
+                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
+                                   tileDataHeight),
                         screenMatrix);
 
                     bool willPaintOnScreen =
@@ -2201,10 +2198,9 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             if (task->targetElement() == d->element &&
                                 task->property() ==
                                     CSSStyleValuePair::KeyKind::Transform &&
-                                task->fraction(
-                                    d->element->document()
-                                        ->browsingContext()
-                                        ->styleResolveStartTick())) {
+                                task->fraction(d->element->document()
+                                                   ->browsingContext()
+                                                   ->styleResolveStartTick())) {
                                 const auto& fromValue =
                                     ((ActiveTransformAnimationTask*)task)
                                         ->decomposedFrom();
@@ -2212,32 +2208,24 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                     ((ActiveTransformAnimationTask*)task)
                                         ->decomposedTo();
 
-                                if (fromValue.translateX <
-                                    toValue.translateX) {
-                                    if (*d->wEarlyPaintingTextureStart !=
-                                        0) {
+                                if (fromValue.translateX < toValue.translateX) {
+                                    if (*d->wEarlyPaintingTextureStart != 0) {
                                         *d->wEarlyPaintingTextureStart =
-                                            *d->wEarlyPaintingTextureStart -
-                                            1;
+                                            *d->wEarlyPaintingTextureStart - 1;
                                     }
                                 }
-                                if (fromValue.translateX >
-                                    toValue.translateX) {
+                                if (fromValue.translateX > toValue.translateX) {
                                     *d->wEarlyPaintingTextureEnd =
                                         *d->wEarlyPaintingTextureEnd + 1;
                                 }
 
-                                if (fromValue.translateY <
-                                    toValue.translateY) {
-                                    if (*d->hEarlyPaintingTextureStart !=
-                                        0) {
+                                if (fromValue.translateY < toValue.translateY) {
+                                    if (*d->hEarlyPaintingTextureStart != 0) {
                                         *d->hEarlyPaintingTextureStart =
-                                            *d->hEarlyPaintingTextureStart -
-                                            1;
+                                            *d->hEarlyPaintingTextureStart - 1;
                                     }
                                 }
-                                if (fromValue.translateY >
-                                    toValue.translateY) {
+                                if (fromValue.translateY > toValue.translateY) {
                                     *d->hEarlyPaintingTextureEnd =
                                         *d->hEarlyPaintingTextureEnd + 1;
                                 }
@@ -2265,19 +2253,17 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                     LayoutRect tileExtent = computeBoxExtent(
                         LayoutRect(minX + (LayoutUnit)tileDataX,
-                                   minY + (LayoutUnit)tileDataY,
-                                   tileDataWidth, tileDataHeight),
+                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
+                                   tileDataHeight),
                         screenMatrix);
 
-                    bool isVisible = hVisibleTextureStart <= y &&
-                                     y < hVisibleTextureEnd &&
-                                     wVisibleTextureStart <= x &&
-                                     x < wVisibleTextureEnd;
-                    bool isEarlyPainting =
-                        hEarlyPaintingTextureStart <= y &&
-                        y < hEarlyPaintingTextureEnd &&
-                        wEarlyPaintingTextureStart <= x &&
-                        x < wEarlyPaintingTextureEnd;
+                    bool isVisible =
+                        hVisibleTextureStart <= y && y < hVisibleTextureEnd &&
+                        wVisibleTextureStart <= x && x < wVisibleTextureEnd;
+                    bool isEarlyPainting = hEarlyPaintingTextureStart <= y &&
+                                           y < hEarlyPaintingTextureEnd &&
+                                           wEarlyPaintingTextureStart <= x &&
+                                           x < wEarlyPaintingTextureEnd;
 
                     if (isVisible || isEarlyPainting) {
                         if (m_rareData->m_graphicsBufferHolder
@@ -2300,14 +2286,11 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                             CanvasSurface* canvasSurface =
                                 CanvasSurface::create(
-                                    m_owner->document()
-                                        ->webView()
-                                        ->renderer(),
+                                    m_owner->document()->webView()->renderer(),
                                     tileDataWidth, tileDataHeight,
                                     additionalPixelRatio(),
                                     m_hasFilterEffect
-                                        ? CanvasSurface::
-                                              PreferUnitedTexture
+                                        ? CanvasSurface::PreferUnitedTexture
                                         : CanvasSurface::PlainElement);
                             Canvas* canvas = Canvas::create(
                                 m_owner->node()->webView(), canvasSurface);
@@ -2320,12 +2303,12 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             // if
                             // needed
                             RepaintRegion rr;
-                            StackingContext::PaintingStackingContextContext
-                                ctx(true,
-                                    m_owner->node()
-                                        ->webView()
-                                        ->m_prevDrawnStackingContextInfo,
-                                    LayoutRect(0, 0, 0, 0), rr, 0, 0);
+                            StackingContext::PaintingStackingContextContext ctx(
+                                true,
+                                m_owner->node()
+                                    ->webView()
+                                    ->m_prevDrawnStackingContextInfo,
+                                LayoutRect(0, 0, 0, 0), rr, 0, 0);
 
                             ctx.layerBaseX = tileDataX;
                             ctx.layerBaseY = tileDataY;
@@ -2335,17 +2318,15 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                            canvasSurface->height());
 
                             canvas->translate(-minX, -minY);
-                            canvas->translate(-ctx.layerBaseX,
-                                              -ctx.layerBaseY);
+                            canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
 
                             fillGraphicsBufferContents(canvas, ctx);
 
                             delete canvas;
 
-                            canvasSurface
-                                ->unmapBufferAndNotifyUpdatedRegion(
-                                    0, 0, canvasSurface->bufferWidth(),
-                                    canvasSurface->bufferHeight());
+                            canvasSurface->unmapBufferAndNotifyUpdatedRegion(
+                                0, 0, canvasSurface->bufferWidth(),
+                                canvasSurface->bufferHeight());
 
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex] = canvasSurface;
@@ -3068,23 +3049,24 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         if (contentSurface) {
             compositor->save();
 
-            // there is only background-color on video or canvas element, we should not make graphics buffer
-            // since we can draw background color property with compositor
+            // there is only background-color on video or canvas element, we
+            // should not make graphics buffer since we can draw background
+            // color property with compositor
             if (thereIsNoBufferBecauseThereIsNoVisibleContent) {
                 auto clr = owner()->style()->backgroundColor();
                 if (!clr.isTransparent()) {
                     compositor->setFillColor(clr);
-                    compositor->drawRect(LayoutRect(0, 0, owner()->width(),
-                            owner()->height()));
+                    compositor->drawRect(
+                        LayoutRect(0, 0, owner()->width(), owner()->height()));
                 }
             }
             auto dx = owner()->borderLeft() + owner()->paddingLeft();
             auto dy = owner()->borderTop() + owner()->paddingTop();
             compositor->translate(dx, dy);
 
-            compositor->drawSurface(
-                contentSurface.getValue(), Unit::Rect(0, 0, owner()->contentWidth(),
-                            owner()->contentHeight()));
+            compositor->drawSurface(contentSurface.getValue(),
+                                    Unit::Rect(0, 0, owner()->contentWidth(),
+                                               owner()->contentHeight()));
             compositor->restore();
         }
 
