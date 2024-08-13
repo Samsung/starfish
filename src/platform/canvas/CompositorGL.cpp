@@ -2166,11 +2166,25 @@ public:
 
     void scissor(float x, float y, float width, float height)
     {
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-        gl()->scissor(x, y, width, height);
-#else
-        gl()->scissor(x, (float)screenHeight() - (y + height), width, height);
-#endif
+        if (m_screenMatrix.isIdentity()) {
+            gl()->scissor(x, (float)screenHeight() - (y + height), width,
+                          height);
+            return;
+        }
+        // TODO implement cases when m_screenMatrix is not 9, 90, 180, 270
+        // degree rotate transform
+        float maxX = x + width;
+        float maxY = y + height;
+        mapPointsByMatrix(x, y, m_screenMatrix);
+        mapPointsByMatrix(maxX, maxY, m_screenMatrix);
+
+        float newX = std::min(x, maxX);
+        float newWidth = std::abs(x - maxX);
+        float newY = std::min(y, maxY);
+        float newHeight = std::abs(y - maxY);
+
+        gl()->scissor(newX, (float)screenHeight() - (newY + newHeight),
+                      newWidth, newHeight);
     }
 
     void mapPointsByMatrix(float& x, float& y, const SkMatrix& m)
@@ -2401,15 +2415,6 @@ public:
                     mapLogicalScreenPointsToScreen(maxX, maxY);
 
                     float hw = 2.f / screenWidth();
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                    float hh = 2.f / screenHeight();
-                    float position[] = {
-                        minX * hw - 1, minY * hh - 1, // V1
-                        minX * hw - 1, maxY * hh - 1, // V2
-                        maxX * hw - 1, minY * hh - 1, // V3
-                        maxX * hw - 1, maxY * hh - 1, // V4
-                    };
-#else
                     float hh = -2.f / screenHeight();
                     float position[] = {
                         minX * hw - 1, minY * hh + 1, // V1
@@ -2417,7 +2422,6 @@ public:
                         maxX * hw - 1, minY * hh + 1, // V3
                         maxX * hw - 1, maxY * hh + 1, // V4
                     };
-#endif
 
                     gl()->bindBuffer(GL_ARRAY_BUFFER,
                                      m_compositorContext->m_drawPosBuffer);
@@ -2472,17 +2476,6 @@ public:
                                                        trianglePoints[5]);
 
                         float hw = 2.f / screenWidth();
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                        float hh = 2.f / screenHeight();
-                        float position[] = {
-                            trianglePoints[0] * hw - 1,
-                            trianglePoints[1] * hh - 1, // V1
-                            trianglePoints[2] * hw - 1,
-                            trianglePoints[3] * hh - 1, // V2
-                            trianglePoints[4] * hw - 1,
-                            trianglePoints[5] * hh - 1, // V3
-                        };
-#else
                         float hh = -2.f / screenHeight();
                         float position[] = {
                             trianglePoints[0] * hw - 1,
@@ -2492,7 +2485,6 @@ public:
                             trianglePoints[4] * hw - 1,
                             trianglePoints[5] * hh + 1, // V3
                         };
-#endif
 
                         gl()->bindBuffer(GL_ARRAY_BUFFER,
                                          m_compositorContext->m_drawPosBuffer);
@@ -2521,16 +2513,6 @@ public:
             mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
 
             float hw = 2.f / screenWidth();
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-            float hh = 2.f / screenHeight();
-            float data[] = {
-                dest[0][0] * hw - 1, dest[0][1] * hh - 1, // V1
-                dest[1][0] * hw - 1, dest[1][1] * hh - 1, // V2
-                dest[2][0] * hw - 1, dest[2][1] * hh - 1, // V3
-                dest[3][0] * hw - 1, dest[3][1] * hh - 1  // V4
-            };
-
-#else
             float hh = -2.f / screenHeight();
             float data[] = {
                 dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
@@ -2538,7 +2520,6 @@ public:
                 dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
                 dest[3][0] * hw - 1, dest[3][1] * hh + 1  // V4
             };
-#endif
 
             gl()->bindBuffer(GL_ARRAY_BUFFER,
                              m_compositorContext->m_drawPosBuffer);
@@ -2879,21 +2860,6 @@ public:
         mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
 
         float hw = 2.f / screenWidth;
-
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-        float hh = 2.f / screenHeight;
-        position[0] = dest[0][0] * hw - 1;
-        position[1] = dest[0][1] * hh - 1;
-
-        position[2] = dest[1][0] * hw - 1;
-        position[3] = dest[1][1] * hh - 1;
-
-        position[4] = dest[2][0] * hw - 1;
-        position[5] = dest[2][1] * hh - 1;
-
-        position[6] = dest[3][0] * hw - 1;
-        position[7] = dest[3][1] * hh - 1;
-#else
         float hh = -2.f / screenHeight;
         position[0] = dest[0][0] * hw - 1;
         position[1] = dest[0][1] * hh + 1;
@@ -2906,7 +2872,6 @@ public:
 
         position[6] = dest[3][0] * hw - 1;
         position[7] = dest[3][1] * hh + 1;
-#endif
     }
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst) override
@@ -2929,6 +2894,7 @@ public:
             Unit::Rect(0, 0, screenWidth(), screenHeight());
 
         SkMatrix ctm = lastState.matrix;
+        SkMatrix screenMatrix = m_screenMatrix;
         size_t screenWidth = this->screenWidth();
         size_t screenHeight = this->screenHeight();
 
@@ -3051,6 +3017,9 @@ public:
 
                             gl()->clearColor(0, 0, 0, 0);
                             gl()->clear(GL_COLOR_BUFFER_BIT);
+
+                            // reset screen matrix while draw fbo on screen
+                            screenMatrix.reset();
                         }
 
                         gl()->enable(GL_STENCIL_TEST);
@@ -3085,25 +3054,16 @@ public:
                             if (!fboStencilClipingEnabled) {
                                 mapPointsByMatrix(trianglePoints[0],
                                                   trianglePoints[1],
-                                                  m_screenMatrix);
+                                                  screenMatrix);
                                 mapPointsByMatrix(trianglePoints[2],
                                                   trianglePoints[3],
-                                                  m_screenMatrix);
+                                                  screenMatrix);
                                 mapPointsByMatrix(trianglePoints[4],
                                                   trianglePoints[5],
-                                                  m_screenMatrix);
+                                                  screenMatrix);
                             }
 
                             float hw = 2.f / screenWidth;
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                            float hh = 2.f / screenHeight;
-                            position.push_back(trianglePoints[0] * hw - 1);
-                            position.push_back(trianglePoints[1] * hh - 1);
-                            position.push_back(trianglePoints[2] * hw - 1);
-                            position.push_back(trianglePoints[3] * hh - 1);
-                            position.push_back(trianglePoints[4] * hw - 1);
-                            position.push_back(trianglePoints[5] * hh - 1);
-#else
                             float hh = -2.f / screenHeight;
                             position.push_back(trianglePoints[0] * hw - 1);
                             position.push_back(trianglePoints[1] * hh + 1);
@@ -3111,7 +3071,6 @@ public:
                             position.push_back(trianglePoints[3] * hh + 1);
                             position.push_back(trianglePoints[4] * hw - 1);
                             position.push_back(trianglePoints[5] * hh + 1);
-#endif
                         }
 
                         gl()->bindBuffer(GL_ARRAY_BUFFER,
@@ -3161,9 +3120,8 @@ public:
                                               std::abs(maxY - minY));
                 if (screenBoundingRect.intersects(visibleArea)) {
                     float texPosition[8];
-                    computeTexturePosition(dst, ctm, m_screenMatrix,
-                                           screenWidth, screenHeight,
-                                           texPosition);
+                    computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
+                                           screenHeight, texPosition);
                     drawTexture(csGL, texPosition,
                                 csGL->m_textureFragments[0].textureID,
                                 GL_TEXTURE_EXTERNAL_OES, -1,
@@ -3233,7 +3191,7 @@ public:
                                 GLuint tid = (GLuint)fragment.textureID;
                                 float texPosition[8];
                                 computeTexturePosition(
-                                    newDst, ctm, m_screenMatrix, screenWidth,
+                                    newDst, ctm, screenMatrix, screenWidth,
                                     screenHeight, texPosition);
                                 drawTexture(csGL, texPosition, tid,
                                             GL_TEXTURE_2D, GL_TEXTURE0,
@@ -3266,28 +3224,14 @@ public:
                 dest[3][0] = visibleArea.maxX();
                 dest[3][1] = visibleArea.y();
 
-                mapPointsByMatrix(dest[0][0], dest[0][1], m_screenMatrix);
-                mapPointsByMatrix(dest[1][0], dest[1][1], m_screenMatrix);
-                mapPointsByMatrix(dest[2][0], dest[2][1], m_screenMatrix);
-                mapPointsByMatrix(dest[3][0], dest[3][1], m_screenMatrix);
+                screenMatrix = m_screenMatrix;
+
+                mapPointsByMatrix(dest[0][0], dest[0][1], screenMatrix);
+                mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
+                mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
+                mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
 
                 float hw = 2.f / this->screenWidth();
-#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
-                float hh = 2.f / this->screenHeight();
-
-                float position[8];
-                position[0] = dest[0][0] * hw - 1;
-                position[1] = dest[0][1] * hh - 1;
-
-                position[2] = dest[1][0] * hw - 1;
-                position[3] = dest[1][1] * hh - 1;
-
-                position[4] = dest[2][0] * hw - 1;
-                position[5] = dest[2][1] * hh - 1;
-
-                position[6] = dest[3][0] * hw - 1;
-                position[7] = dest[3][1] * hh - 1;
-#else
                 float hh = -2.f / this->screenHeight();
 
                 float position[8];
@@ -3302,7 +3246,7 @@ public:
 
                 position[6] = dest[3][0] * hw - 1;
                 position[7] = dest[3][1] * hh + 1;
-#endif
+
                 gl()->bindTexture(GL_TEXTURE_2D, fboTex);
                 checkError(gl());
 
