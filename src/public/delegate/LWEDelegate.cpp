@@ -168,12 +168,10 @@ void LWE::Initialize(const char* storageDirectoryPath)
     bool isThreadMode = false;
     Starfish::StarfishRendererType rendererType =
         Starfish::StarfishRendererType::kOpenGL;
-    if (backend == "uv_cairo_gl" || backend == "dali" || backend == "flutter") {
+    if (backend == "uv_cairo_gl" || backend == "flutter") {
         isThreadMode = true;
     }
-    if (backend == "dali") {
-        rendererType = Starfish::StarfishRendererType::kSoftware;
-    } else if (backend == "efl_headless") {
+    if (backend == "efl_headless") {
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
 

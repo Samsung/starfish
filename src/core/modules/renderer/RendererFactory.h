@@ -29,8 +29,6 @@ namespace RendererFactory {
 #if !defined(STARFISH_EFL_HEADLESS)
     Renderer* createSoftware(Starfish* starfish, uint32_t width,
                              uint32_t height);
-#endif
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
     Renderer* createGL(Starfish* starfish, uint32_t width, uint32_t height);
 #endif
 #if defined(STARFISH_EFL_HEADLESS)

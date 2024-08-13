@@ -44,7 +44,7 @@ namespace CompositorFactory {
     uint32_t maximumTextureSizeCairo();
     bool supportsFilterEffectCairo(size_t textureWidth, size_t textureHeight);
 #endif
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
     Compositor* create3dGl(WebView* webview, CompositorContext* ctx);
     Compositor* create2dGl(WebView* webview, CompositorContext* ctx,
                            CanvasSurface* surface);

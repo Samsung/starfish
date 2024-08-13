@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-#if !defined(STARFISH_DALI) && !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_EFL_HEADLESS)
 
 #include <SkMatrix.h>
 

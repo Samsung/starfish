@@ -65,7 +65,6 @@ ELSE ()
         INCLUDE (build/starfish_uwe_service.cmake)
     ENDIF()
 
-    CONFIGURE_FILE(lightweight-web-engine-dali-plugin.pc.in lightweight-web-engine-dali-plugin.pc @ONLY)
     CONFIGURE_FILE(lightweight-web-engine.pc.in lightweight-web-engine.pc @ONLY)
 
     IF (${SHARED_WORKER} STREQUAL "1" OR ${SERVICE_WORKER} STREQUAL "1")

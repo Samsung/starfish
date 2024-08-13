@@ -18,7 +18,6 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#if !defined(STARFISH_DALI)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
 #include "StarfishConfig.h"
@@ -1775,6 +1774,5 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 }
 } // namespace Starfish
 
-#endif
 #endif
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

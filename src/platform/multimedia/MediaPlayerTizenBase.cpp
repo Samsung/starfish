@@ -18,7 +18,6 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#if !defined(STARFISH_DALI)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 #if !defined(STARFISH_TIZEN_PROD_TV) || \
     defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
@@ -159,7 +158,6 @@ void MediaPlayerTizen::setMediaFormatExtraForAudio(media_format_h& mediaFormat,
 }
 } // namespace Starfish
 
-#endif
 #endif
 #endif
 #endif
