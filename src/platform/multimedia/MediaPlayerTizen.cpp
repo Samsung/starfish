@@ -47,7 +47,7 @@
 #error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
 #endif
 
-#if !defined(STARFISH_MM_OUTPUT_WITH_GL)
+#if !defined(STARFISH_MM_OUTPUT_WITH_GL) && !defined(STARFISH_EFL_HEADLESS)
 #include <Evas.h>
 #endif
 
