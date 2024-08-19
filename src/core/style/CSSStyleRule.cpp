@@ -518,7 +518,9 @@ void CSSKeyframeRule::setKeyText(String* text)
             DOMException::INDEX_SIZE_ERR, s.data());
     }
 
-    (static_cast<CSSKeyframesRule*>(parentRule()))->styleChanged();
+    if (parentRule()) {
+        (static_cast<CSSKeyframesRule*>(parentRule()))->styleChanged();
+    }
 }
 
 CSSStyleDeclaration* CSSKeyframeRule::style()

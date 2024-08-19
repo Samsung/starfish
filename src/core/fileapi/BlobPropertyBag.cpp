@@ -25,6 +25,7 @@ namespace Starfish {
 
 BlobPropertyBag::BlobPropertyBag()
     : m_type(String::emptyString)
+    , m_endings(EndingType::kTransparent)
 {
 }
 
