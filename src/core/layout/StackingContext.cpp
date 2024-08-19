@@ -2932,7 +2932,10 @@ void StackingContext::applyMask(Canvas* canvas,
 
             ImageResource* ir = maskStyle->imageResource(i);
 
-            if (box->node() != nullptr && ir != nullptr) {
+            if (!ir) {
+                return;
+            }
+            if (box->node() != nullptr) {
                 box->node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
                     ir->url()->urlString()->toUTF8NonGCString());
             }

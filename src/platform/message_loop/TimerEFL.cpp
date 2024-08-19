@@ -79,9 +79,10 @@ size_t TimerEFL::addTimer(unsigned delay, GlobalScope* globalScope,
                 if (ecore_timer_freeze_get(td->m_timerID)) {
                     return ECORE_CALLBACK_DONE;
                 }
-                auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-                td->m_timer->m_webBase->messageLoop()
-                    ->invokeMicroTasksIfExist();
+                if (td->m_timer) {
+                    td->m_timer->m_webBase->messageLoop()
+                        ->invokeMicroTasksIfExist();
+                }
                 if (td->m_handler && td->m_timer && td->m_id && td->m_timerID) {
                     td->m_handler(td->m_data);
                 }
@@ -99,8 +100,10 @@ size_t TimerEFL::addTimer(unsigned delay, GlobalScope* globalScope,
                 if (ecore_timer_freeze_get(td->m_timerID)) {
                     return ECORE_CALLBACK_DONE;
                 }
-                td->m_timer->m_webBase->messageLoop()
-                    ->invokeMicroTasksIfExist();
+                if (td->m_timer) {
+                    td->m_timer->m_webBase->messageLoop()
+                        ->invokeMicroTasksIfExist();
+                }
 
                 if (td->m_handler && td->m_timer && td->m_id && td->m_timerID) {
                     td->m_handler(td->m_data);

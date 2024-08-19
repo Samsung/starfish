@@ -286,7 +286,7 @@ static CSSStyleValuePair resolveFlowRelativeInlineProperties(
             ret.setValue(CSSLength(frame->style()->border().left().style()));
             return ret;
         }
-        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineStartWidth) {
+        if (keykind == CSSStyleValuePair::KeyKind::BorderInlineEndWidth) {
             ret.setKeyKind(keykind);
             ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
             ret.setValue(CSSLength(frame->borderLeft()));
