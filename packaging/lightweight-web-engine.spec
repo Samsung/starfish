@@ -659,9 +659,14 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_unitdir}
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all" || "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
-install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
 install -d %{buildroot}%{_datadir}/lwe/update
+
+# Disable temporary on prod_tv
+%if "%{rpm}" != "prod_tv"
+install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%{_unitdir}
 %install_service multi-user.target.wants lightweight-web-engine-update.service
+%endif
+
 %endif
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
@@ -905,9 +910,14 @@ exit 0
 %{_libdir}/lwe/tv/*.so*
 %{_libdir}/lwe/tv/VERSION
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%{_datadir}/lwe/update
+
+# Disable temporary on prod_tv
+%if "%{rpm}" != "prod_tv"
 %{_unitdir}/lightweight-web-engine-update.service
 %{_unitdir}/multi-user.target.wants/lightweight-web-engine-update.service
-%{_datadir}/lwe/update
+%endif
+
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
