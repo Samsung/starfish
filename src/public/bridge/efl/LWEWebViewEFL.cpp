@@ -306,6 +306,7 @@ public:
         , m_isDestroyed(false)
         , m_lastRenderingTime(0)
         , m_lastInputTime(0)
+        , m_evasGlRotationDegrees(-1)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
