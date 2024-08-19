@@ -36,8 +36,8 @@
 #include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTreeBuilder.h"
-#include "core/layout/OverflowStatus.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/ComputeOverflow.h"
 #include "core/style/CalcData.h"
 
 namespace Starfish {
