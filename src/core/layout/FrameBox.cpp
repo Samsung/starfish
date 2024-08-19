@@ -31,7 +31,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
-#include "core/layout/OverflowStatus.h"
+#include "core/layout/ComputeOverflow.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/modules/canvas/image/NativeImageData.h"

@@ -28,9 +28,9 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameReplacedIFrame.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/ComputeOverflow.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
-#include "core/layout/OverflowStatus.h"
 
 namespace Starfish {
 
@@ -165,15 +165,12 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                                        LayoutRect r)
 {
     LayoutRect tmp = computeBoxExtent(r, currentMatrix);
-    OverflowStatus status(frame);
-    for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size() &&
-                       frame->shouldApplyOverflow();
-         i++) {
-        size_t idx = m_boundMaxExtentDueToOverflow.size() - 1 - i;
-        auto parent = std::get<2>(m_boundMaxExtentDueToOverflow[idx]);
-        if (status.canApplyOverflow(parent)) {
+    ::Starfish::ComputeOverflow<JustCheckOveflow> co(frame);
+
+    for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
+        if (co.canApplyOverflow(std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
             tmp = LayoutRect::overlappedRect(
-                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[idx]));
+                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
         }
     }
     m_repaintRegionPerGraphicsLayer[nullptr].unite(tmp);
@@ -190,20 +187,17 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                             root->visibleRect());
             } else {
                 r = computeBoxExtent(r, frame->computeMatrixOnGraphicsBuffer());
+                StackingContext* s = findNearestStackingContextOwner(frame)
+                                         ->stackingContext();
 
-                if (frame->layoutParent() != nullptr) {
-                    StackingContext* s = findNearestStackingContextOwner(frame)
-                                             ->stackingContext();
-                    for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size();
-                         i++) {
-                        if (std::get<1>(m_boundMaxExtentDueToOverflow[i]) ==
-                            s) {
-                            r = LayoutRect::overlappedRect(
-                                r,
-                                std::get<0>(m_boundMaxExtentDueToOverflow[i]));
-                        }
+                for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
+                    if ((std::get<1>(m_boundMaxExtentDueToOverflow[i]) == s) &&
+                            co.canApplyOverflow(std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
+                        tmp = LayoutRect::overlappedRect(
+                            tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
                     }
                 }
+
 
                 m_repaintRegionPerGraphicsLayer
                     [findNearestStackingContextOwner(frame)->node()]
