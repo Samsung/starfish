@@ -93,6 +93,7 @@ static void normalizeAngles(float& startAngle, float& endAngle,
 CanvasPath::CanvasPath(ExecutionContext* executionContext)
     : m_path(nullptr)
     , m_executionContext(executionContext)
+    , m_shouldDisable(false)
 {
     init();
 }
