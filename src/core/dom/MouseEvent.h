@@ -60,6 +60,8 @@ public:
         , m_clientY(clientY)
         , m_screenX(screenX)
         , m_screenY(screenY)
+        , m_pageX(0)
+        , m_pageY(0)
         , m_clickCount(clickCount)
         , m_timeStamp(timeStamp)
         , m_relatedTarget(relatedTarget)
