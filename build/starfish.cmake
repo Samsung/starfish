@@ -52,6 +52,8 @@ FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC
     ${STARFISH_ROOT}/src/public/LWEWebView.cpp
     ${STARFISH_ROOT}/src/public/LWEDelegateLoader.cpp
+    ${STARFISH_ROOT}/src/public/LWEWorker.cpp
+    ${STARFISH_ROOT}/src/public/LWEWorkerDelegateLoader.cpp
     ${STARFISH_SHELL_SRC}
 )
 

@@ -29,18 +29,18 @@
 
 namespace Starfish {
 
-WorkerManager* WorkerManager::create()
+WorkerManager* WorkerManager::create(Starfish* starfish)
 {
 #if defined(STARFISH_WEBWORKER_HOST)
-    return new WorkerHostManager();
+    return new WorkerHostManager(starfish);
 #else
-    return new WorkerClientManager();
+    return new WorkerClientManager(starfish);
 #endif
 }
 
-WorkerManager::WorkerManager()
+WorkerManager::WorkerManager(Starfish* starfish)
     : m_workerSettings(new WorkerSettings())
-    , m_perProcess(new PerProcess(m_workerSettings))
+    , m_perProcess(new PerProcess(starfish, m_workerSettings))
 {
 }
 

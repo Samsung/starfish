@@ -21,17 +21,14 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/worker/PerProcess.h"
-#include "core/modules/worker/WorkerSettings.h"
 #include "core/util/debug/Trace.h"
 #include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/worker/WorkerIPCAddress.h"
 
 namespace Starfish {
 
-WorkerIPCAddress::WorkerIPCAddress(WorkerSettings* settings,
-                                   const std::string& resourceDirPath)
-    : m_workerSettings(settings)
-    , m_resourceDirPath(resourceDirPath)
+WorkerIPCAddress::WorkerIPCAddress(const std::string& resourceDirPath)
+    : m_resourceDirPath(resourceDirPath)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -48,8 +45,7 @@ const std::string WorkerIPCAddress::getIPCHandlePath(const std::string& last)
 {
     std::stringstream ss;
 
-    ss << m_workerSettings->dataDirectoryPath() << m_resourceDirPath << "/"
-       << last;
+    ss << m_resourceDirPath << "/" << last;
 
     return ss.str();
 }
@@ -67,19 +63,9 @@ const std::string WorkerIPCAddress::createIPCAddress(const std::string& last)
 void WorkerIPCAddress::acquire()
 {
     // TODO: consider making parent directories as needed.
-    LocalStorageHelper::File::mkdirIfNotExists(
-        m_workerSettings->dataDirectoryPath());
+    LocalStorageHelper::File::mkdirIfNotExists(m_resourceDirPath);
 
     LocalStorageHelper::File::createClearDirectory(getIPCHandlePath());
-
-    m_workerSettings->addOnChangeDataDirectoryPathCallback(
-        [this](const std::string& curPath, const std::string& newPath) {
-            LocalStorageHelper::File::remove(curPath);
-            LocalStorageHelper::File::createClearDirectory(newPath);
-
-            LocalStorageHelper::File::mkdirIfNotExists(getIPCHandlePath());
-            TRACE(IPC, "Create", getIPCHandlePath());
-        });
 }
 
 void WorkerIPCAddress::release()

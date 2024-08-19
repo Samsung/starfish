@@ -17,123 +17,76 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SHARED_WORKER) || \
-    defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_WEBWORKER_HOST)
 
-#include "StarfishConfig.h"
-#include "Starfish.h"
+#include <cassert>
 
 #include "LWEWorker.h"
-#include "public/delegate/LWEDelegate.h"
-#include "public/delegate/ThreadedCallHelper.h"
 
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/worker/WorkerManager.h"
-#include "core/modules/worker/WorkerSettings.h"
-#include "core/modules/worker/host/WorkerAgent.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#ifdef STARFISH_API_ENABLE_LOADER
+#include "LWEWorkerDelegateLoader.h"
+#else
+#include "public/delegate/LWEWorkerDelegate.h"
+#endif
 
-using namespace Starfish;
-
-namespace LWEDelegate {
-extern Starfish::Starfish *g_starfishInstance;
-}
+#if defined(NDEBUG)
+#define LWE_WORKER_ASSERT(assertion) ((void)0)
+#else
+#define LWE_WORKER_ASSERT(assertion) assert(assertion);
+#endif
 
 namespace LWE {
 
-#if defined(STARFISH_WEBWORKER_HOST)
-
-static WorkerProcessState ToWorkerState(WorkerAgentState state)
+static void initializeWorkerProcess(const std::string &storageDirectoryPath)
 {
-    switch (state) {
-    case WorkerAgentState::Terminated:
-        return WorkerProcessState::Terminated;
-    default:
-        return WorkerProcessState::None;
-    }
-}
+#ifdef STARFISH_API_ENABLE_LOADER
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    std::string targetName = STARFISH_SHARED_WORKER_API_TARGET_NAME;
+#elif defined(STARFISH_ENABLE_SERVICE_WORKER)
+    std::string targetName = STARFISH_SERVICE_WORKER_API_TARGET_NAME;
+#else
+#error \
+    "Please define STARFISH_ENABLE_SHARED_WORKER or STARFISH_ENABLE_SERVICE_WORKER."
+#endif
 
-static void initializeWorkerProcess(const std::string &dataDirectoryPath,
-                                    const std::string &resourceDirectoryPath)
-{
-    STARFISH_LOG_INFO("WORKER STARTS");
-
-    std::string workerDataDirPath = dataDirectoryPath;
-    if (workerDataDirPath.empty()) {
-        workerDataDirPath =
-            Starfish::WorkerSettings::getDefaultDataDirectoryPath();
+    if (!LWEWorkerDelegateLoader::getInstance()->load(targetName)) {
+        LWE_WORKER_ASSERT(false);
     }
 
-    // TODO: use StoragePathProvider class to get the path of worker directory.
-    std::string workerResourceDirPath =
-        dataDirectoryPath + resourceDirectoryPath;
-    LWEDelegate::LWE::Initialize(workerResourceDirPath.data());
+    LWEWorkerDelegateLoader::getSafeInstance()->kLWEWorkerProcTable.Initialize(
+        storageDirectoryPath);
 
-    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [workerDataDirPath]() -> void {
-            if (WorkerAgent::isCreated() == false) {
-                LWEDelegate::g_starfishInstance->workerManager()
-                    ->workerSettings()
-                    ->setDataDirectoryPath(workerDataDirPath);
-
-                WorkerAgent *agent =
-                    WorkerAgent::create(LWEDelegate::g_starfishInstance);
-                agent->start();
-            }
-        });
+#else
+    LWEDelegate::LWEWorker::Initialize(storageDirectoryPath);
+#endif
 }
 
 static void registerOnStatusChangedHandler(
     const std::function<void(WorkerProcessState)> &cb)
 {
-    STARFISH_RELEASE_ASSERT(WorkerAgent::isCreated());
-    auto onStateChangedCallback = [cb](WorkerAgentState state) {
-        cb(ToWorkerState(state));
-    };
-
-    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void {
-            STARFISH_ASSERT(cb != nullptr);
-            WorkerAgent::instance()->registerOnStatusChangedHandler(
-                onStateChangedCallback);
-        });
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEWorkerDelegateLoader::getSafeInstance()
+        ->kLWEWorkerProcTable.RegisterOnStatusChangedHandler(cb);
+#else
+    return LWEDelegate::LWEWorker::RegisterOnStatusChangedHandler(cb);
+#endif
 }
 
 static void finalizeWorkerProcess()
 {
-    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        []() -> void {
-            if (WorkerAgent::isCreated() == true) {
-                WorkerAgent::instance()->destroy();
-            }
-        });
-
-    LWEDelegate::LWE::Finalize();
-
-    STARFISH_LOG_INFO("WORKER ENDS");
+#ifdef STARFISH_API_ENABLE_LOADER
+    return LWEWorkerDelegateLoader::getSafeInstance()
+        ->kLWEWorkerProcTable.Finalize();
+#else
+    return LWEDelegate::LWEWorker::Finalize();
+#endif
 }
 
-void ServiceWorker::Initialize(const std::string &dataDirectoryPath)
-{
-    return initializeWorkerProcess(dataDirectoryPath,
-                                   "/service-worker-resource");
-}
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
 
-void ServiceWorker::RegisterOnStatusChangedHandler(
-    const std::function<void(WorkerProcessState)> &cb)
+void SharedWorker::Initialize(const std::string &storageDirectoryPath)
 {
-    return registerOnStatusChangedHandler(cb);
-}
-
-void ServiceWorker::Finalize()
-{
-    return finalizeWorkerProcess();
-}
-
-void SharedWorker::Initialize(const std::string &dataDirectoryPath)
-{
-    return initializeWorkerProcess(dataDirectoryPath,
-                                   "/shared-worker-resource");
+    return initializeWorkerProcess(storageDirectoryPath);
 }
 
 void SharedWorker::RegisterOnStatusChangedHandler(
@@ -147,32 +100,25 @@ void SharedWorker::Finalize()
     return finalizeWorkerProcess();
 }
 
-#else // !defined(STARFISH_WEBWORKER_HOST)
-void WorkerClient::RegisterDataDirectoryPath(
-    const std::string &dataDirectoryPath)
+#elif defined(STARFISH_ENABLE_SERVICE_WORKER)
+
+void ServiceWorker::Initialize(const std::string &storageDirectoryPath)
 {
-    STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
-    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [dataDirectoryPath]() -> void {
-            LWEDelegate::g_starfishInstance->workerManager()
-                ->workerSettings()
-                ->setDataDirectoryPath(dataDirectoryPath);
-        });
+    return initializeWorkerProcess(storageDirectoryPath);
 }
 
-void WorkerClient::RegisterServiceWorkerProcessExecutor(
-    const std::function<bool()> &fn)
+void ServiceWorker::RegisterOnStatusChangedHandler(
+    const std::function<void(WorkerProcessState)> &cb)
 {
-    STARFISH_RELEASE_ASSERT(LWEDelegate::LWE::IsInitialized());
-    LWEDelegate::ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync(
-        [&]() -> void {
-            LWEDelegate::g_starfishInstance->workerManager()
-                ->workerSettings()
-                ->setServiceWorkerProcessExecutor(fn);
-        });
+    return registerOnStatusChangedHandler(cb);
 }
 
-#endif // defined(STARFISH_WEBWORKER_HOST)
+void ServiceWorker::Finalize()
+{
+    return finalizeWorkerProcess();
+}
+
+#endif
 
 } // namespace LWE
 

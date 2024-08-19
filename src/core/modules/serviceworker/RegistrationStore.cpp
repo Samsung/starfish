@@ -26,7 +26,6 @@
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
 #include "core/util/debug/Trace.h"
-#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/Message.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -75,6 +74,15 @@ RegistrationStoreLocalStorage::RegistrationStoreLocalStorage(
     const std::string& rootPath)
     : m_rootPath(rootPath)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            RegistrationStoreLocalStorage* self =
+                static_cast<RegistrationStoreLocalStorage*>(obj);
+            self->~RegistrationStoreLocalStorage();
+        },
+        nullptr, nullptr, nullptr);
+
     updateListPath();
 }
 

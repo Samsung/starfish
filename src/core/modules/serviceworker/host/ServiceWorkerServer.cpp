@@ -38,6 +38,7 @@
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/worker/PerProcess.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 
 #include "core/dom/ExecutionContext.h"
 
@@ -47,7 +48,6 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
@@ -65,7 +65,7 @@ void ServiceWorkerServer::destroy()
 }
 
 ServiceWorkerServer::ServiceWorkerServer(PerProcess* perProcess,
-                                         ServiceWorkerIPCAddress* ipcAddress)
+                                         WorkerIPCAddress* ipcAddress)
     : m_perProcess(perProcess)
     , m_ipcAddress(ipcAddress)
 {

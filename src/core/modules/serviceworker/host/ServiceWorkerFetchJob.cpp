@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "StoragePathProvider.h"
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/ExecutionContext.h"
@@ -33,7 +34,6 @@
 #include "core/fetch/stream/ReadableStreamBuffer.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
-#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/FetchCacheStream.h"
@@ -204,12 +204,12 @@ void ServiceWorkerFetchJob::successJob()
 
     if (m_response->cachePath().empty()) {
         data->isCached = false;
-        auto stream = new FetchCacheStream(ServiceWorkerAgent::instance()
-                                               ->starfish()
-                                               ->workerManager()
-                                               ->workerSettings()
-                                               ->dataDirectoryPath(),
-                                           true);
+        auto stream =
+            new FetchCacheStream(ServiceWorkerAgent::instance()
+                                     ->starfish()
+                                     ->storagePathProvider()
+                                     .getServiceWorkerDataDirectoryPath(),
+                                 true);
         stream->open("temp");
         stream->writeResponse(data->url->hashValue(), m_response);
         data->responsePath = m_response->cachePath();

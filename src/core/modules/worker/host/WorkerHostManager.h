@@ -38,8 +38,7 @@ public:
     }
 
 private:
-    WorkerHostManager();
-    void createLocalStorageRootDir();
+    WorkerHostManager(Starfish* starfish);
 
     static const size_t s_threadPoolSize = 5;
 };

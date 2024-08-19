@@ -69,8 +69,8 @@ SharedWorkerAgent::SharedWorkerAgent(Starfish* starfish)
     PerProcess* perProcess = m_workerHostManager->perProcess();
     perProcess->initialize();
 
-    m_ipcAddress = new WorkerIPCAddress(perProcess->workerSettings(),
-                                        PATH_SHARED_WORKER_IPC_DIR);
+    m_ipcAddress = new WorkerIPCAddress(
+        starfish->storagePathProvider().getSharedWorkerDataDirectoryPath());
     m_ipcAddress->acquire();
 
     m_server = new SharedWorkerAgentServer(
@@ -87,6 +87,10 @@ void SharedWorkerAgent::destroy()
     TRACE(SHAREDWORKER);
     if (WorkerAgent::g_workerAgentInstance == nullptr) {
         return;
+    }
+
+    if (m_clientFunc) {
+        m_clientFunc(WorkerAgentState::Terminated);
     }
 
     m_server->close();

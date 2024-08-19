@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "StoragePathProvider.h"
 
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
@@ -36,6 +37,7 @@
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/Message.h"
@@ -43,7 +45,6 @@
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
-#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/FetchEventHandler.h"
 
@@ -95,11 +96,14 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
     // check app installation before the web page is loaded.
     m_perProcess = perProcess;
     m_perProcess->initialize();
-    m_ipcAddress = new ServiceWorkerIPCAddress(m_perProcess->workerSettings());
+
+    std::string dataDirPath = perProcess->starfish()
+                                  ->storagePathProvider()
+                                  .getServiceWorkerDataDirectoryPath();
+    m_ipcAddress = new WorkerIPCAddress(dataDirPath);
 
     m_pushServiceAgent = new PushServiceAgent();
-    m_registrationManager =
-        new RegistrationManager(perProcess->workerSettings());
+    m_registrationManager = new RegistrationManager(dataDirPath);
 }
 
 void ServiceWorkerProcessManager::destroy()
@@ -202,11 +206,10 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 #if !defined(STARFISH_USE_WORKER_PROCESS)
         startWorkerOnThread("");
 #else
-        auto swProcessExecutor = m_perProcess->serviceWorkerProcessExecutor();
-        if (swProcessExecutor.hasValue()) {
-            WorkerSettings::ProcessExecutorCallback callback =
-                swProcessExecutor.value();
-            if (!callback()) {
+        auto workerProcessExecutor =
+            m_perProcess->workerSettings()->serviceWorkerProcessExecutor();
+        if (workerProcessExecutor) {
+            if (!workerProcessExecutor()) {
                 STARFISH_LOG_ERROR("Fail to launch Service Worker process");
             }
         } else {

@@ -25,21 +25,6 @@ namespace Starfish {
 class WorkerSettings : public gc {
 public:
     using ProcessExecutorCallback = std::function<bool()>;
-    using OnChangeDataDirectoryPathCallback = std::function<void(
-        const std::string& curPath, const std::string& newPath)>;
-
-    static std::string getDefaultDataDirectoryPath();
-
-    WorkerSettings();
-    WorkerSettings(const std::string& dataDirectoryPath);
-
-    ~WorkerSettings();
-
-    void setDataDirectoryPath(const std::string& path);
-    const std::string dataDirectoryPath()
-    {
-        return m_dataDirectoryPath;
-    }
 
     void setServiceWorkerProcessExecutor(
         const ProcessExecutorCallback& executor)
@@ -51,28 +36,11 @@ public:
         return m_serviceWorkerProcessExecutor;
     }
 
-    void addOnChangeDataDirectoryPathCallback(
-        OnChangeDataDirectoryPathCallback callback);
-
-    void setProcessName(const std::string& name)
-    {
-        m_processName = name;
-    }
-    std::string processName()
-    {
-        return m_processName;
-    }
-
     DEFINE_GETTER_SETTER(size_t, threadPoolSize, ThreadPoolSize);
 
 private:
-    std::string m_dataDirectoryPath;
-    std::string m_processName;
     ProcessExecutorCallback m_serviceWorkerProcessExecutor{ nullptr };
     size_t m_threadPoolSize = 1;
-
-    std::vector<OnChangeDataDirectoryPathCallback>
-        m_onChangeDataDirectoryPathCallbacks;
 };
 
 } // namespace Starfish

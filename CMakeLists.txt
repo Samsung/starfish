@@ -69,6 +69,8 @@ ELSE ()
 
     IF (${SHARED_WORKER} STREQUAL "1" OR ${SERVICE_WORKER} STREQUAL "1")
         INCLUDE (build/worker.cmake)
+        INCLUDE (build/worker_public_api.cmake)
+        INCLUDE (build/worker_launcher.cmake)
     ENDIF()
 
     IF (${SERVICE_WORKER} STREQUAL "1")

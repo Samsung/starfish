@@ -40,12 +40,11 @@ class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
 class IServiceWorkerClientConnection;
 class ServiceWorkerContextManager;
-class ServiceWorkerIPCAddress;
+class WorkerIPCAddress;
 
 class ServiceWorkerServer : public gc, public ServiceWorkerServerInterface {
 public:
-    ServiceWorkerServer(PerProcess* perProcess,
-                        ServiceWorkerIPCAddress* ipcAddress);
+    ServiceWorkerServer(PerProcess* perProcess, WorkerIPCAddress* ipcAddress);
     virtual ~ServiceWorkerServer();
 
     ServiceWorkerServer(ServiceWorkerServer const&) = delete;
@@ -69,7 +68,7 @@ private:
     void registerConnection(ServiceWorkerHostConnection* connection);
 
     PerProcess* m_perProcess{ nullptr };
-    ServiceWorkerIPCAddress* m_ipcAddress{ nullptr };
+    WorkerIPCAddress* m_ipcAddress{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
     GCVector<ServiceWorkerHostConnection*> m_connections;

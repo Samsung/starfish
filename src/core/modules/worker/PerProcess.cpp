@@ -22,9 +22,10 @@
 #include "StarfishConfig.h"
 #include "platform/file/PlatformDirectory.h"
 #include "core/util/String.h"
+#include "core/util/debug/Trace.h"
 
 #include "core/modules/worker/WorkerConfig.h"
-#include "core/util/debug/Trace.h"
+#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/threading/ThreadPool.h"
@@ -38,7 +39,7 @@ namespace Starfish {
 
 #define IO_EVENT_POLLING_TIMEOUT_MS 300
 
-PerProcess::PerProcess(WorkerSettings* settings)
+PerProcess::PerProcess(Starfish* starfish, WorkerSettings* settings)
 {
     LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
         if (GlobalOptions::instance().has("TRACE", id.c_str())) {
@@ -52,6 +53,7 @@ PerProcess::PerProcess(WorkerSettings* settings)
     STARFISH_ASSERT(!isOnceCreated);
     isOnceCreated = true;
 
+    m_starfish = starfish;
     m_workerSettings = settings;
 }
 
@@ -92,18 +94,6 @@ void PerProcess::destroy()
 
     m_threadPool->destroy();
     m_messageLoop->destroy();
-}
-
-Nullable<WorkerSettings::ProcessExecutorCallback>
-PerProcess::serviceWorkerProcessExecutor()
-{
-    WorkerSettings::ProcessExecutorCallback executor =
-        m_workerSettings->serviceWorkerProcessExecutor();
-    if (!executor) {
-        return Nullable<WorkerSettings::ProcessExecutorCallback>();
-    }
-
-    return Nullable<WorkerSettings::ProcessExecutorCallback>(executor);
 }
 
 } // namespace Starfish

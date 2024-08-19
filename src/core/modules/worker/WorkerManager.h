@@ -31,7 +31,7 @@ class PerProcess;
 
 class WorkerManager : public gc {
 public:
-    static WorkerManager* create();
+    static WorkerManager* create(Starfish* starfish);
 
     virtual bool isWorkerHostManager() const
     {
@@ -52,7 +52,7 @@ public:
     DEFINE_GETTER(PerProcess*, perProcess);
 
 protected:
-    WorkerManager();
+    WorkerManager(Starfish* starfish);
 
     WorkerSettings* m_workerSettings{ nullptr };
     PerProcess* m_perProcess{ nullptr };

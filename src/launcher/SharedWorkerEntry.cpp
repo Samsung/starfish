@@ -41,6 +41,17 @@ static inline bool startsWith(const std::string& string,
            (string.compare(0, prefix.size(), prefix) == 0);
 }
 
+static std::string storageDir()
+{
+    std::string cacheDir = "/tmp";
+    const char* homeDir = getenv("HOME");
+    if (homeDir && strlen(homeDir)) {
+        cacheDir = homeDir;
+    }
+    cacheDir += "/Starfish-storage";
+    return cacheDir;
+}
+
 int main(int argc, char* argv[])
 {
     std::string dataDir;
@@ -51,6 +62,10 @@ int main(int argc, char* argv[])
         if (startsWith(arg, std::string("--data-dir="))) {
             dataDir = arg.substr(strlen("--data-dir="));
         }
+    }
+
+    if (dataDir.empty()) {
+        dataDir = storageDir();
     }
 
     LWE::SharedWorker::Initialize(dataDir);

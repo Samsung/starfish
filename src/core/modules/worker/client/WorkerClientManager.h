@@ -43,7 +43,7 @@ public:
 private:
     static const size_t s_threadPoolSize = 2;
 
-    WorkerClientManager();
+    WorkerClientManager(Starfish* starfish);
 
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
     SharedWorkerProcessManager* m_sharedWorkerProcessManager{ nullptr };
