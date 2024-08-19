@@ -247,6 +247,7 @@ typedef unsigned int uint;
 #include <unicode/ucnv.h>
 #include <unicode/ucsdet.h>
 #include <unicode/uscript.h>
+#include <unicode/unorm.h>
 #include <unicode/rbbi.h>
 #endif
 #endif

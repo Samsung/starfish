@@ -243,6 +243,42 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
     auto accessData = text->bufferAccessData();
     size_t length = accessData.length;
     UErrorCode errorCode = U_ZERO_ERROR;
+
+    for (size_t i = 0; i < length; i++) {
+        if (UBLOCK_HANGUL_JAMO ==
+            u_getIntPropertyValue(accessData.charAt(i), UCHAR_BLOCK)) {
+            UErrorCode status = U_ZERO_ERROR;
+            const UNormalizer2* normalizer = unorm2_getNFCInstance(&status);
+            if (!normalizer || U_FAILURE(status)) {
+                // give up
+                break;
+            }
+            auto u16String = text->toUTF16NonGCString();
+            int32_t normalizedStringLength =
+                unorm2_normalize(normalizer, (const UChar*)u16String.data(),
+                                 u16String.length(), nullptr, 0, &status);
+
+            if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
+                // give up
+                break;
+            }
+            UTF16StringDataNonGCStd result;
+            result.resize(normalizedStringLength);
+            status = U_ZERO_ERROR;
+            unorm2_normalize(normalizer, (const UChar*)result.data(),
+                             result.length(), (UChar*)result.data(),
+                             normalizedStringLength, &status);
+
+            if (U_FAILURE(status)) {
+                // give up
+                break;
+            }
+
+            text = String::fromUTF16(result.data(), result.length());
+            break;
+        }
+    }
+
     for (size_t i = 0; i < length;) {
         size_t pos = 0;
         size_t faceIndex = SIZE_MAX;
@@ -479,6 +515,10 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
             (property == U_RIGHT_TO_LEFT_EMBEDDING) ||
             (property == U_RIGHT_TO_LEFT_OVERRIDE) ||
             (property == U_DIR_NON_SPACING_MARK)) {
+            return false;
+        }
+
+        if (UBLOCK_HANGUL_JAMO == u_getIntPropertyValue(ch, UCHAR_BLOCK)) {
             return false;
         }
 
