@@ -28,16 +28,10 @@
 
 namespace Starfish {
 
-WorkerHostManager::WorkerHostManager()
-    : WorkerManager()
+WorkerHostManager::WorkerHostManager(Starfish* starfish)
+    : WorkerManager(starfish)
 {
     m_workerSettings->setThreadPoolSize(s_threadPoolSize);
-}
-
-void WorkerHostManager::createLocalStorageRootDir()
-{
-    LocalStorageHelper::File::mkdirIfNotExists(
-        m_workerSettings->dataDirectoryPath());
 }
 
 } // namespace Starfish

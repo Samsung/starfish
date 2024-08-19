@@ -29,6 +29,8 @@ public:
     std::string getLocalStorageDataFilePath() const;
     std::string getCookieStoreDataFilePath() const;
     std::string getHttpCacheDataDirectoryPath() const;
+    std::string getSharedWorkerDataDirectoryPath() const;
+    std::string getServiceWorkerDataDirectoryPath() const;
 
 private:
     std::string m_storageDirectoryPath;

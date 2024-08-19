@@ -34,7 +34,7 @@ WorkerAgent* WorkerAgent::g_workerAgentInstance = nullptr;
 
 WorkerAgent* WorkerAgent::instance()
 {
-    STARFISH_ASSERT(g_workerAgentInstance);
+    STARFISH_RELEASE_ASSERT(g_workerAgentInstance);
     return g_workerAgentInstance;
 }
 

@@ -21,11 +21,12 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "StoragePathProvider.h"
+
 #include "Internal.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/page/WebBase.h"
 #include "core/util/debug/Trace.h"
-#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/WorkerManager.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/serviceworker/FetchCacheStream.h"
@@ -117,7 +118,7 @@ Internal::Internal(GlobalScope* globalScope,
         fetchWebBase(scriptBindingInstance->scriptContext())->starfish();
 
     m_fetchCacheStream = new FetchCacheStream(
-        starfish->workerManager()->workerSettings()->dataDirectoryPath());
+        starfish->storagePathProvider().getServiceWorkerDataDirectoryPath());
 }
 
 Promise* Internal::open(String* cacheName)
@@ -160,7 +161,7 @@ Promise* Internal::open(String* cacheName)
     task->m_cacheName = cacheName;
     task->m_context = context;
     task->m_localStorageRootDir =
-        starfish->workerManager()->workerSettings()->dataDirectoryPath();
+        starfish->storagePathProvider().getServiceWorkerDataDirectoryPath();
     task->start();
 
     return promise;

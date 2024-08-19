@@ -40,8 +40,7 @@ class ServiceWorkerFetchTask;
 class FetchEventHandler;
 class String;
 class RegistrationManager;
-class WorkerSettings;
-class ServiceWorkerIPCAddress;
+class WorkerIPCAddress;
 
 struct ProcessData {
     ProcessData()
@@ -92,7 +91,7 @@ private:
     static ServiceWorkerProcessManager* m_instance;
 
     PerProcess* m_perProcess{ nullptr };
-    ServiceWorkerIPCAddress* m_ipcAddress{ nullptr };
+    WorkerIPCAddress* m_ipcAddress{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
     RegistrationManager* m_registrationManager{ nullptr };

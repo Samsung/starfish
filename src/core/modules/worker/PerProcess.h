@@ -22,21 +22,21 @@
 #ifndef __StarfishPerProcess__
 #define __StarfishPerProcess__
 
-#include "core/modules/worker/WorkerSettings.h"
-
 namespace Starfish {
 
 class IThread;
 class ThreadPool;
 class IORunnable;
 class MessageLoop;
+class Starfish;
 class WorkerSettings;
 
 class PerProcess : public gc {
 public:
-    PerProcess(WorkerSettings *settings);
+    PerProcess(Starfish *starfish, WorkerSettings *settings);
     ~PerProcess() = default;
 
+    DEFINE_GETTER(Starfish *, starfish);
     DEFINE_GETTER(IORunnable *, ioRunnable);
     DEFINE_GETTER(ThreadPool *, threadPool);
     DEFINE_GETTER(MessageLoop *, messageLoop);
@@ -45,10 +45,8 @@ public:
     void initialize();
     void destroy();
 
-    Nullable<WorkerSettings::ProcessExecutorCallback>
-    serviceWorkerProcessExecutor();
-
 private:
+    Starfish *m_starfish{ nullptr };
     MessageLoop *m_messageLoop{ nullptr };
     ThreadPool *m_threadPool{ nullptr };
     IThread *m_ioThread{ nullptr };

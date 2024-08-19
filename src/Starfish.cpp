@@ -98,7 +98,7 @@ Starfish::Starfish(const StarfishConfiguration& config)
 #endif
 
 #if defined(STARFISH_USE_WORKER_PROCESS)
-    m_workerManager = WorkerManager::create();
+    m_workerManager = WorkerManager::create(this);
 #endif
 
 #ifdef STARFISH_ENABLE_PROFILE

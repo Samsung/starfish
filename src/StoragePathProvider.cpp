@@ -27,6 +27,8 @@ namespace Starfish {
 #define STARFISH_LOCAL_STORAGE_FILE_NAME "localStorage.txt"
 #define STARFISH_COOKIES_FILE_NAME "cookies.txt"
 #define STARFISH_CACHE_DIR_NAME "cache"
+#define STARFISH_SHARED_WORKER_DIR_NAME "shared_worker"
+#define STARFISH_SERVICE_WORKER_DIR_NAME "service_worker"
 
 StoragePathProvider::StoragePathProvider(const char* storageDirectoryPath)
     : m_storageDirectoryPath(storageDirectoryPath)
@@ -53,6 +55,18 @@ std::string StoragePathProvider::getHttpCacheDataDirectoryPath() const
 {
     return PlatformFileUtil::joinPath(m_storageDirectoryPath,
                                       STARFISH_CACHE_DIR_NAME);
+}
+
+std::string StoragePathProvider::getSharedWorkerDataDirectoryPath() const
+{
+    return PlatformFileUtil::joinPath(m_storageDirectoryPath,
+                                      STARFISH_SHARED_WORKER_DIR_NAME);
+}
+
+std::string StoragePathProvider::getServiceWorkerDataDirectoryPath() const
+{
+    return PlatformFileUtil::joinPath(m_storageDirectoryPath,
+                                      STARFISH_SERVICE_WORKER_DIR_NAME);
 }
 
 } // namespace Starfish

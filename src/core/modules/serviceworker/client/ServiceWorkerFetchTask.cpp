@@ -26,7 +26,6 @@
 #include "core/dom/WebOrigin.h"
 #include "core/page/GlobalScope.h"
 #include "core/modules/worker/util/LocalStorageHelper.h"
-#include "core/modules/worker/WorkerSettings.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerFetchTask.h"

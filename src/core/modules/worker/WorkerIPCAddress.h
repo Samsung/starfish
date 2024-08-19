@@ -23,12 +23,9 @@
 
 namespace Starfish {
 
-class WorkerSettings;
-
 class WorkerIPCAddress : public gc {
 public:
-    WorkerIPCAddress(WorkerSettings *settings,
-                     const std::string &resourceDirPath);
+    WorkerIPCAddress(const std::string &resourceDirPath);
 
     virtual ~WorkerIPCAddress();
 
@@ -41,7 +38,6 @@ public:
     virtual void release();
 
 protected:
-    WorkerSettings *m_workerSettings;
     const std::string m_resourceDirPath;
 };
 

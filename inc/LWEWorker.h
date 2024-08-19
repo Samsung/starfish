@@ -36,17 +36,6 @@ namespace LWE {
 class LWE_EXPORT WorkerClient {
 public:
     /*
-     * Register worker data directory path.
-     *
-     * Be sure to set the same data path as the shared or service worker server.
-     * If you do not register data directory, the data directory path is
-     * set to '${HOME}/starfish-worker-data' or /tmp/starfish-worker-data.
-     *
-     * This method must be invoked after LWE::Initialize() is invoked.
-     */
-    static void RegisterDataDirectoryPath(const std::string &dataDirectoryPath);
-
-    /*
      * Register service worker server process executor callback function.
      * The callback function should return the success or failure of the
      * processor execution.

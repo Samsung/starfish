@@ -28,8 +28,8 @@
 
 namespace Starfish {
 
-WorkerClientManager::WorkerClientManager()
-    : WorkerManager()
+WorkerClientManager::WorkerClientManager(Starfish* starfish)
+    : WorkerManager(starfish)
 {
     m_workerSettings->setThreadPoolSize(s_threadPoolSize);
 

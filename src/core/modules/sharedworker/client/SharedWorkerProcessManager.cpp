@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
+#include "StoragePathProvider.h"
 
 #include "platform/process/base/Process.h"
 #include "core/modules/worker/WorkerConfig.h"
@@ -70,8 +72,10 @@ void SharedWorkerProcessManager::start()
 
     m_perProcess->initialize();
 
-    m_ipcAddress = new WorkerIPCAddress(m_perProcess->workerSettings(),
-                                        PATH_SHARED_WORKER_IPC_DIR);
+    m_ipcAddress =
+        new WorkerIPCAddress(m_perProcess->starfish()
+                                 ->storagePathProvider()
+                                 .getSharedWorkerDataDirectoryPath());
 
     m_client = new SharedWorkerClient(
         m_perProcess, m_ipcAddress->createIPCAddress(WORKER_IPC_PROCESS_NAME));

@@ -78,6 +78,11 @@ public:
         return m_lineBreakIteratorPool;
     }
 
+    const StoragePathProvider& storagePathProvider() const
+    {
+        return m_storagePathProvider;
+    }
+
     String* localStorageFilePath();
 
 #ifdef STARFISH_ENABLE_HTTPCACHE

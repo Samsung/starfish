@@ -68,10 +68,6 @@ SET (STARFISH_WORKER_INCLUDE_ADDITIONAL_DIRS
     ${STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS}
 )
 
-SET (STARFISH_SHARED_WORKER_ENTRY ${STARFISH_ROOT}/src/launcher/SharedWorkerEntry.cpp)
-
-SET (STARFISH_SERVICE_WORKER_ENTRY ${STARFISH_ROOT}/src/launcher/ServiceWorkerEntry.cpp)
-
 SET (STARFISH_WORKER_DEPENDENCIES ${STARFISH_WORKER_DEPENDENCIES} skia_matrix)
 SET (STARFISH_WORKER_LIBRARIES_THIRD_PARTY ${STARFISH_WORKER_LIBRARIES_THIRD_PARTY} skia_matrix)
 
@@ -118,6 +114,7 @@ ENDFOREACH()
 FILE (GLOB STARFISH_WORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/public/delegate/LWEDelegate.cpp
     ${STARFISH_ROOT}/src/public/delegate/ThreadedCallHelper.cpp
+    ${STARFISH_ROOT}/src/public/delegate/LWEWorkerDelegate.cpp
     ${STARFISH_ROOT}/src/StaticStrings.cpp
     ${STARFISH_ROOT}/src/StoragePathProvider.cpp
     ${STARFISH_ROOT}/src/Starfish.cpp
@@ -306,20 +303,10 @@ SET (STARFISH_WORKER_LDFLAGS ${LWE_LDFLAGS})
 
 MACRO (add_worker_target file_name variable_name)
     SET (STARFISH_${variable_name}_OBJECT_LIBRARY starfish_${file_name}_object_library)
-    SET (STARFISH_${variable_name}_OUTPUT_NAME ${TARGETNAME}-${file_name})
 
     ADD_LIBRARY (${STARFISH_${variable_name}_OBJECT_LIBRARY} OBJECT ${STARFISH_${variable_name}_SRC_LIST})
     ADD_DEPENDENCIES (${STARFISH_${variable_name}_OBJECT_LIBRARY} ${STARFISH_${variable_name}_DEPENDENCIES})
 
-    ADD_EXECUTABLE (starfish.${file_name}.executable
-        $<TARGET_OBJECTS:${STARFISH_${variable_name}_OBJECT_LIBRARY}>
-        ${STARFISH_${variable_name}_ENTRY})
-    
-    IF (${HOST} STREQUAL "linux")
-        ADD_CUSTOM_COMMAND(TARGET starfish.${file_name}.executable POST_BUILD
-            COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${STARFISH_${variable_name}_OUTPUT_NAME} 
-                ${STARFISH_ROOT}/Starfish-${file_name})
-    ENDIF()
 
     ADD_LIBRARY (starfish.${file_name}.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_${variable_name}_OBJECT_LIBRARY}>)
     ADD_LIBRARY (starfish.${file_name}.static_library STATIC $<TARGET_OBJECTS:${STARFISH_${variable_name}_OBJECT_LIBRARY}>)
@@ -331,23 +318,29 @@ MACRO (add_worker_target file_name variable_name)
     MESSAGE (STATUS "LDFLAGS: " "${STARFISH_WORKER_LDFLAGS}")
     MESSAGE ("")
     
-    TARGET_INCLUDE_DIRECTORIES (${STARFISH_${variable_name}_OBJECT_LIBRARY} PUBLIC ${STARFISH_${variable_name}_INCLUDE_DIRS})
-    TARGET_COMPILE_DEFINITIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} PUBLIC ${STARFISH_${variable_name}_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} PUBLIC ${STARFISH_WORKER_CXXFLAGS})
+    TARGET_INCLUDE_DIRECTORIES (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+        PUBLIC ${STARFISH_${variable_name}_INCLUDE_DIRS})
+    TARGET_COMPILE_DEFINITIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+        PUBLIC ${STARFISH_${variable_name}_DEFINITIONS})
+    TARGET_COMPILE_OPTIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+        PUBLIC ${STARFISH_WORKER_CXXFLAGS})
     
-    TARGET_INCLUDE_DIRECTORIES (starfish.${file_name}.executable PUBLIC ${STARFISH_${variable_name}_INCLUDE_DIRS})
-    TARGET_COMPILE_DEFINITIONS (starfish.${file_name}.executable PUBLIC ${STARFISH_${variable_name}_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (starfish.${file_name}.executable PUBLIC ${STARFISH_WORKER_CXXFLAGS})
-
-    TARGET_LINK_LIBRARIES (starfish.${file_name}.executable PRIVATE ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
-    TARGET_LINK_LIBRARIES (starfish.${file_name}.shared_library PRIVATE ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
-    TARGET_LINK_LIBRARIES (starfish.${file_name}.static_library PRIVATE ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
+    TARGET_LINK_LIBRARIES (starfish.${file_name}.shared_library 
+        PUBLIC ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
+    TARGET_LINK_LIBRARIES (starfish.${file_name}.static_library 
+        PRIVATE ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
     
-    SET_TARGET_PROPERTIES (starfish.${file_name}.executable PROPERTIES OUTPUT_NAME ${STARFISH_${variable_name}_OUTPUT_NAME})
-    SET_TARGET_PROPERTIES (starfish.${file_name}.shared_library PROPERTIES OUTPUT_NAME ${STARFISH_${variable_name}_OUTPUT_NAME})
-    SET_TARGET_PROPERTIES (starfish.${file_name}.static_library PROPERTIES OUTPUT_NAME ${STARFISH_${variable_name}_OUTPUT_NAME})
+    SET_TARGET_PROPERTIES (starfish.${file_name}.shared_library PROPERTIES 
+        OUTPUT_NAME ${TARGETNAME}-${file_name}-impl)
+    SET_TARGET_PROPERTIES (starfish.${file_name}.static_library PROPERTIES 
+        OUTPUT_NAME ${TARGETNAME}-${file_name}-impl)
 
 ENDMACRO()
 
-add_worker_target (sharedworker SHARED_WORKER)
-add_worker_target (serviceworker SERVICE_WORKER)
+IF (${SHARED_WORKER} STREQUAL "1")
+    add_worker_target (sharedworker SHARED_WORKER)
+ENDIF()
+
+IF (${SERVICE_WORKER} STREQUAL "1")
+    add_worker_target (serviceworker SERVICE_WORKER)
+ENDIF()

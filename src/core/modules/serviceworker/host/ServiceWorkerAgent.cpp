@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "StoragePathProvider.h"
 
 #include "platform/file/PlatformDirectory.h"
 
@@ -31,7 +32,7 @@
 #include "core/util/debug/Trace.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/WorkerManager.h"
-#include "core/modules/worker/WorkerSettings.h"
+#include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/worker/PerProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
@@ -40,7 +41,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#include "core/modules/serviceworker/ServiceWorkerIPCAddress.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
@@ -78,8 +78,9 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
     TRACE_SCOPE(SVCWORKER);
 
     m_workerHostManager->perProcess()->initialize();
-    m_ipcAddress = new ServiceWorkerIPCAddress(
-        m_workerHostManager->perProcess()->workerSettings());
+
+    m_ipcAddress = new WorkerIPCAddress(
+        starfish->storagePathProvider().getServiceWorkerDataDirectoryPath());
     m_ipcAddress->acquire();
 
     m_SWServer = new ServiceWorkerServer(perProcess(), m_ipcAddress);
