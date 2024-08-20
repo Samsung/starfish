@@ -12568,6 +12568,10 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 token, CSSPropertyParser::AllowNegative |
                            CSSPropertyParser::AllowPercent |
                            CSSPropertyParser::AllowAuto)) {
+            // Currently, 'var' is not supported in 'grid-template-rows'. ex)
+            // "grid-template-rows : 1fr calc(var(--center-card-width) +
+            // var(--center-pad)*2) 1fr " This is a temporary soluation to
+            // prevent crashes.
             if (legnthOrCalc.valueKind() ==
                 CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
                 return false;
