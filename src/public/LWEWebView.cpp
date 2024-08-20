@@ -79,6 +79,9 @@ void LWE::Initialize(const char* storageDirectoryPath)
 bool LWE::IsInitialized()
 {
 #ifdef STARFISH_API_ENABLE_LOADER
+    if (!LWEDelegateLoader::getInstance()->isLoaded()) {
+        return false;
+    }
     return LWEDelegateLoader::getSafeInstance()->kLWEProcTable.IsInitialized();
 #else
     return LWEDelegate::LWE::IsInitialized();

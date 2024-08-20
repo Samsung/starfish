@@ -110,6 +110,11 @@ public:
     LWETestWitoutInit() = default;
 };
 
+TEST_F(LWETestWitoutInit, IsInitialized)
+{
+    EXPECT_FALSE(LWE::LWE::IsInitialized());
+}
+
 TEST_F(LWETestWitoutInit, GetGCFrequency)
 {
     EXPECT_EXIT(LWE::LWE::GetGCFrequency(), ::testing::KilledBySignal(SIGABRT),
