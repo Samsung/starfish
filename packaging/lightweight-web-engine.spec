@@ -134,6 +134,27 @@ Requires(postun): /sbin/ldconfig
 %define disable_shell 0
 %endif
 
+%if (0%{?tizen_version_major} >= 9)
+# The features below are supported by default in Tizen 9 or higher unless explicitly specified.
+# To set features explicitly, add a define as shown below.
+# Ex) --define 'enable_webgl {0|1}' --define 'enable_dynamic_loader {0|1}'
+%define is_dynamic_loader_supported 1
+%define is_webgl_supported 1
+%else
+%define is_dynamic_loader_supported 0
+%define is_webgl_supported 0
+%endif
+
+%if 0%{?enable_dynamic_loader:1}
+%else
+%define enable_dynamic_loader %{is_dynamic_loader_supported}
+%endif
+
+%if 0%{?enable_webgl:1}
+%else
+%define enable_webgl %{is_webgl_supported}
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -466,6 +487,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -498,6 +520,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 %else # 0%{?build_option:1}
@@ -508,6 +531,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
   -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 %endif
@@ -548,6 +572,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
   -DBACKEND=efl_headless -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -579,6 +604,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.mobile \
   -DWEBRTC='%{enable_webrtc}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
@@ -612,6 +638,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
   -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
