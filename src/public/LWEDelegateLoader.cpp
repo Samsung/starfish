@@ -111,8 +111,8 @@ LWEDelegateLoader* LWEDelegateLoader::getInstance()
 LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
 {
     LWEDelegateLoader* instance = LWEDelegateLoader::getInstance();
-    if (!instance->m_handle) {
-        assert(false);
+    if (!instance->isLoaded()) {
+        abort();
     }
     return instance;
 }
@@ -166,6 +166,11 @@ void LWEDelegateLoader::unload()
     unloadSettingsProcTable();
     unloadWebContainerProcTable();
     unloadWebViewProcTable();
+}
+
+bool LWEDelegateLoader::isLoaded()
+{
+    return m_handle != nullptr;
 }
 
 bool LWEDelegateLoader::loadCookieManagerProcTable()

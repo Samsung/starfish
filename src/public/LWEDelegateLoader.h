@@ -56,6 +56,7 @@ public:
 
     bool load();
     void unload();
+    bool isLoaded();
 
 private:
     LWEDelegateLoader()
