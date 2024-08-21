@@ -32,27 +32,6 @@
 
 namespace {
 
-std::string getThisSharedLibraryPath()
-{
-    Dl_info dl_info;
-    dladdr((void*)getThisSharedLibraryPath, &dl_info);
-    return std::string(dl_info.dli_fname);
-}
-
-std::string getDirectory(const std::string& path)
-{
-    size_t found = path.find_last_of("/\\");
-    return found == std::string::npos ? "" : path.substr(0, found + 1);
-}
-
-std::string getDefaultVersionFilePath()
-{
-    std::string loaderPath = getThisSharedLibraryPath();
-    std::string path = getDirectory(loaderPath);
-    std::cout << "default version file path: " << path << std::endl;
-    return path;
-}
-
 int compareVersions(const std::string& version1, const std::string& version2)
 {
     std::istringstream iss1(version1);
@@ -120,7 +99,7 @@ LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
 bool LWEDelegateLoader::load()
 {
     if (m_preferUpdatedVersion) {
-        std::string defaultVersion = readVersion(getDefaultVersionFilePath());
+        std::string defaultVersion = readVersion(STARFISH_API_DEFAULT_PATH);
         std::string uweVersion = readVersion(STARFISH_API_UWE_MOUNT_PATH);
         std::cout << "default version: " << defaultVersion << std::endl;
         std::cout << "uwe version: " << uweVersion << std::endl;
