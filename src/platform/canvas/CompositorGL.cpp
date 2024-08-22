@@ -946,8 +946,8 @@ public:
     static std::string generateBlurEffectFragmentShader(
         bool isEGLImage, bool addColorAlign = false)
     {
-        // don't support when needsRGBShuffle
-        STARFISH_ASSERT(g_needsRGBShuffle);
+        // Don't support when needsRGBShuffle is true.
+        STARFISH_ASSERT(!g_needsRGBShuffle);
 
         std::vector<float> gaussianKernel = computeGaussianKernel();
         std::stringstream ss;
