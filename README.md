@@ -37,8 +37,8 @@ git submodule update
 ### Compile Starfish
 
 ```sh
-cmake -Bout/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -DTARGETNAME=Starfish -G Ninja
-ninja -C out/release starfish.executable
+cmake -Bout/efl/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -DSHELL=efl -DTARGETNAME=Starfish -G Ninja
+ninja -C out/efl/release starfish.executable
 ```
 
 #### Build targets
