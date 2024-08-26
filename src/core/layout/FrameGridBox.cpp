@@ -1080,17 +1080,57 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
 
     AutoRepeatType autoRepeatType = autoRepeat->autoRepeatType();
     if (autoRepeatType == AutoRepeatType::kAutoFit) {
-        // TODO: Consider remain area widths.
-        int remainArea =
-            areas.size() - (gridTracks.size() - 1) /* -1 means dummy */;
-        int repeatedTrakSize = autoRepeat->gridTrackSizes().size();
-        while (remainArea >= repeatedTrakSize) {
+        if (autoRepeat->gridTrackSizes().size() == 1 &&
+            autoRepeat->gridTrackSizes()[0]->type() ==
+                GridTrackSizeType::kMinMax) {
+            // TODO: Adjust the track size to fit available width.
+            int remainArea =
+                areas.size() - (gridTracks.size() - 1) /* -1 means dummy */;
+            int repeatedTrakSize = autoRepeat->gridTrackSizes().size();
+            while (remainArea >= repeatedTrakSize) {
+                for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
+                    GridTrack gridTrack = gridTrackSizeToGridTrack(
+                        repeatGridTrackSize, isColumnDirection);
+                    gridTracks.push_back(gridTrack);
+                }
+                remainArea -= repeatedTrakSize;
+            }
+        } else {
+            // Covert GridTrackSize to GridTrack and Calculate total width
+            // occupied by the template.
+            GCVector<GridTrack> tracks;
+            LayoutUnit totalSize;
             for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
+                STARFISH_ASSERT(repeatGridTrackSize->type() ==
+                                GridTrackSizeType::kLength);
                 GridTrack gridTrack = gridTrackSizeToGridTrack(
                     repeatGridTrackSize, isColumnDirection);
-                gridTracks.push_back(gridTrack);
+                tracks.push_back(gridTrack);
+                totalSize += gridTrack.size();
             }
-            remainArea -= repeatedTrakSize;
+            totalSize += m_columnGap * (tracks.size() - 1);
+
+            // Repeat adding templates as much as the available width allows.
+            LayoutUnit remainingSpace = m_availableWidth;
+            while (remainingSpace > 0) {
+                LayoutUnit neededSize = totalSize;
+                if (gridTracks.size() > 1) {
+                    neededSize += m_columnGap;
+                }
+                if (remainingSpace >= neededSize) {
+                    remainingSpace -= neededSize;
+                    gridTracks.insert(gridTracks.end(), tracks.begin(),
+                                      tracks.end());
+                } else {
+                    break;
+                }
+            }
+
+            // Handle if the template is larger than the available width.
+            if (gridTracks.size() == 1) {
+                gridTracks.insert(gridTracks.end(), tracks.begin(),
+                                  tracks.end());
+            }
         }
     } else if (autoRepeatType == AutoRepeatType::kAutoFill) {
         STARFISH_UNSUPPORTED("css grid function: repeat with auto-fill");
@@ -1926,7 +1966,8 @@ void GridFormattingContext::applyAlignItems()
         } break;
         default:
             // Other values are not supported.
-            STARFISH_UNSUPPORTED("css property (grid): align-items with stretch");
+            STARFISH_UNSUPPORTED(
+                "css property (grid): align-items with stretch");
             break;
         }
     }
