@@ -24,6 +24,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -2148,12 +2149,19 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);
-        if (style->gridTemplateColumns()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::GridTemplateUnits);
-            p.setGridTemplateUnits(style->gridTemplateColumns());
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* values = new ValueList(Separator::SpaceSeparator);
+        if (frame && frame->isFrameGridBox()) {
+            FrameGridBox* gridBox = frame->asFrameGridBox();
+            const auto& templateColumns = gridBox->gridTemplateColumns();
+            for (size_t i = 1; i < templateColumns.size(); i++) {
+                CSSStyleValuePair cssLength;
+                cssLength.setLengthValue(
+                    CSSLength(templateColumns[i].size().toFloat()));
+                values->push_back(cssLength);
+            }
         }
+        p.setValueList(values);
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridColumn: {

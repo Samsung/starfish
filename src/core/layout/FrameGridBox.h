@@ -397,6 +397,8 @@ public:
 
     GridArea* getNamedGridArea(String* name);
 
+    const GCVector<GridTrack>& gridTemplateColumns() const;
+
 private:
     void buildGridTrackTemplate();
     void layoutGridItems();
@@ -522,6 +524,8 @@ public:
 
     LengthData insets();
 
+    const GCVector<GridTrack>& gridTemplateColumns() const;
+
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(FrameGridBox));
@@ -543,10 +547,12 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         FrameBlockBox::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameGridBox, m_gridTemplateColumns));
     }
 
     bool m_hasFixedStyleWidth{ false };
     bool m_hasFixedStyleHeight{ false };
+    GCVector<GridTrack> m_gridTemplateColumns;
 };
 
 template <typename dataType>

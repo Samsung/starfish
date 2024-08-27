@@ -87,7 +87,7 @@ static bool compareCString(const char* keyword, const char* value)
 
 static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                                             GCVector<GridTrackSize*>* v,
-                                            bool allowRepeat,
+                                            uint8_t option, bool allowRepeat,
                                             bool allowFlexible);
 
 static FontWeightValue lighterWeight(FontWeightValue weight)
@@ -12479,6 +12479,7 @@ static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)
 
 static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
 {
+    // https://drafts.csswg.org/css-grid/#track-sizing
     Nullable<CSSTokenValue> repeat =
         CSSPropertyParser::parseFunctionBlock((char*)str.data(), "repeat");
     if (!repeat.hasValue()) {
@@ -12511,8 +12512,11 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
         CSSStyleDeclaration::tokenizeCSSValue(tokens, repeatData.c_str(),
                                               repeatData.length());
         GCVector<GridTrackSize*> gridTrackSizes;
-        if (!parseGridTemplateRowsAndColumns(tokens, &gridTrackSizes, false,
-                                             false)) {
+        if (!parseGridTemplateRowsAndColumns(
+                tokens, &gridTrackSizes,
+                CSSPropertyParser::AllowNegative |
+                    CSSPropertyParser::AllowPercent,
+                false, false)) {
             return false;
         }
         GridTrackSizeAutoRepeat* autoRepeat =
@@ -12538,8 +12542,12 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
                 CSSTokenVector tokens;
                 CSSStyleDeclaration::tokenizeCSSValue(tokens, data, len);
                 GCVector<GridTrackSize*> gridTrackSizes;
-                if (!parseGridTemplateRowsAndColumns(tokens, &gridTrackSizes,
-                                                     false, true)) {
+                if (!parseGridTemplateRowsAndColumns(
+                        tokens, &gridTrackSizes,
+                        CSSPropertyParser::AllowNegative |
+                            CSSPropertyParser::AllowPercent |
+                            CSSPropertyParser::AllowAuto,
+                        false, true)) {
                     return false;
                 }
                 GridTrackSizeFixedRepeat* fixedRepeat =
@@ -12554,7 +12562,7 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
 
 static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                                             GCVector<GridTrackSize*>* v,
-                                            bool allowRepeat,
+                                            uint8_t option, bool allowRepeat,
                                             bool allowFlexible)
 {
     STARFISH_ASSERT(v != nullptr);
@@ -12564,10 +12572,7 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
 
         // Try to parse length, calc, auto.
         CSSStyleValuePair legnthOrCalc;
-        if (legnthOrCalc.updateValueUnitLengthOrCalc(
-                token, CSSPropertyParser::AllowNegative |
-                           CSSPropertyParser::AllowPercent |
-                           CSSPropertyParser::AllowAuto)) {
+        if (legnthOrCalc.updateValueUnitLengthOrCalc(token, option)) {
             // Currently, 'var' is not supported in 'grid-template-rows'. ex)
             // "grid-template-rows : 1fr calc(var(--center-card-width) +
             // var(--center-pad)*2) 1fr " This is a temporary soluation to
@@ -12618,6 +12623,8 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 return false;
             }
             v->push_back(new GridTrackSizeLength(GridLength(number)));
+        } else {
+            return false;
         }
     }
 
@@ -12641,7 +12648,11 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
 
     GCVector<GridTrackSize*>* v = new GCVector<GridTrackSize*>();
     ValueList* v1 = new ValueList(Separator::SpaceSeparator);
-    if (!parseGridTemplateRowsAndColumns(tokens, v, true, true)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v,
+                                         CSSPropertyParser::AllowNegative |
+                                             CSSPropertyParser::AllowPercent |
+                                             CSSPropertyParser::AllowAuto,
+                                         true, true)) {
         return false;
     }
     setGridTemplateUnits(v);
@@ -12664,7 +12675,11 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
 
     GCVector<GridTrackSize*>* v = new GCVector<GridTrackSize*>();
 
-    if (!parseGridTemplateRowsAndColumns(tokens, v, true, true)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v,
+                                         CSSPropertyParser::AllowNegative |
+                                             CSSPropertyParser::AllowPercent |
+                                             CSSPropertyParser::AllowAuto,
+                                         true, true)) {
         return false;
     }
 

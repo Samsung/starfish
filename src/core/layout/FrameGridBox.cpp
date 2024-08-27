@@ -189,6 +189,11 @@ GridArea* GridFormattingContext::getNamedGridArea(String* name)
     return nullptr;
 }
 
+const GCVector<GridTrack>& GridFormattingContext::gridTemplateColumns() const
+{
+    return m_gridTemplateColumns;
+}
+
 // https://drafts.csswg.org/css-grid/#grid-item-placement-algorithm
 void GridFormattingContext::placeGridItemsIntoCells()
 {
@@ -2151,6 +2156,9 @@ void FrameGridBox::layoutGrid(LayoutContext& ctx)
 {
     GridFormattingContext gridFormattingContext(ctx, this, contentWidth());
     gridFormattingContext.computeColumnsAndRows();
+
+    // Store layout result to provide comptuted style.
+    m_gridTemplateColumns = gridFormattingContext.gridTemplateColumns();
 }
 
 bool FrameGridBox::canStratchItem()
@@ -2179,4 +2187,10 @@ LengthData FrameGridBox::insets()
 
     return LengthData();
 }
+
+const GCVector<GridTrack>& FrameGridBox::gridTemplateColumns() const
+{
+    return m_gridTemplateColumns;
+}
+
 } // namespace Starfish
