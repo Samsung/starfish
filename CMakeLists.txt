@@ -68,12 +68,9 @@ ELSE ()
     CONFIGURE_FILE(lightweight-web-engine.pc.in lightweight-web-engine.pc @ONLY)
 
     IF (${SHARED_WORKER} STREQUAL "1" OR ${SERVICE_WORKER} STREQUAL "1")
+        SET(WORKER "1")
         INCLUDE (build/worker.cmake)
         INCLUDE (build/worker_public_api.cmake)
         INCLUDE (build/worker_launcher.cmake)
-    ENDIF()
-
-    IF (${SERVICE_WORKER} STREQUAL "1")
-        CONFIGURE_FILE(lightweight-web-engine-serviceworker.pc.in lightweight-web-engine-serviceworker.pc @ONLY)
     ENDIF()
 ENDIF ()
