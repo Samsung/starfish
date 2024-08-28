@@ -124,6 +124,28 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
+%if 0%{?asan:1}
+%else
+%define asan 0
+%endif
+
+%if "%{rpm}" == "prod_tv"
+%define is_worker_supported 0
+%else
+%define is_worker_supported 1
+%endif
+
+# Except for 'prod_tv', the default value of enable_worker is 1.
+%if 0%{?enable_worker:1}
+%else
+%define enable_worker %{is_worker_supported}
+%endif
+
+%if 0%{?enable_sharedworker:1}
+%else
+%define enable_sharedworker 0
+%endif
+
 %if 0%{?enable_serviceworker:1}
 %else
 %define enable_serviceworker 0
@@ -477,6 +499,12 @@ CXXFLAGS+=' -fno-lto '
 %define tizen_arch riscv64
 %endif
 
+# Variables for build
+# This features_config values are used in cmake command excluding 'flutter'.
+%define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
+  -DSERVICE_WORKER='%{enable_serviceworker}' \\\
+  -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}'
+
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %define out_tizen out_tizen/unified_tv/release
 
@@ -486,9 +514,9 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DMODE=release -DHOST=tizen \
   -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl \
   -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv \
-  -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
+  -DSHELL=efl -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish.executable
@@ -501,10 +529,13 @@ ninja -C %{out_tizen} starfish.uwe.tpk
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish.serviceworker.executable
-ninja -C %{out_tizen} starfish.serviceworker.shared_library
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %endif
 
 %if "%{rpm}" == "prod_tv"
@@ -519,9 +550,9 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
-  -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
+  -DSHELL=efl -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}'\
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 %else # 0%{?build_option:1}
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -530,9 +561,9 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' \
   -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' \
   -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv \
-  -DSHELL=efl -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
+  -DSHELL=efl -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 %endif
 %endif
@@ -554,10 +585,14 @@ ninja -C %{out_tizen} starfish.executable.tpk
 %if "%{?enable_test}" == "1"
 ninja -C %{out_tizen} install_pixel_test_dep
 %endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish.serviceworker.executable
-ninja -C %{out_tizen} starfish.serviceworker.shared_library
+
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %endif # "%{rpm}" == "prod_tv"
 
 %if "%{rpm}" == "headless"
@@ -571,9 +606,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless \
   -DBACKEND=efl_headless -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DSHELL=efl_headless -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
+  -DSHELL=efl_headless -DTARGETNAME=lightweight-web-engine.headless \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -587,10 +623,13 @@ ninja -C %{out_tizen} starfish.uwe.tpk
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish.serviceworker.executable
-ninja -C %{out_tizen} starfish.serviceworker.shared_library
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %endif
 
 
@@ -602,10 +641,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile \
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.mobile \
-  -DWEBRTC='%{enable_webrtc}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DSHELL=efl -DTARGETNAME=lightweight-web-engine.mobile \
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -619,10 +658,13 @@ ninja -C %{out_tizen} starfish.uwe.tpk
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish.serviceworker.executable
-ninja -C %{out_tizen} starfish.serviceworker.shared_library
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %endif
 
 
@@ -637,9 +679,10 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' \
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable \
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
-  -DSHELL=efl -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable \
-  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' -DWEBGL='%{enable_webgl}' \
-  -DASAN='%{asan}' -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' %{?extra_cmake_options} \
+  -DSHELL=efl -DTARGETNAME=lightweight-web-engine.wearable \
+  -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' 
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
@@ -653,10 +696,13 @@ ninja -C %{out_tizen} starfish.uwe.tpk
 ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish.serviceworker.executable
-ninja -C %{out_tizen} starfish.serviceworker.shared_library
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -759,6 +805,9 @@ cp inc/*.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp %{out_tizen}/lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
+%if "%{?enable_sharedworker}" == "1"
+cp %{out_tizen}/lightweight-web-engine-sharedworker.pc %{buildroot}%{_libdir}/pkgconfig/
+%endif
 %if "%{?enable_serviceworker}" == "1"
 cp %{out_tizen}/lightweight-web-engine-serviceworker.pc %{buildroot}%{_libdir}/pkgconfig/
 %endif
@@ -769,6 +818,9 @@ cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 pushd %{buildroot}%{_libdir}/lwe
 rm -fr *.so*
 ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
+%if "%{?enable_sharedworker}" == "1"
+ln -s liblightweight-web-engine-sharedworker.so.1 liblightweight-web-engine-sharedworker.so
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s liblightweight-web-engine-serviceworker.so.1 liblightweight-web-engine-serviceworker.so
 %endif
@@ -776,6 +828,9 @@ popd
 
 pushd %{buildroot}%{_libdir}
 ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
+%if "%{?enable_sharedworker}" == "1"
+ln -s lwe/liblightweight-web-engine-sharedworker.so liblightweight-web-engine-sharedworker.so
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s lwe/liblightweight-web-engine-serviceworker.so liblightweight-web-engine-serviceworker.so
 %endif
@@ -798,6 +853,9 @@ done
 %if "%{rpm}" == "tv"
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
+%if "%{?enable_sharedworker}" == "1"
+ln -s tv/liblightweight-web-engine.tv-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -805,18 +863,12 @@ ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine
 %if "%{rpm}" == "prod_tv"
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
-%if "%{?enable_serviceworker}" == "1"
-ln -s tv/liblightweight-web-engine.prod.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
-%endif
 %endif # "%{rpm}" == "prod_tv"
 popd
 %endif
 %if "%{rpm}" == "tv"
 pushd %{_bindir}
 ln -sf lightweight-web-engine.tv %{bin}
-%if "%{?enable_serviceworker}" == "1"
-ln -sf lightweight-web-engine.tv-serviceworker %{bin}
-%endif
 popd
 exit 0
 %endif # "%{rpm}" == "tv"
@@ -840,6 +892,9 @@ for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
 done
 ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
 ln -sf headless/VERSION VERSION
+%if "%{?enable_sharedworker}" == "1"
+ln -s headless/liblightweight-web-engine.headless-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -862,6 +917,9 @@ for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
 done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
 ln -sf mobile/VERSION VERSION
+%if "%{?enable_sharedworker}" == "1"
+ln -s mobile/liblightweight-web-engine.mobile-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
@@ -884,6 +942,9 @@ for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
 done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
 ln -sf wearable/VERSION VERSION
+%if "%{?enable_sharedworker}" == "1"
+ln -s wearable/liblightweight-web-engine.wearable-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+%endif
 %if "%{?enable_serviceworker}" == "1"
 ln -s wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif

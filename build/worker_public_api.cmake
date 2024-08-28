@@ -12,7 +12,7 @@ ELSEIF (${MODE} STREQUAL "release")
 ENDIF()
 
 
-SET (STARFISH_WORKER_API_LDFLAGS ${STARFISH_API_LDFLAGS})
+SET (STARFISH_WORKER_API_LDFLAGS ${LWE_LDFLAGS})
 SET (STARFISH_WORKER_API_LINK_LIBRARIES ${STARFISH_API_LINK_LIBRARIES})
 
 MACRO (add_worker_api_taget file_name variable_name)
@@ -24,13 +24,22 @@ MACRO (add_worker_api_taget file_name variable_name)
 
     TARGET_INCLUDE_DIRECTORIES (${STARFISH_${variable_name}_API_OBJECT_LIBRARY} PUBLIC ${STARFISH_WORKER_API_INCLUDE_DIRS})
 
+    # FIXME:
+    # This block came from config.cmake. please remove this and enable SOVERSION and VERSION properties.
+    # The spec file will also need to be modified.
+    IF (${HOST} STREQUAL "tizen")
+        IF (${BACKEND} STREQUAL "efl_cairo_gl")
+            SET (STARFISH_${variable_name}_API_LDFLAGS ${STARFISH_WORKER_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine-${file_name}.so.1)
+        ENDIF()
+    ENDIF()
+
     IF (${ENABLE_DYNAMIC_LOADER} STREQUAL "1")
-        MESSAGE (STATUS "ENABLE DYNAMIC_LOADER")
+        MESSAGE (STATUS "${variable_name} ENABLE DYNAMIC_LOADER")
         ADD_LIBRARY (starfish_api.${file_name}.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_${variable_name}_API_OBJECT_LIBRARY}>)
         ADD_DEPENDENCIES(starfish_api.${file_name}.shared_library starfish.${file_name}.shared_library)
     
         GET_TARGET_PROPERTY(STARFISH_${variable_name}_OUTPUT_NAME starfish.${file_name}.shared_library OUTPUT_NAME)
-        MESSAGE(STATUS "hsdebug: ${STARFISH_${variable_name}_OUTPUT_NAME}")
+    
         SET (STARFISH_${variable_name}_API_DEFINES
             ${STARFISH_WORKER_API_DEFINES}
             -DSTARFISH_ENABLE_${variable_name}
@@ -66,9 +75,9 @@ MACRO (add_worker_api_taget file_name variable_name)
         SET (STARFISH_${variable_name}_API_LINK_LIBRARIES ${STARFISH_${variable_name}_OUTPUT_NAME})
 
         TARGET_LINK_LIBRARIES (starfish_api.${file_name}.shared_library 
-            ${STARFISH_${variable_name}_API_LINK_LIBRARIES} ${STARFISH_API_LDFLAGS})
+            ${STARFISH_${variable_name}_API_LINK_LIBRARIES} ${STARFISH_${variable_name}_API_LDFLAGS})
         TARGET_LINK_LIBRARIES (starfish_api.${file_name}.static_library 
-            ${STARFISH_${variable_name}_API_LINK_LIBRARIES} ${STARFISH_API_LDFLAGS})
+            ${STARFISH_${variable_name}_API_LINK_LIBRARIES} ${STARFISH_${variable_name}_API_LDFLAGS})
 
         SET_TARGET_PROPERTIES (starfish_api.${file_name}.shared_library PROPERTIES
             # SOVERSION 1
@@ -82,7 +91,7 @@ MACRO (add_worker_api_taget file_name variable_name)
     MESSAGE (STATUS "FLAGS: " "${LWE_CXXFLAGS}")
     MESSAGE (STATUS "LIBRARIES: " "${STARFISH_${variable_name}_API_LINK_LIBRARIES}")
     MESSAGE (STATUS "DEFINITIONS: " "${STARFISH_${variable_name}_API_DEFINES}")
-    MESSAGE (STATUS "LDFLAGS: " "${STARFISH_WORKER_API_LDFLAGS}")
+    MESSAGE (STATUS "LDFLAGS: " "${STARFISH_${variable_name}_API_LDFLAGS}")
     MESSAGE (STATUS "INCLUDE_DIRS: " "${STARFISH_WORKER_API_INCLUDE_DIRS}")
     MESSAGE ("")
 ENDMACRO()
