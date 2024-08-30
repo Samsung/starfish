@@ -183,12 +183,15 @@ public:
 
     SVGElement* getSVGElementById(String* id);
 
+    void setOrignalOwnerElement(SVGSVGElement* SVGSVGElement);
+
 protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
     SVGElement* m_clipPathElement;
     SVGElement* m_maskElement;
+    SVGSVGElement* m_orignalOwnerElement;
 };
 } // namespace Starfish
 
