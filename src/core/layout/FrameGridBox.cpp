@@ -1083,62 +1083,105 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
         return;
     }
 
-    AutoRepeatType autoRepeatType = autoRepeat->autoRepeatType();
-    if (autoRepeatType == AutoRepeatType::kAutoFit) {
-        if (autoRepeat->gridTrackSizes().size() == 1 &&
-            autoRepeat->gridTrackSizes()[0]->type() ==
-                GridTrackSizeType::kMinMax) {
-            // TODO: Adjust the track size to fit available width.
-            int remainArea =
-                areas.size() - (gridTracks.size() - 1) /* -1 means dummy */;
-            int repeatedTrakSize = autoRepeat->gridTrackSizes().size();
-            while (remainArea >= repeatedTrakSize) {
-                for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
-                    GridTrack gridTrack = gridTrackSizeToGridTrack(
-                        repeatGridTrackSize, isColumnDirection);
-                    gridTracks.push_back(gridTrack);
-                }
-                remainArea -= repeatedTrakSize;
-            }
-        } else {
-            // Covert GridTrackSize to GridTrack and Calculate total width
-            // occupied by the template.
-            GCVector<GridTrack> tracks;
-            LayoutUnit totalSize;
-            for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
-                STARFISH_ASSERT(repeatGridTrackSize->type() ==
-                                GridTrackSizeType::kLength);
-                GridTrack gridTrack = gridTrackSizeToGridTrack(
-                    repeatGridTrackSize, isColumnDirection);
-                tracks.push_back(gridTrack);
-                totalSize += gridTrack.size();
-            }
-            totalSize += m_columnGap * (tracks.size() - 1);
+    auto insertTemplateTracks = [](GCVector<GridTrack>& gridTracks,
+                                   LayoutUnit& remainingSpace,
+                                   const GCVector<GridTrack>& templateTracks,
+                                   const LayoutUnit& templateTracksSize,
+                                   const LayoutUnit& columnGap) -> bool {
+        LayoutUnit neededSize = templateTracksSize;
+        if (gridTracks.size() > 1) {
+            neededSize += columnGap;
+        }
+        if (remainingSpace >= neededSize) {
+            remainingSpace -= neededSize;
+            gridTracks.insert(gridTracks.end(), templateTracks.begin(),
+                              templateTracks.end());
+            return true;
+        }
+        return false;
+    };
 
-            // Repeat adding templates as much as the available width allows.
-            LayoutUnit remainingSpace = m_availableWidth;
+    if (autoRepeat->gridTrackSizes().size() == 1 &&
+        autoRepeat->gridTrackSizes()[0]->type() == GridTrackSizeType::kMinMax) {
+        GridTrack track = gridTrackSizeToGridTrack(
+            autoRepeat->gridTrackSizes()[0], isColumnDirection);
+        STARFISH_ASSERT(track.isMinMax());
+        GridLength trackMin = track.min();
+        GridLength trackMax = track.max();
+
+        float min =
+            trackMin.length().specifiedValue(m_availableWidth, m_container);
+        float max = 0;
+        if (trackMax.isLength()) {
+            max =
+                trackMax.length().specifiedValue(m_availableWidth, m_container);
+        }
+
+        // If max is smaller than min, then max is ignored
+        LayoutUnit templateTracksSize = std::max(min, max);
+        GCVector<GridTrack> templateTracks;
+        templateTracks.push_back(track);
+        LayoutUnit remainingSpace = m_availableWidth;
+
+        // Repeat adding track as much as the available width allows.
+        while (remainingSpace > 0 && gridTracks.size() - 1 < areas.size()) {
+            if (!insertTemplateTracks(gridTracks, remainingSpace,
+                                      templateTracks, templateTracksSize,
+                                      m_columnGap)) {
+                break;
+            }
+        }
+
+        // If It has still remaining space and tpye is auto-fill, more tracks
+        // are implicitly added.
+        if (autoRepeat->autoRepeatType() == AutoRepeatType::kAutoFill &&
+            remainingSpace) {
+            if (templateTracksSize == 0) {
+                templateTracksSize = 1;
+            }
             while (remainingSpace > 0) {
-                LayoutUnit neededSize = totalSize;
-                if (gridTracks.size() > 1) {
-                    neededSize += m_columnGap;
-                }
-                if (remainingSpace >= neededSize) {
-                    remainingSpace -= neededSize;
-                    gridTracks.insert(gridTracks.end(), tracks.begin(),
-                                      tracks.end());
-                } else {
+                if (!insertTemplateTracks(gridTracks, remainingSpace,
+                                          templateTracks, templateTracksSize,
+                                          m_columnGap)) {
                     break;
                 }
             }
+        }
 
-            // Handle if the template is larger than the available width.
-            if (gridTracks.size() == 1) {
-                gridTracks.insert(gridTracks.end(), tracks.begin(),
-                                  tracks.end());
+        // Fallback
+        if (gridTracks.size() == 1) {
+            gridTracks.push_back(track);
+        }
+    } else {
+        // Covert GridTrackSize to GridTrack and Calculate total width
+        // occupied by the template.
+        GCVector<GridTrack> templateTracks;
+        LayoutUnit templateTracksSize;
+        for (auto* repeatGridTrackSize : autoRepeat->gridTrackSizes()) {
+            STARFISH_ASSERT(repeatGridTrackSize->type() ==
+                            GridTrackSizeType::kLength);
+            GridTrack gridTrack = gridTrackSizeToGridTrack(repeatGridTrackSize,
+                                                           isColumnDirection);
+            templateTracks.push_back(gridTrack);
+            templateTracksSize += gridTrack.size();
+        }
+        templateTracksSize += m_columnGap * (templateTracks.size() - 1);
+
+        // Repeat adding tracks as much as the available width allows.
+        LayoutUnit remainingSpace = m_availableWidth;
+        while (remainingSpace > 0) {
+            if (!insertTemplateTracks(gridTracks, remainingSpace,
+                                      templateTracks, templateTracksSize,
+                                      m_columnGap)) {
+                break;
             }
         }
-    } else if (autoRepeatType == AutoRepeatType::kAutoFill) {
-        STARFISH_UNSUPPORTED("css grid function: repeat with auto-fill");
+
+        // Handle if the template is larger than the available width.
+        if (gridTracks.size() == 1) {
+            gridTracks.insert(gridTracks.end(), templateTracks.begin(),
+                              templateTracks.end());
+        }
     }
 }
 
@@ -1294,10 +1337,12 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
         } else if (track.isMinMax()) {
             // TODO: min- and max-content
             GridLength minGridLength = track.min();
+            float min = 0, max = 0;
             if (minGridLength.isLength()) {
                 Length length = minGridLength.length();
                 if (length.isFixed()) {
-                    track.setSize(length.fixed());
+                    min = length.fixed();
+                    track.setSize(min);
                 } else if (length.isAuto()) {
                     track.setSize(minContent);
                 }
@@ -1307,7 +1352,8 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
             if (maxGridLength.isLength()) {
                 Length length = maxGridLength.length();
                 if (length.isFixed()) {
-                    track.setGrowthLimit(length.fixed());
+                    max = length.fixed();
+                    track.setGrowthLimit(std::max(min, max));
                 }
             }
         } else if (track.isFlexibleLength()) {

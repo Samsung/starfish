@@ -350,6 +350,11 @@ test/cairo/internal-test/css/grid/grid-template-columns_repeat_02.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_03.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_04.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_05.html
+test/cairo/internal-test/css/grid/grid-template-columns_repeat_06.html
+test/cairo/internal-test/css/grid/grid-template-columns_repeat_07.html
+test/cairo/internal-test/css/grid/grid-template-columns_repeat_08.html
+test/cairo/internal-test/css/grid/grid-template-columns_repeat_09.html
+test/cairo/internal-test/css/grid/grid-template-columns_repeat_10.html
 test/cairo/internal-test/css/grid/grid-template-rows_auto_01.html
 test/cairo/internal-test/css/grid/grid-template-rows_auto_02.html
 test/cairo/internal-test/css/grid/grid-template-rows_auto_03.html
