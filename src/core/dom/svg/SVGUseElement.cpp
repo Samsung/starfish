@@ -121,6 +121,10 @@ void SVGUseElement::updateShadowTree()
                     shadowRoot()->appendChild(newClonedElement);
                     m_targetElement = element->asSVGElement();
                     setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+                    SVGElement* owner = ownerSVGElement();
+                    STARFISH_ASSERT(owner->isSVGSVGElement());
+                    newClonedElement->asSVGElement()->setOrignalOwnerElement(
+                        owner->asSVGSVGElement());
                 }
             }
         }

@@ -35,6 +35,7 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
           NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)
     , m_clipPathElement(nullptr)
     , m_maskElement(nullptr)
+    , m_orignalOwnerElement(nullptr)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -218,6 +219,11 @@ void SVGElement::setXmlbase(String* str)
 
 SVGElement* SVGElement::ownerSVGElement()
 {
+    if (m_orignalOwnerElement) {
+        // This node is the first element of ShadowRoot.
+        return reinterpret_cast<SVGElement*>(m_orignalOwnerElement);
+    }
+
     // The nearest ancestor ‘svg’ element. Null if the given element is the
     // outermost svg element.
     Element* e = parentElement();
@@ -527,5 +533,10 @@ SVGElement* SVGElement::getSVGElementById(String* id)
     }
 
     return descendant->asSVGElement();
+}
+
+void SVGElement::setOrignalOwnerElement(SVGSVGElement* svg)
+{
+    m_orignalOwnerElement = svg;
 }
 } // namespace Starfish
