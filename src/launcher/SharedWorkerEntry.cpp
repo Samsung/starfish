@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
         dataDir = storageDir();
     }
 
+    LWE::SharedWorker::SetVersionPreference(true);
     LWE::SharedWorker::Initialize(dataDir);
 
     LWE::SharedWorker::RegisterOnStatusChangedHandler(

@@ -19,55 +19,11 @@
 
 #ifdef STARFISH_API_ENABLE_LOADER
 
-#define CONCAT_STR(a, b) a b
-
+#include "LWELoaderUtils.h"
 #include "LWEDelegateLoader.h"
 
 #include <dlfcn.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <assert.h>
-
-namespace {
-
-int compareVersions(const std::string& version1, const std::string& version2)
-{
-    std::istringstream iss1(version1);
-    std::istringstream iss2(version2);
-
-    int major1, minor1, patch1;
-    int major2, minor2, patch2;
-    char dot;
-
-    iss1 >> major1 >> dot >> minor1 >> dot >> patch1;
-    iss2 >> major2 >> dot >> minor2 >> dot >> patch2;
-
-    if (major1 != major2) {
-        return major1 - major2;
-    }
-    if (minor1 != minor2) {
-        return minor1 - minor2;
-    }
-    return patch1 - patch2;
-}
-
-std::string readVersion(const std::string& path)
-{
-    const std::string versionFileName = "VERSION";
-    std::ifstream versionFile(path + versionFileName);
-
-    std::string versionString = "0.0.0";
-    if (!versionFile.is_open()) {
-        return versionString;
-    }
-
-    getline(versionFile, versionString);
-    return versionString;
-}
-
-} // namespace
 
 namespace LWE {
 
@@ -98,32 +54,8 @@ LWEDelegateLoader* LWEDelegateLoader::getSafeInstance()
 
 bool LWEDelegateLoader::load()
 {
-    if (m_preferUpdatedVersion) {
-        std::string defaultVersion = readVersion(STARFISH_API_DEFAULT_PATH);
-        std::string uweVersion = readVersion(STARFISH_API_UWE_MOUNT_PATH);
-        std::cout << "default version: " << defaultVersion << std::endl;
-        std::cout << "uwe version: " << uweVersion << std::endl;
-
-        if (compareVersions(uweVersion, defaultVersion) > 0) {
-            std::cout << "Try to load updated LWE..." << std::endl;
-            m_handle = dlopen(CONCAT_STR(STARFISH_API_UWE_MOUNT_PATH,
-                                         STARFISH_API_TARGET_NAME),
-                              RTLD_LAZY);
-            if (!m_handle) {
-                std::cerr << "Failed to load updated LWE: " << dlerror()
-                          << std::endl;
-            }
-        }
-    }
-
-    if (!m_handle) {
-        // Try to open defalut version.
-        std::cout << "Try to load default LWE..." << std::endl;
-        m_handle = dlopen(STARFISH_API_TARGET_NAME, RTLD_LAZY);
-    }
-
-    if (!m_handle) {
-        std::cerr << "Failed to load default LWE: " << dlerror() << std::endl;
+    if (!LWELoaderUtils::openLWELibrary(m_handle, STARFISH_API_TARGET_NAME,
+                                        m_preferUpdatedVersion)) {
         return false;
     }
 

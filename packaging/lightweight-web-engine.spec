@@ -521,19 +521,19 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish.executable
 
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %if "%{?build_uwe_tpk}" == "1"
 ninja -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
-%endif
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %endif
@@ -574,6 +574,13 @@ ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 %endif
 
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %if "%{?build_uwe_tpk}" == "1"
 ninja -C %{out_tizen} starfish.uwe.tpk
 %endif
@@ -584,13 +591,6 @@ ninja -C %{out_tizen} starfish.executable.tpk
 
 %if "%{?enable_test}" == "1"
 ninja -C %{out_tizen} install_pixel_test_dep
-%endif
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %endif # "%{rpm}" == "prod_tv"
@@ -615,19 +615,19 @@ ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %if "%{?build_uwe_tpk}" == "1"
 ninja -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
-%endif
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %endif
@@ -650,19 +650,19 @@ ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %if "%{?build_uwe_tpk}" == "1"
 ninja -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
-%endif
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %endif
@@ -688,19 +688,19 @@ ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
 ninja -C %{out_tizen} starfish.executable
 
+%if "%{?enable_sharedworker}" == "1"
+ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
+%endif
+
 %if "%{?build_uwe_tpk}" == "1"
 ninja -C %{out_tizen} starfish.uwe.tpk
 %endif
 
 %if "%{?build_shell_tpk}" == "1"
 ninja -C %{out_tizen} starfish.executable.tpk
-%endif
-
-%if "%{?enable_sharedworker}" == "1"
-ninja -C %{out_tizen} starfish_api.sharedworker.shared_library
-%endif
-%if "%{?enable_serviceworker}" == "1"
-ninja -C %{out_tizen} starfish_api.serviceworker.shared_library
 %endif
 
 %endif
@@ -854,10 +854,10 @@ done
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
 ln -sf tv/VERSION VERSION
 %if "%{?enable_sharedworker}" == "1"
-ln -s tv/liblightweight-web-engine.tv-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+ln -sf tv/liblightweight-web-engine.tv-sharedworker.so liblightweight-web-engine-sharedworker.so.1
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+ln -sf tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 %endif # "%{rpm}" == "tv"
 %if "%{rpm}" == "prod_tv"
@@ -893,10 +893,10 @@ done
 ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
 ln -sf headless/VERSION VERSION
 %if "%{?enable_sharedworker}" == "1"
-ln -s headless/liblightweight-web-engine.headless-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+ln -sf headless/liblightweight-web-engine.headless-sharedworker.so liblightweight-web-engine-sharedworker.so.1
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ln -s headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+ln -sf headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 popd
 %endif
@@ -918,10 +918,10 @@ done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
 ln -sf mobile/VERSION VERSION
 %if "%{?enable_sharedworker}" == "1"
-ln -s mobile/liblightweight-web-engine.mobile-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+ln -sf mobile/liblightweight-web-engine.mobile-sharedworker.so liblightweight-web-engine-sharedworker.so.1
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ln -s mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+ln -sf mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 popd
 %endif
@@ -943,10 +943,10 @@ done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
 ln -sf wearable/VERSION VERSION
 %if "%{?enable_sharedworker}" == "1"
-ln -s wearable/liblightweight-web-engine.wearable-sharedworker.so liblightweight-web-engine-sharedworker.so.1
+ln -sf wearable/liblightweight-web-engine.wearable-sharedworker.so liblightweight-web-engine-sharedworker.so.1
 %endif
 %if "%{?enable_serviceworker}" == "1"
-ln -s wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+ln -sf wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 popd
 %endif
