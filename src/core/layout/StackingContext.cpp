@@ -2394,13 +2394,14 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
     }
 
+    if (wasTranslateAppliedDueToScroll) {
+        canvas->restore();
+    }
+
     if (opacity != 1) {
         canvas->endOpacityLayer();
     }
 
-    if (wasTranslateAppliedDueToScroll) {
-        canvas->restore();
-    }
     paintScrollbar(canvas);
 
     canvas->restore();
