@@ -12501,9 +12501,7 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
         if (repeatType == "auto-fit") {
             autoRepeatType = AutoRepeatType::kAutoFit;
         } else if (repeatType == "auto-fill") {
-            STARFISH_UNSUPPORTED("css function: repeat with auto-fill");
-            // autoRepeatType = AutoRepeatType::kAutoFill;
-            return false;
+            autoRepeatType = AutoRepeatType::kAutoFill;
         } else {
             return false;
         }
