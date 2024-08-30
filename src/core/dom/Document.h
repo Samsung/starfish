@@ -529,6 +529,11 @@ public:
         Document* m_document;
     };
 
+    GCVector<std::pair<ScriptModule, Optional<ResourceURL*>>>& moduleScripts()
+    {
+        return m_moduleScripts;
+    }
+
     void attachNodeIterator(NodeIterator* ni);
     void willNodeBeRemoved(Node* parent, Node* oldChild);
 
@@ -733,6 +738,9 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredSVGScriptElements));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_moduleScripts));
+
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_elementInClickProgressList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nativeGradientCache));
@@ -794,6 +802,8 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
+    GCVector<std::pair<ScriptModule, Optional<ResourceURL*>>> m_moduleScripts;
+
     BloomFilter<12> m_nameIdFilter;
     ReferrerPolicy m_referrerPolicy;
 #ifdef STARFISH_TIZEN

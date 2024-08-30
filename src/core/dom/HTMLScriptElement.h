@@ -72,6 +72,8 @@ public:
     bool defer();
     void setDefer(bool b);
 
+    bool isModule();
+
     String* nonce() const;
     void setNonce(String* str);
 

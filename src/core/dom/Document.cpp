@@ -652,9 +652,17 @@ void Document::endDocumentParsing()
 
 void Document::notifyDomContentLoaded()
 {
-    if (m_deferredScriptElements.size() && m_deferredSVGScriptElements.size()) {
+    if (m_deferredScriptElements.size() || m_deferredSVGScriptElements.size()) {
         return;
     }
+
+    for (size_t i = 0; i < m_moduleScripts.size(); i++) {
+        auto scriptModule = m_moduleScripts[i].first;
+        if (!isExcutedModule(scriptModule)) {
+            executeModule(scriptBindingInstance(), scriptModule);
+        }
+    }
+    m_moduleScripts.clear();
 
     if (!m_domContentLoadedFired) {
         m_preloadScanner = nullptr;

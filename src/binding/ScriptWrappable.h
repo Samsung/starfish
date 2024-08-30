@@ -95,6 +95,10 @@ typedef Escargot::Float64ArrayObjectRef* ScriptFloat64Array;
 typedef Escargot::SharedArrayBufferObjectRef* ScriptSharedArrayBuffer;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
 typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
+typedef Escargot::ScriptRef* ScriptModule;
+
+void staticallyInitScriptEngine();
+void staticallyDestroyScriptEngine();
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
@@ -194,6 +198,12 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance, String* string,
+                                  String* fileName = String::emptyString);
+GCVector<String*> moduleRequests(ScriptModule module);
+void executeModule(ScriptBindingInstance* instance, ScriptModule module);
+bool isExcutedModule(ScriptModule module);
+
 ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
                                     ScriptValue key, ScriptValue value,
                                     ScriptValue thisValue);

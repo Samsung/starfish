@@ -29,6 +29,8 @@
 
 #include "core/page/Window.h"
 
+#include "binding/ScriptEngineInstance.h"
+
 #include <EscargotPublic.h>
 
 #if defined(STARFISH_WINDOWS)
@@ -41,116 +43,6 @@ namespace LWEDelegate {
 
 Starfish::Starfish* g_starfishInstance;
 Starfish::Starfish** g_starfishInstanceHolder;
-
-class EscargotStarfishPlatform : public Escargot::PlatformRef {
-public:
-    EscargotStarfishPlatform()
-    {
-    }
-
-    virtual void customInfoLogger(const char* format, va_list arg)
-    {
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, arg);
-        STARFISH_LOG_INFO("%s", buf);
-    }
-
-    virtual void customErrorLogger(const char* format, va_list arg)
-    {
-        char buf[1024];
-        vsnprintf(buf, sizeof(buf), format, arg);
-        STARFISH_LOG_ERROR("%s", buf);
-    }
-
-    virtual void markJSJobEnqueued(
-        Escargot::ContextRef* relatedContext) override
-    {
-        auto executionContext = Starfish::fetchExecutionContext(relatedContext);
-        executionContext->webBase()->messageLoop()->addMicroTask(
-            executionContext->globalScope(),
-            [](size_t handle, void* data) {
-                VMInstanceRef* vm = (VMInstanceRef*)data;
-                if (vm->hasPendingJob()) {
-                    auto jobResult = vm->executePendingJob();
-                    if (jobResult.error) {
-                        STARFISH_LOG_ERROR("Uncaught Error in JS job");
-                    }
-                }
-            },
-            relatedContext->vmInstance());
-    }
-
-    virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
-                                          Escargot::ScriptRef* whereRequestFrom,
-                                          Escargot::StringRef* moduleSrc,
-                                          ModuleType type) override
-    {
-        return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                Escargot::StringRef::emptyString());
-    }
-
-    virtual void didLoadModule(
-        Escargot::ContextRef* relatedContext,
-        Escargot::OptionalRef<Escargot::ScriptRef> referrer,
-        Escargot::ScriptRef* loadedModule) override
-    {
-    }
-
-    virtual void hostImportModuleDynamically(ContextRef* relatedContext,
-                                             ScriptRef* referrer,
-                                             StringRef* src, ModuleType type,
-                                             PromiseObjectRef* promise) override
-    {
-        LoadModuleResult loadedModuleResult =
-            onLoadModule(relatedContext, referrer, src, type);
-
-        Evaluator::EvaluatorResult executionResult = Evaluator::execute(
-            relatedContext,
-            [](ExecutionStateRef* state, LoadModuleResult loadedModuleResult,
-               PromiseObjectRef* promise) -> ValueRef* {
-                if (loadedModuleResult.script) {
-                    if (loadedModuleResult.script.value()->isExecuted()) {
-                        if (loadedModuleResult.script.value()
-                                ->wasThereErrorOnModuleEvaluation()) {
-                            state->throwException(
-                                loadedModuleResult.script.value()
-                                    ->moduleEvaluationError());
-                        }
-                    } else {
-                        loadedModuleResult.script.value()->execute(state);
-                    }
-                } else {
-                    state->throwException(ErrorObjectRef::create(
-                        state, loadedModuleResult.errorCode,
-                        loadedModuleResult.errorMessage));
-                }
-                return loadedModuleResult.script.value()->moduleNamespace(
-                    state);
-            },
-            loadedModuleResult, promise);
-
-        Evaluator::execute(
-            relatedContext,
-            [](ExecutionStateRef* state, bool isSuccessful, ValueRef* value,
-               PromiseObjectRef* promise) -> ValueRef* {
-                if (isSuccessful) {
-                    promise->fulfill(state, value);
-                } else {
-                    promise->reject(state, value);
-                }
-                return ValueRef::createUndefined();
-            },
-            executionResult.isSuccessful(),
-            executionResult.isSuccessful() ? executionResult.result
-                                           : executionResult.error.value(),
-            promise);
-    }
-
-    virtual void markJSJobFromAnotherThreadExists(
-        ContextRef* relatedContext) override
-    {
-    }
-};
 
 static void StarfishGCMemoryLogger(void* data)
 {
@@ -189,7 +81,8 @@ void LWE::Initialize(const char* storageDirectoryPath)
         config.backend = STARFISH_BACKEND_STR;
         config.rendererType = rendererType;
 
-        Escargot::Globals::initialize(new EscargotStarfishPlatform());
+        Starfish::staticallyInitScriptEngine();
+
         g_starfishInstanceHolder = reinterpret_cast<Starfish::Starfish**>(
             GC_MALLOC_UNCOLLECTABLE(sizeof(Starfish::Starfish**)));
         g_starfishInstance = *g_starfishInstanceHolder =
@@ -223,8 +116,7 @@ void LWE::Finalize()
         Starfish::Starfish::doFullGCWithoutSeeingStack();
         Starfish::Starfish::doFullGCWithoutSeeingStack();
 
-        // Escargot::Globals::finalize should be invoked after full gc
-        Escargot::Globals::finalize();
+        Starfish::staticallyDestroyScriptEngine();
     });
 }
 
