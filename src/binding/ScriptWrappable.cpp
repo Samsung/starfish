@@ -45,6 +45,147 @@ using namespace Escargot;
 
 namespace Starfish {
 
+class EscargotStarfishPlatform : public Escargot::PlatformRef {
+public:
+    EscargotStarfishPlatform()
+    {
+    }
+
+    virtual void customInfoLogger(const char* format, va_list arg)
+    {
+        char buf[1024];
+        vsnprintf(buf, sizeof(buf), format, arg);
+        STARFISH_LOG_INFO("%s", buf);
+    }
+
+    virtual void customErrorLogger(const char* format, va_list arg)
+    {
+        char buf[1024];
+        vsnprintf(buf, sizeof(buf), format, arg);
+        STARFISH_LOG_ERROR("%s", buf);
+    }
+
+    virtual void markJSJobEnqueued(
+        Escargot::ContextRef* relatedContext) override
+    {
+        auto executionContext = fetchExecutionContext(relatedContext);
+        executionContext->webBase()->messageLoop()->addMicroTask(
+            executionContext->globalScope(),
+            [](size_t handle, void* data) {
+                VMInstanceRef* vm = (VMInstanceRef*)data;
+                if (vm->hasPendingJob()) {
+                    auto jobResult = vm->executePendingJob();
+                    if (jobResult.error) {
+                        STARFISH_LOG_ERROR("Uncaught Error in JS job");
+                    }
+                }
+            },
+            relatedContext->vmInstance());
+    }
+
+    virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
+                                          Escargot::ScriptRef* whereRequestFrom,
+                                          Escargot::StringRef* moduleSrc,
+                                          ModuleType type) override
+    {
+        auto executionContext = fetchExecutionContext(relatedContext);
+        auto& moduleScripts = executionContext->document()->moduleScripts();
+
+        String* baseURI;
+        if (whereRequestFrom->src()->length()) {
+            baseURI = (new ResourceURL(toBrowserString(executionContext->document()->scriptBindingInstance(),
+                    whereRequestFrom->src())))->baseURI();
+        } else {
+            baseURI = executionContext->baseURL()->baseURI();
+        }
+        ResourceURL* src = new ResourceURL(
+                toBrowserString(executionContext->document()->scriptBindingInstance(), moduleSrc),
+                baseURI);
+
+        for (size_t i = 0; i < moduleScripts.size(); i ++) {
+            if (moduleScripts[i].second.hasValue() &&
+                *moduleScripts[i].second.value() == *src) {
+                return LoadModuleResult(moduleScripts[i].first);
+            }
+        }
+
+        return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                                Escargot::StringRef::emptyString());
+    }
+
+    virtual void didLoadModule(
+        Escargot::ContextRef* relatedContext,
+        Escargot::OptionalRef<Escargot::ScriptRef> referrer,
+        Escargot::ScriptRef* loadedModule) override
+    {
+    }
+
+    virtual void hostImportModuleDynamically(ContextRef* relatedContext,
+                                             ScriptRef* referrer,
+                                             StringRef* src, ModuleType type,
+                                             PromiseObjectRef* promise) override
+    {
+        LoadModuleResult loadedModuleResult =
+            onLoadModule(relatedContext, referrer, src, type);
+
+        Evaluator::EvaluatorResult executionResult = Evaluator::execute(
+            relatedContext,
+            [](ExecutionStateRef* state, LoadModuleResult loadedModuleResult,
+               PromiseObjectRef* promise) -> ValueRef* {
+                if (loadedModuleResult.script) {
+                    if (loadedModuleResult.script.value()->isExecuted()) {
+                        if (loadedModuleResult.script.value()
+                                ->wasThereErrorOnModuleEvaluation()) {
+                            state->throwException(
+                                loadedModuleResult.script.value()
+                                    ->moduleEvaluationError());
+                        }
+                    } else {
+                        loadedModuleResult.script.value()->execute(state);
+                    }
+                } else {
+                    state->throwException(ErrorObjectRef::create(
+                        state, loadedModuleResult.errorCode,
+                        loadedModuleResult.errorMessage));
+                }
+                return loadedModuleResult.script.value()->moduleNamespace(
+                    state);
+            },
+            loadedModuleResult, promise);
+
+        Evaluator::execute(
+            relatedContext,
+            [](ExecutionStateRef* state, bool isSuccessful, ValueRef* value,
+               PromiseObjectRef* promise) -> ValueRef* {
+                if (isSuccessful) {
+                    promise->fulfill(state, value);
+                } else {
+                    promise->reject(state, value);
+                }
+                return ValueRef::createUndefined();
+            },
+            executionResult.isSuccessful(),
+            executionResult.isSuccessful() ? executionResult.result
+                                           : executionResult.error.value(),
+            promise);
+    }
+
+    virtual void markJSJobFromAnotherThreadExists(
+        ContextRef* relatedContext) override
+    {
+    }
+};
+
+void staticallyInitScriptEngine()
+{
+    Escargot::Globals::initialize(new EscargotStarfishPlatform());
+}
+
+void staticallyDestroyScriptEngine()
+{
+    Escargot::Globals::finalize();
+}
+
 ScriptValue scriptNull()
 {
     return ValueRef::createNull();
@@ -979,18 +1120,8 @@ static StringRef* createCompressibleScriptString(Escargot::VMInstanceRef* instan
     }
 }
 
-ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
-                           String* fileName, bool* result)
+static void initDebuggerIfNeeds(ScriptBindingInstance* instance)
 {
-    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
-                                     "evaluate javascript string");
-    if (UNLIKELY(!instance->isScriptingEnabled())) {
-        if (result) {
-            *result = false;
-        }
-        return scriptUndefined();
-    }
-
 #if defined(STARFISH_ENABLE_DEBUGGER)
     // currently, debugger only supports ScriptBindingWindowInstance
     if (instance->hasWindow() && instance->isScriptingEnabled() &&
@@ -1048,13 +1179,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 
 #endif
+}
 
+static Escargot::ScriptParserRef::InitializeScriptResult initializeScript(
+    ScriptBindingInstance* instance, String* string, String* fileName, bool isModule)
+{
     ContextRef* ctx = instance->scriptContext();
-
-#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
-    size_t parseStart = longTickCount();
-#endif
-
 #if defined(STARFISH_ENABLE_DEBUGGER)
     StringRef* source = toJSString(string);
     std::string fileNameForDebugger;
@@ -1069,9 +1199,9 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         }
     }
 
-    auto scriptRef = ctx->scriptParser()->initializeScript(
+    return ctx->scriptParser()->initializeScript(
         source, toJSString(String::fromUTF8(fileNameForDebugger.data(),
-                                            fileNameForDebugger.length())));
+                                            fileNameForDebugger.length())), isModule);
 #else
     StringRef* source;
     if (StringRef::isCompressibleStringEnabled() && string->length() > 1024 * 512) {
@@ -1079,10 +1209,29 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     } else {
         source = toJSString(string);
     }
-    auto scriptRef =
-        ctx->scriptParser()->initializeScript(source, toJSString(fileName));
+    return ctx->scriptParser()->initializeScript(source, toJSString(fileName), isModule);
+#endif
+}
+
+ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
+                           String* fileName, bool* result)
+{
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "evaluate javascript string");
+    if (UNLIKELY(!instance->isScriptingEnabled())) {
+        if (result) {
+            *result = false;
+        }
+        return scriptUndefined();
+    }
+
+    initDebuggerIfNeeds(instance);
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t parseStart = longTickCount();
 #endif
 
+    auto scriptRef = initializeScript(instance, string, fileName, false);
     if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
             "Script parse error: %s %s", fileName->toUTF8NonGCString().data(),
@@ -1100,6 +1249,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     STARFISH_LOG_INFO("js parse %f ms", time);
 #endif
 
+    ContextRef* ctx = instance->scriptContext();
 #if defined(STARFISH_ENABLE_DEBUGGER)
     ctx->setAsAlwaysStopState();
 #endif
@@ -1142,6 +1292,93 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             *result = true;
         return sbresult.result;
     }
+}
+
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance, String* string, String* fileName)
+{
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "init javascript module");
+    if (UNLIKELY(!instance->isScriptingEnabled())) {
+        return nullptr;
+    }
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t parseStart = longTickCount();
+#endif
+
+    auto scriptRef = initializeScript(instance, string, fileName, true);
+    if (!scriptRef.isSuccessful()) {
+        STARFISH_LOG_ERROR(
+            "Script parse error: %s %s", fileName->toUTF8NonGCString().data(),
+            toBrowserString(instance, scriptRef.parseErrorMessage)
+                ->toUTF8NonGCString()
+                .data());
+        return nullptr;
+    }
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t parseEnd = longTickCount();
+    float time = (float)((parseEnd - parseStart) / 1000.f);
+    STARFISH_LOG_INFO("js parse %f ms", time);
+#endif
+    return scriptRef.script.value();
+}
+
+GCVector<String*> moduleRequests(ScriptModule module)
+{
+    GCVector<String*> result;
+    result.reserve(module->moduleRequestsLength());
+    for (size_t i = 0 ; i < module->moduleRequestsLength(); i ++) {
+        result.push_back(toBrowserString(module->moduleRequest(i)));
+    }
+    return result;
+}
+
+void executeModule(ScriptBindingInstance* instance, ScriptModule module)
+{
+    ContextRef* ctx = instance->scriptContext();
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    ctx->setAsAlwaysStopState();
+#endif
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t executeStart = longTickCount();
+#endif
+
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptRef* script) -> ValueRef* {
+            return script->execute(state);
+        },
+        module);
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t executeEnd = longTickCount();
+    float time = (float)((executeEnd - executeStart) / 1000.f);
+    STARFISH_LOG_INFO("js execute %f ms", time);
+#endif
+
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
+
+    if (sbresult.error.hasValue()) {
+        // Dispatch error event to window
+        ScriptValue errorValue = sbresult.error.value();
+        ErrorEventInit errorInfo;
+        errorInfo.setMessage(toBrowserString(instance, errorValue));
+        if (sbresult.stackTrace.size() > 0) {
+            size_t lastIndex = sbresult.stackTrace.size() - 1;
+            errorInfo.setFilename(toBrowserString(
+                instance, sbresult.stackTrace[lastIndex].srcName));
+            errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+            errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
+        }
+        errorInfo.setError(errorValue);
+        instance->dispatchErrorEventToGlobalScope(errorInfo);
+        loggingJSErrorInfo(instance, sbresult);
+    }
+}
+
+bool isExcutedModule(ScriptModule module)
+{
+    return module->isExecuted();
 }
 
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,

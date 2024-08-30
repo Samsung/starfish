@@ -44,6 +44,12 @@ namespace Starfish {
 extern uint64_t g_profilingBaseTime;
 #endif
 
+static void buildScriptResourceRequest(HTMLScriptElement* element,
+                                       ResourceURL* rurl, bool async,
+                                       bool defer, bool module,
+                                       bool shouldResumeParsing,
+                                       bool forceSync);
+
 void* HTMLScriptElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLScriptElement));
@@ -111,6 +117,7 @@ class DeferredScriptDownloadClient : public ResourceClient {
 public:
     DeferredScriptDownloadClient(HTMLScriptElement* script, Resource* res)
         : ResourceClient(res)
+        , m_isModule(script->isModule())
         , m_isLoaded(false)
         , m_successToLoad(false)
         , m_responseMIMEType(String::emptyString)
@@ -146,15 +153,37 @@ public:
                 client->m_responseMIMEType->toASCIILower()->toUTF8NonGCString();
             if (isJavaScriptType(s.data(), s.length())) {
                 String* text = client->m_resource->asTextResource()->text();
-                client->m_element->document()->appendCurrentScript(
-                    client->m_element);
-                {
-                    ScriptProfileLogger logger;
-                    evaluateString(
-                        client->m_element->window()->scriptBindingInstance(),
-                        text, ResourceClient::resource()->url()->urlString());
+                if (m_isModule) {
+                    Optional<ScriptModule> module =
+                        initModule(m_element->window()->scriptBindingInstance(),
+                                   text, resource()->url()->urlString());
+                    if (module) {
+                        m_element->document()->moduleScripts().push_back(
+                            std::make_pair(module.value(), m_resource->url()));
+
+                        auto requests = moduleRequests(module.value());
+                        for (size_t i = 0; i < requests.size(); i++) {
+                            String* src = requests[i];
+                            ResourceURL* rurl = new ResourceURL(
+                                src, m_resource->url()->urlString());
+                            buildScriptResourceRequest(m_element, rurl, false,
+                                                       false, true, false,
+                                                       false);
+                        }
+                    }
+                } else {
+                    client->m_element->document()->appendCurrentScript(
+                        client->m_element);
+                    {
+                        ScriptProfileLogger logger;
+                        evaluateString(
+                            client->m_element->window()
+                                ->scriptBindingInstance(),
+                            text,
+                            ResourceClient::resource()->url()->urlString());
+                    }
+                    client->m_element->document()->popCurrentScript();
                 }
-                client->m_element->document()->popCurrentScript();
             }
             deferredScriptElements.erase(deferredScriptElements.begin());
         }
@@ -184,6 +213,7 @@ public:
         }
     }
 
+    bool m_isModule;
     bool m_isLoaded;
     bool m_successToLoad;
     String* m_responseMIMEType;
@@ -238,6 +268,63 @@ protected:
     bool m_shouldResumeParsing;
 };
 
+static bool checkSrcSecurity(HTMLScriptElement* element, ResourceURL* rurl)
+{
+    if (!element->document()->contentSecurityPolicy()->allowNonceOrSource(
+            CSPDirectives::ScriptSrc, element->nonce(), rurl)) {
+        String* eventType =
+            element->starfish()->staticStrings()->m_error.localName();
+        Event* e = new Event(element->executionContext(), eventType,
+                             EventInit(false, false));
+        element->dispatchEventIdleTimeByUA(e);
+        return false;
+    }
+
+    return true;
+}
+
+static void buildScriptResourceRequest(HTMLScriptElement* element,
+                                       ResourceURL* rurl, bool async,
+                                       bool defer, bool module,
+                                       bool shouldResumeParsing, bool forceSync)
+{
+    String* charset = element
+                          ->getAttributeOrEmpty(
+                              element->starfish()->staticStrings()->m_charset)
+                          ->trim();
+    TextResource* res =
+        element->document()->resourceLoader().fetchText(rurl, charset);
+    if (module || (!async && defer)) {
+        res->addResourceClient(new DeferredScriptDownloadClient(element, res));
+    } else {
+        res->addResourceClient(
+            new ScriptDownloadClient(element, res, shouldResumeParsing));
+    }
+    res->addResourceClient(new ElementResourceClient(element, res, true));
+
+    RequestData* reqData = new RequestData();
+    reqData->m_url = rurl;
+    reqData->m_referrer = new ReferrerURL(element->document()->documentURI());
+    reqData->m_destination = RequestDestination::Script;
+    reqData->m_syncLevel =
+        forceSync ? RequestSyncLevel::AlwaysSync : RequestSyncLevel::NeverSync;
+
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attributes
+    auto crossOrigin = element->getAttribute(
+        element->starfish()->staticStrings()->m_crossorigin);
+    if (crossOrigin.hasValue()) {
+        reqData->m_mode = RequestMode::CORS;
+        reqData->m_credentials =
+            crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
+                ? RequestCredentials::Include
+                : RequestCredentials::SameOrigin;
+    } else {
+        reqData->m_mode = RequestMode::NoCORS;
+    }
+
+    res->request(reqData, true);
+}
+
 bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 {
     bool result = executeScriptImpl(forceSync, inParser);
@@ -283,13 +370,33 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             }
 
             m_isAlreadyStarted = true;
-            {
+            if (isModule()) {
+                Optional<ScriptModule> module =
+                    initModule(window()->scriptBindingInstance(), script);
+                if (module) {
+                    document()->moduleScripts().push_back(
+                        std::make_pair(module.value(), nullptr));
+
+                    auto requests = moduleRequests(module.value());
+                    for (size_t i = 0; i < requests.size(); i++) {
+                        String* src = requests[i];
+                        ResourceURL* rurl = new ResourceURL(
+                            src, document()->baseURL()->baseURI());
+                        if (!checkSrcSecurity(this, rurl)) {
+                            continue;
+                        }
+
+                        buildScriptResourceRequest(this, rurl, false, false,
+                                                   true, false, false);
+                    }
+                }
+            } else {
                 Document::CurrentScriptManager currentScriptManager(document(),
                                                                     this);
                 ScriptProfileLogger logger;
                 evaluateString(window()->scriptBindingInstance(), script);
+                m_didScriptExecuted = true;
             }
-            m_didScriptExecuted = true;
             return false;
         } else {
             String* url = srcStr.getValue();
@@ -301,18 +408,12 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
-            if (!document()->contentSecurityPolicy()->allowNonceOrSource(
-                    CSPDirectives::ScriptSrc, nonce(), rurl)) {
-                String* eventType =
-                    starfish()->staticStrings()->m_error.localName();
-                Event* e = new Event(executionContext(), eventType,
-                                     EventInit(false, false));
-                dispatchEventIdleTimeByUA(e);
+            if (!checkSrcSecurity(this, rurl)) {
                 return false;
             }
 
             if (document()->preloadScanner() && !async() && !defer() &&
-                inParser) {
+                !isModule() && inParser) {
                 auto ps = document()->preloadScanner();
                 for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
                     Resource* res = ps->preloadedJS()[i];
@@ -347,43 +448,14 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 }
             }
 
-            String* charset =
-                getAttributeOrEmpty(starfish()->staticStrings()->m_charset)
-                    ->trim();
-            TextResource* res =
-                document()->resourceLoader().fetchText(rurl, charset);
-            if (!async() && defer()) {
-                res->addResourceClient(
-                    new DeferredScriptDownloadClient(this, res));
-            } else {
+            bool treatAsDefer = defer() || isModule();
+            if (async() || !treatAsDefer) {
                 setShouldResumeParsing(inParser && !forceSync && !async());
-                res->addResourceClient(
-                    new ScriptDownloadClient(this, res, shouldResumeParsing()));
             }
-            res->addResourceClient(new ElementResourceClient(this, res, true));
+            buildScriptResourceRequest(this, rurl, async(), defer(), isModule(),
+                                       shouldResumeParsing(), forceSync);
 
-            RequestData* reqData = new RequestData();
-            reqData->m_url = rurl;
-            reqData->m_referrer = new ReferrerURL(document()->documentURI());
-            reqData->m_destination = RequestDestination::Script;
-            reqData->m_syncLevel = forceSync ? RequestSyncLevel::AlwaysSync
-                                             : RequestSyncLevel::NeverSync;
-
-            // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attributes
-            auto crossOrigin =
-                getAttribute(starfish()->staticStrings()->m_crossorigin);
-            if (crossOrigin.hasValue()) {
-                reqData->m_mode = RequestMode::CORS;
-                reqData->m_credentials =
-                    crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
-                        ? RequestCredentials::Include
-                        : RequestCredentials::SameOrigin;
-            } else {
-                reqData->m_mode = RequestMode::NoCORS;
-            }
-
-            res->request(reqData, true);
-            if (async() || defer()) {
+            if (async() || treatAsDefer) {
                 return false;
             } else {
                 return true;
@@ -559,6 +631,11 @@ void HTMLScriptElement::setDefer(bool b)
     }
 }
 
+bool HTMLScriptElement::isModule()
+{
+    return type()->equalsIgnoreCase("module");
+}
+
 Node* HTMLScriptElement::clone()
 {
     HTMLScriptElement* n = HTMLElement::clone()->asHTMLScriptElement();
@@ -573,13 +650,10 @@ bool HTMLScriptElement::isValidScriptType()
         return true;
     }
 
-    /* TODO 'module' is not supported yet.
-    String* typeStr =
-        getAttributeOrEmpty(starfish()->staticStrings()->m_type);
-    if (type->equalsIgnoreCase("module")) {
+    if (isModule()) {
         return true;
     }
-    */
+
     return false;
 }
 

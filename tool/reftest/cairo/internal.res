@@ -460,7 +460,6 @@ test/cairo/internal-test/dom/HTMLScriptElement01.html
 test/cairo/internal-test/dom/HTMLScriptElement02.html
 test/cairo/internal-test/dom/HTMLScriptElement03.html
 test/cairo/internal-test/dom/HTMLScriptElement04.html
-test/cairo/internal-test/dom/HTMLScriptElement05.html
 test/cairo/internal-test/dom/HTMLScriptElement06.html
 test/cairo/internal-test/dom/HTMLScriptElement07.html
 test/cairo/internal-test/dom/HTMLScriptElement08.html
@@ -700,3 +699,5 @@ test/cairo/internal-test/resize-observer/observe.html
 test/cairo/internal-test/resize-observer/notify.html
 test/cairo/internal-test/fetch/readablestreamdefaultreader_read.html
 test/cairo/internal-test/intl/hangle_NFD_to_NFC.html
+test/cairo/internal-test/scripting/module/test1.html
+test/cairo/internal-test/scripting/module/test2.html
