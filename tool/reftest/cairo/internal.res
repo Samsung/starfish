@@ -410,6 +410,10 @@ test/cairo/internal-test/css/grid/gridbox_absolute_03.html
 test/cairo/internal-test/css/grid/gridbox_absolute_04.html
 test/cairo/internal-test/css/grid/gridbox_span_01.html
 test/cairo/internal-test/css/grid/gridbox_span_02.html
+test/cairo/internal-test/css/grid/gridbox_span_03.html
+test/cairo/internal-test/css/grid/gridbox_span_04.html
+test/cairo/internal-test/css/grid/gridbox_span_05.html
+test/cairo/internal-test/css/grid/gridbox_span_06.html
 test/cairo/internal-test/css/grid/issue_759/index.partial.html
 test/cairo/internal-test/css/grid/gridbox_child_flexbox_simple.html
 test/cairo/internal-test/css/grid/gridbox_child_flexbox_with_margin_auto.html

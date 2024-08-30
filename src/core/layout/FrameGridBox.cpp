@@ -656,8 +656,21 @@ void GridFormattingContext::placeRemainingGridAreas(
             curRow = m_gridTemplateRows.size() - 1;
         }
 
+        bool needRearrange = false;
         gridArea->setRowStart(curRow);
         gridArea->setRowEnd(gridArea->rowStart() + gridArea->rowSpanValue());
+        while (m_gridTemplateRows.size() < gridArea->rowEnd()) {
+            m_gridTemplateRows.push_back(GridTrack());
+        }
+        while (m_gridTemplateColumns.size() <
+               curCol + gridArea->columnSpanValue()) {
+            m_gridTemplateColumns.push_back(GridTrack());
+            needRearrange = true;
+        }
+
+        if (needRearrange) {
+            rearrangeGridArea(gridAreasAuto, gridArea, &curRow, &curCol);
+        }
 
         if (gridArea->columnStart() == 0) {
             gridArea->setColumnStart(curCol);
@@ -679,9 +692,15 @@ bool GridFormattingContext::hasAvailableGridCells(GridArea* gridArea,
     if (width <= 0) {
         width = 1;
     }
+    if (gridArea->columnSpanValue() > 0) {
+        width = gridArea->columnSpanValue();
+    }
     size_t height = gridArea->rowEnd() - gridArea->rowStart();
     if (height <= 0) {
         height = 1;
+    }
+    if (gridArea->rowSpanValue() > 0) {
+        height = gridArea->rowSpanValue();
     }
 
     size_t availableCells = 0;
@@ -704,6 +723,46 @@ void GridFormattingContext::placeGridArea(GridArea* gridArea)
         for (size_t c = gridArea->columnStart(); c < gridArea->columnEnd();
              c++) {
             m_gridCellTable.setOccupied(r, c);
+        }
+    }
+}
+
+void GridFormattingContext::rearrangeGridArea(
+    GCVector<GridArea*>& gridAreasAuto, GridArea* currentGridArea, size_t* row,
+    size_t* col)
+{
+    m_gridCellTable = GridCellTable();
+
+    size_t curRow = 1;
+    size_t curCol = 1;
+    for (auto& gridArea : gridAreasAuto) {
+        bool found = false;
+        for (size_t r = curRow; r < m_gridTemplateRows.size(); r++) {
+            for (size_t c = curCol; c < m_gridTemplateColumns.size(); c++) {
+                if (hasAvailableGridCells(gridArea, r, c)) {
+                    if (currentGridArea == gridArea) {
+                        *row = r;
+                        *col = c;
+                        while (m_gridTemplateRows.size() >
+                               r + gridArea->rowSpanValue()) {
+                            m_gridTemplateRows.pop_back();
+                        }
+                        gridArea->moveRow(r);
+                        return;
+                    }
+                    gridArea->moveRow(r);
+                    gridArea->moveColumn(c);
+                    placeGridArea(gridArea);
+                    found = true;
+                    curRow = r;
+                    curCol = c;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+            curCol = 1;
         }
     }
 }
