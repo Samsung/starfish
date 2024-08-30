@@ -204,6 +204,20 @@ public:
         return false;
     }
 
+    void moveRow(size_t v) const
+    {
+        size_t previous = rowEnd() - rowStart();
+        setRowStart(v);
+        setRowEnd(v + previous);
+    }
+
+    void moveColumn(size_t v) const
+    {
+        size_t previous = columnEnd() - columnStart();
+        setColumnStart(v);
+        setColumnEnd(v + previous);
+    }
+
     void parseGridRowAndColumnValues(GridFormattingContext& ctx);
     GridLine* parseGridLine(String* gridLineValue);
     void resolveDefinitePositionValues();
@@ -431,6 +445,8 @@ private:
     void placeRemainingGridAreas(GCVector<GridArea*>& gridAreasAuto);
     bool hasAvailableGridCells(GridArea* gridArea, size_t row, size_t col);
     void placeGridArea(GridArea* gridArea);
+    void rearrangeGridArea(GCVector<GridArea*>& gridAreasAuto,
+                           GridArea* gridArea, size_t* row, size_t* col);
 
     void initializePreferredWidths();
     void resolveIntrinsicColumnTrackSizes();
