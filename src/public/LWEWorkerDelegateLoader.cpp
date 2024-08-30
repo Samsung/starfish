@@ -23,6 +23,7 @@
 #include <cassert>
 
 #include "LWEWorker.h"
+#include "LWELoaderUtils.h"
 #include "LWEWorkerDelegateLoader.h"
 
 namespace LWE {
@@ -47,11 +48,19 @@ LWEWorkerDelegateLoader* LWEWorkerDelegateLoader::getSafeInstance()
     return instance;
 }
 
-bool LWEWorkerDelegateLoader::load(const std::string& path)
+bool LWEWorkerDelegateLoader::load()
 {
-    m_handle = dlopen(path.c_str(), RTLD_LAZY);
-    if (!m_handle) {
-        std::cerr << "Failed to open library: " << dlerror() << std::endl;
+#if defined(STARFISH_ENABLE_SHARED_WORKER)
+    std::string targetName = STARFISH_SHARED_WORKER_API_TARGET_NAME;
+#elif defined(STARFISH_ENABLE_SERVICE_WORKER)
+    std::string targetName = STARFISH_SERVICE_WORKER_API_TARGET_NAME;
+#else
+#error \
+    "Please define STARFISH_ENABLE_SHARED_WORKER or STARFISH_ENABLE_SERVICE_WORKER."
+#endif
+
+    if (!LWELoaderUtils::openLWELibrary(m_handle, targetName,
+                                        m_preferUpdatedVersion)) {
         return false;
     }
 

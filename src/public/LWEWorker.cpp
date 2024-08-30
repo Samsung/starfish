@@ -37,19 +37,19 @@
 
 namespace LWE {
 
+static void setVersionPreference(bool preferUpdatedVersion)
+{
+#ifdef STARFISH_API_ENABLE_LOADER
+    LWEWorkerDelegateLoader::getInstance()->setVersionPreference(
+        preferUpdatedVersion);
+#endif
+    // Supported only when using a loader.
+}
+
 static void initializeWorkerProcess(const std::string &storageDirectoryPath)
 {
 #ifdef STARFISH_API_ENABLE_LOADER
-#if defined(STARFISH_ENABLE_SHARED_WORKER)
-    std::string targetName = STARFISH_SHARED_WORKER_API_TARGET_NAME;
-#elif defined(STARFISH_ENABLE_SERVICE_WORKER)
-    std::string targetName = STARFISH_SERVICE_WORKER_API_TARGET_NAME;
-#else
-#error \
-    "Please define STARFISH_ENABLE_SHARED_WORKER or STARFISH_ENABLE_SERVICE_WORKER."
-#endif
-
-    if (!LWEWorkerDelegateLoader::getInstance()->load(targetName)) {
+    if (!LWEWorkerDelegateLoader::getInstance()->load()) {
         LWE_WORKER_ASSERT(false);
     }
 
@@ -84,6 +84,11 @@ static void finalizeWorkerProcess()
 
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 
+void SharedWorker::SetVersionPreference(bool preferUpdatedVersion)
+{
+    setVersionPreference(preferUpdatedVersion);
+}
+
 void SharedWorker::Initialize(const std::string &storageDirectoryPath)
 {
     return initializeWorkerProcess(storageDirectoryPath);
@@ -101,6 +106,11 @@ void SharedWorker::Finalize()
 }
 
 #elif defined(STARFISH_ENABLE_SERVICE_WORKER)
+
+void ServiceWorker::SetVersionPreference(bool preferUpdatedVersion)
+{
+    setVersionPreference(preferUpdatedVersion);
+}
 
 void ServiceWorker::Initialize(const std::string &storageDirectoryPath)
 {

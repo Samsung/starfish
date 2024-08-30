@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
         dataDir = storageDir();
     }
 
+    LWE::ServiceWorker::SetVersionPreference(true);
     LWE::ServiceWorker::Initialize(dataDir);
 
     LWE::ServiceWorker::RegisterOnStatusChangedHandler(
