@@ -705,3 +705,4 @@ test/cairo/internal-test/fetch/readablestreamdefaultreader_read.html
 test/cairo/internal-test/intl/hangle_NFD_to_NFC.html
 test/cairo/internal-test/scripting/module/test1.html
 test/cairo/internal-test/scripting/module/test2.html
+test/cairo/internal-test/scripting/module/test3.html

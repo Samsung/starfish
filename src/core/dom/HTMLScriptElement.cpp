@@ -158,8 +158,16 @@ public:
                         initModule(m_element->window()->scriptBindingInstance(),
                                    text, resource()->url()->urlString());
                     if (module) {
-                        m_element->document()->moduleScripts().push_back(
-                            std::make_pair(module.value(), m_resource->url()));
+                        auto& moduleScripts =
+                            m_element->document()->moduleScripts();
+                        for (auto& ms : moduleScripts) {
+                            if (ms.second &&
+                                *ms.second.value() == *m_resource->url()) {
+                                STARFISH_ASSERT(!ms.first.hasValue());
+                                ms.first = module;
+                                break;
+                            }
+                        }
 
                         auto requests = moduleRequests(module.value());
                         for (size_t i = 0; i < requests.size(); i++) {
@@ -288,6 +296,16 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
                                        bool defer, bool module,
                                        bool shouldResumeParsing, bool forceSync)
 {
+    if (module) {
+        auto& moduleScripts = element->document()->moduleScripts();
+        for (auto& ms : moduleScripts) {
+            if (ms.second && *ms.second.value() == *rurl) {
+                // we already have the module.
+                return;
+            }
+        }
+        moduleScripts.push_back(std::make_pair(nullptr, rurl));
+    }
     String* charset = element
                           ->getAttributeOrEmpty(
                               element->starfish()->staticStrings()->m_charset)

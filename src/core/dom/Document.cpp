@@ -657,7 +657,8 @@ void Document::notifyDomContentLoaded()
     }
 
     for (size_t i = 0; i < m_moduleScripts.size(); i++) {
-        auto scriptModule = m_moduleScripts[i].first;
+        STARFISH_ASSERT(m_moduleScripts[i].first.hasValue());
+        auto scriptModule = m_moduleScripts[i].first.value();
         if (!isExcutedModule(scriptModule)) {
             executeModule(scriptBindingInstance(), scriptModule);
         }

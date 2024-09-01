@@ -105,7 +105,12 @@ public:
         for (size_t i = 0; i < moduleScripts.size(); i ++) {
             if (moduleScripts[i].second.hasValue() &&
                 *moduleScripts[i].second.value() == *src) {
-                return LoadModuleResult(moduleScripts[i].first);
+                if (!moduleScripts[i].first.hasValue()) {
+                    // failed to load the module
+                    return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                                            Escargot::StringRef::createFromASCII("failed to load module"));
+                }
+                return LoadModuleResult(moduleScripts[i].first.value());
             }
         }
 
