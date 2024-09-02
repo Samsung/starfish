@@ -26,40 +26,46 @@
 namespace Starfish {
 
 struct MutationObserverInit {
+    // Define getter/setters
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, childList, ChildList);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, attributes, Attributes);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, characterData, CharacterData);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, subtree, Subtree);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, attributeOldValue,
+                                      AttributeOldValue);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, characterDataOldValue,
+                                      CharacterDataOldValue);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<String*>, attributeFilter,
+                                      AttributeFilter);
+
+    // Define getter/setters
+    DEFINE_MEMBER_WITH_HASFLAG(bool, childList, ChildList);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, attributes, Attributes);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, characterData, CharacterData);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, subtree, Subtree);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, attributeOldValue, AttributeOldValue);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, characterDataOldValue,
+                               CharacterDataOldValue);
+    DEFINE_MEMBER_WITH_HASFLAG(GCVector<String*>, attributeFilter,
+                               AttributeFilter);
 };
 
 class MutationCallback : public gc {
 public:
-    static MutationCallback* toMutationCallback(ScriptValue fn)
-    {
-        if (!isCallableScriptValue(fn)) {
-            return nullptr;
-        }
-        return new MutationCallback(fn);
-    }
+    static MutationCallback* toMutationCallback(ScriptValue callback);
+
+    MutationCallback(ScriptValue callback);
 
 private:
-    MutationCallback(ScriptValue fn)
-        : m_callback(fn)
-    {
-    }
-
-    ScriptValue m_callback;
+    ScriptValue m_mutationCallback;
 };
 
 class MutationObserver final : public ScriptWrappable {
 public:
     MutationObserver(ExecutionContext* executionContext,
-                     MutationCallback* callBack)
-        : ScriptWrappable(this)
-        , m_scriptBindingInstance(executionContext->scriptBindingInstance())
-    {
-    }
+                     MutationCallback* callBack);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     void init(ScriptBindingInstance*, void*) override;
 
@@ -81,7 +87,8 @@ public:
     }
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ExecutionContext* m_executionContext;
+    MutationCallback* m_callback = nullptr;
 };
 } // namespace Starfish
 
