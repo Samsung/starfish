@@ -25,6 +25,8 @@
 
 namespace Starfish {
 
+class MutationRecord;
+
 struct MutationObserverInit {
     // Define getter/setters
     DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, childList, ChildList);
@@ -86,9 +88,13 @@ public:
         STARFISH_UNSUPPORTED_METHOD();
     }
 
+    GCVector<MutationRecord*> takeRecords();
+
 private:
     ExecutionContext* m_executionContext;
     MutationCallback* m_callback = nullptr;
+
+    GCVector<MutationRecord*> m_queuedRecords;
 };
 } // namespace Starfish
 

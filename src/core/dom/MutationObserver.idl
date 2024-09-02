@@ -11,7 +11,7 @@ interface MutationObserver {
 
   [Unimplemented] undefined disconnect();
 
-  [Unimplemented] sequence<MutationRecord> takeRecords();
+  sequence<MutationRecord> takeRecords();
 };
 
 dictionary MutationObserverInit {

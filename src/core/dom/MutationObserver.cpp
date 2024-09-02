@@ -50,4 +50,12 @@ ScriptBindingInstance* MutationObserver::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
+GCVector<MutationRecord*> MutationObserver::takeRecords()
+{
+    GCVector<MutationRecord*> records;
+    records = m_queuedRecords;
+    m_queuedRecords.clear();
+    return records;
+}
+
 } // namespace Starfish
