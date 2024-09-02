@@ -88,7 +88,8 @@ void ServiceWorkerServer::start()
     registerConnection(m_connection);
 
     m_perProcess->ioRunnable()->addClient(m_connection);
-    std::string address = m_ipcAddress->createIPCAddress();
+    std::string address =
+        m_ipcAddress->createIPCAddress(WORKER_IPC_PROCESS_NAME);
     m_connection->socket()->bind(address.c_str());
 }
 

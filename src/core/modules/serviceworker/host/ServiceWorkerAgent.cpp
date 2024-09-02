@@ -23,8 +23,7 @@
 #include "Starfish.h"
 #include "StoragePathProvider.h"
 
-#include "platform/file/PlatformDirectory.h"
-
+#include "platform/file/PlatformFile.h"
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/host/WebWorker.h"
@@ -79,8 +78,10 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
 
     m_workerHostManager->perProcess()->initialize();
 
-    m_ipcAddress = new WorkerIPCAddress(
-        starfish->storagePathProvider().getServiceWorkerDataDirectoryPath());
+    std::string ipcDataPath = PlatformFileUtil::joinPath(
+        starfish->storagePathProvider().getServiceWorkerDataDirectoryPath(),
+        WORKER_IPC_PROCESS_NAME);
+    m_ipcAddress = new WorkerIPCAddress(ipcDataPath);
     m_ipcAddress->acquire();
 
     m_SWServer = new ServiceWorkerServer(perProcess(), m_ipcAddress);
