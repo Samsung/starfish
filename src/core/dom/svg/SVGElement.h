@@ -90,6 +90,9 @@ public:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Element::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_clipPathElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_maskElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_orignalOwnerElement));
     }
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
