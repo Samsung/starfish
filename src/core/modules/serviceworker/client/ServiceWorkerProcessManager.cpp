@@ -24,6 +24,7 @@
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
 #include "core/page/GlobalScope.h"
+#include "platform/file/PlatformFile.h"
 #include "platform/process/base/ProcessType.h"
 #include "platform/process/base/Process.h"
 #include "core/modules/networking/Socket.h"
@@ -100,7 +101,10 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
     std::string dataDirPath = perProcess->starfish()
                                   ->storagePathProvider()
                                   .getServiceWorkerDataDirectoryPath();
-    m_ipcAddress = new WorkerIPCAddress(dataDirPath);
+    std::string ipcDataPath =
+        PlatformFileUtil::joinPath(dataDirPath, WORKER_IPC_PROCESS_NAME);
+
+    m_ipcAddress = new WorkerIPCAddress(ipcDataPath);
 
     m_pushServiceAgent = new PushServiceAgent();
     m_registrationManager = new RegistrationManager(dataDirPath);
@@ -191,11 +195,14 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     std::shared_ptr<ProcessData> processData = nullptr;
 
-    std::string encodedOrigin = Base64Utils::encodeBase64(origin);
-    std::string address = m_ipcAddress->createIPCAddress(encodedOrigin);
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    std::string connectionName = WORKER_IPC_PROCESS_NAME;
+#else
+    std::string connectionName = Base64Utils::encodeBase64(origin);
+#endif
 
     TRACE(SVCWORKER, "origin", origin);
-    TRACE(SVCWORKER, "encodedOrigin", encodedOrigin);
+    TRACE(SVCWORKER, "ipc connectionName", connectionName);
 
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);
@@ -223,7 +230,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
             args.push_back("--debug-worker=" +
                            GlobalOptions::instance().get("DEBUG_WORKER"));
 
-            if (!processExist(encodedOrigin)) {
+            if (!processExist(connectionName)) {
                 if (ProcessUtil::launchProcess(args, &processData->pid) ==
                     true) {
                     TRACE(SVCWORKER, "launchProcess: success");
@@ -240,6 +247,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     }
 
     STARFISH_ASSERT(processData != nullptr);
+
+    std::string address = m_ipcAddress->createIPCAddress(connectionName);
 
     if (m_connection != nullptr) {
         processData->connection = m_connection;
