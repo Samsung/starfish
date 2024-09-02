@@ -14,13 +14,12 @@ interface MutationObserver {
   [Unimplemented] sequence<MutationRecord> takeRecords();
 };
 
-
 dictionary MutationObserverInit {
-  [Unimplemented] boolean childList = false;
-  [Unimplemented] boolean attributes;
-  [Unimplemented] boolean characterData;
-  [Unimplemented] boolean subtree = false;
-  [Unimplemented] boolean attributeOldValue;
-  [Unimplemented] boolean characterDataOldValue;
-  [Unimplemented] sequence<DOMString> attributeFilter;
+  boolean childList = false;
+  boolean attributes;
+  boolean characterData;
+  boolean subtree = false;
+  boolean attributeOldValue;
+  boolean characterDataOldValue;
+  sequence<DOMString> attributeFilter;
 };
