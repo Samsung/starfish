@@ -48,7 +48,7 @@ void* SVGElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGElement)] = { 0 };
-        Element::fillGCDescriptor(desc);
+        SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGElement));
         typeInited = true;
     }
