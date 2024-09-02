@@ -129,18 +129,6 @@ Requires(postun): /sbin/ldconfig
 %define asan 0
 %endif
 
-%if "%{rpm}" == "prod_tv"
-%define is_worker_supported 0
-%else
-%define is_worker_supported 1
-%endif
-
-# Except for 'prod_tv', the default value of enable_worker is 1.
-%if 0%{?enable_worker:1}
-%else
-%define enable_worker %{is_worker_supported}
-%endif
-
 %if 0%{?enable_sharedworker:1}
 %else
 %define enable_sharedworker 0
@@ -162,9 +150,11 @@ Requires(postun): /sbin/ldconfig
 # Ex) --define 'enable_webgl {0|1}' --define 'enable_dynamic_loader {0|1}'
 %define is_dynamic_loader_supported 1
 %define is_webgl_supported 1
+%define is_worker_supported 1
 %else
 %define is_dynamic_loader_supported 0
 %define is_webgl_supported 0
+%define is_worker_supported 0
 %endif
 
 %if 0%{?enable_dynamic_loader:1}
@@ -175,6 +165,11 @@ Requires(postun): /sbin/ldconfig
 %if 0%{?enable_webgl:1}
 %else
 %define enable_webgl %{is_webgl_supported}
+%endif
+
+%if 0%{?enable_worker:1}
+%else
+%define enable_worker %{is_worker_supported}
 %endif
 
 # The following syntax's been outdated.
@@ -500,7 +495,7 @@ CXXFLAGS+=' -fno-lto '
 %endif
 
 # Variables for build
-# This features_config values are used in cmake command excluding 'flutter'.
+# This features_config values are used in cmake command.
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
   -DSERVICE_WORKER='%{enable_serviceworker}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}'
@@ -713,7 +708,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major
   -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter \
   -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DTARGETNAME=lightweight-web-engine.flutter -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
-  -DASAN='%{asan}' %{?extra_cmake_options} \
+  -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
 ninja -C %{out_tizen} starfish_api.shared_library
