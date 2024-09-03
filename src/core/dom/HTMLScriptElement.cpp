@@ -162,12 +162,11 @@ public:
                             m_element->document()->moduleScripts();
                         bool fromParser = false;
                         for (auto& ms : moduleScripts) {
-                            if (std::get<1>(ms) &&
-                                *std::get<1>(ms).value() ==
-                                    *client->resource()->url()) {
-                                STARFISH_ASSERT(!std::get<0>(ms).hasValue());
-                                std::get<0>(ms) = module;
-                                fromParser = std::get<2>(ms);
+                            if (ms.url &&
+                                *ms.url.value() == *client->resource()->url()) {
+                                STARFISH_ASSERT(!ms.module.hasValue());
+                                ms.module = module;
+                                fromParser = ms.fromParser;
                                 break;
                             }
                         }
@@ -183,17 +182,12 @@ public:
                         }
                     }
                 } else {
-                    client->m_element->document()->appendCurrentScript(
-                        client->m_element);
-                    {
-                        ScriptProfileLogger logger;
-                        evaluateString(
-                            client->m_element->window()
-                                ->scriptBindingInstance(),
-                            text,
-                            ResourceClient::resource()->url()->urlString());
-                    }
-                    client->m_element->document()->popCurrentScript();
+                    Document::CurrentScriptManager manager(
+                        client->m_element->document(), client->m_element);
+                    ScriptProfileLogger logger;
+                    evaluateString(
+                        client->m_element->window()->scriptBindingInstance(),
+                        text, ResourceClient::resource()->url()->urlString());
                 }
             }
             deferredScriptElements.erase(deferredScriptElements.begin());
@@ -302,12 +296,14 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
     if (module) {
         auto& moduleScripts = element->document()->moduleScripts();
         for (auto& ms : moduleScripts) {
-            if (std::get<1>(ms) && *std::get<1>(ms).value() == *rurl) {
+            if (ms.url && *ms.url.value() == *rurl) {
                 // we already have the module.
                 return;
             }
         }
-        moduleScripts.push_back(std::make_tuple(nullptr, rurl, fromParser));
+
+        moduleScripts.push_back(
+            Document::ScriptModuleData(nullptr, rurl, element, fromParser));
     }
     String* charset = element
                           ->getAttributeOrEmpty(
@@ -321,7 +317,11 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
         res->addResourceClient(
             new ScriptDownloadClient(element, res, shouldResumeParsing));
     }
-    res->addResourceClient(new ElementResourceClient(element, res, true));
+
+    // load, error event of module is dispatched by another place
+    if (!module) {
+        res->addResourceClient(new ElementResourceClient(element, res, true));
+    }
 
     RequestData* reqData = new RequestData();
     reqData->m_url = rurl;
@@ -396,7 +396,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     initModule(window()->scriptBindingInstance(), script);
                 if (module) {
                     document()->moduleScripts().push_back(
-                        std::make_tuple(module.value(), nullptr, inParser));
+                        Document::ScriptModuleData(module.value(), nullptr,
+                                                   this, inParser));
 
                     auto requests = moduleRequests(module.value());
                     for (size_t i = 0; i < requests.size(); i++) {

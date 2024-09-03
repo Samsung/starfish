@@ -103,14 +103,14 @@ public:
                 baseURI);
 
         for (size_t i = 0; i < moduleScripts.size(); i ++) {
-            if (std::get<1>(moduleScripts[i]).hasValue() &&
-                *std::get<1>(moduleScripts[i]).value() == *src) {
-                if (!std::get<0>(moduleScripts[i]).hasValue()) {
+            if (moduleScripts[i].url.hasValue() &&
+                *moduleScripts[i].url.value() == *src) {
+                if (!moduleScripts[i].module.hasValue()) {
                     // failed to load the module
                     return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
                                             Escargot::StringRef::createFromASCII("failed to load module"));
                 }
-                return LoadModuleResult(std::get<0>(moduleScripts[i]).value());
+                return LoadModuleResult(moduleScripts[i].module.value());
             }
         }
 
@@ -1338,7 +1338,7 @@ GCVector<String*> moduleRequests(ScriptModule module)
     return result;
 }
 
-void executeModule(ScriptBindingInstance* instance, ScriptModule module)
+bool executeModule(ScriptBindingInstance* instance, ScriptModule module)
 {
     ContextRef* ctx = instance->scriptContext();
 #if defined(STARFISH_ENABLE_DEBUGGER)
@@ -1378,7 +1378,9 @@ void executeModule(ScriptBindingInstance* instance, ScriptModule module)
         errorInfo.setError(errorValue);
         instance->dispatchErrorEventToGlobalScope(errorInfo);
         loggingJSErrorInfo(instance, sbresult);
+        return false;
     }
+    return true;
 }
 
 bool isExcutedModule(ScriptModule module)

@@ -529,8 +529,25 @@ public:
         Document* m_document;
     };
 
-    GCVector<std::tuple<Optional<ScriptModule>, Optional<ResourceURL*>, bool>>&
-    moduleScripts()
+    struct ScriptModuleData {
+        Optional<ScriptModule> module;
+        Optional<ResourceURL*> url;
+        HTMLScriptElement* source;
+        bool fromParser;
+        bool wasSuccessful;
+
+        ScriptModuleData(Optional<ScriptModule> module,
+                         Optional<ResourceURL*> url, HTMLScriptElement* source,
+                         bool fromParser)
+            : module(module)
+            , url(url)
+            , source(source)
+            , fromParser(fromParser)
+            , wasSuccessful(false)
+        {
+        }
+    };
+    GCVector<ScriptModuleData>& moduleScripts()
     {
         return m_moduleScripts;
     }
@@ -803,9 +820,7 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
-    // ScriptModule, url, fromParser
-    GCVector<std::tuple<Optional<ScriptModule>, Optional<ResourceURL*>, bool>>
-        m_moduleScripts;
+    GCVector<ScriptModuleData> m_moduleScripts;
 
     BloomFilter<12> m_nameIdFilter;
     ReferrerPolicy m_referrerPolicy;
