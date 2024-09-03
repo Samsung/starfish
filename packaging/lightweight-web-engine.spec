@@ -676,7 +676,7 @@ cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_included
   -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' \
   -DSHELL=efl -DTARGETNAME=lightweight-web-engine.wearable \
   -DENABLE_DYNAMIC_LOADER='%{enable_dynamic_loader}' \
-  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' 
+  -DTIZEN_RW_APP_DIR='%{TZ_SYS_RW_APP}' -DTIZEN_DATA_DIR='%{_datadir}' \
   -DASAN='%{asan}' %{features_config} %{?extra_cmake_options} \
   -G Ninja
 ninja -C %{out_tizen} starfish.shared_library
