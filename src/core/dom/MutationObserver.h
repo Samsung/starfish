@@ -27,6 +27,35 @@ namespace Starfish {
 
 class MutationRecord;
 
+enum class MutationObserverOptionType : uint8_t {
+    kChildList = 1 << 0,
+    kAttributes = 1 << 1,
+    kCharacterData = 1 << 2,
+    kSubtree = 1 << 3,
+    kAttributeOldValue = 1 << 4,
+    kCharacterDataOldValue = 1 << 5,
+    kAttributeFilter = 1 << 6,
+};
+
+inline MutationObserverOptionType& operator|=(MutationObserverOptionType& lhs,
+                                              MutationObserverOptionType rhs)
+{
+    using underlyingType =
+        std::underlying_type<MutationObserverOptionType>::type;
+    lhs = static_cast<MutationObserverOptionType>(
+        static_cast<underlyingType>(lhs) | static_cast<underlyingType>(rhs));
+    return lhs;
+}
+
+inline bool operator&(MutationObserverOptionType lhs,
+                      MutationObserverOptionType rhs)
+{
+    using underlyingType =
+        std::underlying_type<MutationObserverOptionType>::type;
+    return static_cast<bool>(static_cast<underlyingType>(lhs) &
+                             static_cast<underlyingType>(rhs));
+}
+
 struct MutationObserverInit {
     // Define getter/setters
     DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, childList, ChildList);
@@ -73,15 +102,8 @@ public:
 
     bool isMutationObserver() const override;
 
-    void observe(Node* node)
-    {
-        STARFISH_UNSUPPORTED_METHOD();
-    }
-
-    void observe(Node* node, MutationObserverInit options)
-    {
-        STARFISH_UNSUPPORTED_METHOD();
-    }
+    void observe(Node* node);
+    void observe(Node* node, MutationObserverInit options);
 
     void disconnect()
     {
@@ -96,6 +118,7 @@ private:
 
     GCVector<MutationRecord*> m_queuedRecords;
 };
+
 } // namespace Starfish
 
 #endif
