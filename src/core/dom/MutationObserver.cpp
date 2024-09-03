@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/MutationObserver.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 
@@ -48,6 +49,82 @@ MutationObserver::MutationObserver(ExecutionContext* executionContext,
 ScriptBindingInstance* MutationObserver::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+void MutationObserver::observe(Node* node)
+{
+    observe(node, {});
+}
+
+void MutationObserver::observe(Node* node, MutationObserverInit options)
+{
+    // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
+    MutationObserverOptionType optionType;
+
+    if ((options.hasAttributeOldValue() || options.hasAttributeFilter()) &&
+        !options.hasAttributes()) {
+        optionType |= MutationObserverOptionType::kAttributes;
+    }
+    if (options.hasAttributes() && options.attributes()) {
+        optionType |= MutationObserverOptionType::kAttributes;
+    }
+
+    if (options.hasCharacterDataOldValue() && !options.hasCharacterData()) {
+        optionType |= MutationObserverOptionType::kCharacterData;
+    }
+    if (options.hasCharacterData() && options.characterData()) {
+        optionType |= MutationObserverOptionType::kCharacterData;
+    }
+    if (options.hasChildList() && options.childList()) {
+        optionType |= MutationObserverOptionType::kChildList;
+    }
+    if (options.hasSubtree() && options.subtree()) {
+        optionType |= MutationObserverOptionType::kSubtree;
+    }
+
+    if (!(optionType & MutationObserverOptionType::kChildList) &&
+        !(optionType & MutationObserverOptionType::kAttributes) &&
+        !(optionType & MutationObserverOptionType::kCharacterData)) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Invalid MutationObserverInit");
+    }
+
+    if (options.hasAttributeOldValue() && options.attributeOldValue()) {
+        optionType |= MutationObserverOptionType::kAttributeOldValue;
+    }
+    if ((optionType & MutationObserverOptionType::kAttributeOldValue) &&
+        !(optionType & MutationObserverOptionType::kAttributes)) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Invalid MutationObserverInit");
+    }
+
+    if (options.hasAttributeFilter() &&
+        !(optionType & MutationObserverOptionType::kAttributes)) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Invalid MutationObserverInit");
+    }
+    GCUnorderedSet<String*> attributeFilter;
+    if (options.hasAttributeFilter()) {
+        for (auto& filter : options.attributeFilter()) {
+            attributeFilter.insert(filter);
+        }
+        optionType |= MutationObserverOptionType::kAttributeFilter;
+    }
+    STARFISH_LOG_INFO("attributeFilter.size(): %ld", attributeFilter.size());
+    if (options.hasCharacterDataOldValue() && options.characterDataOldValue()) {
+        optionType |= MutationObserverOptionType::kCharacterDataOldValue;
+    }
+    if ((optionType & MutationObserverOptionType::kCharacterDataOldValue) &&
+        !(optionType & MutationObserverOptionType::kCharacterData)) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Invalid MutationObserverInit");
+    }
+
+    // TODO: Register observer to target node.
 }
 
 GCVector<MutationRecord*> MutationObserver::takeRecords()

@@ -6,8 +6,7 @@ callback MutationCallback = undefined (sequence<MutationRecord> mutations, Mutat
 interface MutationObserver {
   // constructor(MutationCallback callback);
 
-  // Currently, our binding generator does not support 'undefined' keyword. I'll change 'undefined' to 'void', since It's not purpose of this PR.
-  undefined observe(Node target, optional MutationObserverInit options);
+  [RaisesException] undefined observe(Node target, optional MutationObserverInit options);
 
   [Unimplemented] undefined disconnect();
 
