@@ -656,14 +656,16 @@ void Document::notifyDomContentLoaded()
         return;
     }
 
-    for (size_t i = 0; i < m_moduleScripts.size(); i++) {
-        STARFISH_ASSERT(m_moduleScripts[i].first.hasValue());
-        auto scriptModule = m_moduleScripts[i].first.value();
-        if (!isExcutedModule(scriptModule)) {
-            executeModule(scriptBindingInstance(), scriptModule);
+    size_t startSize = m_moduleScripts.size();
+    for (size_t i = 0; i < startSize; i++) {
+        if (std::get<2>(m_moduleScripts[i])) {
+            STARFISH_ASSERT(std::get<0>(m_moduleScripts[i]).hasValue());
+            auto scriptModule = std::get<0>(m_moduleScripts[i]).value();
+            if (!isExcutedModule(scriptModule)) {
+                executeModule(scriptBindingInstance(), scriptModule);
+            }
         }
     }
-    m_moduleScripts.clear();
 
     if (!m_domContentLoadedFired) {
         m_preloadScanner = nullptr;
@@ -748,6 +750,16 @@ void Document::notifyDomContentLoaded()
         p->url = this->urlString();
         webView()->callPublicWebViewHandler(OnPageParsed, p);
     }
+
+    for (size_t i = 0; i < startSize; i++) {
+        if (!std::get<2>(m_moduleScripts[i])) {
+            STARFISH_ASSERT(std::get<0>(m_moduleScripts[i]).hasValue());
+            auto scriptModule = std::get<0>(m_moduleScripts[i]).value();
+            if (!isExcutedModule(scriptModule)) {
+                executeModule(scriptBindingInstance(), scriptModule);
+            }
+        }
+    }
 }
 
 void Document::dispose()
@@ -763,6 +775,8 @@ void Document::dispose()
         Event* e = new Event(executionContext(), eventType);
         EventTarget::dispatchEventByUA(body, e);
     }
+
+    m_moduleScripts.clear();
 
     resourceLoader().clear();
 

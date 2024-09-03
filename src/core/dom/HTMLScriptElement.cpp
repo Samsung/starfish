@@ -46,7 +46,7 @@ extern uint64_t g_profilingBaseTime;
 
 static void buildScriptResourceRequest(HTMLScriptElement* element,
                                        ResourceURL* rurl, bool async,
-                                       bool defer, bool module,
+                                       bool defer, bool module, bool fromParser,
                                        bool shouldResumeParsing,
                                        bool forceSync);
 
@@ -154,17 +154,20 @@ public:
             if (isJavaScriptType(s.data(), s.length())) {
                 String* text = client->m_resource->asTextResource()->text();
                 if (m_isModule) {
-                    Optional<ScriptModule> module =
-                        initModule(m_element->window()->scriptBindingInstance(),
-                                   text, resource()->url()->urlString());
+                    Optional<ScriptModule> module = initModule(
+                        m_element->window()->scriptBindingInstance(), text,
+                        client->resource()->url()->urlString());
                     if (module) {
                         auto& moduleScripts =
                             m_element->document()->moduleScripts();
+                        bool fromParser = false;
                         for (auto& ms : moduleScripts) {
-                            if (ms.second &&
-                                *ms.second.value() == *m_resource->url()) {
-                                STARFISH_ASSERT(!ms.first.hasValue());
-                                ms.first = module;
+                            if (std::get<1>(ms) &&
+                                *std::get<1>(ms).value() ==
+                                    *client->resource()->url()) {
+                                STARFISH_ASSERT(!std::get<0>(ms).hasValue());
+                                std::get<0>(ms) = module;
+                                fromParser = std::get<2>(ms);
                                 break;
                             }
                         }
@@ -173,10 +176,10 @@ public:
                         for (size_t i = 0; i < requests.size(); i++) {
                             String* src = requests[i];
                             ResourceURL* rurl = new ResourceURL(
-                                src, m_resource->url()->urlString());
+                                src, client->resource()->url()->urlString());
                             buildScriptResourceRequest(m_element, rurl, false,
-                                                       false, true, false,
-                                                       false);
+                                                       false, true, fromParser,
+                                                       false, false);
                         }
                     }
                 } else {
@@ -293,18 +296,18 @@ static bool checkSrcSecurity(HTMLScriptElement* element, ResourceURL* rurl)
 
 static void buildScriptResourceRequest(HTMLScriptElement* element,
                                        ResourceURL* rurl, bool async,
-                                       bool defer, bool module,
+                                       bool defer, bool module, bool fromParser,
                                        bool shouldResumeParsing, bool forceSync)
 {
     if (module) {
         auto& moduleScripts = element->document()->moduleScripts();
         for (auto& ms : moduleScripts) {
-            if (ms.second && *ms.second.value() == *rurl) {
+            if (std::get<1>(ms) && *std::get<1>(ms).value() == *rurl) {
                 // we already have the module.
                 return;
             }
         }
-        moduleScripts.push_back(std::make_pair(nullptr, rurl));
+        moduleScripts.push_back(std::make_tuple(nullptr, rurl, fromParser));
     }
     String* charset = element
                           ->getAttributeOrEmpty(
@@ -393,7 +396,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     initModule(window()->scriptBindingInstance(), script);
                 if (module) {
                     document()->moduleScripts().push_back(
-                        std::make_pair(module.value(), nullptr));
+                        std::make_tuple(module.value(), nullptr, inParser));
 
                     auto requests = moduleRequests(module.value());
                     for (size_t i = 0; i < requests.size(); i++) {
@@ -405,7 +408,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                         }
 
                         buildScriptResourceRequest(this, rurl, false, false,
-                                                   true, false, false);
+                                                   inParser, true, false,
+                                                   false);
                     }
                 }
             } else {
@@ -471,7 +475,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 setShouldResumeParsing(inParser && !forceSync && !async());
             }
             buildScriptResourceRequest(this, rurl, async(), defer(), isModule(),
-                                       shouldResumeParsing(), forceSync);
+                                       inParser, shouldResumeParsing(),
+                                       forceSync);
 
             if (async() || treatAsDefer) {
                 return false;
