@@ -652,8 +652,14 @@ void GridFormattingContext::placeRemainingGridAreas(
 
         if (!found) {
             m_gridTemplateRows.push_back(GridTrack());
-            curCol = 1;
-            curRow = m_gridTemplateRows.size() - 1;
+            if (prevGridArea &&
+                prevGridArea->columnEnd() + gridArea->columnSpanValue() <=
+                    m_gridTemplateColumns.size()) {
+                curCol = prevGridArea->columnEnd();
+            } else {
+                curCol = 1;
+                curRow = m_gridTemplateRows.size() - 1;
+            }
         }
 
         bool needRearrange = false;
