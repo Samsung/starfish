@@ -52,6 +52,7 @@
 #include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLMapElement.h"
+#include "core/dom/HTMLScriptElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
@@ -656,13 +657,15 @@ void Document::notifyDomContentLoaded()
         return;
     }
 
+    // execute js module by parser
     size_t startSize = m_moduleScripts.size();
     for (size_t i = 0; i < startSize; i++) {
-        if (std::get<2>(m_moduleScripts[i])) {
-            STARFISH_ASSERT(std::get<0>(m_moduleScripts[i]).hasValue());
-            auto scriptModule = std::get<0>(m_moduleScripts[i]).value();
+        if (m_moduleScripts[i].fromParser) {
+            STARFISH_ASSERT(m_moduleScripts[i].module.hasValue());
+            auto scriptModule = m_moduleScripts[i].module.value();
             if (!isExcutedModule(scriptModule)) {
-                executeModule(scriptBindingInstance(), scriptModule);
+                m_moduleScripts[i].wasSuccessful =
+                    executeModule(scriptBindingInstance(), scriptModule);
             }
         }
     }
@@ -751,13 +754,33 @@ void Document::notifyDomContentLoaded()
         webView()->callPublicWebViewHandler(OnPageParsed, p);
     }
 
+    // execute dynamically added js module
     for (size_t i = 0; i < startSize; i++) {
-        if (!std::get<2>(m_moduleScripts[i])) {
-            STARFISH_ASSERT(std::get<0>(m_moduleScripts[i]).hasValue());
-            auto scriptModule = std::get<0>(m_moduleScripts[i]).value();
+        if (!m_moduleScripts[i].fromParser) {
+            STARFISH_ASSERT(m_moduleScripts[i].module.hasValue());
+            auto scriptModule = m_moduleScripts[i].module.value();
             if (!isExcutedModule(scriptModule)) {
-                executeModule(scriptBindingInstance(), scriptModule);
+                m_moduleScripts[i].wasSuccessful =
+                    executeModule(scriptBindingInstance(), scriptModule);
             }
+        }
+    }
+
+    // dispatch load, error event of js module
+    for (size_t i = 0; i < startSize; i++) {
+        if (!m_moduleScripts[i].source->didModuleLoadOrErrorEventFired()) {
+            String* eventType;
+            if (m_moduleScripts[i].wasSuccessful) {
+                eventType = starfish()->staticStrings()->m_load.localName();
+            } else {
+                eventType = starfish()->staticStrings()->m_error.localName();
+            }
+            m_moduleScripts[i].source->dispatchEventByUA(
+                this,
+                new Event(executionContext(), eventType,
+                          EventInit(false, false)),
+                true);
+            m_moduleScripts[i].source->markModuleLoadOrErrorEventFired();
         }
     }
 }

@@ -35,6 +35,7 @@ public:
         , m_isParserInserted(false)
         , m_didScriptExecuted(false)
         , m_shouldResumeParsing(false)
+        , m_didModuleLoadOrErrorEventFired(false)
         , m_nonce(nullptr)
     {
 #ifdef STARFISH_TC_COVERAGE
@@ -121,11 +122,22 @@ public:
 
     bool blockForNoModule();
 
+    bool didModuleLoadOrErrorEventFired()
+    {
+        return m_didModuleLoadOrErrorEventFired;
+    }
+
+    void markModuleLoadOrErrorEventFired()
+    {
+        m_didModuleLoadOrErrorEventFired = true;
+    }
+
 protected:
-    bool m_isAlreadyStarted;
-    bool m_isParserInserted;
-    bool m_didScriptExecuted;
-    bool m_shouldResumeParsing;
+    bool m_isAlreadyStarted : 1;
+    bool m_isParserInserted : 1;
+    bool m_didScriptExecuted : 1;
+    bool m_shouldResumeParsing : 1;
+    bool m_didModuleLoadOrErrorEventFired : 1;
     Nullable<String*> m_nonce;
 };
 } // namespace Starfish

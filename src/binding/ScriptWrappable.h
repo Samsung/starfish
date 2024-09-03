@@ -201,7 +201,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 Optional<ScriptModule> initModule(ScriptBindingInstance* instance, String* string,
                                   String* fileName = String::emptyString);
 GCVector<String*> moduleRequests(ScriptModule module);
-void executeModule(ScriptBindingInstance* instance, ScriptModule module);
+bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
 bool isExcutedModule(ScriptModule module);
 
 ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
