@@ -103,14 +103,14 @@ public:
                 baseURI);
 
         for (size_t i = 0; i < moduleScripts.size(); i ++) {
-            if (moduleScripts[i].second.hasValue() &&
-                *moduleScripts[i].second.value() == *src) {
-                if (!moduleScripts[i].first.hasValue()) {
+            if (std::get<1>(moduleScripts[i]).hasValue() &&
+                *std::get<1>(moduleScripts[i]).value() == *src) {
+                if (!std::get<0>(moduleScripts[i]).hasValue()) {
                     // failed to load the module
                     return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
                                             Escargot::StringRef::createFromASCII("failed to load module"));
                 }
-                return LoadModuleResult(moduleScripts[i].first.value());
+                return LoadModuleResult(std::get<0>(moduleScripts[i]).value());
             }
         }
 

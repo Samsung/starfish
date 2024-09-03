@@ -529,7 +529,7 @@ public:
         Document* m_document;
     };
 
-    GCVector<std::pair<Optional<ScriptModule>, Optional<ResourceURL*>>>&
+    GCVector<std::tuple<Optional<ScriptModule>, Optional<ResourceURL*>, bool>>&
     moduleScripts()
     {
         return m_moduleScripts;
@@ -803,7 +803,8 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
-    GCVector<std::pair<Optional<ScriptModule>, Optional<ResourceURL*>>>
+    // ScriptModule, url, fromParser
+    GCVector<std::tuple<Optional<ScriptModule>, Optional<ResourceURL*>, bool>>
         m_moduleScripts;
 
     BloomFilter<12> m_nameIdFilter;
