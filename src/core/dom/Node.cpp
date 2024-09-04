@@ -2419,29 +2419,50 @@ ExecutionContext* Node::executionContext() const
     return document()->executionContext();
 }
 
-void Node::registerMutationObserver(
+std::pair<bool, MutationObserverRegistration*>
+Node::registerOrUpdateMutationObserver(
     MutationObserver* observer, MutationObserverOptionType options,
     const GCUnorderedSet<String*>& attributeFilter)
 {
+    bool isNewRegistration = false;
     MutationObserverRegistration* registration = nullptr;
 
     GCVector<MutationObserverRegistration*>* registeredMutationObservers =
         ensureRareMembers()->ensureRegisteredMutationObservers();
     for (auto* item : *registeredMutationObservers) {
-        if (item->observer == observer) {
+        if (item->observer() == observer) {
             registration = item;
-            registration->options = options;
-            registration->attributeFilter = attributeFilter;
+            registration->update(options, attributeFilter);
+            break;
         }
+        // TODO: For each node of this’s node list, remove all transient
+        // registered observers whose source is registered from node’s
+        // registered observer list.
     }
     if (!registration) {
         registration = new MutationObserverRegistration(observer, this, options,
                                                         attributeFilter);
         registeredMutationObservers->push_back(registration);
-        observer->addMutationObserverRegistration(registration);
+        isNewRegistration = true;
     }
 
-    document()->addMutationObserverTypes(registration->mutationTypes());
+    STARFISH_ASSERT(registration);
+    return std::make_pair(isNewRegistration, registration);
+}
+
+void Node::unregisterMutationObserver(
+    MutationObserverRegistration* registration)
+{
+    GCVector<MutationObserverRegistration*>* registeredMutationObservers =
+        ensureRareMembers()->ensureRegisteredMutationObservers();
+    registeredMutationObservers->erase(
+        std::remove_if(
+            registeredMutationObservers->begin(),
+            registeredMutationObservers->end(),
+            [registration](const MutationObserverRegistration* item) {
+                return item == registration;
+            }),
+        registeredMutationObservers->end());
 }
 
 } // namespace Starfish
