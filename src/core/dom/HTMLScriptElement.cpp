@@ -157,9 +157,9 @@ public:
                     Optional<ScriptModule> module = initModule(
                         m_element->window()->scriptBindingInstance(), text,
                         client->resource()->url()->urlString());
+                    auto& moduleScripts =
+                        m_element->document()->moduleScripts();
                     if (module) {
-                        auto& moduleScripts =
-                            m_element->document()->moduleScripts();
                         bool fromParser = false;
                         for (auto& ms : moduleScripts) {
                             if (ms.url &&
@@ -179,6 +179,15 @@ public:
                             buildScriptResourceRequest(m_element, rurl, false,
                                                        false, true, fromParser,
                                                        false, false);
+                        }
+                    } else {
+                        // parsing error
+                        for (auto& ms : moduleScripts) {
+                            if (ms.url &&
+                                *ms.url.value() == *client->resource()->url()) {
+                                ms.hasLoadingError = true;
+                                break;
+                            }
                         }
                     }
                 } else {
@@ -210,6 +219,14 @@ public:
             }
 
             m_element->document()->m_deferredScriptElements.erase(pos);
+
+            auto& moduleScripts = m_element->document()->moduleScripts();
+            for (auto& ms : moduleScripts) {
+                if (ms.url && *ms.url.value() == *resource()->url()) {
+                    ms.hasLoadingError = true;
+                    break;
+                }
+            }
         }
 
         if (m_element->document()->m_deferredScriptElements.size() == 0 &&

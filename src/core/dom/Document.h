@@ -534,6 +534,7 @@ public:
         Optional<ResourceURL*> url;
         HTMLScriptElement* source;
         bool fromParser;
+        bool hasLoadingError;
         bool wasSuccessful;
 
         ScriptModuleData(Optional<ScriptModule> module,
@@ -543,6 +544,7 @@ public:
             , url(url)
             , source(source)
             , fromParser(fromParser)
+            , hasLoadingError(false)
             , wasSuccessful(false)
         {
         }
