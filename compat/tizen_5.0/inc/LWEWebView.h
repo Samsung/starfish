@@ -67,18 +67,13 @@ public:
      * function before using WebContainer or WebView
      *
      * \code{.cpp}
-     *     LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
-     *                    "/tmp/Starfish_Cookies.txt", "/tmp/Starfish-cache");
+     *     LWE::LWE::Initialize("/tmp/Starfish_storage");
      * \endcode
      *
-     * \param localStorageDataFilePath File path for local storage.
-     * \param cookieStoreDataFilePath File path for cookie storage.
-     * \param httpCacheDataDirectorypath Directory path for http cache.
+     * \param storageDirectoryPath Directory path for storage.
      *
      */
-    static void Initialize(const char* localStorageDataFilePath,
-                           const char* cookieStoreDataFilePath,
-                           const char* httpCacheDataDirectorypath);
+    static void Initialize(const char* storageDirectoryPath);
 
     /**
      * \brief Returns the initialization status of lightweight web engine.
@@ -299,6 +294,7 @@ public:
         const std::function<void(WebContainer*, bool needsFlush)>& flushCb);
 
     static WebContainer* CreateWebContainer(void* delegate);
+
     // <--- end of function set for render with OpenGL
 
     // Function set for headless
