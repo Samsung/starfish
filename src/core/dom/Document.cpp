@@ -651,24 +651,55 @@ void Document::endDocumentParsing()
     m_documentBuilder = nullptr;
 }
 
+static void executeModule(Document* document,
+                          GCVector<Document::ScriptModuleData>& moduleScripts,
+                          size_t startSize, bool fromParser)
+{
+    for (size_t i = 0; i < startSize; i++) {
+        if (moduleScripts[i].fromParser == fromParser) {
+            // execute module
+            if (!moduleScripts[i].hasLoadingError) {
+                STARFISH_ASSERT(moduleScripts[i].module.hasValue());
+                auto scriptModule = moduleScripts[i].module.value();
+                if (!isExcutedModule(scriptModule)) {
+                    moduleScripts[i].wasSuccessful = executeModule(
+                        document->scriptBindingInstance(), scriptModule);
+                }
+            }
+
+            // dispatch load, error event of js module
+            if (!moduleScripts[i].source->didModuleLoadOrErrorEventFired() &&
+                moduleScripts[i].url.hasValue()) {
+                String* eventType;
+                if (moduleScripts[i].wasSuccessful) {
+                    eventType = document->starfish()
+                                    ->staticStrings()
+                                    ->m_load.localName();
+                } else {
+                    eventType = document->starfish()
+                                    ->staticStrings()
+                                    ->m_error.localName();
+                }
+                moduleScripts[i].source->dispatchEventByUA(
+                    moduleScripts[i].source,
+                    new Event(document->executionContext(), eventType,
+                              EventInit(false, false)),
+                    true);
+                moduleScripts[i].source->markModuleLoadOrErrorEventFired();
+            }
+        }
+    }
+}
+
 void Document::notifyDomContentLoaded()
 {
     if (m_deferredScriptElements.size() || m_deferredSVGScriptElements.size()) {
         return;
     }
 
-    // execute js module by parser
     size_t startSize = m_moduleScripts.size();
-    for (size_t i = 0; i < startSize; i++) {
-        if (m_moduleScripts[i].fromParser) {
-            STARFISH_ASSERT(m_moduleScripts[i].module.hasValue());
-            auto scriptModule = m_moduleScripts[i].module.value();
-            if (!isExcutedModule(scriptModule)) {
-                m_moduleScripts[i].wasSuccessful =
-                    executeModule(scriptBindingInstance(), scriptModule);
-            }
-        }
-    }
+    auto& moduleScripts = m_moduleScripts;
+    executeModule(this, moduleScripts, startSize, true);
 
     if (!m_domContentLoadedFired) {
         m_preloadScanner = nullptr;
@@ -754,35 +785,7 @@ void Document::notifyDomContentLoaded()
         webView()->callPublicWebViewHandler(OnPageParsed, p);
     }
 
-    // execute dynamically added js module
-    for (size_t i = 0; i < startSize; i++) {
-        if (!m_moduleScripts[i].fromParser) {
-            STARFISH_ASSERT(m_moduleScripts[i].module.hasValue());
-            auto scriptModule = m_moduleScripts[i].module.value();
-            if (!isExcutedModule(scriptModule)) {
-                m_moduleScripts[i].wasSuccessful =
-                    executeModule(scriptBindingInstance(), scriptModule);
-            }
-        }
-    }
-
-    // dispatch load, error event of js module
-    for (size_t i = 0; i < startSize; i++) {
-        if (!m_moduleScripts[i].source->didModuleLoadOrErrorEventFired()) {
-            String* eventType;
-            if (m_moduleScripts[i].wasSuccessful) {
-                eventType = starfish()->staticStrings()->m_load.localName();
-            } else {
-                eventType = starfish()->staticStrings()->m_error.localName();
-            }
-            m_moduleScripts[i].source->dispatchEventByUA(
-                this,
-                new Event(executionContext(), eventType,
-                          EventInit(false, false)),
-                true);
-            m_moduleScripts[i].source->markModuleLoadOrErrorEventFired();
-        }
-    }
+    executeModule(this, moduleScripts, startSize, false);
 }
 
 void Document::dispose()
