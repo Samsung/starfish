@@ -42,8 +42,7 @@ public:
         return m_executionContext;
     }
 
-    void postMessage(ScriptValue message,
-                     GCAtomicVector<ScriptObject>& transfer);
+    void postMessage(ScriptValue message, GCVector<ScriptObject>& transfer);
 
     void postMessage(ScriptValue message,
                      const StructuredSerializeOptions& options = {});

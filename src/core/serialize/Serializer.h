@@ -49,7 +49,7 @@ typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
 typedef GCUnorderedMap<void*, ScriptValue> DeserializingMap;
 
 using ScriptValueSerializer = void (*)(ExecutionContext*, ScriptValue,
-                                       const GCAtomicVector<ScriptObject>&,
+                                       const GCVector<ScriptObject>&,
                                        SerializeWithTransferResult&);
 
 using ScriptValueDeserializer = void (*)(ExecutionContext*,
@@ -720,7 +720,7 @@ public:
                                    SerializedTypedData* value);
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,
-        const GCAtomicVector<ScriptObject>& transferValues,
+        const GCVector<ScriptObject>& transferValues,
         SerializeWithTransferResult& result);
     static void deserializeWithTransfer(ExecutionContext* executionContext,
                                         SerializeWithTransferResult& serialized,

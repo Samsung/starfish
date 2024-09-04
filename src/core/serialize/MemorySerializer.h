@@ -158,7 +158,7 @@ public:
 
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,
-        const GCAtomicVector<ScriptObject>& transferValues,
+        const GCVector<ScriptObject>& transferValues,
         SerializeWithTransferResult& result);
 
     static void deserializeWithTransfer(ExecutionContext* executionContext,

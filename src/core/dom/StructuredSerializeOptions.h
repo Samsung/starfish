@@ -25,22 +25,22 @@ namespace Starfish {
 
 struct StructuredSerializeOptions : public gc {
     StructuredSerializeOptions() = default;
-    StructuredSerializeOptions(GCAtomicVector<ScriptObject>& transfer)
+    StructuredSerializeOptions(GCVector<ScriptObject>& transfer)
         : m_transfer(transfer)
     {
     }
 
-    const GCAtomicVector<ScriptObject>& transfer() const
+    const GCVector<ScriptObject>& transfer() const
     {
         return m_transfer;
     }
 
-    void setTransfer(GCAtomicVector<ScriptObject>& transfer)
+    void setTransfer(GCVector<ScriptObject>& transfer)
     {
         m_transfer = transfer;
     }
 
-    GCAtomicVector<ScriptObject> m_transfer;
+    GCVector<ScriptObject> m_transfer;
 };
 
 } // namespace Starfish

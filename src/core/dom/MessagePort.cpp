@@ -92,12 +92,12 @@ void MessagePort::disentangle()
 
 void MessagePort::postMessage(ScriptValue message)
 {
-    GCAtomicVector<ScriptObject> emptyTransfer;
+    GCVector<ScriptObject> emptyTransfer;
     postMessage(message, emptyTransfer);
 }
 
 void MessagePort::postMessage(ScriptValue message,
-                              GCAtomicVector<ScriptObject>& transfer)
+                              GCVector<ScriptObject>& transfer)
 {
     // https://html.spec.whatwg.org/multipage/web-messaging.html#dom-messageport-postmessage
     // Let targetPort be the port with which this MessagePort is entangled,

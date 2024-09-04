@@ -240,7 +240,7 @@ public:
 
     void postMessage(Window* source, ScriptValue message, String* targetOrigin);
     void postMessage(Window* source, ScriptValue message, String* targetOrigin,
-                     GCAtomicVector<ScriptObject>& transfer);
+                     GCVector<ScriptObject>& transfer);
 
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object

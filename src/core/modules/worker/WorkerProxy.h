@@ -46,7 +46,7 @@ public:
     void postTask(PostTask task, void* data);
 
     void postMessage(ScriptValue message,
-                     const GCAtomicVector<ScriptObject>& transfer);
+                     const GCVector<ScriptObject>& transfer);
 
     void close();
 

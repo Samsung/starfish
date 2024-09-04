@@ -283,13 +283,12 @@ Storage* Window::sessionStorage()
 void Window::postMessage(Window* source, ScriptValue message,
                          String* targetOrigin)
 {
-    GCAtomicVector<ScriptObject> emptyList;
+    GCVector<ScriptObject> emptyList;
     postMessage(source, message, targetOrigin, emptyList);
 }
 
 void Window::postMessage(Window* source, ScriptValue message,
-                         String* targetOrigin,
-                         GCAtomicVector<ScriptObject>& transfer)
+                         String* targetOrigin, GCVector<ScriptObject>& transfer)
 {
     String* origin = source->location()->origin();
     if (targetOrigin->equals("/")) {
@@ -316,7 +315,7 @@ void Window::postMessage(Window* source, ScriptValue message,
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         e->message()->toUTF8NonGCString().data());
         STARFISH_ASSERT(msg != nullptr);
-        e->setMessage(String::fromUTF8(msg, strlen(msg)));
+        e->setMessage(String::fromUTF8(msg, msgsiz));
         throw e;
     }
 

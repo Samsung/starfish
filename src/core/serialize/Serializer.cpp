@@ -655,7 +655,7 @@ ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
 
 void Serializer::serializeWithTransfer(
     ExecutionContext* executionContext, ScriptValue value,
-    const GCAtomicVector<ScriptObject>& transferValues,
+    const GCVector<ScriptObject>& transferValues,
     SerializeWithTransferResult& result)
 {
     STARFISH_ASSERT(result.m_serializedTransfer.size() == 0);
@@ -670,11 +670,18 @@ void Serializer::serializeWithTransfer(
                     TransferedTypedData::PlatformObject);
                 initialMap.insert(std::make_pair(item, placeHolder));
                 result.m_serializedTransfer.push_back(placeHolder);
-                continue;
             }
         } else if (item->isArrayBufferObject()) {
-            // TODO Handle SharedArrayBuffer case (ECMAScript2018)
-            STARFISH_UNSUPPORTED("serialize: transfer ArrayBuffer");
+            SerializedTypedData* serialized = new SerializedTypedData(
+                SerializedTypedData::ArrayBuffer,
+                new SerializedArrayBufferData(executionContext,
+                                              item->asArrayBufferObject()));
+            initialMap.insert(std::make_pair(item, serialized));
+            result.m_serializedTransfer.push_back(nullptr);
+        } else if (item->isSharedArrayBufferObject()) {
+            STARFISH_UNSUPPORTED(
+                "serialize: unsupported type SharedArrayBuffer");
+            STARFISH_ASSERT_NOT_REACHED();
         }
     }
     SerializedTypedData* serialized =
@@ -683,18 +690,17 @@ void Serializer::serializeWithTransfer(
                     result.m_serializedTransfer.size());
     for (size_t i = 0; i < transferValues.size(); i++) {
         ScriptObject item = transferValues[i];
-        TransferedTypedData* placeHolder = result.m_serializedTransfer[i];
-        if (placeHolder->isPlatformObject()) {
-            STARFISH_ASSERT(item->extraData());
-            Transferable* tf =
-                (static_cast<ScriptWrappable*>(item->extraData()))
-                    ->toTransferable();
-            TransferedData* dataHolder = tf->transfer();
-            tf->setDetached();
-            placeHolder->setPlatformObjectData(dataHolder);
-        } else if (placeHolder->isArrayBuffer()) {
-            // TODO Handle SharedArrayBuffer case (ECMAScript2018)
-            STARFISH_ASSERT_NOT_REACHED();
+        if (result.m_serializedTransfer[i]) {
+            TransferedTypedData* placeHolder = result.m_serializedTransfer[i];
+            if (placeHolder->isPlatformObject()) {
+                STARFISH_ASSERT(item->extraData());
+                Transferable* tf =
+                    (static_cast<ScriptWrappable*>(item->extraData()))
+                        ->toTransferable();
+                TransferedData* dataHolder = tf->transfer();
+                tf->setDetached();
+                placeHolder->setPlatformObjectData(dataHolder);
+            }
         }
     }
     result.m_serialized = serialized;

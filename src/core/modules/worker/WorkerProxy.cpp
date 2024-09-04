@@ -72,7 +72,7 @@ void WorkerProxy::postTask(PostTask task, void* data)
 }
 
 void WorkerProxy::postMessage(ScriptValue message,
-                              const GCAtomicVector<ScriptObject>& transfer)
+                              const GCVector<ScriptObject>& transfer)
 {
     STARFISH_ASSERT(m_ownerExecutionContext->isContextThread());
 

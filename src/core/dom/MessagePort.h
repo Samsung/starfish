@@ -79,8 +79,7 @@ public:
         SerializeWithTransferResult* serializedMessage);
 
     void postMessage(ScriptValue message);
-    void postMessage(ScriptValue message,
-                     GCAtomicVector<ScriptObject>& transfer);
+    void postMessage(ScriptValue message, GCVector<ScriptObject>& transfer);
     void start();
     void close();
 

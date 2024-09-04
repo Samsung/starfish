@@ -49,7 +49,7 @@ public:
     }
 
     void postMessage(ScriptValue message,
-                     const GCAtomicVector<ScriptObject>& transfer);
+                     const GCVector<ScriptObject>& transfer);
 
     void postMessage(ScriptValue message,
                      const StructuredSerializeOptions& options =

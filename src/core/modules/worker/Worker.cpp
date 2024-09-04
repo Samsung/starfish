@@ -38,8 +38,7 @@ Worker::Worker(ExecutionContext* executionContext, String* scriptURL,
     m_workerThread->start();
 }
 
-void Worker::postMessage(ScriptValue message,
-                         GCAtomicVector<ScriptObject>& transfer)
+void Worker::postMessage(ScriptValue message, GCVector<ScriptObject>& transfer)
 {
     if (m_wasTerminated) {
         return;
