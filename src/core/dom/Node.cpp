@@ -35,6 +35,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/MutationObserver.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
@@ -130,6 +131,16 @@ NodeList* RareNodeMembers::ensureQueryInActiveNodeListVectorForName(
         query,
         new NodeList(ownerNode, NodeListImpl::NamedAccessFilter, ptr, false)));
     return m_activeNodeListVectorForName->back().second;
+}
+
+GCVector<MutationObserverRegistration*>*
+RareNodeMembers::ensureRegisteredMutationObservers()
+{
+    if (!m_registeredMutationObservers) {
+        m_registeredMutationObservers =
+            new (GC) GCVector<MutationObserverRegistration*>();
+    }
+    return m_registeredMutationObservers;
 }
 
 void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
@@ -2407,4 +2418,30 @@ ExecutionContext* Node::executionContext() const
 {
     return document()->executionContext();
 }
+
+void Node::registerMutationObserver(
+    MutationObserver* observer, MutationObserverOptionType options,
+    const GCUnorderedSet<String*>& attributeFilter)
+{
+    MutationObserverRegistration* registration = nullptr;
+
+    GCVector<MutationObserverRegistration*>* registeredMutationObservers =
+        ensureRareMembers()->ensureRegisteredMutationObservers();
+    for (auto* item : *registeredMutationObservers) {
+        if (item->observer == observer) {
+            registration = item;
+            registration->options = options;
+            registration->attributeFilter = attributeFilter;
+        }
+    }
+    if (!registration) {
+        registration = new MutationObserverRegistration(observer, this, options,
+                                                        attributeFilter);
+        registeredMutationObservers->push_back(registration);
+        observer->addMutationObserverRegistration(registration);
+    }
+
+    document()->addMutationObserverTypes(registration->mutationTypes());
+}
+
 } // namespace Starfish

@@ -69,6 +69,7 @@ class IntersectionObserver;
 class ResizeObserver;
 
 struct GradientDrawingInfo;
+enum class MutationObserverOptionType : uint8_t;
 
 /* VisibilityState */
 enum VisibilityState ENSURE_ENUM_UNSIGNED {
@@ -619,6 +620,10 @@ public:
     void removeResizeObserver(ResizeObserver* observer);
     bool hasResizeObserver(ResizeObserver* observer) const;
 
+    void addMutationObserverTypes(MutationObserverOptionType type);
+    bool hasMutationObserversOfType(MutationObserverOptionType type) const;
+    bool hasMutationObservers() const;
+
     void updateObservation();
     void updateIntersectionObservation();
     void updateResizeObservation();
@@ -840,6 +845,7 @@ protected:
     bool m_isMiddleOfUseElementUpdating;
     GCVector<IntersectionObserver*> m_intersectionObservers;
     GCVector<ResizeObserver*> m_resizeObservers;
+    MutationObserverOptionType m_mutationTypes;
 };
 } // namespace Starfish
 

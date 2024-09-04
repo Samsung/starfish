@@ -66,6 +66,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/dom/Range.h"
 #include "core/dom/NodeIterator.h"
+#include "core/dom/MutationObserver.h"
 #include "core/dom/TreeWalker.h"
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/NodeFilter.h"
@@ -2427,6 +2428,21 @@ bool Document::hasResizeObserver(ResizeObserver* observer) const
     }
 
     return false;
+}
+
+void Document::addMutationObserverTypes(MutationObserverOptionType types)
+{
+    m_mutationTypes |= types;
+}
+
+bool Document::hasMutationObserversOfType(MutationObserverOptionType type) const
+{
+    return !!(m_mutationTypes & type);
+}
+
+bool Document::hasMutationObservers() const
+{
+    return !!m_mutationTypes;
 }
 
 void Document::updateObservation()
