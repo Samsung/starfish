@@ -8,7 +8,7 @@ interface MutationObserver {
 
   [RaisesException] undefined observe(Node target, optional MutationObserverInit options);
 
-  [Unimplemented] undefined disconnect();
+  undefined disconnect();
 
   sequence<MutationRecord> takeRecords();
 };

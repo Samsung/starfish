@@ -44,7 +44,7 @@ class RareElementMembers;
 class NodeOrDOMString;
 class PseudoElement;
 class StyleResolveContext;
-struct MutationObserverRegistration;
+class MutationObserverRegistration;
 
 enum class MutationObserverOptionType : uint8_t;
 
@@ -819,9 +819,13 @@ public:
 
     ExecutionContext* executionContext() const override;
 
-    void registerMutationObserver(
+    // True means newly registered.
+    std::pair<bool, MutationObserverRegistration*>
+    registerOrUpdateMutationObserver(
         MutationObserver* observer, const MutationObserverOptionType options,
         const GCUnorderedSet<String*>& attributeFilter);
+
+    void unregisterMutationObserver(MutationObserverRegistration* registration);
 
 private:
     void validateReplace(Node* node, Node* child);

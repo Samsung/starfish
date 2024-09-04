@@ -22,6 +22,7 @@
 #include "core/dom/MutationObserver.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Node.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -43,12 +44,24 @@ MutationObserverRegistration::MutationObserverRegistration(
     MutationObserver* observer, Node* target,
     MutationObserverOptionType options,
     const GCUnorderedSet<String*>& attributeFilter)
+    : m_observer(observer)
+    , m_target(target)
+    , m_options(options)
+    , m_attributeFilter(attributeFilter)
 {
 }
 
 MutationObserverOptionType MutationObserverRegistration::mutationTypes()
 {
-    return options & MutationObserverOptionType::kAllMutationType;
+    return m_options & MutationObserverOptionType::kAllMutationType;
+}
+
+void MutationObserverRegistration::update(
+    MutationObserverOptionType options,
+    const GCUnorderedSet<String*>& attributeFilter)
+{
+    m_options = options;
+    m_attributeFilter = attributeFilter;
 }
 
 MutationObserver::MutationObserver(ExecutionContext* executionContext,
@@ -137,7 +150,24 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
                                "Invalid MutationObserverInit");
     }
 
-    node->registerMutationObserver(this, optionType, attributeFilter);
+    std::pair<bool, MutationObserverRegistration*> resultPair =
+        node->registerOrUpdateMutationObserver(this, optionType,
+                                               attributeFilter);
+    if (resultPair.first) {
+        STARFISH_ASSERT(!m_registrations.contains(resultPair.second));
+        m_registrations.insert(resultPair.second);
+    }
+    node->document()->addMutationObserverTypes(
+        resultPair.second->mutationTypes());
+}
+
+void MutationObserver::disconnect()
+{
+    for (auto* registration : m_registrations) {
+        registration->target()->unregisterMutationObserver(registration);
+    }
+    GCUnorderedSet<MutationObserverRegistration*>().swap(m_registrations);
+    GCVector<MutationRecord*>().swap(m_queuedRecords);
 }
 
 GCVector<MutationRecord*> MutationObserver::takeRecords()
@@ -148,17 +178,4 @@ GCVector<MutationRecord*> MutationObserver::takeRecords()
     return records;
 }
 
-void MutationObserver::addMutationObserverRegistration(
-    MutationObserverRegistration* registration)
-{
-    STARFISH_ASSERT(!m_registrations.contains(registration));
-    m_registrations.insert(registration);
-}
-
-void MutationObserver::removeMutationObserverRegistration(
-    MutationObserverRegistration* registration)
-{
-    STARFISH_ASSERT(m_registrations.contains(registration));
-    m_registrations.erase(registration);
-}
 } // namespace Starfish

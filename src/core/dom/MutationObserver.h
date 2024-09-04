@@ -102,18 +102,33 @@ private:
     ScriptValue m_mutationCallback;
 };
 
-struct MutationObserverRegistration : public gc {
-    MutationObserver* observer = nullptr;
-    Node* target = nullptr;
-    MutationObserverOptionType options;
-    GCUnorderedSet<String*> attributeFilter;
-
+class MutationObserverRegistration : public gc {
+public:
     MutationObserverRegistration(
         MutationObserver* observer, Node* target,
         MutationObserverOptionType options,
         const GCUnorderedSet<String*>& attributeFilter);
 
+    MutationObserver* observer()
+    {
+        return m_observer;
+    }
+
+    Node* target()
+    {
+        return m_target;
+    }
+
     MutationObserverOptionType mutationTypes();
+
+    void update(MutationObserverOptionType options,
+                const GCUnorderedSet<String*>& attributeFilter);
+
+private:
+    MutationObserver* m_observer = nullptr;
+    Node* m_target = nullptr;
+    MutationObserverOptionType m_options;
+    GCUnorderedSet<String*> m_attributeFilter;
 };
 
 class MutationObserver final : public ScriptWrappable {
@@ -130,17 +145,9 @@ public:
     void observe(Node* node);
     void observe(Node* node, MutationObserverInit options);
 
-    void disconnect()
-    {
-        STARFISH_UNSUPPORTED_METHOD();
-    }
+    void disconnect();
 
     GCVector<MutationRecord*> takeRecords();
-
-    void addMutationObserverRegistration(
-        MutationObserverRegistration* registration);
-    void removeMutationObserverRegistration(
-        MutationObserverRegistration* registration);
 
 private:
     ExecutionContext* m_executionContext;
