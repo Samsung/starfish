@@ -21,6 +21,7 @@
 
 #include "core/dom/MutationObserver.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/Node.h"
 
 namespace Starfish {
 
@@ -36,6 +37,18 @@ MutationCallback* MutationCallback::toMutationCallback(ScriptValue callback)
 MutationCallback::MutationCallback(ScriptValue callback)
     : m_mutationCallback(callback)
 {
+}
+
+MutationObserverRegistration::MutationObserverRegistration(
+    MutationObserver* observer, Node* target,
+    MutationObserverOptionType options,
+    const GCUnorderedSet<String*>& attributeFilter)
+{
+}
+
+MutationObserverOptionType MutationObserverRegistration::mutationTypes()
+{
+    return options & MutationObserverOptionType::kAllMutationType;
 }
 
 MutationObserver::MutationObserver(ExecutionContext* executionContext,
@@ -124,7 +137,7 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
                                "Invalid MutationObserverInit");
     }
 
-    // TODO: Register observer to target node.
+    node->registerMutationObserver(this, optionType, attributeFilter);
 }
 
 GCVector<MutationRecord*> MutationObserver::takeRecords()
@@ -135,4 +148,17 @@ GCVector<MutationRecord*> MutationObserver::takeRecords()
     return records;
 }
 
+void MutationObserver::addMutationObserverRegistration(
+    MutationObserverRegistration* registration)
+{
+    STARFISH_ASSERT(!m_registrations.contains(registration));
+    m_registrations.insert(registration);
+}
+
+void MutationObserver::removeMutationObserverRegistration(
+    MutationObserverRegistration* registration)
+{
+    STARFISH_ASSERT(m_registrations.contains(registration));
+    m_registrations.erase(registration);
+}
 } // namespace Starfish

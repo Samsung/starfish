@@ -44,6 +44,9 @@ class RareElementMembers;
 class NodeOrDOMString;
 class PseudoElement;
 class StyleResolveContext;
+struct MutationObserverRegistration;
+
+enum class MutationObserverOptionType : uint8_t;
 
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 typedef GCVector<std::pair<std::pair<String*, String*>, HTMLCollection*>>
@@ -60,6 +63,7 @@ public:
         , m_activeHtmlCollectionListsForTagNameNS(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
         , m_activeNodeListVectorForName(nullptr)
+        , m_registeredMutationObservers(nullptr)
     {
     }
 
@@ -87,6 +91,9 @@ public:
     NodeList* ensureQueryInActiveNodeListVectorForName(Node* ownerNode,
                                                        String* query);
 
+    GCVector<MutationObserverRegistration*>*
+    ensureRegisteredMutationObservers();
+
     HTMLCollection* hasQueryInActiveHtmlCollectionList(
         ActiveHTMLCollectionList* list, String* query);
     HTMLCollection* hasQueryInActiveHtmlCollectionList(
@@ -108,6 +115,7 @@ public:
     ActiveStringPairHTMLCollectionList* m_activeHtmlCollectionListsForTagNameNS;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
     ActiveNodeListVector* m_activeNodeListVectorForName;
+    GCVector<MutationObserverRegistration*>* m_registeredMutationObservers;
 };
 
 struct GetRootNodeOptions {
@@ -810,6 +818,10 @@ public:
     }
 
     ExecutionContext* executionContext() const override;
+
+    void registerMutationObserver(
+        MutationObserver* observer, const MutationObserverOptionType options,
+        const GCUnorderedSet<String*>& attributeFilter);
 
 private:
     void validateReplace(Node* node, Node* child);

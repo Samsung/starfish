@@ -35,6 +35,7 @@ enum class MutationObserverOptionType : uint8_t {
     kAttributeOldValue = 1 << 4,
     kCharacterDataOldValue = 1 << 5,
     kAttributeFilter = 1 << 6,
+    kAllMutationType = kChildList | kAttributes | kCharacterData,
 };
 
 inline MutationObserverOptionType& operator|=(MutationObserverOptionType& lhs,
@@ -47,13 +48,23 @@ inline MutationObserverOptionType& operator|=(MutationObserverOptionType& lhs,
     return lhs;
 }
 
-inline bool operator&(MutationObserverOptionType lhs,
-                      MutationObserverOptionType rhs)
+inline MutationObserverOptionType operator&(MutationObserverOptionType lhs,
+                                            MutationObserverOptionType rhs)
 {
     using underlyingType =
         std::underlying_type<MutationObserverOptionType>::type;
-    return static_cast<bool>(static_cast<underlyingType>(lhs) &
-                             static_cast<underlyingType>(rhs));
+    return static_cast<MutationObserverOptionType>(
+        static_cast<underlyingType>(lhs) & static_cast<underlyingType>(rhs));
+}
+
+inline bool operator!(MutationObserverOptionType option)
+{
+    return static_cast<bool>(option) == false;
+}
+
+inline bool operator&&(MutationObserverOptionType option, bool value)
+{
+    return static_cast<bool>(option) && value;
 }
 
 struct MutationObserverInit {
@@ -91,6 +102,20 @@ private:
     ScriptValue m_mutationCallback;
 };
 
+struct MutationObserverRegistration : public gc {
+    MutationObserver* observer = nullptr;
+    Node* target = nullptr;
+    MutationObserverOptionType options;
+    GCUnorderedSet<String*> attributeFilter;
+
+    MutationObserverRegistration(
+        MutationObserver* observer, Node* target,
+        MutationObserverOptionType options,
+        const GCUnorderedSet<String*>& attributeFilter);
+
+    MutationObserverOptionType mutationTypes();
+};
+
 class MutationObserver final : public ScriptWrappable {
 public:
     MutationObserver(ExecutionContext* executionContext,
@@ -112,11 +137,17 @@ public:
 
     GCVector<MutationRecord*> takeRecords();
 
+    void addMutationObserverRegistration(
+        MutationObserverRegistration* registration);
+    void removeMutationObserverRegistration(
+        MutationObserverRegistration* registration);
+
 private:
     ExecutionContext* m_executionContext;
     MutationCallback* m_callback = nullptr;
 
     GCVector<MutationRecord*> m_queuedRecords;
+    GCUnorderedSet<MutationObserverRegistration*> m_registrations;
 };
 
 } // namespace Starfish
