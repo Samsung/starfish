@@ -361,7 +361,7 @@ SerializedTypedData* MemorySerializer::serialize(
 
 void MemorySerializer::serializeWithTransfer(
     ExecutionContext* executionContext, ScriptValue value,
-    const GCAtomicVector<ScriptObject>& transferValues,
+    const GCVector<ScriptObject>& transferValues,
     SerializeWithTransferResult& result)
 {
     StructuredSerialize* serializer = new StructuredSerialize(executionContext);

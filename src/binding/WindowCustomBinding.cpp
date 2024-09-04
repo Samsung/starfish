@@ -230,7 +230,7 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
     ValueRef* arg1 = argv[1];
     ValueRef* arg2 = (argc > 2) ? argv[2] : ValueRef::createUndefined();
     // Handle argument arg2
-    GCAtomicVector<ScriptObject> value2;
+    GCVector<ScriptObject> value2;
     if (arg2->isUndefined()) {
         validArgCount--;
     } else {

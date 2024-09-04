@@ -77,7 +77,7 @@ void DedicatedWorkerGlobalScope::initialize(
 }
 
 void DedicatedWorkerGlobalScope::postMessage(
-    ScriptValue message, const GCAtomicVector<ScriptObject>& transfer)
+    ScriptValue message, const GCVector<ScriptObject>& transfer)
 {
     if (m_wasTerminated) {
         return;
