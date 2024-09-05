@@ -146,7 +146,8 @@ static Starfish::ScriptValue nativeCallbackFunction(
 
 static Starfish::WebView* createStarfishWebViewInstance(
     unsigned width, unsigned height, float devicePixelRatio,
-    const char* defaultFontName, const char* locale, const char* timezoneID)
+    const char* defaultFontName, const char* locale, const char* timezoneID,
+    bool useSwRenderer = false)
 {
     if (!LWEDelegate::LWE::IsInitialized()) {
         STARFISH_LOG_ERROR(
@@ -171,6 +172,11 @@ static Starfish::WebView* createStarfishWebViewInstance(
     STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
     STARFISH_RELEASE_ASSERT(locale != nullptr);
     STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
+
+    if (useSwRenderer) {
+        LWEDelegate::g_starfishInstance->setRendererType(
+            Starfish::StarfishRendererType::kSoftware);
+    }
 
     ::Starfish::WebView* webView = ::Starfish::WebView::create(
         LWEDelegate::g_starfishInstance, locale, timezoneID, width, height,
@@ -520,7 +526,7 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         Starfish::WebView* webView = createStarfishWebViewInstance(
             args.width, args.height, args.devicePixelRatio,
-            args.defaultFontName, args.locale, args.timezoneID);
+            args.defaultFontName, args.locale, args.timezoneID, true);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
         webView->renderer()->registerRenderingPrepareCallback(

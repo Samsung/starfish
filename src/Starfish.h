@@ -117,6 +117,10 @@ public:
         return m_rendererType;
     }
 
+    void setRendererType(StarfishRendererType rendererType)
+    {
+        m_rendererType = rendererType;
+    }
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 #ifndef NDEBUG
