@@ -2495,7 +2495,7 @@ void Node::collectInterestedObservers(
         ensureRareMembers()->ensureRegisteredMutationObservers();
 
     for (auto* registration : *registeredMutationObservers) {
-        if (registration->isInterestedIn(this, optionTypes, name)) {
+        if (registration->isInterestedIn(target, optionTypes, name)) {
             interestedObservers.push_back(registration);
         }
     }
