@@ -79,7 +79,8 @@ bool MutationObserverRegistration::isInterestedIn(
         return false;
     }
 
-    if (m_target != node && !(option & MutationObserverOptionType::kSubtree)) {
+    if (m_target != node &&
+        !(m_options & MutationObserverOptionType::kSubtree)) {
         return false;
     }
 
