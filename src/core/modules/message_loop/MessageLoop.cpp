@@ -27,6 +27,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/MutationObserver.h"
 
 namespace Starfish {
 
@@ -109,6 +110,7 @@ MessageLoop::MessageLoop()
     , m_microTaskCounter(0)
     , m_microTaskIdler(MessageLoopInvalidID)
     , m_currentThreadID(getCurrentThreadID())
+    , m_isMutationObserverMicroTaskQueued(false)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -149,6 +151,29 @@ void MessageLoop::removeMicroTask(size_t handle)
             break;
         }
     }
+}
+
+void MessageLoop::enqueueMutationObserverMicroTask(MutationObserver* observer)
+{
+    if (m_isMutationObserverMicroTaskQueued) {
+        return;
+    }
+    m_isMutationObserverMicroTaskQueued = true;
+    GlobalScope* globalScope = observer->executionContext()->globalScope();
+    m_activeMuationObservers.insert(observer);
+
+    addMicroTask(
+        globalScope,
+        [](size_t handle, void* data) {
+            auto* self = static_cast<MessageLoop*>(data);
+            self->m_isMutationObserverMicroTaskQueued = false;
+            GCUnorderedSet<MutationObserver*> notifySet;
+            notifySet.swap(self->m_activeMuationObservers);
+            for (auto* observer : notifySet) {
+                observer->notify();
+            }
+        },
+        this);
 }
 
 void MessageLoop::invokeMicroTasksIfExist()
