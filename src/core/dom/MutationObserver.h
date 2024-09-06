@@ -28,6 +28,7 @@ namespace Starfish {
 class MutationRecord;
 
 enum class MutationObserverOptionType : uint8_t {
+    kNone = 0,
     kChildList = 1 << 0,
     kAttributes = 1 << 1,
     kCharacterData = 1 << 2,

@@ -219,9 +219,7 @@ GCVector<MutationRecord*> MutationObserver::takeRecords()
 void MutationObserver::enqueueMutationRecord(MutationRecord* record)
 {
     m_queuedRecords.push_back(record);
-    m_executionContext->webBase()
-        ->messageLoop()
-        ->enqueueMutationObserverMicroTask(this);
+    m_executionContext->document()->enqueueMutationObserverMicroTask(this);
 }
 
 void MutationObserver::notify()
