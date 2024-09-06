@@ -706,6 +706,8 @@ test/cairo/internal-test/resize-observer/notify.html
 test/cairo/internal-test/fetch/readablestreamdefaultreader_read.html
 test/cairo/internal-test/intl/hangle_NFD_to_NFC.html
 test/cairo/internal-test/mutation-observer/observe_attribute_filter.html
+test/cairo/internal-test/mutation-observer/observe_attribute_subtree_false.html
+test/cairo/internal-test/mutation-observer/observe_attribute_subtree_true.html
 test/cairo/internal-test/mutation-observer/observe_attribute.html
 test/cairo/internal-test/mutation-observer/observe_throw_errors.html
 test/cairo/internal-test/scripting/module/test1.html
