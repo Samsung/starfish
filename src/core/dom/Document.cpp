@@ -151,6 +151,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_nativeGradientCacheTotalSize(0)
     , m_webFontResolveVersionForCanvas(0)
     , m_isMiddleOfUseElementUpdating(false)
+    , m_mutationTypes(MutationObserverOptionType::kNone)
+    , m_isMutationObserverMicroTaskQueued(false)
 {
     setBaseURL(fallbackBaseURL());
 
@@ -841,6 +843,9 @@ void Document::dispose()
             observer->disconnect();
         }
     }
+
+    m_isMutationObserverMicroTaskQueued = false;
+    GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
 }
 
 String* Document::characterSet()
@@ -2443,6 +2448,29 @@ bool Document::hasMutationObserversOfType(MutationObserverOptionType type) const
 bool Document::hasMutationObservers() const
 {
     return !!m_mutationTypes;
+}
+
+void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
+{
+    if (m_isMutationObserverMicroTaskQueued) {
+        return;
+    }
+    m_isMutationObserverMicroTaskQueued = true;
+
+    m_activeMuationObservers.insert(observer);
+    GlobalScope* globalScope = executionContext()->globalScope();
+    globalScope->webBase()->messageLoop()->addMicroTask(
+        globalScope,
+        [](size_t handle, void* data) {
+            auto* self = static_cast<Document*>(data);
+            self->m_isMutationObserverMicroTaskQueued = false;
+            GCUnorderedSet<MutationObserver*> notifySet;
+            notifySet.swap(self->m_activeMuationObservers);
+            for (auto* observer : notifySet) {
+                observer->notify();
+            }
+        },
+        this);
 }
 
 void Document::updateObservation()

@@ -623,6 +623,7 @@ public:
     void addMutationObserverTypes(MutationObserverOptionType type);
     bool hasMutationObserversOfType(MutationObserverOptionType type) const;
     bool hasMutationObservers() const;
+    void enqueueMutationObserverMicroTask(MutationObserver* observer);
 
     void updateObservation();
     void updateIntersectionObservation();
@@ -775,6 +776,7 @@ protected:
                    GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
     }
 
     bool m_inParsing : 1;
@@ -846,6 +848,8 @@ protected:
     GCVector<IntersectionObserver*> m_intersectionObservers;
     GCVector<ResizeObserver*> m_resizeObservers;
     MutationObserverOptionType m_mutationTypes;
+    GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
+    bool m_isMutationObserverMicroTaskQueued;
 };
 } // namespace Starfish
 
