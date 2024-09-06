@@ -30,6 +30,7 @@ namespace Starfish {
 class GlobalScope;
 class Mutex;
 class RunLoop;
+class MutationObserver;
 
 constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 
@@ -78,6 +79,8 @@ public:
                         void (*fn)(size_t handle, void*), void* data);
     void removeMicroTask(size_t handle);
 
+    void enqueueMutationObserverMicroTask(MutationObserver* record);
+
     bool calledOnValidThread();
 
 protected:
@@ -101,8 +104,10 @@ protected:
     size_t m_microTaskCounter;
     size_t m_microTaskIdler;
     GCVector<MicroTask> m_microTasks;
+    GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
 
     ThreadID m_currentThreadID;
+    bool m_isMutationObserverMicroTaskQueued;
 
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:

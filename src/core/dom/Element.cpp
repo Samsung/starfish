@@ -31,6 +31,8 @@
 #include "core/dom/Element.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/MutationObserver.h"
+#include "core/dom/MutationRecord.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLBodyElement.h"
@@ -310,6 +312,23 @@ void Element::invokeDidAttributeChanged(QualifiedName name, String* old,
 {
     STARFISH_ASSERT(old != nullptr);
     STARFISH_ASSERT(value != nullptr);
+
+    if (document()->hasMutationObserversOfType(
+            MutationObserverOptionType::kAttributes)) {
+        GCVector<MutationObserverRegistration*> interestedObserversRegistry =
+            interestedObservers(MutationObserverOptionType::kAttributes, name);
+        String* attrName = name.toString();
+        String* attrNamesapce = nullptr;
+        if (name.hasNamespaceURI()) {
+            attrNamesapce = name.namespaceURI().getValue().string();
+        }
+        MutationRecord* record = new MutationRecord(
+            executionContext(), String::createASCIIString("attributes"), this,
+            attrName, attrNamesapce, old);
+        for (auto* registration : interestedObserversRegistry) {
+            registration->observer()->enqueueMutationRecord(record);
+        }
+    }
 
 #if !defined(NDEBUG)
     m_didAttributeChangedCorrectlyInvoked = false;

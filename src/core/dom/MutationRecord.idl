@@ -8,7 +8,7 @@ interface MutationRecord {
   // [SameObject] readonly attribute NodeList removedNodes;
   // readonly attribute Node? previousSibling;
   // readonly attribute Node? nextSibling;
-  // readonly attribute DOMString? attributeName;
-  // readonly attribute DOMString? attributeNamespace;
-  // readonly attribute DOMString? oldValue;
+  readonly attribute DOMString? attributeName;
+  readonly attribute DOMString? attributeNamespace;
+  readonly attribute DOMString? oldValue;
 };

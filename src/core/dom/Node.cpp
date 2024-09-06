@@ -2465,4 +2465,40 @@ void Node::unregisterMutationObserver(
         registeredMutationObservers->end());
 }
 
+GCVector<MutationObserverRegistration*> Node::interestedObservers(
+    const MutationObserverOptionType optionTypes,
+    const Optional<QualifiedName>& name)
+{
+    GCVector<MutationObserverRegistration*> interestedObservers;
+    if (!document()->hasMutationObserversOfType(
+            MutationObserverOptionType::kAttributes)) {
+        return interestedObservers;
+    }
+
+    collectInterestedObservers(interestedObservers, this, optionTypes, name);
+    Node* parent = parentNode();
+    while (parent) {
+        parent->collectInterestedObservers(interestedObservers, this,
+                                           optionTypes, name);
+        parent = parent->parentNode();
+    }
+
+    return interestedObservers;
+}
+
+void Node::collectInterestedObservers(
+    GCVector<MutationObserverRegistration*>& interestedObservers, Node* target,
+    const MutationObserverOptionType optionTypes,
+    const Optional<QualifiedName>& name)
+{
+    GCVector<MutationObserverRegistration*>* registeredMutationObservers =
+        ensureRareMembers()->ensureRegisteredMutationObservers();
+
+    for (auto* registration : *registeredMutationObservers) {
+        if (registration->isInterestedIn(this, optionTypes, name)) {
+            interestedObservers.push_back(registration);
+        }
+    }
+}
+
 } // namespace Starfish

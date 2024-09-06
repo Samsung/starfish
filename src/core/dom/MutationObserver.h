@@ -98,6 +98,11 @@ public:
 
     MutationCallback(ScriptValue callback);
 
+    ScriptValue scriptValue()
+    {
+        return m_mutationCallback;
+    }
+
 private:
     ScriptValue m_mutationCallback;
 };
@@ -123,6 +128,8 @@ public:
 
     void update(MutationObserverOptionType options,
                 const GCUnorderedSet<String*>& attributeFilter);
+    bool isInterestedIn(Node* node, const MutationObserverOptionType option,
+                        const Optional<QualifiedName>& name);
 
 private:
     MutationObserver* m_observer = nullptr;
@@ -148,6 +155,15 @@ public:
     void disconnect();
 
     GCVector<MutationRecord*> takeRecords();
+
+    void enqueueMutationRecord(MutationRecord* record);
+
+    void notify();
+
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
 
 private:
     ExecutionContext* m_executionContext;

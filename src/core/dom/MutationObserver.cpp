@@ -20,9 +20,16 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/MutationObserver.h"
+
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
+#include "core/page/WebBase.h"
+#include "core/dom/MutationRecord.h"
+#include "core/modules/message_loop/MessageLoop.h"
+
+#include "EscargotPublic.h"
 
 namespace Starfish {
 
@@ -64,6 +71,36 @@ void MutationObserverRegistration::update(
     m_attributeFilter = attributeFilter;
 }
 
+bool MutationObserverRegistration::isInterestedIn(
+    Node* node, const MutationObserverOptionType option,
+    const Optional<QualifiedName>& name)
+{
+    if (!(m_options & option)) {
+        return false;
+    }
+
+    if (m_target != node && !(option & MutationObserverOptionType::kSubtree)) {
+        return false;
+    }
+
+    if (option != MutationObserverOptionType::kAttributes ||
+        !(m_options & MutationObserverOptionType::kAttributeFilter)) {
+        return true;
+    }
+    if (!name || !(name.getValue().namespaceURI() == nullptr)) {
+        return false;
+    }
+
+    QualifiedName qname = name.getValue();
+    for (auto* attr : m_attributeFilter) {
+        if (qname.toString()->equals(attr)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 MutationObserver::MutationObserver(ExecutionContext* executionContext,
                                    MutationCallback* callBack)
     : ScriptWrappable(this)
@@ -85,8 +122,8 @@ void MutationObserver::observe(Node* node)
 void MutationObserver::observe(Node* node, MutationObserverInit options)
 {
     // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
+    // TODO: Consider transient registered observers.
     MutationObserverOptionType optionType;
-
     if ((options.hasAttributeOldValue() || options.hasAttributeFilter()) &&
         !options.hasAttributes()) {
         optionType |= MutationObserverOptionType::kAttributes;
@@ -176,6 +213,46 @@ GCVector<MutationRecord*> MutationObserver::takeRecords()
     records = m_queuedRecords;
     m_queuedRecords.clear();
     return records;
+}
+
+void MutationObserver::enqueueMutationRecord(MutationRecord* record)
+{
+    m_queuedRecords.push_back(record);
+    m_executionContext->webBase()
+        ->messageLoop()
+        ->enqueueMutationObserverMicroTask(this);
+}
+
+void MutationObserver::notify()
+{
+    // TODO: Consider transient registered observers.
+    ScriptValue callback = m_callback->scriptValue();
+    if (isCallableScriptValue(callback) && m_queuedRecords.size()) {
+        ScriptValue* argv = nullptr;
+        size_t argc = 0;
+        const auto& result = Escargot::Evaluator::execute(
+            scriptBindingInstance()->scriptContext(),
+            [](Escargot::ExecutionStateRef* state,
+               MutationObserver* self) -> Escargot::ValueRef* {
+                Escargot::ArrayObjectRef* arrayObj =
+                    Escargot::ArrayObjectRef::create(state);
+                for (size_t i = 0; i < self->m_queuedRecords.size(); i++) {
+                    Escargot::ValueRef* item =
+                        self->m_queuedRecords[i]->scriptValue();
+                    arrayObj->set(state, Escargot::ValueRef::create(i), item);
+                }
+                return arrayObj;
+            },
+            this);
+        argc = 2;
+        argv = ALLOCA(sizeof(ScriptValue) * argc, ScriptValue);
+        argv[0] = result.result; // records
+        argv[1] = scriptValue(); // mo
+        m_queuedRecords.clear();
+
+        callScriptFunction(scriptBindingInstance(), callback, argv, argc,
+                           scriptValue());
+    }
 }
 
 } // namespace Starfish

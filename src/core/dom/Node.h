@@ -827,6 +827,14 @@ public:
 
     void unregisterMutationObserver(MutationObserverRegistration* registration);
 
+    GCVector<MutationObserverRegistration*> interestedObservers(
+        const MutationObserverOptionType optionTypes,
+        const Optional<QualifiedName>& name);
+    void collectInterestedObservers(
+        GCVector<MutationObserverRegistration*>& interestedObservers,
+        Node* target, const MutationObserverOptionType optionTypes,
+        const Optional<QualifiedName>& name);
+
 private:
     void validateReplace(Node* node, Node* child);
 

@@ -28,12 +28,10 @@ class Node;
 
 class MutationRecord final : public ScriptWrappable {
 public:
-    MutationRecord(ExecutionContext* executionContext)
-        : ScriptWrappable(this)
-        , m_type(String::emptyString)
-        , m_target(nullptr)
-    {
-    }
+    MutationRecord(ExecutionContext* executionContext);
+    MutationRecord(ExecutionContext* executionContext, String* type,
+                   Node* target, String* attributeName,
+                   String* attributeNamespace, String* oldValue);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
@@ -46,25 +44,38 @@ public:
         return m_type;
     }
 
-    void setType(String* type)
-    {
-        m_type = type;
-    }
-
     Node* target()
     {
         return m_target;
     }
 
-    void setTarget(Node* target)
+    String* attributeName()
     {
-        m_target = target;
+        return m_attributeName;
+    }
+
+    String* attributeNamespace()
+    {
+        return m_attributeNamespace;
+    }
+
+    String* oldValue()
+    {
+        return m_oldValue;
+    }
+
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
     }
 
 private:
     ExecutionContext* m_executionContext = nullptr;
-    String* m_type;
-    Node* m_target;
+    String* m_type = nullptr;
+    Node* m_target = nullptr;
+    String* m_attributeName = nullptr;
+    String* m_attributeNamespace = nullptr;
+    String* m_oldValue = nullptr;
 };
 
 } // namespace Starfish
