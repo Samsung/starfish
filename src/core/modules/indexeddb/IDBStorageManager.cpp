@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_IDB)
 
 #include "StarfishConfig.h"
+#include "platform/file/PlatformDirectory.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/indexeddb/IDBConfig.h"
 #include "core/modules/indexeddb/MemoryBackingStore.h"
@@ -41,8 +42,8 @@ IDBStorageManager::IDBStorageManager()
 {
     STARFISH_ASSERT(isMainThread());
 
-    MemoryBackingStore::createDirectory(getLocalStoragePath());
-    MemoryBackingStore::createDirectory(getIDBLocalStoragePath());
+    PlatformDirectoryUtil::createDirectory(getLocalStoragePath());
+    PlatformDirectoryUtil::createDirectory(getIDBLocalStoragePath());
 }
 
 IDBStorageManager::~IDBStorageManager()

@@ -75,12 +75,19 @@ public:
     void dispatchSuccessEvent();
     void dispatchErrorEvent();
 
-    DEFINE_GETTER(ScriptValue, result);
+    DEFINE_GETTER_SETTER(ScriptValue, result, Result);
     DEFINE_GETTER(DOMException*, error);
     DEFINE_GETTER(ScriptValue, source);
     DEFINE_GETTER(IDBTransaction*, transaction);
     DEFINE_GETTER_SETTER(bool, processed, Processed);
     DEFINE_GETTER_SETTER(bool, done, Done);
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(success);
+    DECLARE_EVENT_LISTENER(error);
+#undef VIRTUAL
+#undef OVERRIDE
 
 protected:
     ExecutionContext* m_executionContext;

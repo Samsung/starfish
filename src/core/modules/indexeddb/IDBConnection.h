@@ -30,6 +30,7 @@ class StorageInternal;
 class WebOrigin;
 class IDBBackingStore;
 class IDBKey;
+class IDBKeyRange;
 struct OpenDBRequestData;
 enum class IDBRequestErrorType : uint8_t;
 
@@ -59,6 +60,9 @@ public:
     IDBRequestErrorType storeRecode(String* name, const char* value,
                                     size_t valueSize, IDBKey* key,
                                     bool noOverwrite);
+
+    bool retrieveValue(String* name, IDBKeyRange* query, char*& data,
+                       size_t& dataSize);
 
     IDBBackingStore* backingStore();
 

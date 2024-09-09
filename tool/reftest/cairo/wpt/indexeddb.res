@@ -212,7 +212,7 @@ http://web-platform.test:8000/IndexedDB/idbfactory_open5.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_delete7.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_deleteIndex.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_deleted.htm
-#http://web-platform.test:8000/IndexedDB/idbobjectstore_get.htm
+http://web-platform.test:8000/IndexedDB/idbobjectstore_get.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_get2.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_get3.htm
 #http://web-platform.test:8000/IndexedDB/idbobjectstore_get4.htm

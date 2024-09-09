@@ -28,15 +28,23 @@
 namespace Starfish {
 
 IDBTransaction::IDBTransaction(ExecutionContext* executionContext,
-                               IDBDatabase* db)
+                               IDBDatabase* db, IDBTransactionMode mode,
+                               IDBTransactionDurability durability)
     : EventTarget()
     , m_executionContext(executionContext)
-    , m_objectStoreNames(new DOMStringList(executionContext))
-    , m_mode(IDBTransactionMode::ReadWrite)
-    , m_durability(IDBTransactionDurability::Default)
+    , m_objectStoreNames(db->objectStoreNames())
+    , m_mode(mode)
+    , m_durability(durability)
     , m_db(db)
     , m_error(nullptr)
     , m_state(State::Active)
+{
+}
+
+IDBTransaction::IDBTransaction(ExecutionContext* executionContext,
+                               IDBDatabase* db)
+    : IDBTransaction(executionContext, db, IDBTransactionMode::ReadOnly,
+                     IDBTransactionDurability::Default)
 {
 }
 

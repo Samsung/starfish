@@ -27,6 +27,7 @@
 #include "core/serialize/MemorySerializer.h"
 #include "core/modules/indexeddb/IDBKey.h"
 #include "core/modules/indexeddb/IDBKeyPath.h"
+#include "core/modules/indexeddb/IDBKeyRange.h"
 #include "core/modules/indexeddb/IDBRequest.h"
 #include "core/modules/indexeddb/IDBConnection.h"
 #include "core/modules/indexeddb/IDBTaskQueue.h"
@@ -160,6 +161,83 @@ IDBRequest* IDBObjectStore::addOrPut(ScriptValue value, ScriptValue key,
             } else {
                 p->idbRequest->fail(IDBRequest::errorCodeToDOMException(
                     p->idbRequest->executionContext(), p->error));
+            }
+
+            GC_FREE(p);
+        },
+        p);
+
+    request->executeRequest(this, std::move(operation));
+
+    return request;
+}
+
+IDBRequest* IDBObjectStore::get(ScriptValue query)
+{
+    TRACE(IDB);
+    // https://w3c.github.io/IndexedDB/#dom-idbobjectstore-get
+    if (m_deleted) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::INVALID_STATE_ERR);
+    }
+
+    if (m_transaction->state() != IDBTransaction::State::Active) {
+        throw new DOMException(
+            m_executionContext,
+            String::createASCIIString("The transaction is not active."),
+            String::createASCIIString("TransactionInactiveError"));
+    }
+
+    IDBKeyRange* range =
+        IDBKeyRange::convertValueToKeyRange(m_executionContext, query, true);
+
+    IDBRequest* request = new IDBRequest(m_executionContext);
+
+    struct Params : public IDBTaskQueueItemData {
+    public:
+        String* name{ nullptr };
+        IDBKeyRange* range{ nullptr };
+        char* buffer{ nullptr };
+        size_t bufferSize{ 0 };
+        IDBConnection* connection{ nullptr };
+        bool result{ false };
+    };
+
+    Params* p = new (NoGC) Params();
+    p->idbRequest = request;
+    p->name = m_name;
+    p->range = range;
+    p->connection = m_transaction->db()->connection();
+
+    auto operation = std::make_unique<IDBTaskQueueItem>(
+        [](IDBConnectionData* connectionData, IDBTaskQueueItemData* data) {
+            Params* p = static_cast<Params*>(data);
+            p->result = p->connection->retrieveValue(p->name, p->range,
+                                                     p->buffer, p->bufferSize);
+        },
+        [](IDBTaskQueueItemData* data) {
+            Params* p = static_cast<Params*>(data);
+            if (p->result) {
+                if (p->bufferSize == 0) {
+                    p->idbRequest->success(scriptUndefined());
+                } else {
+                    try {
+                        ScriptValue value = MemorySerializer::deserialize(
+                            p->idbRequest->executionContext(), p->buffer,
+                            p->bufferSize);
+
+                        p->idbRequest->success(value);
+                    } catch (DOMException* e) {
+                        p->idbRequest->fail(e);
+                    }
+                }
+            } else {
+                // TODO: handle failure case
+                STARFISH_LOG_ERROR("IDBObjectStore::get failed");
+            }
+
+            if (p->buffer) {
+                free(p->buffer);
             }
 
             GC_FREE(p);

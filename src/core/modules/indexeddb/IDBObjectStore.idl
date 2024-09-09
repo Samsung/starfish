@@ -16,7 +16,7 @@ interface IDBObjectStore {
   [NewObject, RaisesException] IDBRequest add(any value, optional any key);
   [Unimplemented, NewObject] IDBRequest delete(any query);
   [Unimplemented, NewObject] IDBRequest clear();
-  [Unimplemented, NewObject, RaisesException] IDBRequest get(any query);
+  [NewObject, RaisesException] IDBRequest get(any query);
   [Unimplemented, NewObject] IDBRequest getKey(any query);
   // optional [EnforceRange] unsigned long count
   [Unimplemented, NewObject] IDBRequest getAll(optional any query,

@@ -34,6 +34,8 @@ public:
     virtual IDBRequestErrorType addOrPut(String* name, const char* data,
                                          size_t dataSize, IDBKey* key,
                                          bool noOverwrite) = 0;
+    virtual bool get(String* name, IDBKey* key, char*& data,
+                     size_t& dataSize) = 0;
 };
 } // namespace Starfish
 

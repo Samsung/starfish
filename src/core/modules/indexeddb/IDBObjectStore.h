@@ -46,10 +46,13 @@ public:
 
     IDBRequest* addOrPut(ScriptValue value, ScriptValue key, bool noOverwrite);
 
+    IDBRequest* get(ScriptValue query);
+
     DEFINE_GETTER_SETTER(String*, name, Name);
     DEFINE_GETTER(DOMStringList*, indexNames);
     DEFINE_GETTER(IDBTransaction*, transaction);
     DEFINE_GETTER(bool, autoIncrement);
+    DEFINE_SETTER(Nullable<IDBKeyPath*>, keyPath, KeyPath);
 
 private:
     ExecutionContext* m_executionContext;

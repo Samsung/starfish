@@ -111,6 +111,12 @@ IDBOpenDBRequest* IDBFactory::open(String* name,
     return request;
 }
 
+IDBOpenDBRequest* IDBFactory::deleteDatabase(String* name)
+{
+    STARFISH_UNIMPLEMENTED();
+    IDBOpenDBRequest* request = new IDBOpenDBRequest(m_executionContext);
+    return request;
+}
 } // namespace Starfish
 
 #endif

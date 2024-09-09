@@ -115,7 +115,6 @@ void IDBTaskQueue::worker(void* data)
                     p->item->workData->idbRequest->setDone(true);
 
                     p->item->afterWork(p->item->workData);
-
                     delete p;
                 },
                 p);

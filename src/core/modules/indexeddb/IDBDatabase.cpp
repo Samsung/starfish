@@ -22,6 +22,9 @@
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMStringList.h"
+#include "core/dom/DOMException.h"
+#include "core/modules/indexeddb/IDBKeyPath.h"
+#include "core/modules/indexeddb/IDBObjectStore.h"
 #include "core/modules/indexeddb/IDBConnection.h"
 #include "core/modules/indexeddb/IDBUtils.h"
 #include "core/modules/indexeddb/IDBTransaction.h"
@@ -52,6 +55,75 @@ IDBDatabase::IDBDatabase(ExecutionContext* executionContext,
 {
 }
 
+IDBTransaction* IDBDatabase::transaction(
+    DOMStringOrSequenceOfDOMString storeNames, String* mode,
+    const IDBTransactionOptions& options)
+{
+    if (storeNames.isSequenceOfDOMStringValue()) {
+        for (String* name : storeNames.getSequenceOfDOMStringValue()) {
+            m_objectStoreNames->push_back(name);
+        }
+    } else if (storeNames.isDOMStringValue()) {
+        m_objectStoreNames->push_back(storeNames.getDOMStringValue());
+    }
+
+    return new IDBTransaction(m_executionContext, this,
+                              IDBUtils::transactionModeToType(mode),
+                              options.m_durability);
+}
+
+IDBObjectStore* IDBDatabase::createObjectStore(String* name)
+{
+    return createObjectStore(name, IDBObjectStoreParameters());
+}
+
+IDBObjectStore* IDBDatabase::createObjectStore(String* name,
+                                               IDBObjectStoreParameters options)
+{
+    // https://w3c.github.io/IndexedDB/#dom-idbdatabase-createobjectstore
+
+    if (!m_versionChangeTransaction) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::INVALID_STATE_ERR);
+    }
+
+    if (m_versionChangeTransaction->state() != IDBTransaction::State::Active) {
+        throw new DOMException(
+            m_executionContext,
+            String::createASCIIString("The transaction is not active."),
+            String::createASCIIString("TransactionInactiveError"));
+    }
+
+    IDBKeyPath* keyPath = nullptr;
+    if (options.m_keyPath.hasValue()) {
+        keyPath = new IDBKeyPath(scriptBindingInstance(),
+                                 options.m_keyPath.getValue());
+        if (!keyPath->isValid()) {
+            throw new DOMException(m_executionContext,
+                                   DOMException::Code::SYNTAX_ERR);
+        }
+    }
+
+    // TODO: 6. If an object store named name already exists in database throw a
+    // "ConstraintError" DOMException.
+
+    // TODO: 8. If autoIncrement is true and keyPath is an empty string or any
+    // sequence (empty or otherwise), throw an "InvalidAccessError"
+    // DOMException.
+
+    IDBObjectStore* store = m_versionChangeTransaction->objectStore(name);
+    m_objectStoreNames->push_back(name);
+
+    // TODO: 9. If autoIncrement is true, then the created object store uses a
+    // key generator.
+
+    if (keyPath) {
+        store->setKeyPath(Nullable<IDBKeyPath*>(keyPath));
+    }
+
+    return store;
+}
+
 IDBTransaction* IDBDatabase::startVersionChangeTransaction()
 {
     STARFISH_ASSERT(!m_versionChangeTransaction);
@@ -61,6 +133,11 @@ IDBTransaction* IDBDatabase::startVersionChangeTransaction()
     m_versionChangeTransaction->setMode(IDBTransactionMode::VersionChange);
 
     return m_versionChangeTransaction;
+}
+
+void IDBDatabase::close()
+{
+    STARFISH_UNIMPLEMENTED();
 }
 
 } // namespace Starfish

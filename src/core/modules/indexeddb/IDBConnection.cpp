@@ -24,6 +24,7 @@
 #include "core/storage/StorageInternal.h"
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/MemoryBackingStore.h"
+#include "core/modules/indexeddb/IDBKeyRange.h"
 #include "core/modules/indexeddb/IDBOpenDBRequest.h"
 #include "core/modules/indexeddb/IDBConnection.h"
 
@@ -110,6 +111,18 @@ IDBRequestErrorType IDBConnection::storeRecode(String* name, const char* data,
     // TODO:
     // https://w3c.github.io/IndexedDB/#store-a-record-into-an-object-store
     return m_backingStore->addOrPut(name, data, dataSize, key, noOverwrite);
+}
+
+bool IDBConnection::retrieveValue(String* name, IDBKeyRange* range, char*& data,
+                                  size_t& dataSize)
+{
+    // TODO:
+    // https://w3c.github.io/IndexedDB/#retrieve-a-value-from-an-object-store
+    if (!range->isOnly()) {
+        return false;
+    }
+
+    return m_backingStore->get(name, range->lower(), data, dataSize);
 }
 
 IDBBackingStore* IDBConnection::backingStore()
