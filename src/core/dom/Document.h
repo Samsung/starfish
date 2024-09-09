@@ -776,7 +776,7 @@ protected:
                    GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
+        markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
     }
 
     bool m_inParsing : 1;

@@ -177,7 +177,7 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
         }
         optionType |= MutationObserverOptionType::kAttributeFilter;
     }
-    STARFISH_LOG_INFO("attributeFilter.size(): %ld", attributeFilter.size());
+
     if (options.hasCharacterDataOldValue() && options.characterDataOldValue()) {
         optionType |= MutationObserverOptionType::kCharacterDataOldValue;
     }
