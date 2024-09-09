@@ -140,7 +140,7 @@ RareNodeMembers::ensureRegisteredMutationObservers()
         m_registeredMutationObservers =
             new (GC) GCVector<MutationObserverRegistration*>();
     }
-    return m_registeredMutationObservers;
+    return m_registeredMutationObservers.getValue();
 }
 
 void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
