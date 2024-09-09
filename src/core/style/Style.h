@@ -619,6 +619,8 @@ class CSSFilterFunction;
     F(PaddingRight, paddingRight, "padding-right")                             \
     F(PaddingBottom, paddingBottom, "padding-bottom")                          \
     F(PaddingLeft, paddingLeft, "padding-left")                                \
+    F(PaddingBlockEnd, paddingPaddingEnd, "padding-block-end")                 \
+    F(PaddingBlockStart, paddingPaddingStart, "padding-block-start")           \
     F(PaddingInlineEnd, paddingInlineEnd, "padding-inline-end")                \
     F(PaddingInlineStart, paddingInlineStart, "padding-inline-start")          \
     F(MarginTop, marginTop, "margin-top")                                      \
@@ -836,9 +838,10 @@ class CSSFilterFunction;
     F(GridTemplate, gridTemplate, "grid-template")                   \
     F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
-    F(MarginBlock, marginBlokc, "margin-block")                      \
+    F(MarginBlock, marginBlock, "margin-block")                      \
     F(MarginInline, marginInline, "margin-inline")                   \
     F(Padding, padding, "padding")                                   \
+    F(PaddingBlock, paddingBlock, "padding-block")                   \
     F(PaddingInline, paddingInline, "padding-inline")                \
     F(Font, font, "font")                                            \
     F(Outline, outline, "outline")                                   \

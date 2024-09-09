@@ -662,6 +662,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
     case 13:
         // border-radius
         // padding-right
+        // padding-block
         // margin-bottom
         // margin-inline
         // border-bottom
@@ -683,6 +684,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::PaddingRight;
+            }
+            if (memcmp(data, "padding-block", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingBlock;
             }
             break;
         case 'm':
@@ -934,6 +938,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // background-origin
         // counter-increment
         // grid-column-start
+        // padding-block-end
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
@@ -968,6 +973,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'm':
             if (memcmp(data, "margin-inline-end", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginInlineEnd;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "padding-block-end", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingBlockEnd;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
@@ -1093,6 +1103,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // list-style-position
         // grid-template-areas
         // margin-inline-start
+        // padding-block-start
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -1144,6 +1155,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'm':
             if (memcmp(data, "margin-inline-start", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginInlineStart;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "padding-block-start", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingBlockStart;
             }
             break;
         case 't':
@@ -2118,6 +2134,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::MarginInlineEnd;
             }
             break;
+        case 'p':
+            if (memcmp(data, "paddingBlockEnd", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingBlockEnd;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||      \
     defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX) || \
     defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
@@ -2251,6 +2272,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'm':
             if (memcmp(data, "marginInlineStart", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginInlineStart;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "paddingBlockStart", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingBlockStart;
             }
             break;
         case 'l':

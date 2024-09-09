@@ -97,6 +97,8 @@ public:
         Width,
         Height,
         Padding,
+        PaddingBlockStart,
+        PaddingBlockEnd,
         PaddingInlineEnd,
         PaddingInlineStart,
         Margin,
@@ -627,6 +629,10 @@ public:
     GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                marginInlineStart, MarginInlineStart);
     GETTER_PTR(LengthData, lengthData, padding, Padding);
+    GETTER_PTR(FlowRelativeLengthBlockData, flowRelativeLengthBlockData,
+               paddingBlockStart, PaddingBlockStart);
+    GETTER_PTR(FlowRelativeLengthBlockData, flowRelativeLengthBlockData,
+               paddingBlockEnd, PaddingBlockEnd);
     GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
                paddingInlineEnd, PaddingInlineEnd);
     GETTER_PTR(FlowRelativeLengthInlineData, flowRelativeLengthInlineData,
@@ -958,6 +964,16 @@ public:
     void setClipPath(String* url)
     {
         *m_rareComputedStyleData.ensureClipPath() = url;
+    }
+
+    void setPaddingBlockEnd(FlowRelativeLengthBlockData length)
+    {
+        *m_rareComputedStyleData.ensurePaddingBlockEnd() = length;
+    }
+
+    void setPaddingBlockStart(FlowRelativeLengthBlockData length)
+    {
+        *m_rareComputedStyleData.ensurePaddingBlockStart() = length;
     }
 
     void setPaddingInlineEnd(FlowRelativeLengthInlineData length)
@@ -3047,6 +3063,11 @@ public:
     void setPaddingTop(const Length& unit)
     {
         m_rareComputedStyleData.ensurePadding()->setTop(unit);
+
+        m_rareComputedStyleData.ensurePaddingBlockStart()
+            ->markCorrespondingTopIsSet();
+        m_rareComputedStyleData.ensurePaddingBlockEnd()
+            ->markCorrespondingTopIsSet();
     }
 
     void setPaddingRight(const Length& unit)
@@ -3062,6 +3083,11 @@ public:
     void setPaddingBottom(const Length& unit)
     {
         m_rareComputedStyleData.ensurePadding()->setBottom(unit);
+
+        m_rareComputedStyleData.ensurePaddingBlockStart()
+            ->markCorrespondingBottomIsSet();
+        m_rareComputedStyleData.ensurePaddingBlockEnd()
+            ->markCorrespondingBottomIsSet();
     }
 
     void setPaddingLeft(const Length& unit)
@@ -3755,6 +3781,36 @@ public:
             return clipPathValue.getValue();
         }
         return String::emptyString;
+    }
+
+    FlowRelativeLengthBlockData paddingBlockEnd()
+    {
+        if (!hasRareComputeStyleData()) {
+            return FlowRelativeLengthBlockData();
+        }
+
+        FlowRelativeLengthBlockData* data =
+            m_rareComputedStyleData.paddingBlockEnd();
+        if (data) {
+            return *data;
+        }
+
+        return FlowRelativeLengthBlockData();
+    }
+
+    FlowRelativeLengthBlockData paddingBlockStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return FlowRelativeLengthBlockData();
+        }
+
+        FlowRelativeLengthBlockData* data =
+            m_rareComputedStyleData.paddingBlockStart();
+        if (data) {
+            return *data;
+        }
+
+        return FlowRelativeLengthBlockData();
     }
 
     FlowRelativeLengthInlineData paddingInlineEnd()

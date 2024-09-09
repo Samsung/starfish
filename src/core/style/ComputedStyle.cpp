@@ -1638,6 +1638,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    if (newStyle->paddingBlockStart() != oldStyle->paddingBlockStart()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingBlockStart] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->paddingBlockEnd() != oldStyle->paddingBlockEnd()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingBlockEnd] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     if (newStyle->paddingInlineEnd() != oldStyle->paddingInlineEnd()) {
         damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineEnd] = true;
         damage = static_cast<ComputedStyleDamage>(
@@ -2723,7 +2735,16 @@ void ComputedStyle::applyFlowRelativeBlockProperties()
         }
     }
 
-    // TODO: padding-block
+    FlowRelativeLengthBlockData paddingStart = paddingBlockStart();
+    FlowRelativeLengthBlockData paddingEnd = paddingBlockEnd();
+    if (paddingStart.legnth().hasValue() &&
+        !paddingStart.isCorrespondingTopSet()) {
+        setPaddingTop(paddingStart.legnth().getValue());
+    }
+    if (paddingEnd.legnth().hasValue() &&
+        !paddingEnd.isCorrespondingBottomSet()) {
+        setPaddingBottom(paddingEnd.legnth().getValue());
+    }
 }
 
 void ComputedStyle::applyFlowRelativeInlineProperties()

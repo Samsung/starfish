@@ -1588,6 +1588,13 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
             return true;
         }
         break;
+    case CSSStyleValuePair::KeyKind::PaddingBlockStart:
+    case CSSStyleValuePair::KeyKind::PaddingBlockEnd:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingTop) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBottom)) {
+            return true;
+        }
+        break;
     case CSSStyleValuePair::KeyKind::PaddingInlineStart:
     case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
         if (hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingLeft) ||
@@ -1653,6 +1660,13 @@ bool CSSStyleDeclaration::shouldKeepAppearanceOrder(
     case CSSStyleValuePair::KeyKind::MarginRight:
         if (hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart) ||
             hasCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd)) {
+            return true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingTop:
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
+        if (hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockStart) ||
+            hasCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockEnd)) {
             return true;
         }
         break;
@@ -4278,6 +4292,73 @@ void CSSStyleDeclaration::removePadding()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingRight);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBottom);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingLeft);
+}
+
+String* CSSStyleDeclaration::PaddingBlock()
+{
+    String* start = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::PaddingBlockStart);
+    String* end = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::PaddingBlockEnd);
+
+    if (start->equals(end)) {
+        return start;
+    }
+
+    return start->concat(" ")->concat(end);
+}
+
+void CSSStyleDeclaration::setPaddingBlock(const char* value, size_t len,
+                                          bool isImportant)
+{
+    if (len == 0) {
+        removePaddingBlock();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair start, end;
+    bool canAdd = false;
+    if (start.updateValueVarReferences(tokens)) {
+        start.setValue(String::fromUTF8(value, len));
+        start.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlock, start);
+        return;
+    } else if (start.updateValueCommon(tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 1 &&
+               start.updateValuePaddingBlockStart(m_node->document(), tokens)) {
+        end = start;
+        canAdd = true;
+    } else if (tokens.size() == 2 && start.updateValueUnitPadding(tokens[0]) &&
+               end.updateValueUnitPadding(tokens[1])) {
+        canAdd = true;
+    }
+
+    if (!canAdd) {
+        return;
+    }
+
+    if (shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::PaddingBlockStart) ||
+        shouldKeepAppearanceOrder(
+            CSSStyleValuePair::KeyKind::PaddingBlockEnd)) {
+        removePaddingBlock();
+    }
+
+    start.setFlagImportant(isImportant);
+    end.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockStart, start);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockEnd, end);
+}
+
+void CSSStyleDeclaration::removePaddingBlock()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockEnd);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockStart);
 }
 
 String* CSSStyleDeclaration::PaddingInline()
