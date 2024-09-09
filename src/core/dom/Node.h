@@ -115,7 +115,8 @@ public:
     ActiveStringPairHTMLCollectionList* m_activeHtmlCollectionListsForTagNameNS;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
     ActiveNodeListVector* m_activeNodeListVectorForName;
-    GCVector<MutationObserverRegistration*>* m_registeredMutationObservers;
+    Optional<GCVector<MutationObserverRegistration*>*>
+        m_registeredMutationObservers;
 };
 
 struct GetRootNodeOptions {
