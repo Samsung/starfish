@@ -354,6 +354,21 @@ static CSSStyleValuePair resolveFlowRelativeBlockProperties(
         ret.setValue(CSSLength(frame->borderBottom()));
         return ret;
     }
+
+    // padding
+    if (keykind == CSSStyleValuePair::KeyKind::PaddingBlockStart) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->paddingTop()));
+        return ret;
+    }
+    if (keykind == CSSStyleValuePair::KeyKind::PaddingBlockEnd) {
+        ret.setKeyKind(keykind);
+        ret.setValueKind(CSSStyleValuePair::ValueKind::Length);
+        ret.setValue(CSSLength(frame->paddingBottom()));
+        return ret;
+    }
+
     return ret;
 }
 
@@ -2529,6 +2544,50 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             if (inb != nullptr) {
                 p = resolveFlowRelativeInlineProperties(
                     CSSStyleValuePair::KeyKind::MarginInlineStart, inb);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::PaddingBlockStart: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingBlockStart);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeBlockProperties(
+                CSSStyleValuePair::KeyKind::PaddingBlockStart,
+                frame->asFrameBox());
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p = resolveFlowRelativeBlockProperties(
+                    CSSStyleValuePair::KeyKind::PaddingBlockStart, inb);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::PaddingBlockEnd: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingBlockEnd);
+        if (frame && frame->isFrameBox()) {
+            p = resolveFlowRelativeBlockProperties(
+                CSSStyleValuePair::KeyKind::PaddingBlockEnd,
+                frame->asFrameBox());
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p = resolveFlowRelativeBlockProperties(
+                    CSSStyleValuePair::KeyKind::PaddingBlockEnd, inb);
             } else {
                 p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             }

@@ -347,6 +347,10 @@ protected:
     void setPadding(const char* value, size_t len, bool isImportant);
     void removePadding();
 
+    String* PaddingBlock();
+    void setPaddingBlock(const char* value, size_t len, bool isImportant);
+    void removePaddingBlock();
+
     String* PaddingInline();
     void setPaddingInline(const char* value, size_t len, bool isImportant);
     void removePaddingInline();
