@@ -35,6 +35,7 @@ public:
     static IDBTransactionDurability transactionDurabilityToType(String* string);
 
     static String* transactionModeToString(IDBTransactionMode mode);
+    static IDBTransactionMode transactionModeToType(String* string);
 };
 
 } // namespace Starfish

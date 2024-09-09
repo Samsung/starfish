@@ -102,6 +102,15 @@ bool MemorySerializeReader::checkValue(const char value)
     return true;
 }
 
+bool MemorySerializeReader::isMatchingValue(const char value)
+{
+    if (m_isError || isOverflown(sizeof(char))) {
+        return false;
+    }
+
+    return (value == *m_position);
+}
+
 bool MemorySerializeReader::isOverflown(const size_t size)
 {
     if (m_position + size > m_end) {
@@ -122,6 +131,8 @@ enum class ScriptValueSerializerTag : uint8_t {
     DoublePrimitive,
     OneByteStringPrimitive,
     TwoByteStringPrimitive,
+    BeginObject,
+    EndObject,
     Unknown,
 };
 
@@ -175,6 +186,22 @@ private:
         } else if (value->isSymbol()) {
             throw new DOMException(m_executionContext,
                                    DOMException::DATA_CLONE_ERR);
+        } else if (value->isObject()) {
+            ScriptObject obj = value->asObject();
+            if (obj->isBooleanObject() || obj->isNumberObject() ||
+                obj->isBigIntObject() || obj->isStringObject() ||
+                obj->isDateObject() || obj->isRegExpObject() ||
+                obj->isSharedArrayBufferObject() || obj->isFunctionObject() ||
+                obj->isErrorObject() || obj->isGlobalObject() ||
+                obj->isPromiseObject() || obj->isProxyObject() ||
+                obj->isArrayBufferView() || obj->isArrayObject() ||
+                obj->isArrayBufferObject() || obj->isTypedArrayObject()) {
+                STARFISH_UNIMPLEMENTED();
+                throw new DOMException(m_executionContext,
+                                       DOMException::DATA_CLONE_ERR);
+            } else {
+                writeObject(obj);
+            }
         } else {
             STARFISH_UNSUPPORTED("Serializing values of unsupported types");
             throw new DOMException(m_executionContext,
@@ -236,6 +263,36 @@ private:
                 bufferData.length);
         }
     }
+
+    void writeObject(ScriptObject object)
+    {
+        writeTag(ScriptValueSerializerTag::BeginObject);
+
+        auto result = Escargot::Evaluator::execute(
+            m_executionContext->scriptBindingInstance()->scriptContext(),
+            [](ScriptExecutionState state, StructuredSerialize* self,
+               ScriptObject object) -> ScriptValue {
+                Escargot::ValueVectorRef* keys = object->ownPropertyKeys(state);
+
+                for (size_t i = 0; i < keys->size(); i++) {
+                    ScriptValue key = keys->at(i);
+                    if (key->isString() && object->hasOwnProperty(state, key)) {
+                        auto property = object->getOwnProperty(state, key);
+                        self->writeString(key->asString());
+                        self->serializeScriptValue(property);
+                    }
+                }
+                return scriptUndefined();
+            },
+            this, object);
+
+        if (!result.isSuccessful()) {
+            m_writer->setError();
+            return;
+        }
+
+        writeTag(ScriptValueSerializerTag::EndObject);
+    }
 };
 
 class StructuredDeserialize : public gc {
@@ -251,6 +308,11 @@ public:
     void deserialize(DeserializeWithTransferResult& result)
     {
         deserializeScriptValue(result.m_deserialized);
+    }
+
+    void deserialize(ScriptValue& scriptValue)
+    {
+        deserializeScriptValue(scriptValue);
     }
 
 private:
@@ -280,6 +342,8 @@ private:
             readOneByteString(scriptValue);
         } else if (tag == ScriptValueSerializerTag::TwoByteStringPrimitive) {
             readTwoByteString(scriptValue);
+        } else if (tag == ScriptValueSerializerTag::BeginObject) {
+            readObject(scriptValue);
         } else {
             TRACE(SERIALIZE, "Unknown Tag");
             throw new DOMException(m_executionContext,
@@ -295,6 +359,11 @@ private:
         checkError();
 
         tag = static_cast<ScriptValueSerializerTag>(v);
+    }
+
+    bool isMatchingTag(ScriptValueSerializerTag tag)
+    {
+        return m_reader.isMatchingValue(static_cast<uint8_t>(tag));
     }
 
     template <typename T>
@@ -332,6 +401,54 @@ private:
                               static_cast<size_t>(length))));
     }
 
+    void readObject(ScriptValue& scriptValue)
+    {
+        auto result = Escargot::Evaluator::execute(
+            m_executionContext->scriptBindingInstance()->scriptContext(),
+            [](ScriptExecutionState state) -> ScriptValue {
+                return Escargot::ObjectRef::create(state);
+            });
+
+        if (!result.isSuccessful()) {
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "cannot read object value");
+            return;
+        }
+        scriptValue = result.result;
+
+        while (!isMatchingTag(ScriptValueSerializerTag::EndObject)) {
+            ScriptValue keyValue;
+            deserializeScriptValue(keyValue);
+
+            ScriptValue propertyValue;
+            deserializeScriptValue(propertyValue);
+
+            auto result = Escargot::Evaluator::execute(
+                m_executionContext->scriptBindingInstance()->scriptContext(),
+                [](ScriptExecutionState state, ScriptObject object,
+                   ScriptValue keyValue,
+                   ScriptValue propertyValue) -> ScriptValue {
+                    object->defineDataProperty(state, keyValue, propertyValue,
+                                               true, true, true);
+                    return scriptUndefined();
+                },
+                scriptValue->asObject(), keyValue, propertyValue);
+
+            if (!result.isSuccessful()) {
+                m_reader.setError();
+                break;
+            }
+        }
+
+        ScriptValueSerializerTag tag;
+        readTag(tag);
+        if (tag != ScriptValueSerializerTag::EndObject) {
+            m_reader.setError();
+        }
+        checkError();
+    }
+
     void checkError()
     {
         if (m_reader.isError()) {
@@ -357,6 +474,17 @@ SerializedTypedData* MemorySerializer::serialize(
 {
     StructuredSerialize serializer(executionContext);
     return serializer.serialize(value);
+}
+
+ScriptValue MemorySerializer::deserialize(ExecutionContext* executionContext,
+                                          const char* data, size_t size)
+{
+    StructuredDeserialize deserializer(executionContext, data, size);
+
+    ScriptValue result = scriptNull();
+    deserializer.deserialize(result);
+
+    return result;
 }
 
 void MemorySerializer::serializeWithTransfer(

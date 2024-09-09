@@ -41,18 +41,6 @@ static String* joinPath(String* first, Types... args)
     return first->concat("/")->concat(joinPath(args...));
 }
 
-void MemoryBackingStore::createDirectory(String* path)
-{
-    PlatformDirectory* dir = PlatformDirectory::create();
-    if (!dir->open(path)) {
-        if (!dir->mkDir()) {
-            STARFISH_LOG_ERROR("[IDB] Failed to create directory(%s)",
-                               CSTR(path));
-        }
-    }
-    dir->close();
-}
-
 void MemoryBackingStore::open(String* name, unsigned long long version)
 {
     String* openPath =
@@ -60,7 +48,7 @@ void MemoryBackingStore::open(String* name, unsigned long long version)
 
     m_openPath = openPath->toUTF8NonGCString();
 
-    createDirectory(openPath);
+    PlatformDirectoryUtil::createDirectory(openPath);
 
     TRACE(IDB, m_openPath);
 }
@@ -77,7 +65,8 @@ IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
     String* hashString = String::fromInt64(keyString->hashValue());
     String* path = joinPath(
         String::fromUTF8(m_openPath.c_str(), m_openPath.length()), name);
-    createDirectory(path);
+
+    PlatformDirectoryUtil::createDirectory(path);
 
     path = joinPath(path, hashString);
     auto out = PlatformFile::open(path, PlatformFile::FileMode::Write);
@@ -95,6 +84,38 @@ IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
 
     return size == dataSize ? IDBRequestErrorType::None
                             : IDBRequestErrorType::Unknown;
+}
+
+bool MemoryBackingStore::get(String* name, IDBKey* key, char*& data,
+                             size_t& dataSize)
+{
+    Nullable<String*> keyString = key->toString();
+    if (!keyString.hasValue()) {
+        return false;
+    }
+
+    String* hashString = String::fromInt64(keyString->hashValue());
+    String* path =
+        joinPath(String::fromUTF8(m_openPath.c_str(), m_openPath.length()),
+                 name, hashString);
+    TRACE(IDB, CSTR(path));
+
+    auto in = PlatformFile::open(path, PlatformFile::FileMode::Read);
+    if (!in) {
+        return true;
+    }
+
+    dataSize = in->size();
+    data = static_cast<char*>(malloc(dataSize));
+    if (in->read(data, sizeof(char), dataSize) != dataSize) {
+        free(data);
+        TRACE(IDB, "read error");
+        return false;
+    }
+
+    TRACE(IDB, "get data: size(", dataSize, ")");
+
+    return true;
 }
 
 } // namespace Starfish

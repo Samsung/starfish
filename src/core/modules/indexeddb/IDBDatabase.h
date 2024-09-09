@@ -42,7 +42,7 @@ struct IDBTransactionOptions {
     void setDurability(String* string);
     String* durability() const;
 
-    IDBTransactionDurability m_durability;
+    IDBTransactionDurability m_durability{ IDBTransactionDurability::Default };
 };
 
 struct IDBObjectStoreParameters {
@@ -67,7 +67,17 @@ public:
         return m_executionContext;
     }
 
+    IDBTransaction* transaction(DOMStringOrSequenceOfDOMString storeNames,
+                                String* mode,
+                                const IDBTransactionOptions& options = {});
+
+    IDBObjectStore* createObjectStore(String* name);
+    IDBObjectStore* createObjectStore(String* name,
+                                      IDBObjectStoreParameters options);
+
     IDBTransaction* startVersionChangeTransaction();
+
+    void close();
 
     DEFINE_GETTER(IDBConnection*, connection);
     DEFINE_GETTER(String*, name);

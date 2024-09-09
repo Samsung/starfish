@@ -19,24 +19,38 @@
 
 #if defined(STARFISH_ENABLE_IDB)
 
-#ifndef __StarfishIDBBackingStore__
-#define __StarfishIDBBackingStore__
+#ifndef __StarfishIDBKeyRange__
+#define __StarfishIDBKeyRange__
+
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
-class String;
 class IDBKey;
-enum class IDBRequestErrorType : uint8_t;
 
-class IDBBackingStore {
+class IDBKeyRange : public ScriptWrappable {
 public:
-    virtual void open(String* name, unsigned long long version) = 0;
-    virtual IDBRequestErrorType addOrPut(String* name, const char* data,
-                                         size_t dataSize, IDBKey* key,
-                                         bool noOverwrite) = 0;
-    virtual bool get(String* name, IDBKey* key, char*& data,
-                     size_t& dataSize) = 0;
+    static IDBKeyRange* convertValueToKeyRange(
+        ExecutionContext* executionContext, ScriptValue value,
+        bool nullDisallowed);
+
+    IDBKeyRange(ExecutionContext* executionContext, IDBKey* lower,
+                IDBKey* upper, bool isLowerOpen, bool isUpperOpen);
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(IDBKeyRange)
+
+    DEFINE_GETTER(IDBKey*, lower);
+    DEFINE_GETTER(bool, isOnly);
+
+private:
+    ExecutionContext* m_executionContext;
+    IDBKey* m_lower;
+    IDBKey* m_upper;
+    bool m_isLowerOpen;
+    bool m_isUpperOpen;
+    bool m_isOnly;
 };
+
 } // namespace Starfish
 
 #endif

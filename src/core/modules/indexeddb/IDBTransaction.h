@@ -41,6 +41,9 @@ public:
         Finished,
     };
 
+    IDBTransaction(ExecutionContext* executionContext, IDBDatabase* db,
+                   IDBTransactionMode mode,
+                   IDBTransactionDurability durability);
     IDBTransaction(ExecutionContext* executionContext, IDBDatabase* db);
 
     virtual void init(ScriptBindingInstance* instance,

@@ -33,15 +33,15 @@ class IDBKey;
 // NOTE: The MemoryBackingStore class is called only on the main work thread of
 // IDBTaskQueue.
 
-class MemoryBackingStore : public IDBBackingStore {
+class MemoryBackingStore final : public IDBBackingStore {
 public:
-    static void createDirectory(String* path);
-
     void open(String* name, unsigned long long version) override;
 
     IDBRequestErrorType addOrPut(String* name, const char* data,
                                  size_t dataSize, IDBKey* key,
                                  bool noOverwrite) override;
+
+    bool get(String* name, IDBKey* key, char*& data, size_t& dataSize) override;
 
 private:
     std::string m_openPath;

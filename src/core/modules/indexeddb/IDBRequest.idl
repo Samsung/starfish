@@ -15,8 +15,8 @@ interface IDBRequest : EventTarget {
   readonly attribute IDBRequestReadyState readyState;
 
   // Event handlers:
-  [Unimplemented] attribute EventHandler onsuccess;
-  [Unimplemented] attribute EventHandler onerror;
+  attribute EventHandler onsuccess;
+  attribute EventHandler onerror;
 };
 
 [STARFISH_ENABLE_IDB]

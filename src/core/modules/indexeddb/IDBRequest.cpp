@@ -159,6 +159,9 @@ void IDBRequest::dispatchErrorEvent()
     EventTarget::dispatchEventIdleTimeByUA(event);
 }
 
+DEFINE_EVENT_LISTENER(IDBRequest, success);
+DEFINE_EVENT_LISTENER(IDBRequest, error);
+
 } // namespace Starfish
 
 #endif

@@ -35,8 +35,6 @@ public:
 
     ~IDBStorageManager();
 
-    void init();
-
     void start();
 
     void dispose();

@@ -68,6 +68,20 @@ String* IDBUtils::transactionModeToString(IDBTransactionMode mode)
     return String::emptyString;
 }
 
+IDBTransactionMode IDBUtils::transactionModeToType(String* string)
+{
+    if (string->equals("readonly")) {
+        return IDBTransactionMode::ReadOnly;
+    } else if (string->equals("readwrite")) {
+        return IDBTransactionMode::ReadWrite;
+    } else if (string->equals("versionchange")) {
+        return IDBTransactionMode::VersionChange;
+    }
+
+    STARFISH_ASSERT_NOT_REACHED();
+    return IDBTransactionMode::ReadOnly;
+}
+
 } // namespace Starfish
 
 #endif

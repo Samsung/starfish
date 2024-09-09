@@ -60,6 +60,11 @@ public:
         return m_isError;
     }
 
+    void setError()
+    {
+        m_isError = true;
+    }
+
     void writeTerminator();
 
 private:
@@ -92,6 +97,8 @@ public:
     void readRawBytes(const size_t size, char*& data);
 
     bool checkValue(const char value);
+
+    bool isMatchingValue(const char value);
 
     bool isError() const
     {
@@ -155,6 +162,9 @@ class MemorySerializer {
 public:
     static SerializedTypedData* serialize(ExecutionContext* executionContext,
                                           ScriptValue value);
+
+    static ScriptValue deserialize(ExecutionContext* executionContext,
+                                   const char* data, size_t size);
 
     static void serializeWithTransfer(
         ExecutionContext* executionContext, ScriptValue value,

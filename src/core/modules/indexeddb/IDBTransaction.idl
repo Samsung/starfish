@@ -12,7 +12,7 @@ interface IDBTransaction : EventTarget {
   [SameObject] readonly attribute IDBDatabase db;
   readonly attribute DOMException? error;
 
-  [Unimplemented] IDBObjectStore objectStore(DOMString name);
+  IDBObjectStore objectStore(DOMString name);
   [Unimplemented] undefined commit();
   [Unimplemented] undefined abort();
 
