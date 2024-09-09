@@ -132,6 +132,32 @@ public:
     bool isInterestedIn(Node* node, const MutationObserverOptionType option,
                         const Optional<QualifiedName>& name);
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(MutationObserverRegistration)] = { 0 };
+            MutationObserverRegistration::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(
+                desc, GC_WORD_LEN(MutationObserverRegistration));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(MutationObserverRegistration, m_observer));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(MutationObserverRegistration, m_target));
+        markHashTable(desc, GC_WORD_OFFSET(MutationObserverRegistration,
+                                           m_attributeFilter));
+    }
+
 private:
     MutationObserver* m_observer = nullptr;
     Node* m_target = nullptr;
@@ -164,6 +190,29 @@ public:
     ExecutionContext* executionContext()
     {
         return m_executionContext;
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(MutationObserver)] = { 0 };
+            MutationObserver::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(MutationObserver));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_executionContext));
+        GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_callback));
+        GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_queuedRecords));
+        markHashTable(desc, GC_WORD_OFFSET(MutationObserver, m_registrations));
     }
 
 private:
