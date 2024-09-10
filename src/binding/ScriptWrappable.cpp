@@ -103,14 +103,15 @@ public:
                 baseURI);
 
         for (size_t i = 0; i < moduleScripts.size(); i ++) {
-            if (moduleScripts[i].url.hasValue() &&
-                *moduleScripts[i].url.value() == *src) {
-                if (!moduleScripts[i].module.hasValue()) {
+            Document::ScriptModuleData* data = moduleScripts[i];
+            if (data->url.hasValue() &&
+                *data->url.value() == *src) {
+                if (!data->module.hasValue()) {
                     // failed to load the module
                     return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
                                             Escargot::StringRef::createFromASCII("failed to load module"));
                 }
-                return LoadModuleResult(moduleScripts[i].module.value());
+                return LoadModuleResult(data->module.value());
             }
         }
 
@@ -369,14 +370,16 @@ Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance* i
         [](ExecutionStateRef* state, ScriptValue iterable,
             GCVector<ScriptValue>* resultVector, ScriptBindingInstance* instance) -> ValueRef* {
             ObjectRef* iterator = iterable->toObject(state)->get(state,
-                    state->context()->vmInstance()->iteratorSymbol())->toObject(state);
+                    state->context()->vmInstance()->iteratorSymbol())->
+                    call(state, iterable, 0, nullptr)->toObject(state);
 
             ValueRef* nextString = instance->stringNext();
             ValueRef* doneString = instance->stringDone();
             ValueRef* valueString = instance->stringValue();
 
             while (true) {
-                ObjectRef* result = iterator->get(state, nextString)->toObject(state);
+                ObjectRef* result = iterator->get(state, nextString)->
+                        call(state, iterator, 0, nullptr)->toObject(state);
                 if (result->get(state, doneString)->toBoolean(state)) {
                     break;
                 }

@@ -655,26 +655,27 @@ void Document::endDocumentParsing()
 }
 
 static void executeModule(Document* document,
-                          GCVector<Document::ScriptModuleData>& moduleScripts,
+                          GCVector<Document::ScriptModuleData*>& moduleScripts,
                           size_t startSize, bool fromParser)
 {
     for (size_t i = 0; i < startSize; i++) {
-        if (moduleScripts[i].fromParser == fromParser) {
+        Document::ScriptModuleData* data = moduleScripts[i];
+        if (data->fromParser == fromParser) {
             // execute module
-            if (!moduleScripts[i].hasLoadingError) {
-                STARFISH_ASSERT(moduleScripts[i].module.hasValue());
-                auto scriptModule = moduleScripts[i].module.value();
+            if (!data->hasLoadingError) {
+                STARFISH_ASSERT(data->module.hasValue());
+                auto scriptModule = data->module.value();
                 if (!isExcutedModule(scriptModule)) {
-                    moduleScripts[i].wasSuccessful = executeModule(
+                    data->wasSuccessful = executeModule(
                         document->scriptBindingInstance(), scriptModule);
                 }
             }
 
             // dispatch load, error event of js module
-            if (!moduleScripts[i].source->didModuleLoadOrErrorEventFired() &&
-                moduleScripts[i].url.hasValue()) {
+            if (!data->source->didModuleLoadOrErrorEventFired() &&
+                data->url.hasValue()) {
                 String* eventType;
-                if (moduleScripts[i].wasSuccessful) {
+                if (data->wasSuccessful) {
                     eventType = document->starfish()
                                     ->staticStrings()
                                     ->m_load.localName();
@@ -683,12 +684,12 @@ static void executeModule(Document* document,
                                     ->staticStrings()
                                     ->m_error.localName();
                 }
-                moduleScripts[i].source->dispatchEventByUA(
-                    moduleScripts[i].source,
+                data->source->dispatchEventByUA(
+                    data->source,
                     new Event(document->executionContext(), eventType,
                               EventInit(false, false)),
                     true);
-                moduleScripts[i].source->markModuleLoadOrErrorEventFired();
+                data->source->markModuleLoadOrErrorEventFired();
             }
         }
     }
