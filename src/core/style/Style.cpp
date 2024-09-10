@@ -7473,21 +7473,15 @@ void StyleResolver::applyProperty(
             ValueList* list = newCssValue.multiValue();
             if (list->size() == 1) {
                 CSSLength length = list->at(0).cssLengthValue();
-                style->setGridRowGap(length.toLength());
+                style->setRowGap(length.toLength());
                 style->setColumnGap(length.toLength());
             } else if (list->size() == 2) {
                 CSSLength row = list->at(0).cssLengthValue();
                 CSSLength column = list->at(1).cssLengthValue();
 
-                style->setGridRowGap(row.toLength());
+                style->setRowGap(row.toLength());
                 style->setColumnGap(column.toLength());
             }
-        }
-        break;
-    case CSSStyleValuePair::KeyKind::GridRowGap:
-        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-            CSSLength row = newCssValue.cssLengthValue();
-            style->setGridRowGap(row.toLength());
         }
         break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas:
@@ -13162,39 +13156,6 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
     }
 
     setValueList(values);
-
-    return true;
-}
-
-bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
-                                              const CSSTokenVector& tokens)
-{
-    STARFISH_ASSERT(document != nullptr);
-
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    auto ss = tokens[0];
-    ss.trim();
-    CSSPropertyParser parser((char*)ss.data(), ss.length());
-    bool hasPoint = false;
-
-    if (!parser.consumeNumber(&hasPoint)) {
-        return false;
-    }
-
-    float number = parser.parsedNumber();
-    parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
-
-    const auto& str = parser.parsedString();
-
-    if (str.length() != 0 && !CSSPropertyParser::isLengthUnit(str)) {
-        return false;
-    }
-
-    CSSLength length = CSSLength(str, number);
-    setLengthValue(length);
 
     return true;
 }

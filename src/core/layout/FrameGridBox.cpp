@@ -84,8 +84,8 @@ GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
     , m_rowGap(0)
     , m_columnGap(0)
 {
-    if (m_container->style()->gridRowGap().isFixed()) {
-        m_rowGap = m_container->style()->gridRowGap().fixed();
+    if (m_container->style()->rowGap().isFixed()) {
+        m_rowGap = m_container->style()->rowGap().fixed();
     }
 
     if (m_container->style()->columnGap().isFixed()) {

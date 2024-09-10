@@ -168,7 +168,6 @@ public:
         GridRowEnd,
         GridColumnStart,
         GridColumnEnd,
-        GridRowGap,
         GridTemplateAreas,
 
         WillChange
@@ -573,7 +572,6 @@ public:
     GETTER_VALUE(Length, length, ry, RY, 0);
     GETTER_VALUE(StylePaintData*, stopColor, stopColor, StopColor, nullptr);
     GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
-    GETTER_VALUE(Length, length, gridRowGap, GridRowGap, 0);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
                  NoneUserSelectValue);
     GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak,
@@ -3994,21 +3992,6 @@ public:
     void setGridColumnEnd(String* v)
     {
         *m_rareComputedStyleData.ensureGridColumnEnd() = v;
-    }
-
-    void setGridRowGap(Length l)
-    {
-        *m_rareComputedStyleData.ensureGridRowGap() = l;
-    }
-
-    Length gridRowGap()
-    {
-        Nullable<Length> gap = m_rareComputedStyleData.gridRowGap();
-        if (gap.hasValue()) {
-            return gap.getValue();
-        }
-
-        return Length();
     }
 
     String* gridRowStart()
