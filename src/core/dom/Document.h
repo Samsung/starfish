@@ -530,7 +530,7 @@ public:
         Document* m_document;
     };
 
-    struct ScriptModuleData {
+    struct ScriptModuleData : public gc {
         Optional<ScriptModule> module;
         Optional<ResourceURL*> url;
         HTMLScriptElement* source;
@@ -550,7 +550,7 @@ public:
         {
         }
     };
-    GCVector<ScriptModuleData>& moduleScripts()
+    GCVector<ScriptModuleData*>& moduleScripts()
     {
         return m_moduleScripts;
     }
@@ -829,7 +829,7 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
-    GCVector<ScriptModuleData> m_moduleScripts;
+    GCVector<ScriptModuleData*> m_moduleScripts;
 
     BloomFilter<12> m_nameIdFilter;
     ReferrerPolicy m_referrerPolicy;

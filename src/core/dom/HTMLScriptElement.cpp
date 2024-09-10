@@ -161,12 +161,12 @@ public:
                         m_element->document()->moduleScripts();
                     if (module) {
                         bool fromParser = false;
-                        for (auto& ms : moduleScripts) {
-                            if (ms.url &&
-                                *ms.url.value() == *client->resource()->url()) {
-                                STARFISH_ASSERT(!ms.module.hasValue());
-                                ms.module = module;
-                                fromParser = ms.fromParser;
+                        for (auto* ms : moduleScripts) {
+                            if (ms->url && *ms->url.value() ==
+                                               *client->resource()->url()) {
+                                STARFISH_ASSERT(!ms->module.hasValue());
+                                ms->module = module;
+                                fromParser = ms->fromParser;
                                 break;
                             }
                         }
@@ -182,10 +182,10 @@ public:
                         }
                     } else {
                         // parsing error
-                        for (auto& ms : moduleScripts) {
-                            if (ms.url &&
-                                *ms.url.value() == *client->resource()->url()) {
-                                ms.hasLoadingError = true;
+                        for (auto* ms : moduleScripts) {
+                            if (ms->url && *ms->url.value() ==
+                                               *client->resource()->url()) {
+                                ms->hasLoadingError = true;
                                 break;
                             }
                         }
@@ -221,9 +221,9 @@ public:
             m_element->document()->m_deferredScriptElements.erase(pos);
 
             auto& moduleScripts = m_element->document()->moduleScripts();
-            for (auto& ms : moduleScripts) {
-                if (ms.url && *ms.url.value() == *resource()->url()) {
-                    ms.hasLoadingError = true;
+            for (auto* ms : moduleScripts) {
+                if (ms->url && *ms->url.value() == *resource()->url()) {
+                    ms->hasLoadingError = true;
                     break;
                 }
             }
@@ -312,15 +312,15 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
 {
     if (module) {
         auto& moduleScripts = element->document()->moduleScripts();
-        for (auto& ms : moduleScripts) {
-            if (ms.url && *ms.url.value() == *rurl) {
+        for (auto* ms : moduleScripts) {
+            if (ms->url && *ms->url.value() == *rurl) {
                 // we already have the module.
                 return;
             }
         }
 
         moduleScripts.push_back(
-            Document::ScriptModuleData(nullptr, rurl, element, fromParser));
+            new Document::ScriptModuleData(nullptr, rurl, element, fromParser));
     }
     String* charset = element
                           ->getAttributeOrEmpty(
@@ -413,8 +413,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     initModule(window()->scriptBindingInstance(), script);
                 if (module) {
                     document()->moduleScripts().push_back(
-                        Document::ScriptModuleData(module.value(), nullptr,
-                                                   this, inParser));
+                        new Document::ScriptModuleData(module.value(), nullptr,
+                                                       this, inParser));
 
                     auto requests = moduleRequests(module.value());
                     for (size_t i = 0; i < requests.size(); i++) {
