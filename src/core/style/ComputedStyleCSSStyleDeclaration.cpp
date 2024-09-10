@@ -2257,7 +2257,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridGap);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* values = new ValueList(Separator::SpaceSeparator);
-        Length row = style->gridRowGap();
+        Length row = style->rowGap();
         Length column = style->columnGap();
         CSSStyleValuePair ret1;
         if (row.isFixed()) {
@@ -2272,14 +2272,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         p.setValueList(values);
 
-        addValuePair(p);
-    } break;
-    case CSSStyleValuePair::KeyKind::GridRowGap: {
-        CSSStyleValuePair p;
-        Length row = style->gridRowGap();
-        if (row.isFixed()) {
-            p.setLengthValue(CSSLength(row.fixed()));
-        }
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas: {

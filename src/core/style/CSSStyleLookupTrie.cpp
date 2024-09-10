@@ -657,7 +657,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::GridRowEnd;
             }
             if (memcmp(data, "grid-row-gap", 12) == 0) {
-                return CSSStyleValuePair::KeyKind::GridRowGap;
+                return CSSStyleValuePair::KeyKind::RowGap;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
@@ -1765,7 +1765,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::GridRowEnd;
             }
             if (memcmp(data, "gridRowGap", 10) == 0) {
-                return CSSStyleValuePair::KeyKind::GridRowGap;
+                return CSSStyleValuePair::KeyKind::RowGap;
             }
             if (memcmp(data, "gridColumn", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::GridColumn;

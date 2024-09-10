@@ -778,7 +778,6 @@ class CSSFilterFunction;
     F(GridColumnEnd, gridColumnEnd, "grid-column-end")                         \
     F(GridGap, gridGap, "grid-gap")                                            \
     F(GridRow, gridRow, "grid-row")                                            \
-    F(GridRowGap, gridRowGap, "grid-row-gap")                                  \
     F(GridColumn, gridColumn, "grid-column")                                   \
     F(GridTemplateAreas, gridTemplateAreas, "grid-template-areas")             \
     F(GridArea, gridArea, "grid-area")                                         \
