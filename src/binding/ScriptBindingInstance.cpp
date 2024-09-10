@@ -219,7 +219,20 @@ ScriptBindingInstance::ScriptBindingInstance(
     */
     m_scriptContext =
         ContextRef::create(engineInstance->engineInstance()).release();
+
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) m_string##Value = AtomicStringRef::create(m_scriptContext, #value);
+    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
 }
+
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) \
+Escargot::StringRef* ScriptBindingInstance::string##Value()          \
+{                                                                    \
+    return m_string##Value->string();                                \
+}
+    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
+
 
 class GlobalBindingNameAccessorPropertyData
     : public ObjectRef::NativeDataAccessorPropertyData {

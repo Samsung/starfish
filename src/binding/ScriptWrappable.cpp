@@ -211,6 +211,11 @@ bool isCallableScriptValue(ScriptValue v)
     return v->isCallable();
 }
 
+bool isConstructibleScriptValue(ScriptValue v)
+{
+    return v->isConstructible();
+}
+
 bool isObjectScriptValue(ScriptValue v)
 {
     return v->isObject();
@@ -249,6 +254,25 @@ unsigned scriptValueAsNumber(ScriptValue v)
 ScriptObject scriptValueAsObject(ScriptValue v)
 {
     return v->asObject();
+}
+
+Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance, ScriptValue v, bool throwsException)
+{
+    auto sbresult = Evaluator::execute(
+            instance->scriptContext(),
+               [](ExecutionStateRef* state, ScriptValue v) -> ValueRef* {
+                   return ValueRef::create(v->toBoolean(state));
+               },
+               v);
+
+    if (sbresult.error.hasValue()) {
+        if (throwsException) {
+            throwScriptException(instance, sbresult.error.value());
+        }
+        return nullptr;
+    }
+
+    return scriptValueAsBoolean(sbresult.result);
 }
 
 ScriptObject scriptError(ScriptBindingInstance* instance, String* msg)
@@ -327,6 +351,50 @@ ScriptObject scriptURIError(ScriptBindingInstance* instance, String* msg)
                },
                msg)
         .result->asObject();
+}
+
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) \
+ScriptString scriptString##Value(ScriptBindingInstance* instance)    \
+{                                                                    \
+    return instance->string##Value();                                \
+}
+STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
+
+Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance* instance, ScriptValue iterable, bool throwsException)
+{
+    GCVector<ScriptValue> result;
+    auto sbresult = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptValue iterable,
+            GCVector<ScriptValue>* resultVector, ScriptBindingInstance* instance) -> ValueRef* {
+            ObjectRef* iterator = iterable->toObject(state)->get(state,
+                    state->context()->vmInstance()->iteratorSymbol())->toObject(state);
+
+            ValueRef* nextString = instance->stringNext();
+            ValueRef* doneString = instance->stringDone();
+            ValueRef* valueString = instance->stringValue();
+
+            while (true) {
+                ObjectRef* result = iterator->get(state, nextString)->toObject(state);
+                if (result->get(state, doneString)->toBoolean(state)) {
+                    break;
+                }
+                resultVector->push_back(result->get(state, valueString));
+            }
+
+            return ValueRef::createUndefined();
+        },
+        iterable, &result, instance);
+
+    if (sbresult.error.hasValue()) {
+        if (throwsException) {
+            throwScriptException(instance, sbresult.error.value());
+        }
+        return nullptr;
+    }
+
+    return result;
 }
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -934,7 +1002,77 @@ ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
     return result;
 }
 
-ScriptValue getScriptObjectOwnProperty(ScriptBindingInstance* instance,
+Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key)
+{
+    auto sbresult = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptObject object,
+                ScriptValue key) -> ValueRef* {
+            return object->get(state, key);
+        },
+        object, key);
+
+    if (sbresult.error.hasValue()) {
+        return nullptr;
+    }
+
+    return sbresult.result;
+}
+
+Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
+                                           ScriptObject object, ScriptString key)
+{
+    return getScriptObjectProperty(instance, object, static_cast<ScriptValue>(key));
+}
+
+ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key)
+{
+    auto sbresult = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptObject object,
+           ScriptValue key) -> ValueRef* {
+            return object->get(state, key);
+        },
+        object, key);
+
+    if (sbresult.error.hasValue()) {
+        throwScriptException(instance, sbresult.error.value());
+    }
+
+    return sbresult.result;
+}
+
+ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptString key)
+{
+    return getScriptObjectPropertyThrowsException(instance, object, static_cast<ScriptValue>(key));
+}
+
+Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key, bool throwException)
+{
+    auto sbresult = Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptObject object,
+           ScriptValue key) -> ValueRef* {
+            return object->get(state, key);
+        },
+        object, key);
+
+    if (sbresult.error.hasValue()) {
+        if (throwException) {
+            throwScriptException(instance, sbresult.error.value());
+        } else {
+            return nullptr;
+        }
+    }
+
+    return sbresult.result;
+}
+
+Optional<ScriptValue> getScriptObjectOwnProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key)
 {
     auto sbresult = Evaluator::execute(
@@ -946,8 +1084,7 @@ ScriptValue getScriptObjectOwnProperty(ScriptBindingInstance* instance,
         object, key);
 
     if (sbresult.error.hasValue()) {
-        STARFISH_ASSERT_NOT_REACHED();
-        return scriptUndefined();
+        return nullptr;
     }
 
     return sbresult.result;
@@ -1757,6 +1894,17 @@ void invokeTestStartFunction(ScriptBindingInstance* instance)
     callScriptFunction(instance, fn, nullptr, 0, scriptUndefined());
 }
 #endif
+
+void throwScriptTypeError(ScriptBindingInstance* instance, String* message)
+{
+    throwScriptException(instance, toJSString(message));
+}
+
+void throwScriptException(ScriptBindingInstance* instance, ScriptValue e)
+{
+    STARFISH_ASSERT(instance->scriptContext()->canThrowException());
+    instance->scriptContext()->throwException(e);
+}
 
 uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer)
 {
