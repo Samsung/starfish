@@ -93,7 +93,7 @@ ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
             proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
         } else {
             proto =
-                newTarget->get(state, StringRef::createFromASCII("prototype"));
+                newTarget->get(state, scriptStringPrototype(fetchScriptBindingInstance(state->context())));
         }
         result->scriptObject()->setPrototype(state, proto);
     }

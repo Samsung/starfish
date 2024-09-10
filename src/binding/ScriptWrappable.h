@@ -105,14 +105,18 @@ ScriptValue scriptUndefined();
 ScriptValue scriptStringToScriptValue(ScriptString s);
 
 bool isCallableScriptValue(ScriptValue v);
+bool isConstructibleScriptValue(ScriptValue v);
 bool isObjectScriptValue(ScriptValue v);
 bool isNumberScriptValue(ScriptValue v);
 bool isBooleanScriptValue(ScriptValue v);
 bool isNullOrUndefinedScriptValue(ScriptValue v);
 bool isStringScriptValue(ScriptValue v); 
+
 bool scriptValueAsBoolean(ScriptValue v);
 unsigned scriptValueAsNumber(ScriptValue v);
 ScriptObject scriptValueAsObject(ScriptValue v);
+
+Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance, ScriptValue v, bool throwsException = false);
 
 ScriptObject scriptError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptEvalError(ScriptBindingInstance*, String* msg);
@@ -120,6 +124,18 @@ ScriptObject scriptRangeError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptReferenceError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptTypeError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptURIError(ScriptBindingInstance*, String* msg);
+
+ScriptString scriptStringPrototype(ScriptBindingInstance*);
+ScriptString scriptStringConstructor(ScriptBindingInstance*);
+ScriptString scriptStringLength(ScriptBindingInstance*);
+
+Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance*, ScriptValue iterable,
+                                        bool throwsException = false);
+inline GCVector<ScriptValue> scriptReadIterableValueThrowsException(
+                                         ScriptBindingInstance* instance, ScriptValue iterable)
+{
+    return scriptReadIterableValue(instance, iterable, true).value();
+}
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     Escargot::ExecutionStateRef* state, Escargot::ObjectRef* obj,
@@ -158,6 +174,11 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
 ScriptString createScriptString(String* str);
 ScriptString createScriptString(const char* utf8Buffer, size_t len);
 ScriptString createScriptASCIIString(const char* asciiBuffer, size_t len);
+template <size_t N>
+static ScriptString createScriptASCIIString(const char (&str)[N])
+{
+    return createScriptASCIIString(str, N - 1);
+}
 ScriptValue createScriptValue(ScriptObject object);
 ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
@@ -208,7 +229,17 @@ ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
                                     ScriptValue key, ScriptValue value,
                                     ScriptValue thisValue);
 
-ScriptValue getScriptObjectOwnProperty(ScriptBindingInstance* instance,
+Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key);
+Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptString key);
+
+ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key);
+ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptString key);
+
+Optional<ScriptValue> getScriptObjectOwnProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key);
 
 void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
@@ -253,7 +284,8 @@ ScriptValue parseJSONStringToScriptValueOrNull(ScriptBindingInstance* instance,
 double parseDate(ScriptBindingInstance* instance, String* date);
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t time);
 
-void throwScriptTypeError(String* message);
+void throwScriptTypeError(ScriptBindingInstance* instance, String* message);
+void throwScriptException(ScriptBindingInstance* instance, ScriptValue e);
 
 uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer);
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);

@@ -21,6 +21,7 @@
 #define __StarfishScriptBindingInstance__
 
 namespace Escargot {
+class AtomicStringRef;
 class ContextRef;
 class ValueRef;
 class StringRef;
@@ -78,7 +79,7 @@ public:
                                          GlobalBindingNameAccessorGetter getter,
                                          GlobalBindingNameAccessorSetter setter);
 
-        virtual void destroy();
+    virtual void destroy();
 
     virtual void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) = 0;
 #if defined(STARFISH_ENABLE_DEBUGGER)
@@ -133,6 +134,18 @@ public:
         return m_scriptContext;
     }
 
+#define STARFISH_COMMONLY_USED_SCRIPT_STRINGS(F) \
+    F(prototype, Prototype)                      \
+    F(constructor, Constructor)                  \
+    F(length, Length)                            \
+    F(done, Done)                                \
+    F(value, Value)                              \
+    F(next, Next)
+
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(_, value) Escargot::StringRef* string##value();
+    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
+
 #ifdef TIZEN_DEVICE_API
     ::DeviceAPI::ExtensionManagerInstance* deviceAPI()
     {
@@ -142,7 +155,12 @@ public:
 
 protected:
     Escargot::ContextRef* m_scriptContext;
-#ifdef TIZEN_DEVICE_API
+
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(_, value) Escargot::AtomicStringRef* m_string##value;
+    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
+
+    #ifdef TIZEN_DEVICE_API
     ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI = nullptr;
 #endif
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,

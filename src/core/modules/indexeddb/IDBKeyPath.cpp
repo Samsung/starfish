@@ -60,12 +60,12 @@ IDBKey* IDBKeyPath::extractKey(ScriptValue value)
     }
 
     for (auto& key : m_strings) {
-        ScriptValue property = getScriptObjectOwnProperty(
+        Optional<ScriptValue> property = getScriptObjectOwnProperty(
             m_instance, scriptValueAsObject(value),
             createScriptValue(createScriptString(key)));
 
-        if (!isNullOrUndefinedScriptValue(property)) {
-            return IDBKey::convertValueToKey(m_instance, property);
+        if (property && !isNullOrUndefinedScriptValue(property.value())) {
+            return IDBKey::convertValueToKey(m_instance, property.value());
         }
     }
 
