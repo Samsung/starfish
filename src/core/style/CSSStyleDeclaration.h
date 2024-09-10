@@ -399,6 +399,10 @@ protected:
     void setMaskRepeat(const char* value, size_t len, bool isImportant);
     void removeMaskRepeat();
 
+    String* Gap();
+    void setGap(const char* value, size_t len, bool isImportant);
+    void removeGap();
+
     // Named property getter/setter/remover for custom properties.
     String* customProperty(String* key);
     void removeCustomProperty(String* key);

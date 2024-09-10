@@ -5445,6 +5445,60 @@ void CSSStyleDeclaration::removeMaskRepeat()
     removeUnitRepeatStyle(CSSStyleValuePair::KeyKind::MaskRepeat);
 }
 
+String* CSSStyleDeclaration::Gap()
+{
+    String* row = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::RowGap);
+    String* column = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::ColumnGap);
+
+    if (row->equals(column)) {
+        return row;
+    }
+
+    return row->concat(" ")->concat(column);
+}
+
+void CSSStyleDeclaration::setGap(const char* value, size_t length,
+                                 bool isImportant)
+{
+    if (length == 0) {
+        removeGap();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair row, column;
+    if (row.updateValueVarReferences(tokens)) {
+        row.setValue(String::fromUTF8(value, length));
+        row.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::RowGap, row);
+        return;
+    } else if (row.updateValueCommon(tokens)) {
+        column = row;
+    } else if (tokens.size() == 1 &&
+               row.updateValueRowGap(m_node->document(), tokens)) {
+        column = row;
+    } else if (tokens.size() == 2 && row.updateValueUnitGap(tokens[0]) &&
+               column.updateValueUnitGap(tokens[1])) {
+    } else {
+        return;
+    }
+
+    row.setFlagImportant(isImportant);
+    column.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::RowGap, row);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::ColumnGap, column);
+}
+
+void CSSStyleDeclaration::removeGap()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::RowGap);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::ColumnGap);
+}
+
 String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
 {
     CSSStyleValuePair::KeyKind xKind, yKind;

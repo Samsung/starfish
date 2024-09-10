@@ -610,6 +610,7 @@ class CSSFilterFunction;
     F(BackgroundPositionY, backgroundPositionY, "background-position-y")       \
     F(BoxDecorationBreak, boxDecorationBreak, "box-decoration-break")          \
     F(ColumnGap, columnGap, "column-gap")                                      \
+    F(RowGap, rowGap, "row-gap")                                               \
     F(CounterReset, counterReset, "counter-reset")                             \
     F(CounterIncrement, counterIncrement, "counter-increment")                 \
     F(LineHeight, lineHeight, "line-height")                                   \
@@ -835,6 +836,7 @@ class CSSFilterFunction;
     F(Background, background, "background")                          \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \
+    F(Gap, gap, "gap")                                               \
     F(GridTemplate, gridTemplate, "grid-template")                   \
     F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
@@ -2557,6 +2559,7 @@ public:
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
     bool updateValueUnitWordSpacing(const CSSTokenValue& value);
     bool updateValueUnitImageValue(const CSSTokenValue& value);
+    bool updateValueUnitGap(const CSSTokenValue& token);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit,
                               Separator sep = Separator::CommaSeparator);

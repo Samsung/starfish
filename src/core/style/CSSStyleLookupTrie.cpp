@@ -61,6 +61,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // all
         // top
         // src
+        // gap
         if (memcmp(data, "all", 3) == 0) {
             return CSSStyleValuePair::KeyKind::All;
         }
@@ -69,6 +70,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         }
         if (memcmp(data, "src", 3) == 0) {
             return CSSStyleValuePair::KeyKind::Src;
+        }
+        if (memcmp(data, "gap", 3) == 0) {
+            return CSSStyleValuePair::KeyKind::Gap;
         }
         break;
     case 4:
@@ -205,6 +209,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // opacity
         // outline
         // hyphens
+        // row-gap
         switch (data[0]) {
         case 'c':
             if (memcmp(data, "content", 7) == 0) {
@@ -224,6 +229,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'p':
             if (memcmp(data, "padding", 7) == 0) {
                 return CSSStyleValuePair::KeyKind::Padding;
+            }
+            break;
+        case 'r':
+            if (memcmp(data, "row-gap", 7) == 0) {
+                return CSSStyleValuePair::KeyKind::RowGap;
             }
             break;
         case 'z':
