@@ -9,7 +9,15 @@ EXECUTE_PROCESS(
     COMMAND rm -rf ${OUTPUT_DIRECTORY}/starfish_generated/binding_test
     COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
     COMMAND python3 ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/
+    RESULT_VARIABLE _result
+    OUTPUT_VARIABLE _output
+    ERROR_VARIABLE _error_output
 )
+
+IF (NOT _result EQUAL 0)
+    MESSAGE(STATUS "Output:\n${_output}")
+    MESSAGE(FATAL_ERROR "${_error_output}")
+ENDIF()
 
 # Copy binding files if it has different content
 FILE (GLOB STARFISH_BINDING_TEST_FILES ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/*)
