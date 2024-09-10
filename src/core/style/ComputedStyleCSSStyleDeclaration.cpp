@@ -1495,6 +1495,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::RowGap: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ColumnGap);
+        Length gap = style->rowGap();
+        if (gap.isFixed()) {
+            p.setLengthValue(CSSLength(gap.fixed()));
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::ListStyleImage: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);

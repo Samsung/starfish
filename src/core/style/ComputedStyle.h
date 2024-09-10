@@ -157,6 +157,7 @@ public:
         LineClamp,
         StopColor,
         StopOpacity,
+        RowGap,
         ColumnGap,
         CustomProperty,
 
@@ -591,6 +592,7 @@ public:
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
     GETTER_VALUE(Length, length, columnGap, ColumnGap, 0);
+    GETTER_VALUE(Length, length, rowGap, RowGap, 0);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -1858,6 +1860,20 @@ public:
     void setColumnGap(const Length& length)
     {
         *m_rareComputedStyleData.ensureColumnGap() = length;
+    }
+
+    Length rowGap()
+    {
+        Nullable<Length> maybeLength = m_rareComputedStyleData.rowGap();
+        if (maybeLength.hasValue()) {
+            return maybeLength.getValue();
+        }
+        return Length();
+    }
+
+    void setRowGap(const Length& length)
+    {
+        *m_rareComputedStyleData.ensureRowGap() = length;
     }
 
     StylePaintData* stopColor()

@@ -4556,6 +4556,25 @@ void StyleResolver::applyProperty(
             }
         }
     } break;
+    case CSSStyleValuePair::KeyKind::RowGap: {
+        CSSStyleValuePair::ValueKind valueKind = newCssValue.valueKind();
+        if (valueKind == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setRowGap(parentStyle->rowGap());
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Initial ||
+                   valueKind == CSSStyleValuePair::ValueKind::Normal) {
+            style->setRowGap(Length(Length::Fixed, 0));
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Length ||
+                   valueKind == CSSStyleValuePair::ValueKind::Percentage ||
+                   valueKind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setRowGap(length.getValue());
+            } else {
+                style->setRowGap(Length(Length::Fixed, 0));
+            }
+        }
+    } break;
     case CSSStyleValuePair::KeyKind::MaskImage:
         // NOTE Do nothing for Initial, Unset, None, Inherit
         style->resetMaskImage();
@@ -12128,6 +12147,12 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
     }
 }
 
+bool CSSStyleValuePair::updateValueUnitGap(const CSSTokenValue& value)
+{
+    return updateValueUnitLengthOrCalc(CSSTokenValue(value),
+                                       CSSPropertyParser::AllowPercent);
+}
+
 #define UPDATE_VALUE_PADDING(POS, ...)                                     \
     bool CSSStyleValuePair::updateValuePadding##POS(                       \
         Document* document, const CSSTokenVector& tokens)                  \
@@ -15738,6 +15763,26 @@ bool CSSStyleValuePair::updateValueBoxDecorationBreak(
         return true;
     }
     return false;
+}
+
+bool CSSStyleValuePair::updateValueRowGap(Document* document,
+                                          const CSSTokenVector& tokens)
+{
+    // normal | <length-percentage [0,∞]>
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (value.equals("normal")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+        return true;
+    }
+
+    return updateValueUnitLengthOrCalc(value,
+                                       CSSPropertyParser::AllowNegative |
+                                           CSSPropertyParser::AllowPercent |
+                                           CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueColumnGap(Document* document,
