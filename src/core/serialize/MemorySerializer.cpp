@@ -133,6 +133,16 @@ enum class ScriptValueSerializerTag : uint8_t {
     TwoByteStringPrimitive,
     BeginObject,
     EndObject,
+    BeginArrayObject,
+    EndArrayObject,
+    ArrayBuffer,
+    ArrayBufferView,
+    Int8Array,
+    Uint8Array,
+    Int16Array,
+    Uint16Array,
+    Int32Array,
+    Uint32Array,
     Unknown,
 };
 
@@ -188,14 +198,19 @@ private:
                                    DOMException::DATA_CLONE_ERR);
         } else if (value->isObject()) {
             ScriptObject obj = value->asObject();
-            if (obj->isBooleanObject() || obj->isNumberObject() ||
-                obj->isBigIntObject() || obj->isStringObject() ||
-                obj->isDateObject() || obj->isRegExpObject() ||
-                obj->isSharedArrayBufferObject() || obj->isFunctionObject() ||
-                obj->isErrorObject() || obj->isGlobalObject() ||
-                obj->isPromiseObject() || obj->isProxyObject() ||
-                obj->isArrayBufferView() || obj->isArrayObject() ||
-                obj->isArrayBufferObject() || obj->isTypedArrayObject()) {
+            if (obj->isArrayObject()) {
+                writeArrayObject(obj->asArrayObject());
+            } else if (obj->isArrayBufferObject()) {
+                writeArrayBufferObject(obj->asArrayBufferObject());
+            } else if (obj->isTypedArrayObject()) {
+                writeTypedArrayObject(obj->asArrayBufferView());
+            } else if (obj->isBooleanObject() || obj->isNumberObject() ||
+                       obj->isBigIntObject() || obj->isStringObject() ||
+                       obj->isDateObject() || obj->isRegExpObject() ||
+                       obj->isSharedArrayBufferObject() ||
+                       obj->isFunctionObject() || obj->isErrorObject() ||
+                       obj->isGlobalObject() || obj->isPromiseObject() ||
+                       obj->isProxyObject() || obj->isArrayBufferView()) {
                 STARFISH_UNIMPLEMENTED();
                 throw new DOMException(m_executionContext,
                                        DOMException::DATA_CLONE_ERR);
@@ -217,6 +232,12 @@ private:
     void writeTag(ScriptValueSerializerTag tag)
     {
         m_writer->write(static_cast<uint8_t>(tag));
+    }
+
+    void writeRawBuffer(const uint8_t* buffer, size_t byteLength)
+    {
+        m_writer->write<size_t>(byteLength);
+        m_writer->write<uint8_t>(buffer, byteLength);
     }
 
     void writeBoolean(bool value)
@@ -264,6 +285,83 @@ private:
         }
     }
 
+    void writeArrayObject(ScriptArrayObject arrayObject)
+    {
+        writeTag(ScriptValueSerializerTag::BeginArrayObject);
+
+        auto result = Evaluator::execute(
+            m_executionContext->scriptBindingInstance()->scriptContext(),
+            [](ScriptExecutionState state, StructuredSerialize* self,
+               ScriptArrayObject arrayObject) {
+                uint64_t length = arrayObject->length(state);
+                self->writer()->write<uint64_t>(length);
+
+                for (uint64_t i = 0; i < length; i++) {
+                    auto key = ValueRef::create(i);
+                    if (arrayObject->hasOwnProperty(state, key)) {
+                        self->serializeScriptValue(
+                            arrayObject->get(state, key));
+                    }
+                }
+
+                return scriptUndefined();
+            },
+            this, arrayObject);
+
+        if (!result.isSuccessful()) {
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Failed to serialize an array object.");
+        }
+
+        writeTag(ScriptValueSerializerTag::EndArrayObject);
+    }
+
+    void writeArrayBufferObject(ScriptArrayBuffer arrayBuffer)
+    {
+        writeTag(ScriptValueSerializerTag::ArrayBuffer);
+        TRACE(SERIALIZE, arrayBuffer->byteLength());
+        writeRawBuffer(arrayBuffer->rawBuffer(), arrayBuffer->byteLength());
+    }
+
+    void writeTypedArrayObject(ScriptArrayBufferView arrayBufferView)
+    {
+        writeTag(ScriptValueSerializerTag::ArrayBuffer);
+        writeRawBuffer(arrayBufferView->rawBuffer(),
+                       arrayBufferView->byteLength());
+
+        writeArrayBufferView(arrayBufferView);
+    }
+
+    void writeArrayBufferView(ArrayBufferViewRef* arrayBufferView)
+    {
+        writeTag(ScriptValueSerializerTag::ArrayBufferView);
+
+        ScriptValueSerializerTag typeTag = ScriptValueSerializerTag::Unknown;
+
+        if (arrayBufferView->isUint8ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Uint8Array;
+        } else if (arrayBufferView->isInt8ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Int8Array;
+        } else if (arrayBufferView->isUint16ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Uint16Array;
+        } else if (arrayBufferView->isInt16ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Int16Array;
+        } else if (arrayBufferView->isUint32ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Uint32Array;
+        } else if (arrayBufferView->isInt32ArrayObject()) {
+            typeTag = ScriptValueSerializerTag::Int32Array;
+        } else {
+            STARFISH_UNIMPLEMENTED();
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR);
+        }
+
+        writeTag(typeTag);
+        m_writer->write<size_t>(arrayBufferView->byteOffset());
+        m_writer->write<size_t>(arrayBufferView->arrayLength());
+    }
+
     void writeObject(ScriptObject object)
     {
         writeTag(ScriptValueSerializerTag::BeginObject);
@@ -287,7 +385,9 @@ private:
             this, object);
 
         if (!result.isSuccessful()) {
-            m_writer->setError();
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Failed to serialize an object.");
             return;
         }
 
@@ -344,6 +444,17 @@ private:
             readTwoByteString(scriptValue);
         } else if (tag == ScriptValueSerializerTag::BeginObject) {
             readObject(scriptValue);
+        } else if (tag == ScriptValueSerializerTag::BeginArrayObject) {
+            readArrayObject(scriptValue);
+        } else if (tag == ScriptValueSerializerTag::ArrayBuffer) {
+            readArrayBufferObject(scriptValue);
+
+            if (isMatchingTag(ScriptValueSerializerTag::ArrayBufferView)) {
+                auto arrayBufferScriptValue =
+                    scriptValue->asArrayBufferObject();
+                readTag(tag);
+                readArrayBufferView(scriptValue, arrayBufferScriptValue);
+            }
         } else {
             TRACE(SERIALIZE, "Unknown Tag");
             throw new DOMException(m_executionContext,
@@ -401,6 +512,134 @@ private:
                               static_cast<size_t>(length))));
     }
 
+    void readArrayObject(ScriptValue& scriptValue)
+    {
+        uint64_t length = 0;
+        m_reader.read<uint64_t>(length);
+
+        ValueVectorRef* elements = ValueVectorRef::create();
+
+        for (size_t i = 0; i < length; i++) {
+            ScriptValue value;
+            deserializeScriptValue(value);
+            elements->pushBack(value);
+        }
+
+        auto result = Evaluator::execute(
+            m_executionContext->scriptBindingInstance()->scriptContext(),
+            [](ScriptExecutionState state,
+               ValueVectorRef* elements) -> ScriptValue {
+                return ArrayObjectRef::create(state, elements);
+            },
+            elements);
+
+        if (!result.isSuccessful()) {
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Failed to deserialize an array object.");
+        }
+
+        scriptValue = result.result;
+
+        ScriptValueSerializerTag tag;
+        readTag(tag);
+        if (tag != ScriptValueSerializerTag::EndArrayObject) {
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Failed to deserialize an array object.");
+        }
+
+        checkError();
+    }
+
+    void readArrayBufferObject(ScriptValue& scriptValue)
+    {
+        size_t byteLength = 0;
+        char* bytes = nullptr;
+
+        m_reader.read<size_t>(byteLength);
+        m_reader.readRawBytes(byteLength, bytes);
+        checkError();
+
+        auto scriptArrayBuffer = createScriptArrayBuffer(
+            m_executionContext->scriptBindingInstance(), byteLength);
+        memcpy(scriptArrayBuffer->rawBuffer(), bytes, byteLength);
+
+        scriptValue = scriptArrayBuffer;
+    }
+
+    static size_t getByteSize(ScriptValueSerializerTag tag)
+    {
+        switch (tag) {
+        case ScriptValueSerializerTag::Int8Array:
+            return sizeof(int8_t);
+        case ScriptValueSerializerTag::Uint8Array:
+            return sizeof(uint8_t);
+        case ScriptValueSerializerTag::Int16Array:
+            return sizeof(int16_t);
+        case ScriptValueSerializerTag::Uint16Array:
+            return sizeof(uint16_t);
+        case ScriptValueSerializerTag::Int32Array:
+            return sizeof(int32_t);
+        case ScriptValueSerializerTag::Uint32Array:
+            return sizeof(uint32_t);
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
+    void readArrayBufferView(ScriptValue& scriptValue,
+                             ScriptArrayBuffer arrayBuffer)
+    {
+        ScriptValueSerializerTag typeTag;
+        size_t byteOffset = 0;
+        size_t arrayLength = 0;
+
+        readTag(typeTag);
+        m_reader.read<size_t>(byteOffset);
+        m_reader.read<size_t>(arrayLength);
+        checkError();
+
+        ScriptArrayBufferView arrayBufferView;
+        if (typeTag == ScriptValueSerializerTag::Uint8Array) {
+            arrayBufferView = createEmptyUint8Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Int8Array) {
+            arrayBufferView = createEmptyInt8Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Uint16Array) {
+            arrayBufferView = createEmptyUint16Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Int16Array) {
+            arrayBufferView = createEmptyInt16Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Uint32Array) {
+            arrayBufferView = createEmptyUint32Array(
+                m_executionContext->scriptBindingInstance());
+        } else if (typeTag == ScriptValueSerializerTag::Int32Array) {
+            arrayBufferView = createEmptyInt32Array(
+                m_executionContext->scriptBindingInstance());
+        } else {
+            STARFISH_UNIMPLEMENTED();
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR);
+        }
+
+        size_t byteSize = getByteSize(typeTag);
+        if (byteSize == 0) {
+            throw new DOMException(
+                m_executionContext, DOMException::DATA_CLONE_ERR,
+                "Failed to deserialize an array buffer view.");
+        }
+
+        arrayBufferView->setBuffer(arrayBuffer, byteOffset,
+                                   byteSize * arrayLength, arrayLength);
+
+        scriptValue = arrayBufferView;
+    }
+
     void readObject(ScriptValue& scriptValue)
     {
         auto result = Escargot::Evaluator::execute(
@@ -412,8 +651,7 @@ private:
         if (!result.isSuccessful()) {
             throw new DOMException(m_executionContext,
                                    DOMException::DATA_CLONE_ERR,
-                                   "cannot read object value");
-            return;
+                                   "Failed to deserialize an object.");
         }
         scriptValue = result.result;
 
@@ -436,15 +674,18 @@ private:
                 scriptValue->asObject(), keyValue, propertyValue);
 
             if (!result.isSuccessful()) {
-                m_reader.setError();
-                break;
+                throw new DOMException(m_executionContext,
+                                       DOMException::DATA_CLONE_ERR,
+                                       "Failed to deserialize an object.");
             }
         }
 
         ScriptValueSerializerTag tag;
         readTag(tag);
         if (tag != ScriptValueSerializerTag::EndObject) {
-            m_reader.setError();
+            throw new DOMException(m_executionContext,
+                                   DOMException::DATA_CLONE_ERR,
+                                   "Failed to deserialize an object.");
         }
         checkError();
     }
