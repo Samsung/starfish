@@ -128,6 +128,7 @@ ScriptObject scriptURIError(ScriptBindingInstance*, String* msg);
 ScriptString scriptStringPrototype(ScriptBindingInstance*);
 ScriptString scriptStringConstructor(ScriptBindingInstance*);
 ScriptString scriptStringLength(ScriptBindingInstance*);
+ScriptString scriptString__proto__(ScriptBindingInstance*);
 
 Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance*, ScriptValue iterable,
                                         bool throwsException = false);
@@ -225,9 +226,19 @@ GCVector<String*> moduleRequests(ScriptModule module);
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
 bool isExcutedModule(ScriptModule module);
 
-ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
-                                    ScriptValue key, ScriptValue value,
-                                    ScriptValue thisValue);
+Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key, ScriptValue value,
+                                       bool throwsException = false);
+Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptString key, ScriptValue value,
+                                       bool throwsException = false);
+
+bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                            ScriptObject object, ScriptValue key,
+                                            ScriptValue value);
+bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                            ScriptObject object, ScriptString key,
+                                            ScriptValue value);
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key);

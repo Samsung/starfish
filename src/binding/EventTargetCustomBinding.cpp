@@ -39,18 +39,18 @@ ValueRef* eventtargetConstructor(ExecutionStateRef* state, ValueRef* thisValue,
     EventTargetWithExecutionContext* eventTargetWithExecutionContext = nullptr;
     ExecutionContext* exeuctionContext =
         fetchExecutionContext(state->context());
+    ScriptBindingInstance* instance = fetchScriptBindingInstance(state->context());
 
     eventTargetWithExecutionContext =
         new EventTargetWithExecutionContext(exeuctionContext);
 
-    if (newTarget.value() !=
-        fetchScriptBindingInstance(state->context())->fnEventTarget()) {
+    if (newTarget.value() != instance->fnEventTarget()) {
         ValueRef* proto = ValueRef::createUndefined();
         if (newTarget->isFunctionObject()) {
             proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
         } else {
             proto =
-                newTarget->get(state, StringRef::createFromASCII("prototype"));
+                newTarget->get(state, scriptStringPrototype(instance));
         }
         eventTargetWithExecutionContext->scriptObject()->setPrototype(state,
                                                                       proto);

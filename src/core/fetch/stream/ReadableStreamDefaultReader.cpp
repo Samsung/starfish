@@ -37,29 +37,29 @@ DefaultReadRequest::DefaultReadRequest(Promise* promise)
 void DefaultReadRequest::chunkSteps(ScriptBindingInstance* instance,
                                     ScriptValue chunk)
 {
-    ScriptValue result = createScriptValue(createEmptyScriptObject(instance));
+    ScriptObject result = createEmptyScriptObject(instance);
     setScriptObjectProperty(
-        instance, createScriptValue(String::createASCIIString("done")),
-        createScriptValue(false), result);
+        instance, result, createScriptValue(String::createASCIIString("done")),
+        createScriptValue(false));
     setScriptObjectProperty(
-        instance, createScriptValue(String::createASCIIString("value")), chunk,
-        result);
+        instance, result, createScriptValue(String::createASCIIString("value")),
+        chunk);
 
-    m_promise->fulfill(result);
+    m_promise->fulfill(createScriptValue(result));
 }
 
 void DefaultReadRequest::closeSteps(ScriptBindingInstance* instance,
                                     ScriptValue chunk)
 {
-    ScriptValue result = createScriptValue(createEmptyScriptObject(instance));
+    ScriptObject result = createEmptyScriptObject(instance);
     setScriptObjectProperty(
-        instance, createScriptValue(String::createASCIIString("done")),
-        createScriptValue(true), result);
+        instance, result, createScriptValue(String::createASCIIString("done")),
+        createScriptValue(true));
     setScriptObjectProperty(
-        instance, createScriptValue(String::createASCIIString("value")), chunk,
-        result);
+        instance, result, createScriptValue(String::createASCIIString("value")),
+        chunk);
 
-    m_promise->fulfill(result);
+    m_promise->fulfill(createScriptValue(result));
 }
 
 void DefaultReadRequest::errorSteps(ScriptBindingInstance* instance,

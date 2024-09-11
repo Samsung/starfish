@@ -1,4 +1,4 @@
-[HTMLConstructor]
+[CustomConstructor]
 interface HTMLElement : Element {
   // https://html.spec.whatwg.org/multipage/dom.html#htmlelement
   // metadata attributes

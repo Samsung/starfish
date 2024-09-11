@@ -983,26 +983,44 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
     return result;
 }
 
-ScriptValue setScriptObjectProperty(ScriptBindingInstance* instance,
-                                    ScriptValue key, ScriptValue value,
-                                    ScriptValue thisValue)
+Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptValue key, ScriptValue value,
+                                       bool throwsException)
 {
-    ScriptValue result = ValueRef::createUndefined();
-    ContextRef* ctx = instance->scriptContext();
     auto sbresult = Evaluator::execute(
-        ctx,
-        [](ExecutionStateRef* state, ScriptValue key, ScriptValue value,
-           ScriptValue thisValue) -> ValueRef* {
-            return ValueRef::create(thisValue->asObject()->defineDataProperty(
-                state, key, value, true, true, true));
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptObject object,
+                ScriptValue key, ScriptValue value) -> ValueRef* {
+            return ValueRef::create(object->set(state, key, value));
         },
-        key, value, thisValue);
+        object, key, value);
+
     if (sbresult.error.hasValue()) {
-        STARFISH_ASSERT_NOT_REACHED();
-    } else {
-        result = sbresult.result;
+        return nullptr;
     }
-    return result;
+
+    return sbresult.result->asBoolean();
+}
+
+Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
+                                       ScriptObject object, ScriptString key, ScriptValue value,
+                                       bool throwsException)
+{
+    return setScriptObjectProperty(instance, object, static_cast<ScriptValue>(key), value, throwsException);
+}
+
+bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                            ScriptObject object, ScriptValue key,
+                                            ScriptValue value)
+{
+    return setScriptObjectProperty(instance, object, key, value, true);
+}
+
+bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
+                                            ScriptObject object, ScriptString key,
+                                            ScriptValue value)
+{
+    return setScriptObjectPropertyThrowsException(instance, object, static_cast<ScriptValue>(key), value);
 }
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,

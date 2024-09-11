@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishHTMLUnknownElement__
-#define __StarfishHTMLUnknownElement__
+#ifndef __StarfishHTMLCustomElement__
+#define __StarfishHTMLCustomElement__
 
 #include "core/dom/HTMLElement.h"
 
@@ -26,31 +26,28 @@ namespace Starfish {
 
 struct CustomElementRegistryData;
 
-class HTMLUnknownElement : public HTMLElement {
+class HTMLCustomElement : public HTMLElement {
 public:
-    HTMLUnknownElement(Document* document, const QualifiedName& name);
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHTMLUnknownElement() const override;
-
-    void morphIntoCustomElement(CustomElementRegistryData* data);
+    HTMLCustomElement(Document* document, const QualifiedName& qname,
+                      CustomElementRegistryData* customElementRegistryData)
+        : HTMLElement(document, qname)
+        , m_customElementRegistryData(customElementRegistryData)
+    {
+    }
 
     void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
 
 private:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         HTMLElement::fillGCDescriptor(desc);
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(HTMLUnknownElement,
-                                  m_customElementRegistryDataPlaceHolder));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLCustomElement,
+                                        m_customElementRegistryData));
     }
 
-    union {
-        void* m_customElementRegistryDataPlaceHolder;
-    };
+    CustomElementRegistryData* m_customElementRegistryData;
 };
 } // namespace Starfish
 

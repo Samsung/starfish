@@ -28,6 +28,17 @@ class Traverse {
 
 public:
     template <typename Func>
+    static void traverse(Node* node, Func func)
+    {
+        func(node);
+        Node* child = node->firstChild();
+        while (child) {
+            traverse(child, func);
+            child = child->nextSibling();
+        }
+    }
+
+    template <typename Func>
     static Node* findDescendant(Node* parent, Func matchingRule)
     {
         Node* child = parent->firstChild();
