@@ -3,7 +3,7 @@
 interface CustomElementRegistry {
   // binding_generate can't handle default argument `= {}`.
   // [CEReactions] undefined define(DOMString name, CustomElementConstructor constructor, optional ElementDefinitionOptions options = {});
-  [CEReactions] undefined define(DOMString name, CustomElementConstructor constructor, optional ElementDefinitionOptions options);
+  [CEReactions, RaisesException] undefined define(DOMString name, CustomElementConstructor constructor, optional ElementDefinitionOptions options);
 
   // binding_generate can't handle union type that can be undefined.
   // But if the actual scriptValue from the browser object is undefined script value or the CustomElementConstructor used at define the result is the same as using union return type.

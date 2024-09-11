@@ -53,6 +53,42 @@ private:
     ScriptValue m_customElementConstructor = nullptr;
 };
 
+struct CustomElementRegistryData : public gc {
+    CustomElementConstructor* constructor;
+    QualifiedName name;
+    Optional<String*> extends;
+
+    GCAtomicVector<AtomicString> observedAttributes;
+    ScriptValue connectedCallback;
+    ScriptValue disconnectedCallback;
+    ScriptValue adoptedCallback;
+    ScriptValue attributeChangedCallback;
+
+    bool disableInternals;
+    bool disableShadow;
+    ScriptValue formAssociatedCallback;
+    ScriptValue formResetCallback;
+    ScriptValue formDisabledCallback;
+    ScriptValue formStateRestoreCallback;
+
+    CustomElementRegistryData()
+        : constructor(nullptr)
+        , name(QualifiedName(AtomicString::emptyAtomicString()))
+        , connectedCallback(scriptUndefined())
+        , disconnectedCallback(scriptUndefined())
+        , adoptedCallback(scriptUndefined())
+        , attributeChangedCallback(scriptUndefined())
+        , disableInternals(false)
+        , disableShadow(false)
+        , formAssociatedCallback(scriptUndefined())
+        , formResetCallback(scriptUndefined())
+        , formDisabledCallback(scriptUndefined())
+        , formStateRestoreCallback(scriptUndefined())
+    {
+    }
+};
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html
 class CustomElementRegistry : public ScriptWrappable {
 public:
     CustomElementRegistry(ExecutionContext* executionContext);
@@ -63,15 +99,23 @@ public:
 
     bool isCustomElementRegistry() const override;
 
+    Optional<CustomElementRegistryData*> find(ScriptValue ctor);
+    Optional<CustomElementRegistryData*> find(AtomicString name);
+    Optional<CustomElementRegistryData*> find(String* name);
+
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-customelementregistry-define
     void define(String* name, CustomElementConstructor* constructor,
                 ElementDefinitionOptions options = {});
 
     CustomElementConstructor* get(String* name);
-
     Nullable<String*> getName(CustomElementConstructor* constructor);
 
+    void upgrade(CustomElementRegistryData* data);
+
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    bool m_isElementDefinitionRunning;
+    ExecutionContext* m_executionContext;
+    GCUnorderedMap<AtomicString, CustomElementRegistryData*> m_registry;
 };
 } // namespace Starfish
 

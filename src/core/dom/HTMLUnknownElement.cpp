@@ -21,12 +21,31 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLUnknownElement.h"
+#include "core/dom/HTMLCustomElement.h"
+#include "core/dom/CustomElementRegistry.h"
 
 namespace Starfish {
 HTMLUnknownElement::HTMLUnknownElement(Document* document,
                                        const QualifiedName& qname)
     : HTMLElement(document, qname)
+    , m_customElementRegistryDataPlaceHolder(nullptr)
 {
+}
+
+void HTMLUnknownElement::morphIntoCustomElement(CustomElementRegistryData* data)
+{
+    m_customElementRegistryDataPlaceHolder = data;
+
+    // change c++ vptr to HTMLCustomElement
+    HTMLCustomElement vptrSource(document(), data->name, data);
+    size_t* srcPtr = reinterpret_cast<size_t*>(&vptrSource);
+    size_t* thisPtr = reinterpret_cast<size_t*>(this);
+    *thisPtr = *srcPtr;
+
+    if (!isGivenUpScriptValue()) {
+        // update script object's __proto__
+        init(scriptBindingInstance(), this);
+    }
 }
 
 void* HTMLUnknownElement::operator new(size_t size)
@@ -36,10 +55,12 @@ void* HTMLUnknownElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLUnknownElement)] = { 0 };
-        HTMLElement::fillGCDescriptor(desc);
+        HTMLUnknownElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLUnknownElement));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
+
+static_assert(sizeof(HTMLCustomElement) == sizeof(HTMLUnknownElement), "");
 } // namespace Starfish

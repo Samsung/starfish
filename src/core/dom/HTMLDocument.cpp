@@ -19,6 +19,8 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/page/Window.h"
+#include "core/dom/CustomElementRegistry.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLAreaElement.h"
@@ -77,6 +79,7 @@
 #include "core/dom/HTMLModElement.h"
 #include "core/dom/HTMLParamElement.h"
 #include "core/dom/HTMLUnknownElement.h"
+#include "core/dom/HTMLCustomElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLAudioElement.h"
 #include "core/dom/HTMLSourceElement.h"
@@ -274,6 +277,15 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLCanvasElement(document, qname);
     }
 #endif
+
+    if (document->window()->hasCustomElements()) {
+        auto customElementsData =
+            document->window()->customElements()->find(name);
+        if (customElementsData) {
+            return new HTMLCustomElement(document, qname,
+                                         customElementsData.value());
+        }
+    }
 
     auto s = name.string()->toUTF8NonGCString();
     STARFISH_LOG_INFO("HTMLDocument: invalid (or unsupported) element: %s",

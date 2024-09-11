@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+struct CustomElementRegistryData;
+
 class HTMLUnknownElement : public HTMLElement {
 public:
     HTMLUnknownElement(Document* document, const QualifiedName& name);
@@ -32,8 +34,23 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLUnknownElement() const override;
 
+    void morphIntoCustomElement(CustomElementRegistryData* data);
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+private:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        HTMLElement::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLUnknownElement,
+                                  m_customElementRegistryDataPlaceHolder));
+    }
+
+    union {
+        void* m_customElementRegistryDataPlaceHolder;
+    };
 };
 } // namespace Starfish
 

@@ -137,6 +137,7 @@ public:
 #define STARFISH_COMMONLY_USED_SCRIPT_STRINGS(F) \
     F(prototype, Prototype)                      \
     F(constructor, Constructor)                  \
+    F(__proto__, __proto__)                      \
     F(length, Length)                            \
     F(done, Done)                                \
     F(value, Value)                              \

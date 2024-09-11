@@ -109,6 +109,10 @@ public:
     }
 
     CustomElementRegistry* customElements();
+    bool hasCustomElements()
+    {
+        return m_customElementRegistry.hasValue();
+    }
 
     Navigator* navigator()
     {
