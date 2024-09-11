@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/modules/worker/WorkerSettings.h"
-#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/worker/client/WorkerClientManager.h"
 

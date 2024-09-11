@@ -21,7 +21,7 @@
 #ifndef __StarfishServiceWorkerGlobalScope__
 #define __StarfishServiceWorkerGlobalScope__
 
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 
 namespace Starfish {
 

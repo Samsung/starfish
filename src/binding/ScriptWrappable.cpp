@@ -35,7 +35,7 @@
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #if defined(STARFISH_WEBWORKER_HOST)
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #endif /* defined(STARFISH_WEBWORKER_HOST) */
 

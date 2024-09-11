@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "binding/ScriptWrappable.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/dom/ErrorEvent.h"

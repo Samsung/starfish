@@ -24,7 +24,7 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
-#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/WebWorker.h"
 #include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"

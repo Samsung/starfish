@@ -34,7 +34,7 @@
 #include "platform/network/http/HTTPStatus.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/modules/worker/util/network/IORunnable.h"
 #include "core/modules/worker/util/network/Connection.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"

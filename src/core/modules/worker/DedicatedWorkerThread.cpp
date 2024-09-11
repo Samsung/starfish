@@ -22,9 +22,9 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
-#include "core/modules/worker/host/WorkerObjectProxy.h"
+#include "core/modules/worker/WebWorker.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/WorkerObjectProxy.h"
 #include "core/modules/worker/Worker.h"
 #include "core/modules/worker/DedicatedWorkerThread.h"
 

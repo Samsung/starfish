@@ -29,13 +29,13 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/WorkerScriptController.h"
 #include "core/util/debug/Trace.h"
 #include "core/modules/sharedworker/host/SharedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/WebWorker.h"
 
 namespace Starfish {
 

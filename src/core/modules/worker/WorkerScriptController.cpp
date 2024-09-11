@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/WorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/ExecutionContext.h"

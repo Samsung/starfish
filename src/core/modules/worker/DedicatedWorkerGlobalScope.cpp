@@ -27,9 +27,9 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/worker/Worker.h"
 #include "core/modules/worker/WorkerHostProxy.h"
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerObjectProxy.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/WebWorker.h"
+#include "core/modules/worker/WorkerObjectProxy.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
 
 namespace Starfish {
 

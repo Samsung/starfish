@@ -32,7 +32,7 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/worker/Worker.h"
-#include "core/modules/worker/host/WorkerHost.h"
+#include "core/modules/worker/WorkerHost.h"
 #include "core/util/debug/Trace.h"
 
 #include "core/modules/worker/WorkerThread.h"

@@ -27,7 +27,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Window.h"
 #if defined(STARFISH_WEBWORKER_HOST)
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #endif
 

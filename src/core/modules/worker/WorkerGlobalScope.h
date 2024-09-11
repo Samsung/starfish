@@ -153,12 +153,12 @@ protected:
     WorkerGlobalScope(WebWorker* webWorker);
 
     WebWorker* m_webWorker;
-    ScriptBindingInstance* m_scriptBindingInstance;
-    ExecutionContext* m_executionContext;
-    WorkerScriptController* m_workerScriptController;
-    WorkerLocation* m_workerLocation;
-    WorkerNavigator* m_workerNavigator;
-    Crypto* m_crypto;
+    ScriptBindingInstance* m_scriptBindingInstance{ nullptr };
+    ExecutionContext* m_executionContext{ nullptr };
+    WorkerScriptController* m_workerScriptController{ nullptr };
+    WorkerLocation* m_workerLocation{ nullptr };
+    WorkerNavigator* m_workerNavigator{ nullptr };
+    Crypto* m_crypto{ nullptr };
     std::atomic_bool m_closing;
 
 #if defined(STARFISH_ENABLE_IDB)

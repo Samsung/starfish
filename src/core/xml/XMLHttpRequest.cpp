@@ -28,7 +28,7 @@
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/WebOrigin.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/FetchUtils.h"
 #include "core/fetch/Headers.h"

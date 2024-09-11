@@ -22,7 +22,7 @@
 #define __StarfishDedicatedWorkerGlobalScope__
 
 #include "core/dom/StructuredSerializeOptions.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 
 namespace Starfish {
 

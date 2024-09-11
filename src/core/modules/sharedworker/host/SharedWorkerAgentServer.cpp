@@ -51,6 +51,8 @@ void SharedWorkerAgentServer::start()
 void SharedWorkerAgentServer::onReceived(Socket* socket, const char* data,
                                          size_t len)
 {
+    Connection::onReceived(socket, data, len);
+
     m_messageHandler->onReceiveMessage(data, len);
 }
 

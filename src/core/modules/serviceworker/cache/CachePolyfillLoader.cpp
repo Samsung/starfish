@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/WorkerScriptController.h"
 #include "core/util/debug/Trace.h"
 
 #include "binding/generated/Js2c_CacheStorage.h"

@@ -22,9 +22,9 @@
 #include "StarfishConfig.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerHost.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/WebWorker.h"
+#include "core/modules/worker/WorkerHost.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/WorkerHostProxy.h"
 
 namespace Starfish {
