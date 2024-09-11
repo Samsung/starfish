@@ -49,7 +49,7 @@ void WebGLContextAttributes::setPowerPreference(String* preference)
     } else if (preference->equals("low-power") == true) {
         m_powerPreference = WebGLPowerPreference::LOW_POWER;
         return;
-    } else if (preference->equals("low-power") == true) {
+    } else if (preference->equals("high-performance") == true) {
         m_powerPreference = WebGLPowerPreference::HIGH_PERFORMANCE;
         return;
     }
