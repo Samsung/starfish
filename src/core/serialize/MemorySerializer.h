@@ -60,11 +60,6 @@ public:
         return m_isError;
     }
 
-    void setError()
-    {
-        m_isError = true;
-    }
-
     void writeTerminator();
 
 private:
@@ -103,11 +98,6 @@ public:
     bool isError() const
     {
         return m_isError;
-    }
-
-    void setError()
-    {
-        m_isError = true;
     }
 
 private:
