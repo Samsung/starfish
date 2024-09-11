@@ -27,8 +27,8 @@
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 #include "core/modules/sharedworker/IPCMessageSerializer.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
-#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
-#include "core/modules/sharedworker/client/SharedWorkerClient.h"
+#include "core/modules/sharedworker/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerClient.h"
 
 namespace Starfish {
 
@@ -59,6 +59,8 @@ void SharedWorkerClient::start()
 void SharedWorkerClient::onReceived(Socket* socket, const char* data,
                                     size_t len)
 {
+    Connection::onReceived(socket, data, len);
+
     m_requestFlag = false;
     sendPendingMessage();
 

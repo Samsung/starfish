@@ -22,7 +22,7 @@
 #include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 
 #include <EscargotPublic.h>

@@ -21,7 +21,7 @@
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
-#include "core/modules/worker/host/WorkerAgent.h"
+#include "core/modules/worker/WorkerAgent.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {

@@ -29,7 +29,7 @@
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 
 #include "core/dom/Event.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/util/debug/Trace.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/host/ExtendableEvent.h"

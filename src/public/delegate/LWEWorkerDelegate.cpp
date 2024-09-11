@@ -28,7 +28,7 @@
 
 #include "ThreadedCallHelper.h"
 
-#include "core/modules/worker/host/WorkerAgent.h"
+#include "core/modules/worker/WorkerAgent.h"
 
 #if defined(STARFISH_WINDOWS)
 #include <fontconfig/fontconfig.h>

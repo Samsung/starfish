@@ -21,7 +21,7 @@
 #ifndef __StarfishServiceWorkerScriptController__
 #define __StarfishServiceWorkerScriptController__
 
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/WorkerScriptController.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
 namespace Starfish {

@@ -20,7 +20,7 @@
 #ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/modules/worker/host/WorkerNavigator.h"
+#include "core/modules/worker/WorkerNavigator.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/ExecutionContext.h"
 

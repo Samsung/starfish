@@ -26,11 +26,11 @@
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
-#include "core/modules/worker/host/WorkerLocation.h"
-#include "core/modules/worker/host/WorkerNavigator.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/WebWorker.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerLocation.h"
+#include "core/modules/worker/WorkerNavigator.h"
+#include "core/modules/worker/WorkerScriptController.h"
 #include "core/util/debug/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 
@@ -49,7 +49,6 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     : EventTarget()
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
-    , m_crypto(nullptr)
     , m_closing(false)
 {
     STARFISH_ASSERT(webWorker != nullptr);

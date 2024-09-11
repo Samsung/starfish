@@ -153,7 +153,6 @@ FILE (GLOB STARFISH_WORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/worker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/worker/util/*.cpp
     ${STARFISH_ROOT}/src/core/modules/worker/util/network/*.cpp
-    ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
     ${STARFISH_ROOT}/src/core/modules/cast/*.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp

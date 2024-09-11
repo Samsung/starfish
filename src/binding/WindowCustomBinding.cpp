@@ -31,7 +31,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/renderer/Renderer.h"
-#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerProcessManager.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"

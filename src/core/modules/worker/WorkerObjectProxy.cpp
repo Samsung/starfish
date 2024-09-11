@@ -26,8 +26,8 @@
 #include "core/modules/worker/Worker.h"
 #include "core/modules/worker/WorkerThread.h"
 #include "core/modules/worker/WorkerHostProxy.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
-#include "core/modules/worker/host/WorkerObjectProxy.h"
+#include "core/modules/worker/DedicatedWorkerGlobalScope.h"
+#include "core/modules/worker/WorkerObjectProxy.h"
 
 namespace Starfish {
 

@@ -30,8 +30,8 @@
 #include "core/modules/sharedworker/SharedWorker.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
-#include "core/modules/sharedworker/client/SharedWorkerClient.h"
-#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerClient.h"
+#include "core/modules/sharedworker/SharedWorkerProcessManager.h"
 
 namespace Starfish {
 

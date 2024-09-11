@@ -30,11 +30,11 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/RunLoop.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/WebWorker.h"
 #include "core/modules/worker/WorkerThread.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/WorkerGlobalScope.h"
 
-#include "core/modules/worker/host/WorkerHost.h"
+#include "core/modules/worker/WorkerHost.h"
 
 namespace Starfish {
 

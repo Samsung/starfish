@@ -27,7 +27,7 @@
 #include "core/storage/StorageInternal.h"
 #include "core/util/debug/Trace.h"
 #include "core/serialize/MemorySerializer.h"
-#include "core/modules/sharedworker/client/SharedWorkerProcessManager.h"
+#include "core/modules/sharedworker/SharedWorkerProcessManager.h"
 #include "core/modules/sharedworker/SharedWorkerMessagePortConnection.h"
 #include "core/modules/sharedworker/IPCMessagePort.h"
 #include "core/modules/sharedworker/SharedWorkerKey.h"

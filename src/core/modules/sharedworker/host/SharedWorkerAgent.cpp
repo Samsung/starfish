@@ -29,7 +29,7 @@
 #include "core/modules/worker/WorkerIPCAddress.h"
 #include "core/modules/worker/WorkerConfig.h"
 #include "core/modules/worker/PerProcess.h"
-#include "core/modules/worker/host/WorkerHostManager.h"
+#include "core/modules/worker/WorkerHostManager.h"
 #include "core/modules/worker/util/LocalStorageHelper.h"
 #include "core/modules/sharedworker/SharedWorkerMessage.h"
 #include "core/modules/sharedworker/SharedWorkerKey.h"

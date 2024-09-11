@@ -22,7 +22,7 @@
 #ifndef __StarfishSharedWorkerAgent__
 #define __StarfishSharedWorkerAgent__
 
-#include "core/modules/worker/host/WorkerAgent.h"
+#include "core/modules/worker/WorkerAgent.h"
 
 namespace Starfish {
 

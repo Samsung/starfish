@@ -23,10 +23,8 @@
 #include "Starfish.h"
 
 #include "core/modules/worker/WorkerManager.h"
-#include "core/modules/worker/host/WorkerHostManager.h"
-#include "core/modules/sharedworker/host/SharedWorkerAgent.h"
-#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
-#include "core/modules/worker/host/WorkerAgent.h"
+#include "core/modules/worker/WorkerHostManager.h"
+#include "core/modules/worker/WorkerAgent.h"
 
 namespace Starfish {
 
