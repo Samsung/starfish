@@ -2810,6 +2810,11 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         return;
     }
 
+    if (imageData == nullptr) {
+        STARFISH_ASSERT_NOT_REACHED();
+        return;
+    }
+
     size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
     size_t byteLengthOfPixels = width * height * bytesPerPixel;
     stride = bytesPerPixel * width;
