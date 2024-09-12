@@ -559,8 +559,7 @@ String* CSSStyleValuePair::keyName() const
 #define ADD_CASE_FOR_KEYNAME(Name, name, cssname) \
     case CSSStyleValuePair::KeyKind::Name:        \
         return String::createASCIIString(cssname);
-        FOR_EACH_STYLE_ATTRIBUTE_BASIC(ADD_CASE_FOR_KEYNAME)
-        FOR_EACH_STYLE_ATTRIBUTE_STICKY(ADD_CASE_FOR_KEYNAME)
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CASE_FOR_KEYNAME)
 #undef ADD_CASE_FOR_KEYNAME
     case CSSStyleValuePair::KeyKind::CustomProperty:
         // TODO

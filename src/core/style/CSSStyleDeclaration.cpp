@@ -37,6 +37,10 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/GradientData.h"
 #include "core/style/StyleRule.h"
+#include "core/dom/MutationObserver.h"
+#include "core/dom/MutationRecord.h"
+#include "core/dom/MutationObservationScope.h"
+#include "core/dom/Node.h"
 
 namespace Starfish {
 
@@ -1264,12 +1268,14 @@ static bool parseAnimationShorthand(
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
     , m_node(element)
+    , m_isMutationObservationEnabled(false)
 {
 }
 
 CSSStyleDeclaration::CSSStyleDeclaration(Document* document)
     : ScriptWrappable(this)
     , m_node(document)
+    , m_isMutationObservationEnabled(false)
 {
 }
 
@@ -2037,6 +2043,17 @@ bool CSSStyleDeclaration::setPropertyInternal(
     CSSStyleValuePair::KeyKind keyKind, const char* value, size_t valueLength,
     bool isImportant)
 {
+    MutationObservationScope scope;
+    if (isInlineStyle() && m_isMutationObservationEnabled) {
+        String* old = nullptr;
+        QualifiedName qname(m_node->starfish()->staticStrings()->m_style);
+        auto maybeOld = m_node->asElement()->getAttribute(qname);
+        if (maybeOld) {
+            old = maybeOld.getValue();
+        }
+        scope.startAttributeMutationScope(m_node, qname, old);
+    }
+
     if (isShorthandProperty(keyKind)) {
         return setPropertyInternalFor<PropertyType::kShorthand>(
             keyKind, value, valueLength, isImportant);
