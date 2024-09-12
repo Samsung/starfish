@@ -2538,6 +2538,7 @@ public:
 
 #if !defined(PORT_PIXEL_ORDER_RGBA) && !defined(PORT_PIXEL_ORDER_BGRA)
         STARFISH_ASSERT_NOT_REACHED();
+        return;
 #endif
 
         bool needsColorConversion = false;
@@ -2774,6 +2775,11 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         TRACE(WEBGL, "source.isHTMLImageElementValue");
         HTMLImageElement* element = source.getHTMLImageElementValue();
         imageData = element->imageData();
+        if (imageData == nullptr) {
+            // For suppressing annoying coverity issue (false positive)
+            STARFISH_ASSERT_NOT_REACHED();
+            return;
+        }
         if (imageData->isSVGNativeImageData()) {
             STARFISH_UNIMPLEMENTED("SVGNativeImageData");
             width = element->width();
@@ -2801,6 +2807,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 #endif
     else {
         STARFISH_ASSERT_NOT_REACHED();
+        return;
     }
 
     size_t bytesPerPixel = Pixel::getBytesPerPixel(format, type);
