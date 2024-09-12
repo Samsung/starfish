@@ -375,12 +375,12 @@ public:
 
     void setStyleAttr(String* style);
 
-    CSSStyleDeclaration* inlineStyleWithoutCreation()
+    InlineCSSStyleDeclaration* inlineStyleWithoutCreation()
     {
         return m_inlineStyle;
     }
 
-    CSSStyleDeclaration* inlineStyle();
+    InlineCSSStyleDeclaration* inlineStyle();
     CSSStyleDeclaration* getComputedStyle();
 #ifdef STARFISH_ENABLE_TEST
     void dumpStyle();
@@ -478,7 +478,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Element, m_attributes));
     }
 
-    CSSStyleDeclaration* m_inlineStyle;
+    InlineCSSStyleDeclaration* m_inlineStyle;
     int m_tabIndex;
     QualifiedName m_name;
 

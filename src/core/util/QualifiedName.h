@@ -26,14 +26,14 @@ namespace Starfish {
 
 class QualifiedName : public gc {
     friend class StaticStrings;
+
+public:
     QualifiedName()
         : m_prefix(nullptr)
         , m_namespaceURI(AtomicString::emptyAtomicString())
         , m_localName(AtomicString::emptyAtomicString())
     {
     }
-
-public:
     QualifiedName(const AtomicString& localName)
         : m_prefix(nullptr)
         , m_namespaceURI(nullptr)
