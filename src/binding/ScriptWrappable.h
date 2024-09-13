@@ -212,6 +212,9 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         ScriptValue fn, ScriptValue* argv,
                                         size_t argc, ScriptValue thisValue,
                                         bool& error);
+void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
+                     ScriptValue* argv, size_t argc,
+                     ScriptObject thisValue);
 ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
                                     ScriptValue obj, ScriptValue* argv,
                                     size_t argc, ScriptValue thisValue);
