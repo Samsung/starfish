@@ -983,6 +983,47 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
     return result;
 }
 
+void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
+                            ScriptValue* argv, size_t argc,
+                            ScriptObject thisValue)
+{
+    INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
+                                     "call constructor function");
+    ScriptValue result = ValueRef::createUndefined();
+    if (fn->isCallable()) {
+        ContextRef* ctx = instance->scriptContext();
+        auto sbresult = Evaluator::execute(
+            ctx,
+            [](ExecutionStateRef* state, ScriptValue fn, ScriptValue* argv,
+               size_t argc, ScriptObject thisValue) -> ValueRef* {
+                fn->asObject()->callConstructor(state, thisValue, argc, argv);
+                return ValueRef::createUndefined();
+            },
+            fn, argv, argc, thisValue);
+        if (sbresult.error.hasValue()) {
+            // Dispatch error event to window
+            ScriptValue errorValue = sbresult.error.value();
+            ErrorEventInit errorInfo;
+            errorInfo.setMessage(toBrowserString(instance, errorValue));
+            if (sbresult.stackTrace.size() > 0) {
+                size_t lastIndex = sbresult.stackTrace.size() - 1;
+                errorInfo.setFilename(toBrowserString(
+                    instance,
+                    ValueRef::create(sbresult.stackTrace[lastIndex].srcName)));
+                errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+                errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
+            }
+            errorInfo.setError(errorValue);
+            instance->dispatchErrorEventToGlobalScope(errorInfo);
+            loggingJSErrorInfo(instance, sbresult);
+        } else {
+            result = sbresult.result;
+        }
+    }
+
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
+}
+
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key, ScriptValue value,
                                        bool throwsException)
