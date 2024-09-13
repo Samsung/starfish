@@ -24,6 +24,7 @@
 
 namespace Starfish {
 
+class HTMLUnknownElement;
 struct CustomElementRegistryData;
 
 class HTMLCustomElement : public HTMLElement {
@@ -35,9 +36,25 @@ public:
     {
     }
 
-    void* operator new(size_t size);
+    virtual bool isHTMLCustomElement() const override
+    {
+        return true;
+    }
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
+    virtual void didNodeAdopted(Document* oldDocument) override;
+
+    CustomElementRegistryData* customElementRegistryData() const
+    {
+        return m_customElementRegistryData;
+    }
 
 private:
     static inline void fillGCDescriptor(GC_word* desc)

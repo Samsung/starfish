@@ -28,6 +28,7 @@
 #include "core/dom/CDATASection.h"
 #include "core/dom/Comment.h"
 #include "core/dom/CustomEvent.h"
+#include "core/dom/CustomElementRegistry.h"
 #include "core/dom/ProcessingInstruction.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
@@ -1576,6 +1577,10 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
 
     if (newChild->isHTMLBaseElement()) {
         processBaseElement();
+    } else if (newChild->isHTMLUnknownElement()) {
+        if (window()->hasCustomElements()) {
+            window()->customElements()->upgrade(newChild);
+        }
     }
 
     updateDOMVersion();

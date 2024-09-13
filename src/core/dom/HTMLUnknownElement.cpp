@@ -41,11 +41,6 @@ void HTMLUnknownElement::morphIntoCustomElement(CustomElementRegistryData* data)
     size_t* srcPtr = reinterpret_cast<size_t*>(&vptrSource);
     size_t* thisPtr = reinterpret_cast<size_t*>(this);
     *thisPtr = *srcPtr;
-
-    if (!isGivenUpScriptValue()) {
-        // update script object's __proto__
-        init(scriptBindingInstance(), this);
-    }
 }
 
 void* HTMLUnknownElement::operator new(size_t size)

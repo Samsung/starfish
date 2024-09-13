@@ -279,9 +279,9 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void HTMLImageElement::didNodeAdopted()
+void HTMLImageElement::didNodeAdopted(Document* oldDocument)
 {
-    HTMLElement::didNodeAdopted();
+    HTMLElement::didNodeAdopted(oldDocument);
     if (document()->doesParticipateInRendering()) {
         Nullable<String*> srcStr =
             getAttribute(starfish()->staticStrings()->m_src);

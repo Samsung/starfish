@@ -1453,8 +1453,9 @@ static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
 {
     // adopt node
     if (node->document() != head->document()) {
+        auto oldDocument = node->document();
         node->setDocument(head->document());
-        node->didNodeAdopted();
+        node->didNodeAdopted(oldDocument);
     }
 
     if (head->isConnected()) {

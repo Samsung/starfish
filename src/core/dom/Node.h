@@ -35,6 +35,7 @@ class DOMTokenList;
 class Element;
 class Frame;
 class HTMLCollection;
+class HTMLCustomElement;
 class HTMLFormControl;
 class HTMLTextEditable;
 class HTMLListContainer;
@@ -636,7 +637,7 @@ public:
     }
     virtual void didNodeRemovedFromDocumentTree();
 
-    virtual void didNodeAdopted()
+    virtual void didNodeAdopted(Document* oldDocument)
     {
     }
 
@@ -753,6 +754,17 @@ public:
     {
         STARFISH_ASSERT(isPseudoElement());
         return reinterpret_cast<PseudoElement*>(this);
+    }
+
+    virtual bool isHTMLCustomElement() const
+    {
+        return false;
+    }
+
+    HTMLCustomElement* asHTMLCustomElement()
+    {
+        STARFISH_ASSERT(isHTMLCustomElement());
+        return reinterpret_cast<HTMLCustomElement*>(this);
     }
 
     bool isRunningOpacityAnimation()

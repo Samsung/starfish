@@ -282,8 +282,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         auto customElementsData =
             document->window()->customElements()->find(name);
         if (customElementsData) {
-            return new HTMLCustomElement(document, qname,
-                                         customElementsData.value());
+            return document->window()->customElements()->createCustomElement(
+                document, customElementsData.value());
         }
     }
 
