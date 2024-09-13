@@ -1785,6 +1785,23 @@ ScriptObject createScriptObject(ScriptBindingInstance* instance,
         .result->asObject();
 }
 
+ScriptObject createScriptObject(ScriptBindingInstance* instance,
+                                ScriptObject constructor, void* extraData)
+{
+    return Evaluator::execute(
+               instance->scriptContext(),
+               [](ExecutionStateRef* state, ScriptObject constructor,
+                  void* extraData) -> ValueRef* {
+                   ObjectRef* object = constructor->construct(state, 0, nullptr)->asObject();
+                   if (extraData) {
+                       object->setExtraData(extraData);
+                   }
+                   return object;
+               },
+               static_cast<Escargot::ObjectRef*>(constructor), extraData)
+        .result->asObject();
+}
+
 void registerJavaScriptNativeInterface(
     ScriptBindingInstance* instance, String* exposedObjectName,
     String* jsFunctionName, void* scriptObject,

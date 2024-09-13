@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/CustomElementRegistry.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -43,15 +44,40 @@ void* HTMLCustomElement::operator new(size_t size)
 void HTMLCustomElement::init(ScriptBindingInstance* instance,
                              void* domObjectPointer)
 {
-    HTMLElement::init(instance, domObjectPointer);
+    STARFISH_ASSERT_NOT_REACHED();
+}
 
-    ScriptValue proto = getScriptObjectPropertyThrowsException(
-        instance,
-        scriptValueAsObject(
-            m_customElementRegistryData->constructor->scriptValue()),
-        scriptStringPrototype(instance));
-    setScriptObjectProperty(instance, scriptObject(),
-                            scriptString__proto__(instance), proto);
+void HTMLCustomElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+}
+
+void HTMLCustomElement::didNodeInsertedToDocumentTree()
+{
+    HTMLElement::didNodeInsertedToDocumentTree();
+    m_customElementRegistryData->registry->invokeCustomElementReaction(
+        this, CustomElementCallbackType::kConnected, nullptr);
+}
+
+void HTMLCustomElement::didNodeRemovedFromDocumentTree()
+{
+    HTMLElement::didNodeRemovedFromDocumentTree();
+    m_customElementRegistryData->registry->invokeCustomElementReaction(
+        this, CustomElementCallbackType::kDisconnected, nullptr);
+}
+
+void HTMLCustomElement::didNodeAdopted(Document* oldDocument)
+{
+    HTMLElement::didNodeAdopted(oldDocument);
+    ScriptValue* data = new (GC)
+        ScriptValue[2]{ createScriptValue(oldDocument->scriptObject()),
+                        createScriptValue(document()->scriptObject()) };
+    m_customElementRegistryData->registry->invokeCustomElementReaction(
+        this, CustomElementCallbackType::kAdoptped, data);
 }
 
 } // namespace Starfish

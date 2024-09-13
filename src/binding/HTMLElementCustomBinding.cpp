@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/HTMLElement.h"
+#include "core/dom/HTMLCustomElement.h"
 #include "core/dom/CustomElementRegistry.h"
 #include "core/page/Window.h"
 #include "binding/ScriptBindingInstance.h"
@@ -62,8 +63,8 @@ ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue, 
         }
 
         if (isDecendentOfHTMLElement) {
-            HTMLElement* result = new HTMLElement(window->document(),
-                    data.value()->name);
+            auto obj = customElement->createCustomElement(window->document(), data.value(),
+                                                          false)->scriptObject();
 
             ValueRef* proto = ValueRef::createUndefined();
             if (newTarget->isFunctionObject()) {
@@ -71,8 +72,8 @@ ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue, 
             } else {
                 proto = newTarget->get(state, prototypeString);
             }
-            result->scriptObject()->setPrototype(state, proto);
-            return result->scriptValue();
+            obj->setPrototype(state, proto);
+            return obj;
         }
     }
 

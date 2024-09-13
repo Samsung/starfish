@@ -25,6 +25,8 @@
 
 namespace Starfish {
 
+class HTMLCustomElement;
+
 struct ElementDefinitionOptions {
     ElementDefinitionOptions()
         : m_extends(nullptr)
@@ -54,6 +56,7 @@ private:
 };
 
 struct CustomElementRegistryData : public gc {
+    CustomElementRegistry* registry;
     CustomElementConstructor* constructor;
     QualifiedName name;
     Optional<String*> extends;
@@ -72,7 +75,8 @@ struct CustomElementRegistryData : public gc {
     ScriptValue formStateRestoreCallback;
 
     CustomElementRegistryData()
-        : constructor(nullptr)
+        : registry(nullptr)
+        , constructor(nullptr)
         , name(QualifiedName(AtomicString::emptyAtomicString()))
         , connectedCallback(scriptUndefined())
         , disconnectedCallback(scriptUndefined())
@@ -88,6 +92,14 @@ struct CustomElementRegistryData : public gc {
     }
 };
 
+enum class CustomElementCallbackType : uint8_t {
+    kUpgraded,
+    kConnected,
+    kDisconnected,
+    kAdoptped,
+    kAttributeChanged,
+};
+
 // https://html.spec.whatwg.org/multipage/custom-elements.html
 class CustomElementRegistry : public ScriptWrappable {
 public:
@@ -98,6 +110,10 @@ public:
     void init(ScriptBindingInstance*, void*) override;
 
     bool isCustomElementRegistry() const override;
+
+    HTMLCustomElement* createCustomElement(Document* document,
+                                           CustomElementRegistryData* data,
+                                           bool invokeCallbacks = true);
 
     Optional<CustomElementRegistryData*> find(ScriptValue ctor);
     Optional<CustomElementRegistryData*> find(AtomicString name);
@@ -110,12 +126,43 @@ public:
     CustomElementConstructor* get(String* name);
     Nullable<String*> getName(CustomElementConstructor* constructor);
 
+    void upgrade(Node* node);
+    void upgrade(Element* element, CustomElementRegistryData* data,
+                 bool invokeCallbacks = true);
     void upgrade(CustomElementRegistryData* data);
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-callback-reaction
+    void enqueueToCustomElementsReactionStack(HTMLCustomElement* element,
+                                              CustomElementCallbackType type,
+                                              Optional<ScriptValue*> data);
 
 private:
     bool m_isElementDefinitionRunning;
+    bool m_isProcessingBackupElementQueue;
     ExecutionContext* m_executionContext;
     GCUnorderedMap<AtomicString, CustomElementRegistryData*> m_registry;
+
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-an-element-on-the-appropriate-element-queue
+    void enqueueAnElementOnAppropriateElementQueue(
+        HTMLCustomElement* element, CustomElementCallbackType type,
+        Optional<ScriptValue*> data);
+
+    struct CustomElementReactionData : public gc {
+        GCVector<std::pair<CustomElementCallbackType, Optional<ScriptValue*>>>
+            reactionData;
+    };
+
+    GCUnorderedMap<HTMLCustomElement*, CustomElementReactionData*>
+        m_customElementReactions;
+
+    GCVector<HTMLCustomElement*> m_customElementReactionStack;
+    GCVector<HTMLCustomElement*> m_customElementReactionStackBackupQueue;
+
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#invoke-custom-element-reactions
+    void invokeCustomElementReactions(GCVector<HTMLCustomElement*>& queue);
+    friend class HTMLCustomElement;
+    void invokeCustomElementReaction(HTMLCustomElement* element,
+                                     CustomElementCallbackType type,
+                                     Optional<ScriptValue*> data);
 };
 } // namespace Starfish
 
