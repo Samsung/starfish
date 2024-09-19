@@ -21,6 +21,7 @@
 
 #include "core/dom/MutationRecord.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/NodeList.h"
 
 namespace Starfish {
 MutationRecord::MutationRecord(ExecutionContext* executionContext)
@@ -45,6 +46,30 @@ MutationRecord::MutationRecord(ExecutionContext* executionContext, String* type,
 ScriptBindingInstance* MutationRecord::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+NodeList* MutationRecord::addedNodes()
+{
+    if (!m_addedNodes) {
+        m_addedNodes = new NodeList(m_target, true);
+        GCVector<Element*> emptyVector;
+
+        // Fill the cache with empty vectors.
+        m_addedNodes->getNodeListImpl().setItems(emptyVector);
+    }
+    return m_addedNodes;
+}
+
+NodeList* MutationRecord::removedNodes()
+{
+    if (!m_removedNodes) {
+        m_removedNodes = new NodeList(m_target, true);
+        GCVector<Element*> emptyVector;
+
+        // Fill the cache with empty vectors.
+        m_removedNodes->getNodeListImpl().setItems(emptyVector);
+    }
+    return m_removedNodes;
 }
 
 } // namespace Starfish
