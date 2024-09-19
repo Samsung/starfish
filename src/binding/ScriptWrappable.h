@@ -49,6 +49,8 @@ class Uint8ClampedArrayObjectRef;
 class Float32ArrayObjectRef;
 class Float64ArrayObjectRef;
 class SharedArrayBufferObjectRef;
+class MapObjectRef;
+class SetObjectRef;
 
 template <typename T>
 class OptionalRef;
@@ -98,6 +100,8 @@ typedef Escargot::SharedArrayBufferObjectRef* ScriptSharedArrayBuffer;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
 typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
 typedef Escargot::ScriptRef* ScriptModule;
+typedef Escargot::MapObjectRef* ScriptMap;
+typedef Escargot::SetObjectRef* ScriptSet;
 
 void staticallyInitScriptEngine();
 void staticallyDestroyScriptEngine();
@@ -112,7 +116,7 @@ bool isObjectScriptValue(ScriptValue v);
 bool isNumberScriptValue(ScriptValue v);
 bool isBooleanScriptValue(ScriptValue v);
 bool isNullOrUndefinedScriptValue(ScriptValue v);
-bool isStringScriptValue(ScriptValue v); 
+bool isStringScriptValue(ScriptValue v);
 
 bool scriptValueAsBoolean(ScriptValue v);
 unsigned scriptValueAsNumber(ScriptValue v);

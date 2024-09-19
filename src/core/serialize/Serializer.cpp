@@ -87,6 +87,34 @@ void* SerializedObjectData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void* SerializedMapData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SerializedMapData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedMapData)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedMapData, m_data));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(SerializedMapData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* SerializedSetData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SerializedSetData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(SerializedSetData)] = { 0 };
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(SerializedSetData, m_data));
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(SerializedSetData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void* SerializedArrayBufferData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SerializedArrayBufferData));
@@ -304,6 +332,39 @@ static bool deserializingDeep(ExecutionContext* executionContext,
             obj->defineDataProperty(state, property, deserialized, true, true,
                                     true);
         }
+    } else if (src->isMap()) {
+        ScriptMap obj = dst->asMapObject();
+        SerializedMapData* serializedObject =
+            src->data()->asSerializedMapData();
+        size_t len = serializedObject->length();
+        for (size_t i = 0; i < len; i++) {
+            auto& propertyAndValue = serializedObject->keyAndValue(i);
+            ScriptValue deserializedKey = deserializeInternal(
+                executionContext, state, propertyAndValue.first, memory);
+            if (!deserializedKey) {
+                return false;
+            }
+            ScriptValue deserializedValue = deserializeInternal(
+                executionContext, state, propertyAndValue.second, memory);
+            if (!deserializedValue) {
+                return false;
+            }
+            obj->set(state, deserializedKey, deserializedValue);
+        }
+    } else if (src->isSet()) {
+        ScriptSet obj = dst->asSetObject();
+        SerializedSetData* serializedObject =
+            src->data()->asSerializedSetData();
+        size_t len = serializedObject->length();
+        for (size_t i = 0; i < len; i++) {
+            auto value = serializedObject->value(i);
+            ScriptValue deserialized =
+                deserializeInternal(executionContext, state, value, memory);
+            if (!deserialized) {
+                return false;
+            }
+            obj->add(state, deserialized);
+        }
     } else if (src->isPlatformObject()) {
         ScriptWrappable* sw = (ScriptWrappable*)(dst->asObject()->extraData());
         STARFISH_ASSERT(sw->isSerializable());
@@ -350,6 +411,54 @@ static bool serializingDeep(ExecutionContext* executionContext,
                 serializedObject->setKeyAndValue(
                     key->asString()->toStdUTF8String(), serialized);
             }
+        }
+    } else if (dst->isMap()) {
+        ScriptObject obj = src->asObject();
+        SerializedMapData* serializedObject =
+            dst->data()->asSerializedMapData();
+        GCVector<ScriptValue> keyValues =
+            scriptReadIterableValue(executionContext->scriptBindingInstance(),
+                                    obj, false)
+                .value();
+        for (auto keyValue : keyValues) {
+            ScriptObject keyValuePairObj = keyValue->asObject();
+            ValueRef* keyIndex = ValueRef::create(0);
+            ValueRef* valueIndex = ValueRef::create(1);
+            if (keyValuePairObj->hasOwnProperty(state, keyIndex) &&
+                keyValuePairObj->hasOwnProperty(state, valueIndex)) {
+                SerializedTypedData* serializedKey = serializeInternal(
+                    executionContext, state,
+                    keyValuePairObj->get(state, keyIndex), memory);
+                if (!serializedKey) {
+                    return false;
+                }
+                SerializedTypedData* serializedValue = serializeInternal(
+                    executionContext, state,
+                    keyValuePairObj->get(state, valueIndex), memory);
+                if (!serializedValue) {
+                    return false;
+                }
+                serializedObject->setKeyAndValue(serializedKey,
+                                                 serializedValue);
+            } else {
+                return false;
+            }
+        }
+    } else if (dst->isSet()) {
+        ScriptObject obj = src->asObject();
+        SerializedSetData* serializedObject =
+            dst->data()->asSerializedSetData();
+        GCVector<ScriptValue> values =
+            scriptReadIterableValue(executionContext->scriptBindingInstance(),
+                                    obj, false)
+                .value();
+        for (auto v : values) {
+            SerializedTypedData* serialized =
+                serializeInternal(executionContext, state, v, memory);
+            if (!serialized) {
+                return false;
+            }
+            serializedObject->setValue(serialized);
         }
     } else if (dst->isPlatformObject()) {
         ScriptWrappable* sw = (ScriptWrappable*)(src->asObject()->extraData());
@@ -417,6 +526,14 @@ static SerializedTypedData* serializeInternal(
                 obj->asDateObject()->primitiveValue());
         } else if (obj->isRegExpObject()) {
             STARFISH_UNSUPPORTED("serialize: RegExpObject");
+        } else if (obj->isMapObject()) {
+            type = SerializedTypedData::Map;
+            data = new SerializedMapData();
+            deep = true;
+        } else if (obj->isSetObject()) {
+            type = SerializedTypedData::Set;
+            data = new SerializedSetData();
+            deep = true;
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
@@ -545,6 +662,12 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
     } else if (value->isRegExp()) {
         STARFISH_UNSUPPORTED("deserialize: RegExpObject");
         result = ValueRef::createUndefined();
+    } else if (value->isMap()) {
+        result = MapObjectRef::create(state);
+        deep = true;
+    } else if (value->isSet()) {
+        result = SetObjectRef::create(state);
+        deep = true;
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
         array->set(
