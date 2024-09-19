@@ -23,6 +23,8 @@
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "EscargotPublic.h"
+#include "core/dom/StructuredSerializeOptions.h"
+#include "core/serialize/Serializer.h"
 
 #ifdef STARFISH_ENABLE_CANVAS
 #include "core/style/Style.h"
@@ -84,6 +86,28 @@ namespace WindowOrWorkerGlobalScope {
                     scriptUndefined());
             },
             param);
+    }
+
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value)
+    {
+        return structuredClone(executionContext, value,
+                               StructuredSerializeOptions());
+    }
+
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value,
+                                StructuredSerializeOptions options)
+    {
+        SerializeWithTransferResult serializedRecord;
+        DeserializeWithTransferResult deserializedRecord;
+        // Needs to handle exception
+        Serializer::serializeWithTransfer(executionContext, value,
+                                          options.transfer(), serializedRecord);
+        STARFISH_ASSERT(serializedRecord.m_deserializer);
+        serializedRecord.m_deserializer(executionContext, serializedRecord,
+                                        deserializedRecord);
+        return deserializedRecord.m_deserialized;
     }
 
 #ifdef STARFISH_ENABLE_CANVAS

@@ -33,6 +33,7 @@ typedef CanvasImageSourceOrBlobOrImageData ImageBitmapSource;
 namespace Starfish {
 
 class String;
+class StructuredSerializeOptions;
 
 namespace WindowOrWorkerGlobalScope {
     String* btoa(ExecutionContext* executionContext, String* data);
@@ -40,6 +41,12 @@ namespace WindowOrWorkerGlobalScope {
 
     void queueMicrotask(ExecutionContext* executionContext,
                         ScriptObject callback);
+
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value);
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value,
+                                StructuredSerializeOptions options);
 
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(ExecutionContext* executionContext,

@@ -691,6 +691,8 @@ test/cairo/internal-test/css/css-ui/pointer-events_01.html
 test/cairo/internal-test/compatibility/quirks-height-percent.html
 test/cairo/internal-test/compatibility/quirks-empty-body.html
 test/cairo/internal-test/window/execution-order.html
+test/cairo/internal-test/window/structuredClone_01.html
+test/cairo/internal-test/window/structuredClone_02.html
 test/cairo/internal-test/url/URLsearchParams.html
 test/cairo/internal-test/blob/blob_arraybuffer_text_test.html
 test/cairo/internal-test/file/file_constructor.html

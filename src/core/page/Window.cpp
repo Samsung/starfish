@@ -62,6 +62,7 @@
 #include "core/modules/indexeddb/IDBStorageManager.h"
 #include "core/modules/indexeddb/IDBFactory.h"
 #include "binding/ScriptBindingSecurity.h"
+#include "core/dom/StructuredSerializeOptions.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "platform/process/base/ProcessType.h"
@@ -678,6 +679,20 @@ void Window::queueMicrotask(ExecutionContext* executionContext,
                             ScriptObject callback)
 {
     WindowOrWorkerGlobalScope::queueMicrotask(executionContext, callback);
+}
+
+ScriptValue Window::structuredClone(ExecutionContext* executionContext,
+                                    ScriptValue value)
+{
+    return WindowOrWorkerGlobalScope::structuredClone(executionContext, value);
+}
+
+ScriptValue Window::structuredClone(ExecutionContext* executionContext,
+                                    ScriptValue value,
+                                    StructuredSerializeOptions options)
+{
+    return WindowOrWorkerGlobalScope::structuredClone(executionContext, value,
+                                                      options);
 }
 
 #ifdef STARFISH_ENABLE_CANVAS

@@ -124,6 +124,12 @@ public:
     void queueMicrotask(ExecutionContext* executionContext,
                         ScriptObject callback);
 
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value);
+    ScriptValue structuredClone(ExecutionContext* executionContext,
+                                ScriptValue value,
+                                StructuredSerializeOptions options);
+
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(
         ExecutionContext* executionContext, ImageBitmapSource image,
