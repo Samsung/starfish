@@ -36,6 +36,8 @@ class SerializedStringData;
 class SerializedArrayData;
 class SerializedPlatformObjectData;
 class SerializedObjectData;
+class SerializedMapData;
+class SerializedSetData;
 class SerializedTypedData;
 class SerializedArrayBufferData;
 class SerializedArrayBufferViewData;
@@ -96,6 +98,16 @@ public:
         return false;
     }
 
+    virtual bool isSerializedMapData() const
+    {
+        return false;
+    }
+
+    virtual bool isSerializedSetData() const
+    {
+        return false;
+    }
+
     virtual bool isTransferedPlatformObjectData() const
     {
         return false;
@@ -144,6 +156,18 @@ public:
     {
         STARFISH_ASSERT(isSerializedObjectData());
         return (SerializedObjectData*)this;
+    }
+
+    SerializedMapData* asSerializedMapData() const
+    {
+        STARFISH_ASSERT(isSerializedMapData());
+        return (SerializedMapData*)this;
+    }
+
+    SerializedSetData* asSerializedSetData() const
+    {
+        STARFISH_ASSERT(isSerializedSetData());
+        return (SerializedSetData*)this;
     }
 
     TransferedPlatformObjectData* asTransferedPlatformObjectData() const
@@ -360,6 +384,73 @@ public:
 
 private:
     GCVector<std::pair<std::string, SerializedTypedData*>> m_data;
+};
+
+class SerializedMapData : public SerializedData {
+public:
+    SerializedMapData()
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    bool isSerializedMapData() const override
+    {
+        return true;
+    }
+
+    void setKeyAndValue(SerializedTypedData* key, SerializedTypedData* value)
+    {
+        m_data.emplace_back(key, value);
+    }
+
+    const std::pair<SerializedTypedData*, SerializedTypedData*>& keyAndValue(
+        size_t idx) const
+    {
+        return m_data[idx];
+    }
+
+    size_t length() const
+    {
+        return m_data.size();
+    }
+
+private:
+    GCVector<std::pair<SerializedTypedData*, SerializedTypedData*>> m_data;
+};
+
+class SerializedSetData : public SerializedData {
+public:
+    SerializedSetData()
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    bool isSerializedSetData() const override
+    {
+        return true;
+    }
+
+    void setValue(SerializedTypedData* value)
+    {
+        m_data.emplace_back(value);
+    }
+
+    SerializedTypedData* value(size_t idx) const
+    {
+        return m_data[idx];
+    }
+
+    size_t length() const
+    {
+        return m_data.size();
+    }
+
+private:
+    GCVector<SerializedTypedData*> m_data;
 };
 
 class SerializedArrayBufferData : public SerializedData {
