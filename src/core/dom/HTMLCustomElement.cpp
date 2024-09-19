@@ -55,6 +55,32 @@ void HTMLCustomElement::didAttributeChanged(QualifiedName name,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
+    if (isNullOrUndefinedScriptValue(
+            m_customElementRegistryData->attributeChangedCallback)) {
+        return;
+    }
+
+    bool contains = false;
+    for (auto s : m_customElementRegistryData->observedAttributes) {
+        if (s == name.localNameAtomic()) {
+            contains = true;
+            break;
+        }
+    }
+
+    if (!contains) {
+        return;
+    }
+
+    ScriptValue* data = new (GC) ScriptValue[3]{
+        createScriptValue(toJSString(name.localName())),
+        attributeCreated ? scriptNull()
+                         : createScriptValue(toJSString(old.value())),
+        attributeRemoved ? scriptNull() : createScriptValue(toJSString(value))
+    };
+
+    m_customElementRegistryData->registry->invokeCustomElementReaction(
+        this, CustomElementCallbackType::kAttributeChanged, data);
 }
 
 void HTMLCustomElement::didNodeInsertedToDocumentTree()
