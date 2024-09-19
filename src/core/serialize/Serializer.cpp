@@ -275,14 +275,16 @@ static bool deserializingDeep(ExecutionContext* executionContext,
         size_t len = serializedArray->length();
         for (size_t i = 0; i < len; i++) {
             SerializedTypedData* serialized = (*serializedArray)[i];
-            ScriptValue deserialized = deserializeInternal(
-                executionContext, state, serialized, memory);
-            if (!deserialized) {
-                return false;
+            if (serialized) {
+                ScriptValue deserialized = deserializeInternal(
+                    executionContext, state, serialized, memory);
+                if (!deserialized) {
+                    return false;
+                }
+                arrayobj->defineDataProperty(
+                    state, ValueRef::create(i)->toString(state), deserialized,
+                    true, true, true);
             }
-            arrayobj->defineDataProperty(state,
-                                         ValueRef::create(i)->toString(state),
-                                         deserialized, true, true, true);
         }
     } else if (src->isObject()) {
         ScriptObject obj = dst->asObject();
@@ -726,6 +728,9 @@ void Serializer::deserializeWithTransfer(
             if (*deserialized) {
                 for (size_t i = 0; i < serialized->m_serializedTransfer.size();
                      i++) {
+                    if (!serialized->m_serializedTransfer[i]) {
+                        continue;
+                    }
                     ScriptValue v = deserializeInternal(
                         executionContext, state,
                         serialized->m_serializedTransfer[i], *initialMap);

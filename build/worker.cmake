@@ -223,6 +223,7 @@ FILE (GLOB STARFISH_WORKER_BINDING_SRC
     ${STARFISH_BINDING_GENERATED_DIR}/BufferSourceOrBlobOrDOMStringBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/BlobPropertyBagBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/FilePropertyBagBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/StructuredSerializeOptionsBinding.cpp
 )
 
 FILE (GLOB STARFISH_WORKER_PUBLIC_SRC
@@ -330,35 +331,35 @@ MACRO (add_worker_target file_name variable_name)
     MESSAGE (STATUS "DEFINITIONS: " "${STARFISH_${variable_name}_DEFINITIONS}")
     MESSAGE (STATUS "LDFLAGS: " "${STARFISH_WORKER_LDFLAGS}")
     MESSAGE ("")
-    
-    TARGET_INCLUDE_DIRECTORIES (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+
+    TARGET_INCLUDE_DIRECTORIES (${STARFISH_${variable_name}_OBJECT_LIBRARY}
         PUBLIC ${STARFISH_${variable_name}_INCLUDE_DIRS})
-    TARGET_COMPILE_DEFINITIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+    TARGET_COMPILE_DEFINITIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY}
         PUBLIC ${STARFISH_${variable_name}_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY} 
+    TARGET_COMPILE_OPTIONS (${STARFISH_${variable_name}_OBJECT_LIBRARY}
         PUBLIC ${STARFISH_WORKER_CXXFLAGS})
-    
-    TARGET_LINK_LIBRARIES (starfish.${file_name}.shared_library 
+
+    TARGET_LINK_LIBRARIES (starfish.${file_name}.shared_library
         PUBLIC ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
-    TARGET_LINK_LIBRARIES (starfish.${file_name}.static_library 
+    TARGET_LINK_LIBRARIES (starfish.${file_name}.static_library
         PRIVATE ${STARFISH_${variable_name}_LINK_LIBRARIES} ${STARFISH_WORKER_LDFLAGS})
-    
-    SET_TARGET_PROPERTIES (starfish.${file_name}.shared_library PROPERTIES 
+
+    SET_TARGET_PROPERTIES (starfish.${file_name}.shared_library PROPERTIES
         OUTPUT_NAME ${TARGETNAME}-${file_name}-impl)
-    SET_TARGET_PROPERTIES (starfish.${file_name}.static_library PROPERTIES 
+    SET_TARGET_PROPERTIES (starfish.${file_name}.static_library PROPERTIES
         OUTPUT_NAME ${TARGETNAME}-${file_name}-impl)
 
 ENDMACRO()
 
 IF (${SHARED_WORKER} STREQUAL "1")
-    CONFIGURE_FILE(${STARFISH_ROOT}/lightweight-web-engine-sharedworker.pc.in 
+    CONFIGURE_FILE(${STARFISH_ROOT}/lightweight-web-engine-sharedworker.pc.in
         lightweight-web-engine-sharedworker.pc @ONLY)
 
     add_worker_target (sharedworker SHARED_WORKER)
 ENDIF()
 
 IF (${SERVICE_WORKER} STREQUAL "1")
-    CONFIGURE_FILE(${STARFISH_ROOT}/lightweight-web-engine-serviceworker.pc.in 
+    CONFIGURE_FILE(${STARFISH_ROOT}/lightweight-web-engine-serviceworker.pc.in
         lightweight-web-engine-serviceworker.pc @ONLY)
 
     add_worker_target (serviceworker SERVICE_WORKER)

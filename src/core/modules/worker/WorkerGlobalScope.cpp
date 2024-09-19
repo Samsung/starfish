@@ -42,6 +42,7 @@
 #include "core/modules/indexeddb/IDBFactory.h"
 
 #include "core/page/WindowOrWorkerGlobalScope.h"
+#include "core/dom/StructuredSerializeOptions.h"
 
 namespace Starfish {
 
@@ -223,6 +224,20 @@ void WorkerGlobalScope::queueMicrotask(ExecutionContext* executionContext,
                                        ScriptObject callback)
 {
     WindowOrWorkerGlobalScope::queueMicrotask(executionContext, callback);
+}
+
+ScriptValue WorkerGlobalScope::structuredClone(
+    ExecutionContext* executionContext, ScriptValue value)
+{
+    return WindowOrWorkerGlobalScope::structuredClone(executionContext, value);
+}
+
+ScriptValue WorkerGlobalScope::structuredClone(
+    ExecutionContext* executionContext, ScriptValue value,
+    StructuredSerializeOptions options)
+{
+    return WindowOrWorkerGlobalScope::structuredClone(executionContext, value,
+                                                      options);
 }
 
 #ifdef STARFISH_ENABLE_CANVAS

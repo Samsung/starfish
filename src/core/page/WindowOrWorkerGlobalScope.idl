@@ -29,4 +29,8 @@ interface WindowOrWorkerGlobalScope {
   // ImageBitmap
   [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
   [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
+
+  // structured cloning
+  [CallWith=ExecutionContext,RaisesException] any structuredClone(any value, optional StructuredSerializeOptions options);
+
 };
