@@ -99,7 +99,7 @@ void* HTMLElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLElement::didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                       String* value, bool attributeCreated,
                                       bool attributeRemoved)
 {

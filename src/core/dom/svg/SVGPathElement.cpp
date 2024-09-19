@@ -25,8 +25,9 @@
 
 namespace Starfish {
 
-void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
-                                         String* value, bool attributeCreated,
+void SVGPathElement::didAttributeChanged(QualifiedName name,
+                                         Nullable<String*> old, String* value,
+                                         bool attributeCreated,
                                          bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

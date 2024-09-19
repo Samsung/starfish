@@ -322,8 +322,9 @@ bool HTMLOptionElement::handleDefaultEvent(Event* event)
 // selectedness is true, and false otherwise. On setting, it must set the
 // element's selectedness to the new value, set its dirtiness to true, and then
 // cause the element to ask for a reset.
-void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
-                                            String* val, bool attributeCreated,
+void HTMLOptionElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old, String* val,
+                                            bool attributeCreated,
                                             bool attributeRemoved)
 {
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
@@ -345,7 +346,7 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
             }
         }
     } else if (name == starfish()->staticStrings()->m_label) {
-        if (!old->equals(val)) {
+        if (attributeCreated || !old->equals(val)) {
             setNeedsFrameTreeBuild();
         }
     }

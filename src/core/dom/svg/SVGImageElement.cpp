@@ -124,8 +124,9 @@ void SVGImageElement::loadImage(String* src)
     m_imageResource->request(reqData, true);
 }
 
-void SVGImageElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void SVGImageElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

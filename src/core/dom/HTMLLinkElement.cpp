@@ -328,14 +328,15 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
 }
 
-void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void HTMLLinkElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
     if (name == starfish()->staticStrings()->m_href) {
-        if (!old->equals(value)) {
+        if (attributeCreated || !old->equals(value)) {
             checkLoadStyleSheet();
         }
     } else if (name == starfish()->staticStrings()->m_type) {
@@ -343,7 +344,7 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == starfish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
     } else if (name == starfish()->staticStrings()->m_media) {
-        if (!old->equals(value)) {
+        if (attributeCreated || !old->equals(value)) {
             checkLoadStyleSheet();
         }
     } else if (name == starfish()->staticStrings()->m_crossorigin) {

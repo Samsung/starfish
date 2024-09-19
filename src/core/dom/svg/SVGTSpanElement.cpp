@@ -25,8 +25,9 @@
 
 namespace Starfish {
 
-void SVGTSpanElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void SVGTSpanElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

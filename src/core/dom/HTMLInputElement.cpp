@@ -537,8 +537,9 @@ String* HTMLInputElement::obscurePhrase(String* phrase)
     return sb.finalize();
 }
 
-void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* val, bool attributeCreated,
+void HTMLInputElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* val,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,

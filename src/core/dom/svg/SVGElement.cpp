@@ -55,7 +55,7 @@ void* SVGElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void SVGElement::didAttributeChanged(QualifiedName name, String* old,
+void SVGElement::didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved)
 {

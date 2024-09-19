@@ -306,11 +306,11 @@ String* Element::getAttributeOrVarReferencedValue(
     return attributeValue;
 }
 
-void Element::invokeDidAttributeChanged(QualifiedName name, String* old,
-                                        String* value, bool attributeCreated,
+void Element::invokeDidAttributeChanged(QualifiedName name,
+                                        Nullable<String*> old, String* value,
+                                        bool attributeCreated,
                                         bool attributeRemoved)
 {
-    STARFISH_ASSERT(old != nullptr);
     STARFISH_ASSERT(value != nullptr);
 
     MutationObservationScope mutationScope;
@@ -332,8 +332,7 @@ void Element::setAttribute(const AttributeName& name, String* value)
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         m_attributes.push_back(Attribute(name.qname(), value));
-        invokeDidAttributeChanged(name.qname(), String::emptyString, value,
-                                  true, false);
+        invokeDidAttributeChanged(name.qname(), nullptr, value, true, false);
     } else {
         if (name.isNamespaceAware()) {
             // If an attribute with the same local name and namespace URI is
@@ -544,7 +543,7 @@ bool Element::matches(String* selectors)
     return selectorQuery.matches(*this);
 }
 
-void Element::didAttributeChanged(QualifiedName name, String* old,
+void Element::didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                   String* value, bool attributeCreated,
                                   bool attributeRemoved)
 {
@@ -557,7 +556,6 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     }
 #endif
 
-    STARFISH_ASSERT(old != nullptr);
     STARFISH_ASSERT(value != nullptr);
 #if !defined(NDEBUG)
     STARFISH_ASSERT(!m_didAttributeChangedCorrectlyInvoked);
@@ -579,14 +577,14 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
                                                                 false);
                 }
             } else if (attributeRemoved) {
-                if (old->length()) {
-                    document()->invalidNamedAccessCacheIfNeeded(old, false,
-                                                                true);
+                if (old && old->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(old.getValue(),
+                                                                false, true);
                 }
             } else {
-                if (old->length()) {
-                    document()->invalidNamedAccessCacheIfNeeded(old, false,
-                                                                true);
+                if (old && old->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(old.getValue(),
+                                                                false, true);
                 }
                 if (value->length()) {
                     document()->invalidNamedAccessCacheIfNeeded(value, true,
@@ -667,12 +665,14 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
                 document()->invalidNamedAccessCacheIfNeeded(value, true, false);
             }
         } else if (attributeRemoved) {
-            if (old->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            if (old && old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old.getValue(),
+                                                            false, true);
             }
         } else {
-            if (old->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
+            if (old && old->length()) {
+                document()->invalidNamedAccessCacheIfNeeded(old.getValue(),
+                                                            false, true);
             }
             if (value->length()) {
                 document()->invalidNamedAccessCacheIfNeeded(value, true, false);

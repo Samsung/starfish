@@ -24,7 +24,8 @@
 #include "core/style/Style.h"
 
 namespace Starfish {
-void HTMLTablePartElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLTablePartElement::didAttributeChanged(QualifiedName name,
+                                               Nullable<String*> old,
                                                String* value,
                                                bool attributeCreated,
                                                bool attributeRemoved)

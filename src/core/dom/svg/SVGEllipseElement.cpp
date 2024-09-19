@@ -25,12 +25,12 @@
 
 namespace Starfish {
 
-void SVGEllipseElement::didAttributeChanged(QualifiedName name, String* old,
+void SVGEllipseElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
 {
-    STARFISH_ASSERT(old != nullptr);
     STARFISH_ASSERT(value != nullptr);
 
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

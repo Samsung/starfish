@@ -240,7 +240,7 @@ public:
         return m_attributes[hasAttribute(name)];
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old,
+    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
@@ -485,7 +485,7 @@ protected:
 private:
     LayoutUnit scrollBlockAlign(ScrollLogicalPosition position);
     LayoutUnit scrollInlineAlign(ScrollLogicalPosition position);
-    void invokeDidAttributeChanged(QualifiedName name, String* old,
+    void invokeDidAttributeChanged(QualifiedName name, Nullable<String*> old,
                                    String* value, bool attributeCreated,
                                    bool attributeRemoved);
 #if !defined(NDEBUG)

@@ -37,8 +37,9 @@ SVGMarkerElement::SVGMarkerElement(Document* document,
                                               SVG_MARKER_ORIENT_ANGLE);
 }
 
-void SVGMarkerElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void SVGMarkerElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

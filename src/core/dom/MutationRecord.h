@@ -32,7 +32,7 @@ public:
     MutationRecord(ExecutionContext* executionContext);
     MutationRecord(ExecutionContext* executionContext, String* type,
                    Node* target, String* attributeName,
-                   String* attributeNamespace, String* oldValue);
+                   String* attributeNamespace, Nullable<String*> oldValue);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
@@ -73,7 +73,7 @@ public:
         return m_attributeNamespace;
     }
 
-    String* oldValue()
+    Nullable<String*> oldValue()
     {
         return m_oldValue;
     }
@@ -93,7 +93,7 @@ private:
     Node* m_nextSibling = nullptr;
     String* m_attributeName = nullptr;
     String* m_attributeNamespace = nullptr;
-    String* m_oldValue = nullptr;
+    Nullable<String*> m_oldValue = nullptr;
 };
 
 } // namespace Starfish

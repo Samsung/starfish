@@ -23,7 +23,8 @@
 #include "core/dom/HTMLTableCellElement.h"
 
 namespace Starfish {
-void HTMLTableColElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLTableColElement::didAttributeChanged(QualifiedName name,
+                                              Nullable<String*> old,
                                               String* value,
                                               bool attributeCreated,
                                               bool attributeRemoved)

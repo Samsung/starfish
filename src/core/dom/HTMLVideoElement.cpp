@@ -38,8 +38,9 @@ uint32_t HTMLVideoElement::videoHeight()
                          : STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
 }
 
-void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void HTMLVideoElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated,

@@ -28,7 +28,8 @@
 
 namespace Starfish {
 
-void HTMLTableCellElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLTableCellElement::didAttributeChanged(QualifiedName name,
+                                               Nullable<String*> old,
                                                String* value,
                                                bool attributeCreated,
                                                bool attributeRemoved)

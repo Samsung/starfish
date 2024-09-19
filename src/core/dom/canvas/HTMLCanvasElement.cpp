@@ -34,7 +34,8 @@
 
 namespace Starfish {
 
-void HTMLCanvasElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLCanvasElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

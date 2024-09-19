@@ -51,8 +51,8 @@ public:
         return m_isInShowModal;
     }
 
-    void didAttributeChanged(QualifiedName name, String* old, String* value,
-                             bool attributeCreated,
+    void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+                             String* value, bool attributeCreated,
                              bool attributeRemoved) override;
 
 private:

@@ -173,8 +173,9 @@ bool HTMLAreaElement::handleDefaultEvent(Event* event)
     return false;
 }
 
-void HTMLAreaElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void HTMLAreaElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,

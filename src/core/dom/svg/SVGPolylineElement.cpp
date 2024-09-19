@@ -24,7 +24,8 @@
 
 namespace Starfish {
 
-void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
+void SVGPolylineElement::didAttributeChanged(QualifiedName name,
+                                             Nullable<String*> old,
                                              String* value,
                                              bool attributeCreated,
                                              bool attributeRemoved)

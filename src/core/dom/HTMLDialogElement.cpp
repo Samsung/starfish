@@ -102,7 +102,8 @@ void HTMLDialogElement::close(String* returnValue)
     dispatchEventByUA(e);
 }
 
-void HTMLDialogElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLDialogElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
