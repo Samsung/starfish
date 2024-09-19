@@ -33,8 +33,8 @@ public:
 
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     void didNodeInserted(Node* parent, Node* newChild) override;
-    void didAttributeChanged(QualifiedName name, String* old, String* val,
-                             bool attributeCreated,
+    void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+                             String* val, bool attributeCreated,
                              bool attributeRemoved) override;
     void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;

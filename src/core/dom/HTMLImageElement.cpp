@@ -247,8 +247,9 @@ uint32_t HTMLImageElement::naturalHeight()
     return 0;
 }
 
-void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void HTMLImageElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,

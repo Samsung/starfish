@@ -124,7 +124,8 @@ void HTMLIFrameElement::setScrolling(String* scrolling)
     setAttribute(starfish()->staticStrings()->m_scrolling, scrolling);
 }
 
-void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLIFrameElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

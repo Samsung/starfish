@@ -39,7 +39,8 @@ MutationObservationScope::~MutationObservationScope()
 }
 
 void MutationObservationScope::startAttributeMutationScope(
-    Node* target, const Optional<QualifiedName>& name, String* oldValue)
+    Node* target, const Optional<QualifiedName>& name,
+    Nullable<String*> oldValue)
 {
     m_isStarted = true;
     m_target = target;
@@ -63,7 +64,8 @@ void MutationObservationScope::end()
     m_isStarted = false;
 }
 
-void MutationObservationScope::enqueueMutationRecordIfNeeds(String* oldValue)
+void MutationObservationScope::enqueueMutationRecordIfNeeds(
+    Nullable<String*> oldValue)
 {
     if (!m_target->document()->hasMutationObserversOfType(m_optionTypes)) {
         return;
@@ -84,8 +86,9 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds(String* oldValue)
     for (auto* registration : interestedObserversRegistry) {
         String* attributeOldValue = nullptr;
         if (!!(registration->deliveryOptions() &
-               MutationObserverOptionType::kAttributeOldValue)) {
-            attributeOldValue = oldValue;
+               MutationObserverOptionType::kAttributeOldValue) &&
+            oldValue) {
+            attributeOldValue = oldValue.getValue();
         }
         MutationRecord* record = new MutationRecord(
             m_target->executionContext(),

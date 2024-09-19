@@ -86,7 +86,8 @@ void HTMLTextAreaElement::didNodeInserted(Node* parent, Node* newChild)
     }
 }
 
-void HTMLTextAreaElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLTextAreaElement::didAttributeChanged(QualifiedName name,
+                                              Nullable<String*> old,
                                               String* val,
                                               bool attributeCreated,
                                               bool attributeRemoved)

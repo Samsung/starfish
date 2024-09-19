@@ -249,7 +249,7 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
     virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
-    virtual void didAttributeChanged(QualifiedName name, String* old,
+    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didNodeInsertedToDocumentTree() override;

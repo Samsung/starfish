@@ -506,7 +506,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
     return false;
 }
 
-void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLScriptElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

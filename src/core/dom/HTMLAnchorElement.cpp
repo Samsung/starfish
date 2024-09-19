@@ -50,8 +50,9 @@ void* HTMLAnchorElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
-                                            String* val, bool attributeCreated,
+void HTMLAnchorElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old, String* val,
+                                            bool attributeCreated,
                                             bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,

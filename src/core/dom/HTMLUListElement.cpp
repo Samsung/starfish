@@ -23,8 +23,9 @@
 #include "core/dom/HTMLUListElement.h"
 
 namespace Starfish {
-void HTMLUListElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void HTMLUListElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,

@@ -30,7 +30,8 @@ SVGGradientElement::SVGGradientElement(Document* document,
 {
 }
 
-void SVGGradientElement::didAttributeChanged(QualifiedName name, String* old,
+void SVGGradientElement::didAttributeChanged(QualifiedName name,
+                                             Nullable<String*> old,
                                              String* value,
                                              bool attributeCreated,
                                              bool attributeRemoved)

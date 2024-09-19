@@ -48,8 +48,9 @@ SVGUseElement::SVGUseElement(Document* document, const QualifiedName& qname)
 {
 }
 
-void SVGUseElement::didAttributeChanged(QualifiedName name, String* old,
-                                        String* value, bool attributeCreated,
+void SVGUseElement::didAttributeChanged(QualifiedName name,
+                                        Nullable<String*> old, String* value,
+                                        bool attributeCreated,
                                         bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

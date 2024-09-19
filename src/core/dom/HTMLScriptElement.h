@@ -90,7 +90,7 @@ public:
     virtual void didCharacterDataModified(String* before,
                                           String* after) override;
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
-    virtual void didAttributeChanged(QualifiedName name, String* old,
+    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 

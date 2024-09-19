@@ -95,7 +95,7 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_orignalOwnerElement));
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old,
+    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 

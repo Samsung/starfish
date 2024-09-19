@@ -54,8 +54,9 @@ void HTMLBaseElement::setTarget(String* target)
     setAttribute(starfish()->staticStrings()->m_target, target);
 }
 
-void HTMLBaseElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void HTMLBaseElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,

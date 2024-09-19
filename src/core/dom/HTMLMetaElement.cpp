@@ -45,8 +45,9 @@ void* HTMLMetaElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void HTMLMetaElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,

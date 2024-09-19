@@ -24,7 +24,8 @@
 
 namespace Starfish {
 
-void SVGPolygonElement::didAttributeChanged(QualifiedName name, String* old,
+void SVGPolygonElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

@@ -52,7 +52,8 @@ void HTMLHeadingElement::setAlign(String* align)
     setAttribute(starfish()->staticStrings()->m_align, align);
 }
 
-void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLHeadingElement::didAttributeChanged(QualifiedName name,
+                                             Nullable<String*> old,
                                              String* value,
                                              bool attributeCreated,
                                              bool attributeRemoved)

@@ -266,8 +266,9 @@ void HTMLFormControl::fireSubmitEvent()
     webView()->messageLoop()->addIdler(window(), fn, this);
 }
 
-void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
-                                          String* val, bool attributeCreated,
+void HTMLFormControl::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* val,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,

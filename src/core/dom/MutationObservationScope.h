@@ -37,13 +37,13 @@ public:
 
     void startAttributeMutationScope(Node* target,
                                      const Optional<QualifiedName>& name,
-                                     String* oldValue);
+                                     Nullable<String*> oldValue);
 
     // Ensures that |end| is implicitly called when an object is destroyed.
     void end();
 
 private:
-    void enqueueMutationRecordIfNeeds(String* oldValue);
+    void enqueueMutationRecordIfNeeds(Nullable<String*> oldValue);
 
     Node* m_target = nullptr;
     bool m_isStarted = false;

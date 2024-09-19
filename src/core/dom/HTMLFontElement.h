@@ -39,7 +39,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLFontElement() const override;
-    virtual void didAttributeChanged(QualifiedName name, String* old,
+    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 

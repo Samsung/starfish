@@ -37,8 +37,9 @@ void* HTMLFontElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
-                                          String* value, bool attributeCreated,
+void HTMLFontElement::didAttributeChanged(QualifiedName name,
+                                          Nullable<String*> old, String* value,
+                                          bool attributeCreated,
                                           bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
@@ -51,7 +52,7 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
         if (attributeRemoved) {
             m_hasColorAttribute = false;
         }
-        if (!old->equals(value)) {
+        if (attributeCreated || !old->equals(value)) {
             setAttribute(starfish()->staticStrings()->m_color, value);
         }
         setNeedsStyleRecalc();
@@ -62,7 +63,7 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
         if (attributeRemoved) {
             m_hasSizeAttribute = false;
         }
-        if (!old->equals(value)) {
+        if (attributeCreated || !old->equals(value)) {
             setAttribute(starfish()->staticStrings()->m_size, value);
         }
         setNeedsStyleRecalc();

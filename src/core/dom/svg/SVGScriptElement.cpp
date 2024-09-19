@@ -397,8 +397,9 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
     return false;
 }
 
-void SVGScriptElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void SVGScriptElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,

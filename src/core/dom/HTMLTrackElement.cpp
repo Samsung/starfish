@@ -144,8 +144,9 @@ void* HTMLTrackElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
-                                           String* value, bool attributeCreated,
+void HTMLTrackElement::didAttributeChanged(QualifiedName name,
+                                           Nullable<String*> old, String* value,
+                                           bool attributeCreated,
                                            bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
