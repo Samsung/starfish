@@ -65,6 +65,7 @@ public:
     void removeCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
     bool hasCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
     CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind keyKind);
+    bool hasVarFunctionValueKindCSSValue(CSSStyleValuePair::KeyKind keyKind);
 
     bool shouldKeepAppearanceOrder(CSSStyleValuePair::KeyKind keyKind);
 
@@ -223,6 +224,9 @@ protected:
 
     bool isShorthandProperty(CSSStyleValuePair::KeyKind keyKind);
     bool isStickyProperty(CSSStyleValuePair::KeyKind keyKind);
+
+    bool isInInlineStyleWithVarFunctionValueKind(
+        CSSStyleValuePair::KeyKind keyKind);
 
     enum class PropertyType {
         kLonghand,
