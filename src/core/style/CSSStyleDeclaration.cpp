@@ -1905,10 +1905,18 @@ String* CSSStyleDeclaration::getPropertyValueInternalFor<
 {
     // Use macros to prevent missing shorthanded properties.
     switch (keyKind) {
-#define GET_ATTR(name, ...)                  \
-    case CSSStyleValuePair::KeyKind::name: { \
-        return name();                       \
-        break;                               \
+#define GET_ATTR(name, ...)                                                \
+    case CSSStyleValuePair::KeyKind::name: {                               \
+        if (isInInlineStyleWithVarFunctionValueKind(                       \
+                CSSStyleValuePair::KeyKind::name)) {                       \
+            auto pair = getCSSValuePair(CSSStyleValuePair::KeyKind::name); \
+            STARFISH_ASSERT(                                               \
+                pair.valueKind() ==                                        \
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind);       \
+            return pair.toString();                                        \
+        }                                                                  \
+        return name();                                                     \
+        break;                                                             \
     }
         FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(GET_ATTR)
 #undef GET_ATTR
@@ -2307,6 +2315,15 @@ String* CSSStyleDeclaration::generateCSSText() const
     return txt.finalize()->trim();
 }
 
+bool CSSStyleDeclaration::isInInlineStyleWithVarFunctionValueKind(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    STARFISH_ASSERT(isShorthandProperty(keyKind));
+    // Shorthand is used as the key value only when it has VarFunctionValueKind
+    // as the value.
+    return isInlineStyle() && hasCSSValuePair(keyKind);
+}
+
 String* CSSStyleDeclaration::Background()
 {
     StringBuilder builder;
@@ -2490,6 +2507,7 @@ void CSSStyleDeclaration::removeBackground()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundAttachment);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundOrigin);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Background);
 }
 
 bool CSSStyleDeclaration::parseUnitPositionShorthand(
@@ -2730,6 +2748,7 @@ void CSSStyleDeclaration::removeBorder()
     removeBorderRight();
     removeBorderBottom();
     removeBorderLeft();
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Border);
 }
 
 String* CSSStyleDeclaration::BorderBlockStart()
@@ -2816,7 +2835,7 @@ void CSSStyleDeclaration::setBorderBlockEnd(const char* value, size_t len,
                                             bool isImportant)
 {
     if (len == 0) {
-        removeBorderBlockStart();
+        removeBorderBlockEnd();
         return;
     }
 
@@ -3061,6 +3080,7 @@ void CSSStyleDeclaration::removeBorderColor()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderColor);
 }
 
 String* CSSStyleDeclaration::BorderStyle(bool* isCombined)
@@ -3105,6 +3125,7 @@ void CSSStyleDeclaration::removeBorderStyle()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderStyle);
 }
 
 String* CSSStyleDeclaration::BorderWidth(bool* isCombined)
@@ -3149,6 +3170,7 @@ void CSSStyleDeclaration::removeBorderWidth()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderWidth);
 }
 
 String* CSSStyleDeclaration::BorderTop()
@@ -3194,6 +3216,7 @@ void CSSStyleDeclaration::removeBorderTop()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTop);
 }
 
 String* CSSStyleDeclaration::BorderRight()
@@ -3239,6 +3262,7 @@ void CSSStyleDeclaration::removeBorderRight()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRight);
 }
 
 String* CSSStyleDeclaration::BorderBottom()
@@ -3284,6 +3308,7 @@ void CSSStyleDeclaration::removeBorderBottom()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottom);
 }
 
 String* CSSStyleDeclaration::BorderLeft()
@@ -3329,6 +3354,7 @@ void CSSStyleDeclaration::removeBorderLeft()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeft);
 }
 
 String* CSSStyleDeclaration::BorderRadius()
@@ -3416,11 +3442,8 @@ String* CSSStyleDeclaration::BorderRadius()
 void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
                                           bool isImportant)
 {
-    removeCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderTopRightRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius);
     if (len == 0) {
+        removeBorderRadius();
         return;
     }
     CSSTokenVector tokens;
@@ -3536,18 +3559,21 @@ void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
     topRight.setFlagImportant(isImportant);
     bottomRight.setFlagImportant(isImportant);
     bottomLeft.setFlagImportant(isImportant);
-    addCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius, topLeft);
-    addCSSValuePair(CSSStyleValuePair::BorderTopRightRadius, topRight);
-    addCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius, bottomRight);
-    addCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius, bottomLeft);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopLeftRadius, topLeft);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopRightRadius, topRight);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomRightRadius,
+                    bottomRight);
+    addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomLeftRadius,
+                    bottomLeft);
 }
 
 void CSSStyleDeclaration::removeBorderRadius()
 {
-    removeCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderTopRightRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius);
-    removeCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopLeftRadius);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomLeftRadius);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRadius);
 }
 
 String* CSSStyleDeclaration::BorderImage()
@@ -3593,6 +3619,7 @@ void CSSStyleDeclaration::removeBorderImage()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageOutset);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImageRepeat);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderImage);
 }
 
 void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
@@ -3647,6 +3674,10 @@ String* CSSStyleDeclaration::Flex()
         CSSStyleValuePair::KeyKind::FlexShrink);
     String* flexBasis = getPropertyValueInternalFor<PropertyType::kLonghand>(
         CSSStyleValuePair::KeyKind::FlexBasis);
+
+    if (flexGrow->isEmpty() && flexShrink->isEmpty() && flexBasis->isEmpty()) {
+        return String::emptyString;
+    }
 
     String* space = String::spaceString;
     StringBuilder builder;
@@ -3714,6 +3745,7 @@ void CSSStyleDeclaration::removeFlex()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexGrow);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexShrink);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexBasis);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Flex);
 }
 
 void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
@@ -3747,6 +3779,7 @@ void CSSStyleDeclaration::removeFlexFlow()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexDirection);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexWrap);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FlexFlow);
 }
 
 String* CSSStyleDeclaration::FlexFlow()
@@ -3756,6 +3789,10 @@ String* CSSStyleDeclaration::FlexFlow()
             CSSStyleValuePair::KeyKind::FlexDirection);
     String* flexWrap = getPropertyValueInternalFor<PropertyType::kLonghand>(
         CSSStyleValuePair::KeyKind::FlexWrap);
+
+    if (flexDirection->isEmpty() && flexWrap->isEmpty()) {
+        return String::emptyString;
+    }
 
     String* space = String::spaceString;
     StringBuilder builder;
@@ -3832,11 +3869,7 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
                                   bool isImportant)
 {
     if (length == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight);
+        removeFont();
         return;
     }
 
@@ -3887,6 +3920,7 @@ void CSSStyleDeclaration::removeFont()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Font);
 }
 
 void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
@@ -3958,9 +3992,7 @@ void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
                                        bool isImportant)
 {
     if (len == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage);
+        removeListStyle();
         return;
     }
 
@@ -3991,6 +4023,7 @@ void CSSStyleDeclaration::removeListStyle()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyle);
 }
 
 String* CSSStyleDeclaration::Margin(bool* isCombined)
@@ -4034,6 +4067,7 @@ void CSSStyleDeclaration::removeMargin()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginRight);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBottom);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginLeft);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Margin);
 }
 
 String* CSSStyleDeclaration::MarginBlock()
@@ -4100,6 +4134,7 @@ void CSSStyleDeclaration::removeMarginBlock()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlock);
 }
 
 String* CSSStyleDeclaration::MarginInline()
@@ -4167,6 +4202,7 @@ void CSSStyleDeclaration::removeMarginInline()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginInline);
 }
 
 String* CSSStyleDeclaration::Outline()
@@ -4184,9 +4220,7 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
                                      bool isImportant)
 {
     if (length == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor);
+        removeOutline();
         return;
     }
 
@@ -4218,6 +4252,7 @@ void CSSStyleDeclaration::removeOutline()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Outline);
 }
 
 String* CSSStyleDeclaration::Overflow()
@@ -4266,6 +4301,7 @@ void CSSStyleDeclaration::removeOverflow()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowX);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::OverflowY);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Overflow);
 }
 
 String* CSSStyleDeclaration::Padding(bool* isCombined)
@@ -4309,6 +4345,7 @@ void CSSStyleDeclaration::removePadding()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingRight);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBottom);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingLeft);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Padding);
 }
 
 String* CSSStyleDeclaration::PaddingBlock()
@@ -4376,6 +4413,7 @@ void CSSStyleDeclaration::removePaddingBlock()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockEnd);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlockStart);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingBlock);
 }
 
 String* CSSStyleDeclaration::PaddingInline()
@@ -4444,6 +4482,7 @@ void CSSStyleDeclaration::removePaddingInline()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInline);
 }
 
 void CSSStyleDeclaration::setSrc(const char* value, size_t len,
@@ -4477,6 +4516,11 @@ String* CSSStyleDeclaration::GridTemplate()
     String* gridTemplateAreas =
         getPropertyValueInternalFor<PropertyType::kLonghand>(
             CSSStyleValuePair::KeyKind::GridTemplateAreas);
+
+    if (gridTemplateRows->isEmpty() && gridTemplateColumns->isEmpty() &&
+        gridTemplateAreas->isEmpty()) {
+        return String::emptyString;
+    }
 
     StringBuilder builder;
     builder.appendString(gridTemplateRows);
@@ -4598,6 +4642,7 @@ void CSSStyleDeclaration::removeGridTemplate()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateAreas);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateRows);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateColumns);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplate);
 }
 
 String* CSSStyleDeclaration::TextDecoration()
@@ -4631,9 +4676,7 @@ void CSSStyleDeclaration::setTextDecoration(const char* value, size_t len,
                                             bool isImportant)
 {
     if (len == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+        removeTextDecoration();
         return;
     }
 
@@ -4718,6 +4761,7 @@ void CSSStyleDeclaration::removeTextDecoration()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecoration);
 }
 
 void CSSStyleDeclaration::setTransitionProperty(const char* value,
@@ -4936,10 +4980,7 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
 {
     if (length == 0) {
         // There are not arguments.
-        removeCSSValuePair(CSSStyleValuePair::TransitionProperty);
-        removeCSSValuePair(CSSStyleValuePair::TransitionDuration);
-        removeCSSValuePair(CSSStyleValuePair::TransitionDelay);
-        removeCSSValuePair(CSSStyleValuePair::TransitionTimingFunction);
+        removeTransition();
         return;
     }
     // TODO handle var() case
@@ -5000,6 +5041,7 @@ void CSSStyleDeclaration::removeTransition()
     removeCSSValuePair(CSSStyleValuePair::TransitionDuration);
     removeCSSValuePair(CSSStyleValuePair::TransitionDelay);
     removeCSSValuePair(CSSStyleValuePair::TransitionTimingFunction);
+    removeCSSValuePair(CSSStyleValuePair::Transition);
 }
 
 String* CSSStyleDeclaration::Animation()
@@ -5315,14 +5357,7 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
 {
     if (length == 0) {
         // There are not arguments.
-        removeCSSValuePair(CSSStyleValuePair::AnimationName);
-        removeCSSValuePair(CSSStyleValuePair::AnimationDuration);
-        removeCSSValuePair(CSSStyleValuePair::AnimationTimingFunction);
-        removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
-        removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
-        removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
-        removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
-        removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
+        removeAnimation();
         return;
     }
     // TODO handle var() case
@@ -5407,6 +5442,7 @@ void CSSStyleDeclaration::removeAnimation()
     removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
     removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
     removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
+    removeCSSValuePair(CSSStyleValuePair::Animation);
 }
 
 String* CSSStyleDeclaration::Mask()
@@ -5491,7 +5527,7 @@ void CSSStyleDeclaration::setGap(const char* value, size_t length,
     if (row.updateValueVarReferences(tokens)) {
         row.setValue(String::fromUTF8(value, length));
         row.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::RowGap, row);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Gap, row);
         return;
     } else if (row.updateValueCommon(tokens)) {
         column = row;
@@ -5514,6 +5550,7 @@ void CSSStyleDeclaration::removeGap()
 {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::RowGap);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::ColumnGap);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Gap);
 }
 
 String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
@@ -5577,9 +5614,8 @@ void CSSStyleDeclaration::setUnitPosition(const char* value, size_t length,
         return;
     }
 
-    if (value == 0) {
-        removeCSSValuePair(xKind);
-        removeCSSValuePair(yKind);
+    if (length == 0) {
+        removeUnitPosition(keyKind);
         return;
     }
 
@@ -5613,6 +5649,7 @@ void CSSStyleDeclaration::removeUnitPosition(CSSStyleValuePair::KeyKind keyKind)
 
     removeCSSValuePair(xKind);
     removeCSSValuePair(yKind);
+    removeCSSValuePair(keyKind);
 }
 
 String* CSSStyleDeclaration::UnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind)
@@ -5665,9 +5702,8 @@ void CSSStyleDeclaration::setUnitRepeatStyle(const char* value, size_t length,
         return;
     }
 
-    if (value == 0) {
-        removeCSSValuePair(xKind);
-        removeCSSValuePair(yKind);
+    if (length == 0) {
+        removeUnitRepeatStyle(keyKind);
         return;
     }
 
@@ -5702,6 +5738,7 @@ void CSSStyleDeclaration::removeUnitRepeatStyle(
 
     removeCSSValuePair(xKind);
     removeCSSValuePair(yKind);
+    removeCSSValuePair(keyKind);
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
