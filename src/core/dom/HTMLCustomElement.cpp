@@ -47,7 +47,8 @@ void HTMLCustomElement::init(ScriptBindingInstance* instance,
     STARFISH_ASSERT_NOT_REACHED();
 }
 
-void HTMLCustomElement::didAttributeChanged(QualifiedName name, String* old,
+void HTMLCustomElement::didAttributeChanged(QualifiedName name,
+                                            Nullable<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
