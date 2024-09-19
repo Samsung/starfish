@@ -81,10 +81,16 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds(String* oldValue)
             attrNamesapce = qname.namespaceURI().getValue().string();
         }
     }
-    MutationRecord* record = new MutationRecord(
-        m_target->executionContext(), String::createASCIIString("attributes"),
-        m_target, attrName, attrNamesapce, oldValue);
     for (auto* registration : interestedObserversRegistry) {
+        String* attributeOldValue = nullptr;
+        if (!!(registration->deliveryOptions() &
+               MutationObserverOptionType::kAttributeOldValue)) {
+            attributeOldValue = oldValue;
+        }
+        MutationRecord* record = new MutationRecord(
+            m_target->executionContext(),
+            String::createASCIIString("attributes"), m_target, attrName,
+            attrNamesapce, attributeOldValue);
         registration->observer()->enqueueMutationRecord(record);
     }
 }

@@ -32,11 +32,12 @@ enum class MutationObserverOptionType : uint8_t {
     kChildList = 1 << 0,
     kAttributes = 1 << 1,
     kCharacterData = 1 << 2,
+    kAllMutationType = kChildList | kAttributes | kCharacterData,
     kSubtree = 1 << 3,
     kAttributeOldValue = 1 << 4,
     kCharacterDataOldValue = 1 << 5,
+    kAllDeliveryOptions = kAttributeOldValue | kCharacterDataOldValue,
     kAttributeFilter = 1 << 6,
-    kAllMutationType = kChildList | kAttributes | kCharacterData,
 };
 
 inline MutationObserverOptionType& operator|=(MutationObserverOptionType& lhs,
@@ -126,6 +127,7 @@ public:
     }
 
     MutationObserverOptionType mutationTypes();
+    MutationObserverOptionType deliveryOptions();
 
     void update(MutationObserverOptionType options,
                 const GCUnorderedSet<String*>& attributeFilter);
