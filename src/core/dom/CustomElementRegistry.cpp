@@ -436,6 +436,7 @@ void CustomElementRegistry::define(String* name,
     data->formResetCallback = formResetCallback;
     data->formDisabledCallback = formDisabledCallback;
     data->formStateRestoreCallback = formStateRestoreCallback;
+    data->observedAttributes = std::move(observedAttributes);
 
     m_registry.insert(std::make_pair(qname.localNameAtomic(), data));
 
@@ -471,7 +472,7 @@ void CustomElementRegistry::upgrade(Node* node)
 
 void CustomElementRegistry::upgrade(CustomElementRegistryData* data)
 {
-    // TODO For each element element in upgrade candidates, enqueue a custom
+    // For each element in upgrade candidates, enqueue a custom
     // element upgrade reaction given element and definition.
     Traverse::traverse(m_executionContext->document(), [&](Node* e) {
         if (e->isHTMLUnknownElement() && e->asElement()->name() == data->name) {
@@ -495,6 +496,33 @@ void CustomElementRegistry::upgrade(Element* e, CustomElementRegistryData* data,
         invokeCustomElementReaction(e->asHTMLCustomElement(),
                                     CustomElementCallbackType::kUpgraded,
                                     nullptr);
+
+        // fire attribute changed
+        if (!isNullOrUndefinedScriptValue(data->attributeChangedCallback)) {
+            const auto& attrs = e->attributesVector();
+            GCVector<ScriptValue*> callbackDatas;
+
+            for (auto s : data->observedAttributes) {
+                for (const auto& attr : attrs) {
+                    if (attr.name().localNameAtomic() == s) {
+                        ScriptValue* argv = new (GC) ScriptValue[3]{
+                            createScriptValue(
+                                toJSString(attr.name().localName())),
+                            scriptNull(),
+                            createScriptValue(toJSString(attr.value()))
+                        };
+                        callbackDatas.push_back(argv);
+                        break;
+                    }
+                }
+            }
+
+            for (auto* callbackData : callbackDatas) {
+                invokeCustomElementReaction(
+                    e->asHTMLCustomElement(),
+                    CustomElementCallbackType::kAttributeChanged, callbackData);
+            }
+        }
 
         // fire connected
         if (e->isConnected()) {
@@ -524,15 +552,9 @@ Nullable<String*> CustomElementRegistry::getName(
     return nullptr;
 }
 
-// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-callback-reaction
-void CustomElementRegistry::enqueueToCustomElementsReactionStack(
-    HTMLCustomElement* element, CustomElementCallbackType type,
-    Optional<ScriptValue*> data)
+static ScriptValue fetchCallback(CustomElementRegistryData* definition,
+                                 CustomElementCallbackType type)
 {
-    // Let definition be element's custom element definition.
-    auto definition = element->customElementRegistryData();
-    // Let callback be the value of the entry in definition's lifecycle
-    // callbacks with key callbackName.
     ScriptValue callback = scriptUndefined();
     switch (type) {
     case CustomElementCallbackType::kUpgraded:
@@ -554,30 +576,31 @@ void CustomElementRegistry::enqueueToCustomElementsReactionStack(
         STARFISH_ASSERT_NOT_REACHED();
         break;
     }
+    return callback;
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-callback-reaction
+void CustomElementRegistry::enqueueToCustomElementsReactionStack(
+    HTMLCustomElement* element, CustomElementCallbackType type,
+    Optional<ScriptValue*> data)
+{
+    // Let definition be element's custom element definition.
+    auto definition = element->customElementRegistryData();
+    // Let callback be the value of the entry in definition's lifecycle
+    // callbacks with key callbackName.
+    ScriptValue callback = fetchCallback(definition, type);
 
     // If callback is null, then return.
     if (isNullOrUndefinedScriptValue(callback)) {
         return;
     }
+
+    // NOTE do this on HTMLCustomElement::didAttributeChanged
     // If callbackName is "attributeChangedCallback", then:
-    if (type == CustomElementCallbackType::kAttributeChanged) {
-        // Let attributeName be the first element of args.
-        // If definition's observed attributes does not contain attributeName,
-        // then return.
-        bool contains = false;
+    //   Let attributeName be the first element of args.
+    //   If definition's observed attributes does not contain attributeName,
+    //   then return.
 
-        AtomicString* attrName = reinterpret_cast<AtomicString*>(data.value());
-        for (auto s : definition->observedAttributes) {
-            if (s == *attrName) {
-                contains = true;
-                break;
-            }
-        }
-
-        if (!contains) {
-            return;
-        }
-    }
     // Add a new callback reaction to element's custom element reaction queue,
     // with callback function callback and arguments args.
     CustomElementReactionData* customElementReactionData;
@@ -688,24 +711,7 @@ void CustomElementRegistry::invokeCustomElementReaction(
         // callback reaction
         // Invoke reaction's callback function with reaction's arguments and
         // "report", and callback this value set to element.
-        ScriptValue callback = scriptUndefined();
-        switch (type) {
-        case CustomElementCallbackType::kConnected:
-            callback = customElementRegistryData->connectedCallback;
-            break;
-        case CustomElementCallbackType::kDisconnected:
-            callback = customElementRegistryData->disconnectedCallback;
-            break;
-        case CustomElementCallbackType::kAdoptped:
-            callback = customElementRegistryData->adoptedCallback;
-            break;
-        case CustomElementCallbackType::kAttributeChanged:
-            callback = customElementRegistryData->attributeChangedCallback;
-            break;
-        default:
-            STARFISH_ASSERT_NOT_REACHED();
-            break;
-        }
+        ScriptValue callback = fetchCallback(customElementRegistryData, type);
 
         switch (type) {
         case CustomElementCallbackType::kConnected:
@@ -717,6 +723,11 @@ void CustomElementRegistry::invokeCustomElementReaction(
         case CustomElementCallbackType::kAdoptped:
             callScriptFunction(element->scriptBindingInstance(), callback,
                                data.value(), 2,
+                               createScriptValue(element->scriptObject()));
+            break;
+        case CustomElementCallbackType::kAttributeChanged:
+            callScriptFunction(element->scriptBindingInstance(), callback,
+                               data.value(), 3,
                                createScriptValue(element->scriptObject()));
             break;
         default:
