@@ -25,6 +25,7 @@
 namespace Starfish {
 
 class Node;
+class NodeList;
 
 class MutationRecord final : public ScriptWrappable {
 public:
@@ -47,6 +48,19 @@ public:
     Node* target()
     {
         return m_target;
+    }
+
+    NodeList* addedNodes();
+    NodeList* removedNodes();
+
+    Node* previousSibling()
+    {
+        return m_previousSibling;
+    }
+
+    Node* nextSibling()
+    {
+        return m_nextSibling;
     }
 
     String* attributeName()
@@ -73,6 +87,10 @@ private:
     ExecutionContext* m_executionContext = nullptr;
     String* m_type = nullptr;
     Node* m_target = nullptr;
+    NodeList* m_addedNodes = nullptr;
+    NodeList* m_removedNodes = nullptr;
+    Node* m_previousSibling = nullptr;
+    Node* m_nextSibling = nullptr;
     String* m_attributeName = nullptr;
     String* m_attributeNamespace = nullptr;
     String* m_oldValue = nullptr;
