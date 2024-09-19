@@ -2453,12 +2453,13 @@ bool Document::hasMutationObservers() const
 
 void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 {
+    m_activeMuationObservers.insert(observer);
+
     if (m_isMutationObserverMicroTaskQueued) {
         return;
     }
     m_isMutationObserverMicroTaskQueued = true;
 
-    m_activeMuationObservers.insert(observer);
     GlobalScope* globalScope = executionContext()->globalScope();
     globalScope->webBase()->messageLoop()->addMicroTask(
         globalScope,
