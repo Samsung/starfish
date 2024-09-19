@@ -63,6 +63,11 @@ MutationObserverOptionType MutationObserverRegistration::mutationTypes()
     return m_options & MutationObserverOptionType::kAllMutationType;
 }
 
+MutationObserverOptionType MutationObserverRegistration::deliveryOptions()
+{
+    return m_options & MutationObserverOptionType::kAllDeliveryOptions;
+}
+
 void MutationObserverRegistration::update(
     MutationObserverOptionType options,
     const GCUnorderedSet<String*>& attributeFilter)
