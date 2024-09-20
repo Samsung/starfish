@@ -38,9 +38,11 @@ public:
     void startAttributeMutationScope(Node* target,
                                      const Optional<QualifiedName>& name,
                                      Nullable<String*> oldValue);
+    void startCharacterDataMutationScope(Node* target,
+                                         Nullable<String*> oldValue);
 
     // Ensures that |end| is implicitly called when an object is destroyed.
-    void end();
+    void endMutationScope();
 
 private:
     void enqueueMutationRecordIfNeeds(Nullable<String*> oldValue);
@@ -49,6 +51,7 @@ private:
     bool m_isStarted = false;
     Optional<QualifiedName> m_name;
     MutationObserverOptionType m_optionTypes;
+    AtomicString m_type;
 };
 
 } // namespace Starfish

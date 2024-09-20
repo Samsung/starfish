@@ -24,6 +24,7 @@
 #include "core/dom/DOMException.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
+#include "core/dom/MutationObservationScope.h"
 
 namespace Starfish {
 
@@ -95,6 +96,9 @@ void CharacterData::setData(String* data)
     STARFISH_ASSERT(data);
     String* oldData = m_data;
     m_data = data;
+
+    MutationObservationScope scop;
+    scop.startCharacterDataMutationScope(this, oldData);
 
     if (frame() && frame()->isFrameText() &&
         style()->textTransform() != NoneTextTransformValue) {

@@ -58,16 +58,6 @@ MutationObserverRegistration::MutationObserverRegistration(
 {
 }
 
-MutationObserverOptionType MutationObserverRegistration::mutationTypes()
-{
-    return m_options & MutationObserverOptionType::kAllMutationType;
-}
-
-MutationObserverOptionType MutationObserverRegistration::deliveryOptions()
-{
-    return m_options & MutationObserverOptionType::kAllDeliveryOptions;
-}
-
 void MutationObserverRegistration::update(
     MutationObserverOptionType options,
     const GCUnorderedSet<String*>& attributeFilter)
@@ -201,7 +191,7 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
         m_registrations.insert(resultPair.second);
     }
     node->document()->addMutationObserverTypes(
-        resultPair.second->mutationTypes());
+        mutationTypes(resultPair.second->options()));
 }
 
 void MutationObserver::disconnect()
