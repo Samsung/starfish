@@ -59,6 +59,15 @@ inline MutationObserverOptionType operator&(MutationObserverOptionType lhs,
         static_cast<underlyingType>(lhs) & static_cast<underlyingType>(rhs));
 }
 
+inline MutationObserverOptionType operator|(MutationObserverOptionType lhs,
+                                            MutationObserverOptionType rhs)
+{
+    using underlyingType =
+        std::underlying_type<MutationObserverOptionType>::type;
+    return static_cast<MutationObserverOptionType>(
+        static_cast<underlyingType>(lhs) | static_cast<underlyingType>(rhs));
+}
+
 inline bool operator!(MutationObserverOptionType option)
 {
     return static_cast<bool>(option) == false;
@@ -67,6 +76,18 @@ inline bool operator!(MutationObserverOptionType option)
 inline bool operator&&(MutationObserverOptionType option, bool value)
 {
     return static_cast<bool>(option) && value;
+}
+
+inline MutationObserverOptionType mutationTypes(
+    MutationObserverOptionType options)
+{
+    return options & MutationObserverOptionType::kAllMutationType;
+}
+
+inline MutationObserverOptionType deliveryOptions(
+    MutationObserverOptionType options)
+{
+    return options & MutationObserverOptionType::kAllDeliveryOptions;
 }
 
 struct MutationObserverInit {
@@ -126,8 +147,10 @@ public:
         return m_target;
     }
 
-    MutationObserverOptionType mutationTypes();
-    MutationObserverOptionType deliveryOptions();
+    MutationObserverOptionType options()
+    {
+        return m_options;
+    }
 
     void update(MutationObserverOptionType options,
                 const GCUnorderedSet<String*>& attributeFilter);

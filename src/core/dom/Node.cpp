@@ -2471,8 +2471,7 @@ GCVector<MutationObserverRegistration*> Node::interestedObservers(
     const Optional<QualifiedName>& name)
 {
     GCVector<MutationObserverRegistration*> interestedObservers;
-    if (!document()->hasMutationObserversOfType(
-            MutationObserverOptionType::kAttributes)) {
+    if (!document()->hasMutationObserversOfType(optionTypes)) {
         return interestedObservers;
     }
 

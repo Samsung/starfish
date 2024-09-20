@@ -35,7 +35,7 @@ MutationObservationScope::MutationObservationScope()
 
 MutationObservationScope::~MutationObservationScope()
 {
-    end();
+    endMutationScope();
 }
 
 void MutationObservationScope::startAttributeMutationScope(
@@ -45,7 +45,10 @@ void MutationObservationScope::startAttributeMutationScope(
     m_isStarted = true;
     m_target = target;
     m_name = name;
-    m_optionTypes = MutationObserverOptionType::kAttributes;
+    m_optionTypes = MutationObserverOptionType::kAttributes |
+                    MutationObserverOptionType::kAttributeOldValue;
+    m_type =
+        AtomicString::createAtomicString(m_target->starfish(), "attributes");
 
     if (m_target->isElement() && m_name &&
         m_name.getValue().toString()->equals("style")) {
@@ -54,7 +57,19 @@ void MutationObservationScope::startAttributeMutationScope(
     enqueueMutationRecordIfNeeds(oldValue);
 }
 
-void MutationObservationScope::end()
+void MutationObservationScope::startCharacterDataMutationScope(
+    Node* target, Nullable<String*> oldValue)
+{
+    m_isStarted = true;
+    m_target = target;
+    m_optionTypes = MutationObserverOptionType::kCharacterData |
+                    MutationObserverOptionType::kCharacterDataOldValue;
+    m_type =
+        AtomicString::createAtomicString(m_target->starfish(), "characterData");
+    enqueueMutationRecordIfNeeds(oldValue);
+}
+
+void MutationObservationScope::endMutationScope()
 {
     if (m_isStarted && m_target->isElement() &&
         m_optionTypes == MutationObserverOptionType::kAttributes && m_name &&
@@ -67,12 +82,13 @@ void MutationObservationScope::end()
 void MutationObservationScope::enqueueMutationRecordIfNeeds(
     Nullable<String*> oldValue)
 {
-    if (!m_target->document()->hasMutationObserversOfType(m_optionTypes)) {
+    MutationObserverOptionType observerTypes = mutationTypes(m_optionTypes);
+    if (!m_target->document()->hasMutationObserversOfType(observerTypes)) {
         return;
     }
 
     GCVector<MutationObserverRegistration*> interestedObserversRegistry =
-        m_target->interestedObservers(m_optionTypes, m_name);
+        m_target->interestedObservers(observerTypes, m_name);
 
     String* attrName = nullptr;
     String* attrNamesapce = nullptr;
@@ -85,14 +101,13 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds(
     }
     for (auto* registration : interestedObserversRegistry) {
         String* attributeOldValue = nullptr;
-        if (!!(registration->deliveryOptions() &
-               MutationObserverOptionType::kAttributeOldValue) &&
+        if (!!(deliveryOptions(registration->options()) &
+               deliveryOptions(m_optionTypes)) &&
             oldValue) {
             attributeOldValue = oldValue.getValue();
         }
         MutationRecord* record = new MutationRecord(
-            m_target->executionContext(),
-            String::createASCIIString("attributes"), m_target, attrName,
+            m_target->executionContext(), m_type.string(), m_target, attrName,
             attrNamesapce, attributeOldValue);
         registration->observer()->enqueueMutationRecord(record);
     }
