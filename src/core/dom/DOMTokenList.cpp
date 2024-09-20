@@ -261,20 +261,20 @@ void DOMTokenList::remove(GCVector<String*>& tokensToRemove)
         validateToken(tokensToRemove[i]);
         matchCount += checkMatchedTokens(matchFlags, tokens, tokensToRemove[i]);
     }
-    if (matchCount > 0) {
-        bool isEmpty = true;
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            if (!matchFlags[i]) {
-                if (isEmpty) {
-                    dst = new StringView(tokens[i]);
-                    isEmpty = false;
-                } else {
-                    dst = dst->concat(String::spaceString)->concat(&tokens[i]);
-                }
+
+    bool isEmpty = true;
+    for (unsigned i = 0; i < tokens.size(); i++) {
+        if (!matchFlags[i]) {
+            if (isEmpty) {
+                dst = new StringView(tokens[i]);
+                isEmpty = false;
+            } else {
+                dst = dst->concat(String::spaceString)->concat(&tokens[i]);
             }
         }
-        m_element->setAttribute(m_localName, dst);
     }
+    m_element->setAttribute(m_localName, dst);
+
     delete[] matchFlags;
 }
 
@@ -295,25 +295,25 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
     GCVector<StringView> tokens;
     tokenize(str, tokens);
     bool needAdd = false;
-    if (isForced) {
-        if (forceValue) {
-            needAdd = true;
+
+    if (std::find_if(tokens.begin(), tokens.end(),
+                     [token](const StringView& item) -> bool {
+                         return item.equals(token);
+                     }) != tokens.end()) {
+        if (!isForced || !forceValue) {
+            remove(token);
+            return false;
         }
-    } else {
-        bool* matchFlags = new bool[tokens.size()];
-        int matchCount = checkMatchedTokens(matchFlags, tokens, token);
-        if (matchCount == 0) {
-            needAdd = true;
-        }
-        delete[] matchFlags;
+        return true;
     }
-    if (needAdd) {
-        str = addSingleToken(str, tokens, token);
-        m_element->setAttribute(m_localName, str);
-    } else {
-        remove(token);
+
+    if (isForced && !forceValue) {
+        return false;
     }
-    return needAdd;
+
+    str = addSingleToken(str, tokens, token);
+    m_element->setAttribute(m_localName, str);
+    return true;
 }
 
 bool DOMTokenList::replace(String* token, String* newToken)
