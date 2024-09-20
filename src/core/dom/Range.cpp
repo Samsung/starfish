@@ -646,6 +646,11 @@ Node* Range::root()
     return Traverse::root(startContainer());
 }
 
+void Range::deleteContents()
+{
+    processContents(Delete);
+}
+
 DocumentFragment* Range::extractContents()
 {
     return processContents(Extract);

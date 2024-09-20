@@ -105,11 +105,11 @@ public:
     DOMRectList* getClientRects();
     DOMRect* getBoundingClientRect(bool layoutIfNeeds = true);
 
+    void deleteContents();
     DocumentFragment* extractContents();
     DocumentFragment* cloneContents();
 
     /*
-    void deleteContents();
     DocumentFragment cloneContents();
     void surroundContents(Node newParent);
     */
