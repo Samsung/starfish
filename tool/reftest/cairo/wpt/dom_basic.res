@@ -149,7 +149,7 @@ http://web-platform.test:8000/dom/nodes/Element-remove.html
 #http://web-platform.test:8000/dom/nodes/attributes.html
 #http://web-platform.test:8000/dom/nodes/ParentNode-querySelector-All-content.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-27.htm
-#http://web-platform.test:8000/dom/nodes/MutationObserver-characterData.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-characterData.html
 http://web-platform.test:8000/dom/nodes/Node-textContent.html
 http://web-platform.test:8000/dom/nodes/Node-baseURI.html
 http://web-platform.test:8000/dom/nodes/ChildNode-replaceWith.html
