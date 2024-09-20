@@ -228,7 +228,7 @@ http://web-platform.test:8000/dom/nodes/Document-createTextNode.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-29.htm
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-16.htm
 #http://web-platform.test:8000/dom/nodes/Element-classlist.html
-#http://web-platform.test:8000/dom/nodes/MutationObserver-attributes.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-attributes.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-03.htm
 http://web-platform.test:8000/dom/nodes/Node-properties.html
 #http://web-platform.test:8000/dom/nodes/Node-isConnected.html
@@ -269,6 +269,6 @@ http://web-platform.test:8000/dom/nodes/Document-getElementById.html
 http://web-platform.test:8000/dom/nodes/Node-nodeValue.html
 http://web-platform.test:8000/dom/nodes/CharacterData-remove.html
 #http://web-platform.test:8000/dom/nodes/Document-getElementsByTagName.html
-#http://web-platform.test:8000/dom/nodes/MutationObserver-disconnect.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-disconnect.html
 #http://web-platform.test:8000/dom/nodes/Node-cloneNode.html
 http://web-platform.test:8000/dom/nodes/Node-appendChild.html
