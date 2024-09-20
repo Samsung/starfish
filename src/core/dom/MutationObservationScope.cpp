@@ -78,7 +78,7 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds(
     String* attrNamesapce = nullptr;
     if (m_name.hasValue()) {
         QualifiedName qname = m_name.getValue();
-        attrName = qname.toString();
+        attrName = qname.localName();
         if (qname.hasNamespaceURI()) {
             attrNamesapce = qname.namespaceURI().getValue().string();
         }
