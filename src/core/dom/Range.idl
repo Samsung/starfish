@@ -27,7 +27,7 @@ interface Range {
     const unsigned short END_TO_START = 3;
     [RaisesException] short compareBoundaryPoints(unsigned short how, Range sourceRange);
 
-    [Unimplemented,RaisesException, CEReactions] void deleteContents();
+    [CEReactions] void deleteContents();
     [NewObject, CEReactions] DocumentFragment extractContents();
     [Unimplemented,NewObject, RaisesException, CEReactions] DocumentFragment cloneContents();
     [RaisesException, CEReactions] void insertNode(Node node);
