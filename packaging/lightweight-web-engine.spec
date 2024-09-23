@@ -149,8 +149,14 @@ Requires(postun): /sbin/ldconfig
 # To set features explicitly, add a define as shown below.
 # Ex) --define 'enable_webgl {0|1}' --define 'enable_dynamic_loader {0|1}'
 %define is_dynamic_loader_supported 1
-%define is_webgl_supported 1
 %define is_worker_supported 1
+
+  %if "%{rpm}" == "headless"
+%define is_webgl_supported 0
+  %else
+%define is_webgl_supported 1
+  %endif
+
 %else
 %define is_dynamic_loader_supported 0
 %define is_webgl_supported 0
