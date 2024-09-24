@@ -44,6 +44,23 @@ MutationRecord::MutationRecord(ExecutionContext* executionContext, String* type,
 {
 }
 
+MutationRecord::MutationRecord(ExecutionContext* executionContext, String* type,
+                               Node* target, GCVector<Node*>& addedNodes,
+                               GCVector<Node*>& removedNodes,
+                               Node* previousSibling, Node* nextSibling)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+    , m_type(type)
+    , m_target(target)
+    , m_addedNodes(new NodeList(target, true))
+    , m_removedNodes(new NodeList(target, true))
+    , m_previousSibling(previousSibling)
+    , m_nextSibling(nextSibling)
+{
+    m_addedNodes->getNodeListImpl().setItems(addedNodes);
+    m_removedNodes->getNodeListImpl().setItems(removedNodes);
+}
+
 ScriptBindingInstance* MutationRecord::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
@@ -53,7 +70,7 @@ NodeList* MutationRecord::addedNodes()
 {
     if (!m_addedNodes) {
         m_addedNodes = new NodeList(m_target, true);
-        GCVector<Element*> emptyVector;
+        GCVector<Node*> emptyVector;
 
         // Fill the cache with empty vectors.
         m_addedNodes->getNodeListImpl().setItems(emptyVector);
@@ -65,7 +82,7 @@ NodeList* MutationRecord::removedNodes()
 {
     if (!m_removedNodes) {
         m_removedNodes = new NodeList(m_target, true);
-        GCVector<Element*> emptyVector;
+        GCVector<Node*> emptyVector;
 
         // Fill the cache with empty vectors.
         m_removedNodes->getNodeListImpl().setItems(emptyVector);

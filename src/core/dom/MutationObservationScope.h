@@ -41,11 +41,18 @@ public:
     void startCharacterDataMutationScope(Node* target,
                                          Nullable<String*> oldValue);
 
+    void startChildListMutationScope(Node* target);
+    void childAdded(Node* child);
+    void childRemoved(Node* child, bool forceUpdateSibling = false);
+
     // Ensures that |end| is implicitly called when an object is destroyed.
     void endMutationScope();
 
 private:
     void enqueueMutationRecordIfNeeds();
+    void enqueueChildListMutationRecordIfNeeds();
+    bool isEmptyChildList();
+    void updateSiblingIfNeeds(Node* child, bool forceUpdateSibling);
 
     Node* m_target = nullptr;
     bool m_isStarted = false;
@@ -53,6 +60,12 @@ private:
     MutationObserverOptionType m_optionTypes;
     AtomicString m_type;
     Nullable<String*> m_oldValue;
+    GCVector<Node*> m_addedChilds;
+    GCVector<Node*> m_removedChilds;
+    Node* m_previousSibling = nullptr;
+    Node* m_nextSibling = nullptr;
+
+    static std::unordered_set<Node*> m_onScopeSet;
 };
 
 } // namespace Starfish

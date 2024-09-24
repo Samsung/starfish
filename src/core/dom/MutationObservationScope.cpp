@@ -25,8 +25,11 @@
 #include "core/dom/Element.h"
 #include "core/dom/MutationObserver.h"
 #include "core/dom/MutationRecord.h"
+#include "core/dom/NodeList.h"
 
 namespace Starfish {
+
+std::unordered_set<Node*> MutationObservationScope::m_onScopeSet;
 
 MutationObservationScope::MutationObservationScope()
 {
@@ -42,6 +45,10 @@ void MutationObservationScope::startAttributeMutationScope(
     Node* target, const Optional<QualifiedName>& name,
     Nullable<String*> oldValue)
 {
+    if (m_onScopeSet.find(target) != m_onScopeSet.end()) {
+        return;
+    }
+
     m_isStarted = true;
     m_target = target;
     m_name = name;
@@ -50,16 +57,16 @@ void MutationObservationScope::startAttributeMutationScope(
     m_type =
         AtomicString::createAtomicString(m_target->starfish(), "attributes");
     m_oldValue = oldValue;
-
-    if (m_target->isElement() && m_name &&
-        m_name.getValue().toString()->equals("style")) {
-        m_target->asElement()->inlineStyle()->setMutationObservation(false);
-    }
+    m_onScopeSet.insert(target);
 }
 
 void MutationObservationScope::startCharacterDataMutationScope(
     Node* target, Nullable<String*> oldValue)
 {
+    if (m_onScopeSet.find(target) != m_onScopeSet.end()) {
+        return;
+    }
+
     m_isStarted = true;
     m_target = target;
     m_optionTypes = MutationObserverOptionType::kCharacterData |
@@ -67,6 +74,21 @@ void MutationObservationScope::startCharacterDataMutationScope(
     m_type =
         AtomicString::createAtomicString(m_target->starfish(), "characterData");
     m_oldValue = oldValue;
+    m_onScopeSet.insert(target);
+}
+
+void MutationObservationScope::startChildListMutationScope(Node* target)
+{
+    if (m_onScopeSet.find(target) != m_onScopeSet.end()) {
+        return;
+    }
+
+    m_isStarted = true;
+    m_target = target;
+    m_optionTypes = MutationObserverOptionType::kChildList;
+    m_type =
+        AtomicString::createAtomicString(m_target->starfish(), "childList");
+    m_onScopeSet.insert(target);
 }
 
 void MutationObservationScope::endMutationScope()
@@ -74,13 +96,11 @@ void MutationObservationScope::endMutationScope()
     if (!!(m_optionTypes & MutationObserverOptionType::kAttributes) ||
         !!(m_optionTypes & MutationObserverOptionType::kCharacterData)) {
         enqueueMutationRecordIfNeeds();
+    } else if (!!(m_optionTypes & MutationObserverOptionType::kChildList)) {
+        enqueueChildListMutationRecordIfNeeds();
     }
 
-    if (m_isStarted && m_target->isElement() &&
-        m_optionTypes == MutationObserverOptionType::kAttributes && m_name &&
-        m_name.getValue().toString()->equals("style")) {
-        m_target->asElement()->inlineStyle()->setMutationObservation(true);
-    }
+    m_onScopeSet.erase(m_target);
     m_isStarted = false;
 }
 
@@ -114,6 +134,60 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds()
             m_target->executionContext(), m_type.string(), m_target, attrName,
             attrNamesapce, attributeOldValue);
         registration->observer()->enqueueMutationRecord(record);
+    }
+}
+
+void MutationObservationScope::enqueueChildListMutationRecordIfNeeds()
+{
+    MutationObserverOptionType observerTypes = mutationTypes(m_optionTypes);
+    if (!m_target->document()->hasMutationObserversOfType(observerTypes)) {
+        return;
+    }
+
+    if (isEmptyChildList()) {
+        return;
+    }
+
+    GCVector<MutationObserverRegistration*> interestedObserversRegistry =
+        m_target->interestedObservers(observerTypes, m_name);
+    for (auto* registration : interestedObserversRegistry) {
+        MutationRecord* record = new MutationRecord(
+            m_target->executionContext(), m_type.string(), m_target,
+            m_addedChilds, m_removedChilds, m_previousSibling, m_nextSibling);
+        registration->observer()->enqueueMutationRecord(record);
+    }
+}
+
+void MutationObservationScope::childAdded(Node* child)
+{
+    if (!m_isStarted) {
+        return;
+    }
+    updateSiblingIfNeeds(child, false);
+    m_addedChilds.push_back(child);
+}
+
+void MutationObservationScope::childRemoved(Node* child,
+                                            bool forceUpdateSibling)
+{
+    if (!m_isStarted) {
+        return;
+    }
+    updateSiblingIfNeeds(child, forceUpdateSibling);
+    m_removedChilds.push_back(child);
+}
+
+bool MutationObservationScope::isEmptyChildList()
+{
+    return m_addedChilds.empty() && m_removedChilds.empty();
+}
+
+void MutationObservationScope::updateSiblingIfNeeds(Node* child,
+                                                    bool forceUpdateSibling)
+{
+    if (isEmptyChildList() || forceUpdateSibling) {
+        m_previousSibling = child->previousSibling();
+        m_nextSibling = child->nextSibling();
     }
 }
 

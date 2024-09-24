@@ -1268,14 +1268,12 @@ static bool parseAnimationShorthand(
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
     , m_node(element)
-    , m_isMutationObservationEnabled(false)
 {
 }
 
 CSSStyleDeclaration::CSSStyleDeclaration(Document* document)
     : ScriptWrappable(this)
     , m_node(document)
-    , m_isMutationObservationEnabled(false)
 {
 }
 
@@ -2052,12 +2050,15 @@ bool CSSStyleDeclaration::setPropertyInternal(
     bool isImportant)
 {
     MutationObservationScope scope;
-    if (isInlineStyle() && m_isMutationObservationEnabled) {
+    if (isInlineStyle() && m_node->document()->hasMutationObserversOfType(
+                               MutationObserverOptionType::kAttributes)) {
         String* old = nullptr;
         QualifiedName qname(m_node->starfish()->staticStrings()->m_style);
-        auto maybeOld = m_node->asElement()->getAttribute(qname);
-        if (maybeOld) {
-            old = maybeOld.getValue();
+        if (m_node->isElement()) {
+            auto maybeOld = m_node->asElement()->getAttribute(qname);
+            if (maybeOld) {
+                old = maybeOld.getValue();
+            }
         }
         scope.startAttributeMutationScope(m_node, qname, old);
     }

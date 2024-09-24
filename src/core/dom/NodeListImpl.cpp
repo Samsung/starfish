@@ -436,7 +436,7 @@ void NodeListImpl::fillCacheIfNeed() const
     }
 }
 
-void NodeListImpl::setItems(GCVector<Element*>& elements)
+void NodeListImpl::setItems(GCVector<Node*>& elements)
 {
     m_cachedNodeList.insert(m_cachedNodeList.end(), elements.begin(),
                             elements.end());

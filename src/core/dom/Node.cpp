@@ -36,6 +36,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/MutationObserver.h"
+#include "core/dom/MutationObservationScope.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
@@ -424,15 +425,17 @@ void Node::setTextContent(Nullable<String*> val)
         str = val.getValue();
     }
 
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
     switch (nodeType()) {
     case DOCUMENT_FRAGMENT_NODE:
     case ELEMENT_NODE: {
         while (firstChild()) {
-            removeChild(firstChild());
+            scope.childRemoved(removeChild(firstChild()));
         }
 
         if (!str->equals(String::emptyString)) {
-            appendChild(new Text(document(), str));
+            scope.childAdded(appendChild(new Text(document(), str)));
         }
         break;
     }
@@ -1483,6 +1486,10 @@ static void setChildrenNeedsStyleRecalc(Node* node)
 
 static void didInsertNode(Node* self, Node* child)
 {
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(self);
+    scope.childAdded(child);
+
     child->setParentNode(self);
 
     Node* parent = self;
@@ -1513,9 +1520,14 @@ Node* Node::appendChild(Node* child)
     validatePreinsert(child, nullptr);
 
     if (child->isDocumentFragment()) {
+        MutationObservationScope scope;
+        scope.startChildListMutationScope(this);
+
+        MutationObservationScope scopeForFragment;
+        scopeForFragment.startChildListMutationScope(child);
         while (Node* nd = child->firstChild()) {
-            child->removeChild(nd);
-            appendChild(nd);
+            scopeForFragment.childRemoved(child->removeChild(nd));
+            scope.childAdded(appendChild(nd));
         }
         return child;
     }
@@ -1561,9 +1573,14 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     }
 
     if (child->isDocumentFragment()) {
+        MutationObservationScope scope;
+        scope.startChildListMutationScope(this);
+
+        MutationObservationScope scopeForFragment;
+        scopeForFragment.startChildListMutationScope(child);
         while (Node* nd = child->firstChild()) {
-            child->removeChild(nd);
-            insertBefore(nd, childRef);
+            scopeForFragment.childRemoved(child->removeChild(nd));
+            scope.childAdded(insertBefore(nd, childRef));
         }
         return child;
     }
@@ -1724,13 +1741,22 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
     STARFISH_ASSERT(childToRemove->parentNode() == this);
 
     if (child == childToRemove) {
+        Node* next = childToRemove->nextSibling();
+        removeChild(childToRemove);
+        insertBefore(child, next);
         return childToRemove;
     }
     if (child->parentNode()) {
         child->parentNode()->removeChild(child);
     }
-    insertBefore(child, childToRemove);
+
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+
+    scope.childAdded(insertBefore(child, childToRemove));
     Node* removed = removeChild(childToRemove);
+    scope.childRemoved(removed, true);
+
     return removed;
 }
 
@@ -1783,6 +1809,10 @@ Node* Node::removeChild(Node* child)
     if (m_lastChild == child) {
         m_lastChild = prevChild;
     }
+
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    scope.childRemoved(child);
 
     child->setPreviousSibling(nullptr);
     child->setNextSibling(nullptr);
