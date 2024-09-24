@@ -106,7 +106,7 @@ http://web-platform.test:8000/dom/lists/DOMTokenList-stringifier.html
 #http://web-platform.test:8000/dom/lists/DOMTokenList-coverage-for-attributes.html
 http://web-platform.test:8000/dom/lists/DOMTokenList-value.html
 #http://web-platform.test:8000/dom/historical.html
-#http://web-platform.test:8000/dom/nodes/MutationObserver-childList.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-childList.html
 http://web-platform.test:8000/dom/nodes/Node-parentNode.html
 http://web-platform.test:8000/dom/nodes/Element-removeAttributeNS.html
 #http://web-platform.test:8000/dom/nodes/Element-getElementsByTagName.html
@@ -238,7 +238,7 @@ http://web-platform.test:8000/dom/nodes/getElementsByClassName-18.htm
 http://web-platform.test:8000/dom/nodes/Element-firstElementChild.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-20.htm
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-17.htm
-#http://web-platform.test:8000/dom/nodes/MutationObserver-takeRecords.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-takeRecords.html
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/createDocument.html
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_gif.html
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_html.html
