@@ -318,6 +318,8 @@ public:
     template <typename U = T, typename = typename std::enable_if<
                                   std::is_same<JustCheckOveflow, U>::value>::type>
     ComputeOverflow(FrameBox* frame)
+    : m_canvasOrCompositor(nullptr)
+    , m_opacity(1)
     {
         m_canApplyOverflowOrScrolls.reserve(32);
 
