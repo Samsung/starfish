@@ -109,10 +109,9 @@ public:
     DocumentFragment* extractContents();
     DocumentFragment* cloneContents();
 
-    /*
-    DocumentFragment cloneContents();
-    void surroundContents(Node newParent);
-    */
+    void surroundContents(Node* newParent);
+
+    // DocumentFragment cloneContents();
 
     Range* cloneRange();
     void detach();
