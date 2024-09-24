@@ -2175,8 +2175,11 @@ public:
         // degree rotate transform
         float maxX = x + width;
         float maxY = y + height;
-        mapPointsByMatrix(x, y, m_screenMatrix);
-        mapPointsByMatrix(maxX, maxY, m_screenMatrix);
+
+        if (gl()->isGeneric()) {
+            mapPointsByMatrix(x, y, m_screenMatrix);
+            mapPointsByMatrix(maxX, maxY, m_screenMatrix);
+        }
 
         float newX = std::min(x, maxX);
         float newWidth = std::abs(x - maxX);
