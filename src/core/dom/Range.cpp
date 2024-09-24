@@ -661,6 +661,41 @@ DocumentFragment* Range::cloneContents()
     return processContents(Clone);
 }
 
+void Range::surroundContents(Node* newParent)
+{
+    Node* start = startContainer();
+    if (start->nodeType() == Node::TEXT_NODE) {
+        start = start->parentNode();
+    }
+    Node* end = endContainer();
+    if (end->nodeType() == Node::TEXT_NODE) {
+        end = end->parentNode();
+    }
+    if (start != end) {
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::Code::INVALID_NODE_TYPE_ERR);
+    }
+
+    Node::NodeType type = newParent->nodeType();
+    if (type == Node::DOCUMENT_NODE || type == Node::DOCUMENT_TYPE_NODE ||
+        type == Node::DOCUMENT_FRAGMENT_NODE) {
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::Code::INVALID_NODE_TYPE_ERR);
+    }
+
+    DocumentFragment* fragment = extractContents();
+    if (newParent->hasChildNodes()) {
+        while (Node* first = newParent->firstChild()) {
+            newParent->removeChild(first);
+        }
+    }
+
+    insertNode(newParent);
+    newParent->appendChild(fragment);
+    selectNode(newParent);
+    return;
+}
+
 // The part of below is taken from Webkit Project.
 // (Source/WebCore/dom/Range.cpp)
 
