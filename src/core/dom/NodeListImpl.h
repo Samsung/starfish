@@ -154,7 +154,7 @@ public:
         m_cachedNodeList.clear();
     }
 
-    void setItems(GCVector<Element*>& elements);
+    void setItems(GCVector<Node*>& elements);
     void getherDescendant(GCVector<Node*>* collection, Node* root) const;
     void getherDescendantIncludingRoot(GCVector<Node*>* collection,
                                        Node* root) const;

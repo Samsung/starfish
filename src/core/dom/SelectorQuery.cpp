@@ -126,7 +126,7 @@ NodeList* SelectorQuery::queryAll(Node& rootNode)
 
     NodeList* list = new NodeList(&rootNode, true);
     if (matchedElement.size() > 0) {
-        GCVector<Element*> gcMatchedElement;
+        GCVector<Node*> gcMatchedElement;
         size_t len = matchedElement.size();
         gcMatchedElement.reserve(len);
         for (size_t i = 0; i < len; i++) {

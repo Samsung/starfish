@@ -183,11 +183,6 @@ public:
                     String::emptyString);
     }
 
-    void setMutationObservation(bool enable)
-    {
-        m_isMutationObservationEnabled = enable;
-    }
-
     virtual bool isInlineStyle() const
     {
         return false;
@@ -462,7 +457,6 @@ protected:
     Nullable<MutablePropertyValueList*> m_cssCustomValues;
     GCVector<void*> m_pointerRooter;
     Node* m_node;
-    bool m_isMutationObservationEnabled;
 };
 
 class StyleRuleCSSStyleDeclaration : public CSSStyleDeclaration {
@@ -488,7 +482,6 @@ public:
     InlineCSSStyleDeclaration(Element* element)
         : CSSStyleDeclaration(element)
     {
-        m_isMutationObservationEnabled = true;
     }
 
     void setCssText(String* text) override;

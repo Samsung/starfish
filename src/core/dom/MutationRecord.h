@@ -33,6 +33,10 @@ public:
     MutationRecord(ExecutionContext* executionContext, String* type,
                    Node* target, String* attributeName,
                    String* attributeNamespace, Nullable<String*> oldValue);
+    MutationRecord(ExecutionContext* executionContext, String* type,
+                   Node* target, GCVector<Node*>& addedNodes,
+                   GCVector<Node*>& removedNodes, Node* previousSibling,
+                   Node* nextSibling);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
