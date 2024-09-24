@@ -49,12 +49,12 @@ void MutationObservationScope::startAttributeMutationScope(
                     MutationObserverOptionType::kAttributeOldValue;
     m_type =
         AtomicString::createAtomicString(m_target->starfish(), "attributes");
+    m_oldValue = oldValue;
 
     if (m_target->isElement() && m_name &&
         m_name.getValue().toString()->equals("style")) {
         m_target->asElement()->inlineStyle()->setMutationObservation(false);
     }
-    enqueueMutationRecordIfNeeds(oldValue);
 }
 
 void MutationObservationScope::startCharacterDataMutationScope(
@@ -66,11 +66,16 @@ void MutationObservationScope::startCharacterDataMutationScope(
                     MutationObserverOptionType::kCharacterDataOldValue;
     m_type =
         AtomicString::createAtomicString(m_target->starfish(), "characterData");
-    enqueueMutationRecordIfNeeds(oldValue);
+    m_oldValue = oldValue;
 }
 
 void MutationObservationScope::endMutationScope()
 {
+    if (!!(m_optionTypes & MutationObserverOptionType::kAttributes) ||
+        !!(m_optionTypes & MutationObserverOptionType::kCharacterData)) {
+        enqueueMutationRecordIfNeeds();
+    }
+
     if (m_isStarted && m_target->isElement() &&
         m_optionTypes == MutationObserverOptionType::kAttributes && m_name &&
         m_name.getValue().toString()->equals("style")) {
@@ -79,8 +84,7 @@ void MutationObservationScope::endMutationScope()
     m_isStarted = false;
 }
 
-void MutationObservationScope::enqueueMutationRecordIfNeeds(
-    Nullable<String*> oldValue)
+void MutationObservationScope::enqueueMutationRecordIfNeeds()
 {
     MutationObserverOptionType observerTypes = mutationTypes(m_optionTypes);
     if (!m_target->document()->hasMutationObserversOfType(observerTypes)) {
@@ -103,8 +107,8 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds(
         String* attributeOldValue = nullptr;
         if (!!(deliveryOptions(registration->options()) &
                deliveryOptions(m_optionTypes)) &&
-            oldValue) {
-            attributeOldValue = oldValue.getValue();
+            m_oldValue) {
+            attributeOldValue = m_oldValue.getValue();
         }
         MutationRecord* record = new MutationRecord(
             m_target->executionContext(), m_type.string(), m_target, attrName,

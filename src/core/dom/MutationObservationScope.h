@@ -45,13 +45,14 @@ public:
     void endMutationScope();
 
 private:
-    void enqueueMutationRecordIfNeeds(Nullable<String*> oldValue);
+    void enqueueMutationRecordIfNeeds();
 
     Node* m_target = nullptr;
     bool m_isStarted = false;
     Optional<QualifiedName> m_name;
     MutationObserverOptionType m_optionTypes;
     AtomicString m_type;
+    Nullable<String*> m_oldValue;
 };
 
 } // namespace Starfish
