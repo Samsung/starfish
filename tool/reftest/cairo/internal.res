@@ -727,4 +727,7 @@ test/cairo/internal-test/scripting/module/test3.html
 test/cairo/internal-test/idb/idb_put_object.html
 test/cairo/internal-test/custom-element-registry/define.html
 test/cairo/internal-test/custom-element-registry/reactions.html
+test/cairo/internal-test/custom-element-registry/reactions2.html
+test/cairo/internal-test/custom-element-registry/reactions3.html
+test/cairo/internal-test/custom-element-registry/reaction-inf-recursive.html
 test/cairo/internal-test/custom-element-registry/upgrade.html

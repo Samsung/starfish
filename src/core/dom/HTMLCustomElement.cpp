@@ -79,21 +79,21 @@ void HTMLCustomElement::didAttributeChanged(QualifiedName name,
         attributeRemoved ? scriptNull() : createScriptValue(toJSString(value))
     };
 
-    m_customElementRegistryData->registry->invokeCustomElementReaction(
+    m_customElementRegistryData->registry->enqueueToCustomElementsReactionStack(
         this, CustomElementCallbackType::kAttributeChanged, data);
 }
 
 void HTMLCustomElement::didNodeInsertedToDocumentTree()
 {
     HTMLElement::didNodeInsertedToDocumentTree();
-    m_customElementRegistryData->registry->invokeCustomElementReaction(
+    m_customElementRegistryData->registry->enqueueToCustomElementsReactionStack(
         this, CustomElementCallbackType::kConnected, nullptr);
 }
 
 void HTMLCustomElement::didNodeRemovedFromDocumentTree()
 {
     HTMLElement::didNodeRemovedFromDocumentTree();
-    m_customElementRegistryData->registry->invokeCustomElementReaction(
+    m_customElementRegistryData->registry->enqueueToCustomElementsReactionStack(
         this, CustomElementCallbackType::kDisconnected, nullptr);
 }
 
@@ -103,7 +103,7 @@ void HTMLCustomElement::didNodeAdopted(Document* oldDocument)
     ScriptValue* data = new (GC)
         ScriptValue[2]{ createScriptValue(oldDocument->scriptObject()),
                         createScriptValue(document()->scriptObject()) };
-    m_customElementRegistryData->registry->invokeCustomElementReaction(
+    m_customElementRegistryData->registry->enqueueToCustomElementsReactionStack(
         this, CustomElementCallbackType::kAdoptped, data);
 }
 

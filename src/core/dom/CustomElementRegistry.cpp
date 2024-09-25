@@ -30,6 +30,9 @@
 
 namespace Starfish {
 
+CustomElementReactionStack*
+    CustomElementReactionStack::s_currentProcessingStack = nullptr;
+
 CustomElementConstructor* CustomElementConstructor::toCustomElementConstructor(
     ScriptValue constructor)
 {
@@ -39,6 +42,30 @@ CustomElementConstructor* CustomElementConstructor::toCustomElementConstructor(
 CustomElementConstructor::CustomElementConstructor(ScriptValue constructor)
     : m_customElementConstructor(constructor)
 {
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#invoke-custom-element-reactions
+void CustomElementQueue::process()
+{
+    // While queue is not empty:
+    while (size()) {
+        // Let element be the result of dequeuing from queue.
+        // Let reactions be element's custom element reaction queue.
+        // Repeat until reactions is empty:
+        //   Remove the first element of reactions, and let reaction be that
+        //   element. Switch on reaction's type:
+        HTMLCustomElement* element = front();
+        erase(begin());
+        auto registry = element->customElementRegistryData()->registry;
+        auto& reactionQueue = registry->elementReactionQueue(element);
+        while (reactionQueue.size()) {
+            auto item = reactionQueue.front();
+            reactionQueue.erase(reactionQueue.begin());
+            registry->invokeCustomElementReaction(element, item.first,
+                                                  item.second);
+        }
+    }
+    clear();
 }
 
 CustomElementRegistry::CustomElementRegistry(ExecutionContext* executionContext)
@@ -53,7 +80,7 @@ HTMLCustomElement* CustomElementRegistry::createCustomElement(
     Document* document, CustomElementRegistryData* data, bool invokeCallbacks)
 {
     auto ele = new HTMLUnknownElement(document, data->name);
-    upgrade(ele, data, invokeCallbacks);
+    upgrade(ele, data, invokeCallbacks, false);
     return ele->asHTMLCustomElement();
 }
 
@@ -455,7 +482,8 @@ void CustomElementRegistry::define(String* name,
     //     when-defined promise map.
 }
 
-void CustomElementRegistry::upgrade(Node* node)
+void CustomElementRegistry::upgrade(Node* node,
+                                    bool inCaseOfConnectedToDocument)
 {
     Traverse::traverse(node, [&](Node* e) {
         if (!node->isHTMLUnknownElement()) {
@@ -466,7 +494,8 @@ void CustomElementRegistry::upgrade(Node* node)
         if (!data) {
             return;
         }
-        upgrade(node->asElement(), data.value());
+        upgrade(node->asElement(), data.value(), true,
+                inCaseOfConnectedToDocument);
     });
 }
 
@@ -476,13 +505,14 @@ void CustomElementRegistry::upgrade(CustomElementRegistryData* data)
     // element upgrade reaction given element and definition.
     Traverse::traverse(m_executionContext->document(), [&](Node* e) {
         if (e->isHTMLUnknownElement() && e->asElement()->name() == data->name) {
-            upgrade(e->asElement(), data);
+            upgrade(e->asElement(), data, true, false);
         }
     });
 }
 
 void CustomElementRegistry::upgrade(Element* e, CustomElementRegistryData* data,
-                                    bool invokeCallbacks)
+                                    bool invokeCallbacks,
+                                    bool inCaseOfConnectedToDocument)
 {
     if (e->isGivenUpScriptValue()) {
         e->generateScriptObject();
@@ -492,44 +522,13 @@ void CustomElementRegistry::upgrade(Element* e, CustomElementRegistryData* data,
     STARFISH_ASSERT(!e->isHTMLUnknownElement());
 
     if (invokeCallbacks) {
-        // fire constructor
-        invokeCustomElementReaction(e->asHTMLCustomElement(),
-                                    CustomElementCallbackType::kUpgraded,
-                                    nullptr);
-
-        // fire attribute changed
-        if (!isNullOrUndefinedScriptValue(data->attributeChangedCallback)) {
-            const auto& attrs = e->attributesVector();
-            GCVector<ScriptValue*> callbackDatas;
-
-            for (auto s : data->observedAttributes) {
-                for (const auto& attr : attrs) {
-                    if (attr.name().localNameAtomic() == s) {
-                        ScriptValue* argv = new (GC) ScriptValue[3]{
-                            createScriptValue(
-                                toJSString(attr.name().localName())),
-                            scriptNull(),
-                            createScriptValue(toJSString(attr.value()))
-                        };
-                        callbackDatas.push_back(argv);
-                        break;
-                    }
-                }
-            }
-
-            for (auto* callbackData : callbackDatas) {
-                invokeCustomElementReaction(
-                    e->asHTMLCustomElement(),
-                    CustomElementCallbackType::kAttributeChanged, callbackData);
-            }
-        }
-
-        // fire connected
-        if (e->isConnected()) {
-            invokeCustomElementReaction(e->asHTMLCustomElement(),
-                                        CustomElementCallbackType::kConnected,
-                                        nullptr);
-        }
+        HTMLCustomElement* ce = e->asHTMLCustomElement();
+        enqueueToCustomElementsReactionStack(
+            ce,
+            inCaseOfConnectedToDocument
+                ? CustomElementCallbackType::kUpgradedWhenConnected
+                : CustomElementCallbackType::kUpgradedWhenDefined,
+            nullptr);
     }
 }
 
@@ -557,7 +556,8 @@ static ScriptValue fetchCallback(CustomElementRegistryData* definition,
 {
     ScriptValue callback = scriptUndefined();
     switch (type) {
-    case CustomElementCallbackType::kUpgraded:
+    case CustomElementCallbackType::kUpgradedWhenDefined:
+    case CustomElementCallbackType::kUpgradedWhenConnected:
         callback = definition->constructor->scriptValue();
         break;
     case CustomElementCallbackType::kConnected:
@@ -579,57 +579,28 @@ static ScriptValue fetchCallback(CustomElementRegistryData* definition,
     return callback;
 }
 
-// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-callback-reaction
-void CustomElementRegistry::enqueueToCustomElementsReactionStack(
-    HTMLCustomElement* element, CustomElementCallbackType type,
-    Optional<ScriptValue*> data)
+CustomElementRegistry::ElementReactionQueue&
+CustomElementRegistry::elementReactionQueue(HTMLCustomElement* element)
 {
-    // Let definition be element's custom element definition.
-    auto definition = element->customElementRegistryData();
-    // Let callback be the value of the entry in definition's lifecycle
-    // callbacks with key callbackName.
-    ScriptValue callback = fetchCallback(definition, type);
-
-    // If callback is null, then return.
-    if (isNullOrUndefinedScriptValue(callback)) {
-        return;
-    }
-
-    // NOTE do this on HTMLCustomElement::didAttributeChanged
-    // If callbackName is "attributeChangedCallback", then:
-    //   Let attributeName be the first element of args.
-    //   If definition's observed attributes does not contain attributeName,
-    //   then return.
-
-    // Add a new callback reaction to element's custom element reaction queue,
-    // with callback function callback and arguments args.
-    CustomElementReactionData* customElementReactionData;
-    auto iter = m_customElementReactions.find(element);
-    if (iter == m_customElementReactions.end()) {
-        customElementReactionData = new CustomElementReactionData;
-        m_customElementReactions.insert(
-            std::make_pair(element, customElementReactionData));
+    CustomElementRegistry::ElementReactionQueue* queue;
+    auto iter = m_customElementReactionQueues.find(element);
+    if (iter == m_customElementReactionQueues.end()) {
+        queue = new CustomElementRegistry::ElementReactionQueue;
+        m_customElementReactionQueues.insert(std::make_pair(element, queue));
     } else {
-        customElementReactionData = iter->second;
+        queue = iter->second;
     }
-    customElementReactionData->reactionData.push_back(
-        std::make_pair(type, data));
-
-    // Enqueue an element on the appropriate element queue given element.
-    enqueueAnElementOnAppropriateElementQueue(element, type, data);
+    return *queue;
 }
 
-// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-an-element-on-the-appropriate-element-queue
-void CustomElementRegistry::enqueueAnElementOnAppropriateElementQueue(
-    HTMLCustomElement* element, CustomElementCallbackType type,
-    Optional<ScriptValue*> data)
+void CustomElementRegistry::enqueueElementOnAppropriateElementQueue(
+    HTMLCustomElement* element)
 {
     // To enqueue an element on the appropriate element queue, given an element
     // element, run the following steps: Let reactionsStack be element's
     // relevant agent's custom element reactions stack.
-    auto& reactionsStack = m_customElementReactionStack;
     // If reactionsStack is empty, then:
-    if (reactionsStack.size() == 0) {
+    if (!CustomElementReactionStack::s_currentProcessingStack) {
         // Add element to reactionsStack's backup element queue.
         m_customElementReactionStackBackupQueue.push_back(element);
 
@@ -650,8 +621,8 @@ void CustomElementRegistry::enqueueAnElementOnAppropriateElementQueue(
                 auto* self = static_cast<CustomElementRegistry*>(data);
                 // Invoke custom element reactions in reactionsStack's backup
                 // element queue.
-                self->invokeCustomElementReactions(
-                    self->m_customElementReactionStackBackupQueue);
+                self->m_customElementReactionStackBackupQueue.process();
+
                 // Unset reactionsStack's processing the backup element queue
                 // flag.
                 self->m_isProcessingBackupElementQueue = false;
@@ -660,34 +631,29 @@ void CustomElementRegistry::enqueueAnElementOnAppropriateElementQueue(
     } else {
         // Otherwise, add element to element's relevant agent's current element
         // queue.
-        reactionsStack.push_back(element);
+        CustomElementReactionStack::s_currentProcessingStack->m_queue.push_back(
+            element);
     }
 }
 
-// https://html.spec.whatwg.org/multipage/custom-elements.html#invoke-custom-element-reactions
-void CustomElementRegistry::invokeCustomElementReactions(
-    GCVector<HTMLCustomElement*>& queue)
+void CustomElementRegistry::enqueueToCustomElementsReactionStack(
+    HTMLCustomElement* element, CustomElementCallbackType type,
+    Optional<ScriptValue*> data)
 {
-    // While queue is not empty:
-    while (queue.size()) {
-        // Let element be the result of dequeuing from queue.
-        HTMLCustomElement* element = queue.front();
-        queue.erase(queue.begin());
-        // Let reactions be element's custom element reaction queue.
-        auto iter = m_customElementReactions.find(element);
-        CustomElementReactionData* reactions = iter->second;
-        m_customElementReactions.erase(iter);
+    // Let definition be element's custom element definition.
+    auto definition = element->customElementRegistryData();
+    // Let callback be the value of the entry in definition's lifecycle
+    // callbacks with key callbackName.
+    ScriptValue callback = fetchCallback(definition, type);
 
-        // Repeat until reactions is empty:
-        while (reactions->reactionData.size()) {
-            // Remove the first element of reactions, and let reaction be that
-            // element. Switch on reaction's type:
-            auto reaction = reactions->reactionData.front();
-            reactions->reactionData.erase(reactions->reactionData.begin());
-            invokeCustomElementReaction(element, reaction.first,
-                                        reaction.second);
-        }
+    // If callback is null, then return.
+    if (isNullOrUndefinedScriptValue(callback)) {
+        return;
     }
+
+    auto& queue = elementReactionQueue(element);
+    queue.push_back(std::make_pair(type, data));
+    enqueueElementOnAppropriateElementQueue(element);
 }
 
 void CustomElementRegistry::invokeCustomElementReaction(
@@ -696,17 +662,57 @@ void CustomElementRegistry::invokeCustomElementReaction(
 {
     auto customElementRegistryData = element->customElementRegistryData();
     // upgrade reaction
-    if (type == CustomElementCallbackType::kUpgraded) {
+    if (type == CustomElementCallbackType::kUpgradedWhenConnected ||
+        type == CustomElementCallbackType::kUpgradedWhenDefined) {
         // Upgrade element using reaction's custom element definition.
         // If this throws an exception, catch it, and report it for reaction's
         // custom element definition's constructor's corresponding JavaScript
         // object's associated realm's global object.
+
+        if (!isNullOrUndefinedScriptValue(
+                customElementRegistryData->attributeChangedCallback)) {
+            const auto& attrs = element->attributesVector();
+            GCVector<ScriptValue*> callbackDatas;
+
+            for (auto s : customElementRegistryData->observedAttributes) {
+                for (const auto& attr : attrs) {
+                    if (attr.name().localNameAtomic() == s) {
+                        ScriptValue* argv = new (GC) ScriptValue[3]{
+                            createScriptValue(
+                                toJSString(attr.name().localName())),
+                            scriptNull(),
+                            createScriptValue(toJSString(attr.value()))
+                        };
+                        callbackDatas.push_back(argv);
+                        break;
+                    }
+                }
+            }
+
+            for (auto* callbackData : callbackDatas) {
+                enqueueToCustomElementsReactionStack(
+                    element->asHTMLCustomElement(),
+                    CustomElementCallbackType::kAttributeChanged, callbackData);
+            }
+        }
+
+        // connected callback will be enqueued from
+        // HTMLCustomElement::didNodeInsertedToDocumentTree
+        if (type != CustomElementCallbackType::kUpgradedWhenConnected) {
+            if (element->isConnected()) {
+                enqueueToCustomElementsReactionStack(
+                    element->asHTMLCustomElement(),
+                    CustomElementCallbackType::kConnected, nullptr);
+            }
+        }
+
         // TODO "report it for reaction's custom element definition's
         // constructor's corresponding JavaScript object's associated realm's
         // global object."
         callConstructor(element->scriptBindingInstance(),
                         customElementRegistryData->constructor->scriptValue(),
                         nullptr, 0, element->scriptObject());
+
     } else {
         // callback reaction
         // Invoke reaction's callback function with reaction's arguments and

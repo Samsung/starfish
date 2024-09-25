@@ -1579,7 +1579,7 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
         processBaseElement();
     } else if (newChild->isHTMLUnknownElement()) {
         if (window()->hasCustomElements()) {
-            window()->customElements()->upgrade(newChild);
+            window()->customElements()->upgrade(newChild, true);
         }
     }
 
