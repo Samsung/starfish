@@ -465,6 +465,30 @@ void CustomElementRegistry::define(String* name,
     data->formStateRestoreCallback = formStateRestoreCallback;
     data->observedAttributes = std::move(observedAttributes);
 
+    if (extends) {
+        STARFISH_UNSUPPORTED(
+            "'extends' property of CustomElementRegistry is unsupported");
+    }
+
+    if (disableInternals) {
+        STARFISH_UNSUPPORTED(
+            "'disableInternals' property of CustomElementRegistry is "
+            "unsupported");
+    }
+
+    if (disableShadow) {
+        STARFISH_UNSUPPORTED(
+            "'disableShadow' property of CustomElementRegistry is unsupported");
+    }
+
+    if (!isNullOrUndefinedScriptValue(formAssociatedCallback) ||
+        !isNullOrUndefinedScriptValue(formResetCallback) ||
+        !isNullOrUndefinedScriptValue(formDisabledCallback) ||
+        !isNullOrUndefinedScriptValue(formStateRestoreCallback)) {
+        STARFISH_UNSUPPORTED(
+            "'form*Callback' property of CustomElementRegistry is unsupported");
+    }
+
     m_registry.insert(std::make_pair(qname.localNameAtomic(), data));
 
     // Let upgrade candidates be all elements that are shadow-including
