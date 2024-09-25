@@ -45,10 +45,12 @@
 #include "HTMLParser.h"
 #include "AtomicHTMLToken.h"
 
+#include "core/page/Window.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/svg/SVGScriptElement.h"
+#include "core/dom/CustomElementRegistry.h"
 
 namespace Starfish {
 
@@ -82,24 +84,22 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
                 forceSync = true;
             }
 
-            if (scriptElement->isHTMLScriptElement()) {
-                HTMLScriptElement* script =
-                    scriptElement->asHTMLScriptElement();
-                script->clearParserInserted();
-                bool shouldStop = script->executeScript(forceSync, true);
-                script->markScriptExecuted();
-                if (shouldStop) {
-                    break;
-                }
+            if (scriptElement->isHTMLScriptElement() ||
+                scriptElement->isSVGScriptElement()) {
+#define DO_SCRIPT_EXECUTE(Kind)                                     \
+    if (scriptElement->is##Kind##Element()) {                       \
+        CustomElementReactionStack reactionStack;                   \
+        Kind##Element* script = scriptElement->as##Kind##Element(); \
+        script->clearParserInserted();                              \
+        bool shouldStop = script->executeScript(forceSync, true);   \
+        script->markScriptExecuted();                               \
+        if (shouldStop) {                                           \
+            break;                                                  \
+        }                                                           \
+    }
 
-            } else if (scriptElement->isSVGScriptElement()) {
-                SVGScriptElement* script = scriptElement->asSVGScriptElement();
-                script->clearParserInserted();
-                bool shouldStop = script->executeScript(forceSync, true);
-                script->markScriptExecuted();
-                if (shouldStop) {
-                    break;
-                }
+                DO_SCRIPT_EXECUTE(HTMLScript);
+                DO_SCRIPT_EXECUTE(SVGScript);
             }
         }
 
