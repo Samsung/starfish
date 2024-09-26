@@ -245,6 +245,7 @@ private:
     MutationCallback* m_callback = nullptr;
 
     GCVector<MutationRecord*> m_queuedRecords;
+    GCVector<MutationRecord*> m_pendingQueuedRecords;
     GCUnorderedSet<MutationObserverRegistration*> m_registrations;
 };
 

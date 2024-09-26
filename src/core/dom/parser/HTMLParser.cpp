@@ -51,6 +51,10 @@
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/svg/SVGScriptElement.h"
 #include "core/dom/CustomElementRegistry.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/page/GlobalScope.h"
+#include "core/page/WebBase.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
@@ -101,6 +105,12 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
                 DO_SCRIPT_EXECUTE(HTMLScript);
                 DO_SCRIPT_EXECUTE(SVGScript);
             }
+
+            m_document->executionContext()
+                ->globalScope()
+                ->webBase()
+                ->messageLoop()
+                ->invokeMicroTasksIfExist();
         }
 
         if (!m_tokenizer.nextToken(m_input.current(), token())) {

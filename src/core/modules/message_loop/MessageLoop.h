@@ -79,6 +79,7 @@ public:
     void removeMicroTask(size_t handle);
 
     bool calledOnValidThread();
+    void invokeMicroTasksIfExist();
 
 protected:
     MessageLoop();
@@ -95,7 +96,6 @@ protected:
         void* m_data;
     };
 
-    void invokeMicroTasksIfExist();
     void clearMicroTasks(GlobalScope* globalScope);
 
     size_t m_microTaskCounter;

@@ -48,9 +48,10 @@ public:
     // Ensures that |end| is implicitly called when an object is destroyed.
     void endMutationScope();
 
+    void enqueueChildListMutationRecordIfNeeds();
+
 private:
     void enqueueMutationRecordIfNeeds();
-    void enqueueChildListMutationRecordIfNeeds();
     bool isEmptyChildList();
     void updateSiblingIfNeeds(Node* child, bool forceUpdateSibling);
 

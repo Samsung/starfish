@@ -430,6 +430,16 @@ void Node::setTextContent(Nullable<String*> val)
     switch (nodeType()) {
     case DOCUMENT_FRAGMENT_NODE:
     case ELEMENT_NODE: {
+        // Note: This is an optimization to mimic the behavior of Chrome.
+        Node* fc = firstChild();
+        if (fc && !fc->nextSibling() && fc->isText()) {
+            String* original = fc->asText()->data();
+            if (val && !val->isEmpty() && original &&
+                original->equals(val.value())) {
+                return;
+            }
+        }
+
         while (firstChild()) {
             scope.childRemoved(removeChild(firstChild()));
         }
@@ -1489,6 +1499,7 @@ static void didInsertNode(Node* self, Node* child)
     MutationObservationScope scope;
     scope.startChildListMutationScope(self);
     scope.childAdded(child);
+    scope.enqueueChildListMutationRecordIfNeeds();
 
     child->setParentNode(self);
 
@@ -1849,6 +1860,10 @@ Node* Node::parserAppendChild(Node* child)
 
     child->setParentNode(this);
 
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    scope.childAdded(child);
+
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(this, child);
     }
@@ -1881,6 +1896,10 @@ void Node::parserRemoveChild(Node* child)
     if (m_lastChild == child) {
         m_lastChild = prevChild;
     }
+
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    scope.childRemoved(child);
 
     child->setPreviousSibling(nullptr);
     child->setNextSibling(nullptr);
@@ -1937,6 +1956,10 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
+
+    MutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    scope.childAdded(child);
 
     Node* parent = this;
     while (parent) {
