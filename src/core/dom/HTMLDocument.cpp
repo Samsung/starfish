@@ -282,6 +282,7 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         auto customElementsData =
             document->window()->customElements()->find(name);
         if (customElementsData) {
+            CustomElementReactionStack reactionStack;
             return document->window()->customElements()->createCustomElement(
                 document, customElementsData.value());
         }

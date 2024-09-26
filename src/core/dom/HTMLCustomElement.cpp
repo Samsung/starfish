@@ -72,11 +72,14 @@ void HTMLCustomElement::didAttributeChanged(QualifiedName name,
         return;
     }
 
-    ScriptValue* data = new (GC) ScriptValue[3]{
+    ScriptValue* data = new (GC) ScriptValue[4]{
         createScriptValue(toJSString(name.localName())),
         attributeCreated ? scriptNull()
                          : createScriptValue(toJSString(old.value())),
-        attributeRemoved ? scriptNull() : createScriptValue(toJSString(value))
+        attributeRemoved ? scriptNull() : createScriptValue(toJSString(value)),
+        name.namespaceURI() ? createScriptValue(toJSString(
+                                  name.namespaceURI().value().string()))
+                            : scriptNull(),
     };
 
     m_customElementRegistryData->registry->enqueueToCustomElementsReactionStack(
