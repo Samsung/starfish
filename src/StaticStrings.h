@@ -200,6 +200,7 @@ namespace Starfish {
     F(Checked, checked, "checked")                             \
     F(Current, current, "current")                             \
     F(Default, default, "default")                             \
+    F(Defined, defined, "defined")                             \
     F(Dir, dir, "dir(")                                        \
     F(Disabled, disabled, "disabled")                          \
     F(Drop, drop, "drop")                                      \
