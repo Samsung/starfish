@@ -545,6 +545,11 @@ void CustomElementRegistry::upgrade(Element* e, CustomElementRegistryData* data,
     e->asHTMLUnknownElement()->morphIntoCustomElement(data);
     STARFISH_ASSERT(!e->isHTMLUnknownElement());
 
+    // we need to style recalc for this element since we support :defined
+    // selector DOMTreeChange damage needs
+    // for children selector like `:defined > div`
+    e->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
+
     if (invokeCallbacks) {
         HTMLCustomElement* ce = e->asHTMLCustomElement();
         enqueueToCustomElementsReactionStack(

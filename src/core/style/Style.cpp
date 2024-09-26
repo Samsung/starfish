@@ -1000,6 +1000,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
         case PseudoDecrement:
     */
     case PseudoDefault:
+    case PseudoDefined:
     case PseudoDir:
     case PseudoDisabled:
     /*
@@ -8422,6 +8423,12 @@ bool StyleResolver::checkPseudoClass(Element* element,
             element->classNames();
         return !checkOne(element, elementName, elementId, elementClasses,
                          selector->pseudoSelectorList()[0].m_selector, result);
+    }
+    case CSSSelector::PseudoType::PseudoDefined: {
+        if (element->isHTMLElement() && !element->isHTMLUnknownElement()) {
+            return true;
+        }
+        return false;
     }
     case CSSSelector::PseudoType::PseudoEnabled: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
