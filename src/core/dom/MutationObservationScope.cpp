@@ -139,6 +139,10 @@ void MutationObservationScope::enqueueMutationRecordIfNeeds()
 
 void MutationObservationScope::enqueueChildListMutationRecordIfNeeds()
 {
+    if (!m_isStarted) {
+        return;
+    }
+
     MutationObserverOptionType observerTypes = mutationTypes(m_optionTypes);
     if (!m_target->document()->hasMutationObserversOfType(observerTypes)) {
         return;
@@ -156,6 +160,9 @@ void MutationObservationScope::enqueueChildListMutationRecordIfNeeds()
             m_addedChilds, m_removedChilds, m_previousSibling, m_nextSibling);
         registration->observer()->enqueueMutationRecord(record);
     }
+
+    GCVector<Node*>().swap(m_addedChilds);
+    GCVector<Node*>().swap(m_removedChilds);
 }
 
 void MutationObservationScope::childAdded(Node* child)

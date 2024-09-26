@@ -369,11 +369,60 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
     return result;
 }
 
+class ScriptExecutionScope {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+    ScriptExecutionScope()
+    {
+    }
+
+    ~ScriptExecutionScope()
+    {
+        if (m_started) {
+            endScope();
+        }
+    }
+
+    void startScope()
+    {
+        m_started = true;
+        s_scriptNestingLevel++;
+    }
+
+    void endScope()
+    {
+        m_started = false;
+        s_scriptNestingLevel--;
+    }
+    bool isExecutingScript()
+    {
+        return !!s_scriptNestingLevel;
+    }
+
+private:
+    static unsigned s_scriptNestingLevel;
+    bool m_started = false;
+};
+
+unsigned ScriptExecutionScope::s_scriptNestingLevel = 0;
+
 bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 {
     if (m_isParserInserted) {
         return false;
     }
+
+    ScriptExecutionScope scope;
+    if (!scope.isExecutingScript() && document()) {
+        executionContext()
+            ->globalScope()
+            ->webBase()
+            ->messageLoop()
+            ->invokeMicroTasksIfExist();
+    }
+
+    scope.startScope();
+
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
         if (!isValidScriptType()) {

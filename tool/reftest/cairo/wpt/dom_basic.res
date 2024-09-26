@@ -210,7 +210,7 @@ http://web-platform.test:8000/dom/nodes/CharacterData-substringData.html
 http://web-platform.test:8000/dom/nodes/Element-childElement-null.html
 #http://web-platform.test:8000/dom/nodes/Document-doctype.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-28.htm
-#http://web-platform.test:8000/dom/nodes/MutationObserver-document.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-document.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-23.htm
 http://web-platform.test:8000/dom/nodes/DOMImplementation-hasFeature.html
 http://web-platform.test:8000/dom/nodes/Node-insertBefore.html
