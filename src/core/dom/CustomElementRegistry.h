@@ -163,6 +163,8 @@ public:
     void upgrade(Element* element, CustomElementRegistryData* data,
                  bool invokeCallbacks, bool inCaseOfConnectedToDocument);
 
+    Promise* whenDefined(String* name);
+
     // https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-callback-reaction
     void enqueueToCustomElementsReactionStack(HTMLCustomElement* element,
                                               CustomElementCallbackType type,
@@ -173,6 +175,7 @@ private:
     bool m_isProcessingBackupElementQueue;
     ExecutionContext* m_executionContext;
     GCUnorderedMap<AtomicString, CustomElementRegistryData*> m_registry;
+    GCUnorderedMap<AtomicString, Promise*> m_whenDefinedMap;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-an-element-on-the-appropriate-element-queue
     void enqueueElementOnAppropriateElementQueue(HTMLCustomElement* element);

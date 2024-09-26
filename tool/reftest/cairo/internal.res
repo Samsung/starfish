@@ -731,3 +731,5 @@ test/cairo/internal-test/custom-element-registry/reactions2.html
 test/cairo/internal-test/custom-element-registry/reactions3.html
 test/cairo/internal-test/custom-element-registry/reaction-inf-recursive.html
 test/cairo/internal-test/custom-element-registry/upgrade.html
+test/cairo/internal-test/custom-element-registry/whendefined.html
+test/cairo/internal-test/custom-element-registry/definedselector.html

@@ -167,6 +167,10 @@ static bool isValidCustomElementName(String* name)
         }
     }
 
+    if (!seenHypen) {
+        return false;
+    }
+
     // name must not be any of the following:
     // annotation-xml
     // color-profile
@@ -498,12 +502,17 @@ void CustomElementRegistry::define(String* name,
     // name.
     upgrade(data);
 
-    // TODO If this CustomElementRegistry's when-defined promise map contains an
+    // If this CustomElementRegistry's when-defined promise map contains an
     // entry with key name:
-    //     TODO Let promise be the value of that entry.
-    //     TODO Resolve promise with constructor.
-    //     TODO Delete the entry with key name from this CustomElementRegistry's
-    //     when-defined promise map.
+    auto iter = m_whenDefinedMap.find(qname.localNameAtomic());
+    if (iter != m_whenDefinedMap.end()) {
+        // Let promise be the value of that entry.
+        // Resolve promise with constructor.
+        iter->second->fulfill(data->constructor->scriptValue());
+        // Delete the entry with key name from this CustomElementRegistry's
+        // when-defined promise map.
+        m_whenDefinedMap.erase(iter);
+    }
 }
 
 void CustomElementRegistry::upgrade(Node* node,
@@ -578,6 +587,45 @@ Nullable<String*> CustomElementRegistry::getName(
         return item.value()->name.localName();
     }
     return nullptr;
+}
+
+Promise* CustomElementRegistry::whenDefined(String* name)
+{
+    // If name is not a valid custom element name, then return a promise
+    // rejected with a "SyntaxError" DOMException.
+    if (!isValidCustomElementName(name)) {
+        DOMException* e =
+            new DOMException(m_executionContext, DOMException::SYNTAX_ERR,
+                             "Invalid custom element name");
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->reject(e->scriptValue());
+        return promise;
+    }
+    // If this CustomElementRegistry contains an entry with name name, then
+    // return a promise resolved with that entry's constructor.
+    AtomicString atomicName =
+        AtomicString::createAtomicString(m_executionContext->starfish(), name);
+    auto entry = find(atomicName);
+    if (entry) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->fulfill(entry->constructor->scriptValue());
+        return promise;
+    }
+    Promise* promise;
+    // Let map be this CustomElementRegistry's when-defined promise map.
+    auto& map = m_whenDefinedMap;
+    // If map does not contain an entry with key name, create an entry in map
+    // with key name and whose value is a new promise.
+    auto iter = map.find(atomicName);
+    if (iter == map.end()) {
+        promise = new Promise(scriptBindingInstance());
+        map.insert(std::make_pair(atomicName, promise));
+    } else {
+        // Let promise be the value of the entry in map with key name.
+        promise = iter->second;
+    }
+    // Return promise.
+    return promise;
 }
 
 static ScriptValue fetchCallback(CustomElementRegistryData* definition,
