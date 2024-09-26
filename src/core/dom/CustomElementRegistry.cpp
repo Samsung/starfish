@@ -754,11 +754,18 @@ void CustomElementRegistry::invokeCustomElementReaction(
             for (auto s : customElementRegistryData->observedAttributes) {
                 for (const auto& attr : attrs) {
                     if (attr.name().localNameAtomic() == s) {
-                        ScriptValue* argv = new (GC) ScriptValue[3]{
+                        ScriptValue* argv = new (GC) ScriptValue[4]{
                             createScriptValue(
                                 toJSString(attr.name().localName())),
                             scriptNull(),
-                            createScriptValue(toJSString(attr.value()))
+                            createScriptValue(toJSString(attr.value())),
+                            attr.name().namespaceURI()
+                                ? createScriptValue(
+                                      toJSString(attr.name()
+                                                     .namespaceURI()
+                                                     .value()
+                                                     .string()))
+                                : scriptNull(),
                         };
                         callbackDatas.push_back(argv);
                         break;
@@ -810,7 +817,7 @@ void CustomElementRegistry::invokeCustomElementReaction(
             break;
         case CustomElementCallbackType::kAttributeChanged:
             callScriptFunction(element->scriptBindingInstance(), callback,
-                               data.value(), 3,
+                               data.value(), 4,
                                createScriptValue(element->scriptObject()));
             break;
         default:
