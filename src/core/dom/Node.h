@@ -307,8 +307,8 @@ public:
     Nullable<String*> textContent() const;
     void setTextContent(Nullable<String*> val);
 
-    bool isEqualNode(Node* other);
-    bool isSameNode(Node* other);
+    bool isEqualNode(Optional<Node*> other);
+    bool isSameNode(Optional<Node*> other);
 
     void normalize();
 
@@ -318,15 +318,20 @@ public:
 
     Node* cloneNode(bool deep = false);
     Node* makeShadowClone();
-    void validatePreinsert(Node* node, Node* child);
+    void validatePreinsert(Node* node, Optional<Node*> child);
 
     unsigned short compareDocumentPosition(Node* other);
 
-    bool contains(const Node* other) const
+    bool contains(Optional<Node*> other) const
     {
-        if (other == nullptr) {
+        if (!other) {
             return false;
         }
+        return contains(other.value());
+    }
+
+    bool contains(const Node* other) const
+    {
         if (this == other) {
             return true;
         }
@@ -350,7 +355,7 @@ public:
     bool isInDocumentScopeAndDocumentParticipateInRendering();
 
     Node* appendChild(Node* child);
-    Node* insertBefore(Node* child, Node* childRef = nullptr);
+    Node* insertBefore(Node* child, Optional<Node*> childRef = nullptr);
     Node* replaceChild(Node* child, Node* childToRemove);
     Node* removeChild(Node* child);
 

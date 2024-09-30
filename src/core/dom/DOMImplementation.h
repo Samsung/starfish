@@ -37,7 +37,8 @@ public:
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);
     XMLDocument* createDocument(Nullable<String*> namespaceParameter,
-                                String* qualifiedName, DocumentType* doctype);
+                                String* qualifiedName,
+                                Nullable<DocumentType*> doctype);
     Document* createHTMLDocument(Nullable<String*> title = Nullable<String*>());
 
     // useless; always returns true

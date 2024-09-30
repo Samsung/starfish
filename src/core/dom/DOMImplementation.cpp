@@ -63,7 +63,7 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
 
 XMLDocument* DOMImplementation::createDocument(
     Nullable<String*> namespaceParameter, String* qualifiedName,
-    DocumentType* doctype)
+    Nullable<DocumentType*> doctype)
 {
     // Let document be a new XMLDocument.
     XMLDocument* document = new XMLDocument(
@@ -80,7 +80,7 @@ XMLDocument* DOMImplementation::createDocument(
     }
     // If doctype is non-null, append doctype to document.
     if (doctype) {
-        document->appendChild(doctype);
+        document->appendChild(doctype.value());
         doctype->setDocument(document);
         doctype->setParentNode(document);
     }

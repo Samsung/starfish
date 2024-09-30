@@ -54,8 +54,8 @@ void HTMLOptionsCollection::setLength(size_t value)
     m_nodeListImpl.root()->asHTMLSelectElement()->setLength(value);
 }
 
-bool HTMLOptionsCollection::defaultIndexedSetter(unsigned index,
-                                                 HTMLOptionElement* option)
+bool HTMLOptionsCollection::defaultIndexedSetter(
+    unsigned index, Optional<HTMLOptionElement*> option)
 {
     STARFISH_ASSERT(m_nodeListImpl.root());
     STARFISH_ASSERT(m_nodeListImpl.root()->isHTMLSelectElement());

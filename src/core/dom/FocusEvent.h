@@ -34,23 +34,23 @@ public:
     }
 
     FocusEventInit(bool bubbles, bool cancelable,
-                   EventTarget* relatedTarget = nullptr)
+                   Optional<EventTarget*> relatedTarget = nullptr)
         : UIEventInit(bubbles, cancelable)
         , m_relatedTarget(relatedTarget)
     {
     }
 
-    EventTarget* relatedTarget() const
+    Optional<EventTarget*> relatedTarget() const
     {
         return m_relatedTarget;
     }
-    void setRelatedTarget(EventTarget* relatedTarget)
+    void setRelatedTarget(Optional<EventTarget*> relatedTarget)
     {
         m_relatedTarget = relatedTarget;
     }
 
 private:
-    EventTarget* m_relatedTarget;
+    Optional<EventTarget*> m_relatedTarget;
 };
 
 class FocusEvent : public UIEvent {
@@ -72,11 +72,11 @@ public:
     {
     }
 
-    EventTarget* relatedTarget() const
+    Optional<EventTarget*> relatedTarget() const
     {
         return m_relatedTarget;
     }
-    void setRelatedTarget(EventTarget* relatedTarget)
+    void setRelatedTarget(Optional<EventTarget*> relatedTarget)
     {
         m_relatedTarget = relatedTarget;
     }
@@ -85,7 +85,7 @@ public:
     virtual bool isFocusEvent() const override;
 
 private:
-    EventTarget* m_relatedTarget;
+    Optional<EventTarget*> m_relatedTarget;
 };
 } // namespace Starfish
 

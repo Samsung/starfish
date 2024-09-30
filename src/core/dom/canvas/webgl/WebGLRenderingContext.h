@@ -280,22 +280,22 @@ public:
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, TexImageSource source);
 
-    void uniform1fv(WebGLUniformLocation* location, Float32List v);
-    void uniform2fv(WebGLUniformLocation* location, Float32List v);
-    void uniform3fv(WebGLUniformLocation* location, Float32List v);
-    void uniform4fv(WebGLUniformLocation* location, Float32List v);
+    void uniform1fv(Optional<WebGLUniformLocation*> location, Float32List v);
+    void uniform2fv(Optional<WebGLUniformLocation*> location, Float32List v);
+    void uniform3fv(Optional<WebGLUniformLocation*> location, Float32List v);
+    void uniform4fv(Optional<WebGLUniformLocation*> location, Float32List v);
 
-    void uniform1iv(WebGLUniformLocation* location, Int32List v);
-    void uniform2iv(WebGLUniformLocation* location, Int32List v);
-    void uniform3iv(WebGLUniformLocation* location, Int32List v);
-    void uniform4iv(WebGLUniformLocation* location, Int32List v);
+    void uniform1iv(Optional<WebGLUniformLocation*> location, Int32List v);
+    void uniform2iv(Optional<WebGLUniformLocation*> location, Int32List v);
+    void uniform3iv(Optional<WebGLUniformLocation*> location, Int32List v);
+    void uniform4iv(Optional<WebGLUniformLocation*> location, Int32List v);
 
-    void uniformMatrix2fv(WebGLUniformLocation* uniform, GLboolean transpose,
-                          Float32List value);
-    void uniformMatrix3fv(WebGLUniformLocation* uniform, GLboolean transpose,
-                          Float32List value);
-    void uniformMatrix4fv(WebGLUniformLocation* uniform, GLboolean transpose,
-                          Float32List value);
+    void uniformMatrix2fv(Optional<WebGLUniformLocation*> uniform,
+                          GLboolean transpose, Float32List value);
+    void uniformMatrix3fv(Optional<WebGLUniformLocation*> uniform,
+                          GLboolean transpose, Float32List value);
+    void uniformMatrix4fv(Optional<WebGLUniformLocation*> uniform,
+                          GLboolean transpose, Float32List value);
 
     GL* gl();
 

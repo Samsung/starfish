@@ -57,7 +57,7 @@ ScriptBindingInstance* AudioBufferSourceNode::scriptBindingInstance()
 }
 
 // https://webaudio.github.io/web-audio-api/#dom-audiobuffersourcenode-buffe
-void AudioBufferSourceNode::setBuffer(AudioBuffer* buffer)
+void AudioBufferSourceNode::setBuffer(Optional<AudioBuffer*> buffer)
 {
     if (buffer && m_bufferSet) {
         throw new DOMException(executionContext(),

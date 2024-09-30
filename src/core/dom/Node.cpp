@@ -512,11 +512,12 @@ Node* Node::makeShadowClone()
     return newNode;
 }
 
-bool Node::isEqualNode(Node* other)
+bool Node::isEqualNode(Optional<Node*> otherInput)
 {
-    if (other == nullptr) {
+    if (!otherInput) {
         return false;
     }
+    Node* other = otherInput.value();
     if (this == other) {
         return true;
     }
@@ -596,9 +597,12 @@ bool Node::isEqualNode(Node* other)
     return true;
 }
 
-bool Node::isSameNode(Node* other)
+bool Node::isSameNode(Optional<Node*> other)
 {
-    return other == this;
+    if (other) {
+        return other.value() == this;
+    }
+    return false;
 }
 
 void Node::normalize()
@@ -1292,7 +1296,7 @@ Node* Node::getDoctypeChild()
     return nullptr;
 }
 
-void Node::validatePreinsert(Node* node, Node* child) // (node, child)
+void Node::validatePreinsert(Node* node, Optional<Node*> child) // (node, child)
 {
     // 4.2.1 pre-insertion validity
     if (!(isDocument() || isElement() || isDocumentFragment())) {
@@ -1309,7 +1313,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
         }
     }
 
-    if (child != nullptr && child->parentNode() != this) {
+    if (child && child->parentNode() != this) {
         throw new DOMException(
             executionContext(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
@@ -1566,7 +1570,7 @@ Node* Node::appendChild(Node* child)
     return child;
 }
 
-Node* Node::insertBefore(Node* child, Node* childRef)
+Node* Node::insertBefore(Node* child, Optional<Node*> childRef)
 {
     // Spec does not say what to do when node is null
     if (child == nullptr) {
@@ -1577,10 +1581,10 @@ Node* Node::insertBefore(Node* child, Node* childRef)
 
     validatePreinsert(child, childRef);
 
-    if (childRef == nullptr) {
+    if (!childRef) {
         return appendChild(child);
     }
-    if (child == childRef) {
+    if (child == childRef.value()) {
         return child;
     }
 
@@ -1593,7 +1597,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
         while (Node* nd = child->firstChild()) {
             child->removeChild(nd);
             scopeForFragment.updateSiblingIfNeeds(nd, true);
-            insertBefore(nd, childRef);
+            insertBefore(nd, childRef.value());
         }
         return child;
     }
@@ -1610,15 +1614,15 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     childRef->setPreviousSibling(child);
     STARFISH_ASSERT(m_lastChild != prev);
     if (prev) {
-        STARFISH_ASSERT(m_firstChild != childRef);
+        STARFISH_ASSERT(m_firstChild != childRef.value());
         prev->setNextSibling(child);
     } else {
-        STARFISH_ASSERT(m_firstChild == childRef);
+        STARFISH_ASSERT(m_firstChild == childRef.value());
         m_firstChild = child;
     }
 
     child->setPreviousSibling(prev);
-    child->setNextSibling(childRef);
+    child->setNextSibling(childRef.value());
 
     didInsertNode(this, child);
 

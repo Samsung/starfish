@@ -43,7 +43,7 @@ public:
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, int32_t clickCount,
               DOMTimeStamp timeStamp = timestamp(),
-              EventTarget* relatedTarget = nullptr)
+              Optional<EventTarget*> relatedTarget = nullptr)
         : MouseData(button, buttons, clientX, clientY, clientX, clientY,
                     clickCount, timeStamp, relatedTarget)
     {
@@ -52,7 +52,7 @@ public:
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, double screenX, double screenY,
               int32_t clickCount, DOMTimeStamp timeStamp = timestamp(),
-              EventTarget* relatedTarget = nullptr)
+              Optional<EventTarget*> relatedTarget = nullptr)
         : m_isDefaultPrevented(false)
         , m_button(button)
         , m_buttons(buttons)
@@ -163,12 +163,12 @@ public:
         return m_timeStamp;
     }
 
-    EventTarget* relatedTarget() const
+    Optional<EventTarget*> relatedTarget() const
     {
         return m_relatedTarget;
     }
 
-    void setRelatedTarget(EventTarget* relatedTarget)
+    void setRelatedTarget(Optional<EventTarget*> relatedTarget)
     {
         m_relatedTarget = relatedTarget;
     }
@@ -197,7 +197,7 @@ protected:
 
     int32_t m_clickCount;
     DOMTimeStamp m_timeStamp;
-    EventTarget* m_relatedTarget;
+    Optional<EventTarget*> m_relatedTarget;
 };
 
 // Binding interface
@@ -286,7 +286,7 @@ public:
         return m_mouseData.buttons();
     }
 
-    EventTarget* relatedTarget() const
+    Optional<EventTarget*> relatedTarget() const
     {
         return m_mouseData.relatedTarget();
     }
@@ -320,10 +320,11 @@ public:
     }
 
     void initMouseEvent(String* type, bool bubbles, bool cancelable,
-                        Window* view, int32_t detail, double screenX,
+                        Optional<Window*> view, int32_t detail, double screenX,
                         double screenY, double clientX, double clientY,
                         unsigned char button, bool ctrlKey, bool altKey,
-                        bool shiftKey, bool metaKey, EventTarget* relatedTarget)
+                        bool shiftKey, bool metaKey,
+                        Optional<EventTarget*> relatedTarget)
     {
         setType(type);
         setBubbles(bubbles);

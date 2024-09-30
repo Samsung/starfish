@@ -1271,7 +1271,7 @@ HTMLElement* Document::html()
     return nullptr;
 }
 
-void Document::setBody(HTMLElement* element)
+void Document::setBody(Optional<HTMLElement*> element)
 {
     if (!(element && element->isHTMLBodyElement())) {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_2, "1", "body",

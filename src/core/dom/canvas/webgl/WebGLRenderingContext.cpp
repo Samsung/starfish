@@ -3002,12 +3002,13 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
 
 #define IMPLEMENT_UNIFORM_NFV(N, Suffix, SrcType)                           \
     void WebGLRenderingContext::uniform##N##Suffix(                         \
-        WebGLUniformLocation* location, SrcType variant)                    \
+        Optional<WebGLUniformLocation*> mayBeLocation, SrcType variant)     \
     {                                                                       \
         ENTER_CONTEXT_SCOPE();                                              \
-        if (location == nullptr) {                                          \
+        if (!mayBeLocation) {                                               \
             return;                                                         \
         }                                                                   \
+        WebGLUniformLocation* location = mayBeLocation.value();             \
         if (!isFromCurrentProgram(location)) {                              \
             setGLError(GL_INVALID_OPERATION);                               \
             return;                                                         \
@@ -3047,12 +3048,13 @@ IMPLEMENT_UNIFORM_NFV(4, fv, Float32List)
 
 #define IMPLEMENT_UNIFORM_NIV(N, Suffix, SrcType)                             \
     void WebGLRenderingContext::uniform##N##Suffix(                           \
-        WebGLUniformLocation* location, SrcType variant)                      \
+        Optional<WebGLUniformLocation*> mayBeLocation, SrcType variant)       \
     {                                                                         \
         ENTER_CONTEXT_SCOPE();                                                \
-        if (location == nullptr) {                                            \
+        if (!mayBeLocation) {                                                 \
             return;                                                           \
         }                                                                     \
+        WebGLUniformLocation* location = mayBeLocation.value();               \
         if (!isFromCurrentProgram(location)) {                                \
             setGLError(GL_INVALID_OPERATION);                                 \
             return;                                                           \
@@ -3086,14 +3088,15 @@ IMPLEMENT_UNIFORM_NIV(4, iv, Int32List)
 
 #define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                        \
     void WebGLRenderingContext::uniformMatrix##N##fv(                          \
-        WebGLUniformLocation* location, GLboolean transpose,                   \
+        Optional<WebGLUniformLocation*> mayBeLocation, GLboolean transpose,    \
         Float32List variant)                                                   \
     {                                                                          \
         ENTER_CONTEXT_SCOPE();                                                 \
         /* location is nullable. */                                            \
-        if (location == nullptr) {                                             \
+        if (!mayBeLocation) {                                                  \
             return;                                                            \
         }                                                                      \
+        WebGLUniformLocation* location = mayBeLocation.value();                \
         if (!isFromCurrentProgram(location)) {                                 \
             setGLError(GL_INVALID_OPERATION);                                  \
             return;                                                            \

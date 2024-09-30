@@ -77,18 +77,18 @@ public:
         return m_hasCellPaddingAttribute;
     }
 
-    HTMLTableCaptionElement* caption();
-    void setCaption(HTMLTableCaptionElement* caption);
+    Optional<HTMLTableCaptionElement*> caption();
+    void setCaption(Optional<HTMLTableCaptionElement*> caption);
     HTMLTableCaptionElement* createCaption();
     void deleteCaption();
 
-    HTMLTableSectionElement* tHead();
-    void setTHead(HTMLTableSectionElement* tHead);
+    Optional<HTMLTableSectionElement*> tHead();
+    void setTHead(Optional<HTMLTableSectionElement*> tHead);
     HTMLTableSectionElement* createTHead();
     void deleteTHead();
 
-    HTMLTableSectionElement* tFoot();
-    void setTFoot(HTMLTableSectionElement* tFoot);
+    Optional<HTMLTableSectionElement*> tFoot();
+    void setTFoot(Optional<HTMLTableSectionElement*> tFoot);
     HTMLTableSectionElement* createTFoot();
     void deleteTFoot();
 

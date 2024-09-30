@@ -65,7 +65,8 @@ public:
              Nullable<HTMLElementOrlong> before);
     using Node::remove;
     void remove(int index);
-    bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
+    bool defaultIndexedSetter(unsigned index,
+                              Optional<HTMLOptionElement*> option);
 
     HTMLCollection* selectedOptions();
 
