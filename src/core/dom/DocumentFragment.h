@@ -31,6 +31,9 @@ public:
     {
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isDocumentFragment() const override;
@@ -46,6 +49,12 @@ public:
     virtual Node* clone() override;
 
     Element* getElementById(String* id);
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Node::fillGCDescriptor(desc);
+    }
 };
 } // namespace Starfish
 

@@ -47,7 +47,7 @@ interface Element : Node {
   [CEReactions, RaisesException] Attr removeAttributeNode(Attr attr);
 
   [Unimplemented] ShadowRoot attachShadow(ShadowRootInit init);
-  [Unimplemented] readonly attribute ShadowRoot? shadowRoot;
+  readonly attribute ShadowRoot? shadowRoot;
 
   [RaisesException] Element? closest(DOMString selectors);
   [RaisesException] boolean matches(DOMString selectors);

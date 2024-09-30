@@ -26,6 +26,20 @@
 
 namespace Starfish {
 
+void* DocumentFragment::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(DocumentFragment));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(DocumentFragment)] = { 0 };
+        DocumentFragment::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(DocumentFragment));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 String* DocumentFragment::nodeName()
 {
     return starfish()->staticStrings()->m_documentFragmentLocalName.string();

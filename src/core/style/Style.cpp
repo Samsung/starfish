@@ -9593,7 +9593,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             Element* svgUseElement = child->asElement();
             Element* svgUseTargetElement =
                 svgUseElement->asSVGUseElement()->targetElement();
-            ShadowRoot* sr = svgUseElement->shadowRoot();
+            auto sr = svgUseElement->internalEnsureShadowRoot();
             if (sr->hasChildNodes()) {
                 Node* shadowFirstChild = sr->firstChild();
 

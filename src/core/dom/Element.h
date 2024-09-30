@@ -23,6 +23,7 @@
 #include "core/animation/Animation.h"
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
+#include "core/dom/ShadowRoot.h"
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
 #include "core/page/ScrollOptions.h"
@@ -113,7 +114,7 @@ public:
     Scrolling* m_scrolling;
     DOMStringMap* m_dataset;
     PseudoElementMap* m_pseudoElementMap;
-    ShadowRoot* m_shadowRoot;
+    Optional<ShadowRoot*> m_shadowRoot;
     GCVector<IntersectionObserverRegistration*>*
         m_registeredIntersectionObservers;
     GCVector<ResizeObserverRegistration*>* m_registeredResizeObservers;
@@ -190,7 +191,13 @@ public:
 
     GCVector<String*> getAttributeNames() const;
 
-    ShadowRoot* shadowRoot();
+    // https://dom.spec.whatwg.org/#dom-element-shadowroot
+    Optional<ShadowRoot*> shadowRoot(bool returnNullWhenMeetClosed = true);
+    Optional<ShadowRoot*> internalShadowRoot()
+    {
+        return shadowRoot(false);
+    }
+    ShadowRoot* internalEnsureShadowRoot();
 
     Node* createNodeWithHTML(String*);
 

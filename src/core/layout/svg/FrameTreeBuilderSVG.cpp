@@ -138,7 +138,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
             parentFrame->appendChild(currentFrame);
             svgElement->setFrame(currentFrame);
 
-            ShadowRoot* sr = svgElement->asElement()->shadowRoot();
+            auto sr = svgElement->asElement()->internalEnsureShadowRoot();
             Document* document = svgElement->document();
 
             if (sr->hasChildNodes()) {

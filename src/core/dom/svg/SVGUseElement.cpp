@@ -111,7 +111,7 @@ void SVGUseElement::updateShadowTree()
         }
     }
 
-    shadowRoot()->clear();
+    internalEnsureShadowRoot()->clear();
     if (m_targetElementURL) {
         String* id = m_targetElementURL->getFragmentIdValue();
         if (!id->isEmpty()) {
@@ -119,7 +119,7 @@ void SVGUseElement::updateShadowTree()
             if (element && element->isSVGElement()) {
                 Node* newClonedElement = element->makeShadowClone();
                 if (newClonedElement && newClonedElement->isSVGElement()) {
-                    shadowRoot()->appendChild(newClonedElement);
+                    internalEnsureShadowRoot()->appendChild(newClonedElement);
                     m_targetElement = element->asSVGElement();
                     setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
                     SVGElement* owner = ownerSVGElement();
