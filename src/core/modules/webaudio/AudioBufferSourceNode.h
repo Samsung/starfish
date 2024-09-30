@@ -33,9 +33,9 @@ class BaseAudioContext;
 class AudioBuffer;
 
 struct AudioBufferSourceOptions {
-    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+    DEFINE_GETTER_SETTER(Optional<AudioBuffer*>, buffer, Buffer);
 
-    AudioBuffer* m_buffer{ nullptr };
+    Optional<AudioBuffer*> m_buffer;
 };
 
 class AudioBufferSourceNode : public AudioScheduledSourceNode {
@@ -46,13 +46,13 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBufferSourceNode)
 
-    DEFINE_GETTER(AudioBuffer*, buffer);
-    void setBuffer(AudioBuffer* buffer);
+    DEFINE_GETTER(Optional<AudioBuffer*>, buffer);
+    void setBuffer(Optional<AudioBuffer*> buffer);
 
     void start(double when = 0, double offset = 0, double duration = 0);
 
 private:
-    AudioBuffer* m_buffer{ nullptr };
+    Optional<AudioBuffer*> m_buffer;
     bool m_bufferSet{ false };
 };
 } // namespace Starfish

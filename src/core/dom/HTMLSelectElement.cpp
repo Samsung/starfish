@@ -294,8 +294,8 @@ void HTMLSelectElement::remove(int index)
     }
 }
 
-bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
-                                             HTMLOptionElement* option)
+bool HTMLSelectElement::defaultIndexedSetter(
+    unsigned index, Optional<HTMLOptionElement*> option)
 {
     if (!option) {
         remove(index);
@@ -307,7 +307,7 @@ bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
     }
 
     if (index == length()) {
-        appendChild(option);
+        appendChild(option.value());
         return true;
     }
 
@@ -316,7 +316,7 @@ bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
 
     STARFISH_ASSERT(oldOption && parent);
 
-    parent->replaceChild(option, oldOption);
+    parent->replaceChild(option.value(), oldOption);
     return true;
 }
 

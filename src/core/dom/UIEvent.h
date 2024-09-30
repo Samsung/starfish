@@ -46,12 +46,12 @@ public:
     {
     }
 
-    Window* view() const
+    Optional<Window*> view() const
     {
         return m_view;
     }
 
-    void setView(Window* view)
+    void setView(Optional<Window*> view)
     {
         m_view = view;
     }
@@ -77,7 +77,7 @@ public:
     }
 
 private:
-    Window* m_view;
+    Optional<Window*> m_view;
     int32_t m_detail;
     uint32_t m_which;
 };
@@ -138,12 +138,12 @@ public:
                       void* domObjectPointer) override;
     virtual bool isUIEvent() const override;
 
-    Window* view() const
+    Optional<Window*> view() const
     {
         return m_view;
     }
 
-    void setView(Window* view)
+    void setView(Optional<Window*> view)
     {
         m_view = view;
     }
@@ -164,7 +164,7 @@ public:
     }
 
 private:
-    Window* m_view;
+    Optional<Window*> m_view;
     int32_t m_detail;
     uint32_t m_which;
 };

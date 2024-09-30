@@ -131,7 +131,7 @@ public:
         return m_lang;
     }
 
-    void setVoice(SpeechSynthesisVoice* voice)
+    void setVoice(Optional<SpeechSynthesisVoice*> voice)
     {
         m_voice = voice;
         if (m_voice) {
@@ -139,7 +139,7 @@ public:
         }
     }
 
-    SpeechSynthesisVoice* voice()
+    Optional<SpeechSynthesisVoice*> voice()
     {
         return m_voice;
     }
@@ -200,7 +200,7 @@ private:
     int m_id;
     String* m_text;
     String* m_lang;
-    SpeechSynthesisVoice* m_voice;
+    Optional<SpeechSynthesisVoice*> m_voice;
     float m_volume;
     float m_rate;
     float m_pitch;

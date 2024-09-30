@@ -340,7 +340,7 @@ void HTMLTableElement::styleForPresentationAttribute(
     }
 }
 
-HTMLTableCaptionElement* HTMLTableElement::caption()
+Optional<HTMLTableCaptionElement*> HTMLTableElement::caption()
 {
     Node* child = firstChild();
     while (child) {
@@ -352,7 +352,7 @@ HTMLTableCaptionElement* HTMLTableElement::caption()
     return nullptr;
 }
 
-void HTMLTableElement::setCaption(HTMLTableCaptionElement* caption)
+void HTMLTableElement::setCaption(Optional<HTMLTableCaptionElement*> caption)
 {
     if (caption && !caption->isHTMLTableCaptionElement()) {
         throw new DOMException(executionContext(),
@@ -364,19 +364,19 @@ void HTMLTableElement::setCaption(HTMLTableCaptionElement* caption)
 
     deleteCaption();
     if (!caption) {
-        insertBefore(caption, firstChild());
+        insertBefore(caption.value(), firstChild());
     }
 }
 
 HTMLTableCaptionElement* HTMLTableElement::createCaption()
 {
-    HTMLTableCaptionElement* caption = this->caption();
+    Optional<HTMLTableCaptionElement*> caption = this->caption();
     if (!caption) {
         caption = new HTMLTableCaptionElement(
             document(), starfish()->staticStrings()->m_captionTagName);
-        insertBefore(caption, firstChild());
+        insertBefore(caption.value(), firstChild());
     }
-    return caption;
+    return caption.value();
 }
 
 void HTMLTableElement::deleteCaption()
@@ -391,7 +391,7 @@ void HTMLTableElement::deleteCaption()
     }
 }
 
-HTMLTableSectionElement* HTMLTableElement::tHead()
+Optional<HTMLTableSectionElement*> HTMLTableElement::tHead()
 {
     Node* child = firstChild();
     while (child) {
@@ -403,7 +403,7 @@ HTMLTableSectionElement* HTMLTableElement::tHead()
     return nullptr;
 }
 
-void HTMLTableElement::setTHead(HTMLTableSectionElement* tHead)
+void HTMLTableElement::setTHead(Optional<HTMLTableSectionElement*> tHead)
 {
     if (tHead && !tHead->isHTMLTHeadElement()) {
         throw new DOMException(executionContext(),
@@ -423,13 +423,13 @@ void HTMLTableElement::setTHead(HTMLTableSectionElement* tHead)
             }
             child = child->nextSibling();
         }
-        insertBefore(tHead, child);
+        insertBefore(tHead.value(), child);
     }
 }
 
 HTMLTableSectionElement* HTMLTableElement::createTHead()
 {
-    HTMLTableSectionElement* tHead = this->tHead();
+    Optional<HTMLTableSectionElement*> tHead = this->tHead();
     if (!tHead) {
         tHead = new HTMLTHeadElement(
             document(), starfish()->staticStrings()->m_theadTagName);
@@ -441,9 +441,9 @@ HTMLTableSectionElement* HTMLTableElement::createTHead()
             }
             child = child->nextSibling();
         }
-        insertBefore(tHead, child);
+        insertBefore(tHead.value(), child);
     }
-    return tHead;
+    return tHead.value();
 }
 
 void HTMLTableElement::deleteTHead()
@@ -458,7 +458,7 @@ void HTMLTableElement::deleteTHead()
     }
 }
 
-HTMLTableSectionElement* HTMLTableElement::tFoot()
+Optional<HTMLTableSectionElement*> HTMLTableElement::tFoot()
 {
     Node* child = firstChild();
     while (child) {
@@ -470,7 +470,7 @@ HTMLTableSectionElement* HTMLTableElement::tFoot()
     return nullptr;
 }
 
-void HTMLTableElement::setTFoot(HTMLTableSectionElement* tFoot)
+void HTMLTableElement::setTFoot(Optional<HTMLTableSectionElement*> tFoot)
 {
     if (tFoot && !tFoot->isHTMLTFootElement()) {
         throw new DOMException(executionContext(),
@@ -491,13 +491,13 @@ void HTMLTableElement::setTFoot(HTMLTableSectionElement* tFoot)
             }
             child = child->nextSibling();
         }
-        insertBefore(tFoot, child);
+        insertBefore(tFoot.value(), child);
     }
 }
 
 HTMLTableSectionElement* HTMLTableElement::createTFoot()
 {
-    HTMLTableSectionElement* tFoot = this->tFoot();
+    Optional<HTMLTableSectionElement*> tFoot = this->tFoot();
     if (!tFoot) {
         tFoot = new HTMLTFootElement(
             document(), starfish()->staticStrings()->m_tfootTagName);
@@ -510,9 +510,9 @@ HTMLTableSectionElement* HTMLTableElement::createTFoot()
             }
             child = child->nextSibling();
         }
-        insertBefore(tFoot, child);
+        insertBefore(tFoot.value(), child);
     }
-    return tFoot;
+    return tFoot.value();
 }
 
 void HTMLTableElement::deleteTFoot()

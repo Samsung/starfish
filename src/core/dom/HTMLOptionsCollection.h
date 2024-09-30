@@ -46,7 +46,8 @@ public:
     size_t length() const;
     void setLength(size_t value);
 
-    bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
+    bool defaultIndexedSetter(unsigned index,
+                              Optional<HTMLOptionElement*> option);
     void add(HTMLOptionElementOrHTMLOptGroupElement element,
              Nullable<HTMLElementOrlong> before);
     void remove(int index);
