@@ -425,7 +425,7 @@ void Node::setTextContent(Nullable<String*> val)
         str = val.getValue();
     }
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
     switch (nodeType()) {
     case DOCUMENT_FRAGMENT_NODE:
@@ -441,11 +441,11 @@ void Node::setTextContent(Nullable<String*> val)
         }
 
         while (firstChild()) {
-            scope.childRemoved(removeChild(firstChild()));
+            removeChild(firstChild());
         }
 
         if (!str->equals(String::emptyString)) {
-            scope.childAdded(appendChild(new Text(document(), str)));
+            appendChild(new Text(document(), str));
         }
         break;
     }
@@ -1496,7 +1496,7 @@ static void setChildrenNeedsStyleRecalc(Node* node)
 
 static void didInsertNode(Node* self, Node* child)
 {
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(self);
     scope.childAdded(child);
     scope.enqueueChildListMutationRecordIfNeeds();
@@ -1531,14 +1531,15 @@ Node* Node::appendChild(Node* child)
     validatePreinsert(child, nullptr);
 
     if (child->isDocumentFragment()) {
-        MutationObservationScope scope;
+        ChildListMutationObservationScope scope;
         scope.startChildListMutationScope(this);
 
-        MutationObservationScope scopeForFragment;
+        ChildListMutationObservationScope scopeForFragment;
         scopeForFragment.startChildListMutationScope(child);
         while (Node* nd = child->firstChild()) {
-            scopeForFragment.childRemoved(child->removeChild(nd));
-            scope.childAdded(appendChild(nd));
+            child->removeChild(nd);
+            scopeForFragment.updateSiblingIfNeeds(nd, true);
+            appendChild(nd);
         }
         return child;
     }
@@ -1584,14 +1585,15 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     }
 
     if (child->isDocumentFragment()) {
-        MutationObservationScope scope;
+        ChildListMutationObservationScope scope;
         scope.startChildListMutationScope(this);
 
-        MutationObservationScope scopeForFragment;
+        ChildListMutationObservationScope scopeForFragment;
         scopeForFragment.startChildListMutationScope(child);
         while (Node* nd = child->firstChild()) {
-            scopeForFragment.childRemoved(child->removeChild(nd));
-            scope.childAdded(insertBefore(nd, childRef));
+            child->removeChild(nd);
+            scopeForFragment.updateSiblingIfNeeds(nd, true);
+            insertBefore(nd, childRef);
         }
         return child;
     }
@@ -1761,13 +1763,12 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
         child->parentNode()->removeChild(child);
     }
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
 
-    scope.childAdded(insertBefore(child, childToRemove));
+    insertBefore(child, childToRemove);
     Node* removed = removeChild(childToRemove);
-    scope.childRemoved(removed, true);
-
+    scope.updateSiblingIfNeeds(childToRemove, true);
     return removed;
 }
 
@@ -1821,7 +1822,7 @@ Node* Node::removeChild(Node* child)
         m_lastChild = prevChild;
     }
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
     scope.childRemoved(child);
 
@@ -1860,7 +1861,7 @@ Node* Node::parserAppendChild(Node* child)
 
     child->setParentNode(this);
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
     scope.childAdded(child);
 
@@ -1897,7 +1898,7 @@ void Node::parserRemoveChild(Node* child)
         m_lastChild = prevChild;
     }
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
     scope.childRemoved(child);
 
@@ -1957,7 +1958,7 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
 
-    MutationObservationScope scope;
+    ChildListMutationObservationScope scope;
     scope.startChildListMutationScope(this);
     scope.childAdded(child);
 

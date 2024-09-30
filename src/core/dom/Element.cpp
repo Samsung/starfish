@@ -1756,6 +1756,8 @@ Node* Element::createNodeWithHTML(String* html)
 
 void Element::setInnerHTML(String* html)
 {
+    ChildListMutationObservationScope scope;
+    scope.startChildListMutationScope(this);
     while (firstChild()) {
         removeChild(firstChild());
     }

@@ -214,7 +214,7 @@ http://web-platform.test:8000/dom/nodes/MutationObserver-document.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-23.htm
 http://web-platform.test:8000/dom/nodes/DOMImplementation-hasFeature.html
 http://web-platform.test:8000/dom/nodes/Node-insertBefore.html
-#http://web-platform.test:8000/dom/nodes/MutationObserver-inner-outer.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-inner-outer.html
 http://web-platform.test:8000/dom/nodes/Element-lastElementChild.html
 #http://web-platform.test:8000/dom/nodes/Element-matches.html
 http://web-platform.test:8000/dom/nodes/Element-nextElementSibling.html

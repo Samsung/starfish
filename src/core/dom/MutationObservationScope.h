@@ -21,6 +21,7 @@
 #define __StarfishMutationObservationScope__
 
 #include <cstdint>
+#include "core/util/RefPtr.h"
 
 namespace Starfish {
 
@@ -41,19 +42,11 @@ public:
     void startCharacterDataMutationScope(Node* target,
                                          Nullable<String*> oldValue);
 
-    void startChildListMutationScope(Node* target);
-    void childAdded(Node* child);
-    void childRemoved(Node* child, bool forceUpdateSibling = false);
-
     // Ensures that |end| is implicitly called when an object is destroyed.
     void endMutationScope();
 
-    void enqueueChildListMutationRecordIfNeeds();
-
 private:
     void enqueueMutationRecordIfNeeds();
-    bool isEmptyChildList();
-    void updateSiblingIfNeeds(Node* child, bool forceUpdateSibling);
 
     Node* m_target = nullptr;
     bool m_isStarted = false;
@@ -61,12 +54,41 @@ private:
     MutationObserverOptionType m_optionTypes;
     AtomicString m_type;
     Nullable<String*> m_oldValue;
-    GCVector<Node*> m_addedChilds;
-    GCVector<Node*> m_removedChilds;
-    Node* m_previousSibling = nullptr;
-    Node* m_nextSibling = nullptr;
-
     static std::unordered_set<Node*> m_onScopeSet;
+};
+
+struct MutatedNodes : public RefCounted<MutatedNodes>, public gc {
+public:
+    GCVector<Node*> addedChilds;
+    GCVector<Node*> removedChilds;
+    Node* previousSibling = nullptr;
+    Node* nextSibling = nullptr;
+};
+
+class ChildListMutationObservationScope {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED();
+
+    ChildListMutationObservationScope();
+    ~ChildListMutationObservationScope();
+
+    void startChildListMutationScope(Node* target);
+    void childAdded(Node* child);
+    void childRemoved(Node* child, bool forceUpdateSibling = false);
+    void updateSiblingIfNeeds(Node* child, bool forceUpdateSibling);
+    void enqueueChildListMutationRecordIfNeeds();
+
+private:
+    bool isEmptyChildList();
+
+    Node* m_target = nullptr;
+    bool m_isStarted = false;
+    RefPtr<MutatedNodes> m_mutatedChildren;
+#ifndef NDEBUG
+    bool m_isRootScope = false;
+#endif
+
+    static std::unordered_map<Node*, RefPtr<MutatedNodes>>* s_onScopeMap;
 };
 
 } // namespace Starfish
