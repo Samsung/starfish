@@ -2308,13 +2308,34 @@ Animation* Element::animate(ExecutionContext* executionContext,
     return new Animation(executionContext);
 }
 
-ShadowRoot* Element::shadowRoot()
+Optional<ShadowRoot*> Element::shadowRoot(bool returnNullWhenMeetClosed)
+{
+    // The shadowRoot getter steps are:
+    // Let shadow be this’s shadow root.
+    // If shadow is null or its mode is "closed", then return null.
+    // Return shadow.
+    if (!hasRareMembers()) {
+        return nullptr;
+    }
+    RareElementMembers* rareData = rareMembers();
+    STARFISH_ASSERT(rareData->isRareElementMembers());
+    if (!rareData->m_shadowRoot) {
+        return nullptr;
+    }
+    if (returnNullWhenMeetClosed && rareData->m_shadowRoot->isClosed()) {
+        return nullptr;
+    }
+    return rareData->m_shadowRoot;
+}
+
+ShadowRoot* Element::internalEnsureShadowRoot()
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_shadowRoot) {
-        rareMembers->m_shadowRoot = new ShadowRoot(document());
+        rareMembers->m_shadowRoot =
+            new ShadowRoot(document(), ShadowRootMode::Closed);
     }
-    return rareMembers->m_shadowRoot;
+    return rareMembers->m_shadowRoot.value();
 }
 } // namespace Starfish

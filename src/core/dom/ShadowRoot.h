@@ -21,16 +21,21 @@
 #define __StarfishShadowRoot__
 
 #include "core/dom/DocumentFragment.h"
+#include "core/dom/ShadowRootInit.h"
 #include "core/layout/Frame.h"
 
 namespace Starfish {
 
 class ShadowRoot : public DocumentFragment {
 public:
-    ShadowRoot(Document* document)
+    ShadowRoot(Document* document, ShadowRootMode mode)
         : DocumentFragment(document)
+        , m_mode(mode)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -46,6 +51,20 @@ public:
             parserRemoveChild(firstChild());
         }
     }
+
+    String* mode();
+
+    bool isClosed() const
+    {
+        return m_mode == ShadowRootMode::Closed;
+    }
+    bool isOpened() const
+    {
+        return m_mode == ShadowRootMode::Open;
+    }
+
+private:
+    ShadowRootMode m_mode;
 };
 } // namespace Starfish
 
