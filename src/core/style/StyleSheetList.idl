@@ -4,4 +4,7 @@
 interface StyleSheetList {
     getter StyleSheet? item(unsigned long index);
     readonly attribute unsigned long length;
+    // StyleSheetList must be iterable like NodeList
+    // NOTE : This isn't in the standard IDL, but in most web-engines StyleSheetList is iterable.
+    iterable<StyleSheet>;
 };
