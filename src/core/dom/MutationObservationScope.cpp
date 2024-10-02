@@ -43,7 +43,7 @@ MutationObservationScope::~MutationObservationScope()
 
 void MutationObservationScope::startAttributeMutationScope(
     Node* target, const Optional<QualifiedName>& name,
-    Nullable<String*> oldValue)
+    Optional<String*> oldValue)
 {
     if (m_onScopeSet.find(target) != m_onScopeSet.end()) {
         return;
@@ -61,7 +61,7 @@ void MutationObservationScope::startAttributeMutationScope(
 }
 
 void MutationObservationScope::startCharacterDataMutationScope(
-    Node* target, Nullable<String*> oldValue)
+    Node* target, Optional<String*> oldValue)
 {
     if (m_onScopeSet.find(target) != m_onScopeSet.end()) {
         return;

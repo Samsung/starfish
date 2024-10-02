@@ -162,8 +162,8 @@ public:
 
     virtual QualifiedName name() = 0;
     virtual String* nodeName() override;
-    Nullable<String*> namespaceURI();
-    virtual Nullable<String*> prefix() override;
+    Optional<String*> namespaceURI();
+    virtual Optional<String*> prefix() override;
     virtual String* localName() override;
     virtual bool handleDefaultEvent(Event* event) override;
     String* tagName();
@@ -204,30 +204,30 @@ public:
 protected:
     size_t hasAttribute(const AttributeName& name) const;
     size_t hasAttributeNode(const AttributeName& name);
-    Nullable<String*> getAttribute(const AttributeName& name) const;
+    Optional<String*> getAttribute(const AttributeName& name) const;
     Attr* getAttributeNode(const AttributeName& name);
     void removeAttribute(const AttributeName& name);
 
 public:
     bool hasAttribute(String* qualifiedName);
     size_t hasAttribute(const QualifiedName& qualifiedName) const;
-    bool hasAttributeNS(Nullable<String*> ns, String* localName);
+    bool hasAttributeNS(Optional<String*> ns, String* localName);
 
-    Nullable<String*> getAttribute(String* qualifiedName);
-    Nullable<String*> getAttribute(const QualifiedName& qualifiedName) const;
-    Nullable<String*> getAttributeNS(Nullable<String*> ns, String* localName);
+    Optional<String*> getAttribute(String* qualifiedName);
+    Optional<String*> getAttribute(const QualifiedName& qualifiedName) const;
+    Optional<String*> getAttributeNS(Optional<String*> ns, String* localName);
     Attr* getAttributeNode(String* qualifiedName);
-    Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
+    Attr* getAttributeNodeNS(Optional<String*> ns, String* localName);
     String* getAttributeOrEmpty(const QualifiedName& qualifiedName) const;
     String* getAttributeOrVarReferencedValue(
         const QualifiedName& attributeName,
-        Nullable<const MutablePropertyValueList*> cssCustomValues);
+        Optional<const MutablePropertyValueList*> cssCustomValues);
 
     void setAttribute(const AttributeName& name, String* value);
 
     void setAttribute(String* qualifiedName, String* value);
     void setAttribute(const QualifiedName& qualifiedName, String* value);
-    void setAttributeNS(Nullable<String*> ns, String* qualifiedName,
+    void setAttributeNS(Optional<String*> ns, String* qualifiedName,
                         String* value);
     Attr* setAttributeNode(Attr* attrNode);
     Attr* setAttributeNodeNS(Attr* attrNode);
@@ -235,7 +235,7 @@ public:
     void removeAttribute(size_t idx);
     void removeAttribute(String* name);
     void removeAttribute(const QualifiedName& name);
-    void removeAttributeNS(Nullable<String*> ns, String* localName);
+    void removeAttributeNS(Optional<String*> ns, String* localName);
     Attr* removeAttributeNode(Attr* attr);
 
     Element* closest(String* selectors);
@@ -247,7 +247,7 @@ public:
         return m_attributes[hasAttribute(name)];
     }
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
 
@@ -258,13 +258,13 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues)
+        Optional<const MutablePropertyValueList*> cssCustomValues)
     {
     }
 
     virtual void didComputedStyleChanged(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
-        Nullable<StyleResolveContext*> ctx) override;
+        Optional<StyleResolveContext*> ctx) override;
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump() override
@@ -293,7 +293,7 @@ public:
 
         for (const Attribute& otherAttr : *(otherNode->getAttributes())) {
             AttributeName attrName(otherAttr.name(), AttributeName::MatchNS);
-            Nullable<String*> attr = getAttribute(attrName);
+            Optional<String*> attr = getAttribute(attrName);
             if (!attr.hasValue() ||
                 !attr.getValue()->equals(otherAttr.value())) {
                 return false;
@@ -443,10 +443,10 @@ public:
     void makeKeyframesFromObject(ScriptObject object,
                                  std::vector<StyleRuleBase*>& keyframeRules);
     Animation* animate(ExecutionContext* executionContext,
-                       Nullable<GCVector<ScriptValue>>& keyframes,
+                       Optional<GCVector<ScriptValue>>& keyframes,
                        KeyframeAnimationOptions& options);
     Animation* animate(ExecutionContext* executionContext,
-                       Nullable<GCVector<ScriptValue>>& keyframes);
+                       Optional<GCVector<ScriptValue>>& keyframes);
     void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
 
     void appendIntersectionObserverRegistration(
@@ -492,7 +492,7 @@ protected:
 private:
     LayoutUnit scrollBlockAlign(ScrollLogicalPosition position);
     LayoutUnit scrollInlineAlign(ScrollLogicalPosition position);
-    void invokeDidAttributeChanged(QualifiedName name, Nullable<String*> old,
+    void invokeDidAttributeChanged(QualifiedName name, Optional<String*> old,
                                    String* value, bool attributeCreated,
                                    bool attributeRemoved);
 #if !defined(NDEBUG)

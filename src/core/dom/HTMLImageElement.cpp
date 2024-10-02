@@ -159,12 +159,12 @@ String* HTMLImageElement::src()
     }
 }
 
-Nullable<String*> HTMLImageElement::crossOrigin()
+Optional<String*> HTMLImageElement::crossOrigin()
 {
     return getAttribute(starfish()->staticStrings()->m_crossorigin);
 }
 
-void HTMLImageElement::setCrossOrigin(Nullable<String*> crossOrigin)
+void HTMLImageElement::setCrossOrigin(Optional<String*> crossOrigin)
 {
     if (crossOrigin.hasValue()) {
         setAttribute(starfish()->staticStrings()->m_crossorigin,
@@ -248,7 +248,7 @@ uint32_t HTMLImageElement::naturalHeight()
 }
 
 void HTMLImageElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {
@@ -284,7 +284,7 @@ void HTMLImageElement::didNodeAdopted(Document* oldDocument)
 {
     HTMLElement::didNodeAdopted(oldDocument);
     if (document()->doesParticipateInRendering()) {
-        Nullable<String*> srcStr =
+        Optional<String*> srcStr =
             getAttribute(starfish()->staticStrings()->m_src);
         if (srcStr.hasValue() && srcStr.getValue()->length() > 0) {
             loadImage(srcStr.getValue());

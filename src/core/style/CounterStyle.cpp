@@ -53,11 +53,11 @@ String* CounterStyle::getFallbackSymbol(
     return fallback()->getSymbolAt(pos, failedCounters);
 }
 
-Nullable<String*> CounterStyle::getCyclicSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getCyclicSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos)) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     size_t size = m_symbols.size();
     if (size == 1) {
@@ -70,24 +70,24 @@ Nullable<String*> CounterStyle::getCyclicSymbol(int32_t pos) const
     return m_symbols[index];
 }
 
-Nullable<String*> CounterStyle::getFixedSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getFixedSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_symbols.size());
     int32_t start = firstSymbolValue();
     // NOTE This is safe becase symbols.size() can not exceed kMaxRangeValue
     int32_t size = (int32_t)m_symbols.size();
     if (pos < start || pos >= start + size || exceedBound(pos)) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     return m_symbols[pos - start];
 }
 
-Nullable<String*> CounterStyle::getSymbolicSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getSymbolicSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos) || pos == 0) {
         // NOTE In symbolic system, index 0 does not match any symbol
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     size_t size = m_symbols.size();
     STARFISH_ASSERT(pos != 0);
@@ -100,12 +100,12 @@ Nullable<String*> CounterStyle::getSymbolicSymbol(int32_t pos) const
     return symbol;
 }
 
-Nullable<String*> CounterStyle::getAlphabeticSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getAlphabeticSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos) || pos == 0) {
         // NOTE In alphabetic system, index 0 does not match any symbol
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     size_t size = m_symbols.size();
     STARFISH_ASSERT(pos != 0);
@@ -120,11 +120,11 @@ Nullable<String*> CounterStyle::getAlphabeticSymbol(int32_t pos) const
     return symbol;
 }
 
-Nullable<String*> CounterStyle::getNumericSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getNumericSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_symbols.size());
     if (exceedBound(pos)) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     size_t size = m_symbols.size();
     size_t positivePos = pos < 0 ? -pos : pos;
@@ -137,11 +137,11 @@ Nullable<String*> CounterStyle::getNumericSymbol(int32_t pos) const
     return symbol;
 }
 
-Nullable<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
+Optional<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
 {
     STARFISH_ASSERT(m_additiveSymbols.size());
     if (exceedBound(pos)) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     size_t size = m_additiveSymbols.size();
     size_t positivePos = pos < 0 ? -pos : pos;
@@ -149,7 +149,7 @@ Nullable<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
         if (m_additiveSymbols.back().m_weight == 0) {
             return m_additiveSymbols.back().m_symbol;
         }
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     String* result = String::emptyString;
     for (size_t i = 0; i < size && positivePos != 0; i++) {
@@ -165,7 +165,7 @@ Nullable<String*> CounterStyle::getAdditiveSymbol(int32_t pos) const
         }
     }
     if (positivePos > 0) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
     return result;
 }
@@ -188,7 +188,7 @@ String* CounterStyle::getSymbolAt(int32_t pos) const
 String* CounterStyle::getSymbolAt(
     int32_t pos, GCVector<const CounterStyle*>& failedCounters) const
 {
-    Nullable<String*> result;
+    Optional<String*> result;
     CounterStyle::System system =
         m_system == ExtendsSystem ? extendsRootSystem(this) : m_system;
     switch (system) {

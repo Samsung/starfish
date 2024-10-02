@@ -25,7 +25,7 @@
 namespace Starfish {
 
 void SVGLineElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -68,7 +68,7 @@ void* SVGLineElement::operator new(size_t size)
 
 void SVGLineElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }

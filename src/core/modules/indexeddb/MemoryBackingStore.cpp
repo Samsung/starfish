@@ -57,7 +57,7 @@ IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
                                                  size_t dataSize, IDBKey* key,
                                                  bool noOverwrite)
 {
-    Nullable<String*> keyString = key->toString();
+    Optional<String*> keyString = key->toString();
     if (!keyString.hasValue()) {
         return IDBRequestErrorType::Unknown;
     }
@@ -89,7 +89,7 @@ IDBRequestErrorType MemoryBackingStore::addOrPut(String* name, const char* data,
 bool MemoryBackingStore::get(String* name, IDBKey* key, char*& data,
                              size_t& dataSize)
 {
-    Nullable<String*> keyString = key->toString();
+    Optional<String*> keyString = key->toString();
     if (!keyString.hasValue()) {
         return false;
     }

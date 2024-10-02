@@ -58,7 +58,7 @@ public:
 
     void setDirectionStr(String* direction);
 
-    Nullable<String*> currentDirection();
+    Optional<String*> currentDirection();
 
     bool stopped();
 

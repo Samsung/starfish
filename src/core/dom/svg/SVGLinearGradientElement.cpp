@@ -42,7 +42,7 @@ GCVector<ColorStop*> SVGLinearGradientElement::colorStops()
 }
 
 void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
-                                                   Nullable<String*> old,
+                                                   Optional<String*> old,
                                                    String* value,
                                                    bool attributeCreated,
                                                    bool attributeRemoved)

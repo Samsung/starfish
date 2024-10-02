@@ -250,7 +250,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             request->m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        Nullable<HTTPCache*> cache = nwd->request->starfish()->httpCache();
+        Optional<HTTPCache*> cache = nwd->request->starfish()->httpCache();
         if (cache.hasValue() && !nwd->request->isRedirected()) {
             // FIXME : remove '!nwd->corsPreflightFlag'
             // When 'network-or-cache-fetch' is implemented, the response for

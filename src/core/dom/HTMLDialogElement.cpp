@@ -103,7 +103,7 @@ void HTMLDialogElement::close(String* returnValue)
 }
 
 void HTMLDialogElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old,
+                                            Optional<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

@@ -364,12 +364,12 @@ protected:
                         GCVector<const CounterStyle*>& failedCounters) const;
     String* getFallbackSymbol(
         int32_t index, GCVector<const CounterStyle*>& failedCounters) const;
-    Nullable<String*> getCyclicSymbol(int32_t index) const;
-    Nullable<String*> getFixedSymbol(int32_t index) const;
-    Nullable<String*> getSymbolicSymbol(int32_t index) const;
-    Nullable<String*> getAlphabeticSymbol(int32_t index) const;
-    Nullable<String*> getNumericSymbol(int32_t index) const;
-    Nullable<String*> getAdditiveSymbol(int32_t index) const;
+    Optional<String*> getCyclicSymbol(int32_t index) const;
+    Optional<String*> getFixedSymbol(int32_t index) const;
+    Optional<String*> getSymbolicSymbol(int32_t index) const;
+    Optional<String*> getAlphabeticSymbol(int32_t index) const;
+    Optional<String*> getNumericSymbol(int32_t index) const;
+    Optional<String*> getAdditiveSymbol(int32_t index) const;
 
 protected:
     String* m_name;

@@ -51,8 +51,8 @@ class ScriptWrappable;
 class Response final : public ScriptWrappable {
 public:
     Response(ExecutionContext* executionContext);
-    Response(ExecutionContext* executionContext, Nullable<BodyInit>& body);
-    Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
+    Response(ExecutionContext* executionContext, Optional<BodyInit>& body);
+    Response(ExecutionContext* executionContext, Optional<BodyInit>& body,
              ResponseInit& init);
 
     virtual ~Response();
@@ -99,7 +99,7 @@ public:
     Response* cloneWithoutBody();
     Response* clone();
 
-    Nullable<BodyInit> bodyInit() const
+    Optional<BodyInit> bodyInit() const
     {
         return m_body->bodyInit();
     }
@@ -155,7 +155,7 @@ private:
     ResponseData* m_responseData;
     Body* m_body;
 
-    void handleBodyInit(Nullable<BodyInit>& body);
+    void handleBodyInit(Optional<BodyInit>& body);
     void copyResponseData(Response* destResponse);
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 public:

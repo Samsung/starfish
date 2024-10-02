@@ -39,13 +39,13 @@ public:
     Attr* item(unsigned long index);
 
     Attr* getNamedItem(String* name);
-    Attr* getNamedItemNS(Nullable<String*> ns, String* localName);
+    Attr* getNamedItemNS(Optional<String*> ns, String* localName);
 
     Attr* setNamedItem(Attr* attr);
     Attr* setNamedItemNS(Attr* attr);
 
     Attr* removeNamedItem(String* name);
-    Attr* removeNamedItemNS(Nullable<String*> ns, String* localName);
+    Attr* removeNamedItemNS(Optional<String*> ns, String* localName);
 
     Element* element()
     {

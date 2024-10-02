@@ -269,14 +269,14 @@ String* Starfish::localStorageFilePath()
 }
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
-Nullable<HTTPCache*> Starfish::httpCache()
+Optional<HTTPCache*> Starfish::httpCache()
 {
     // HTTPCache is supported only on the window.
     if (!isMainThread() || !m_httpCache) {
-        return Nullable<HTTPCache*>();
+        return Optional<HTTPCache*>();
     }
 
-    return Nullable<HTTPCache*>(m_httpCache);
+    return Optional<HTTPCache*>(m_httpCache);
 }
 #endif
 } // namespace Starfish

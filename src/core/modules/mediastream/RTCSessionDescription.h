@@ -48,14 +48,14 @@ public:
     {
     }
 
-    RTCSessionDescriptionInit(Nullable<RTCSdpType> type, String* sdp)
+    RTCSessionDescriptionInit(Optional<RTCSdpType> type, String* sdp)
         : m_type(type)
         , m_sdp(sdp)
     {
     }
 
     RTCSessionDescriptionInit(
-        Nullable<libwebrtc::RTCSessionDescription::SdpType> type,
+        Optional<libwebrtc::RTCSessionDescription::SdpType> type,
         std::string sdp);
     RTCSessionDescriptionInit(libwebrtc::RTCSessionDescription::SdpType type,
                               std::string sdp);
@@ -64,10 +64,10 @@ public:
     void setType(String* type);
     DEFINE_GETTER_SETTER(String*, sdp, Sdp);
 
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> toSdpType();
+    Optional<libwebrtc::RTCSessionDescription::SdpType> toSdpType();
 
 private:
-    Nullable<RTCSdpType> m_type;
+    Optional<RTCSdpType> m_type;
     String* m_sdp{ String::emptyString };
 };
 
@@ -86,7 +86,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    Nullable<RTCSdpType> m_type;
+    Optional<RTCSdpType> m_type;
     String* m_sdp{ String::emptyString };
 };
 } // namespace Starfish

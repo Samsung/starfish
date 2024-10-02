@@ -47,11 +47,11 @@ ScriptBindingInstance* SVGAngle::scriptBindingInstance()
     return m_sourceElement->scriptBindingInstance();
 }
 
-static Nullable<Angle> valueToAngle(CSSStyleValuePair::ValueKind kind,
+static Optional<Angle> valueToAngle(CSSStyleValuePair::ValueKind kind,
                                     CSSStyleValuePair::ValueData data)
 {
     if (kind == CSSStyleValuePair::ValueKind::Auto) {
-        return Nullable<Angle>();
+        return Optional<Angle>();
     } else if (kind == CSSStyleValuePair::ValueKind::Angle) {
         return data.m_angle.toAngle();
     } else if (kind == CSSStyleValuePair::ValueKind::Number) {
@@ -61,11 +61,11 @@ static Nullable<Angle> valueToAngle(CSSStyleValuePair::ValueKind kind,
         if (type.isAngle() || type.isPercentage()) {
             return Angle(data.m_calc);
         } else {
-            return Nullable<Angle>();
+            return Optional<Angle>();
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return Nullable<Angle>();
+        return Optional<Angle>();
     }
 }
 

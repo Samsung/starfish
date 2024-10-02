@@ -74,7 +74,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    Nullable<ElementOrDocument> m_root;
+    Optional<ElementOrDocument> m_root;
     ResizeObserverCallback* m_callback = nullptr;
     GCVector<Element*> m_targets;
     GCVector<ResizeObserverEntry*> m_queuedEntries;

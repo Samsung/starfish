@@ -69,7 +69,7 @@ public:
         return m_body;
     }
 
-    Nullable<BodyInit> bodyInit() const
+    Optional<BodyInit> bodyInit() const
     {
         return m_body->bodyInit();
     }

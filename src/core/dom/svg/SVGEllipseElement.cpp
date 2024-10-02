@@ -26,7 +26,7 @@
 namespace Starfish {
 
 void SVGEllipseElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old,
+                                            Optional<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
@@ -89,7 +89,7 @@ void* SVGEllipseElement::operator new(size_t size)
 
 void SVGEllipseElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX, cssCustomValues);

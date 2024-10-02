@@ -47,7 +47,7 @@ class Body : public gc {
 
 public:
     Body(ExecutionContext* executionContext);
-    Body(ExecutionContext* executionContext, Nullable<BodyInit>& bodyInitValue);
+    Body(ExecutionContext* executionContext, Optional<BodyInit>& bodyInitValue);
 
     Promise* arrayBuffer();
     Promise* blob();
@@ -65,8 +65,8 @@ public:
     bool bodyUsed();
     bool bodyDisturbedOrLocked();
 
-    Nullable<BodyInit> bodyInit() const;
-    void setBodyInit(const Nullable<BodyInit>& bodyInit);
+    Optional<BodyInit> bodyInit() const;
+    void setBodyInit(const Optional<BodyInit>& bodyInit);
     void pushResponseData(ResourceRequest* request);
 
     String* contentType() const
@@ -96,7 +96,7 @@ private:
 
 protected:
     ExecutionContext* m_executionContext;
-    Nullable<BodyInit> m_bodyInit;
+    Optional<BodyInit> m_bodyInit;
     String* m_contentType;
     ResourceRequest* m_resourceRequest;
     ReadableStream* m_readableStream;

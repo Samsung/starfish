@@ -30,7 +30,7 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TextEncoder)
 
-    ScriptUint8Array encode(Nullable<String*> input);
+    ScriptUint8Array encode(Optional<String*> input);
 
     String* encoding() const
     {

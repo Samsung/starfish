@@ -35,7 +35,7 @@ public:
     virtual bool isDOMStringMap() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    Nullable<String*> defaultNamedGetter(String* key);
+    Optional<String*> defaultNamedGetter(String* key);
     bool defaultNamedSetter(String* key, String* value);
     bool defaultNamedDeleter(String* key);
     void defaultNamedEnumerator(GCVector<String*>& enums);

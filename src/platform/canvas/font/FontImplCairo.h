@@ -72,7 +72,7 @@ public:
 
     FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
                       uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0,
-                      Nullable<UTF8StringDataNonGCStd> path = nullptr)
+                      Optional<UTF8StringDataNonGCStd> path = nullptr)
     {
         m_dataBuffer = dataBuffer;
         m_dataBufferSize = dataBufferSize;
@@ -254,8 +254,8 @@ public:
         return m_hbFace;
     }
 
-    Nullable<uint8_t*> m_dataBuffer;
-    Nullable<UTF8StringDataNonGCStd> m_path;
+    Optional<uint8_t*> m_dataBuffer;
+    Optional<UTF8StringDataNonGCStd> m_path;
     size_t m_dataBufferSize;
     int m_xHeight;
     int m_unitsPerEM;

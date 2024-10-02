@@ -46,7 +46,7 @@ Response::Response(ExecutionContext* executionContext)
 #endif
 }
 
-Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
+Response::Response(ExecutionContext* executionContext, Optional<BodyInit>& body)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_headers(new Headers(executionContext))
@@ -68,7 +68,7 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
 #endif
 }
 
-Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
+Response::Response(ExecutionContext* executionContext, Optional<BodyInit>& body,
                    ResponseInit& init)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
@@ -121,7 +121,7 @@ ScriptBindingInstance* Response::scriptBindingInstance()
     return m_body->executionContext()->scriptBindingInstance();
 }
 
-void Response::handleBodyInit(Nullable<BodyInit>& body)
+void Response::handleBodyInit(Optional<BodyInit>& body)
 {
     const auto st = status();
     if (body.hasValue()) {

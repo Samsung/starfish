@@ -52,7 +52,7 @@ WebGLVertexArrayObjectOES* OES_vertex_array_object::createVertexArrayOES()
 }
 
 void OES_vertex_array_object::deleteVertexArrayOES(
-    Nullable<WebGLVertexArrayObjectOES*> arrayObject)
+    Optional<WebGLVertexArrayObjectOES*> arrayObject)
 {
     if (arrayObject.hasValue()) {
         WebGLVertexArrayObjectOES* value = arrayObject.value();
@@ -79,7 +79,7 @@ void OES_vertex_array_object::deleteVertexArrayOES(
 }
 
 GLboolean OES_vertex_array_object::isVertexArrayOES(
-    Nullable<WebGLVertexArrayObjectOES*> arrayObject)
+    Optional<WebGLVertexArrayObjectOES*> arrayObject)
 {
     if (!arrayObject.hasValue()) {
         return false;
@@ -102,7 +102,7 @@ GLboolean OES_vertex_array_object::isVertexArrayOES(
 }
 
 void OES_vertex_array_object::bindVertexArrayOES(
-    Nullable<WebGLVertexArrayObjectOES*> arrayObject)
+    Optional<WebGLVertexArrayObjectOES*> arrayObject)
 {
     if (arrayObject.hasValue()) {
         WebGLVertexArrayObjectOES* value = arrayObject.value();

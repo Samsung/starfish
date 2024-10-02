@@ -65,7 +65,7 @@ bool HTMLOptionsCollection::defaultIndexedSetter(
 }
 
 void HTMLOptionsCollection::add(HTMLOptionElementOrHTMLOptGroupElement element,
-                                Nullable<HTMLElementOrlong> before)
+                                Optional<HTMLElementOrlong> before)
 {
     STARFISH_ASSERT(m_nodeListImpl.root());
     STARFISH_ASSERT(m_nodeListImpl.root()->isHTMLSelectElement());

@@ -94,7 +94,7 @@ public:
         m_id = id;
     }
 
-    Nullable<String*> separator() const
+    Optional<String*> separator() const
     {
         return m_separator;
     }
@@ -106,7 +106,7 @@ public:
 
     void unsetSeparator()
     {
-        m_separator = Nullable<String*>();
+        m_separator = Optional<String*>();
     }
 
     const CounterStyle* counterStyle() const
@@ -123,7 +123,7 @@ public:
 
 private:
     AtomicString m_id;
-    Nullable<String*> m_separator;
+    Optional<String*> m_separator;
     const CounterStyle* m_counter;
 };
 

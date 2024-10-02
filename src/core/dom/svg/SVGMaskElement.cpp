@@ -48,7 +48,7 @@ SVGMaskElement::SVGMaskElement(Document* document, const QualifiedName& qname)
 }
 
 void SVGMaskElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -73,7 +73,7 @@ void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
 
 void SVGMaskElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }

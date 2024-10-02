@@ -109,7 +109,7 @@ protected:
         return &m_treeItemModel;
     }
 
-    Nullable<GradientDrawingInfo*> makeGradientDrawingInfo(String* url);
+    Optional<GradientDrawingInfo*> makeGradientDrawingInfo(String* url);
 
     FrameTreeItemModel m_treeItemModel;
     bool m_hasClipPath;

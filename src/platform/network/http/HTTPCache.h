@@ -37,17 +37,17 @@ public:
     static const int LOAD_NO_CACHE = 2;
     static const int LOAD_CACHE_ONLY = 3;
 
-    static Nullable<HTTPCache*> getInstance(String* cacheDirPath)
+    static Optional<HTTPCache*> getInstance(String* cacheDirPath)
     {
         auto httpCache = new HTTPCache(cacheDirPath);
-        return (httpCache->good()) ? Nullable<HTTPCache*>(httpCache)
-                                   : Nullable<HTTPCache*>();
+        return (httpCache->good()) ? Optional<HTTPCache*>(httpCache)
+                                   : Optional<HTTPCache*>();
     }
 
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
     bool initFromIndexFileIfPossible();
-    Nullable<HTTPCacheEntry*> get(ResourceURL* url);
+    Optional<HTTPCacheEntry*> get(ResourceURL* url);
 
     void put(NetworkURLWorkerData* data);
     void update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry);
@@ -110,7 +110,7 @@ private:
     void insertToCacheEntryTable(
         const std::pair<size_t, RefPtr<HTTPCacheEntry>>& pair);
     void removeFromCacheEntryTable(HTTPCacheEntry* entry);
-    Nullable<HTTPCacheEntry*> findEntryInCacheEntryTable(String* key);
+    Optional<HTTPCacheEntry*> findEntryInCacheEntryTable(String* key);
     HTTPCacheLRUList::iterator findItemInLRUList(String* item);
     void extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
                                        CacheControl& cc, HTTPContentInfo& cinfo,

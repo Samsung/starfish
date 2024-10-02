@@ -54,7 +54,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    Nullable<Unit::Rect> viewBox()
+    Optional<Unit::Rect> viewBox()
     {
         return m_viewBox;
     }
@@ -74,7 +74,7 @@ public:
         m_isInnerSVG = v;
     }
 
-    void setContainerViewport(Nullable<Unit::Rect> containerViewport)
+    void setContainerViewport(Optional<Unit::Rect> containerViewport)
     {
         m_containerViewport = containerViewport;
     }
@@ -96,13 +96,13 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
     }
 
-    Nullable<Unit::Rect> m_viewBox;
+    Optional<Unit::Rect> m_viewBox;
     float m_svgScale;
     NativeImageData* m_surface;
     bool m_isInnerSVG;
     size_t m_defaultWidth;
     size_t m_defaultHeight;
-    Nullable<Unit::Rect> m_containerViewport;
+    Optional<Unit::Rect> m_containerViewport;
 };
 } // namespace Starfish
 

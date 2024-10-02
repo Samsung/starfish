@@ -31,7 +31,7 @@ namespace Starfish {
 void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                    Font* font, LayoutUnit viewportWidth,
                                    LayoutUnit viewportHeight,
-                                   Nullable<ComputedStyle*> cs)
+                                   Optional<ComputedStyle*> cs)
 {
     if (isFontPercent()) {
         if (m_type == Rem && !rootFontSize.isFixed()) {

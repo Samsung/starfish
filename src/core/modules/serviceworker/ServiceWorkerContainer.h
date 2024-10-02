@@ -70,7 +70,7 @@ public:
 
     ServiceWorkerEnvironment* serviceWorkerEnvironment() override;
 
-    Nullable<ServiceWorkerJob*> findJob(Id<ServiceWorkerJob> id);
+    Optional<ServiceWorkerJob*> findJob(Id<ServiceWorkerJob> id);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,
@@ -105,7 +105,7 @@ private:
         m_requestMap;
     State m_state;
 
-    void startRegister(Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL,
+    void startRegister(Optional<ResourceURL*> scopeURL, ResourceURL* scriptURL,
                        Promise* p, ServiceWorkerEnvironment* client,
                        WorkerType type,
                        ServiceWorkerUpdateViaCache updateViaCache);

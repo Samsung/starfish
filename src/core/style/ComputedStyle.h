@@ -501,15 +501,15 @@ public:
         return &(*it).m_value.m_##VALUE_NAME;                       \
     }                                                               \
                                                                     \
-    Nullable<RETURN_TYPE> name()                                    \
+    Optional<RETURN_TYPE> name()                                    \
     {                                                               \
         FIND_VALUE(Name);                                           \
                                                                     \
         if (it == m_styles.end()) {                                 \
-            return Nullable<RETURN_TYPE>();                         \
+            return Optional<RETURN_TYPE>();                         \
         }                                                           \
                                                                     \
-        return Nullable<RETURN_TYPE>((*it).m_value.m_##VALUE_NAME); \
+        return Optional<RETURN_TYPE>((*it).m_value.m_##VALUE_NAME); \
     }
 
     GETTER_VALUE(int32_t, int32Value, order, Order, 0);
@@ -1032,7 +1032,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.width();
+        Optional<Length> ret = m_rareComputedStyleData.width();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1046,7 +1046,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.maxWidth();
+        Optional<Length> ret = m_rareComputedStyleData.maxWidth();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1060,7 +1060,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.minWidth();
+        Optional<Length> ret = m_rareComputedStyleData.minWidth();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1089,7 +1089,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.height();
+        Optional<Length> ret = m_rareComputedStyleData.height();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1103,7 +1103,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.maxHeight();
+        Optional<Length> ret = m_rareComputedStyleData.maxHeight();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1117,7 +1117,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.minHeight();
+        Optional<Length> ret = m_rareComputedStyleData.minHeight();
         if (ret.hasValue()) {
             return ret.getValue();
         }
@@ -1166,7 +1166,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> verticalAlign =
+        Optional<Length> verticalAlign =
             m_rareComputedStyleData.verticalAlignLength();
         if (verticalAlign.hasValue()) {
             return verticalAlign.getValue();
@@ -1289,7 +1289,7 @@ public:
     BoxDecorationBreakValue boxDecorationBreak()
     {
         if (m_rareComputedStyleData.m_styles.size()) {
-            Nullable<BoxDecorationBreakValue> v =
+            Optional<BoxDecorationBreakValue> v =
                 m_rareComputedStyleData.boxDecorationBreak();
             if (v.hasValue()) {
                 return v.getValue();
@@ -1327,7 +1327,7 @@ public:
             return Unit::Color(0, 0, 0, 255);
         }
 
-        Nullable<Unit::Color> c =
+        Optional<Unit::Color> c =
             rareComputedStyleData()->textDecorationColor();
         if (c.hasValue()) {
             return c.getValue();
@@ -1347,7 +1347,7 @@ public:
             return TextDecorationStyleValue::SolidTextDecorationStyleValue;
         }
 
-        Nullable<TextDecorationStyleValue> c =
+        Optional<TextDecorationStyleValue> c =
             rareComputedStyleData()->textDecorationStyle();
         if (c.hasValue()) {
             return c.getValue();
@@ -1393,7 +1393,7 @@ public:
             return ResizeValue::NoneResizeValue;
         }
 
-        Nullable<ResizeValue> v = rareComputedStyleData()->resize();
+        Optional<ResizeValue> v = rareComputedStyleData()->resize();
         if (v.hasValue()) {
             return v.getValue();
         }
@@ -1833,7 +1833,7 @@ public:
             return 1;
         }
 
-        Nullable<float> opacity = m_rareComputedStyleData.opacity();
+        Optional<float> opacity = m_rareComputedStyleData.opacity();
         if (opacity.hasValue()) {
             return opacity.getValue();
         }
@@ -1848,7 +1848,7 @@ public:
 
     Length columnGap()
     {
-        Nullable<Length> maybeLength = m_rareComputedStyleData.columnGap();
+        Optional<Length> maybeLength = m_rareComputedStyleData.columnGap();
         if (maybeLength.hasValue()) {
             return maybeLength.getValue();
         }
@@ -1862,7 +1862,7 @@ public:
 
     Length rowGap()
     {
-        Nullable<Length> maybeLength = m_rareComputedStyleData.rowGap();
+        Optional<Length> maybeLength = m_rareComputedStyleData.rowGap();
         if (maybeLength.hasValue()) {
             return maybeLength.getValue();
         }
@@ -1880,7 +1880,7 @@ public:
             return new StylePaintData(Unit::Color(0, 0, 0, 0xff));
         }
 
-        Nullable<StylePaintData*> stopColor =
+        Optional<StylePaintData*> stopColor =
             m_rareComputedStyleData.stopColor();
         if (stopColor.hasValue()) {
             return stopColor.getValue();
@@ -1900,7 +1900,7 @@ public:
             return 1;
         }
 
-        Nullable<float> stopOpacity = m_rareComputedStyleData.stopOpacity();
+        Optional<float> stopOpacity = m_rareComputedStyleData.stopOpacity();
         if (stopOpacity.hasValue()) {
             return stopOpacity.getValue();
         }
@@ -1921,7 +1921,7 @@ public:
             return 0;
         }
 
-        Nullable<int32_t> zIndex = m_rareComputedStyleData.zIndex();
+        Optional<int32_t> zIndex = m_rareComputedStyleData.zIndex();
         if (zIndex.hasValue()) {
             return zIndex.getValue();
         }
@@ -1945,7 +1945,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> d = m_rareComputedStyleData.d();
+        Optional<String*> d = m_rareComputedStyleData.d();
         if (d.hasValue()) {
             return d.getValue();
         }
@@ -1969,7 +1969,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> areas = m_rareComputedStyleData.gridTemplateAreas();
+        Optional<String*> areas = m_rareComputedStyleData.gridTemplateAreas();
         if (areas.hasValue()) {
             return areas.getValue();
         }
@@ -1983,7 +1983,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> x = m_rareComputedStyleData.x();
+        Optional<Length> x = m_rareComputedStyleData.x();
         if (x.hasValue()) {
             return x.getValue();
         }
@@ -2002,7 +2002,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> y = m_rareComputedStyleData.y();
+        Optional<Length> y = m_rareComputedStyleData.y();
         if (y.hasValue()) {
             return y.getValue();
         }
@@ -2021,7 +2021,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> x1 = m_rareComputedStyleData.x1();
+        Optional<Length> x1 = m_rareComputedStyleData.x1();
         if (x1.hasValue()) {
             return x1.getValue();
         }
@@ -2040,7 +2040,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> y1 = m_rareComputedStyleData.y1();
+        Optional<Length> y1 = m_rareComputedStyleData.y1();
         if (y1.hasValue()) {
             return y1.getValue();
         }
@@ -2059,7 +2059,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> x2 = m_rareComputedStyleData.x2();
+        Optional<Length> x2 = m_rareComputedStyleData.x2();
         if (x2.hasValue()) {
             return x2.getValue();
         }
@@ -2078,7 +2078,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> y2 = m_rareComputedStyleData.y2();
+        Optional<Length> y2 = m_rareComputedStyleData.y2();
         if (y2.hasValue()) {
             return y2.getValue();
         }
@@ -2097,7 +2097,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> r = m_rareComputedStyleData.r();
+        Optional<Length> r = m_rareComputedStyleData.r();
         if (r.hasValue()) {
             return r.getValue();
         }
@@ -2116,7 +2116,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> x = m_rareComputedStyleData.cx();
+        Optional<Length> x = m_rareComputedStyleData.cx();
         if (x.hasValue()) {
             return x.getValue();
         }
@@ -2135,7 +2135,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> y = m_rareComputedStyleData.cy();
+        Optional<Length> y = m_rareComputedStyleData.cy();
         if (y.hasValue()) {
             return y.getValue();
         }
@@ -2154,7 +2154,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> x = m_rareComputedStyleData.rx();
+        Optional<Length> x = m_rareComputedStyleData.rx();
         if (x.hasValue()) {
             return x.getValue();
         }
@@ -2173,7 +2173,7 @@ public:
             return Length();
         }
 
-        Nullable<Length> y = m_rareComputedStyleData.ry();
+        Optional<Length> y = m_rareComputedStyleData.ry();
         if (y.hasValue()) {
             return y.getValue();
         }
@@ -2214,7 +2214,7 @@ public:
         return b;
     }
 
-    Nullable<BorderData*> nullableBorder()
+    Optional<BorderData*> nullableBorder()
     {
         return m_rareComputedStyleData.border();
     }
@@ -3145,9 +3145,9 @@ public:
     GEN_FOURSIDE(GET_SIDE)
 #undef GET_SIDE
 
-    Nullable<LengthData*> nullableMargin()
+    Optional<LengthData*> nullableMargin()
     {
-        return Nullable<LengthData*>(m_rareComputedStyleData.margin());
+        return Optional<LengthData*>(m_rareComputedStyleData.margin());
     }
 
     LengthData margin()
@@ -3159,9 +3159,9 @@ public:
         return LengthData();
     }
 
-    Nullable<LengthData*> nullablePadding()
+    Optional<LengthData*> nullablePadding()
     {
-        return Nullable<LengthData*>(m_rareComputedStyleData.padding());
+        return Optional<LengthData*>(m_rareComputedStyleData.padding());
     }
 
     LengthData padding()
@@ -3175,13 +3175,13 @@ public:
     }
 
     // <margin, border, padding>
-    std::tuple<Nullable<LengthData*>, Nullable<BorderData*>,
-               Nullable<LengthData*>>
+    std::tuple<Optional<LengthData*>, Optional<BorderData*>,
+               Optional<LengthData*>>
     marginBorderPadding()
     {
-        Nullable<LengthData*> margin;
-        Nullable<BorderData*> border;
-        Nullable<LengthData*> padding;
+        Optional<LengthData*> margin;
+        Optional<BorderData*> border;
+        Optional<LengthData*> padding;
 
         int count = 0;
         auto it = m_rareComputedStyleData.m_styles.begin();
@@ -3660,7 +3660,7 @@ public:
             return 0;
         }
 
-        Nullable<int32_t> order = m_rareComputedStyleData.order();
+        Optional<int32_t> order = m_rareComputedStyleData.order();
         if (order.hasValue()) {
             return order.getValue();
         }
@@ -3719,7 +3719,7 @@ public:
             return 0;
         }
 
-        Nullable<float> flexGrow = m_rareComputedStyleData.flexGrow();
+        Optional<float> flexGrow = m_rareComputedStyleData.flexGrow();
         if (flexGrow.hasValue()) {
             return flexGrow.getValue();
         }
@@ -3738,7 +3738,7 @@ public:
             return 1;
         }
 
-        Nullable<float> flexShrink = m_rareComputedStyleData.flexShrink();
+        Optional<float> flexShrink = m_rareComputedStyleData.flexShrink();
         if (flexShrink.hasValue()) {
             return flexShrink.getValue();
         }
@@ -3790,7 +3790,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> clipPathValue = m_rareComputedStyleData.clipPath();
+        Optional<String*> clipPathValue = m_rareComputedStyleData.clipPath();
         if (clipPathValue.hasValue()) {
             return clipPathValue.getValue();
         }
@@ -4000,7 +4000,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> area = m_rareComputedStyleData.gridRowStart();
+        Optional<String*> area = m_rareComputedStyleData.gridRowStart();
         if (area.hasValue()) {
             return area.getValue();
         }
@@ -4014,7 +4014,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> area = m_rareComputedStyleData.gridRowEnd();
+        Optional<String*> area = m_rareComputedStyleData.gridRowEnd();
         if (area.hasValue()) {
             return area.getValue();
         }
@@ -4028,7 +4028,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> area = m_rareComputedStyleData.gridColumnStart();
+        Optional<String*> area = m_rareComputedStyleData.gridColumnStart();
         if (area.hasValue()) {
             return area.getValue();
         }
@@ -4042,7 +4042,7 @@ public:
             return String::emptyString;
         }
 
-        Nullable<String*> area = m_rareComputedStyleData.gridColumnEnd();
+        Optional<String*> area = m_rareComputedStyleData.gridColumnEnd();
         if (area.hasValue()) {
             return area.getValue();
         }
@@ -4250,7 +4250,7 @@ public:
         Element* containerElement, PseudoElementType pid,
         ComputedStyle* stickyInheritFrom = nullptr,
         ComputedStyle* oldPseudoStyleIfHas = nullptr,
-        Nullable<StyleResolveContext*> ctx = Nullable<StyleResolveContext*>());
+        Optional<StyleResolveContext*> ctx = Optional<StyleResolveContext*>());
 
     bool seenPseudoElement(PseudoElementType pseudoId)
     {
@@ -4616,7 +4616,7 @@ public:
             return UserSelectValue::NoneUserSelectValue;
         }
 
-        Nullable<UserSelectValue> us = rareComputedStyleData()->userSelect();
+        Optional<UserSelectValue> us = rareComputedStyleData()->userSelect();
         if (us.hasValue()) {
             return us.getValue();
         }
@@ -4662,7 +4662,7 @@ public:
             return LineBreakValue::NormalLineBreakValue;
         }
 
-        Nullable<LineBreakValue> v = rareComputedStyleData()->lineBreak();
+        Optional<LineBreakValue> v = rareComputedStyleData()->lineBreak();
         if (v.hasValue()) {
             return v.getValue();
         }
@@ -4704,7 +4704,7 @@ public:
             return AppearanceValue::AutoAppearanceValue;
         }
 
-        Nullable<AppearanceValue> v = rareComputedStyleData()->appearance();
+        Optional<AppearanceValue> v = rareComputedStyleData()->appearance();
         if (v.hasValue()) {
             return v.getValue();
         }
@@ -4735,7 +4735,7 @@ public:
         return !!customProperty();
     }
 
-    Nullable<MutablePropertyValueList*> customProperty()
+    Optional<MutablePropertyValueList*> customProperty()
     {
         return m_rareComputedStyleData.customProperty();
     }
@@ -4754,7 +4754,7 @@ protected:
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
     static ComputedStyle* pseudoStyleForElementInternal(
         Node* node, PseudoElementType pseudoId, ComputedStyle* parentStyle,
-        ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx);
+        ComputedStyle* oldPseudoStyleIfHas, Optional<StyleResolveContext*> ctx);
     void removeCachedPseudoStyle(PseudoElementType pid);
 
     void applyFlowRelativeBlockProperties();

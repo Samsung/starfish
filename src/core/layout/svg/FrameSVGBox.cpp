@@ -183,7 +183,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     (svg##gradient##Element->name()->baseVal()->unitType() == \
      SVGLength::SVG_LENGTHTYPE_NUMBER)
 
-static Nullable<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
+static Optional<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
     SVGLinearGradientElement* svgLinearGradientElement, LayoutRect layoutRect,
     FrameBox* frameBox)
 {
@@ -220,7 +220,7 @@ static Nullable<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
 
     Unit::Rect unitRect = Unit::Rect(layoutRect.x(), layoutRect.y(),
                                      layoutRect.width(), layoutRect.height());
-    Nullable<GradientDrawingInfo*> gradientDrawingInfo =
+    Optional<GradientDrawingInfo*> gradientDrawingInfo =
         gradientData->asLinearGradientData()->makeGradientDrawingInfo(unitRect,
                                                                       frameBox);
     gradientDrawingInfo->x1 = x1.specifiedValue(unitRect.width(), frameBox);
@@ -231,7 +231,7 @@ static Nullable<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
     return gradientDrawingInfo;
 }
 
-static Nullable<GradientDrawingInfo*> makeRadialGradientDrawingInfo(
+static Optional<GradientDrawingInfo*> makeRadialGradientDrawingInfo(
     SVGRadialGradientElement* svgRadialGradientElement, LayoutRect layoutRect,
     FrameBox* frameBox)
 {
@@ -270,14 +270,14 @@ static Nullable<GradientDrawingInfo*> makeRadialGradientDrawingInfo(
 
     Unit::Rect unitRect = Unit::Rect(layoutRect.x(), layoutRect.y(),
                                      layoutRect.width(), layoutRect.height());
-    Nullable<GradientDrawingInfo*> gradientDrawingInfo =
+    Optional<GradientDrawingInfo*> gradientDrawingInfo =
         radialGradient->makeGradientDrawingInfo(unitRect, frameBox);
 
     return gradientDrawingInfo;
 }
 #undef IS_SVGLENGTH_UNIT_TYPE_NUMBER
 
-Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
+Optional<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
 {
     ResourceURL* resourceUrl = new ResourceURL(url);
     if (!resourceUrl->isValid()) {
@@ -302,7 +302,7 @@ Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
     }
 
     LayoutRect layoutRect = frameRect();
-    Nullable<GradientDrawingInfo*> gradientDrawingInfo = nullptr;
+    Optional<GradientDrawingInfo*> gradientDrawingInfo = nullptr;
     if (matchingSvg->isSVGLinearGradientElement()) {
         // NOTE : There is a problem that width and height are different and the
         // gradient direction is not normally drawn in cases other than 0, 90,
@@ -524,7 +524,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             // Temporarily use the existing path until implementing radial
             // gradient at makeCanvasFillStrokeSource.
             if (!info) {
-                Nullable<GradientDrawingInfo*> radialGradientInfo =
+                Optional<GradientDrawingInfo*> radialGradientInfo =
                     makeGradientDrawingInfo(style()->fill()->url());
                 if (radialGradientInfo.hasValue()) {
                     ctx.m_canvas->save();

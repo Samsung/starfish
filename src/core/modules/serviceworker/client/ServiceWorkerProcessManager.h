@@ -80,7 +80,7 @@ public:
         return m_registrationManager;
     }
 
-    Nullable<FetchEventHandler*> findFetchEventHandler(Id<GlobalScope> id);
+    Optional<FetchEventHandler*> findFetchEventHandler(Id<GlobalScope> id);
 
 private:
     ServiceWorkerProcessManager() = default;

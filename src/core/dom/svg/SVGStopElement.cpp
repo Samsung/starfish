@@ -27,7 +27,7 @@
 namespace Starfish {
 
 void SVGStopElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -79,7 +79,7 @@ ColorStop* SVGStopElement::colorStop()
 
 void SVGStopElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 

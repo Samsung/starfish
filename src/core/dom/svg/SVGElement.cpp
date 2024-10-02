@@ -55,7 +55,7 @@ void* SVGElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void SVGElement::didAttributeChanged(QualifiedName name, Nullable<String*> old,
+void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved)
 {
@@ -245,7 +245,7 @@ SVGElement* SVGElement::viewportElement()
 
 void SVGElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     Element::styleForPresentationAttribute(cssValues);
     CSSStyleValuePair pair;

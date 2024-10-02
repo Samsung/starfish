@@ -437,7 +437,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             return false;
         }
 
-        Nullable<String*> srcStr =
+        Optional<String*> srcStr =
             getAttribute(starfish()->staticStrings()->m_src);
         if (!srcStr.hasValue()) {
             if (!firstChild()) {
@@ -556,7 +556,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 }
 
 void HTMLScriptElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old,
+                                            Optional<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
@@ -657,12 +657,12 @@ void HTMLScriptElement::setCharset(String* charset)
     setAttribute(starfish()->staticStrings()->m_charset, charset);
 }
 
-Nullable<String*> HTMLScriptElement::crossOrigin()
+Optional<String*> HTMLScriptElement::crossOrigin()
 {
     return getAttribute(starfish()->staticStrings()->m_crossorigin);
 }
 
-void HTMLScriptElement::setCrossOrigin(Nullable<String*> crossOrigin)
+void HTMLScriptElement::setCrossOrigin(Optional<String*> crossOrigin)
 {
     if (crossOrigin.hasValue()) {
         setAttribute(starfish()->staticStrings()->m_crossorigin,
@@ -750,7 +750,7 @@ bool HTMLScriptElement::isValidScriptType()
 
 bool HTMLScriptElement::isValidClassicScriptType()
 {
-    Nullable<String*> typeStr =
+    Optional<String*> typeStr =
         getAttribute(starfish()->staticStrings()->m_type);
     if (typeStr.hasValue()) {
         auto utf8Data = typeStr.getValue()->toASCIILower()->toUTF8NonGCString();

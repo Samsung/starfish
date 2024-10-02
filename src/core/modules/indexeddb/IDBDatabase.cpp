@@ -118,7 +118,7 @@ IDBObjectStore* IDBDatabase::createObjectStore(String* name,
     // key generator.
 
     if (keyPath) {
-        store->setKeyPath(Nullable<IDBKeyPath*>(keyPath));
+        store->setKeyPath(Optional<IDBKeyPath*>(keyPath));
     }
 
     return store;

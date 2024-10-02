@@ -44,7 +44,7 @@ public:
 
     IDBOpenDBRequest* open(String* name);
     IDBOpenDBRequest* open(String* name, unsigned long long version);
-    IDBOpenDBRequest* open(String* name, Nullable<unsigned long long> version);
+    IDBOpenDBRequest* open(String* name, Optional<unsigned long long> version);
 
     IDBOpenDBRequest* deleteDatabase(String* name);
 

@@ -112,7 +112,7 @@ void SharedWorkerProcessManager::addSharedWorkerObject(
     m_sharedWorkers.insert({ sharedWorker->clientID(), sharedWorker });
 }
 
-Nullable<SharedWorker*> SharedWorkerProcessManager::getSharedWorkerObject(
+Optional<SharedWorker*> SharedWorkerProcessManager::getSharedWorkerObject(
     int32_t clientID)
 {
     const auto& iter = m_sharedWorkers.find(clientID);
@@ -120,7 +120,7 @@ Nullable<SharedWorker*> SharedWorkerProcessManager::getSharedWorkerObject(
         return iter->second;
     }
 
-    return Nullable<SharedWorker*>();
+    return Optional<SharedWorker*>();
 }
 
 void SharedWorkerProcessManager::destroy()
@@ -164,7 +164,7 @@ void SharedWorkerProcessManager::startMessagePortConnection(
         return;
     }
 
-    Nullable<SharedWorker*> sharedWorker =
+    Optional<SharedWorker*> sharedWorker =
         SharedWorkerProcessManager::instance()->getSharedWorkerObject(
             message.clientID());
 

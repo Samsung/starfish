@@ -877,48 +877,48 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 
     if (hasRareComputeStyleData()) {
-        Nullable<Length> width = m_rareComputedStyleData.width();
+        Optional<Length> width = m_rareComputedStyleData.width();
         if (width.hasValue()) {
             m_rareComputedStyleData.ensureWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> height = m_rareComputedStyleData.height();
+        Optional<Length> height = m_rareComputedStyleData.height();
         if (height.hasValue()) {
             m_rareComputedStyleData.ensureHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> minWidth = m_rareComputedStyleData.minWidth();
+        Optional<Length> minWidth = m_rareComputedStyleData.minWidth();
         if (minWidth.hasValue()) {
             m_rareComputedStyleData.ensureMinWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
-        Nullable<Length> maxWidth = m_rareComputedStyleData.maxWidth();
+        Optional<Length> maxWidth = m_rareComputedStyleData.maxWidth();
         if (maxWidth.hasValue()) {
             m_rareComputedStyleData.ensureMaxWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> minHeight = m_rareComputedStyleData.minHeight();
+        Optional<Length> minHeight = m_rareComputedStyleData.minHeight();
         if (minHeight.hasValue()) {
             m_rareComputedStyleData.ensureMinHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> maxHeight = m_rareComputedStyleData.maxHeight();
+        Optional<Length> maxHeight = m_rareComputedStyleData.maxHeight();
         if (maxHeight.hasValue()) {
             m_rareComputedStyleData.ensureMaxHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
         }
 
-        Nullable<Length> verticalAlignLength =
+        Optional<Length> verticalAlignLength =
             m_rareComputedStyleData.verticalAlignLength();
         if (verticalAlignLength.hasValue()) {
             m_rareComputedStyleData.ensureVerticalAlignLength()
@@ -1039,7 +1039,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
 
 #define TO_FIXED(name, name2)                                           \
-    Nullable<Length> name = m_rareComputedStyleData.name();             \
+    Optional<Length> name = m_rareComputedStyleData.name();             \
     if (name.hasValue()) {                                              \
         m_rareComputedStyleData.ensure##name2()->changeToFixedIfNeeded( \
             curFontSize, rootFontSize, font, windowSize.width(),        \
@@ -2565,7 +2565,7 @@ ComputedStyle* ComputedStyle::pseudoStyle(Element* containerElement,
                                           PseudoElementType pseudoType,
                                           ComputedStyle* stickyInheritFrom,
                                           ComputedStyle* oldPseudoStyleIfHas,
-                                          Nullable<StyleResolveContext*> ctx)
+                                          Optional<StyleResolveContext*> ctx)
 {
     if (!seenPseudoElement(pseudoType)) {
         return nullptr;
@@ -2587,7 +2587,7 @@ ComputedStyle* ComputedStyle::pseudoStyle(Element* containerElement,
 
 ComputedStyle* ComputedStyle::pseudoStyleForElementInternal(
     Node* parent, PseudoElementType pseudoId, ComputedStyle* parentStyle,
-    ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx)
+    ComputedStyle* oldPseudoStyleIfHas, Optional<StyleResolveContext*> ctx)
 {
     STARFISH_ASSERT(pseudoId != PseudoElementType::PseudoElementNone);
     STARFISH_ASSERT(parentStyle);

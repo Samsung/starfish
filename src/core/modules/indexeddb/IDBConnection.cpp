@@ -55,7 +55,7 @@ void IDBConnection::openDatabase(IDBConnectionData* connectionData,
     StorageInternal* storageKey = connectionData->storageKey(data->webOrigin);
 
     // key is name, value is version.
-    Nullable<String*> db = storageKey->getItem(data->name);
+    Optional<String*> db = storageKey->getItem(data->name);
     unsigned long long dbVersion = 1;
 
     if (db.hasValue()) {
@@ -64,7 +64,7 @@ void IDBConnection::openDatabase(IDBConnectionData* connectionData,
     }
 
     if (!data->version.hasValue()) {
-        data->version = Nullable<unsigned long long>(dbVersion);
+        data->version = Optional<unsigned long long>(dbVersion);
     }
 
     if (!db.hasValue()) {

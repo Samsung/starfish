@@ -144,7 +144,7 @@ void FormData::remove(String* name)
                   m_list->end());
 }
 
-Nullable<String*> FormData::get(String* name)
+Optional<String*> FormData::get(String* name)
 {
     auto it = findByName(name);
 

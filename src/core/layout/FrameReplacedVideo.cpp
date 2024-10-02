@@ -68,7 +68,7 @@ void FrameReplacedVideo::willCompsiteStackingContext(Compositor* c)
     }
 }
 
-Nullable<CanvasSurface*> FrameReplacedVideo::contentSurface()
+Optional<CanvasSurface*> FrameReplacedVideo::contentSurface()
 {
     auto v = node()->asHTMLVideoElement();
     if (v->activeMediaPlayer()) {

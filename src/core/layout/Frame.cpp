@@ -647,13 +647,13 @@ void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,
     registerFirstLineAscender(blockBox, lb, ascender);
 }
 
-Nullable<LayoutUnit> LayoutContext::lineBoxAscender(FrameBlockBox* blockBox)
+Optional<LayoutUnit> LayoutContext::lineBoxAscender(FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == blockBox);
     auto iter = c.m_lineBoxAscenders->find(blockBox);
     if (iter == c.m_lineBoxAscenders->end()) {
-        return Nullable<LayoutUnit>();
+        return Optional<LayoutUnit>();
     }
     LayoutUnit r = iter->second;
     c.m_lineBoxAscenders->erase(iter);
@@ -705,7 +705,7 @@ static LineBox* findLineBox(FrameBlockBox* fb, size_t index)
     return nullptr;
 }
 
-Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
+Optional<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
     FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
@@ -713,7 +713,7 @@ Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
                     blockBox);
     auto iter = c.m_firstLineAscenders->find(blockBox);
     if (iter == c.m_firstLineAscenders->end()) {
-        return Nullable<std::pair<LineBox*, LayoutUnit>>();
+        return Optional<std::pair<LineBox*, LayoutUnit>>();
     }
 
     auto l = iter->second;
@@ -722,11 +722,11 @@ Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
     LineBox* lb = findLineBox(l.first.m_block, l.first.m_lineIndex);
 
     if (lb) {
-        return Nullable<std::pair<LineBox*, LayoutUnit>>(
+        return Optional<std::pair<LineBox*, LayoutUnit>>(
             std::make_pair(lb, l.second));
     }
 
-    return Nullable<std::pair<LineBox*, LayoutUnit>>();
+    return Optional<std::pair<LineBox*, LayoutUnit>>();
 }
 
 void LayoutContext::tempReigsterFirstLineAscender(
@@ -759,33 +759,33 @@ void LayoutContext::tempReigsterFirstLineAscender(
             std::make_pair(cellBox, std::make_pair(info, ascenderInfo.second)));
 }
 
-Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::tempFirstLineAscender(
+Optional<std::pair<LineBox*, LayoutUnit>> LayoutContext::tempFirstLineAscender(
     FrameTableCellBox* cellBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     auto it = c.m_tempAscenders->find(cellBox);
     if (it == c.m_tempAscenders->end()) {
-        return Nullable<std::pair<LineBox*, LayoutUnit>>();
+        return Optional<std::pair<LineBox*, LayoutUnit>>();
     }
 
     LineBox* lb =
         findLineBox(it->second.first.m_block, it->second.first.m_lineIndex);
 
     if (lb) {
-        return Nullable<std::pair<LineBox*, LayoutUnit>>(
+        return Optional<std::pair<LineBox*, LayoutUnit>>(
             std::make_pair(lb, it->second.second));
     }
 
-    return Nullable<std::pair<LineBox*, LayoutUnit>>();
+    return Optional<std::pair<LineBox*, LayoutUnit>>();
 }
 
-Nullable<PreferredWidthValue> LayoutContext::preferredWidthInfo(
+Optional<PreferredWidthValue> LayoutContext::preferredWidthInfo(
     PreferredWidthKey key)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     auto it = c.m_preferredWidthValues->find(key);
     if (it == c.m_preferredWidthValues->end()) {
-        return Nullable<PreferredWidthValue>();
+        return Optional<PreferredWidthValue>();
     }
 
     return it->second;
@@ -914,7 +914,7 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
-Nullable<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* box)
+Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* box)
 {
     bool exists = false;
     LayoutUnit result = 0;
@@ -948,7 +948,7 @@ Nullable<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* bo
     });
 
     if (exists) {
-        return Nullable<LayoutUnit>(result);
+        return Optional<LayoutUnit>(result);
     }
 
     return nullptr;
@@ -1011,7 +1011,7 @@ void LayoutContext::
     }
 }
 
-Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
+Optional<LayoutUnit> LayoutContext::testBasisSizeCache(
     Frame* flexItem, bool isMainAxisInInlineAxis,
     LayoutUnit availableMainCrossSize,
     bool shouldRespectPercentageWidthOnComputingBasisSize)
@@ -1035,7 +1035,7 @@ Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
             }
         }
     }
-    return Nullable<LayoutUnit>();
+    return Optional<LayoutUnit>();
 }
 
 void LayoutContext::registerToBasisSizeCache(
@@ -1081,7 +1081,7 @@ void LayoutContext::unregisterToBasisSizeCache(
     }
 }
 
-Nullable<LayoutUnit> LayoutContext::testGridItemPreferredWidthCache(
+Optional<LayoutUnit> LayoutContext::testGridItemPreferredWidthCache(
     Frame* gridItem, LayoutUnit availableWidth)
 {
     auto iter = m_gridItemPreferredWidthCache.find(gridItem);
@@ -1093,7 +1093,7 @@ Nullable<LayoutUnit> LayoutContext::testGridItemPreferredWidthCache(
             }
         }
     }
-    return Nullable<LayoutUnit>();
+    return Optional<LayoutUnit>();
 }
 
 void LayoutContext::registerToGridItemPreferredWidthCache(

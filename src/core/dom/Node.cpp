@@ -344,7 +344,7 @@ String* Node::baseURI() const
     return document()->baseURL()->urlString();
 }
 
-Nullable<String*> Node::nodeValue() const
+Optional<String*> Node::nodeValue() const
 {
     switch (nodeType()) {
     case ATTRIBUTE_NODE:
@@ -359,7 +359,7 @@ Nullable<String*> Node::nodeValue() const
     }
 }
 
-void Node::setNodeValue(Nullable<String*> val)
+void Node::setNodeValue(Optional<String*> val)
 {
     String* str = String::emptyString;
     if (val.hasValue()) {
@@ -382,7 +382,7 @@ void Node::setNodeValue(Nullable<String*> val)
     }
 }
 
-Nullable<String*> Node::textContent() const
+Optional<String*> Node::textContent() const
 {
     switch (nodeType()) {
     case DOCUMENT_FRAGMENT_NODE:
@@ -418,7 +418,7 @@ Nullable<String*> Node::textContent() const
     }
 }
 
-void Node::setTextContent(Nullable<String*> val)
+void Node::setTextContent(Optional<String*> val)
 {
     String* str = String::emptyString;
     if (val.hasValue()) {
@@ -1067,7 +1067,7 @@ unsigned short Node::compareDocumentPosition(Node* other)
 }
 
 // https://dom.spec.whatwg.org/#locate-a-namespace
-static Nullable<String*> locateNamespace(Node* node, Nullable<String*> prefix)
+static Optional<String*> locateNamespace(Node* node, Optional<String*> prefix)
 {
     switch (node->nodeType()) {
     case Node::NodeType::ELEMENT_NODE: {
@@ -1102,7 +1102,7 @@ static Nullable<String*> locateNamespace(Node* node, Nullable<String*> prefix)
         // element using prefix.
         return node->parentElement()
                    ? locateNamespace(node->parentElement(), prefix)
-                   : Nullable<String*>();
+                   : Optional<String*>();
     }
     case Node::NodeType::DOCUMENT_NODE:
         // If its document element is null, then return null.
@@ -1111,31 +1111,31 @@ static Nullable<String*> locateNamespace(Node* node, Nullable<String*> prefix)
         return node->asDocument()->documentElement()
                    ? locateNamespace(node->asDocument()->documentElement(),
                                      prefix)
-                   : Nullable<String*>();
+                   : Optional<String*>();
     case Node::NodeType::DOCUMENT_TYPE_NODE:
     case Node::NodeType::DOCUMENT_FRAGMENT_NODE:
         // Return null.
-        return Nullable<String*>();
+        return Optional<String*>();
     case Node::NodeType::ATTRIBUTE_NODE:
         // If its element is null, then return null.
         // Return the result of running locate a namespace on its element
         // using prefix.
         return node->asAttr()->ownerElement()
                    ? locateNamespace(node->asAttr()->ownerElement(), prefix)
-                   : Nullable<String*>();
+                   : Optional<String*>();
     default:
         // If its parent element is null, then return null.
         // Return the result of running locate a namespace on its parent
         // element using prefix.
         return node->parentElement()
                    ? locateNamespace(node->parentElement(), prefix)
-                   : Nullable<String*>();
+                   : Optional<String*>();
     }
 }
 
 // https://dom.spec.whatwg.org/#locate-a-namespace-prefix
-static Nullable<String*> locateNamespacePrefix(Element* element,
-                                               Nullable<String*> namespaceUri)
+static Optional<String*> locateNamespacePrefix(Element* element,
+                                               Optional<String*> namespaceUri)
 {
     // If element’s namespace is namespace and its namespace prefix is not null,
     // then return its namespace prefix.
@@ -1166,15 +1166,15 @@ static Nullable<String*> locateNamespacePrefix(Element* element,
     }
 
     // Return null.
-    return Nullable<String*>();
+    return Optional<String*>();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-lookupprefix
-Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
+Optional<String*> Node::lookupPrefix(Optional<String*> namespaceUri)
 {
     // If namespace is null or the empty string, then return null.
     if (!namespaceUri.hasValue() || namespaceUri.getValue()->equals("")) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 
     switch (nodeType()) {
@@ -1189,12 +1189,12 @@ Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
         if (documentElement) {
             return locateNamespacePrefix(documentElement, namespaceUri);
         } else {
-            return Nullable<String*>();
+            return Optional<String*>();
         }
     }
     case DOCUMENT_TYPE_NODE:
     case DOCUMENT_FRAGMENT_NODE:
-        return Nullable<String*>();
+        return Optional<String*>();
     case ATTRIBUTE_NODE:
         // Return the result of locating a namespace prefix for its element, if
         // its element is non-null, and null otherwise.
@@ -1202,7 +1202,7 @@ Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
             return locateNamespacePrefix(asAttr()->ownerElement(),
                                          namespaceUri);
         }
-        return Nullable<String*>();
+        return Optional<String*>();
     default: {
         // Return the result of locating a namespace prefix for its parent
         // element, if its parent element is non-null, and null otherwise.
@@ -1210,7 +1210,7 @@ Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
         if (parent) {
             return locateNamespacePrefix(parent, namespaceUri);
         } else {
-            return Nullable<String*>();
+            return Optional<String*>();
         }
     }
     }
@@ -1218,11 +1218,11 @@ Nullable<String*> Node::lookupPrefix(Nullable<String*> namespaceUri)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
-Nullable<String*> Node::lookupNamespaceURI(Nullable<String*> prefix)
+Optional<String*> Node::lookupNamespaceURI(Optional<String*> prefix)
 {
     // If prefix is the empty string, then set it to null.
     if (prefix.hasValue() && prefix.getValue()->equals(String::emptyString)) {
-        prefix = Nullable<String*>();
+        prefix = Optional<String*>();
     }
     // Return the result of running locate a namespace for the context object
     // using prefix.
@@ -1230,17 +1230,17 @@ Nullable<String*> Node::lookupNamespaceURI(Nullable<String*> prefix)
 }
 
 // https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
-bool Node::isDefaultNamespace(Nullable<String*> namespaceUri)
+bool Node::isDefaultNamespace(Optional<String*> namespaceUri)
 {
     // If namespace is the empty string, then set it to null.
     if (namespaceUri.hasValue() &&
         namespaceUri.getValue()->equals(String::emptyString)) {
-        namespaceUri = Nullable<String*>();
+        namespaceUri = Optional<String*>();
     }
 
     // Let defaultNamespace be the result of running locate a namespace for
     // context object using null.
-    Nullable<String*> defaultNamespace = locateNamespace(this, nullptr);
+    Optional<String*> defaultNamespace = locateNamespace(this, nullptr);
     if (defaultNamespace.hasValue() != namespaceUri.hasValue()) {
         return false;
     }
@@ -2028,10 +2028,10 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
     return list;
 }
 
-HTMLCollection* Node::getElementsByTagNameNS(Nullable<String*> ns, String* name)
+HTMLCollection* Node::getElementsByTagNameNS(Optional<String*> ns, String* name)
 {
     if (ns.hasValue() && ns.getValue()->equals(String::emptyString)) {
-        ns = Nullable<String*>();
+        ns = Optional<String*>();
     }
 
     QualifiedName qName(document()->createAttributeNameNS(ns, name));
@@ -2373,7 +2373,7 @@ void Node::setNeedsComposite()
 
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
                                    ComputedStyle* newStyle,
-                                   Nullable<StyleResolveContext*> ctx)
+                                   Optional<StyleResolveContext*> ctx)
 {
     if (newStyle && frame()) {
         frame()->computeStyleFlags();

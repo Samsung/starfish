@@ -35,12 +35,12 @@ public:
     }
 
     DEFINE_GETTER_SETTER(bool, userVisibleOnly, UserVisibleOnly);
-    DEFINE_GETTER_SETTER(Nullable<BufferSourceOrDOMString>,
+    DEFINE_GETTER_SETTER(Optional<BufferSourceOrDOMString>,
                          applicationServerKey, ApplicationServerKey);
 
 private:
     bool m_userVisibleOnly;
-    Nullable<BufferSourceOrDOMString> m_applicationServerKey;
+    Optional<BufferSourceOrDOMString> m_applicationServerKey;
 };
 
 class PushSubscriptionOptions : public ScriptWrappable {

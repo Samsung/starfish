@@ -130,9 +130,9 @@ void URLSearchParams::deleteParams(String* name)
     updateSourceUrlIfNeeds();
 }
 
-Nullable<String*> URLSearchParams::get(String* name)
+Optional<String*> URLSearchParams::get(String* name)
 {
-    Nullable<String*> r;
+    Optional<String*> r;
     for (auto param : m_list) {
         if (param->key->equals(name)) {
             r = param->value;
@@ -225,7 +225,7 @@ String* URLSearchParams::toString()
 }
 
 class URLSearchParamsIterationSource final
-    : public IterationSource<Nullable<String*>, Nullable<String*>> {
+    : public IterationSource<Optional<String*>, Optional<String*>> {
 public:
     URLSearchParamsIterationSource(URLSearchParams* params)
     {
@@ -234,7 +234,7 @@ public:
     }
 
     virtual bool next(Escargot::ExecutionStateRef* state,
-                      Nullable<String*>& key, Nullable<String*>& value) override
+                      Optional<String*>& key, Optional<String*>& value) override
     {
         if (m_index >= m_params->length()) {
             return false;
@@ -252,7 +252,7 @@ private:
     size_t m_index{ 0 };
 };
 
-IterationSource<Nullable<String*>, Nullable<String*>>*
+IterationSource<Optional<String*>, Optional<String*>>*
 URLSearchParams::startIteration(Escargot::ExecutionStateRef* state)
 {
     return new URLSearchParamsIterationSource(this);

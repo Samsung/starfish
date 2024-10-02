@@ -25,7 +25,7 @@ namespace Starfish {
 
 String* HTMLTitleElement::text()
 {
-    Nullable<String*> value = textContent();
+    Optional<String*> value = textContent();
     if (value.hasValue()) {
         return value.getValue();
     }

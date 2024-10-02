@@ -44,7 +44,7 @@ public:
                       void* domObjectPointer) override;
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didNodeInsertedToDocumentTree() override;

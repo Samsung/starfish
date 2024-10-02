@@ -51,7 +51,7 @@ void* HTMLAnchorElement::operator new(size_t size)
 }
 
 void HTMLAnchorElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old, String* val,
+                                            Optional<String*> old, String* val,
                                             bool attributeCreated,
                                             bool attributeRemoved)
 {
@@ -101,7 +101,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
     // TODO : Apply noreferrer
     if (event->type()->equals("click")) {
         const auto& href = starfish()->staticStrings()->m_href;
-        Nullable<String*> hrefAttr = getAttribute(href);
+        Optional<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();
             ReferrerURL* rUrl =

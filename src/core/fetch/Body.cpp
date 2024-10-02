@@ -88,7 +88,7 @@ Body::Body(ExecutionContext* executionContext)
 {
 }
 
-Body::Body(ExecutionContext* executionContext, Nullable<BodyInit>& body)
+Body::Body(ExecutionContext* executionContext, Optional<BodyInit>& body)
     : Body(executionContext)
 {
     if (body.hasValue()) {
@@ -372,13 +372,13 @@ String* Body::extractTextFromBodyInit()
     return String::emptyString;
 }
 
-Nullable<BodyInit> Body::bodyInit() const
+Optional<BodyInit> Body::bodyInit() const
 {
     // TODO: in case that m_bodyUsed is True
     return m_bodyInit;
 }
 
-void Body::setBodyInit(const Nullable<BodyInit>& bodyInitValue)
+void Body::setBodyInit(const Optional<BodyInit>& bodyInitValue)
 {
     m_bodyInit = bodyInitValue;
 

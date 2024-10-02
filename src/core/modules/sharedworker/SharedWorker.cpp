@@ -47,7 +47,7 @@ SharedWorker::SharedWorker(ExecutionContext* executionContext,
         m_options = nameOrOptions.getWorkerOptionsValue();
     }
 
-    Nullable<StorageKey*> storageKey =
+    Optional<StorageKey*> storageKey =
         StorageInternal::getStorageKey(executionContext);
     if (!storageKey.hasValue()) {
         throw new DOMException(m_executionContext,

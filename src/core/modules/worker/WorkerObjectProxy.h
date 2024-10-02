@@ -39,7 +39,7 @@ public:
 
     void terminateWorker();
 
-    Nullable<WorkerGlobalScope*> parentWorkerGlobalScope();
+    Optional<WorkerGlobalScope*> parentWorkerGlobalScope();
     void addChildWorker();
     void removeChildWorker();
 

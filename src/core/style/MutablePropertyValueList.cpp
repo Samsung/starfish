@@ -48,7 +48,7 @@ size_t MutablePropertyValueList::findProperty(AtomicString key) const
     return std::numeric_limits<size_t>::max();
 }
 
-Nullable<String*> MutablePropertyValueList::property(AtomicString key) const
+Optional<String*> MutablePropertyValueList::property(AtomicString key) const
 {
     if (m_bloomFilter.mayContain(key.string())) {
         for (size_t i = 0; i < m_values.size(); i++) {

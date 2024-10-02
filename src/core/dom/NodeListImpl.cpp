@@ -203,7 +203,7 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
         }
 
         if (shouldConsiderNameAttribute) {
-            Nullable<String*> attr = element->getAttribute(ss->m_name);
+            Optional<String*> attr = element->getAttribute(ss->m_name);
             if (attr.hasValue() &&
                 attr.getValue()->equals(namedAccess->localName())) {
                 return true;

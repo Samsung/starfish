@@ -41,7 +41,7 @@ void TextDecorationData::merge(ComputedStyle* style)
         }
     }
 
-    Nullable<Unit::Color> c =
+    Optional<Unit::Color> c =
         style->rareComputedStyleData()->textDecorationColor();
     if (c.hasValue()) {
         m_underLineColor = c.getValue();

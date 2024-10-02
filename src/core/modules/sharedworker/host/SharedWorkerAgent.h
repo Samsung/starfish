@@ -74,7 +74,7 @@ public:
     void didGlobalScopeConnected(SharedWorkerGlobalScope* globalScope,
                                  SharedWorkerMessagePortConnection* connection);
 
-    Nullable<MessagePortConnectionInfo*> getConnectionInfo(uint32_t identifier);
+    Optional<MessagePortConnectionInfo*> getConnectionInfo(uint32_t identifier);
 
     void closeSharedWorker(uint32_t pid);
 

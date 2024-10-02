@@ -62,7 +62,7 @@ public:
     HTMLOptionElement* namedItem(String* name);
 
     void add(HTMLOptionElementOrHTMLOptGroupElement element,
-             Nullable<HTMLElementOrlong> before);
+             Optional<HTMLElementOrlong> before);
     using Node::remove;
     void remove(int index);
     bool defaultIndexedSetter(unsigned index,

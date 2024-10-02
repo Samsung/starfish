@@ -112,17 +112,17 @@ ScriptBindingInstance* DOMStringMap::scriptBindingInstance()
     return m_element->document()->scriptBindingInstance();
 }
 
-Nullable<String*> DOMStringMap::defaultNamedGetter(String* key)
+Optional<String*> DOMStringMap::defaultNamedGetter(String* key)
 {
     STARFISH_ASSERT(m_element);
     size_t size = m_element->attributeCount();
     for (size_t i = 0; i < size; i++) {
         String* name = m_element->getAssuredAttributeName(i).localName();
         if (isSameCustomDataName(name, key)) {
-            return Nullable<String*>(m_element->getAssuredAttribute(i));
+            return Optional<String*>(m_element->getAssuredAttribute(i));
         }
     }
-    return Nullable<String*>();
+    return Optional<String*>();
 }
 
 bool DOMStringMap::defaultNamedSetter(String* key, String* value)

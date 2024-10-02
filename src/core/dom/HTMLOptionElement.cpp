@@ -224,7 +224,7 @@ HTMLSelectElement* HTMLOptionElement::selectElement()
 
 String* HTMLOptionElement::text()
 {
-    Nullable<String*> value = textContent();
+    Optional<String*> value = textContent();
     if (value.hasValue()) {
         return value.getValue();
     }
@@ -278,7 +278,7 @@ int HTMLOptionElement::index()
 
 bool HTMLOptionElement::defaultSelected()
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_selected);
     return val.hasValue();
 }
@@ -323,7 +323,7 @@ bool HTMLOptionElement::handleDefaultEvent(Event* event)
 // element's selectedness to the new value, set its dirtiness to true, and then
 // cause the element to ask for a reset.
 void HTMLOptionElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old, String* val,
+                                            Optional<String*> old, String* val,
                                             bool attributeCreated,
                                             bool attributeRemoved)
 {

@@ -54,7 +54,7 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
 
 void SVGClipPathElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }

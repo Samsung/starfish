@@ -116,7 +116,7 @@ void HTMLTableSectionElement::deleteRow(long index)
 
 String* HTMLTableSectionElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
+    Optional<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }

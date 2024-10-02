@@ -710,7 +710,7 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
     }
 }
 
-std::pair<Nullable<Element*>, Unit::Color>
+std::pair<Optional<Element*>, Unit::Color>
 BrowsingContext::hasWindowBackgroundColor()
 {
     if (hasRootElementBackground() || hasBodyElementBackground()) {
@@ -1145,7 +1145,7 @@ Element* BrowsingContext::activeElement()
 
 static bool updateEventNodeSet(Document* document, Node* n,
                                GCUnorderedSet<Node*>& set,
-                               Nullable<GCUnorderedSet<Node*>*> oldSet,
+                               Optional<GCUnorderedSet<Node*>*> oldSet,
                                Node** target, size_t* version,
                                Node::NodeState state)
 {
@@ -1211,7 +1211,7 @@ void BrowsingContext::releaseActiveNode()
 }
 
 bool BrowsingContext::setHoveredNode(
-    Node* n, Nullable<GCUnorderedSet<Node*>*> oldHoveredNodeSet)
+    Node* n, Optional<GCUnorderedSet<Node*>*> oldHoveredNodeSet)
 {
     return updateEventNodeSet(document(), n, m_hoveredNodeSet,
                               oldHoveredNodeSet, &m_hoveredNodeTarget,
@@ -2009,7 +2009,7 @@ void BrowsingContext::focusNavigation(bool forward)
 
 void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
                                                String* data,
-                                               Nullable<Node*> node)
+                                               Optional<Node*> node)
 {
     // Set target
     // 1) currently focused element if possible

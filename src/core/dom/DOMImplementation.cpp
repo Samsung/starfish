@@ -62,8 +62,8 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
 }
 
 XMLDocument* DOMImplementation::createDocument(
-    Nullable<String*> namespaceParameter, String* qualifiedName,
-    Nullable<DocumentType*> doctype)
+    Optional<String*> namespaceParameter, String* qualifiedName,
+    Optional<DocumentType*> doctype)
 {
     // Let document be a new XMLDocument.
     XMLDocument* document = new XMLDocument(
@@ -109,7 +109,7 @@ XMLDocument* DOMImplementation::createDocument(
     return document;
 }
 
-Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
+Document* DOMImplementation::createHTMLDocument(Optional<String*> title)
 {
     // Let doc be a new document that is an HTML document.
     // Set doc’s content type to "text/html".

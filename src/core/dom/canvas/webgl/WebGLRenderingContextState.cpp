@@ -28,7 +28,7 @@ WebGLRenderingContextState::WebGLRenderingContextState()
 {
 }
 
-Nullable<WebGLBuffer*>
+Optional<WebGLBuffer*>
 WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 {
     const auto& iter = m_buffersBoundToVertexAttributes.find(index);
@@ -41,7 +41,7 @@ WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 }
 
 void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
-    GLuint index, Nullable<WebGLBuffer*> maybe)
+    GLuint index, Optional<WebGLBuffer*> maybe)
 {
     if (maybe.hasValue()) {
         m_buffersBoundToVertexAttributes.insert_or_assign(index, maybe.value());
@@ -50,7 +50,7 @@ void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
     }
 }
 
-Nullable<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
+Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 {
     const auto& iter = m_buffersBound.find(target);
     if (iter == m_buffersBound.end()) {
@@ -62,7 +62,7 @@ Nullable<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 }
 
 void WebGLRenderingContextState::setBoundBuffer(GLenum target,
-                                                Nullable<WebGLBuffer*> maybe)
+                                                Optional<WebGLBuffer*> maybe)
 {
     if (maybe.hasValue()) {
         m_buffersBound.insert_or_assign(target, maybe.value());

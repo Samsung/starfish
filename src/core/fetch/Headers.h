@@ -40,7 +40,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Headers)
 
     void fill(HeadersInit headersInit);
-    Nullable<String*> get(String* name);
+    Optional<String*> get(String* name);
     void append(String* name, String* value);
     void set(String* name, String* value);
     void noCheckValidSet(const std::string& lowerCaseName,
@@ -55,7 +55,7 @@ public:
     void copyHeaders(Headers* src);
     String* extractMIMEType();
 
-    IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
+    IterationSource<Optional<String*>, Optional<String*>>* startIteration(
         Escargot::ExecutionStateRef* state) override;
 
     ExecutionContext* executionContext()

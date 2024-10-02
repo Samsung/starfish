@@ -49,7 +49,7 @@ public:
     bool defaultIndexedSetter(unsigned index,
                               Optional<HTMLOptionElement*> option);
     void add(HTMLOptionElementOrHTMLOptGroupElement element,
-             Nullable<HTMLElementOrlong> before);
+             Optional<HTMLElementOrlong> before);
     void remove(int index);
 
     int selectedIndex();

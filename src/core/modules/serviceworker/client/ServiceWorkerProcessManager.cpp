@@ -384,7 +384,7 @@ NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
     return it->second;
 }
 
-Nullable<FetchEventHandler*> ServiceWorkerProcessManager::findFetchEventHandler(
+Optional<FetchEventHandler*> ServiceWorkerProcessManager::findFetchEventHandler(
     Id<GlobalScope> id)
 {
     auto it = m_fetchEventHandlers.find(id);

@@ -189,7 +189,7 @@ void ContentSecurityPolicy::dispatchViolationEvent(
     }
 }
 
-ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
+ScriptOptionalValue ContentSecurityPolicy::checkUnsafeEvalCallback(
     ScriptExecutionState state, bool isEval)
 {
     ExecutionContext* executionContext =
@@ -202,6 +202,6 @@ ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
         return StringRef::createFromASCII("Exception function EvalError");
     }
 
-    return ScriptNullableValue();
+    return ScriptOptionalValue();
 }
 } // namespace Starfish

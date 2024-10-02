@@ -139,7 +139,7 @@ bool DOMTokenList::checkDuplicatedToken(GCVector<StringView>& tokens,
 
 uint32_t DOMTokenList::length()
 {
-    Nullable<String*> src = m_element->getAttribute(m_localName);
+    Optional<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
         GCVector<StringView> tokens;
         tokenize(src.getValue(), tokens);
@@ -148,24 +148,24 @@ uint32_t DOMTokenList::length()
     return 0;
 }
 
-Nullable<String*> DOMTokenList::item(unsigned long index)
+Optional<String*> DOMTokenList::item(unsigned long index)
 {
-    Nullable<String*> src = m_element->getAttribute(m_localName);
+    Optional<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
         GCVector<StringView> tokens;
         tokenize(src.getValue(), tokens);
         if (index < tokens.size()) {
-            return Nullable<String*>(new StringView(tokens[index]));
+            return Optional<String*>(new StringView(tokens[index]));
         }
     }
-    return Nullable<String*>();
+    return Optional<String*>();
 }
 
 bool DOMTokenList::contains(String* token)
 {
     validateToken(token);
 
-    Nullable<String*> src = m_element->getAttribute(m_localName);
+    Optional<String*> src = m_element->getAttribute(m_localName);
     if (src.hasValue()) {
         GCVector<StringView> tokens;
         tokenize(src.getValue(), tokens);
@@ -246,7 +246,7 @@ void DOMTokenList::remove(GCVector<String*>& tokensToRemove)
     if (tokensToRemove.size() == 0) {
         return;
     }
-    Nullable<String*> old = m_element->getAttribute(m_localName);
+    Optional<String*> old = m_element->getAttribute(m_localName);
     if (!old.hasValue()) {
         // Nothing to remove
         return;
@@ -321,7 +321,7 @@ bool DOMTokenList::replace(String* token, String* newToken)
     validateToken(token);
     validateToken(newToken);
 
-    Nullable<String*> old = m_element->getAttribute(m_localName);
+    Optional<String*> old = m_element->getAttribute(m_localName);
     if (!old.hasValue()) {
         // Nothing to replace
         return false;

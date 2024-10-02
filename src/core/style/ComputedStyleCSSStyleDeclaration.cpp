@@ -2643,12 +2643,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } break;
     case CSSStyleValuePair::KeyKind::CustomProperty: {
         if (style->hasCustomProperty()) {
-            Nullable<MutablePropertyValueList*> customPropertyties =
+            Optional<MutablePropertyValueList*> customPropertyties =
                 style->customProperty();
             if (customPropertyties) {
                 AtomicString key = AtomicString::createAtomicString(
                     m_node->starfish(), customPropertyName);
-                Nullable<String*> value =
+                Optional<String*> value =
                     customPropertyties.value()->property(key);
                 if (value) {
                     setCustomProperty(key, value.value());

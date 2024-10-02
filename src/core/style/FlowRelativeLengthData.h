@@ -36,7 +36,7 @@ public:
     {
     }
 
-    Nullable<Length> legnth() const
+    Optional<Length> legnth() const
     {
         return m_length;
     }
@@ -47,7 +47,7 @@ public:
     }
 
 protected:
-    Nullable<Length> m_length;
+    Optional<Length> m_length;
 };
 
 class FlowRelativeLengthInlineData : public FlowRelativeLengthData {

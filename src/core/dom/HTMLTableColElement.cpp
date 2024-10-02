@@ -24,7 +24,7 @@
 
 namespace Starfish {
 void HTMLTableColElement::didAttributeChanged(QualifiedName name,
-                                              Nullable<String*> old,
+                                              Optional<String*> old,
                                               String* value,
                                               bool attributeCreated,
                                               bool attributeRemoved)
@@ -68,7 +68,7 @@ void HTMLTableColElement::setSpan(uint32_t span)
 
 uint32_t HTMLTableColElement::span()
 {
-    Nullable<String*> span = getAttribute(starfish()->staticStrings()->m_span);
+    Optional<String*> span = getAttribute(starfish()->staticStrings()->m_span);
     if (span.hasValue()) {
         int spanVal = String::parseInt(span.getValue());
         if (spanVal < 1) {
@@ -85,7 +85,7 @@ uint32_t HTMLTableColElement::span()
 
 String* HTMLTableColElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
+    Optional<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }

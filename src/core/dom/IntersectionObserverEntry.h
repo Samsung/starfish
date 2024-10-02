@@ -41,7 +41,7 @@ public:
 
     // Define getter/setters
     DEFINE_GETTER_SETTER_WITH_HASFLAG(double, time, Time);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(Nullable<DOMRectInit>, rootBounds,
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(Optional<DOMRectInit>, rootBounds,
                                       RootBounds);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(DOMRectInit, boundingClientRect,
                                       BoundingClientRect);
@@ -54,7 +54,7 @@ public:
 
     // Define memebers
     DEFINE_MEMBER_WITH_HASFLAG(double, time, Time);
-    DEFINE_MEMBER_WITH_HASFLAG(Nullable<DOMRectInit>, rootBounds, RootBounds);
+    DEFINE_MEMBER_WITH_HASFLAG(Optional<DOMRectInit>, rootBounds, RootBounds);
     DEFINE_MEMBER_WITH_HASFLAG(DOMRectInit, boundingClientRect,
                                BoundingClientRect);
     DEFINE_MEMBER_WITH_HASFLAG(DOMRectInit, intersectionRect, IntersectionRect);

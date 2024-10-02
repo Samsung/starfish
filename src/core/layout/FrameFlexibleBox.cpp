@@ -715,12 +715,12 @@ bool FlexFormattingContext::doesParticipateInFlexFormattingContext(
     return true;
 }
 
-Nullable<LayoutUnit> FlexFormattingContext::firstLineBoxYPosition(
+Optional<LayoutUnit> FlexFormattingContext::firstLineBoxYPosition(
     FrameBox* flexItem) const
 {
     auto it = m_firstLineBoxYPositions.find(flexItem);
     if (it == m_firstLineBoxYPositions.end()) {
-        return Nullable<LayoutUnit>();
+        return Optional<LayoutUnit>();
     }
 
     return it->second;

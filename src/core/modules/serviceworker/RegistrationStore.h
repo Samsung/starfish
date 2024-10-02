@@ -47,16 +47,16 @@ public:
 
     virtual void load(ServiceWorkerRegistrationMap& map) = 0;
     virtual void add(ServiceWorkerRegistrationData* data) = 0;
-    virtual Nullable<ServiceWorkerRegistrationData*> get(
+    virtual Optional<ServiceWorkerRegistrationData*> get(
         const std::string& path) = 0;
     virtual void remove(ServiceWorkerRegistrationData* data) = 0;
     virtual void setWorkingPath(const std::string& path) = 0;
     virtual void loadRegistrationList() = 0;
     virtual void saveWorkerScripts(String* scope, String* urlString,
                                    String* scriptText) = 0;
-    virtual Nullable<String*> loadWorkerScript(String* scope) = 0;
+    virtual Optional<String*> loadWorkerScript(String* scope) = 0;
     virtual bool hasRegistraionSW(String* scope) = 0;
-    virtual Nullable<RegistrationStoreData*> findRegistraionStoreData(
+    virtual Optional<RegistrationStoreData*> findRegistraionStoreData(
         size_t scopeHash) = 0;
 
 protected:
@@ -70,16 +70,16 @@ public:
 
     void load(ServiceWorkerRegistrationMap& map) override;
     void add(ServiceWorkerRegistrationData* data) override;
-    Nullable<ServiceWorkerRegistrationData*> get(
+    Optional<ServiceWorkerRegistrationData*> get(
         const std::string& path) override;
     void remove(ServiceWorkerRegistrationData* data) override;
     void setWorkingPath(const std::string& path) override;
     void loadRegistrationList() override;
     void saveWorkerScripts(String* scope, String* urlString,
                            String* scriptText) override;
-    Nullable<String*> loadWorkerScript(String* scope) override;
+    Optional<String*> loadWorkerScript(String* scope) override;
     bool hasRegistraionSW(String* scope) override;
-    Nullable<RegistrationStoreData*> findRegistraionStoreData(
+    Optional<RegistrationStoreData*> findRegistraionStoreData(
         size_t scopeHash) override;
 
 private:

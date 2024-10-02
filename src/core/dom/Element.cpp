@@ -100,11 +100,11 @@ static AttributeName properAttributeName(Element* e, String* name)
         AttributeName::MatchName);
 }
 
-static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
+static AttributeName properAttributeNameNS(Element* e, Optional<String*> ns,
                                            String* name)
 {
     if (ns.hasValue() && ns.getValue()->equals(String::emptyString)) {
-        ns = Nullable<String*>();
+        ns = Optional<String*>();
     }
 
     return AttributeName((ns.hasValue()
@@ -162,13 +162,13 @@ String* Element::tagName()
     return tagName;
 }
 
-Nullable<String*> Element::namespaceURI()
+Optional<String*> Element::namespaceURI()
 {
     auto v = name().namespaceURI();
     if (v.hasValue()) {
         return v.getValue().string();
     } else {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 }
 
@@ -182,13 +182,13 @@ String* Element::nodeName()
     return tagName();
 }
 
-Nullable<String*> Element::prefix()
+Optional<String*> Element::prefix()
 {
     auto v = name().prefix();
     if (v.hasValue()) {
         return v.getValue().string();
     } else {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 }
 
@@ -217,7 +217,7 @@ bool Element::hasAttribute(String* name)
     return hasAttribute(properAttributeName(this, name)) != SIZE_MAX;
 }
 
-bool Element::hasAttributeNS(Nullable<String*> ns, String* name)
+bool Element::hasAttributeNS(Optional<String*> ns, String* name)
 {
     return hasAttribute(properAttributeNameNS(this, ns, name)) != SIZE_MAX;
 }
@@ -237,27 +237,27 @@ size_t Element::hasAttributeNode(const AttributeName& name)
     return SIZE_MAX;
 }
 
-Nullable<String*> Element::getAttribute(const AttributeName& name) const
+Optional<String*> Element::getAttribute(const AttributeName& name) const
 {
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
-    return Nullable<String*>(m_attributes[idx].value());
+    return Optional<String*>(m_attributes[idx].value());
 }
 
-Nullable<String*> Element::getAttribute(
+Optional<String*> Element::getAttribute(
     const QualifiedName& qualifiedName) const
 {
     return getAttribute(AttributeName(qualifiedName, AttributeName::MatchName));
 }
 
-Nullable<String*> Element::getAttribute(String* name)
+Optional<String*> Element::getAttribute(String* name)
 {
     return getAttribute(properAttributeName(this, name));
 }
 
-Nullable<String*> Element::getAttributeNS(Nullable<String*> ns,
+Optional<String*> Element::getAttributeNS(Optional<String*> ns,
                                           String* localName)
 {
     return getAttribute(properAttributeNameNS(this, ns, localName));
@@ -279,14 +279,14 @@ Attr* Element::getAttributeNode(String* name)
     return getAttributeNode(properAttributeName(this, name));
 }
 
-Attr* Element::getAttributeNodeNS(Nullable<String*> ns, String* name)
+Attr* Element::getAttributeNodeNS(Optional<String*> ns, String* name)
 {
     return getAttributeNode(properAttributeNameNS(this, ns, name));
 }
 
 String* Element::getAttributeOrEmpty(const QualifiedName& qualifiedName) const
 {
-    Nullable<String*> result = getAttribute(qualifiedName);
+    Optional<String*> result = getAttribute(qualifiedName);
     if (result.hasValue()) {
         return result.getValue();
     }
@@ -295,19 +295,19 @@ String* Element::getAttributeOrEmpty(const QualifiedName& qualifiedName) const
 
 String* Element::getAttributeOrVarReferencedValue(
     const QualifiedName& attributeName,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     String* attributeValue = getAttributeOrEmpty(attributeName);
     if (attributeValue->startsWith("var(")) {
         std::string newValue = StyleResolver::resolveVarReferencedValue(
-            this, attributeValue->toNullableUTF8String(), cssCustomValues);
+            this, attributeValue->toOptionalUTF8String(), cssCustomValues);
         return String::fromUTF8(newValue.c_str(), newValue.size());
     }
     return attributeValue;
 }
 
 void Element::invokeDidAttributeChanged(QualifiedName name,
-                                        Nullable<String*> old, String* value,
+                                        Optional<String*> old, String* value,
                                         bool attributeCreated,
                                         bool attributeRemoved)
 {
@@ -364,7 +364,7 @@ void Element::setAttribute(String* name, String* value)
     setAttribute(properAttributeName(this, name), value);
 }
 
-void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
+void Element::setAttributeNS(Optional<String*> ns, String* qualifiedName,
                              String* value)
 {
     STARFISH_ASSERT(qualifiedName != nullptr);
@@ -476,7 +476,7 @@ void Element::removeAttribute(String* name)
     removeAttribute(properAttributeName(this, name));
 }
 
-void Element::removeAttributeNS(Nullable<String*> ns, String* localName)
+void Element::removeAttributeNS(Optional<String*> ns, String* localName)
 {
     STARFISH_ASSERT(localName != nullptr);
 
@@ -543,7 +543,7 @@ bool Element::matches(String* selectors)
     return selectorQuery.matches(*this);
 }
 
-void Element::didAttributeChanged(QualifiedName name, Nullable<String*> old,
+void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
                                   String* value, bool attributeCreated,
                                   bool attributeRemoved)
 {
@@ -735,7 +735,7 @@ static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
 
 void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                                       ComputedStyle* newStyle,
-                                      Nullable<StyleResolveContext*> ctx)
+                                      Optional<StyleResolveContext*> ctx)
 {
     Node::didComputedStyleChanged(oldStyle, newStyle, ctx);
 
@@ -2245,7 +2245,7 @@ void Element::makeKeyframesFromObject(
 }
 
 Animation* Element::animate(ExecutionContext* executionContext,
-                            Nullable<GCVector<ScriptValue>>& keyframes,
+                            Optional<GCVector<ScriptValue>>& keyframes,
                             KeyframeAnimationOptions& options)
 {
     if (!keyframes.hasValue() || !style()) {
@@ -2302,7 +2302,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
 }
 
 Animation* Element::animate(ExecutionContext* executionContext,
-                            Nullable<GCVector<ScriptValue>>& keyframes)
+                            Optional<GCVector<ScriptValue>>& keyframes)
 {
     // TODO
     return new Animation(executionContext);

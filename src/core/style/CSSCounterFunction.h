@@ -36,17 +36,17 @@ public:
         return m_name;
     }
 
-    Nullable<String*> separator()
+    Optional<String*> separator()
     {
         return m_separator;
     }
 
-    void setSeparator(Nullable<String*> sp)
+    void setSeparator(Optional<String*> sp)
     {
         m_separator = sp;
     }
 
-    Nullable<AtomicString> style()
+    Optional<AtomicString> style()
     {
         return m_style;
     }
@@ -79,8 +79,8 @@ public:
 
 protected:
     AtomicString m_name;
-    Nullable<String*> m_separator;
-    Nullable<AtomicString> m_style;
+    Optional<String*> m_separator;
+    Optional<AtomicString> m_style;
 };
 } // namespace Starfish
 

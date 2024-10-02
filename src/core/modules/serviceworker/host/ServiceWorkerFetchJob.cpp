@@ -47,7 +47,7 @@
 namespace Starfish {
 
 // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
-Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
+Optional<Response*> ServiceWorkerFetchJob::handleFetch(
     FetchEventRequestData* data)
 {
     TRACE(HOST);

@@ -57,7 +57,7 @@ public:
         return m_values;
     }
 
-    Nullable<String*> property(AtomicString key) const;
+    Optional<String*> property(AtomicString key) const;
     size_t findProperty(AtomicString key) const;
     bool hasProperty(AtomicString key) const
     {

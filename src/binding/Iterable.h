@@ -27,7 +27,7 @@ namespace Starfish {
 template <typename KeyType, typename ValueType>
 class Iterable {
 public:
-    virtual IterationSource<Nullable<KeyType>, Nullable<ValueType>>*
+    virtual IterationSource<Optional<KeyType>, Optional<ValueType>>*
     startIteration(Escargot::ExecutionStateRef* state) = 0;
 };
 

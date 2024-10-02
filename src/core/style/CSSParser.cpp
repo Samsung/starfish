@@ -2044,7 +2044,7 @@ StyleRuleImport* CSSParser::parseImportRule()
 
     restoreState();
 
-    Nullable<String*> url = parseURLString();
+    Optional<String*> url = parseURLString();
     if (!url.hasValue()) {
         return nullptr;
     }
@@ -2453,7 +2453,7 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
         ungetToken();
     }
 
-    Nullable<String*> namespaceURI = parseURLString();
+    Optional<String*> namespaceURI = parseURLString();
     if (!namespaceURI.hasValue()) {
         ungetToken();
         forgetState();
@@ -2550,7 +2550,7 @@ StyleRuleKeyframes* CSSParser::parseKeyframesRule()
     return nullptr;
 }
 
-Nullable<String*> CSSParser::parseURLString()
+Optional<String*> CSSParser::parseURLString()
 {
     RefPtr<CSSToken> token = getToken(true, true);
 

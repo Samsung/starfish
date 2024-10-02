@@ -173,7 +173,7 @@ CSSFilterFunction* CSSFilterFunction::parse(const CSSTokenValue& from)
     CSSTokenValue token = from;
     std::transform(token.begin(), token.end(), token.begin(), tolower);
     for (size_t i = 0; i < kFilterSize; i++) {
-        Nullable<CSSTokenValue> matched =
+        Optional<CSSTokenValue> matched =
             CSSPropertyParser::parseFunctionBlock(token.data(), kFilters[i]);
         if (!matched.hasValue()) {
             continue;

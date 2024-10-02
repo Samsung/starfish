@@ -65,23 +65,23 @@ public:
         return m_name;
     }
 
-    Nullable<String*> namespaceURI()
+    Optional<String*> namespaceURI()
     {
         auto v = m_name.namespaceURI();
         if (v.hasValue() && !v.getValue().isEmptyAtomicString()) {
             return v.getValue().string();
         } else {
-            return Nullable<String*>();
+            return Optional<String*>();
         }
     }
 
-    Nullable<String*> prefix() override
+    Optional<String*> prefix() override
     {
         auto v = m_name.prefix();
         if (v.hasValue()) {
             return v.getValue().string();
         } else {
-            return Nullable<String*>();
+            return Optional<String*>();
         }
     }
 

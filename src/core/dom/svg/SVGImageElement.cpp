@@ -125,7 +125,7 @@ void SVGImageElement::loadImage(String* src)
 }
 
 void SVGImageElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {
@@ -164,7 +164,7 @@ void SVGImageElement::updateSVGAttributeNeeded(QualifiedName name)
 
 void SVGImageElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }

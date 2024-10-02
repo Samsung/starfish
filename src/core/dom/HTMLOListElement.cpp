@@ -25,7 +25,7 @@
 
 namespace Starfish {
 void HTMLOListElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {
@@ -77,7 +77,7 @@ void HTMLOListElement::styleForPresentationAttribute(
 
 int32_t HTMLOListElement::startNumber()
 {
-    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_start);
+    Optional<String*> v = getAttribute(starfish()->staticStrings()->m_start);
     if (v.hasValue()) {
         return String::parseInt(v.getValue());
     }
@@ -89,7 +89,7 @@ int32_t HTMLOListElement::startNumber()
 
 int32_t HTMLOListElement::start()
 {
-    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_start);
+    Optional<String*> v = getAttribute(starfish()->staticStrings()->m_start);
     if (v.hasValue()) {
         return String::parseInt(v.getValue());
     }

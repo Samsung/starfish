@@ -33,7 +33,7 @@ MutationRecord::MutationRecord(ExecutionContext* executionContext)
 MutationRecord::MutationRecord(ExecutionContext* executionContext, String* type,
                                Node* target, String* attributeName,
                                String* attributeNamespace,
-                               Nullable<String*> oldValue)
+                               Optional<String*> oldValue)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_type(type)

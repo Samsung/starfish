@@ -55,7 +55,7 @@ public:
     String* getString();
     double getNumber();
 
-    Nullable<String*> toString();
+    Optional<String*> toString();
 
     void checkInvalid(ExecutionContext* executionContext);
 

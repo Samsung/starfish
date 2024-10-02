@@ -163,7 +163,7 @@ HTMLTableElement::CellBorders getCellBordersFromRule(
 }
 
 void HTMLTableElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {

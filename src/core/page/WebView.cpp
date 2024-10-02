@@ -115,7 +115,7 @@ namespace Starfish {
 void screenShotInRendering(WebView* wv, const char* path,
                            std::function<void()> callback);
 // WPT Reference Test
-static Nullable<String*> rtExtractReference(Document* document)
+static Optional<String*> rtExtractReference(Document* document)
 {
     STARFISH_ASSERT(document != nullptr);
 
@@ -127,7 +127,7 @@ static Nullable<String*> rtExtractReference(Document* document)
             return current->href();
         }
     }
-    return Nullable<String*>();
+    return Optional<String*>();
 }
 // WPT Reference Test
 static void rtShouldTrue(bool condition, WebView* wv, const char* msg)
@@ -200,7 +200,7 @@ static void rtDoTest(Document* document)
         // Case1: Running TC
         rtShouldLoaded(document, "TC_LOAD_FAIL");
 
-        Nullable<String*> url = rtExtractReference(document);
+        Optional<String*> url = rtExtractReference(document);
         rtShouldTrue(url.hasValue(), wv, "WRONG_REF_URL");
 
         rtScreenShot(wv);
@@ -751,7 +751,7 @@ static String* resolvePath(String* filePath)
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
         !filePath->startsWith("data:")) {
         String* prefix = String::fromUTF8("file://");
-        Nullable<std::string> result =
+        Optional<std::string> result =
             PlatformFileUtil::absolutePath(filePath->toUTF8NonGCString());
         if (result.hasValue()) {
             resolvedPath = prefix->concat(String::fromUTF8(
@@ -1056,7 +1056,7 @@ bool WebView::isValidMediaSourceBlobURL(MediaSource* ptr)
     return iter != m_urlMediaSourceBlobStore.end();
 }
 
-Nullable<BlobURLStore> WebView::findMediaSourceBlobURL(MediaSource* ptr)
+Optional<BlobURLStore> WebView::findMediaSourceBlobURL(MediaSource* ptr)
 {
     STARFISH_ASSERT(ptr != nullptr);
 
@@ -2234,7 +2234,7 @@ void WebView::dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data)
 }
 
 void WebView::dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                       Nullable<Node*> node)
+                                       Optional<Node*> node)
 {
     STARFISH_ASSERT(data != nullptr);
 
@@ -2324,10 +2324,10 @@ void WebView::putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
     m_boxShadowCachePerRendering[std::make_pair(box, idx)] = image;
 }
 
-Nullable<BufferedNativeImageData*> WebView::isThereImageInBoxShadowCache(
+Optional<BufferedNativeImageData*> WebView::isThereImageInBoxShadowCache(
     FrameBox* box, size_t idx)
 {
-    Nullable<BufferedNativeImageData*> data =
+    Optional<BufferedNativeImageData*> data =
         m_boxShadowCachePerRendering[std::make_pair(box, idx)];
     return data;
 }

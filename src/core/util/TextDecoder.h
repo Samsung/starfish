@@ -87,8 +87,8 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TextDecoder)
 
-    String* decode(Nullable<ArrayBufferViewOrArrayBuffer> input = nullptr,
-                   Nullable<TextDecodeOptions> options = nullptr);
+    String* decode(Optional<ArrayBufferViewOrArrayBuffer> input = nullptr,
+                   Optional<TextDecodeOptions> options = nullptr);
     String* decode(const uint8_t* data, size_t length,
                    TextDecodeOptions options);
 

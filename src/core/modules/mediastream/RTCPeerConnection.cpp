@@ -1008,7 +1008,7 @@ Promise* RTCPeerConnection::setLocalDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setLocalDescriptionObserver->addPromise(promise);
 
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+    Optional<libwebrtc::RTCSessionDescription::SdpType> type =
         toSdpType(description.m_type);
     if (!type.hasValue()) {
         STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
@@ -1106,7 +1106,7 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
         m_lastCreatedAnswer = String::emptyString;
     }
 
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+    Optional<libwebrtc::RTCSessionDescription::SdpType> type =
         toSdpType(description.m_type);
     std::string typeString = description.type()->toUTF8NonGCString();
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
@@ -1217,7 +1217,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setRemoteDescriptionObserver->addPromise(promise);
 
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+    Optional<libwebrtc::RTCSessionDescription::SdpType> type =
         toSdpType(description.m_type);
     if (!type.hasValue()) {
         STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
@@ -2047,8 +2047,8 @@ RTCSdpType RTCPeerConnection::toRtcSdpType(std::string type)
     return result;
 }
 
-Nullable<libwebrtc::RTCSessionDescription::SdpType>
-RTCPeerConnection::toSdpType(Nullable<RTCSdpType> type)
+Optional<libwebrtc::RTCSessionDescription::SdpType>
+RTCPeerConnection::toSdpType(Optional<RTCSdpType> type)
 {
     RTCSessionDescriptionInit init(type, String::emptyString);
     return init.toSdpType();

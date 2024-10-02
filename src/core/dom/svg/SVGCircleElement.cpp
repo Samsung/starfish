@@ -27,7 +27,7 @@
 namespace Starfish {
 
 void SVGCircleElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {
@@ -93,7 +93,7 @@ void* SVGCircleElement::operator new(size_t size)
 
 void SVGCircleElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R, cssCustomValues);

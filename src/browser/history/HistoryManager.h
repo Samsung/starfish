@@ -84,9 +84,9 @@ public:
 
     uint32_t length();
     void pushState(Document* document, ScriptValue state, String* title,
-                   Nullable<String*> url);
+                   Optional<String*> url);
     void replaceState(Document* document, ScriptValue state, String* title,
-                      Nullable<String*> url);
+                      Optional<String*> url);
     ScriptValue state(Document* document);
 
     void push(Document* document, ResourceURL* url);
@@ -105,9 +105,9 @@ private:
     void addHistoryEntry(HistoryEntry* entry);
     bool checkHistoryEntry(int delta, bool changeCurrentEntry);
     void pushReplaceStateInternal(Document* document, ScriptValue state,
-                                  String* title, Nullable<String*> url,
+                                  String* title, Optional<String*> url,
                                   OperationType type);
-    ResourceURL* resolveURL(Document* document, Nullable<String*> url);
+    ResourceURL* resolveURL(Document* document, Optional<String*> url);
 
     enum HistoryManagerOwner {
         OwnerIsWebView,

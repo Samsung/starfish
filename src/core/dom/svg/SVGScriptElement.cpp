@@ -263,7 +263,7 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             return false;
         }
 
-        Nullable<String*> srcStr =
+        Optional<String*> srcStr =
             getAttribute(starfish()->staticStrings()->m_href);
         if (!srcStr.hasValue()) {
             srcStr = getAttribute(starfish()->staticStrings()->m_xlinkHref);
@@ -398,7 +398,7 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 }
 
 void SVGScriptElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {
@@ -522,12 +522,12 @@ void SVGScriptElement::setCharset(String* charset)
     setAttribute(starfish()->staticStrings()->m_charset, charset);
 }
 
-Nullable<String*> SVGScriptElement::crossOrigin()
+Optional<String*> SVGScriptElement::crossOrigin()
 {
     return getAttribute(starfish()->staticStrings()->m_crossorigin);
 }
 
-void SVGScriptElement::setCrossOrigin(Nullable<String*> crossOrigin)
+void SVGScriptElement::setCrossOrigin(Optional<String*> crossOrigin)
 {
     if (crossOrigin.hasValue()) {
         setAttribute(starfish()->staticStrings()->m_crossorigin,
@@ -613,7 +613,7 @@ bool SVGScriptElement::isValidScriptType()
 
 bool SVGScriptElement::isValidClassicScriptType()
 {
-    Nullable<String*> typeStr =
+    Optional<String*> typeStr =
         getAttribute(starfish()->staticStrings()->m_type);
     if (typeStr.hasValue()) {
         auto utf8Data = typeStr.getValue()->toASCIILower()->toUTF8NonGCString();

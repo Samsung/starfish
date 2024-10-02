@@ -903,7 +903,7 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
                     ascender = box->asFrameTableBox()->calBaseline(
                         ctx->m_layoutContext);
                 } else {
-                    Nullable<LayoutUnit> p =
+                    Optional<LayoutUnit> p =
                         ctx->m_layoutContext.lineBoxAscender(
                             box->asFrameBlockBox());
                     if (p.hasValue() &&
@@ -3409,7 +3409,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
         if (display == InlineTableDisplayValue) {
             ascender = asFrameTableBox()->calBaseline(ctx.m_layoutContext);
         } else {
-            Nullable<LayoutUnit> p = ctx.m_layoutContext.lineBoxAscender(this);
+            Optional<LayoutUnit> p = ctx.m_layoutContext.lineBoxAscender(this);
             if (p.hasValue() && appliedOverflowX() == VisibleOverflow) {
                 ascender = p.getValue();
             } else {

@@ -52,8 +52,8 @@ public:
     void setSrc(String* src);
     String* src();
 
-    Nullable<String*> crossOrigin();
-    void setCrossOrigin(Nullable<String*> crossOrigin);
+    Optional<String*> crossOrigin();
+    void setCrossOrigin(Optional<String*> crossOrigin);
 
     uint32_t width();
     void setWidth(uint32_t width);
@@ -90,7 +90,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didNodeAdopted(Document* oldDocument) override;

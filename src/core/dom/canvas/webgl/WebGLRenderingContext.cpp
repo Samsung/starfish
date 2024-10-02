@@ -308,16 +308,16 @@ void WebGLRenderingContext::setUnpackColorSpace(String* value)
     }
 }
 
-Nullable<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
+Optional<WebGLContextAttributes> WebGLRenderingContext::getContextAttributes()
 {
-    ENTER_CONTEXT_SCOPE(Nullable<WebGLContextAttributes>());
+    ENTER_CONTEXT_SCOPE(Optional<WebGLContextAttributes>());
 
     return m_attributes;
 }
 
-Nullable<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
+Optional<GCVector<String*>> WebGLRenderingContext::getSupportedExtensions()
 {
-    ENTER_CONTEXT_SCOPE(Nullable<GCVector<String*>>());
+    ENTER_CONTEXT_SCOPE(Optional<GCVector<String*>>());
 
     return WebGLExtensionRegistry::instance().getSupportedExtensions();
 }
@@ -327,10 +327,10 @@ bool WebGLRenderingContext::isContextLost()
     return m_isContextLost;
 }
 
-Nullable<ScriptObject> WebGLRenderingContext::getExtension(
+Optional<ScriptObject> WebGLRenderingContext::getExtension(
     String* requestedName)
 {
-    ENTER_CONTEXT_SCOPE(Nullable<ScriptObject>());
+    ENTER_CONTEXT_SCOPE(Optional<ScriptObject>());
 
     // TODO: An attempt to use any features of an extension without first
     // calling getExtension to enable it must generate an appropriate GL
@@ -349,7 +349,7 @@ Nullable<ScriptObject> WebGLRenderingContext::getExtension(
         WebGLExtensionRegistry::instance().getGenerator(name);
 
     if (!maybeGenerator.hasValue()) {
-        return Nullable<ScriptObject>();
+        return Optional<ScriptObject>();
     }
 
     ScriptObject object = maybeGenerator.value()(scriptBindingInstance(), this);
@@ -396,7 +396,7 @@ void WebGLRenderingContext::bindAttribLocation(WebGLProgram* program,
 }
 
 void WebGLRenderingContext::bindBuffer(GLenum target,
-                                       Nullable<WebGLBuffer*> buffer)
+                                       Optional<WebGLBuffer*> buffer)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -426,7 +426,7 @@ void WebGLRenderingContext::bindBuffer(GLenum target,
 }
 
 void WebGLRenderingContext::bindFramebuffer(
-    GLenum target, Nullable<WebGLFramebuffer*> maybeFramebuffer)
+    GLenum target, Optional<WebGLFramebuffer*> maybeFramebuffer)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -457,7 +457,7 @@ void WebGLRenderingContext::bindFramebuffer(
 }
 
 void WebGLRenderingContext::bindRenderbuffer(
-    GLenum target, Nullable<WebGLRenderbuffer*> maybeRenderbuffer)
+    GLenum target, Optional<WebGLRenderbuffer*> maybeRenderbuffer)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -486,7 +486,7 @@ void WebGLRenderingContext::bindRenderbuffer(
 }
 
 void WebGLRenderingContext::bindTexture(GLenum target,
-                                        Nullable<WebGLTexture*> maybeTexture)
+                                        Optional<WebGLTexture*> maybeTexture)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -721,7 +721,7 @@ void WebGLRenderingContext::cullFace(GLenum mode)
 }
 
 #define IMPLEMENT_DELETE_BUFFERS(Name, Deleter)                            \
-    void WebGLRenderingContext::delete##Name(Nullable<WebGL##Name*> maybe) \
+    void WebGLRenderingContext::delete##Name(Optional<WebGL##Name*> maybe) \
     {                                                                      \
         ENTER_CONTEXT_SCOPE();                                             \
         if (maybe.hasValue()) {                                            \
@@ -746,7 +746,7 @@ IMPLEMENT_DELETE_BUFFERS(Texture, m_gl->deleteTextures);
 #undef IMPLEMENT_DELETE_BUFFERS
 
 #define IMPLEMENT_DELETE_OBJECT(Name, Deleter)                             \
-    void WebGLRenderingContext::delete##Name(Nullable<WebGL##Name*> maybe) \
+    void WebGLRenderingContext::delete##Name(Optional<WebGL##Name*> maybe) \
     {                                                                      \
         ENTER_CONTEXT_SCOPE();                                             \
         if (maybe.hasValue()) {                                            \
@@ -907,11 +907,11 @@ void WebGLRenderingContext::flushWebGL()
 
 void WebGLRenderingContext::framebufferRenderbuffer(
     GLenum target, GLenum attachment, GLenum renderbuffertarget,
-    Nullable<WebGLRenderbuffer*> maybeRenderbuffer)
+    Optional<WebGLRenderbuffer*> maybeRenderbuffer)
 {
     ENTER_CONTEXT_SCOPE();
 
-    Nullable<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
+    Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
 
     if (maybeRenderbuffer.hasValue()) {
         WebGLRenderbuffer* renderBuffer = maybeRenderbuffer.value();
@@ -940,11 +940,11 @@ void WebGLRenderingContext::framebufferRenderbuffer(
 
 void WebGLRenderingContext::framebufferTexture2D(
     GLenum target, GLenum attachment, GLenum textarget,
-    Nullable<WebGLTexture*> maybeTexture, GLint level)
+    Optional<WebGLTexture*> maybeTexture, GLint level)
 {
     ENTER_CONTEXT_SCOPE();
 
-    Nullable<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
+    Optional<WebGLFramebuffer*> webGLFramebuffer = m_state->webGLFramebuffer();
 
     if (maybeTexture.hasValue()) {
         WebGLTexture* texture = maybeTexture.value();
@@ -1108,7 +1108,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         GLint value = -1;
         m_gl->getIntegerv(pname, &value);
 
-        Nullable<WebGLProgram*> maybe = m_state->webGLProgram();
+        Optional<WebGLProgram*> maybe = m_state->webGLProgram();
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
         }
@@ -1123,7 +1123,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             return scriptNull();
         }
 
-        Nullable<WebGLFramebuffer*> maybe = m_state->webGLFramebuffer();
+        Optional<WebGLFramebuffer*> maybe = m_state->webGLFramebuffer();
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
             return scriptNull();
         }
@@ -1143,7 +1143,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             return scriptNull();
         }
 
-        Nullable<WebGLVertexArrayObjectOES*> maybe =
+        Optional<WebGLVertexArrayObjectOES*> maybe =
             m_state->webGLVertexArrayObjectOES();
 
         if (!maybe.hasValue() || maybe.value()->isDeleted()) {
@@ -1260,7 +1260,7 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
                                String::createASCIIString(name.data(), length));
 }
 
-Nullable<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
+Optional<GCVector<WebGLShader*>> WebGLRenderingContext::getAttachedShaders(
     WebGLProgram* program)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
@@ -1340,7 +1340,7 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
     case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
         return Escargot::ValueRef::create(params);
     case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME: {
-        Nullable<WebGLFramebuffer*> webGLFramebuffer =
+        Optional<WebGLFramebuffer*> webGLFramebuffer =
             m_state->webGLFramebuffer();
         if (!webGLFramebuffer) {
             return scriptNull();
@@ -1656,14 +1656,14 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
 
         TRACE(WEBGL, KV(index), KV(value));
 
-        Nullable<WebGLVertexArrayObjectOES*> maybe =
+        Optional<WebGLVertexArrayObjectOES*> maybe =
             m_state->webGLVertexArrayObjectOES();
 
         if (!maybe.hasValue()) {
             return scriptNull(); // No mention found for this in the spec.
         }
 
-        Nullable<WebGLBuffer*> maybeBuffer =
+        Optional<WebGLBuffer*> maybeBuffer =
             m_state->getBufferBoundToVertexAttributes(index);
 
         if (!maybeBuffer.hasValue()) {
@@ -1725,7 +1725,7 @@ void WebGLRenderingContext::hint(GLenum target, GLenum mode)
     m_gl->hint(target, mode);
 }
 
-bool WebGLRenderingContext::isBuffer(Nullable<WebGLBuffer*> maybe)
+bool WebGLRenderingContext::isBuffer(Optional<WebGLBuffer*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1751,7 +1751,7 @@ bool WebGLRenderingContext::isEnabled(GLenum cap)
     return m_gl->isEnabled(cap);
 }
 
-bool WebGLRenderingContext::isFramebuffer(Nullable<WebGLFramebuffer*> maybe)
+bool WebGLRenderingContext::isFramebuffer(Optional<WebGLFramebuffer*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1763,7 +1763,7 @@ bool WebGLRenderingContext::isFramebuffer(Nullable<WebGLFramebuffer*> maybe)
     return true;
 }
 
-bool WebGLRenderingContext::isProgram(Nullable<WebGLProgram*> maybe)
+bool WebGLRenderingContext::isProgram(Optional<WebGLProgram*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1775,7 +1775,7 @@ bool WebGLRenderingContext::isProgram(Nullable<WebGLProgram*> maybe)
     return true;
 }
 
-bool WebGLRenderingContext::isRenderbuffer(Nullable<WebGLRenderbuffer*> maybe)
+bool WebGLRenderingContext::isRenderbuffer(Optional<WebGLRenderbuffer*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1787,7 +1787,7 @@ bool WebGLRenderingContext::isRenderbuffer(Nullable<WebGLRenderbuffer*> maybe)
     return true;
 }
 
-bool WebGLRenderingContext::isShader(Nullable<WebGLShader*> maybe)
+bool WebGLRenderingContext::isShader(Optional<WebGLShader*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1799,7 +1799,7 @@ bool WebGLRenderingContext::isShader(Nullable<WebGLShader*> maybe)
     return true;
 }
 
-bool WebGLRenderingContext::isTexture(Nullable<WebGLTexture*> maybe)
+bool WebGLRenderingContext::isTexture(Optional<WebGLTexture*> maybe)
 {
     ENTER_CONTEXT_SCOPE(false);
 
@@ -1953,7 +1953,7 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
 }
 
 void WebGLRenderingContext::uniform1f(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x)
+    Optional<WebGLUniformLocation*> maybeUniform, GLfloat x)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -1979,7 +1979,7 @@ void WebGLRenderingContext::uniform1f(
 }
 
 void WebGLRenderingContext::uniform2f(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y)
+    Optional<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -1998,7 +1998,7 @@ void WebGLRenderingContext::uniform2f(
 }
 
 void WebGLRenderingContext::uniform3f(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
+    Optional<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
     GLfloat z)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2018,7 +2018,7 @@ void WebGLRenderingContext::uniform3f(
 }
 
 void WebGLRenderingContext::uniform4f(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
+    Optional<WebGLUniformLocation*> maybeUniform, GLfloat x, GLfloat y,
     GLfloat z, GLfloat w)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2038,7 +2038,7 @@ void WebGLRenderingContext::uniform4f(
 }
 
 void WebGLRenderingContext::uniform1i(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLint x)
+    Optional<WebGLUniformLocation*> maybeUniform, GLint x)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2057,7 +2057,7 @@ void WebGLRenderingContext::uniform1i(
 }
 
 void WebGLRenderingContext::uniform2i(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y)
+    Optional<WebGLUniformLocation*> maybeUniform, GLint x, GLint y)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2076,7 +2076,7 @@ void WebGLRenderingContext::uniform2i(
 }
 
 void WebGLRenderingContext::uniform3i(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z)
+    Optional<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2095,7 +2095,7 @@ void WebGLRenderingContext::uniform3i(
 }
 
 void WebGLRenderingContext::uniform4i(
-    Nullable<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z,
+    Optional<WebGLUniformLocation*> maybeUniform, GLint x, GLint y, GLint z,
     GLint w)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2114,7 +2114,7 @@ void WebGLRenderingContext::uniform4i(
     m_gl->uniform4i(uniform->location(), x, y, z, w);
 }
 
-void WebGLRenderingContext::useProgram(Nullable<WebGLProgram*> maybeProgram)
+void WebGLRenderingContext::useProgram(Optional<WebGLProgram*> maybeProgram)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2275,7 +2275,7 @@ void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
 }
 
 void WebGLRenderingContext::bufferData(GLenum target,
-                                       Nullable<AllowSharedBufferSource> data,
+                                       Optional<AllowSharedBufferSource> data,
                                        GLenum usage)
 {
     ENTER_CONTEXT_SCOPE();
@@ -2365,7 +2365,7 @@ void WebGLRenderingContext::compressedTexSubImage2D(
 void WebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width,
                                        GLsizei height, GLenum format,
                                        GLenum type,
-                                       Nullable<ScriptArrayBufferView> pixels)
+                                       Optional<ScriptArrayBufferView> pixels)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2632,7 +2632,7 @@ private:
 
 void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     GLenum target, GLint level, GLsizei width, GLsizei height, GLenum format,
-    GLenum type, Nullable<ScriptArrayBufferView> pixels,
+    GLenum type, Optional<ScriptArrayBufferView> pixels,
     std::function<void(const TexImageHelper*)> updateImage,
     std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
     std::function<void(const std::vector<GLushort>&)> updateTwoBytesBlackImage)
@@ -2834,7 +2834,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        GLint internalFormat, GLsizei width,
                                        GLsizei height, GLint border,
                                        GLenum format, GLenum type,
-                                       Nullable<ScriptArrayBufferView> pixels)
+                                       Optional<ScriptArrayBufferView> pixels)
 {
     ENTER_CONTEXT_SCOPE();
 
@@ -2944,7 +2944,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
 void WebGLRenderingContext::texSubImage2D(
     GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
     GLsizei height, GLenum format, GLenum type,
-    Nullable<ScriptArrayBufferView> pixels)
+    Optional<ScriptArrayBufferView> pixels)
 {
     ENTER_CONTEXT_SCOPE();
 

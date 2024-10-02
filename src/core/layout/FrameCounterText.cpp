@@ -74,7 +74,7 @@ static String* generateCounterText(const CounterContentData* counterData,
     STARFISH_ASSERT(indice.size());
 
     const CounterStyle* counter = counterData->counterStyle();
-    Nullable<String*> sp = counterData->separator();
+    Optional<String*> sp = counterData->separator();
     if (sp.hasValue()) {
         StringBuilder sb;
         size_t indiceSize = indice.size();

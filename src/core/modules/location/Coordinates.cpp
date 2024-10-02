@@ -24,9 +24,9 @@
 namespace Starfish {
 
 Coordinates::Coordinates(Document* document, double latitude, double longitude,
-                         Nullable<double> altitude, double accuracy,
-                         Nullable<double> altitudeAccuracy,
-                         Nullable<double> heading, Nullable<double> speed)
+                         Optional<double> altitude, double accuracy,
+                         Optional<double> altitudeAccuracy,
+                         Optional<double> heading, Optional<double> speed)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_latitude(latitude)

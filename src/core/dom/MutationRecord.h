@@ -32,7 +32,7 @@ public:
     MutationRecord(ExecutionContext* executionContext);
     MutationRecord(ExecutionContext* executionContext, String* type,
                    Node* target, String* attributeName,
-                   String* attributeNamespace, Nullable<String*> oldValue);
+                   String* attributeNamespace, Optional<String*> oldValue);
     MutationRecord(ExecutionContext* executionContext, String* type,
                    Node* target, GCVector<Node*>& addedNodes,
                    GCVector<Node*>& removedNodes, Node* previousSibling,
@@ -77,7 +77,7 @@ public:
         return m_attributeNamespace;
     }
 
-    Nullable<String*> oldValue()
+    Optional<String*> oldValue()
     {
         return m_oldValue;
     }
@@ -97,7 +97,7 @@ private:
     Node* m_nextSibling = nullptr;
     String* m_attributeName = nullptr;
     String* m_attributeNamespace = nullptr;
-    Nullable<String*> m_oldValue = nullptr;
+    Optional<String*> m_oldValue = nullptr;
 };
 
 } // namespace Starfish

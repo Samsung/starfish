@@ -880,7 +880,7 @@ CSSStyleDeclaration* Window::getComputedStyle(Element* element)
 }
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element,
-                                              Nullable<String*> pseudoElt)
+                                              Optional<String*> pseudoElt)
 {
     return element->getComputedStyle();
 }
@@ -895,7 +895,7 @@ MediaQueryList* Window::matchMedia(String* query)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
-Nullable<ScriptObject> Window::defaultNamedGetter(String* name)
+Optional<ScriptObject> Window::defaultNamedGetter(String* name)
 {
     // TODO
     // when child browser context(ex- iframe) implemented, we should
@@ -911,7 +911,7 @@ Nullable<ScriptObject> Window::defaultNamedGetter(String* name)
         }
     }
 
-    return Nullable<ScriptObject>();
+    return Optional<ScriptObject>();
 }
 
 Window* Window::defaultIndexedGetter(uint32_t idx)

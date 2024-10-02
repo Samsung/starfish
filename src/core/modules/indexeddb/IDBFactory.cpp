@@ -43,16 +43,16 @@ ScriptBindingInstance* IDBFactory::scriptBindingInstance()
 
 IDBOpenDBRequest* IDBFactory::open(String* name)
 {
-    return open(name, Nullable<unsigned long long>());
+    return open(name, Optional<unsigned long long>());
 }
 
 IDBOpenDBRequest* IDBFactory::open(String* name, unsigned long long version)
 {
-    return open(name, Nullable<unsigned long long>(version));
+    return open(name, Optional<unsigned long long>(version));
 }
 
 IDBOpenDBRequest* IDBFactory::open(String* name,
-                                   Nullable<unsigned long long> version)
+                                   Optional<unsigned long long> version)
 {
     // https://w3c.github.io/IndexedDB/#dom-idbfactory-open
 

@@ -35,7 +35,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGMaskElement() const override;
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
@@ -43,7 +43,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsGeometryAttributes() override
     {

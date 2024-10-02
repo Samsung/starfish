@@ -45,7 +45,7 @@ unsigned long StoragePersistent::length()
     return m_cache.size();
 }
 
-Nullable<String*> StoragePersistent::key(unsigned long index)
+Optional<String*> StoragePersistent::key(unsigned long index)
 {
     if (index >= m_cache.size()) {
         return nullptr;
@@ -54,7 +54,7 @@ Nullable<String*> StoragePersistent::key(unsigned long index)
     return itr->first;
 }
 
-Nullable<String*> StoragePersistent::getItem(String* key)
+Optional<String*> StoragePersistent::getItem(String* key)
 {
     auto itr = m_cache.find(key);
     if (itr == m_cache.end()) {
@@ -120,7 +120,7 @@ StorageDiskWriter::StorageDiskWriter(String* localStoragePath)
         NULL, NULL, NULL);
 }
 
-Nullable<String*> StorageDiskWriter::getItem(WebOrigin* webOrigin, String* key)
+Optional<String*> StorageDiskWriter::getItem(WebOrigin* webOrigin, String* key)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
     auto& allocator = m_jsonDocument->GetAllocator();
@@ -235,7 +235,7 @@ void StorageDiskWriter::loadFromFileToJsonDocument()
 {
     auto fileIO = PlatformFile::open(m_localStoragePath, PlatformFile::Read);
     if (fileIO) {
-        Nullable<String*> filedata = fileIO->readAll();
+        Optional<String*> filedata = fileIO->readAll();
         if (filedata.hasValue()) {
             auto s = filedata.getValue()->toUTF8NonGCString();
             m_jsonDocument->Parse(s.data());

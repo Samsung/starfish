@@ -102,7 +102,7 @@ void SharedWorkerClient::initMessageReceiveHandlers()
 
 void SharedWorkerClient::sendMessage(IPCMessage& message, bool force)
 {
-    Nullable<IPCMessageSerializer*> serializer =
+    Optional<IPCMessageSerializer*> serializer =
         m_messageHandler->serialize(message);
 
     if (force) {

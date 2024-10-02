@@ -53,13 +53,13 @@ public:
         return false;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     ColorStop* colorStop();
 };

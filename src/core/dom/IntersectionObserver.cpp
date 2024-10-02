@@ -69,7 +69,7 @@ IntersectionObserver::IntersectionObserver(
 }
 
 void IntersectionObserver::initialize(
-    Nullable<IntersectionObserverInit> maybeOptions)
+    Optional<IntersectionObserverInit> maybeOptions)
 {
     if (maybeOptions) {
         IntersectionObserverInit options = maybeOptions.getValue();
@@ -122,7 +122,7 @@ ScriptBindingInstance* IntersectionObserver::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-Nullable<ElementOrDocument> IntersectionObserver::root()
+Optional<ElementOrDocument> IntersectionObserver::root()
 {
     return m_root;
 }

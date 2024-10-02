@@ -71,7 +71,7 @@ ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
 
             if (validArgCount == 2) {
                 result = new ImageData(callWith, value0, value1,
-                                       Nullable<uint32_t>());
+                                       Optional<uint32_t>());
             } else if (validArgCount == 3) {
                 result = new ImageData(callWith, value0, value1, value2);
             }

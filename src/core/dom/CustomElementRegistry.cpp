@@ -579,7 +579,7 @@ CustomElementConstructor* CustomElementRegistry::get(String* name)
     return new CustomElementConstructor(scriptUndefined());
 }
 
-Nullable<String*> CustomElementRegistry::getName(
+Optional<String*> CustomElementRegistry::getName(
     CustomElementConstructor* constructor)
 {
     auto item = find(constructor->scriptValue());

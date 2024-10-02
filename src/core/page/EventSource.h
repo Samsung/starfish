@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    Nullable<bool> m_withCredentials;
+    Optional<bool> m_withCredentials;
 };
 
 class EventSource : public EventTarget,

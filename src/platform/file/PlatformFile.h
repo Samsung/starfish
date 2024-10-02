@@ -25,7 +25,7 @@ namespace Starfish {
 class PlatformFileUtil {
 public:
     static bool removeFile(const std::string& filePath);
-    static Nullable<std::string> absolutePath(const std::string& filePath);
+    static Optional<std::string> absolutePath(const std::string& filePath);
     static std::string joinPath(const std::string& dirPath,
                                 const std::string& name);
 };
@@ -67,7 +67,7 @@ public:
         return false;
     }
 
-    Nullable<String*> readLine()
+    Optional<String*> readLine()
     {
         char* line = nullptr;
         size_t len = 0;
@@ -80,7 +80,7 @@ public:
         return String::fromUTF8(line, len);
     }
 
-    Nullable<String*> readAll()
+    Optional<String*> readAll()
     {
         std::string str;
         bool ret = readAll(str);

@@ -38,8 +38,8 @@ public:
     virtual ~StoragePersistent(){};
 
     unsigned long length() override;
-    Nullable<String*> key(unsigned long index) override;
-    Nullable<String*> getItem(String* key) override;
+    Optional<String*> key(unsigned long index) override;
+    Optional<String*> getItem(String* key) override;
     bool setItem(String* key, String* value) override;
     bool removeItem(String* key) override;
     void clear() override;
@@ -57,7 +57,7 @@ public:
     virtual ~StorageDiskWriter(){};
 
     void load(GCUnorderedMap<String*, String*>& out, WebOrigin* webOrigin);
-    Nullable<String*> getItem(WebOrigin* webOrigin, String* key);
+    Optional<String*> getItem(WebOrigin* webOrigin, String* key);
     void setItem(WebOrigin* webOrigin, String* key, String* value);
     void removeItem(WebOrigin* webOrigin, String* key);
     void clear(WebOrigin* webOrigin);

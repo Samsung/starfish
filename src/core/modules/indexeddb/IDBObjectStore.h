@@ -52,7 +52,7 @@ public:
     DEFINE_GETTER(DOMStringList*, indexNames);
     DEFINE_GETTER(IDBTransaction*, transaction);
     DEFINE_GETTER(bool, autoIncrement);
-    DEFINE_SETTER(Nullable<IDBKeyPath*>, keyPath, KeyPath);
+    DEFINE_SETTER(Optional<IDBKeyPath*>, keyPath, KeyPath);
 
 private:
     ExecutionContext* m_executionContext;
@@ -61,7 +61,7 @@ private:
     IDBTransaction* m_transaction;
     bool m_autoIncrement;
     bool m_deleted;
-    Nullable<IDBKeyPath*> m_keyPath;
+    Optional<IDBKeyPath*> m_keyPath;
 };
 } // namespace Starfish
 

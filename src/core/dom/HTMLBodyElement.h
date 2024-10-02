@@ -72,9 +72,9 @@ public:
 
     virtual void didComputedStyleChanged(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
-        Nullable<StyleResolveContext*> ctx) override;
+        Optional<StyleResolveContext*> ctx) override;
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 

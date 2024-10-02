@@ -56,7 +56,7 @@ private:
     SharedWorkerProcessManager();
 
     void addSharedWorkerObject(SharedWorker* sharedWorker);
-    Nullable<SharedWorker*> getSharedWorkerObject(int32_t clientID);
+    Optional<SharedWorker*> getSharedWorkerObject(int32_t clientID);
 
     SharedWorkerMessagePortConnection* createMessagePortConnection(
         SharedWorker* sharedWorker,

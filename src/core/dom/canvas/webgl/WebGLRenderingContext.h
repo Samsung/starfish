@@ -86,17 +86,17 @@ public:
     void setUnpackColorSpace(String* value);
 
     // Implement WebGLRenderingContextBase
-    Nullable<WebGLContextAttributes> getContextAttributes();
+    Optional<WebGLContextAttributes> getContextAttributes();
     bool isContextLost();
-    Nullable<GCVector<String*>> getSupportedExtensions();
-    Nullable<ScriptObject> getExtension(String* name);
+    Optional<GCVector<String*>> getSupportedExtensions();
+    Optional<ScriptObject> getExtension(String* name);
     void activeTexture(GLenum texture);
     void attachShader(WebGLProgram* program, WebGLShader* shader);
     void bindAttribLocation(WebGLProgram* program, GLuint index, String* name);
-    void bindBuffer(GLenum target, Nullable<WebGLBuffer*> buffer);
-    void bindFramebuffer(GLenum target, Nullable<WebGLFramebuffer*> buffer);
-    void bindRenderbuffer(GLenum target, Nullable<WebGLRenderbuffer*> buffer);
-    void bindTexture(GLenum target, Nullable<WebGLTexture*> texture);
+    void bindBuffer(GLenum target, Optional<WebGLBuffer*> buffer);
+    void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
+    void bindRenderbuffer(GLenum target, Optional<WebGLRenderbuffer*> buffer);
+    void bindTexture(GLenum target, Optional<WebGLTexture*> texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue,
                     GLclampf alpha);
     void blendEquation(GLenum mode);
@@ -128,12 +128,12 @@ public:
     WebGLShader* createShader(unsigned long type);
     WebGLTexture* createTexture();
     void cullFace(GLenum mode);
-    void deleteBuffer(Nullable<WebGLBuffer*> buffer);
-    void deleteFramebuffer(Nullable<WebGLFramebuffer*> framebuffer);
-    void deleteProgram(Nullable<WebGLProgram*> program);
-    void deleteRenderbuffer(Nullable<WebGLRenderbuffer*> renderbuffer);
-    void deleteShader(Nullable<WebGLShader*> shader);
-    void deleteTexture(Nullable<WebGLTexture*> texture);
+    void deleteBuffer(Optional<WebGLBuffer*> buffer);
+    void deleteFramebuffer(Optional<WebGLFramebuffer*> framebuffer);
+    void deleteProgram(Optional<WebGLProgram*> program);
+    void deleteRenderbuffer(Optional<WebGLRenderbuffer*> renderbuffer);
+    void deleteShader(Optional<WebGLShader*> shader);
+    void deleteTexture(Optional<WebGLTexture*> texture);
     void depthFunc(GLenum func);
     void depthMask(GLboolean flag);
     void depthRange(GLclampf zNear, GLclampf zFar);
@@ -148,15 +148,15 @@ public:
     void flushWebGL();
     void framebufferRenderbuffer(GLenum target, GLenum attachment,
                                  GLenum renderbuffertarget,
-                                 Nullable<WebGLRenderbuffer*> renderbuffer);
+                                 Optional<WebGLRenderbuffer*> renderbuffer);
     void framebufferTexture2D(GLenum target, GLenum attachment,
-                              GLenum textarget, Nullable<WebGLTexture*> texture,
+                              GLenum textarget, Optional<WebGLTexture*> texture,
                               GLint level);
     void frontFace(GLenum mode);
     void generateMipmap(GLenum target);
     WebGLActiveInfo* getActiveAttrib(WebGLProgram* program, GLuint index);
     WebGLActiveInfo* getActiveUniform(WebGLProgram* program, GLuint index);
-    Nullable<GCVector<WebGLShader*>> getAttachedShaders(WebGLProgram* program);
+    Optional<GCVector<WebGLShader*>> getAttachedShaders(WebGLProgram* program);
     GLint getAttribLocation(WebGLProgram* program, String* name);
     ScriptValue getBufferParameter(GLenum target, GLenum pname);
     ScriptValue getParameter(GLenum pname);
@@ -181,13 +181,13 @@ public:
     GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
 
     void hint(GLenum target, GLenum mode);
-    bool isBuffer(Nullable<WebGLBuffer*> buffer);
+    bool isBuffer(Optional<WebGLBuffer*> buffer);
     bool isEnabled(GLenum cap);
-    bool isFramebuffer(Nullable<WebGLFramebuffer*> framebuffer);
-    bool isProgram(Nullable<WebGLProgram*> program);
-    bool isRenderbuffer(Nullable<WebGLRenderbuffer*> renderbuffer);
-    bool isShader(Nullable<WebGLShader*> shader);
-    bool isTexture(Nullable<WebGLTexture*> texture);
+    bool isFramebuffer(Optional<WebGLFramebuffer*> framebuffer);
+    bool isProgram(Optional<WebGLProgram*> program);
+    bool isRenderbuffer(Optional<WebGLRenderbuffer*> renderbuffer);
+    bool isShader(Optional<WebGLShader*> shader);
+    bool isTexture(Optional<WebGLTexture*> texture);
     void lineWidth(GLfloat width);
     void linkProgram(WebGLProgram* program);
     void pixelStorei(GLenum pname, GLint param);
@@ -198,20 +198,20 @@ public:
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
     void texParameterf(GLenum target, GLenum pname, GLfloat param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
-    void uniform1f(Nullable<WebGLUniformLocation*> uniform, GLfloat x);
-    void uniform2f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+    void uniform1f(Optional<WebGLUniformLocation*> uniform, GLfloat x);
+    void uniform2f(Optional<WebGLUniformLocation*> uniform, GLfloat x,
                    GLfloat y);
-    void uniform3f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+    void uniform3f(Optional<WebGLUniformLocation*> uniform, GLfloat x,
                    GLfloat y, GLfloat z);
-    void uniform4f(Nullable<WebGLUniformLocation*> uniform, GLfloat x,
+    void uniform4f(Optional<WebGLUniformLocation*> uniform, GLfloat x,
                    GLfloat y, GLfloat z, GLfloat w);
-    void uniform1i(Nullable<WebGLUniformLocation*> uniform, GLint x);
-    void uniform2i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y);
-    void uniform3i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y,
+    void uniform1i(Optional<WebGLUniformLocation*> uniform, GLint x);
+    void uniform2i(Optional<WebGLUniformLocation*> uniform, GLint x, GLint y);
+    void uniform3i(Optional<WebGLUniformLocation*> uniform, GLint x, GLint y,
                    GLint z);
-    void uniform4i(Nullable<WebGLUniformLocation*> uniform, GLint x, GLint y,
+    void uniform4i(Optional<WebGLUniformLocation*> uniform, GLint x, GLint y,
                    GLint z, GLint w);
-    void useProgram(Nullable<WebGLProgram*> program);
+    void useProgram(Optional<WebGLProgram*> program);
     void validateProgram(WebGLProgram* program);
     void shaderSource(WebGLShader* shader, String* source);
 
@@ -240,7 +240,7 @@ public:
 
     // Implement WebGLRenderingContextOverloads
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
-    void bufferData(GLenum target, Nullable<AllowSharedBufferSource> data,
+    void bufferData(GLenum target, Optional<AllowSharedBufferSource> data,
                     GLenum usage);
     void bufferSubData(GLenum target, GLintptr offset,
                        AllowSharedBufferSource data);
@@ -254,12 +254,12 @@ public:
 
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
-                    Nullable<ScriptArrayBufferView> pixels);
+                    Optional<ScriptArrayBufferView> pixels);
 
 private:
     void handleTexImageWithArrayBufferView(
         GLenum target, GLint level, GLsizei width, GLsizei height,
-        GLenum format, GLenum type, Nullable<ScriptArrayBufferView> pixels,
+        GLenum format, GLenum type, Optional<ScriptArrayBufferView> pixels,
         std::function<void(const TexImageHelper*)> updateImage,
         std::function<void(const std::vector<GLubyte>&)> updateBlackImage,
         std::function<void(const std::vector<GLushort>&)>
@@ -271,12 +271,12 @@ private:
 public:
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
-                    GLenum type, Nullable<ScriptArrayBufferView> pixels);
+                    GLenum type, Optional<ScriptArrayBufferView> pixels);
     void texImage2D(GLenum target, GLint level, GLint internalFormat,
                     GLenum format, GLenum type, TexImageSource source);
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLsizei width, GLsizei height, GLenum format,
-                       GLenum type, Nullable<ScriptArrayBufferView> pixels);
+                       GLenum type, Optional<ScriptArrayBufferView> pixels);
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, TexImageSource source);
 
