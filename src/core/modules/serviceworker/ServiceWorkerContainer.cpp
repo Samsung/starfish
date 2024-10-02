@@ -127,7 +127,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 }
 
 void ServiceWorkerContainer::startRegister(
-    Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL, Promise* promise,
+    Optional<ResourceURL*> scopeURL, ResourceURL* scriptURL, Promise* promise,
     ServiceWorkerEnvironment* client, WorkerType type,
     ServiceWorkerUpdateViaCache updateViaCache)
 {
@@ -608,7 +608,7 @@ void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
     m_jobMap.erase(job->data()->id);
 }
 
-Nullable<ServiceWorkerJob*> ServiceWorkerContainer::findJob(
+Optional<ServiceWorkerJob*> ServiceWorkerContainer::findJob(
     Id<ServiceWorkerJob> id)
 {
     TRACE_SCOPE(SVCWORKER);

@@ -59,7 +59,7 @@ Element* HTMLCollection::namedItem(String* key)
             if (elem->hasId() && elem->id()->equals(key)) {
                 return elem;
             }
-            Nullable<String*> attrStr =
+            Optional<String*> attrStr =
                 elem->getAttribute(elem->starfish()->staticStrings()->m_name);
             if (attrStr.hasValue() && attrStr.getValue()->equals(key)) {
                 return elem;

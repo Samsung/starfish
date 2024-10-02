@@ -75,7 +75,7 @@ public:
     void addGlobalScope(ServiceWorkerContextId id,
                         ServiceWorkerGlobalScope* globalScope);
     void removeGlobalScope(ServiceWorkerContextId id);
-    Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
+    Optional<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
     WorkerHostManager* workerHostManager() const

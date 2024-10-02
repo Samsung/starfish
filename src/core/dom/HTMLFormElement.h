@@ -93,7 +93,7 @@ public:
 
     void setAutofocus(bool autofocus);
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* val, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didNodeInsertedToDocumentTree() override;

@@ -40,7 +40,7 @@ using namespace Escargot;
 namespace Starfish {
 
 class HeadersIterationSource final
-    : public IterationSource<Nullable<String*>, Nullable<String*>> {
+    : public IterationSource<Optional<String*>, Optional<String*>> {
 public:
     HeadersIterationSource(HTTPHeaderMap* headerMap)
     {
@@ -48,8 +48,8 @@ public:
         m_iterator = m_headerMap.begin();
     }
 
-    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
-                      Nullable<String*>& value) override
+    virtual bool next(ExecutionStateRef* state, Optional<String*>& key,
+                      Optional<String*>& value) override
     {
         if (m_iterator == m_headerMap.end()) {
             return false;
@@ -196,7 +196,7 @@ void Headers::setHeader(ScriptValue keyValue, ScriptValue nameValue,
     THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
 }
 
-Nullable<String*> Headers::get(String* name)
+Optional<String*> Headers::get(String* name)
 {
     bool error = false;
     auto nullable = m_headersData->get(name, &error);
@@ -265,7 +265,7 @@ String* Headers::extractMIMEType()
     return m_headersData->extractMIMEType();
 }
 
-IterationSource<Nullable<String*>, Nullable<String*>>* Headers::startIteration(
+IterationSource<Optional<String*>, Optional<String*>>* Headers::startIteration(
     ExecutionStateRef* state)
 {
     return new HeadersIterationSource(m_headersData->httpHeaderMap());

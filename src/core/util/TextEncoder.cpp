@@ -55,7 +55,7 @@ ScriptBindingInstance* TextEncoder::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-ScriptUint8Array TextEncoder::encode(Nullable<String*> input)
+ScriptUint8Array TextEncoder::encode(Optional<String*> input)
 {
     if (!input) {
         return createEmptyUint8Array(

@@ -63,8 +63,8 @@ ScriptBindingInstance* TextDecoder::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-String* TextDecoder::decode(Nullable<ArrayBufferViewOrArrayBuffer> input,
-                            Nullable<TextDecodeOptions> options)
+String* TextDecoder::decode(Optional<ArrayBufferViewOrArrayBuffer> input,
+                            Optional<TextDecodeOptions> options)
 {
     if (!input) {
         return String::emptyString;

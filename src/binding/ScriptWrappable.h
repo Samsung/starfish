@@ -98,7 +98,7 @@ typedef Escargot::Float32ArrayObjectRef* ScriptFloat32Array;
 typedef Escargot::Float64ArrayObjectRef* ScriptFloat64Array;
 typedef Escargot::SharedArrayBufferObjectRef* ScriptSharedArrayBuffer;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
-typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
+typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptOptionalValue;
 typedef Escargot::ScriptRef* ScriptModule;
 typedef Escargot::MapObjectRef* ScriptMap;
 typedef Escargot::SetObjectRef* ScriptSet;

@@ -61,8 +61,8 @@ public:
     String* charset();
     void setCharset(String* charset);
 
-    Nullable<String*> crossOrigin();
-    void setCrossOrigin(Nullable<String*> crossOrigin);
+    Optional<String*> crossOrigin();
+    void setCrossOrigin(Optional<String*> crossOrigin);
 
     String* text();
     void setText(String* s);
@@ -90,7 +90,7 @@ public:
     virtual void didCharacterDataModified(String* before,
                                           String* after) override;
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
@@ -138,7 +138,7 @@ protected:
     bool m_didScriptExecuted : 1;
     bool m_shouldResumeParsing : 1;
     bool m_didModuleLoadOrErrorEventFired : 1;
-    Nullable<String*> m_nonce;
+    Optional<String*> m_nonce;
 };
 } // namespace Starfish
 

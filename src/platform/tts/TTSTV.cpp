@@ -148,7 +148,7 @@ static void dispatchStartEvent(TTS* t, int id)
         }
 
         // NOTE : Hold this code according to VD requirement for now.
-        Nullable<Element*> element = t->lastSpeechElement();
+        Optional<Element*> element = t->lastSpeechElement();
         if (!u && element) {
             String* eventName =
                 element->starfish()->staticStrings()->m_ttsstart.localName();
@@ -176,7 +176,7 @@ static void dispatchCompleteEvent(TTS* t, int id)
         }
 
         // NOTE : Hold this code according to VD requirement for now.
-        Nullable<Element*> element = t->lastSpeechElement();
+        Optional<Element*> element = t->lastSpeechElement();
         if (!u && element) {
             String* eventName =
                 element->starfish()->staticStrings()->m_ttsend.localName();
@@ -207,7 +207,7 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
         }
 
         // NOTE : Code below is required in case of accessibility.
-        Nullable<Element*> element = t->lastSpeechElement();
+        Optional<Element*> element = t->lastSpeechElement();
         if (u == nullptr && element) {
             ErrorEventInit errorInfo;
             errorInfo.setMessage(String::fromUTF8(errorMsg, strlen(errorMsg)));

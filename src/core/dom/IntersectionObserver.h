@@ -29,13 +29,13 @@ namespace Starfish {
 
 struct IntersectionObserverInit {
     // Define getter/setters
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(Nullable<ElementOrDocument>, root, Root);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(Optional<ElementOrDocument>, root, Root);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, rootMargin, RootMargin);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(doubleOrSequenceOfdouble, threshold,
                                       Threshold);
 
     // Define memebers
-    DEFINE_MEMBER_WITH_HASFLAG(Nullable<ElementOrDocument>, root, Root);
+    DEFINE_MEMBER_WITH_HASFLAG(Optional<ElementOrDocument>, root, Root);
     DEFINE_MEMBER_WITH_HASFLAG(String*, rootMargin, RootMargin);
     DEFINE_MEMBER_WITH_HASFLAG(doubleOrSequenceOfdouble, threshold, Threshold);
 };
@@ -70,7 +70,7 @@ public:
 
     bool isIntersectionObserver() const override;
 
-    Nullable<ElementOrDocument> root();
+    Optional<ElementOrDocument> root();
 
     String* rootMargin();
 
@@ -105,11 +105,11 @@ public:
     bool isValidTarget(Element* target);
 
 private:
-    void initialize(Nullable<IntersectionObserverInit> maybeOptions = nullptr);
+    void initialize(Optional<IntersectionObserverInit> maybeOptions = nullptr);
     String* parseMarginToFoursides(String* rootMargin);
 
     ExecutionContext* m_executionContext;
-    Nullable<ElementOrDocument> m_root;
+    Optional<ElementOrDocument> m_root;
     String* m_rootMargin = String::emptyString;
     std::vector<double> m_thresholds = { 0 };
 

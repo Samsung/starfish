@@ -45,7 +45,7 @@ void* HTMLTableRowElement::operator new(size_t size)
 }
 
 void HTMLTableRowElement::didAttributeChanged(QualifiedName name,
-                                              Nullable<String*> old,
+                                              Optional<String*> old,
                                               String* value,
                                               bool attributeCreated,
                                               bool attributeRemoved)
@@ -76,7 +76,7 @@ void HTMLTableRowElement::styleForPresentationAttribute(
 
 String* HTMLTableRowElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
+    Optional<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }

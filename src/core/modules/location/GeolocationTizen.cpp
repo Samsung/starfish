@@ -130,9 +130,9 @@ static void sendResult(LocationRequestInfoTizen* info)
 {
     Coordinates* c = new Coordinates(
         info->document, info->latitude, info->longitude,
-        Nullable<double>(info->altitude), info->horizontalAccuracy,
-        Nullable<double>(), Nullable<double>(info->direction),
-        Nullable<double>(info->speed * 1000));
+        Optional<double>(info->altitude), info->horizontalAccuracy,
+        Optional<double>(), Optional<double>(info->direction),
+        Optional<double>(info->speed * 1000));
 
     info->cb(info->document,
              new Geoposition(info->document, c, info->timestamp), info->cbData);

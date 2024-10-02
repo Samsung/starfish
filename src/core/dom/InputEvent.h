@@ -64,14 +64,14 @@ class InputEvent : public UIEvent {
 public:
     InputEvent(ExecutionContext* executionContext)
         : UIEvent(executionContext)
-        , m_data(Nullable<String*>())
+        , m_data(Optional<String*>())
         , m_inputType(String::emptyString)
     {
     }
 
     InputEvent(ExecutionContext* executionContext, String* eventType)
         : UIEvent(executionContext, eventType)
-        , m_data(Nullable<String*>())
+        , m_data(Optional<String*>())
         , m_inputType(String::emptyString)
     {
     }
@@ -88,12 +88,12 @@ public:
                       void* domObjectPointer) override;
     virtual bool isInputEvent() const override;
 
-    Nullable<String*> data() const
+    Optional<String*> data() const
     {
         return m_data;
     }
 
-    void setData(Nullable<String*> data)
+    void setData(Optional<String*> data)
     {
         m_data = data;
     }
@@ -109,7 +109,7 @@ public:
     }
 
 private:
-    Nullable<String*> m_data;
+    Optional<String*> m_data;
     String* m_inputType;
 };
 } // namespace Starfish

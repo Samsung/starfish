@@ -522,7 +522,7 @@ void ServiceWorkerClientConnection::respondFetchEvent(
     handler->respondFetchEvent(data);
 }
 
-Nullable<ServiceWorkerContainer*>
+Optional<ServiceWorkerContainer*>
 ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {

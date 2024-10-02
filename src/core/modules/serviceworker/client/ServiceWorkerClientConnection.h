@@ -64,7 +64,7 @@ public:
     void fireEventRequest(String* scriptURL, String* eventName);
     void respondFetchEvent(FetchEventResponseData* data);
 
-    Nullable<ServiceWorkerContainer*> findServiceWorkerContainer(
+    Optional<ServiceWorkerContainer*> findServiceWorkerContainer(
         ServiceWorkerContextId id);
 };
 

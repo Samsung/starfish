@@ -42,7 +42,7 @@ public:
     static bool checkDuplicatedToken(GCVector<StringView>& tokens,
                                      StringView token);
     uint32_t length();
-    Nullable<String*> item(unsigned long index);
+    Optional<String*> item(unsigned long index);
     bool contains(String* token);
     String* addSingleToken(String* src, const GCVector<StringView>& tokens,
                            String* token);

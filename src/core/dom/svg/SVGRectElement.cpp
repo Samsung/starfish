@@ -26,7 +26,7 @@
 namespace Starfish {
 
 void SVGRectElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -84,7 +84,7 @@ void* SVGRectElement::operator new(size_t size)
 
 void SVGRectElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R, cssCustomValues);

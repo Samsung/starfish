@@ -83,12 +83,12 @@ public:
         m_lastEventId = lastEventId;
     }
 
-    Nullable<MessageEventSource> source() const
+    Optional<MessageEventSource> source() const
     {
         return m_source;
     }
 
-    void setSource(Nullable<MessageEventSource> source)
+    void setSource(Optional<MessageEventSource> source)
     {
         m_source = source;
     }
@@ -98,7 +98,7 @@ private:
     GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
-    Nullable<MessageEventSource> m_source;
+    Optional<MessageEventSource> m_source;
 };
 
 class MessageEvent : public Event {
@@ -179,19 +179,19 @@ public:
         m_lastEventId = lastEventId;
     }
 
-    Nullable<MessageEventSource> source() const
+    Optional<MessageEventSource> source() const
     {
         return m_source;
     }
 
-    void setSource(Nullable<MessageEventSource> source)
+    void setSource(Optional<MessageEventSource> source)
     {
         m_source = source;
     }
 
     void initMessageEvent(String* type, bool bubbles, bool cancelable,
                           ScriptValue data, String* origin, String* lastEventId,
-                          Nullable<MessageEventSource> source)
+                          Optional<MessageEventSource> source)
     {
         initEvent(type, bubbles, cancelable);
         m_data = data;
@@ -205,7 +205,7 @@ private:
     GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
-    Nullable<MessageEventSource> m_source;
+    Optional<MessageEventSource> m_source;
 };
 } // namespace Starfish
 

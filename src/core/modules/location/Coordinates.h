@@ -29,9 +29,9 @@ class Document;
 class Coordinates : public ScriptWrappable {
 public:
     Coordinates(Document* document, double latitude, double longitude,
-                Nullable<double> altitude, double accuracy,
-                Nullable<double> altitudeAccuracy, Nullable<double> heading,
-                Nullable<double> speed);
+                Optional<double> altitude, double accuracy,
+                Optional<double> altitudeAccuracy, Optional<double> heading,
+                Optional<double> speed);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Coordinates)
 
@@ -45,7 +45,7 @@ public:
         return m_longitude;
     }
 
-    Nullable<double> altitude()
+    Optional<double> altitude()
     {
         return m_altitude;
     }
@@ -55,20 +55,20 @@ public:
         return m_accuracy;
     }
 
-    Nullable<double> altitudeAccuracy()
+    Optional<double> altitudeAccuracy()
     {
         return m_altitudeAccuracy;
     }
 
-    Nullable<double> heading()
+    Optional<double> heading()
     {
         if (m_speed.hasValue() && m_speed.getValue() == 0) {
-            return Nullable<double>(std::numeric_limits<double>::quiet_NaN());
+            return Optional<double>(std::numeric_limits<double>::quiet_NaN());
         }
         return m_heading;
     }
 
-    Nullable<double> speed()
+    Optional<double> speed()
     {
         return m_speed;
     }
@@ -77,11 +77,11 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     double m_latitude;
     double m_longitude;
-    Nullable<double> m_altitude;
+    Optional<double> m_altitude;
     double m_accuracy;
-    Nullable<double> m_altitudeAccuracy;
-    Nullable<double> m_heading;
-    Nullable<double> m_speed;
+    Optional<double> m_altitudeAccuracy;
+    Optional<double> m_heading;
+    Optional<double> m_speed;
 };
 } // namespace Starfish
 

@@ -89,7 +89,7 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
         LayoutUnit orgHeight = contentHeight();
 
         m_svgScale = 1;
-        m_viewBox = Nullable<Unit::Rect>();
+        m_viewBox = Optional<Unit::Rect>();
 
         if (node()->asSVGSVGElement()->hasViewBox()) {
             Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
@@ -104,7 +104,7 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
                 setWidth(s * contentWidth());
                 setHeight(s * contentHeight());
                 m_svgScale = s;
-                m_viewBox = Nullable<Unit::Rect>(rt);
+                m_viewBox = Optional<Unit::Rect>(rt);
             }
         }
 

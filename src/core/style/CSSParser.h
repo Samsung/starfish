@@ -688,7 +688,7 @@ public:
         return false;
     }
 
-    static Nullable<CSSTokenValue> parseFunctionBlock(const char* token,
+    static Optional<CSSTokenValue> parseFunctionBlock(const char* token,
                                                       const char* functionName)
     {
         CSSPropertyParser parser((char*)token);
@@ -706,10 +706,10 @@ public:
                 }
             }
         }
-        return Nullable<CSSTokenValue>();
+        return Optional<CSSTokenValue>();
     }
 
-    static Nullable<CSSTokenValue> parseQuoteBlock(const char* token)
+    static Optional<CSSTokenValue> parseQuoteBlock(const char* token)
     {
         CSSPropertyParser parser((char*)token);
         parser.consumeWhitespaces();
@@ -719,7 +719,7 @@ public:
                 return parser.parsedString();
             }
         }
-        return Nullable<CSSTokenValue>();
+        return Optional<CSSTokenValue>();
     }
 
     static bool parseLayers(const char* token, size_t length,
@@ -1810,7 +1810,7 @@ public:
                                        GCVector<StyleRuleBase*>& rootRule,
                                        AllowedRulesType allowedRules);
     StyleRuleKeyframes* parseKeyframesRule();
-    Nullable<String*> parseURLString();
+    Optional<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
     bool parseKeyframeKeyList(RefPtr<CSSToken>& token,
                               GCAtomicVector<double>& keyList);

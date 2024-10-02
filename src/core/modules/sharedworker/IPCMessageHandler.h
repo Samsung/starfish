@@ -37,7 +37,7 @@ class IPCMessageHandler : public gc {
 public:
     using MessageReceiveHandler = void (*)(IPCMessageDeserializer*);
 
-    Nullable<IPCMessageSerializer*> serialize(IPCMessage& message);
+    Optional<IPCMessageSerializer*> serialize(IPCMessage& message);
 
     void sendMessage(Connection* connection, IPCMessage& message);
 

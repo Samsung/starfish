@@ -32,8 +32,8 @@ protected:
 public:
     static WebOrigin* createDocumentOrigin(ResourceURL* url);
     String* serialize() const;
-    Nullable<String*> domain() const;
-    Nullable<ResourceURL*> url() const
+    Optional<String*> domain() const;
+    Optional<ResourceURL*> url() const
     {
         return m_originalURL;
     }
@@ -48,7 +48,7 @@ public:
     bool canRewritten(const WebOrigin* targetWebOrigin) const;
 
 protected:
-    Nullable<ResourceURL*> m_originalURL;
+    Optional<ResourceURL*> m_originalURL;
     bool m_isOpaque;
 };
 

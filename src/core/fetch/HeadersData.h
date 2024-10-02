@@ -38,8 +38,8 @@ public:
 
     void append(String* name, String* value, bool* typeErrorOccurred = nullptr);
     void deleteHeader(String* name, bool* typeErrorOccurred = nullptr);
-    Nullable<String*> get(String* name, bool* typeErrorOccurred = nullptr);
-    Nullable<std::string> noCheckValidGet(const std::string& name);
+    Optional<String*> get(String* name, bool* typeErrorOccurred = nullptr);
+    Optional<std::string> noCheckValidGet(const std::string& name);
     bool has(String* name, bool* typeErrorOccurred = nullptr);
     bool noCheckValidHas(const std::string& lowerCaseName);
     void set(String* name, String* value, bool* typeErrorOccurred = nullptr);

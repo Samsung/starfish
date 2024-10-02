@@ -36,10 +36,10 @@ public:
 
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);
-    XMLDocument* createDocument(Nullable<String*> namespaceParameter,
+    XMLDocument* createDocument(Optional<String*> namespaceParameter,
                                 String* qualifiedName,
-                                Nullable<DocumentType*> doctype);
-    Document* createHTMLDocument(Nullable<String*> title = Nullable<String*>());
+                                Optional<DocumentType*> doctype);
+    Document* createHTMLDocument(Optional<String*> title = Optional<String*>());
 
     // useless; always returns true
     bool hasFeature()

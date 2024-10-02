@@ -70,7 +70,7 @@ void SVGLength::setUnitType(unsigned short unitType)
     m_unitType = unitType;
 }
 
-static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
+static Optional<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
                                       CSSStyleValuePair::ValueData data)
 {
     if (kind == CSSStyleValuePair::ValueKind::Auto) {
@@ -86,11 +86,11 @@ static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
         if (type.isLength() || type.isPercentage()) {
             return Length(data.m_calc);
         } else {
-            return Nullable<Length>();
+            return Optional<Length>();
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return Nullable<Length>();
+        return Optional<Length>();
     }
 }
 

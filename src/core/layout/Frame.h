@@ -422,7 +422,7 @@ public:
     void advanceLineBoxAscender(LayoutUnit a);
     void registerLineBoxAscender(FrameBlockBox* blockBox, LineBox* lb,
                                  LayoutUnit ascender);
-    Nullable<LayoutUnit> lineBoxAscender(FrameBlockBox* box);
+    Optional<LayoutUnit> lineBoxAscender(FrameBlockBox* box);
 
     void pushBlockBoxAligningAtFirstBaseline(FrameBlockBox* blockBox)
     {
@@ -438,16 +438,16 @@ public:
 
     void registerFirstLineAscender(FrameBlockBox* owner, LineBox* lineBox,
                                    LayoutUnit ascender);
-    Nullable<std::pair<LineBox*, LayoutUnit>> firstLineAscender(
+    Optional<std::pair<LineBox*, LayoutUnit>> firstLineAscender(
         FrameBlockBox* blockBox);
 
     void tempReigsterFirstLineAscender(
         FrameTableCellBox* cellBox,
         std::pair<LineBox*, LayoutUnit> ascenderInfo);
-    Nullable<std::pair<LineBox*, LayoutUnit>> tempFirstLineAscender(
+    Optional<std::pair<LineBox*, LayoutUnit>> tempFirstLineAscender(
         FrameTableCellBox* cellBox);
 
-    Nullable<PreferredWidthValue> preferredWidthInfo(PreferredWidthKey key);
+    Optional<PreferredWidthValue> preferredWidthInfo(PreferredWidthKey key);
     void registerPreferredWidthInfo(PreferredWidthKey key,
                                     PreferredWidthValue value);
 
@@ -544,7 +544,7 @@ public:
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
 
-    Nullable<LayoutUnit> lookupFirstLineOrDefiniteHeight(FrameBox* box);
+    Optional<LayoutUnit> lookupFirstLineOrDefiniteHeight(FrameBox* box);
 
     void pushIntoLineBoxPool(LineBox* b);
 
@@ -642,7 +642,7 @@ public:
     void applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
         FrameBox* fb);
 
-    Nullable<LayoutUnit> testBasisSizeCache(
+    Optional<LayoutUnit> testBasisSizeCache(
         Frame* flexItem, bool isMainAxisInInlineAxis,
         LayoutUnit availableMainCrossSize,
         bool shouldRespectPercentageWidthOnComputingBasisSize);
@@ -654,7 +654,7 @@ public:
     void unregisterToBasisSizeCache(Frame* flexItem,
                                     LayoutUnit availableMainCrossSize);
 
-    Nullable<LayoutUnit> testGridItemPreferredWidthCache(
+    Optional<LayoutUnit> testGridItemPreferredWidthCache(
         Frame* gridItem, LayoutUnit availableWidth);
     void registerToGridItemPreferredWidthCache(Frame* gridItem,
                                                LayoutUnit availableWidth,

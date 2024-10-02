@@ -945,7 +945,7 @@ public:
         return m_layoutParent;
     }
 
-    virtual Nullable<CanvasSurface*> contentSurface()
+    virtual Optional<CanvasSurface*> contentSurface()
     {
         return nullptr;
     }

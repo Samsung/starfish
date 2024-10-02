@@ -106,7 +106,7 @@ class CSSVariableSyntaxTreeBuilder : public gc {
 
 public:
     STARFISH_MAKE_STACK_ALLOCATED();
-    CSSVariableSyntaxTreeBuilder(Nullable<Starfish*> sf)
+    CSSVariableSyntaxTreeBuilder(Optional<Starfish*> sf)
         : m_valid(true)
         , m_starfish(sf)
     {
@@ -119,7 +119,7 @@ public:
     typedef VectorWithInlineStorage<256, char, std::allocator<char>>
         StyleString;
     StyleString generateStyle(Element* element,
-                              Nullable<const MutablePropertyValueList*>);
+                              Optional<const MutablePropertyValueList*>);
 
     void dump();
 
@@ -136,7 +136,7 @@ public:
 
 private:
     bool m_valid;
-    Nullable<Starfish*> m_starfish; // if this value is null, there is no actual
+    Optional<Starfish*> m_starfish; // if this value is null, there is no actual
                                     // Variable will build.
     VectorWithInlineStorage<12, VariableContainer,
                             GCUtil::gc_malloc_allocator<VariableContainer>>

@@ -198,7 +198,7 @@ void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
     saveRegistrationList();
 }
 
-Nullable<ServiceWorkerRegistrationData*> RegistrationStoreLocalStorage::get(
+Optional<ServiceWorkerRegistrationData*> RegistrationStoreLocalStorage::get(
     const std::string& path)
 {
     if (!LocalStorageHelper::File::exists(path)) {
@@ -274,7 +274,7 @@ void RegistrationStoreLocalStorage::saveWorkerScripts(String* scope,
     return;
 }
 
-Nullable<String*> RegistrationStoreLocalStorage::loadWorkerScript(String* scope)
+Optional<String*> RegistrationStoreLocalStorage::loadWorkerScript(String* scope)
 {
     TRACE(HOST);
 
@@ -319,7 +319,7 @@ RegistrationStoreData* RegistrationStoreLocalStorage::getRegistraionStoreData(
     return newStoreData;
 }
 
-Nullable<RegistrationStoreData*>
+Optional<RegistrationStoreData*>
 RegistrationStoreLocalStorage::findRegistraionStoreData(size_t scopeHash)
 {
     auto itr = m_registrationSW.find(scopeHash);

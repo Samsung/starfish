@@ -24,7 +24,7 @@
 
 namespace Starfish {
 void HTMLTableCaptionElement::didAttributeChanged(QualifiedName name,
-                                                  Nullable<String*> old,
+                                                  Optional<String*> old,
                                                   String* value,
                                                   bool attributeCreated,
                                                   bool attributeRemoved)

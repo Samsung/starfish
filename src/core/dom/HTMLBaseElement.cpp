@@ -27,7 +27,7 @@ namespace Starfish {
 
 String* HTMLBaseElement::href() const
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
 
     if (!hrefAttr.hasValue()) {
@@ -55,7 +55,7 @@ void HTMLBaseElement::setTarget(String* target)
 }
 
 void HTMLBaseElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {

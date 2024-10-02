@@ -299,7 +299,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
 static void appendString(CSSVariableSyntaxTreeBuilder::StyleString& str,
                          String* src)
 {
-    auto n = src->toNullableUTF8String();
+    auto n = src->toOptionalUTF8String();
     for (size_t i = 0; i < n.m_bufferSize; i++) {
         str.push_back(n.m_buffer[i]);
     }
@@ -307,7 +307,7 @@ static void appendString(CSSVariableSyntaxTreeBuilder::StyleString& str,
 
 CSSVariableSyntaxTreeBuilder::StyleString
 CSSVariableSyntaxTreeBuilder::generateStyle(
-    Element* element, Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Element* element, Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     struct Context {
         Context(Block* b, size_t i)
@@ -342,7 +342,7 @@ CSSVariableSyntaxTreeBuilder::generateStyle(
                     Variable* variable = (Variable*)block;
                     if (isFirst) {
                         auto currentElement = element;
-                        Nullable<const MutablePropertyValueList*>
+                        Optional<const MutablePropertyValueList*>
                             currentCustomValues = cssCustomValues;
                         while (currentElement && !found) {
                             if (currentCustomValues) {

@@ -95,7 +95,7 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_orignalOwnerElement));
     }
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
@@ -103,7 +103,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsGeometryAttributes()
     {

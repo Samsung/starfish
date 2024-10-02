@@ -71,12 +71,12 @@ void HTMLLinkElement::setHref(String* href)
     setAttribute(starfish()->staticStrings()->m_href, href);
 }
 
-Nullable<String*> HTMLLinkElement::crossOrigin()
+Optional<String*> HTMLLinkElement::crossOrigin()
 {
     return getAttribute(starfish()->staticStrings()->m_crossorigin);
 }
 
-void HTMLLinkElement::setCrossOrigin(Nullable<String*> crossOrigin)
+void HTMLLinkElement::setCrossOrigin(Optional<String*> crossOrigin)
 {
     if (crossOrigin.hasValue()) {
         setAttribute(starfish()->staticStrings()->m_crossorigin,
@@ -143,7 +143,7 @@ StyleSheet* HTMLLinkElement::sheet()
 
 ResourceURL* HTMLLinkElement::url()
 {
-    Nullable<String*> url = getAttribute(starfish()->staticStrings()->m_href);
+    Optional<String*> url = getAttribute(starfish()->staticStrings()->m_href);
 
     if (!url.hasValue()) {
         return nullptr;
@@ -170,9 +170,9 @@ void HTMLLinkElement::checkLoadStyleSheet()
         return;
     }
 
-    Nullable<String*> type = getAttribute(starfish()->staticStrings()->m_type);
-    Nullable<String*> href = getAttribute(starfish()->staticStrings()->m_href);
-    Nullable<String*> rel = getAttribute(starfish()->staticStrings()->m_rel);
+    Optional<String*> type = getAttribute(starfish()->staticStrings()->m_type);
+    Optional<String*> href = getAttribute(starfish()->staticStrings()->m_href);
+    Optional<String*> rel = getAttribute(starfish()->staticStrings()->m_rel);
 
     if (((type.hasValue() &&
           isCSSType(
@@ -329,7 +329,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
 }
 
 void HTMLLinkElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {

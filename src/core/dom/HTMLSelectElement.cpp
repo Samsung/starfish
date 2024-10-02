@@ -262,7 +262,7 @@ HTMLOptionElement* HTMLSelectElement::namedItem(String* name)
 }
 
 void HTMLSelectElement::add(HTMLOptionElementOrHTMLOptGroupElement element,
-                            Nullable<HTMLElementOrlong> before)
+                            Optional<HTMLElementOrlong> before)
 {
     HTMLElement* newElement;
     if (element.isHTMLOptionElementValue()) {
@@ -357,7 +357,7 @@ void HTMLSelectElement::setSelectedIndex(size_t index)
 void HTMLSelectElement::resetFromOption(GCVector<HTMLOptionElement*>& list,
                                         HTMLOptionElement* resetFrom)
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_multiple);
     if (!val.hasValue()) {
         // single selection

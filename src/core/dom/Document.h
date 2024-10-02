@@ -180,7 +180,7 @@ public:
 
     DocumentFragment* createDocumentFragment();
     Element* createElement(String* name);
-    Element* createElementNS(Nullable<String*> namespaceString,
+    Element* createElementNS(Optional<String*> namespaceString,
                              String* qualifiedName);
     Text* createTextNode(String* data);
     CDATASection* createCDATASection(String* data);
@@ -252,9 +252,9 @@ public:
 
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);
-    Attr* createAttributeNS(Nullable<String*> ns, String* name);
+    Attr* createAttributeNS(Optional<String*> ns, String* name);
     QualifiedName createAttributeName(String* name);
-    QualifiedName createAttributeNameNS(Nullable<String*> ns, String* name);
+    QualifiedName createAttributeNameNS(Optional<String*> ns, String* name);
 
     Range* createRange();
 
@@ -506,10 +506,10 @@ public:
         return m_designMode;
     }
 
-    QualifiedName validateAndExtractQualifiedName(Nullable<String*> ns,
+    QualifiedName validateAndExtractQualifiedName(Optional<String*> ns,
                                                   String* qualifiedName);
 
-    Nullable<HTMLOrSVGScriptElement> currentScript();
+    Optional<HTMLOrSVGScriptElement> currentScript();
 
     // if you want to modify current script, use this.
     class CurrentScriptManager {

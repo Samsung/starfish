@@ -79,7 +79,7 @@ void HTMLTextAreaElement::didNodeInserted(Node* parent, Node* newChild)
     // element's dirty value flag is false, set the element's raw value to its
     // child text content.
     if (parent == this && !m_dirtyValueFlag) {
-        Nullable<String*> content = textContent();
+        Optional<String*> content = textContent();
         if (content.hasValue()) {
             m_value = content.getValue();
         }
@@ -87,7 +87,7 @@ void HTMLTextAreaElement::didNodeInserted(Node* parent, Node* newChild)
 }
 
 void HTMLTextAreaElement::didAttributeChanged(QualifiedName name,
-                                              Nullable<String*> old,
+                                              Optional<String*> old,
                                               String* val,
                                               bool attributeCreated,
                                               bool attributeRemoved)
@@ -140,7 +140,7 @@ void HTMLTextAreaElement::reset()
     // back to false, and set the raw value of element to its child text
     // content.
     m_dirtyValueFlag = false;
-    Nullable<String*> content = textContent();
+    Optional<String*> content = textContent();
     if (content.hasValue()) {
         m_value = content.getValue();
     } else {
@@ -189,7 +189,7 @@ void HTMLTextAreaElement::setApiValue(String* value)
 String* HTMLTextAreaElement::defaultValue()
 {
     // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-defaultvalue
-    Nullable<String*> content = textContent();
+    Optional<String*> content = textContent();
     return content.hasValue() ? content.getValue() : String::emptyString;
 }
 
@@ -206,7 +206,7 @@ int HTMLTextAreaElement::textLength()
 
 uint32_t HTMLTextAreaElement::cols()
 {
-    Nullable<String*> attrValue =
+    Optional<String*> attrValue =
         getAttribute(starfish()->staticStrings()->m_cols);
     if (attrValue.hasValue()) {
         int32_t parsed = String::parseInt(attrValue.getValue());
@@ -225,7 +225,7 @@ void HTMLTextAreaElement::setCols(uint32_t value)
 
 uint32_t HTMLTextAreaElement::rows()
 {
-    Nullable<String*> attrValue =
+    Optional<String*> attrValue =
         getAttribute(starfish()->staticStrings()->m_rows);
     if (attrValue.hasValue()) {
         int32_t parsed = String::parseInt(attrValue.getValue());

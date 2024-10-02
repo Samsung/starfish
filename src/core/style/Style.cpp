@@ -151,7 +151,7 @@ static Length parseAbsoluteFontSize(int col, float mediumSize)
     return Length(Length::Fixed, strictFontSizeTable[row][col]);
 }
 
-static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
+static Optional<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
                                              CSSStyleValuePair::ValueData data)
 {
     if (kind == CSSStyleValuePair::ValueKind::Auto) {
@@ -167,7 +167,7 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
         if (type.isLength() || type.isPercentage() || type.isNumber()) {
             return Length(data.m_calc);
         } else {
-            return Nullable<Length>();
+            return Optional<Length>();
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -208,7 +208,7 @@ static void setComputedStyleUnitPositionX(
             offsetValueKind == CSSStyleValuePair::ValueKind::Percentage ||
             offsetValueKind == CSSStyleValuePair::ValueKind::CalcValueKind);
         if (side.sideValue() == SideValue::LeftSideValue) {
-            Nullable<Length> maybeLength =
+            Optional<Length> maybeLength =
                 convertValueToLength(offsetValueKind, offset.value());
             if (maybeLength.hasValue()) {
                 setter(style, maybeLength.getValue(), layer);
@@ -240,7 +240,7 @@ static void setComputedStyleUnitPositionX(
             setComputedStyleUnitPositionX(style, (*list)[i], i, setter);
         }
     } else {
-        Nullable<Length> len =
+        Optional<Length> len =
             convertValueToLength(value.valueKind(), value.value());
         if (len.hasValue()) {
             setter(style, len.getValue(), layer);
@@ -284,7 +284,7 @@ static void setComputedStyleUnitPositionY(
             offsetValueKind == CSSStyleValuePair::ValueKind::Percentage ||
             offsetValueKind == CSSStyleValuePair::ValueKind::CalcValueKind);
         if (side.sideValue() == SideValue::TopSideValue) {
-            Nullable<Length> maybeLength =
+            Optional<Length> maybeLength =
                 convertValueToLength(offsetValueKind, offset.value());
             if (maybeLength.hasValue()) {
                 setter(style, maybeLength.getValue(), layer);
@@ -316,7 +316,7 @@ static void setComputedStyleUnitPositionY(
             setComputedStyleUnitPositionY(style, (*list)[i], i, setter);
         }
     } else {
-        Nullable<Length> len =
+        Optional<Length> len =
             convertValueToLength(value.valueKind(), value.value());
         if (len.hasValue()) {
             setter(style, len.getValue(), layer);
@@ -332,7 +332,7 @@ bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
 }
 
 static bool removeCalcFuncNameIfNeeds(const CSSStyleValuePair& item,
-                                      NullableUTF8String& utf8String)
+                                      OptionalUTF8String& utf8String)
 {
     if (item.varFunctionValue()->startsWith("calc(") &&
         item.varFunctionValue()->endsWith(")")) {
@@ -371,11 +371,11 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                        CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
                 STARFISH_ASSERT(valueSize == 1);
 
-                NullableUTF8String utf8String =
-                    item.varFunctionValue()->toNullableUTF8String();
+                OptionalUTF8String utf8String =
+                    item.varFunctionValue()->toOptionalUTF8String();
                 volatile const char* forceKeepPointer = utf8String.m_buffer;
 
-                Nullable<const MutablePropertyValueList*> cssCustomValues;
+                Optional<const MutablePropertyValueList*> cssCustomValues;
                 if (style->customProperty()) {
                     cssCustomValues = style->customProperty().value();
                 }
@@ -416,7 +416,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         case CSSTransformFunction::Kind::Translate3D:
         case CSSTransformFunction::Kind::Translate: {
             Length a, b(Length::Fixed, 0);
-            Nullable<Length> nA = convertValueToLength(
+            Optional<Length> nA = convertValueToLength(
                 (*f.values())[0].valueKind(), (*f.values())[0].value());
             if (nA.hasValue() == true) {
                 a = nA.getValue();
@@ -424,7 +424,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                 break;
             }
             if (valueSize > 1) {
-                Nullable<Length> nB = convertValueToLength(
+                Optional<Length> nB = convertValueToLength(
                     (*f.values())[1].valueKind(), (*f.values())[1].value());
                 if (nB.hasValue()) {
                     b = nB.getValue();
@@ -442,7 +442,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             break;
         }
         case CSSTransformFunction::Kind::TranslateX: {
-            Nullable<Length> a = convertValueToLength(
+            Optional<Length> a = convertValueToLength(
                 (*f.values())[0].valueKind(), (*f.values())[0].value());
             if (a.hasValue() == true) {
                 style->setTransformTranslate(a.getValue(),
@@ -450,7 +450,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             }
         } break;
         case CSSTransformFunction::Kind::TranslateY: {
-            Nullable<Length> a = convertValueToLength(
+            Optional<Length> a = convertValueToLength(
                 (*f.values())[0].valueKind(), (*f.values())[0].value());
             if (a.hasValue() == true) {
                 style->setTransformTranslate(Length(Length::Fixed, 0),
@@ -475,7 +475,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         case CSSTransformFunction::Kind::Rotate:
             if (valueSize > 1) {
                 Length a, b(Length::Fixed, 0);
-                Nullable<Length> nA = convertValueToLength(
+                Optional<Length> nA = convertValueToLength(
                     (*f.values())[1].valueKind(), (*f.values())[1].value());
                 if (nA.hasValue() == true) {
                     a = nA.getValue();
@@ -483,7 +483,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                     break;
                 }
                 if (valueSize > 2) {
-                    Nullable<Length> nB = convertValueToLength(
+                    Optional<Length> nB = convertValueToLength(
                         (*f.values())[2].valueKind(), (*f.values())[2].value());
                     if (nB.hasValue()) {
                         b = nB.getValue();
@@ -2549,7 +2549,7 @@ bool StyleResolver::anyAttributeMatches(Element* element,
 
     String* selectorValue = selector->value();
 
-    Nullable<String*> refAttr = element->getAttribute(selectorAttr);
+    Optional<String*> refAttr = element->getAttribute(selectorAttr);
     if (!refAttr.hasValue()) {
         return false;
     }
@@ -2668,7 +2668,7 @@ void* StyleResolveContext::allocateComputedStyle()
 
 void StyleResolver::applyAllProperty(
     Element* element, CSSStyleValuePair::ValueKind valueKind,
-    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    Optional<const MutablePropertyValueList*> cssCustomValues,
     ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
     bool isImportant)
 {
@@ -3180,8 +3180,8 @@ static void tokenize(TokenVector& tokens, const char* data, size_t length)
 }
 
 std::string StyleResolver::resolveVarReferencedValue(
-    Element* element, NullableUTF8String utf8String,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Element* element, OptionalUTF8String utf8String,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     std::string newCssValue;
     TokenVector cssValueTokens;
@@ -3267,10 +3267,10 @@ std::string StyleResolver::resolveVarReferencedValue(
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
     CSSStyleValuePair::KeyKind keyKind,
-    Nullable<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
+    Optional<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
 {
-    NullableUTF8String utf8String =
-        cssValuePair.varFunctionValue()->toNullableUTF8String();
+    OptionalUTF8String utf8String =
+        cssValuePair.varFunctionValue()->toOptionalUTF8String();
     size_t startIndex = 0;
     size_t size = utf8String.m_bufferSize;
     if (cssValuePair.temporaryValueKind() ==
@@ -3318,7 +3318,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
 
 void StyleResolver::apply(
     Element* element, const GCAtomicVector<CSSStyleValuePair>& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    Optional<const MutablePropertyValueList*> cssCustomValues,
     ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
     bool isImportant)
 {
@@ -3351,7 +3351,7 @@ void StyleResolver::apply(
 
 void StyleResolver::applyProperty(
     Element* element, const CSSStyleValuePair& newCssValue,
-    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    Optional<const MutablePropertyValueList*> cssCustomValues,
     ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
     bool isImportant)
 {
@@ -3461,7 +3461,7 @@ void StyleResolver::applyProperty(
                 break;
             }
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setWidth(length.getValue());
@@ -3483,7 +3483,7 @@ void StyleResolver::applyProperty(
                    CSSStyleValuePair::ValueKind::None) {
             style->setMaxWidth(Length());
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMaxWidth(length.getValue());
@@ -3505,7 +3505,7 @@ void StyleResolver::applyProperty(
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
             STARFISH_UNIMPLEMENTED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMinWidth(length.getValue());
@@ -3527,7 +3527,7 @@ void StyleResolver::applyProperty(
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
             STARFISH_UNIMPLEMENTED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setHeight(length.getValue());
@@ -3552,7 +3552,7 @@ void StyleResolver::applyProperty(
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
             STARFISH_UNIMPLEMENTED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMaxHeight(length.getValue());
@@ -3571,7 +3571,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMinHeight(Length());
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMinHeight(length.getValue());
@@ -3659,7 +3659,7 @@ void StyleResolver::applyProperty(
                 style->setFontSize(parentStyle->fontSize() / 1.2f);
             }
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 Length l = length.getValue();
@@ -3817,7 +3817,7 @@ void StyleResolver::applyProperty(
                             VerticalAlignValue::NumericVAlignValue);
             style->setVerticalAlign(newCssValue.verticalAlignValue());
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setVerticalAlignLength(length.getValue());
@@ -3896,7 +3896,7 @@ void StyleResolver::applyProperty(
                    CSSStyleValuePair::ValueKind::Initial) {
             style->setTextIndent(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> len = convertValueToLength(newCssValue.valueKind(),
+            Optional<Length> len = convertValueToLength(newCssValue.valueKind(),
                                                         newCssValue.value());
             if (len.hasValue()) {
                 style->setTextIndent(len.getValue());
@@ -4181,7 +4181,7 @@ void StyleResolver::applyProperty(
                        CSSStyleValuePair::ValueKind::Length ||
                    newCssValue.valueKind() ==
                        CSSStyleValuePair::ValueKind::CalcValueKind) {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setWordSpacing(length.getValue());
@@ -4204,7 +4204,7 @@ void StyleResolver::applyProperty(
                        CSSStyleValuePair::ValueKind::Length ||
                    newCssValue.valueKind() ==
                        CSSStyleValuePair::ValueKind::CalcValueKind) {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setLetterSpacing(length.getValue());
@@ -4346,14 +4346,14 @@ void StyleResolver::applyProperty(
                     ValueList* list = layer.multiValue();
                     LengthSize result;
                     if (list->size() >= 1) {
-                        Nullable<Length> width = convertValueToLength(
+                        Optional<Length> width = convertValueToLength(
                             (*list)[0].valueKind(), (*list)[0].value());
                         if (width.hasValue()) {
                             result.m_width = width.getValue();
                         }
                     }
                     if (list->size() >= 2) {
-                        Nullable<Length> height = convertValueToLength(
+                        Optional<Length> height = convertValueToLength(
                             (*list)[1].valueKind(), (*list)[1].value());
                         if (height.hasValue()) {
                             result.m_height = height.getValue();
@@ -4547,7 +4547,7 @@ void StyleResolver::applyProperty(
         } else if (valueKind == CSSStyleValuePair::ValueKind::Length ||
                    valueKind == CSSStyleValuePair::ValueKind::Percentage ||
                    valueKind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setColumnGap(length.getValue());
@@ -4566,7 +4566,7 @@ void StyleResolver::applyProperty(
         } else if (valueKind == CSSStyleValuePair::ValueKind::Length ||
                    valueKind == CSSStyleValuePair::ValueKind::Percentage ||
                    valueKind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setRowGap(length.getValue());
@@ -4636,14 +4636,14 @@ void StyleResolver::applyProperty(
                     ValueList* list = layer.multiValue();
                     LengthSize result;
                     if (list->size() >= 1) {
-                        Nullable<Length> width = convertValueToLength(
+                        Optional<Length> width = convertValueToLength(
                             (*list)[0].valueKind(), (*list)[0].value());
                         if (width.hasValue()) {
                             result.m_width = width.getValue();
                         }
                     }
                     if (list->size() >= 2) {
-                        Nullable<Length> height = convertValueToLength(
+                        Optional<Length> height = convertValueToLength(
                             (*list)[1].valueKind(), (*list)[1].value());
                         if (height.hasValue()) {
                             result.m_height = height.getValue();
@@ -4940,7 +4940,7 @@ void StyleResolver::applyProperty(
                 CSSStyleValuePair::ValueKind::Number) {
                 t.setValue((*values)[0].numberValue());
             } else {
-                Nullable<Length> nTop = convertValueToLength(
+                Optional<Length> nTop = convertValueToLength(
                     (*values)[0].valueKind(), (*values)[0].value());
                 if (nTop.hasValue()) {
                     t = nTop.getValue();
@@ -4951,7 +4951,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     r.setValue((*values)[1].numberValue());
                 } else {
-                    Nullable<Length> nRight = convertValueToLength(
+                    Optional<Length> nRight = convertValueToLength(
                         (*values)[1].valueKind(), (*values)[1].value());
                     if (nRight.hasValue()) {
                         r = nRight.getValue();
@@ -4965,7 +4965,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     b.setValue((*values)[2].numberValue());
                 } else {
-                    Nullable<Length> nBottom = convertValueToLength(
+                    Optional<Length> nBottom = convertValueToLength(
                         (*values)[2].valueKind(), (*values)[2].value());
                     if (nBottom.hasValue()) {
                         b = nBottom.getValue();
@@ -4979,7 +4979,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     l.setValue((*values)[3].numberValue());
                 } else {
-                    Nullable<Length> nLeft = convertValueToLength(
+                    Optional<Length> nLeft = convertValueToLength(
                         (*values)[3].valueKind(), (*values)[3].value());
                     if (nLeft.hasValue()) {
                         l = nLeft.getValue();
@@ -5121,7 +5121,7 @@ void StyleResolver::applyProperty(
                 CSSStyleValuePair::ValueKind::Number) {
                 t.setValue((*values)[0].numberValue());
             } else {
-                Nullable<Length> nTop = convertValueToLength(
+                Optional<Length> nTop = convertValueToLength(
                     (*values)[0].valueKind(), (*values)[0].value());
                 if (nTop.hasValue()) {
                     t = nTop.getValue();
@@ -5132,7 +5132,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     r.setValue((*values)[1].numberValue());
                 } else {
-                    Nullable<Length> nRight = convertValueToLength(
+                    Optional<Length> nRight = convertValueToLength(
                         (*values)[1].valueKind(), (*values)[1].value());
                     if (nRight.hasValue()) {
                         r = nRight.getValue();
@@ -5146,7 +5146,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     b.setValue((*values)[2].numberValue());
                 } else {
-                    Nullable<Length> nBottom = convertValueToLength(
+                    Optional<Length> nBottom = convertValueToLength(
                         (*values)[2].valueKind(), (*values)[2].value());
                     if (nBottom.hasValue()) {
                         b = nBottom.getValue();
@@ -5160,7 +5160,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Number) {
                     l.setValue((*values)[3].numberValue());
                 } else {
-                    Nullable<Length> nLeft = convertValueToLength(
+                    Optional<Length> nLeft = convertValueToLength(
                         (*values)[3].valueKind(), (*values)[3].value());
                     if (nLeft.hasValue()) {
                         l = nLeft.getValue();
@@ -5211,7 +5211,7 @@ void StyleResolver::applyProperty(
             break;
         case CSSStyleValuePair::ValueKind::Length:
         case CSSStyleValuePair::ValueKind::CalcValueKind: {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setHorizontalBorderSpacing(length.getValue());
@@ -5226,9 +5226,9 @@ void StyleResolver::applyProperty(
             STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
                             newCssValue.valueKind());
             ValueList* list = newCssValue.multiValue();
-            Nullable<Length> hbLength = convertValueToLength(
+            Optional<Length> hbLength = convertValueToLength(
                 (*list)[0].valueKind(), (*list)[0].value());
-            Nullable<Length> vbLength = convertValueToLength(
+            Optional<Length> vbLength = convertValueToLength(
                 (*list)[1].valueKind(), (*list)[1].value());
             if (hbLength.hasValue()) {
                 style->setHorizontalBorderSpacing(hbLength.getValue());
@@ -5301,7 +5301,7 @@ void StyleResolver::applyProperty(
             style->setLineHeight(
                 Length(Length::InheritableNumber, newCssValue.numberValue()));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 auto value = length.getValue();
@@ -5353,7 +5353,7 @@ void StyleResolver::applyProperty(
                 Length(Length::Percent, newCssValue.percentageValue())); \
         } else if (newCssValue.valueKind() ==                            \
                    CSSStyleValuePair::ValueKind::CalcValueKind) {        \
-            Nullable<Length> length = convertValueToLength(              \
+            Optional<Length> length = convertValueToLength(              \
                 newCssValue.valueKind(), newCssValue.value());           \
             if (length.hasValue()) {                                     \
                 style->set##POS(length.getValue());                      \
@@ -5838,7 +5838,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {      \
             style->setMargin##POS(Length(Length::Fixed, 0));     \
         } else {                                                 \
-            Nullable<Length> length = convertValueToLength(      \
+            Optional<Length> length = convertValueToLength(      \
                 newCssValue.valueKind(), newCssValue.value());   \
             if (length.hasValue()) {                             \
                 style->setMargin##POS(length.getValue());        \
@@ -5864,7 +5864,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMarginBlockStart(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMarginBlockStart(length.getValue());
@@ -5885,7 +5885,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMarginBlockEnd(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMarginBlockEnd(length.getValue());
@@ -5906,7 +5906,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMarginInlineEnd(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMarginInlineEnd(length.getValue());
@@ -5927,7 +5927,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMarginInlineStart(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setMarginInlineStart(length.getValue());
@@ -5951,7 +5951,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {       \
             style->setPadding##POS(Length(Length::Fixed, 0));     \
         } else {                                                  \
-            Nullable<Length> length = convertValueToLength(       \
+            Optional<Length> length = convertValueToLength(       \
                 newCssValue.valueKind(), newCssValue.value());    \
             if (length.hasValue()) {                              \
                 style->setPadding##POS(length.getValue());        \
@@ -5977,7 +5977,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setPaddingBlockStart(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setPaddingBlockStart(length.getValue());
@@ -5998,7 +5998,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setPaddingBlockEnd(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setPaddingBlockEnd(length.getValue());
@@ -6019,7 +6019,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setPaddingInlineEnd(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setPaddingInlineEnd(length.getValue());
@@ -6040,7 +6040,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setPaddingInlineStart(Length(Length::Fixed, 0));
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setPaddingInlineStart(length.getValue());
@@ -6179,13 +6179,13 @@ void StyleResolver::applyProperty(
                     }
                 } else {
                     if (i == 0) {
-                        Nullable<Length> nXAxis = convertValueToLength(
+                        Optional<Length> nXAxis = convertValueToLength(
                             item.valueKind(), item.value());
                         if (nXAxis.hasValue()) {
                             xAxis = nXAxis.getValue();
                         }
                     } else {
-                        Nullable<Length> nYAxis = convertValueToLength(
+                        Optional<Length> nYAxis = convertValueToLength(
                             item.valueKind(), item.value());
                         if (nYAxis.hasValue()) {
                             yAxis = nYAxis.getValue();
@@ -6195,7 +6195,7 @@ void StyleResolver::applyProperty(
             }
 
             if (list->size() == 3) {
-                Nullable<Length> nZAxis = convertValueToLength(
+                Optional<Length> nZAxis = convertValueToLength(
                     (*list)[2].valueKind(), (*list)[2].value());
                 if (nZAxis.hasValue()) {
                     zAxis = nZAxis.getValue();
@@ -6281,7 +6281,7 @@ void StyleResolver::applyProperty(
                     style->setContentText(item.stringValue());
                 } else if (item.valueKind() ==
                            CSSStyleValuePair::ValueKind::Attr) {
-                    Nullable<String*> attrValue = element->getAttribute(
+                    Optional<String*> attrValue = element->getAttribute(
                         element->document()->createAttributeName(
                             item.attrValue()));
                     if (attrValue.hasValue()) {
@@ -6297,8 +6297,8 @@ void StyleResolver::applyProperty(
                 } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
                                                    CounterFunctionValueKind) {
                     CSSCounterFunction* v = item.counterFunctionValue();
-                    Nullable<String*> sp = v->separator();
-                    Nullable<AtomicString> counterName = v->style();
+                    Optional<String*> sp = v->separator();
+                    Optional<AtomicString> counterName = v->style();
                     const CounterStyle* counter = nullptr;
                     if (counterName.hasValue()) {
                         counter = CounterStyle::getKnownCounter(
@@ -6497,7 +6497,7 @@ void StyleResolver::applyProperty(
             style->setFlexBasis(FlexBasisData(FlexBasisData::Width, length));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::CalcValueKind) {
-            Nullable<Length> maybeLength = convertValueToLength(
+            Optional<Length> maybeLength = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (maybeLength) {
                 style->setFlexBasis(
@@ -6642,7 +6642,7 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setStrokeWidth(parentStyle->strokeWidth());
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setStrokeWidth(length.getValue());
@@ -6661,7 +6661,7 @@ void StyleResolver::applyProperty(
             style->setX(parentStyle->x());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setX(length.getValue());
@@ -6680,7 +6680,7 @@ void StyleResolver::applyProperty(
             style->setY(parentStyle->y());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setY(length.getValue());
@@ -6699,7 +6699,7 @@ void StyleResolver::applyProperty(
             style->setX1(parentStyle->x1());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setX1(length.getValue());
@@ -6718,7 +6718,7 @@ void StyleResolver::applyProperty(
             style->setY1(parentStyle->y1());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setY1(length.getValue());
@@ -6737,7 +6737,7 @@ void StyleResolver::applyProperty(
             style->setX2(parentStyle->x2());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setX2(length.getValue());
@@ -6756,7 +6756,7 @@ void StyleResolver::applyProperty(
             style->setY2(parentStyle->y2());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setY2(length.getValue());
@@ -6775,7 +6775,7 @@ void StyleResolver::applyProperty(
             style->setR(parentStyle->r());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setR(length.getValue());
@@ -6807,7 +6807,7 @@ void StyleResolver::applyProperty(
             style->setCX(parentStyle->cx());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setCX(length.getValue());
@@ -6826,7 +6826,7 @@ void StyleResolver::applyProperty(
             style->setCY(parentStyle->cy());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setCY(length.getValue());
@@ -6845,7 +6845,7 @@ void StyleResolver::applyProperty(
             style->setRX(parentStyle->rx());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setRX(length.getValue());
@@ -6864,7 +6864,7 @@ void StyleResolver::applyProperty(
             style->setRY(parentStyle->ry());
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else {
-            Nullable<Length> length = convertValueToLength(
+            Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
             if (length.hasValue()) {
                 style->setRY(length.getValue());
@@ -6932,7 +6932,7 @@ void StyleResolver::applyProperty(
                         CSSStyleValuePair::ValueKind::SideValueKind) {
                         if (i == 0) {
                             if (first.sideValue() == SideValue::LeftSideValue) {
-                                Nullable<Length> nX = convertValueToLength(
+                                Optional<Length> nX = convertValueToLength(
                                     second.valueKind(), second.value());
                                 if (nX.hasValue()) {
                                     x = nX.getValue();
@@ -6966,7 +6966,7 @@ void StyleResolver::applyProperty(
                             }
                         } else {
                             if (first.sideValue() == SideValue::TopSideValue) {
-                                Nullable<Length> nY = convertValueToLength(
+                                Optional<Length> nY = convertValueToLength(
                                     second.valueKind(), second.value());
                                 if (nY.hasValue()) {
                                     y = nY.getValue();
@@ -7002,13 +7002,13 @@ void StyleResolver::applyProperty(
                     }
                 } else {
                     if (i == 0) {
-                        Nullable<Length> nX = convertValueToLength(
+                        Optional<Length> nX = convertValueToLength(
                             item.valueKind(), item.value());
                         if (nX.hasValue()) {
                             x = nX.getValue();
                         }
                     } else {
-                        Nullable<Length> nY = convertValueToLength(
+                        Optional<Length> nY = convertValueToLength(
                             item.valueKind(), item.value());
                         if (nY.hasValue()) {
                             y = nY.getValue();
@@ -7845,7 +7845,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
-    Nullable<const MutablePropertyValueList*> cssCustomValues;
+    Optional<const MutablePropertyValueList*> cssCustomValues;
     {
         auto list = ret->customProperty();
         if (list) {
@@ -12563,7 +12563,7 @@ static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)
 static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize*>* v)
 {
     // https://drafts.csswg.org/css-grid/#track-sizing
-    Nullable<CSSTokenValue> repeat =
+    Optional<CSSTokenValue> repeat =
         CSSPropertyParser::parseFunctionBlock((char*)str.data(), "repeat");
     if (!repeat.hasValue()) {
         return false;
@@ -12662,7 +12662,7 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
                 return false;
             }
-            Nullable<Length> maybeLength = convertValueToLength(
+            Optional<Length> maybeLength = convertValueToLength(
                 legnthOrCalc.valueKind(), legnthOrCalc.value());
             if (!maybeLength.hasValue()) {
                 return false;
@@ -14983,7 +14983,7 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 return false;
             }
 
-            Nullable<CSSTokenValue> transformValue = parser.parsedString();
+            Optional<CSSTokenValue> transformValue = parser.parsedString();
             if (!transformValue) {
                 return false;
             }
@@ -15777,7 +15777,7 @@ static bool parseCubicBezierFunction(const CSSTokenValue& value,
 {
     STARFISH_ASSERT(result != nullptr);
 
-    Nullable<CSSTokenValue> mayBezier =
+    Optional<CSSTokenValue> mayBezier =
         CSSPropertyParser::parseFunctionBlock(value.data(), "cubic-bezier");
     if (!mayBezier.hasValue()) {
         return false;
@@ -15816,7 +15816,7 @@ static bool parseStepsFunction(const CSSTokenValue& value,
 {
     STARFISH_ASSERT(result != nullptr);
 
-    Nullable<CSSTokenValue> maySteps =
+    Optional<CSSTokenValue> maySteps =
         CSSPropertyParser::parseFunctionBlock(value.data(), "steps");
     if (!maySteps.hasValue()) {
         return false;

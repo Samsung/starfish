@@ -71,7 +71,7 @@ void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
     }
 }
 
-Nullable<CanvasSurface*> FrameReplacedCanvas::contentSurface()
+Optional<CanvasSurface*> FrameReplacedCanvas::contentSurface()
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
     if (canvasElement->canvasRenderingContext() &&

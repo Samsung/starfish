@@ -58,7 +58,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLCanvasElement() const;
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
@@ -72,7 +72,7 @@ public:
 
     uint32_t height();
     void setHeight(uint32_t value);
-    Nullable<RenderingContextBindindingUnion> getContext(
+    Optional<RenderingContextBindindingUnion> getContext(
         String* contextId, GCVector<ScriptValue> arguments);
 
     String* toDataURL(String* type);

@@ -31,7 +31,7 @@ public:
     ImageData(ExecutionContext* ownerExecutionContext, uint32_t sw,
               uint32_t sh);
     ImageData(ExecutionContext* ownerExecutionContext,
-              ScriptUint8ClampedArray data, uint32_t sw, Nullable<uint32_t> sh);
+              ScriptUint8ClampedArray data, uint32_t sw, Optional<uint32_t> sh);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

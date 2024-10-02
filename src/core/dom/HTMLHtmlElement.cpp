@@ -31,7 +31,7 @@ namespace Starfish {
 
 void HTMLHtmlElement::didComputedStyleChanged(
     ComputedStyle* oldStyle, ComputedStyle* newStyle,
-    Nullable<StyleResolveContext*> ctx)
+    Optional<StyleResolveContext*> ctx)
 {
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||

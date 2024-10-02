@@ -60,7 +60,7 @@ Attr* NamedNodeMap::getNamedItem(String* name)
     return m_element->getAttributeNode(name);
 }
 
-Attr* NamedNodeMap::getNamedItemNS(Nullable<String*> ns, String* localName)
+Attr* NamedNodeMap::getNamedItemNS(Optional<String*> ns, String* localName)
 {
     return m_element->getAttributeNodeNS(ns, localName);
 }
@@ -85,7 +85,7 @@ Attr* NamedNodeMap::removeNamedItem(String* name)
     return m_element->removeAttributeNode(old);
 }
 
-Attr* NamedNodeMap::removeNamedItemNS(Nullable<String*> ns, String* localName)
+Attr* NamedNodeMap::removeNamedItemNS(Optional<String*> ns, String* localName)
 {
     Attr* old = getNamedItemNS(ns, localName);
     if (old == nullptr) {

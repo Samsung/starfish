@@ -102,7 +102,7 @@ public:
     }
 
 private:
-    Nullable<size_t> m_value;
+    Optional<size_t> m_value;
     size_t m_spanValue{ 1 };
     String* m_customIdent{ String::emptyString };
 };

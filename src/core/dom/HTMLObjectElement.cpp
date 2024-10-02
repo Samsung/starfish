@@ -41,7 +41,7 @@ void* HTMLObjectElement::operator new(size_t size)
 }
 
 void HTMLObjectElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old,
+                                            Optional<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)

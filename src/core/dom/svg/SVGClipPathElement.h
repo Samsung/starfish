@@ -44,7 +44,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool isRenderableElement() override
     {

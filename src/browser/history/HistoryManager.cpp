@@ -174,13 +174,13 @@ ScriptValue HistoryManager::state(Document* document)
 }
 
 void HistoryManager::pushState(Document* document, ScriptValue state,
-                               String* title, Nullable<String*> url)
+                               String* title, Optional<String*> url)
 {
     pushReplaceStateInternal(document, state, title, url, OperationType::kPush);
 }
 
 void HistoryManager::replaceState(Document* document, ScriptValue state,
-                                  String* title, Nullable<String*> url)
+                                  String* title, Optional<String*> url)
 {
     pushReplaceStateInternal(document, state, title, url,
                              OperationType::kReplace);
@@ -189,7 +189,7 @@ void HistoryManager::replaceState(Document* document, ScriptValue state,
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#shared-history-push/replace-state-steps
 void HistoryManager::pushReplaceStateInternal(Document* document,
                                               ScriptValue state, String* title,
-                                              Nullable<String*> url,
+                                              Optional<String*> url,
                                               OperationType type)
 {
     ResourceURL* newURL = resolveURL(document, url);
@@ -216,7 +216,7 @@ void HistoryManager::pushReplaceStateInternal(Document* document,
 }
 
 ResourceURL* HistoryManager::resolveURL(Document* document,
-                                        Nullable<String*> url)
+                                        Optional<String*> url)
 {
     ResourceURL* resolvedURL = nullptr;
     if (url.hasValue()) {

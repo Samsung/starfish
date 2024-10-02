@@ -115,7 +115,7 @@ public:
 
         m_frameSVGSVGBox->setContainerViewport(dst);
         m_frameSVGSVGBox->paintReplaced(canvas);
-        m_frameSVGSVGBox->setContainerViewport(Nullable<Unit::Rect>());
+        m_frameSVGSVGBox->setContainerViewport(Optional<Unit::Rect>());
 
         canvas->restore();
     }

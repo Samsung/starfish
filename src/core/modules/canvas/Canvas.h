@@ -715,7 +715,7 @@ protected:
         return m_state[m_state.size() - 1];
     }
     CanvasRenderTargetInfo m_renderTargetInfo;
-    Nullable<CanvasSurface*> m_targetSurface;
+    Optional<CanvasSurface*> m_targetSurface;
     GCVector<CanvasState*> m_state{};
     GCVector<CanvasState*> m_stateMemoryPool{};
     bool m_shouldApplyCanvasFillStrokeSource{ false };

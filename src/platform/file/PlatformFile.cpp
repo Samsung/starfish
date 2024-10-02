@@ -104,7 +104,7 @@ bool PlatformFileUtil::removeFile(const std::string& filePath)
     return remove(filePath.data()) == 0;
 }
 
-Nullable<std::string> PlatformFileUtil::absolutePath(
+Optional<std::string> PlatformFileUtil::absolutePath(
     const std::string& filePath)
 {
     std::string prefix("file://");
@@ -128,18 +128,18 @@ Nullable<std::string> PlatformFileUtil::absolutePath(
                 result[i] = '/';
             }
         }
-        return Nullable<std::string>(toNarrowString(result));
+        return Optional<std::string>(toNarrowString(result));
     } else {
-        return Nullable<std::string>();
+        return Optional<std::string>();
     }
 #else
     char* resolved = realpath(filePath.c_str(), NULL);
     if (resolved) {
         std::string result = std::string(resolved);
         free(resolved);
-        return Nullable<std::string>(result);
+        return Optional<std::string>(result);
     }
-    return Nullable<std::string>();
+    return Optional<std::string>();
 #endif
 }
 

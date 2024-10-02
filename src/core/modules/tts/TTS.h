@@ -137,7 +137,7 @@ public:
         return m_handle;
     }
 
-    Nullable<Element*> lastSpeechElement()
+    Optional<Element*> lastSpeechElement()
     {
         return m_lastSpeechElement;
     }
@@ -151,7 +151,7 @@ private:
 
 #if defined(STARFISH_TIZEN)
     tts_h m_handle;
-    Nullable<Element*> m_lastSpeechElement;
+    Optional<Element*> m_lastSpeechElement;
     friend void utteranceCompletedCB(tts_h handle, int utteranceId, void* data);
 #endif
     bool m_isAccessibilityMode;

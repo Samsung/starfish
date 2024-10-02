@@ -27,7 +27,7 @@
 namespace Starfish {
 
 StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
-                                           Nullable<String*> localStoragePath)
+                                           Optional<String*> localStoragePath)
     : m_storageType(storageType)
     , m_localStoragePath(localStoragePath)
 {

@@ -26,7 +26,7 @@
 namespace Starfish {
 
 void SVGPathElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -42,7 +42,7 @@ void SVGPathElement::didAttributeChanged(QualifiedName name,
 
 void SVGPathElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 

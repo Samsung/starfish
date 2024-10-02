@@ -38,7 +38,7 @@ SVGMarkerElement::SVGMarkerElement(Document* document,
 }
 
 void SVGMarkerElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {

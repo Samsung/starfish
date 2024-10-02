@@ -39,7 +39,7 @@ public:
 
     virtual void didComputedStyleChanged(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
-        Nullable<StyleResolveContext*> ctx) override;
+        Optional<StyleResolveContext*> ctx) override;
 
     HTMLBodyElement* body()
     {

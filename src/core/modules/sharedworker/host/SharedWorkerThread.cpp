@@ -60,7 +60,7 @@ WorkerGlobalScope* SharedWorkerThread::createWorkerGlobalScope(
 
     globalScope->initialize(m_name, m_sharedWorkerKey);
 
-    Nullable<MessagePortConnectionInfo*> connectionInfo =
+    Optional<MessagePortConnectionInfo*> connectionInfo =
         SharedWorkerAgent::instance()->getConnectionInfo(m_initialIdentifier);
     if (!connectionInfo.hasValue()) {
         TRACE(SHAREDWORKER, "GlobalScope will be closed");

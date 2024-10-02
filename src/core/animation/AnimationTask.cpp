@@ -1673,7 +1673,7 @@ static AnimatedValue* backgroundPositionToAnimatedValue(
     return nullptr;
 }
 
-static Nullable<Length> convertValueToLength(const CSSStyleValuePair& property)
+static Optional<Length> convertValueToLength(const CSSStyleValuePair& property)
 {
     CSSStyleValuePair::ValueKind kind = property.valueKind();
     CSSStyleValuePair::ValueData data = property.value();
@@ -1690,12 +1690,12 @@ static Nullable<Length> convertValueToLength(const CSSStyleValuePair& property)
         if (type.isLength() || type.isPercentage() || type.isNumber()) {
             return Length(data.m_calc);
         } else {
-            return Nullable<Length>();
+            return Optional<Length>();
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
-    return Nullable<Length>();
+    return Optional<Length>();
 }
 
 static LengthSize backgroundSizeToLengthSize(const CSSStyleValuePair& property)
@@ -1704,13 +1704,13 @@ static LengthSize backgroundSizeToLengthSize(const CSSStyleValuePair& property)
     if (property.valueKind() == CSSStyleValuePair::ValueListKind) {
         ValueList* list = property.multiValue();
         if (list->size() >= 1) {
-            Nullable<Length> width = convertValueToLength((*list)[0]);
+            Optional<Length> width = convertValueToLength((*list)[0]);
             if (width.hasValue()) {
                 result.m_width = width.getValue();
             }
         }
         if (list->size() >= 2) {
-            Nullable<Length> height = convertValueToLength((*list)[1]);
+            Optional<Length> height = convertValueToLength((*list)[1]);
             if (height.hasValue()) {
                 result.m_height = height.getValue();
             }

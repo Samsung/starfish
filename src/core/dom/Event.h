@@ -71,7 +71,7 @@ public:
     }
     void uninitializeType()
     {
-        m_type = Nullable<String*>();
+        m_type = Optional<String*>();
     }
     String* type() const
     {
@@ -245,7 +245,7 @@ protected:
 
 private:
     ExecutionContext* m_executionContext;
-    Nullable<String*> m_type;
+    Optional<String*> m_type;
     EventTarget* m_target;
     EventTarget* m_currentTarget;
 

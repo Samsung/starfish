@@ -86,7 +86,7 @@ public:
     String* localStorageFilePath();
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    Nullable<HTTPCache*> httpCache();
+    Optional<HTTPCache*> httpCache();
 #endif
 
     size_t webViewInstanceCount()

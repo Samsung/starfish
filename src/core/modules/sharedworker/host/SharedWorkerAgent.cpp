@@ -190,7 +190,7 @@ void SharedWorkerAgent::didGlobalScopeConnected(
         globalScope, connection);
 }
 
-Nullable<MessagePortConnectionInfo*> SharedWorkerAgent::getConnectionInfo(
+Optional<MessagePortConnectionInfo*> SharedWorkerAgent::getConnectionInfo(
     uint32_t identifier)
 {
     Locker<Mutex> lock(*m_mutex);
@@ -205,7 +205,7 @@ Nullable<MessagePortConnectionInfo*> SharedWorkerAgent::getConnectionInfo(
         return *iter;
     }
 
-    return Nullable<MessagePortConnectionInfo*>();
+    return Optional<MessagePortConnectionInfo*>();
 }
 
 void SharedWorkerAgent::closeSharedWorker(uint32_t pid)

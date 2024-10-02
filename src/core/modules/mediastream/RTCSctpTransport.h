@@ -49,7 +49,7 @@ public:
     String* stateStr();
 
     double maxMessageSize();
-    Nullable<uint32_t> maxChannels();
+    Optional<uint32_t> maxChannels();
 
 #define VIRTUAL
 #define OVERRIDE

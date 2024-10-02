@@ -33,7 +33,7 @@ SVGTextElement::SVGTextElement(Document* document, const QualifiedName& qname)
 }
 
 void SVGTextElement::didAttributeChanged(QualifiedName name,
-                                         Nullable<String*> old, String* value,
+                                         Optional<String*> old, String* value,
                                          bool attributeCreated,
                                          bool attributeRemoved)
 {
@@ -95,7 +95,7 @@ void SVGTextElement::updateAttributeNeeded(QualifiedName name)
 
 void SVGTextElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 

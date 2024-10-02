@@ -156,7 +156,7 @@ public:
                 ElementDefinitionOptions options = {});
 
     CustomElementConstructor* get(String* name);
-    Nullable<String*> getName(CustomElementConstructor* constructor);
+    Optional<String*> getName(CustomElementConstructor* constructor);
 
     void upgrade(Node* node, bool inCaseOfConnectedToDocument = false);
     void upgrade(CustomElementRegistryData* data);

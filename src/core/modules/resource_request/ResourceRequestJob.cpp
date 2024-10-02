@@ -73,7 +73,7 @@ inline static bool codeUnitToHexaDecimal(const UTF16StringDataNonGCStd& str,
     return succeed && (*res & 0xC0) == 0x80;
 }
 
-static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
+static Optional<String*> decodeURI(String* uriString, bool noComponent = true)
 {
     UTF16StringDataNonGCStd unescaped;
     auto u16String = uriString->toUTF16NonGCString();
@@ -87,7 +87,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
             size_t start = i;
             if (i + 2 >= strLen) {
                 // error
-                return Nullable<String*>();
+                return Optional<String*>();
             }
             char16_t next = u16String[i + 1];
             char16_t nextnext = u16String[i + 2];
@@ -96,7 +96,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
             unsigned char b = 0;
             if (!twocharToHexaDecimal(next, nextnext, &b)) {
                 // error
-                return Nullable<String*>();
+                return Optional<String*>();
             }
             i += 2;
 
@@ -127,7 +127,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
                 }
                 if (n == 1 || n == 5 || (i + (3 * (n - 1)) >= strLen)) {
                     // error
-                    return Nullable<String*>();
+                    return Optional<String*>();
                 }
                 unsigned char octets[4];
                 octets[0] = b;
@@ -137,7 +137,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
                     if (!codeUnitToHexaDecimal(u16String, ++i,
                                                &b)) { // "%XY" type
                         // error
-                        return Nullable<String*>();
+                        return Optional<String*>();
                     }
                     i += 2;
                     octets[j] = b;
@@ -149,7 +149,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
                     v = (octets[0] & 0x1F) << 6 | (octets[1] & 0x3F);
                     if ((octets[0] == 0xC0) || (octets[0] == 0xC1)) {
                         // error
-                        return Nullable<String*>();
+                        return Optional<String*>();
                     }
                 } else if (n == 3) {
                     v = (octets[0] & 0x0F) << 12 | (octets[1] & 0x3F) << 6 |
@@ -158,7 +158,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
                         ((octets[0] == 0xE0) &&
                          ((octets[1] < 0xA0) || (octets[1] > 0xBF)))) {
                         // error
-                        return Nullable<String*>();
+                        return Optional<String*>();
                     }
                 } else if (n == 4) {
                     v = (octets[0] & 0x07) << 18 | (octets[1] & 0x3F) << 12 |
@@ -166,7 +166,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
                     if ((octets[0] == 0xF0) &&
                         ((octets[1] < 0x90) || (octets[1] > 0xBF))) {
                         // error
-                        return Nullable<String*>();
+                        return Optional<String*>();
                     }
                 }
                 if (v >= 0x10000) {
@@ -182,7 +182,7 @@ static Nullable<String*> decodeURI(String* uriString, bool noComponent = true)
             }
         }
     }
-    return Nullable<String*>(
+    return Optional<String*>(
         String::fromUTF16(unescaped.data(), unescaped.size()));
 }
 

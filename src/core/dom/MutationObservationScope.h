@@ -38,9 +38,9 @@ public:
 
     void startAttributeMutationScope(Node* target,
                                      const Optional<QualifiedName>& name,
-                                     Nullable<String*> oldValue);
+                                     Optional<String*> oldValue);
     void startCharacterDataMutationScope(Node* target,
-                                         Nullable<String*> oldValue);
+                                         Optional<String*> oldValue);
 
     // Ensures that |end| is implicitly called when an object is destroyed.
     void endMutationScope();
@@ -53,7 +53,7 @@ private:
     Optional<QualifiedName> m_name;
     MutationObserverOptionType m_optionTypes;
     AtomicString m_type;
-    Nullable<String*> m_oldValue;
+    Optional<String*> m_oldValue;
     static std::unordered_set<Node*> m_onScopeSet;
 };
 

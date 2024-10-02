@@ -134,7 +134,7 @@ bool HTMLAreaElement::handleDefaultEvent(Event* event)
 
     if (event->type()->equals("click")) {
         const auto& href = starfish()->staticStrings()->m_href;
-        Nullable<String*> hrefAttr = getAttribute(href);
+        Optional<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();
             ReferrerURL* rUrl =
@@ -174,7 +174,7 @@ bool HTMLAreaElement::handleDefaultEvent(Event* event)
 }
 
 void HTMLAreaElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {

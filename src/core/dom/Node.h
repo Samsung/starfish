@@ -198,11 +198,11 @@ public:
 
     virtual NodeType nodeType() const = 0;
     virtual String* nodeName() = 0;
-    virtual Nullable<String*> prefix()
+    virtual Optional<String*> prefix()
     {
         // For nodes other than elements and attributes, the prefix is always
         // null
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 
     virtual void beginParsing()
@@ -301,11 +301,11 @@ public:
 
     String* baseURI() const;
 
-    Nullable<String*> nodeValue() const;
-    void setNodeValue(Nullable<String*> newVal);
+    Optional<String*> nodeValue() const;
+    void setNodeValue(Optional<String*> newVal);
 
-    Nullable<String*> textContent() const;
-    void setTextContent(Nullable<String*> val);
+    Optional<String*> textContent() const;
+    void setTextContent(Optional<String*> val);
 
     bool isEqualNode(Optional<Node*> other);
     bool isSameNode(Optional<Node*> other);
@@ -345,11 +345,11 @@ public:
     }
 
     // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
-    Nullable<String*> lookupPrefix(Nullable<String*> namespaceUri);
+    Optional<String*> lookupPrefix(Optional<String*> namespaceUri);
     // https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
-    Nullable<String*> lookupNamespaceURI(Nullable<String*> prefix);
+    Optional<String*> lookupNamespaceURI(Optional<String*> prefix);
     // https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
-    bool isDefaultNamespace(Nullable<String*> namespaceUri);
+    bool isDefaultNamespace(Optional<String*> namespaceUri);
 
     bool isInDocumentScope();
     bool isInDocumentScopeAndDocumentParticipateInRendering();
@@ -367,7 +367,7 @@ public:
     /* 4.5. Interface Document */
     HTMLCollection* getElementsByTagName(String* name);
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
-    HTMLCollection* getElementsByTagNameNS(Nullable<String*> ns, String* name);
+    HTMLCollection* getElementsByTagNameNS(Optional<String*> ns, String* name);
     HTMLCollection* getElementsByClassName(String* classNames);
 
     void parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
@@ -566,8 +566,8 @@ public:
     void setNeedsPainting();
     void setNeedsComposite();
 
-    void setStyle(ComputedStyle* style, Nullable<StyleResolveContext*> ctx =
-                                            Nullable<StyleResolveContext*>())
+    void setStyle(ComputedStyle* style, Optional<StyleResolveContext*> ctx =
+                                            Optional<StyleResolveContext*>())
     {
         ComputedStyle* old = m_style;
         m_style = style;
@@ -618,7 +618,7 @@ public:
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
                                          ComputedStyle* newStyle,
-                                         Nullable<StyleResolveContext*> ctx);
+                                         Optional<StyleResolveContext*> ctx);
 
     template <typename F>
     void notifyDOMEventToParentTree(Node* parent, const F& fn)

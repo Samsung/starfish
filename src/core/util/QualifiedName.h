@@ -108,7 +108,7 @@ public:
         return false;
     }
 
-    bool hasSameLocalName(Nullable<String*> str) const
+    bool hasSameLocalName(Optional<String*> str) const
     {
         if (m_localName.string()) {
             if (str.hasValue()) {
@@ -129,18 +129,18 @@ public:
         return m_prefix.string() != nullptr;
     }
 
-    Nullable<AtomicString> prefix() const
+    Optional<AtomicString> prefix() const
     {
         if (m_prefix.string() == nullptr) {
-            return Nullable<AtomicString>();
+            return Optional<AtomicString>();
         }
         return m_prefix;
     }
 
-    Nullable<String*> prefixString() const
+    Optional<String*> prefixString() const
     {
         if (m_prefix.string() == nullptr) {
-            return Nullable<String*>();
+            return Optional<String*>();
         }
         return m_prefix.string();
     }
@@ -167,7 +167,7 @@ public:
         return false;
     }
 
-    bool hasSamePrefix(Nullable<String*> str) const
+    bool hasSamePrefix(Optional<String*> str) const
     {
         if (m_prefix.string()) {
             if (str.hasValue()) {
@@ -188,10 +188,10 @@ public:
         return m_namespaceURI.string() != nullptr;
     }
 
-    Nullable<AtomicString> namespaceURI() const
+    Optional<AtomicString> namespaceURI() const
     {
         if (m_namespaceURI.string() == nullptr) {
-            return Nullable<AtomicString>();
+            return Optional<AtomicString>();
         }
         return m_namespaceURI;
     }
@@ -213,7 +213,7 @@ public:
         return false;
     }
 
-    bool hasSameNamespaceURI(Nullable<String*> str) const
+    bool hasSameNamespaceURI(Optional<String*> str) const
     {
         if (m_namespaceURI.string()) {
             if (str.hasValue()) {
@@ -229,7 +229,7 @@ public:
         }
     }
 
-    bool hasSameNamespaceURI(Nullable<AtomicString> str) const
+    bool hasSameNamespaceURI(Optional<AtomicString> str) const
     {
         if (m_namespaceURI.string()) {
             if (str.hasValue()) {

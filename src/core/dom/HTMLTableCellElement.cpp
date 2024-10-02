@@ -29,7 +29,7 @@
 namespace Starfish {
 
 void HTMLTableCellElement::didAttributeChanged(QualifiedName name,
-                                               Nullable<String*> old,
+                                               Optional<String*> old,
                                                String* value,
                                                bool attributeCreated,
                                                bool attributeRemoved)
@@ -178,7 +178,7 @@ HTMLTableElement* HTMLTableCellElement::tableElement()
 
 uint32_t HTMLTableCellElement::colSpan()
 {
-    Nullable<String*> colSpan =
+    Optional<String*> colSpan =
         getAttribute(starfish()->staticStrings()->m_colspan);
     if (colSpan.hasValue()) {
         int colSpanVal = String::parseInt(colSpan.getValue());
@@ -202,7 +202,7 @@ void HTMLTableCellElement::setColSpan(uint32_t colSpan)
 
 uint32_t HTMLTableCellElement::rowSpan()
 {
-    Nullable<String*> rowSpan =
+    Optional<String*> rowSpan =
         getAttribute(starfish()->staticStrings()->m_rowspan);
     if (rowSpan.hasValue()) {
         int rowSpanVal = String::parseInt(rowSpan.getValue());
@@ -259,7 +259,7 @@ void HTMLTableCellElement::setScope(String* scope)
 
 String* HTMLTableCellElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
+    Optional<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }

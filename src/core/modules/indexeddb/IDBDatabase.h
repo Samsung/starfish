@@ -46,11 +46,11 @@ struct IDBTransactionOptions {
 };
 
 struct IDBObjectStoreParameters {
-    DEFINE_GETTER_SETTER(Nullable<DOMStringOrSequenceOfDOMString>, keyPath,
+    DEFINE_GETTER_SETTER(Optional<DOMStringOrSequenceOfDOMString>, keyPath,
                          KeyPath);
     DEFINE_GETTER_SETTER(bool, autoIncrement, AutoIncrement);
 
-    Nullable<DOMStringOrSequenceOfDOMString> m_keyPath;
+    Optional<DOMStringOrSequenceOfDOMString> m_keyPath;
     bool m_autoIncrement = false;
 };
 

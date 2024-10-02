@@ -218,7 +218,7 @@ void ServiceWorkerAgent::removeGlobalScope(ServiceWorkerContextId id)
     m_globalScopeMap.erase(id);
 }
 
-Nullable<ServiceWorkerGlobalScope*>
+Optional<ServiceWorkerGlobalScope*>
 ServiceWorkerAgent::findGlobalScopeByContextId(ServiceWorkerContextId id)
 {
     auto it = m_globalScopeMap.find(id);

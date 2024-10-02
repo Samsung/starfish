@@ -35,15 +35,15 @@ public:
     virtual ~StorageInternal();
 
     virtual unsigned long length() = 0;
-    virtual Nullable<String*> key(unsigned long index) = 0;
-    virtual Nullable<String*> getItem(String* key) = 0;
+    virtual Optional<String*> key(unsigned long index) = 0;
+    virtual Optional<String*> getItem(String* key) = 0;
     virtual bool setItem(String* key, String* value) = 0;
     virtual bool removeItem(String* key) = 0;
     virtual void clear() = 0;
 
     virtual GCVector<String*> getKeyNames() = 0;
 
-    static Nullable<StorageKey*> getStorageKey(ExecutionContext* context);
+    static Optional<StorageKey*> getStorageKey(ExecutionContext* context);
 
 protected:
     StorageType m_storageType;
@@ -59,8 +59,8 @@ public:
     virtual ~StorageMemory(){};
 
     unsigned long length() override;
-    Nullable<String*> key(unsigned long index) override;
-    Nullable<String*> getItem(String* key) override;
+    Optional<String*> key(unsigned long index) override;
+    Optional<String*> getItem(String* key) override;
     bool setItem(String* key, String* value) override;
     bool removeItem(String* key) override;
     void clear() override;

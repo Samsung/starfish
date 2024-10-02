@@ -184,7 +184,7 @@ public:
 
     CSSStyleDeclaration* getComputedStyle(Element* element);
     CSSStyleDeclaration* getComputedStyle(Element* element,
-                                          Nullable<String*> pseudoElt);
+                                          Optional<String*> pseudoElt);
 
     MediaQueryList* matchMedia(String* query);
 
@@ -254,7 +254,7 @@ public:
     // https://html.spec.whatwg.org/multipage/
     // browsers.html#named-access-on-the-window-object
     ScriptValue namedAccess(String* name);
-    Nullable<ScriptObject> defaultNamedGetter(String* name);
+    Optional<ScriptObject> defaultNamedGetter(String* name);
     Window* defaultIndexedGetter(uint32_t idx);
     uint32_t length();
     void invalidateFramesIfNeeded();
@@ -410,11 +410,11 @@ private:
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;
-    Nullable<Screen*> m_screen;
+    Optional<Screen*> m_screen;
     Scrolling* m_scrolling;
-    Nullable<Performance*> m_performance;
-    Nullable<CustomElementRegistry*> m_customElementRegistry;
-    Nullable<Crypto*> m_crypto;
+    Optional<Performance*> m_performance;
+    Optional<CustomElementRegistry*> m_customElementRegistry;
+    Optional<Crypto*> m_crypto;
 
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
@@ -427,8 +427,8 @@ private:
     uint32_t m_width;
     uint32_t m_height;
 
-    Nullable<Node*> m_cssTarget;
-    Nullable<NodeList*> m_frames;
+    Optional<Node*> m_cssTarget;
+    Optional<NodeList*> m_frames;
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* m_currentDispatchingEvent;
 #endif

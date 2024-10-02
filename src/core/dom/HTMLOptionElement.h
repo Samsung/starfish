@@ -61,7 +61,7 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
-    void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    void didAttributeChanged(QualifiedName name, Optional<String*> old,
                              String* val, bool attributeCreated,
                              bool attributeRemoved) override;
     HTMLSelectElement* selectElement();

@@ -45,8 +45,8 @@ public:
 
     // 4.1 Storage interface in IDL
     unsigned long length();
-    Nullable<String*> key(unsigned long index);
-    Nullable<String*> getItem(String* key);
+    Optional<String*> key(unsigned long index);
+    Optional<String*> getItem(String* key);
     bool setItem(String* key, String* value);
     bool removeItem(String* key);
     void clear();

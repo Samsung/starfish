@@ -52,7 +52,7 @@ String* WebOrigin::serialize() const
     return m_originalURL->origin();
 }
 
-Nullable<String*> WebOrigin::domain() const
+Optional<String*> WebOrigin::domain() const
 {
     if (isOpaque()) {
         return nullptr;

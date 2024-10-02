@@ -47,24 +47,24 @@ struct RTCIceCandidateInit : public gc {
                         int sdpMLineIndex);
 
     DEFINE_GETTER_SETTER(String*, candidate, Candidate)
-    DEFINE_GETTER_SETTER(Nullable<String*>, sdpMid, SdpMid)
-    DEFINE_GETTER_SETTER(Nullable<uint32_t>, sdpMLineIndex, SdpMLineIndex)
-    DEFINE_GETTER_SETTER(Nullable<String*>, usernameFragment, UsernameFragment)
+    DEFINE_GETTER_SETTER(Optional<String*>, sdpMid, SdpMid)
+    DEFINE_GETTER_SETTER(Optional<uint32_t>, sdpMLineIndex, SdpMLineIndex)
+    DEFINE_GETTER_SETTER(Optional<String*>, usernameFragment, UsernameFragment)
 
-    Nullable<String*> ufrag()
+    Optional<String*> ufrag()
     {
         return m_usernameFragment;
     }
 
-    void setUfrag(Nullable<String*> usernameFragment)
+    void setUfrag(Optional<String*> usernameFragment)
     {
         m_usernameFragment = usernameFragment;
     }
 
     String* m_candidate{ String::emptyString };
-    Nullable<String*> m_sdpMid;
-    Nullable<uint32_t> m_sdpMLineIndex;
-    Nullable<String*> m_usernameFragment;
+    Optional<String*> m_sdpMid;
+    Optional<uint32_t> m_sdpMLineIndex;
+    Optional<String*> m_usernameFragment;
 };
 
 class RTCIceCandidate : public ScriptWrappable {
@@ -75,11 +75,11 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceCandidate)
 
     DEFINE_GETTER(String*, candidate)
-    DEFINE_GETTER(Nullable<String*>, sdpMid)
-    DEFINE_GETTER(Nullable<uint32_t>, sdpMLineIndex)
-    DEFINE_GETTER(Nullable<String*>, usernameFragment)
+    DEFINE_GETTER(Optional<String*>, sdpMid)
+    DEFINE_GETTER(Optional<uint32_t>, sdpMLineIndex)
+    DEFINE_GETTER(Optional<String*>, usernameFragment)
 
-    Nullable<String*> ufrag()
+    Optional<String*> ufrag()
     {
         return usernameFragment();
     }
@@ -89,9 +89,9 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     String* m_candidate{ String::emptyString };
-    Nullable<String*> m_sdpMid;
-    Nullable<uint32_t> m_sdpMLineIndex;
-    Nullable<String*> m_usernameFragment;
+    Optional<String*> m_sdpMid;
+    Optional<uint32_t> m_sdpMLineIndex;
+    Optional<String*> m_usernameFragment;
 };
 } // namespace Starfish
 

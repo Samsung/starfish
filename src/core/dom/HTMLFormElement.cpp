@@ -148,7 +148,7 @@ void HTMLFormControl::setFormAction(String* formAction)
 
 bool HTMLFormControl::required()
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_required);
     return val.hasValue();
 }
@@ -165,7 +165,7 @@ void HTMLFormControl::setRequired(bool required)
 
 bool HTMLFormControl::multiple()
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_multiple);
     return val.hasValue();
 }
@@ -182,7 +182,7 @@ void HTMLFormControl::setMultiple(bool multiple)
 
 bool HTMLFormControl::disabled()
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_disabled);
     if (val.hasValue()) {
         return val.getValue();
@@ -267,7 +267,7 @@ void HTMLFormControl::fireSubmitEvent()
 }
 
 void HTMLFormControl::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* val,
+                                          Optional<String*> old, String* val,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {
@@ -380,7 +380,7 @@ bool HTMLFormControl::supportsFocus()
 int32_t HTMLFormControl::maxLength()
 {
     int32_t result = 0;
-    Nullable<String*> maxLengthStr =
+    Optional<String*> maxLengthStr =
         getAttribute(starfish()->staticStrings()->m_maxlength);
 
     if (!maxLengthStr.hasValue()) {
@@ -421,7 +421,7 @@ void HTMLFormControl::setMaxLength(int32_t maxlength)
 int32_t HTMLFormControl::minLength()
 {
     int32_t result = 0;
-    Nullable<String*> minLengthStr =
+    Optional<String*> minLengthStr =
         getAttribute(starfish()->staticStrings()->m_minlength);
 
     if (!minLengthStr.hasValue()) {

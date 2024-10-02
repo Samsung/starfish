@@ -31,7 +31,7 @@ class IDBConnection;
 
 struct OpenDBRequestData : public IDBTaskQueueItemData {
     String* name{ nullptr };
-    Nullable<unsigned long long> version;
+    Optional<unsigned long long> version;
     bool upgradeNeeded{ false };
     IDBConnection* connection{ nullptr };
     WebOrigin* webOrigin{ nullptr };

@@ -104,11 +104,11 @@ public:
 
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,
-              Nullable<String*> userName, Nullable<String*> password);
+              Optional<String*> userName, Optional<String*> password);
     void open(String* method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
-    void send(Nullable<String*> body);
+    void send(Optional<String*> body);
     void send(String* body);
     void abort();
 
@@ -124,7 +124,7 @@ public:
 
     void overrideMimeType(String* mime);
     String* getAllResponseHeaders();
-    Nullable<String*> getResponseHeader(String* name);
+    Optional<String*> getResponseHeader(String* name);
 
 #define VIRTUAL
 #define OVERRIDE

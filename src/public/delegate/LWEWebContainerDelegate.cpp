@@ -732,7 +732,7 @@ Settings* WebContainerImpl::GetSettings()
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
         result->SetUserAgentString(m_webView->userAgent()->toUTF8NonGCString());
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        Nullable<::Starfish::HTTPCache*> cache =
+        Optional<::Starfish::HTTPCache*> cache =
             m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             result->SetCacheMode(cache->cacheMode());
@@ -1034,7 +1034,7 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setBaseForegroundColor(
                 Starfish::Unit::Color(r, g, b, a));
 #ifdef STARFISH_ENABLE_HTTPCACHE
-            Nullable<::Starfish::HTTPCache*> cache =
+            Optional<::Starfish::HTTPCache*> cache =
                 m_webView->starfish()->httpCache();
             if (cache.hasValue()) {
                 cache->setCacheMode(settings->GetCacheMode());
@@ -1100,7 +1100,7 @@ void WebContainerImpl::ClearCache()
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-            Nullable<::Starfish::HTTPCache*> cache =
+            Optional<::Starfish::HTTPCache*> cache =
                 m_webView->starfish()->httpCache();
             if (cache.hasValue()) {
                 cache->clear();
@@ -1419,7 +1419,7 @@ void WebContainerImpl::SetCacheMode(int mode)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        Nullable<::Starfish::HTTPCache*> cache =
+        Optional<::Starfish::HTTPCache*> cache =
             m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             cache->setCacheMode(mode);
@@ -1433,7 +1433,7 @@ int WebContainerImpl::GetCacheMode()
     int ret = 0;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
-        Nullable<::Starfish::HTTPCache*> cache =
+        Optional<::Starfish::HTTPCache*> cache =
             m_webView->starfish()->httpCache();
         if (cache.hasValue()) {
             ret = cache->cacheMode();

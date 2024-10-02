@@ -60,7 +60,7 @@ public:
 
     uint8_t readyState() const;
 
-    Nullable<DOMStringOrArrayBuffer> result() const;
+    Optional<DOMStringOrArrayBuffer> result() const;
 
 #define VIRTUAL
 #define OVERRIDE

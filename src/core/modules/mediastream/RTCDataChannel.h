@@ -76,11 +76,11 @@ public:
 
     String* label();
     bool ordered();
-    Nullable<uint32_t> maxPacketLifeTime();
-    Nullable<uint32_t> maxRetransmits();
+    Optional<uint32_t> maxPacketLifeTime();
+    Optional<uint32_t> maxRetransmits();
     DEFINE_GETTER(String*, protocol);
     bool negotiated();
-    Nullable<uint32_t> id();
+    Optional<uint32_t> id();
     DEFINE_GETTER(String*, priority);
     String* readyState();
 

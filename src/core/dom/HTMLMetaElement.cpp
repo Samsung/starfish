@@ -46,7 +46,7 @@ void* HTMLMetaElement::operator new(size_t size)
 }
 
 void HTMLMetaElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {

@@ -577,8 +577,8 @@ size_t utf16ToUtf32(const T* UTF16, const T* bufferEnd, char32_t& uc)
     return tRequiredSize;
 }
 
-struct NullableUTF8String : public gc {
-    NullableUTF8String(const char* buffer, const size_t& bufferSize)
+struct OptionalUTF8String : public gc {
+    OptionalUTF8String(const char* buffer, const size_t& bufferSize)
     {
         m_buffer = buffer;
         m_bufferSize = bufferSize;
@@ -827,7 +827,7 @@ public:
     UTF8StringDataNonGCStd toUTF8NonGCString() const;
     // 1. this method not always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
-    NullableUTF8String toNullableUTF8String();
+    OptionalUTF8String toOptionalUTF8String();
 
     // this is fastest version of view utf8 data of string
     // const char* buffer ends with '\0'

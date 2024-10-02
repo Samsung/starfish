@@ -25,7 +25,7 @@
 namespace Starfish {
 String* HTMLHyperlinkContainer::href()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -42,7 +42,7 @@ void HTMLHyperlinkContainer::setHref(String* href)
 
 String* HTMLHyperlinkContainer::host()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -54,7 +54,7 @@ String* HTMLHyperlinkContainer::host()
 
 void HTMLHyperlinkContainer::setHost(String* host)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -67,7 +67,7 @@ void HTMLHyperlinkContainer::setHost(String* host)
 
 String* HTMLHyperlinkContainer::hostname()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -79,7 +79,7 @@ String* HTMLHyperlinkContainer::hostname()
 
 void HTMLHyperlinkContainer::setHostname(String* hostname)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -92,7 +92,7 @@ void HTMLHyperlinkContainer::setHostname(String* hostname)
 
 String* HTMLHyperlinkContainer::pathname()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -104,7 +104,7 @@ String* HTMLHyperlinkContainer::pathname()
 
 void HTMLHyperlinkContainer::setPathname(String* path)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -117,7 +117,7 @@ void HTMLHyperlinkContainer::setPathname(String* path)
 
 String* HTMLHyperlinkContainer::port()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -129,7 +129,7 @@ String* HTMLHyperlinkContainer::port()
 
 void HTMLHyperlinkContainer::setPort(String* port)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -142,7 +142,7 @@ void HTMLHyperlinkContainer::setPort(String* port)
 
 String* HTMLHyperlinkContainer::protocol()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         return (new ResourceURL(hrefAttr.getValue()->trim(),
@@ -154,7 +154,7 @@ String* HTMLHyperlinkContainer::protocol()
 
 void HTMLHyperlinkContainer::setProtocol(String* protocol)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -167,7 +167,7 @@ void HTMLHyperlinkContainer::setProtocol(String* protocol)
 
 String* HTMLHyperlinkContainer::origin()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
@@ -189,7 +189,7 @@ void HTMLHyperlinkContainer::setTarget(String* target)
 
 String* HTMLHyperlinkContainer::username()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
@@ -203,7 +203,7 @@ String* HTMLHyperlinkContainer::username()
 
 void HTMLHyperlinkContainer::setUsername(String* username)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -216,7 +216,7 @@ void HTMLHyperlinkContainer::setUsername(String* username)
 
 String* HTMLHyperlinkContainer::password()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
@@ -230,7 +230,7 @@ String* HTMLHyperlinkContainer::password()
 
 void HTMLHyperlinkContainer::setPassword(String* password)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -243,7 +243,7 @@ void HTMLHyperlinkContainer::setPassword(String* password)
 
 String* HTMLHyperlinkContainer::search()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
@@ -257,7 +257,7 @@ String* HTMLHyperlinkContainer::search()
 
 void HTMLHyperlinkContainer::setSearch(String* hash)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;
@@ -270,7 +270,7 @@ void HTMLHyperlinkContainer::setSearch(String* hash)
 
 String* HTMLHyperlinkContainer::hash()
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (hrefAttr.hasValue()) {
         ResourceURL* url = new ResourceURL(hrefAttr.getValue()->trim(),
@@ -284,7 +284,7 @@ String* HTMLHyperlinkContainer::hash()
 
 void HTMLHyperlinkContainer::setHash(String* hash)
 {
-    Nullable<String*> hrefAttr =
+    Optional<String*> hrefAttr =
         getAttribute(starfish()->staticStrings()->m_href);
     if (!hrefAttr.hasValue()) {
         return;

@@ -585,21 +585,21 @@ const char* getWindowsTempDir();
                                                    : GC_MALLOC(bytes))
 
 template <typename T>
-struct Nullable : public gc {
+struct Optional : public gc {
 public:
-    Nullable()
+    Optional()
         : m_hasValue(false)
         , m_value()
     {
     }
 
-    Nullable(T value)
+    Optional(T value)
         : m_hasValue(true)
         , m_value(value)
     {
     }
 
-    Nullable(std::nullptr_t value)
+    Optional(std::nullptr_t value)
         : m_hasValue(false)
         , m_value()
     {
@@ -655,7 +655,7 @@ public:
         return m_hasValue;
     }
 
-    bool operator==(const Nullable<T>& other) const
+    bool operator==(const Optional<T>& other) const
     {
         if (m_hasValue != other.hasValue()) {
             return false;
@@ -663,7 +663,7 @@ public:
         return m_hasValue ? m_value == other.m_value : true;
     }
 
-    bool operator!=(const Nullable<T>& other) const
+    bool operator!=(const Optional<T>& other) const
     {
         return !this->operator==(other);
     }
@@ -687,34 +687,31 @@ protected:
 };
 
 template <typename T>
-using Optional = Nullable<T>;
-
-template <typename T>
-inline bool operator==(const T& a, const Nullable<T>& b)
+inline bool operator==(const T& a, const Optional<T>& b)
 {
     return b == a;
 }
 
 template <typename T>
-inline bool operator!=(const T& a, const Nullable<T>& b)
+inline bool operator!=(const T& a, const Optional<T>& b)
 {
     return b != a;
 }
 
 template <typename T>
-class Nullable<T*> : public gc {
+class Optional<T*> : public gc {
 public:
-    Nullable()
+    Optional()
         : m_value(nullptr)
     {
     }
 
-    Nullable(T* value)
+    Optional(T* value)
         : m_value(value)
     {
     }
 
-    Nullable(std::nullptr_t value)
+    Optional(std::nullptr_t value)
         : m_value(nullptr)
     {
     }
@@ -781,7 +778,7 @@ public:
         return *m_value;
     }
 
-    bool operator==(const Nullable<T*>& other) const
+    bool operator==(const Optional<T*>& other) const
     {
         if (hasValue() != other.hasValue()) {
             return false;
@@ -789,7 +786,7 @@ public:
         return hasValue() ? m_value == other.m_value : true;
     }
 
-    bool operator!=(const Nullable<T*>& other) const
+    bool operator!=(const Optional<T*>& other) const
     {
         return !this->operator==(other);
     }
@@ -812,13 +809,13 @@ protected:
 };
 
 template <typename T>
-inline bool operator==(const T*& a, const Nullable<T*>& b)
+inline bool operator==(const T*& a, const Optional<T*>& b)
 {
     return b == a;
 }
 
 template <typename T>
-inline bool operator!=(const T*& a, const Nullable<T*>& b)
+inline bool operator!=(const T*& a, const Optional<T*>& b)
 {
     return b != a;
 }

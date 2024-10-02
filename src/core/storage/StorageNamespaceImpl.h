@@ -40,14 +40,14 @@ using GCWebOriginToStorageMap =
 class StorageNamespaceImpl : public StorageNamespace {
 public:
     StorageNamespaceImpl(StorageType storageType,
-                         Nullable<String*> localStoragePath);
+                         Optional<String*> localStoragePath);
     virtual ~StorageNamespaceImpl(){};
 
     virtual StorageInternal* storageInternal(WebOrigin* origin) override;
 
 private:
     StorageType m_storageType;
-    Nullable<String*> m_localStoragePath;
+    Optional<String*> m_localStoragePath;
 
     GCWebOriginToStorageMap m_originToStorage;
 };

@@ -43,12 +43,12 @@ public:
         return m_size;
     }
 
-    Nullable<String*> item(unsigned long index)
+    Optional<String*> item(unsigned long index)
     {
         if (index < size()) {
             return at(index);
         }
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 
     bool contains(String* item)

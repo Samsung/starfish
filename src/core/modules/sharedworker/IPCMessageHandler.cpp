@@ -27,13 +27,13 @@
 
 namespace Starfish {
 
-Nullable<IPCMessageSerializer*> IPCMessageHandler::serialize(
+Optional<IPCMessageSerializer*> IPCMessageHandler::serialize(
     IPCMessage& message)
 {
     IPCMessageSerializer* serializer = message.serialize();
     if (serializer->isError()) {
         TRACE(IPC, "IPCMessageSerializer error");
-        return Nullable<IPCMessageSerializer*>();
+        return Optional<IPCMessageSerializer*>();
     }
 
     return serializer;
@@ -41,7 +41,7 @@ Nullable<IPCMessageSerializer*> IPCMessageHandler::serialize(
 
 void IPCMessageHandler::sendMessage(Connection* connection, IPCMessage& message)
 {
-    Nullable<IPCMessageSerializer*> serializer = serialize(message);
+    Optional<IPCMessageSerializer*> serializer = serialize(message);
     if (serializer.hasValue()) {
         serializer->writeTerminator();
         connection->send(serializer->data(), serializer->size());

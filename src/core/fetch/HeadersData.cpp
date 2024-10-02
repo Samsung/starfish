@@ -157,14 +157,14 @@ void HeadersData::deleteHeader(String* name, bool* typeErrorOccurred)
     return;
 }
 
-Nullable<String*> HeadersData::get(String* name, bool* typeErrorOccurred)
+Optional<String*> HeadersData::get(String* name, bool* typeErrorOccurred)
 {
     if (!isValidHTTPToken(name)) {
         SET_TYPE_ERROR();
         return nullptr;
     }
 
-    Nullable<std::string> value =
+    Optional<std::string> value =
         noCheckValidGet(name->toLower()->toUTF8NonGCString());
     if (value.hasValue() == true) {
         return String::fromUTF8(value.getValue().data(),
@@ -173,7 +173,7 @@ Nullable<String*> HeadersData::get(String* name, bool* typeErrorOccurred)
     return nullptr;
 }
 
-Nullable<std::string> HeadersData::noCheckValidGet(const std::string& name)
+Optional<std::string> HeadersData::noCheckValidGet(const std::string& name)
 {
     // TODO : https://fetch.spec.whatwg.org/#concept-header-list-get
     auto it = m_httpHeaderMap.find(name);

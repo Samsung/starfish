@@ -341,7 +341,7 @@ void XMLHttpRequest::initResponseData()
     m_responseXML = nullptr;
 }
 
-void XMLHttpRequest::send(Nullable<String*> body)
+void XMLHttpRequest::send(Optional<String*> body)
 {
     if (body.hasValue()) {
         send(body.getValue());
@@ -393,8 +393,8 @@ void XMLHttpRequest::open(String* method, String* url)
 }
 
 void XMLHttpRequest::open(String* method, String* url, bool async,
-                          Nullable<String*> userName,
-                          Nullable<String*> password)
+                          Optional<String*> userName,
+                          Optional<String*> password)
 {
     String* uValue =
         userName.hasValue() ? userName.getValue() : String::emptyString;
@@ -768,7 +768,7 @@ String* XMLHttpRequest::getAllResponseHeaders()
     return sb.finalize();
 }
 
-Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
+Optional<String*> XMLHttpRequest::getResponseHeader(String* name)
 {
     if (readyState() < static_cast<uint8_t>(ReadyState::HeadersReceived) ||
         m_resourceRequest->isError()) {

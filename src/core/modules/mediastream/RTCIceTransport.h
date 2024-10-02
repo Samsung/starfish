@@ -55,7 +55,7 @@ public:
 
     // String* state();
     GCVector<RTCIceCandidate*> getRemoteCandidates();
-    Nullable<RTCIceCandidatePair> getSelectedCandidatePair();
+    Optional<RTCIceCandidatePair> getSelectedCandidatePair();
 
     // void setBackend(libwebrtc::scoped_refptr<libwebrtc::IceTransport>
     // backend);

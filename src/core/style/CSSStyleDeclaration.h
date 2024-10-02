@@ -89,8 +89,8 @@ public:
 
     // NOTE Based on IDL,
     // CSSStyleDeclaration has namedGetter, namedEnumerator, namedSetter
-    Nullable<String*> defaultNamedGetter(String* name);
-    bool defaultNamedSetter(String* name, Nullable<String*> value);
+    Optional<String*> defaultNamedGetter(String* name);
+    bool defaultNamedSetter(String* name, Optional<String*> value);
     void defaultNamedEnumerator(GCVector<String*>& enums);
 
     template <typename T>
@@ -162,7 +162,7 @@ public:
         return m_cssValues;
     }
 
-    Nullable<MutablePropertyValueList*> cssCustomValues()
+    Optional<MutablePropertyValueList*> cssCustomValues()
     {
         return m_cssCustomValues;
     }
@@ -454,7 +454,7 @@ protected:
     void removeUnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
-    Nullable<MutablePropertyValueList*> m_cssCustomValues;
+    Optional<MutablePropertyValueList*> m_cssCustomValues;
     GCVector<void*> m_pointerRooter;
     Node* m_node;
 };

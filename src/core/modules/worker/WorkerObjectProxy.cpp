@@ -74,19 +74,19 @@ void WorkerObjectProxy::terminateWorker()
         this);
 }
 
-Nullable<WorkerGlobalScope*> WorkerObjectProxy::parentWorkerGlobalScope()
+Optional<WorkerGlobalScope*> WorkerObjectProxy::parentWorkerGlobalScope()
 {
     ExecutionContext* parentExecutionContext = targetExecutionContext();
     if (parentExecutionContext->hasWorkerGlobalScope()) {
         return parentExecutionContext->workerGlobalScope();
     }
 
-    return Nullable<WorkerGlobalScope*>();
+    return Optional<WorkerGlobalScope*>();
 }
 
 void WorkerObjectProxy::addChildWorker()
 {
-    Nullable<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
+    Optional<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
     if (parent.hasValue()) {
         parent->asDedicatedWorkerGlobalScope()
             ->workerObjectProxy()
@@ -97,7 +97,7 @@ void WorkerObjectProxy::addChildWorker()
 
 void WorkerObjectProxy::removeChildWorker()
 {
-    Nullable<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
+    Optional<WorkerGlobalScope*> parent = parentWorkerGlobalScope();
     if (parent.hasValue()) {
         if (!parent->asDedicatedWorkerGlobalScope()->isClosing()) {
             parent->asDedicatedWorkerGlobalScope()

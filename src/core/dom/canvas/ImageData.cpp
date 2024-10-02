@@ -62,7 +62,7 @@ ImageData::ImageData(ExecutionContext* ownerExecutionContext, uint32_t sw,
 
 ImageData::ImageData(ExecutionContext* ownerExecutionContext,
                      ScriptUint8ClampedArray data, uint32_t sw,
-                     Nullable<uint32_t> sh)
+                     Optional<uint32_t> sh)
     : ImageData(ownerExecutionContext)
 {
     size_t length = data->byteLength();

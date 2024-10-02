@@ -25,7 +25,7 @@
 namespace Starfish {
 
 void HTMLLIElement::didAttributeChanged(QualifiedName name,
-                                        Nullable<String*> old, String* value,
+                                        Optional<String*> old, String* value,
                                         bool attributeCreated,
                                         bool attributeRemoved)
 {
@@ -119,7 +119,7 @@ void HTMLLIElement::setValue(int32_t v)
 
 bool HTMLLIElement::hasValue()
 {
-    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_value);
+    Optional<String*> v = getAttribute(starfish()->staticStrings()->m_value);
     if (v.hasValue()) {
         return true;
     } else {

@@ -30,10 +30,10 @@ namespace Starfish {
 class WebGLBuffer;
 
 #define STATEFUL_VALUES(V)                                             \
-    V(WebGLVertexArrayObjectOES, Nullable<WebGLVertexArrayObjectOES*>, \
+    V(WebGLVertexArrayObjectOES, Optional<WebGLVertexArrayObjectOES*>, \
       webGLVertexArrayObjectOES)                                       \
-    V(WebGLFramebuffer, Nullable<WebGLFramebuffer*>, webGLFramebuffer) \
-    V(WebGLProgram, Nullable<WebGLProgram*>, webGLProgram)
+    V(WebGLFramebuffer, Optional<WebGLFramebuffer*>, webGLFramebuffer) \
+    V(WebGLProgram, Optional<WebGLProgram*>, webGLProgram)
 
 // Forward declarations
 #define V(Constructor, _, __) class Constructor;
@@ -56,12 +56,12 @@ public:
     STATEFUL_VALUES(V);
 #undef V
 
-    Nullable<WebGLBuffer*> getBoundBuffer(GLuint target);
-    void setBoundBuffer(GLenum target, Nullable<WebGLBuffer*> maybe);
+    Optional<WebGLBuffer*> getBoundBuffer(GLuint target);
+    void setBoundBuffer(GLenum target, Optional<WebGLBuffer*> maybe);
 
-    Nullable<WebGLBuffer*> getBufferBoundToVertexAttributes(GLuint index);
+    Optional<WebGLBuffer*> getBufferBoundToVertexAttributes(GLuint index);
     void setBufferBoundToVertexAttributes(GLuint index,
-                                          Nullable<WebGLBuffer*> maybe);
+                                          Optional<WebGLBuffer*> maybe);
 
 private:
     // Define variables

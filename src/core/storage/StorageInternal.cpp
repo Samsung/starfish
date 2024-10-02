@@ -36,7 +36,7 @@ StorageInternal::StorageInternal(StorageType storageType, WebOrigin* webOrigin)
 }
 
 // https://storage.spec.whatwg.org/#obtain-a-storage-key
-Nullable<StorageKey*> StorageInternal::getStorageKey(ExecutionContext* context)
+Optional<StorageKey*> StorageInternal::getStorageKey(ExecutionContext* context)
 {
     if (context->webOrigin()->isOpaque()) {
         return nullptr;
@@ -56,7 +56,7 @@ unsigned long StorageMemory::length()
     return m_map.size();
 }
 
-Nullable<String*> StorageMemory::key(unsigned long index)
+Optional<String*> StorageMemory::key(unsigned long index)
 {
     if (index >= m_map.size()) {
         return nullptr;
@@ -65,7 +65,7 @@ Nullable<String*> StorageMemory::key(unsigned long index)
     return itr->first;
 }
 
-Nullable<String*> StorageMemory::getItem(String* key)
+Optional<String*> StorageMemory::getItem(String* key)
 {
     auto itr = m_map.find(key);
     if (itr == m_map.end()) {

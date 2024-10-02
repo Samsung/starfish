@@ -51,8 +51,8 @@ public:
     bool canGoBack();
     bool canGoForward();
 
-    void pushState(ScriptValue state, String* title, Nullable<String*> url);
-    void replaceState(ScriptValue state, String* title, Nullable<String*> url);
+    void pushState(ScriptValue state, String* title, Optional<String*> url);
+    void replaceState(ScriptValue state, String* title, Optional<String*> url);
 
 private:
     HistoryManager* historyManager();

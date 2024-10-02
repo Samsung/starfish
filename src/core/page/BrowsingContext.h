@@ -194,13 +194,13 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData& data);
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                  Nullable<Node*> node);
+                                  Optional<Node*> node);
 
     bool setActiveNode(Node* n);
     void releaseActiveNode();
 
     bool setHoveredNode(Node* n,
-                        Nullable<GCUnorderedSet<Node*>*> oldHoveredNodeSet);
+                        Optional<GCUnorderedSet<Node*>*> oldHoveredNodeSet);
     void releaseHoveredNode();
 
     Node* focusedNode();
@@ -233,7 +233,7 @@ public:
     void clearingBeforePaint(T canvas);
     void paintWindowBackground(Canvas* canvas);
 
-    std::pair<Nullable<Element*>, Unit::Color> hasWindowBackgroundColor();
+    std::pair<Optional<Element*>, Unit::Color> hasWindowBackgroundColor();
     bool rootStackingContextNeedsGraphicsBuffer();
 
     bool isTopLevelBrowsingContext()

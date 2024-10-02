@@ -154,7 +154,7 @@ void HTMLMediaElement::onDOMContentLoaded()
 }
 
 void HTMLMediaElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* value,
+                                           Optional<String*> old, String* value,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {
@@ -804,12 +804,12 @@ String* HTMLMediaElement::currentSrc()
     return m_currentSrc;
 }
 
-Nullable<String*> HTMLMediaElement::crossOrigin()
+Optional<String*> HTMLMediaElement::crossOrigin()
 {
     return getAttribute(starfish()->staticStrings()->m_crossorigin);
 }
 
-void HTMLMediaElement::setCrossOrigin(Nullable<String*> crossOrigin)
+void HTMLMediaElement::setCrossOrigin(Optional<String*> crossOrigin)
 {
     if (crossOrigin.hasValue()) {
         setAttribute(starfish()->staticStrings()->m_crossorigin,

@@ -85,13 +85,13 @@ ScriptValue History::state()
     return historyManager()->state(document());
 }
 
-void History::pushState(ScriptValue state, String* title, Nullable<String*> url)
+void History::pushState(ScriptValue state, String* title, Optional<String*> url)
 {
     historyManager()->pushState(document(), state, title, url);
 }
 
 void History::replaceState(ScriptValue state, String* title,
-                           Nullable<String*> url)
+                           Optional<String*> url)
 {
     historyManager()->replaceState(document(), state, title, url);
 }

@@ -54,7 +54,7 @@ void* SVGSVGElement::operator new(size_t size)
 }
 
 void SVGSVGElement::didAttributeChanged(QualifiedName name,
-                                        Nullable<String*> old, String* value,
+                                        Optional<String*> old, String* value,
                                         bool attributeCreated,
                                         bool attributeRemoved)
 {
@@ -99,7 +99,7 @@ void SVGSVGElement::updateSVGAttributeNeeded(QualifiedName name)
 
 void SVGSVGElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
-    Nullable<const MutablePropertyValueList*> cssCustomValues)
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 

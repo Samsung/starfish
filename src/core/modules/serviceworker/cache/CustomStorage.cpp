@@ -36,12 +36,12 @@ unsigned long CustomStorage::length()
     return m_storageInternal->length();
 }
 
-Nullable<String*> CustomStorage::key(unsigned long index)
+Optional<String*> CustomStorage::key(unsigned long index)
 {
     return m_storageInternal->key(index);
 }
 
-Nullable<String*> CustomStorage::getItem(String* key)
+Optional<String*> CustomStorage::getItem(String* key)
 {
     return m_storageInternal->getItem(key);
 }

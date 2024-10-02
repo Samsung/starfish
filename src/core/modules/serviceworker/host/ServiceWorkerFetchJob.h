@@ -45,7 +45,7 @@ public:
     {
     }
 
-    Nullable<Response*> handleFetch(FetchEventRequestData* data);
+    Optional<Response*> handleFetch(FetchEventRequestData* data);
 
     void onCompleteFetch(FetchEvent* event);
 

@@ -27,7 +27,7 @@
 namespace Starfish {
 
 class RTCStatsReportIterationSource final
-    : public IterationSource<Nullable<String*>, Nullable<ScriptValue>> {
+    : public IterationSource<Optional<String*>, Optional<ScriptValue>> {
 public:
     RTCStatsReportIterationSource(
         GCVector<std::pair<String*, ScriptValue>>& data)
@@ -37,8 +37,8 @@ public:
     }
 
     virtual bool next(Escargot::ExecutionStateRef* state,
-                      Nullable<String*>& key,
-                      Nullable<ScriptValue>& value) override
+                      Optional<String*>& key,
+                      Optional<ScriptValue>& value) override
     {
         if (m_iterator == m_data.end()) {
             return false;
@@ -71,13 +71,13 @@ ScriptBindingInstance* RTCStatsReport::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-IterationSource<Nullable<String*>, Nullable<ScriptValue>>*
+IterationSource<Optional<String*>, Optional<ScriptValue>>*
 RTCStatsReport::startIteration(Escargot::ExecutionStateRef* state)
 {
     return new RTCStatsReportIterationSource(m_data);
 }
 
-Nullable<ScriptValue> RTCStatsReport::get(String* key)
+Optional<ScriptValue> RTCStatsReport::get(String* key)
 {
     for (auto pair : m_data) {
         if (key->equals(pair.first)) {

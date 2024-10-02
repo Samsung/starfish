@@ -3288,30 +3288,30 @@ public:
                               bool inheritedStyleChanged = false);
 
     static std::string resolveVarReferencedValue(
-        Element* element, NullableUTF8String utf8String,
-        Nullable<const MutablePropertyValueList*> cssCustomValues);
+        Element* element, OptionalUTF8String utf8String,
+        Optional<const MutablePropertyValueList*> cssCustomValues);
 
 protected:
     CSSStyleDeclaration* resolveVarValue(
         Element* element, const CSSStyleValuePair& cssValuePair,
         CSSStyleValuePair::KeyKind keyKind,
-        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        Optional<const MutablePropertyValueList*> cssCustomValues,
         bool isImportant);
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
-               Nullable<const MutablePropertyValueList*> cssCustomValues,
+               Optional<const MutablePropertyValueList*> cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
 
     void applyProperty(
         Element* element, const CSSStyleValuePair& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        Optional<const MutablePropertyValueList*> cssCustomValues,
         ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
         bool isImportant = false);
 
     void applyAllProperty(
         Element* element, CSSStyleValuePair::ValueKind valueKind,
-        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        Optional<const MutablePropertyValueList*> cssCustomValues,
         ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
         bool isImportant = false);
 

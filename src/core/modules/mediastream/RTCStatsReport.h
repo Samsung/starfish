@@ -37,10 +37,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCStatsReport)
 
-    IterationSource<Nullable<String*>, Nullable<ScriptValue>>* startIteration(
+    IterationSource<Optional<String*>, Optional<ScriptValue>>* startIteration(
         Escargot::ExecutionStateRef* state) override;
 
-    virtual Nullable<ScriptValue> get(String* key) override;
+    virtual Optional<ScriptValue> get(String* key) override;
 
     virtual void set(String* key, ScriptValue value) override;
 

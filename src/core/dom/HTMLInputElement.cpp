@@ -287,7 +287,7 @@ void HTMLInputElement::toggleChecked()
 
 bool HTMLInputElement::defaultChecked()
 {
-    Nullable<String*> val =
+    Optional<String*> val =
         getAttribute(starfish()->staticStrings()->m_checked);
 
     return val.hasValue();
@@ -538,7 +538,7 @@ String* HTMLInputElement::obscurePhrase(String* phrase)
 }
 
 void HTMLInputElement::didAttributeChanged(QualifiedName name,
-                                           Nullable<String*> old, String* val,
+                                           Optional<String*> old, String* val,
                                            bool attributeCreated,
                                            bool attributeRemoved)
 {

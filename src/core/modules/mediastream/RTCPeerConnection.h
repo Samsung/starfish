@@ -413,8 +413,8 @@ public:
     ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
                                                     String* sdp);
     RTCSdpType toRtcSdpType(std::string type);
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> toSdpType(
-        Nullable<RTCSdpType> type);
+    Optional<libwebrtc::RTCSessionDescription::SdpType> toSdpType(
+        Optional<RTCSdpType> type);
     DOMException* toDomException(std::string type);
 
     bool isClosed();

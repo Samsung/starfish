@@ -42,7 +42,7 @@ DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
 
 void HTMLBodyElement::didComputedStyleChanged(
     ComputedStyle* oldStyle, ComputedStyle* newStyle,
-    Nullable<StyleResolveContext*> ctx)
+    Optional<StyleResolveContext*> ctx)
 {
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||
@@ -56,7 +56,7 @@ void HTMLBodyElement::didComputedStyleChanged(
 }
 
 void HTMLBodyElement::didAttributeChanged(QualifiedName name,
-                                          Nullable<String*> old, String* value,
+                                          Optional<String*> old, String* value,
                                           bool attributeCreated,
                                           bool attributeRemoved)
 {

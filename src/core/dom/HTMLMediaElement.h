@@ -249,7 +249,7 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
     virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void didNodeInsertedToDocumentTree() override;
@@ -272,8 +272,8 @@ public:
 
     String* currentSrc();
 
-    Nullable<String*> crossOrigin();
-    void setCrossOrigin(Nullable<String*> crossOrigin);
+    Optional<String*> crossOrigin();
+    void setCrossOrigin(Optional<String*> crossOrigin);
 
     NetworkState networkState();
     PreloadState preloadValue();

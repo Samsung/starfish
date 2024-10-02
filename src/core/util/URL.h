@@ -69,7 +69,7 @@ public:
 protected:
     ExecutionContext* m_executionContext;
     ResourceURL* m_resourceURL;
-    Nullable<URLSearchParams*> m_searchParams;
+    Optional<URLSearchParams*> m_searchParams;
 };
 } // namespace Starfish
 

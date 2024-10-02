@@ -977,12 +977,12 @@ Element* Document::createElement(String* localName)
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
+QualifiedName Document::validateAndExtractQualifiedName(Optional<String*> ns,
                                                         String* qualifiedName)
 {
     // If namespace is the empty string, set it to null.
     if (ns.hasValue() && !ns.getValue()->length()) {
-        ns = Nullable<String*>();
+        ns = Optional<String*>();
     }
     // Validate qualifiedName.
     if (!QualifiedName::validateQualifiedName(qualifiedName)) {
@@ -990,7 +990,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Let prefix be null.
-    Nullable<AtomicString> prefix;
+    Optional<AtomicString> prefix;
     AtomicString localName;
     // If qualifiedName contains a ":" (U+003E), then split the string on it and
     // set prefix to the part before and localName to the part after.
@@ -1054,7 +1054,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     }
 }
 
-Element* Document::createElementNS(Nullable<String*> namespaceString,
+Element* Document::createElementNS(Optional<String*> namespaceString,
                                    String* qualifiedName)
 {
     QualifiedName name =
@@ -1203,7 +1203,7 @@ Attr* Document::createAttribute(QualifiedName localName)
     return new Attr(this, localName);
 }
 
-Attr* Document::createAttributeNS(Nullable<String*> ns, String* name)
+Attr* Document::createAttributeNS(Optional<String*> ns, String* name)
 {
     QualifiedName qName = validateAndExtractQualifiedName(ns, name);
     return new Attr(this, qName);
@@ -1307,7 +1307,7 @@ String* Document::title()
     // document element.
     // Otherwise, let value be the child text content of the title element, or
     // the empty string if the title element is null.
-    Nullable<String*> value = title->textContent();
+    Optional<String*> value = title->textContent();
     if (!value.hasValue())
         return String::emptyString;
     // Strip and collapse ASCII whitespace in value.
@@ -1860,7 +1860,7 @@ QualifiedName Document::createAttributeName(String* name)
     }
 }
 
-QualifiedName Document::createAttributeNameNS(Nullable<String*> ns,
+QualifiedName Document::createAttributeNameNS(Optional<String*> ns,
                                               String* localName)
 {
     // Case sensitive
@@ -1965,7 +1965,7 @@ String* Document::domain()
         return String::emptyString;
     }
 
-    Nullable<String*> effectiveDomain = webOrigin()->domain();
+    Optional<String*> effectiveDomain = webOrigin()->domain();
     if (effectiveDomain.hasValue()) {
         return effectiveDomain.getValue();
     }
@@ -1977,10 +1977,10 @@ void Document::setDomain(String* domain)
     STARFISH_UNSUPPORTED_METHOD();
 }
 
-Nullable<HTMLOrSVGScriptElement> Document::currentScript()
+Optional<HTMLOrSVGScriptElement> Document::currentScript()
 {
     if (m_currentScripts.size() == 0) {
-        return Nullable<HTMLOrSVGScriptElement>();
+        return Optional<HTMLOrSVGScriptElement>();
     }
     STARFISH_ASSERT(m_currentScripts.back());
     STARFISH_ASSERT(m_currentScripts.back()->isHTMLScriptElement() ||
@@ -2004,7 +2004,7 @@ void Document::loadBuiltinPolyfill(String* localPath)
         STARFISH_LOG_INFO("Invalid built-in polyfill path.");
         return;
     }
-    Nullable<String*> data = in->readAll();
+    Optional<String*> data = in->readAll();
     in.reset();
     if (!data.hasValue()) {
         STARFISH_LOG_INFO("Invalid built-in polyfill content.");
@@ -2541,7 +2541,7 @@ void Document::updateIntersectionObservation()
 
             IntersectionObserverEntryInit init;
             Unit::Rect rootRect;
-            Nullable<DOMRectInit> rootBounds;
+            Optional<DOMRectInit> rootBounds;
             if (rootBoundingClientRect) {
                 rootRect = Unit::Rect(rootBoundingClientRect->x(),
                                       rootBoundingClientRect->y(),

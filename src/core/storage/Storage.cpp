@@ -38,12 +38,12 @@ unsigned long Storage::length()
     return m_storageInternal->length();
 }
 
-Nullable<String*> Storage::key(unsigned long index)
+Optional<String*> Storage::key(unsigned long index)
 {
     return m_storageInternal->key(index);
 }
 
-Nullable<String*> Storage::getItem(String* key)
+Optional<String*> Storage::getItem(String* key)
 {
     return m_storageInternal->getItem(key);
 }

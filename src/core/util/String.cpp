@@ -997,19 +997,19 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(
     return new StringDataASCII(std::move(ascii));
 }
 
-NullableUTF8String String::toNullableUTF8String()
+OptionalUTF8String String::toOptionalUTF8String()
 {
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return NullableUTF8String(data.asciiData(), data.length);
+        return OptionalUTF8String(data.asciiData(), data.length);
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
         size_t len = 0;
         const char* ptr = utf16ToUtf8(data.utf16Data(), data.length, &len);
-        return NullableUTF8String(ptr, len - 1);
+        return OptionalUTF8String(ptr, len - 1);
     } else {
         size_t len = 0;
         const char* ptr = utf32ToUtf8(data.utf32Data(), data.length, &len);
-        return NullableUTF8String(ptr, len - 1);
+        return OptionalUTF8String(ptr, len - 1);
     }
 }
 

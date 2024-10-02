@@ -140,9 +140,9 @@ double RTCSctpTransport::maxMessageSize()
     return 0;
 }
 
-Nullable<uint32_t> RTCSctpTransport::maxChannels()
+Optional<uint32_t> RTCSctpTransport::maxChannels()
 {
-    Nullable<uint32_t> result;
+    Optional<uint32_t> result;
     // if (!m_backend) {
     //     return result;
     // }

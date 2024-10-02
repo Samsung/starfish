@@ -200,16 +200,16 @@ bool RTCDataChannel::ordered()
     return false;
 }
 
-Nullable<uint32_t> RTCDataChannel::maxPacketLifeTime()
+Optional<uint32_t> RTCDataChannel::maxPacketLifeTime()
 {
-    Nullable<uint32_t> ret;
+    Optional<uint32_t> ret;
     STARFISH_UNSUPPORTED("Indicates max number of ms for packet life time");
     return ret;
 }
 
-Nullable<uint32_t> RTCDataChannel::maxRetransmits()
+Optional<uint32_t> RTCDataChannel::maxRetransmits()
 {
-    Nullable<uint32_t> ret;
+    Optional<uint32_t> ret;
     STARFISH_UNSUPPORTED("Indicates max number of times to retransmits");
     return ret;
 }
@@ -220,9 +220,9 @@ bool RTCDataChannel::negotiated()
     return false;
 }
 
-Nullable<uint32_t> RTCDataChannel::id()
+Optional<uint32_t> RTCDataChannel::id()
 {
-    Nullable<uint32_t> ret;
+    Optional<uint32_t> ret;
     int id = m_backend->id();
     if (id >= 0) {
         ret = id;

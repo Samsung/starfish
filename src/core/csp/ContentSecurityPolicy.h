@@ -84,7 +84,7 @@ private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;
     ExecutionContext* m_executionContext;
 
-    static ScriptNullableValue checkUnsafeEvalCallback(
+    static ScriptOptionalValue checkUnsafeEvalCallback(
         ScriptExecutionState state, bool isEval);
 };
 } // namespace Starfish

@@ -255,7 +255,7 @@ void FileReader::dispatchProgressEvent(ProgressState progState)
     EventTarget::dispatchEventByUA(this, pe);
 }
 
-Nullable<DOMStringOrArrayBuffer> FileReader::result() const
+Optional<DOMStringOrArrayBuffer> FileReader::result() const
 {
     if (m_resultInText) {
         // read as text

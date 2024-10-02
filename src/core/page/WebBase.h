@@ -135,7 +135,7 @@ public:
     void removeBlobFromBlobURLStore(Blob* ptr);
     bool isValidBlobURL(BlobURLStore ptr);
     bool isValidBlobURL(Blob* ptr);
-    Nullable<BlobURLStore> findBlobURL(Blob* ptr);
+    Optional<BlobURLStore> findBlobURL(Blob* ptr);
     void clearBlobURLStore();
 
     Console* console() const

@@ -71,7 +71,7 @@ public:
     void append(String* name, String* value);
     bool has(String* name);
     void remove(String* name);
-    Nullable<FormDataEntryValue*> get(String* name);
+    Optional<FormDataEntryValue*> get(String* name);
     GCVector<String*> getAll(String* name) const;
 
 private:

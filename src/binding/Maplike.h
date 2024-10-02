@@ -27,7 +27,7 @@ namespace Starfish {
 template <typename KeyType, typename ValueType>
 class Maplike : public Iterable<KeyType, ValueType> {
 public:
-    virtual Nullable<ValueType> get(KeyType key) = 0;
+    virtual Optional<ValueType> get(KeyType key) = 0;
 
     virtual void set(KeyType key, ValueType value) = 0;
 

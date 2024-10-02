@@ -95,10 +95,10 @@ GCVector<RTCIceCandidate*> RTCIceTransport::getRemoteCandidates()
     return candidates;
 }
 
-Nullable<RTCIceCandidatePair> RTCIceTransport::getSelectedCandidatePair()
+Optional<RTCIceCandidatePair> RTCIceTransport::getSelectedCandidatePair()
 {
     // TODO: unsupported
-    Nullable<RTCIceCandidatePair> pair;
+    Optional<RTCIceCandidatePair> pair;
     return pair;
 }
 

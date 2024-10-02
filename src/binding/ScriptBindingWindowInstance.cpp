@@ -70,7 +70,7 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
         }
     }
     String* name = toBrowserString(state, key);
-    Nullable<ScriptObject> coll = self->defaultNamedGetter(name);
+    Optional<ScriptObject> coll = self->defaultNamedGetter(name);
     if (coll.hasValue()) {
         return ValueRef::create(coll.getValue());
     }

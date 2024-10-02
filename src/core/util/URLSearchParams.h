@@ -64,7 +64,7 @@ public:
 
     void append(String* name, String* value);
     void deleteParams(String* name);
-    Nullable<String*> get(String* name);
+    Optional<String*> get(String* name);
     GCVector<String*> getAll(String* name);
     bool has(String* name);
     void set(String* name, String* value);
@@ -74,14 +74,14 @@ public:
     size_t length();
     URLParam* at(size_t i);
     String* toString();
-    IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
+    IterationSource<Optional<String*>, Optional<String*>>* startIteration(
         Escargot::ExecutionStateRef* state) override;
 
 private:
     void parse(String* str);
     void updateSourceUrlIfNeeds();
     ExecutionContext* m_executionContext{ nullptr };
-    Nullable<URL*> m_sourceUrl;
+    Optional<URL*> m_sourceUrl;
     GCVector<URLParam*> m_list;
 };
 } // namespace Starfish

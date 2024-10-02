@@ -35,7 +35,7 @@
 namespace Starfish {
 
 void HTMLCanvasElement::didAttributeChanged(QualifiedName name,
-                                            Nullable<String*> old,
+                                            Optional<String*> old,
                                             String* value,
                                             bool attributeCreated,
                                             bool attributeRemoved)
@@ -53,7 +53,7 @@ void HTMLCanvasElement::didAttributeChanged(QualifiedName name,
 
 uint32_t HTMLCanvasElement::width()
 {
-    Nullable<String*> width =
+    Optional<String*> width =
         getAttribute(starfish()->staticStrings()->m_width);
     if (!width.hasValue()) {
         return STARFISH_CANVAS_DEFAULT_WIDTH;
@@ -68,7 +68,7 @@ void HTMLCanvasElement::setWidth(uint32_t value)
 
 uint32_t HTMLCanvasElement::height()
 {
-    Nullable<String*> height =
+    Optional<String*> height =
         getAttribute(starfish()->staticStrings()->m_height);
     if (!height.hasValue()) {
         return STARFISH_CANVAS_DEFAULT_HEIGHT;
@@ -81,7 +81,7 @@ void HTMLCanvasElement::setHeight(uint32_t value)
     setAttribute(starfish()->staticStrings()->m_height, String::fromInt(value));
 }
 
-Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
+Optional<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
     String* contextId, GCVector<ScriptValue> arguments)
 {
     if (contextId->equals("2d")) {

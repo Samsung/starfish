@@ -30,7 +30,7 @@
 namespace Starfish {
 
 RTCSessionDescriptionInit::RTCSessionDescriptionInit(
-    Nullable<libwebrtc::RTCSessionDescription::SdpType> type, std::string sdp)
+    Optional<libwebrtc::RTCSessionDescription::SdpType> type, std::string sdp)
 {
     if (type.hasValue()) {
         if (type.value() == libwebrtc::RTCSessionDescription::SdpType::kOffer) {
@@ -93,27 +93,27 @@ void RTCSessionDescriptionInit::setType(String* type)
     }
 }
 
-Nullable<libwebrtc::RTCSessionDescription::SdpType>
+Optional<libwebrtc::RTCSessionDescription::SdpType>
 RTCSessionDescriptionInit::toSdpType()
 {
     if (!m_type.hasValue()) {
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>();
     }
 
     switch (m_type.value()) {
     case RTCSdpType::Offer:
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>(
             libwebrtc::RTCSessionDescription::SdpType::kOffer);
     case RTCSdpType::Pranswer:
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>(
             libwebrtc::RTCSessionDescription::SdpType::kPrAnswer);
     case RTCSdpType::Answer:
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>(
             libwebrtc::RTCSessionDescription::SdpType::kAnswer);
     case RTCSdpType::Rollback:
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>();
     default:
-        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
+        return Optional<libwebrtc::RTCSessionDescription::SdpType>();
     }
 }
 

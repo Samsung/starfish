@@ -1806,7 +1806,7 @@ CSSStyleValuePair::KeyKind lookupName(const char* buf, size_t len)
     }
 }
 
-Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
+Optional<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
 {
     CSSStyleValuePair::KeyKind keyKind;
     name->peekUTF8Buffer(
@@ -1823,7 +1823,7 @@ Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
         &keyKind);
 
     if (keyKind == CSSStyleValuePair::KeyKind::Unknown) {
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 
     return getPropertyValueInternal(keyKind);
@@ -2160,7 +2160,7 @@ void CSSStyleDeclaration::defaultNamedEnumerator(GCVector<String*>& enums)
 }
 
 bool CSSStyleDeclaration::defaultNamedSetter(String* name,
-                                             Nullable<String*> value)
+                                             Optional<String*> value)
 {
     CSSStyleValuePair::KeyKind keyKind;
     name->peekUTF8Buffer(
@@ -3651,12 +3651,12 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
-    Nullable<CSSTokenValue> mayFunctionBlock =
+    Optional<CSSTokenValue> mayFunctionBlock =
         CSSPropertyParser::parseFunctionBlock(value, "path");
     if (!mayFunctionBlock.hasValue()) {
         return;
     }
-    Nullable<CSSTokenValue> mayQuoteBlock =
+    Optional<CSSTokenValue> mayQuoteBlock =
         CSSPropertyParser::parseQuoteBlock(mayFunctionBlock.getValue().data());
     if (!mayQuoteBlock.hasValue()) {
         return;

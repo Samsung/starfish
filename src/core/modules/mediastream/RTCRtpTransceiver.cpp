@@ -187,7 +187,7 @@ void RTCRtpTransceiver::setDirectionStr(String* direction)
     }
 }
 
-Nullable<String*> RTCRtpTransceiver::currentDirection()
+Optional<String*> RTCRtpTransceiver::currentDirection()
 {
     if (!m_backend) {
         return nullptr;

@@ -47,7 +47,7 @@ public:
         SVGGradientElement::fillGCDescriptor(desc);
     }
 
-    virtual void didAttributeChanged(QualifiedName name, Nullable<String*> old,
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
@@ -70,7 +70,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
-        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

@@ -82,7 +82,7 @@ double IDBKey::getNumber()
     return m_value.m_number;
 }
 
-Nullable<String*> IDBKey::toString()
+Optional<String*> IDBKey::toString()
 {
     if (m_type == IDBKey::Type::String) {
         return m_value.m_string;
@@ -90,7 +90,7 @@ Nullable<String*> IDBKey::toString()
         return String::fromDouble(m_value.m_number);
     } else {
         STARFISH_UNIMPLEMENTED();
-        return Nullable<String*>();
+        return Optional<String*>();
     }
 }
 

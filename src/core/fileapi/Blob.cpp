@@ -86,8 +86,8 @@ void Blob::initialize(const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
     size_t totalByteLength = 0;
     for (auto& item : blobParts) {
         if (item.isDOMStringValue()) {
-            NullableUTF8String str =
-                item.getDOMStringValue()->toNullableUTF8String();
+            OptionalUTF8String str =
+                item.getDOMStringValue()->toOptionalUTF8String();
             bufferInfo.push_back(std::make_pair(
                 reinterpret_cast<void*>(const_cast<char*>(str.m_buffer)),
                 str.m_bufferSize));

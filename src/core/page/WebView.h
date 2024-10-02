@@ -162,7 +162,7 @@ public:
     void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
     bool isValidMediaSourceBlobURL(BlobURLStore ptr);
     bool isValidMediaSourceBlobURL(MediaSource* ptr);
-    Nullable<BlobURLStore> findMediaSourceBlobURL(MediaSource* ptr);
+    Optional<BlobURLStore> findMediaSourceBlobURL(MediaSource* ptr);
     void clearMediaSourceBlobURLStore();
 
     void layoutIfNeeded(bool shouldCareStackingContextNow = true);
@@ -371,7 +371,7 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data);
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                  Nullable<Node*> node);
+                                  Optional<Node*> node);
     // starting global pointing Intercept must use default event.
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);
@@ -500,7 +500,7 @@ public:
 
     void putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
                                     BufferedNativeImageData* image);
-    Nullable<BufferedNativeImageData*> isThereImageInBoxShadowCache(
+    Optional<BufferedNativeImageData*> isThereImageInBoxShadowCache(
         FrameBox* box, size_t idx);
 
 private:

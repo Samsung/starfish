@@ -144,7 +144,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
         return false;
     }
 
-    Nullable<String*> data = in->readAll();
+    Optional<String*> data = in->readAll();
     in.reset();
 
     PlatformFileUtil::removeFile(m_indexFilePath->toUTF8NonGCString());
@@ -254,7 +254,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
     return true;
 }
 
-Nullable<HTTPCacheEntry*> HTTPCache::get(ResourceURL* url)
+Optional<HTTPCacheEntry*> HTTPCache::get(ResourceURL* url)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -306,7 +306,7 @@ void HTTPCache::removeFromCacheEntryTable(HTTPCacheEntry* entry)
     }
 }
 
-Nullable<HTTPCacheEntry*> HTTPCache::findEntryInCacheEntryTable(String* key)
+Optional<HTTPCacheEntry*> HTTPCache::findEntryInCacheEntryTable(String* key)
 {
     auto iter = m_cacheEntryTable->find(key->hashValue());
     if (iter != m_cacheEntryTable->end()) {
