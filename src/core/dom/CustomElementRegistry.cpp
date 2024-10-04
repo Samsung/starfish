@@ -118,7 +118,7 @@ Optional<CustomElementRegistryData*> CustomElementRegistry::find(String* name)
 }
 
 // https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
-static bool isValidCustomElementName(String* name)
+bool CustomElementRegistry::isValidCustomElementName(String* name)
 {
     // name must match the PotentialCustomElementName production:
     // PotentialCustomElementName ::=

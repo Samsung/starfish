@@ -135,6 +135,8 @@ private:
 // https://html.spec.whatwg.org/multipage/custom-elements.html
 class CustomElementRegistry : public ScriptWrappable {
 public:
+    static bool isValidCustomElementName(String* name);
+
     CustomElementRegistry(ExecutionContext* executionContext);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;

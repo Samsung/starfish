@@ -23,6 +23,8 @@
 
 namespace Starfish {
 
+DEFINE_EVENT_LISTENER(ShadowRoot, slotchange);
+
 void* ShadowRoot::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ShadowRoot));
@@ -37,7 +39,7 @@ void* ShadowRoot::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-String* ShadowRoot::mode()
+String* ShadowRoot::mode() const
 {
     if (isOpened()) {
         return starfish()->staticStrings()->m_open.localName();

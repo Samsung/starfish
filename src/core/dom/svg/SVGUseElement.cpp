@@ -111,7 +111,15 @@ void SVGUseElement::updateShadowTree()
         }
     }
 
-    internalEnsureShadowRoot()->clear();
+    auto shadowRoot = internalEnsureShadowRoot();
+    while (shadowRoot->firstChild()) {
+        Frame* frame = shadowRoot->firstChild()->frame();
+        if (frame) {
+            frame->parent()->removeChild(frame);
+        }
+        shadowRoot->parserRemoveChild(shadowRoot->firstChild());
+    }
+
     if (m_targetElementURL) {
         String* id = m_targetElementURL->getFragmentIdValue();
         if (!id->isEmpty()) {

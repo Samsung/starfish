@@ -28,9 +28,16 @@ namespace Starfish {
 
 class ShadowRoot : public DocumentFragment {
 public:
-    ShadowRoot(Document* document, ShadowRootMode mode)
+    ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
         : DocumentFragment(document)
         , m_mode(mode)
+        , m_delegatesFocus(false)
+        , m_slotAssignment(SlotAssignmentMode::Named)
+        , m_clonable(false)
+        , m_serializable(false)
+        , m_availableToElementInternals(false)
+        , m_declarative(false)
+        , m_host(host)
     {
     }
 
@@ -41,18 +48,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isShadowRoot() const override;
 
-    void clear()
+    String* mode() const;
+    ShadowRootMode modeEnum() const
     {
-        while (firstChild()) {
-            Frame* frame = firstChild()->frame();
-            if (frame) {
-                frame->parent()->removeChild(frame);
-            }
-            parserRemoveChild(firstChild());
-        }
+        return m_mode;
     }
-
-    String* mode();
 
     bool isClosed() const
     {
@@ -63,8 +63,96 @@ public:
         return m_mode == ShadowRootMode::Open;
     }
 
+    bool delegatesFocus() const
+    {
+        return m_delegatesFocus;
+    }
+
+    void setDelegatesFocus(bool delegatesFocus)
+    {
+        m_delegatesFocus = delegatesFocus;
+    }
+
+    bool availableToElementInternals() const
+    {
+        return m_availableToElementInternals;
+    }
+
+    void setAvailableToElementInternals(bool availableToElementInternals)
+    {
+        m_availableToElementInternals = availableToElementInternals;
+    }
+
+    bool declarative() const
+    {
+        return m_declarative;
+    }
+
+    void setDeclarative(bool declarative)
+    {
+        m_declarative = declarative;
+    }
+
+    String* slotAssignment() const
+    {
+        if (m_slotAssignment == SlotAssignmentMode::Manual) {
+            return String::createASCIIString("manual");
+        } else {
+            STARFISH_ASSERT(m_slotAssignment == SlotAssignmentMode::Named);
+            return String::createASCIIString("named");
+        }
+    }
+
+    SlotAssignmentMode slotAssignmentEnum() const
+    {
+        return m_slotAssignment;
+    }
+
+    void setSlotAssignment(SlotAssignmentMode slotAssignmentMode)
+    {
+        m_slotAssignment = slotAssignmentMode;
+    }
+
+    bool clonable() const
+    {
+        return m_clonable;
+    }
+
+    void setClonable(bool clonable)
+    {
+        m_clonable = clonable;
+    }
+
+    bool serializable() const
+    {
+        return m_serializable;
+    }
+
+    void setSerializable(bool serializable)
+    {
+        m_serializable = serializable;
+    }
+
+    Element* host() const
+    {
+        return m_host;
+    }
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(slotchange);
+#undef VIRTUAL
+#undef OVERRIDE
+
 private:
-    ShadowRootMode m_mode;
+    ShadowRootMode m_mode : 1;
+    bool m_delegatesFocus : 1;
+    SlotAssignmentMode m_slotAssignment : 1;
+    bool m_clonable : 1;
+    bool m_serializable : 1;
+    bool m_availableToElementInternals : 1;
+    bool m_declarative : 1;
+    Element* m_host;
 };
 } // namespace Starfish
 
