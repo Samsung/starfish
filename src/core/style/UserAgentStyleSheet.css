@@ -380,6 +380,9 @@
 "    display: block;"
 "    list-style-type: disc;"
 "}"
+"template {"
+"    display: none;"
+"}"
 #if !defined(STARFISH_ENABLE_TEST)
 // old test expect images are doesn't consider this rule
 "a:link {"

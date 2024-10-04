@@ -65,6 +65,7 @@
 #include "core/dom/HTMLTableRowElement.h"
 #include "core/dom/HTMLTBodyElement.h"
 #include "core/dom/HTMLTDElement.h"
+#include "core/dom/HTMLTemplateElement.h"
 #include "core/dom/HTMLTextAreaElement.h"
 #include "core/dom/HTMLTFootElement.h"
 #include "core/dom/HTMLTHeadElement.h"
@@ -222,6 +223,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLDialogElement(document, qname);
     } else if (name == str->m_dataTagName.localNameAtomic()) {
         return new HTMLDataElement(document, qname);
+    } else if (name == str->m_templateTagName.localNameAtomic()) {
+        return new HTMLTemplateElement(document, qname);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                             \
     else if (name == str->m_##tagName##TagName.localNameAtomic()) \
