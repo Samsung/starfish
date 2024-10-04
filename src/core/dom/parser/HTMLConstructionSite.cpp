@@ -54,6 +54,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLScriptElement.h"
+#include "core/dom/HTMLTemplateElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/parser/AtomicHTMLToken.h"
@@ -121,11 +122,10 @@ static inline bool isAllWhitespace(String* string)
 
 static inline void insert(HTMLConstructionSiteTask& task)
 {
-    // TODO
-    /*
-    if (task.parent->hasTagName(templateTag))
-        task.parent = toHTMLTemplateElement(task.parent.get())->content();
-     */
+    if (task.parent->isHTMLTemplateElement()) {
+        task.parent = task.parent->asHTMLTemplateElement()->content();
+    }
+
     if (Node* parent = task.child->parentNode()) {
         parent->parserRemoveChild(task.child);
     }

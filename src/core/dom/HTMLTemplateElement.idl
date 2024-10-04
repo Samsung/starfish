@@ -1,0 +1,8 @@
+[HTMLConstructor]
+interface HTMLTemplateElement : HTMLElement {
+  readonly attribute DocumentFragment content;
+  [Unimplemented, CEReactions, RaisesException] attribute DOMString shadowRootMode;
+  [Unimplemented, CEReactions, RaisesException] attribute boolean shadowRootDelegatesFocus;
+  [Unimplemented, CEReactions, RaisesException] attribute boolean shadowRootClonable;
+  [Unimplemented, CEReactions, RaisesException] attribute boolean shadowRootSerializable;
+};
