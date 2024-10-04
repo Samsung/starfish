@@ -295,7 +295,7 @@ static void invalidateStyleOfMatchedElementWorker(
 {
     filter.pushNode(parentElement);
 
-    Node* child = parentElement->firstChild();
+    Node* child = parentElement->firstRenderingChild();
     while (child) {
         if (child->isElement() && !child->needsStyleRecalc()) {
             StyleResolver& resolver = child->document()->styleResolver();
@@ -329,7 +329,7 @@ static void invalidateStyleOfMatchedElementWorker(
         child = child->nextSibling();
     }
 
-    child = parentElement->firstChild();
+    child = parentElement->firstRenderingChild();
     while (child) {
         if (child->isElement()) {
             invalidateStyleOfMatchedElementWorker(child, filter, styleRules);

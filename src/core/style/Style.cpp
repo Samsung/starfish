@@ -9395,15 +9395,16 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
             if (style->display() != DisplayValue::NoneDisplayValue &&
-                element->frame() == nullptr && element->parentElement()) {
+                element->frame() == nullptr &&
+                element->renderingParentElement()) {
                 // special path for Node::appendChild
 
-                Element* e = element->parentElement();
+                Element* e = element->renderingParentElement();
                 while (e) {
                     if (e->style() && e->style()->hasBlockLikeDisplay()) {
                         break;
                     }
-                    e = e->parentElement();
+                    e = e->renderingParentElement();
                 }
 
                 if (e && e->frame() && !e->frame()->isFrameDocument()) {
@@ -9451,7 +9452,7 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
 
     element->clearDidPrepareAnimation();
 
-    Node* child = element->firstChild();
+    Node* child = element->firstRenderingChild();
     while (child != nullptr) {
         if (child->isElement() == true) {
             child->clearNeedsStyleRecalc();
@@ -9484,7 +9485,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
     ctx.m_ancestorSelectorFilter->pushNode(parentElement);
 
-    Node* child = parentElement->firstChild();
+    Node* child = parentElement->firstRenderingChild();
     while (child) {
         if (child->isElement()) {
             ComputedStyle* oldStyle = child->style();
@@ -9497,7 +9498,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 oldStyle &&
                 oldStyle->someNonInheritMemberExplicitlyInherited()) {
                 child->markChildNeedsStyleRecalc();
-                Node* grandChild = child->firstChild();
+                Node* grandChild = child->firstRenderingChild();
                 while (grandChild) {
                     if (grandChild->isElement()) {
                         grandChild->markNeedsStyleRecalc();
@@ -9580,7 +9581,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
         child = child->nextSibling();
     }
 
-    child = parentElement->firstChild();
+    child = parentElement->firstRenderingChild();
     while (child) {
         if (child->isElement() && child->childNeedsStyleRecalc()) {
             resolveChildrenStyle(
@@ -9663,7 +9664,7 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
     STARFISH_ASSERT(parent != nullptr);
     STARFISH_ASSERT(sheet != nullptr);
 
-    Node* child = parent->firstChild();
+    Node* child = parent->firstRenderingChild();
     while (child) {
         if (!originFound && child == sheet->origin()) {
             originFound = true;
