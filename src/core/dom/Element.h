@@ -198,6 +198,7 @@ public:
         return shadowRoot(false);
     }
     ShadowRoot* internalEnsureShadowRoot();
+    ShadowRoot* attachShadow(ShadowRootInit init);
 
     Node* createNodeWithHTML(String*);
 
@@ -495,6 +496,7 @@ private:
     void invokeDidAttributeChanged(QualifiedName name, Optional<String*> old,
                                    String* value, bool attributeCreated,
                                    bool attributeRemoved);
+    void updateShadowRoot(Optional<ShadowRoot*> sr);
 #if !defined(NDEBUG)
     bool m_didAttributeChangedCorrectlyInvoked;
 #endif

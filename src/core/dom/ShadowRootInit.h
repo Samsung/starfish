@@ -23,6 +23,7 @@
 namespace Starfish {
 
 enum class ShadowRootMode { Open, Closed };
+enum class SlotAssignmentMode { Manual, Named };
 
 struct ShadowRootInit {
     ShadowRootInit()
@@ -34,7 +35,7 @@ struct ShadowRootInit {
         if (mode->equals("open")) {
             m_mode = ShadowRootMode::Open;
         } else {
-            STARFISH_ASSERT("closed");
+            STARFISH_ASSERT(mode->equals("closed"));
             m_mode = ShadowRootMode::Closed;
         }
     }
@@ -48,7 +49,60 @@ struct ShadowRootInit {
         }
     }
 
+    void setSlotAssignment(String* slotAssignment)
+    {
+        if (slotAssignment->equals("manual")) {
+            m_slotAssignment = SlotAssignmentMode::Manual;
+        } else {
+            STARFISH_ASSERT(slotAssignment->equals("named"));
+            m_slotAssignment = SlotAssignmentMode::Named;
+        }
+    }
+
+    String* slotAssignment() const
+    {
+        if (m_slotAssignment == SlotAssignmentMode::Manual) {
+            return String::createASCIIString("manual");
+        } else {
+            return String::createASCIIString("named");
+        }
+    }
+
+    void setDelegatesFocus(bool delegatesFocus)
+    {
+        m_delegatesFocus = delegatesFocus;
+    }
+
+    bool delegatesFocus() const
+    {
+        return m_delegatesFocus;
+    }
+
+    void setClonable(bool clonable)
+    {
+        m_clonable = clonable;
+    }
+
+    bool clonable() const
+    {
+        return m_clonable;
+    }
+
+    void setSerializable(bool serializable)
+    {
+        m_serializable = serializable;
+    }
+
+    bool serializable() const
+    {
+        return m_serializable;
+    }
+
     ShadowRootMode m_mode = ShadowRootMode::Open;
+    bool m_delegatesFocus = false;
+    SlotAssignmentMode m_slotAssignment = SlotAssignmentMode::Named;
+    bool m_clonable = false;
+    bool m_serializable = false;
 };
 
 } // namespace Starfish

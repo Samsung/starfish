@@ -1,8 +1,14 @@
 // https://dom.spec.whatwg.org/#interface-shadowroot
-[UnimplementedConstructor,Exposed=Window]
+[Exposed=Window]
 interface ShadowRoot : DocumentFragment {
   readonly attribute ShadowRootMode mode;
-  [Unimplemented] readonly attribute Element host;
+  readonly attribute boolean delegatesFocus;
+  readonly attribute SlotAssignmentMode slotAssignment;
+  readonly attribute boolean clonable;
+  readonly attribute boolean serializable;
+  readonly attribute Element host;
+  attribute EventHandler onslotchange;
 };
 
 enum ShadowRootMode { "open", "closed" };
+enum SlotAssignmentMode { "manual", "named" };

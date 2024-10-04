@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/Attr.h"
+#include "core/dom/CustomElementRegistry.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DOMException.h"
@@ -2334,8 +2335,155 @@ ShadowRoot* Element::internalEnsureShadowRoot()
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_shadowRoot) {
         rareMembers->m_shadowRoot =
-            new ShadowRoot(document(), ShadowRootMode::Closed);
+            new ShadowRoot(document(), ShadowRootMode::Closed, this);
+        setNeedsFrameTreeBuildWithoutSelf();
     }
     return rareMembers->m_shadowRoot.value();
+}
+
+void Element::updateShadowRoot(Optional<ShadowRoot*> sr)
+{
+    if (!hasRareMembers() && !sr) {
+        return;
+    }
+    RareElementMembers* rareData = ensureRareElementMembers();
+    STARFISH_ASSERT(rareData->isRareElementMembers());
+    rareData->m_shadowRoot = sr;
+    setNeedsFrameTreeBuildWithoutSelf();
+}
+
+// https://dom.spec.whatwg.org/#valid-shadow-host-name
+static bool isValidShadowHostName(StaticStrings& ss, AtomicString name)
+{
+    // "article", "aside", "blockquote", "body", "div", "footer", "h1", "h2",
+    // "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", or
+    // "span"
+#define VAILD_NAMES(F) \
+    F(article)         \
+    F(aside)           \
+    F(blockquote)      \
+    F(body)            \
+    F(div)             \
+    F(footer)          \
+    F(h1)              \
+    F(h2)              \
+    F(h3)              \
+    F(h4)              \
+    F(h5)              \
+    F(h6)              \
+    F(header)          \
+    F(main)            \
+    F(nav)             \
+    F(p)               \
+    F(section)         \
+    F(span)
+
+    if (false) {
+    }
+#define COMPARE(tagName)                                        \
+    else if (name == ss.m_##tagName##TagName.localNameAtomic()) \
+    {                                                           \
+        return true;                                            \
+    }
+    VAILD_NAMES(COMPARE);
+
+#undef COMPARE
+#undef VAILD_NAMES
+
+    // a valid custom element name
+    if (CustomElementRegistry::isValidCustomElementName(name.string())) {
+        return true;
+    }
+
+    return false;
+}
+
+// https://dom.spec.whatwg.org/#dom-element-attachshadow
+ShadowRoot* Element::attachShadow(ShadowRootInit init)
+{
+    // Run attach a shadow root with this, init["mode"], init["clonable"],
+    // init["serializable"], init["delegatesFocus"], and init["slotAssignment"].
+    // https://dom.spec.whatwg.org/#concept-attach-a-shadow-root
+    // If element’s namespace is not the HTML namespace, then throw a
+    // "NotSupportedError" DOMException.
+    if (!namespaceURI() || !namespaceURI()->equals(HTML_NAMESPACE)) {
+        throw new DOMException(
+            executionContext(), DOMException::NOT_SUPPORTED_ERR,
+            "Invalid element to attach shadow(namespace is not HTML)");
+    }
+    // If element’s local name is not a valid shadow host name, then throw a
+    // "NotSupportedError" DOMException.
+    if (!isValidShadowHostName(*starfish()->staticStrings(),
+                               name().localNameAtomic())) {
+        throw new DOMException(
+            executionContext(), DOMException::NOT_SUPPORTED_ERR,
+            "Invalid element to attach shadow(invalid localName)");
+    }
+    // If element’s local name is a valid custom element name, or element’s is
+    // value is non-null, then:
+    // TODO "element’s is value is non-null"
+    if (CustomElementRegistry::isValidCustomElementName(name().localName())) {
+        // Let definition be the result of looking up a custom element
+        // definition given element’s node document, its namespace, its local
+        // name, and its is value.
+        auto definition =
+            window()->customElements()->find(name().localNameAtomic());
+        // If definition is not null and definition’s disable shadow is true,
+        // then throw a "NotSupportedError" DOMException.
+        if (definition && definition->disableShadow) {
+            throw new DOMException(
+                executionContext(), DOMException::NOT_SUPPORTED_ERR,
+                "Invalid element to attach shadow(disableShadow is true)");
+        }
+    }
+
+    // If element is a shadow host, then:
+    auto currentShadowRoot = internalShadowRoot();
+    if (currentShadowRoot) {
+        // Let currentShadowRoot be element’s shadow root.
+        // If any of the following are true:
+        // currentShadowRoot’s declarative is false; or
+        // currentShadowRoot’s mode is not mode,
+        if (!currentShadowRoot->declarative() ||
+            init.m_mode != currentShadowRoot->modeEnum()) {
+            // then throw a "NotSupportedError" DOMException.
+            throw new DOMException(executionContext(),
+                                   DOMException::NOT_SUPPORTED_ERR,
+                                   "Faild to attach shadow");
+        } else {
+            // Otherwise:
+            // Remove all of currentShadowRoot’s children, in tree order.
+            while (currentShadowRoot->firstChild()) {
+                currentShadowRoot->removeChild(currentShadowRoot->firstChild());
+            }
+            // Set currentShadowRoot’s declarative to false.
+            currentShadowRoot->setDeclarative(false);
+            // Return.
+        }
+        setNeedsFrameTreeBuildWithoutSelf();
+        return currentShadowRoot.value();
+    }
+
+    // Let shadow be a new shadow root whose node document is element’s node
+    // document, host is element, and mode is mode.
+    ShadowRoot* shadow = new ShadowRoot(document(), init.m_mode, this);
+    // Set shadow’s delegates focus to delegatesFocus.
+    shadow->setDelegatesFocus(init.delegatesFocus());
+    // If element’s custom element state is "precustomized" or "custom", then
+    // set shadow’s available to element internals to true.
+    if (isHTMLCustomElement()) {
+        shadow->setAvailableToElementInternals(true);
+    }
+    // Set shadow’s slot assignment to slotAssignment.
+    shadow->setSlotAssignment(init.m_slotAssignment);
+    // Set shadow’s declarative to false.
+    shadow->setDeclarative(false);
+    // Set shadow’s clonable to clonable.
+    shadow->setClonable(init.clonable());
+    // Set shadow’s serializable to serializable.
+    shadow->setSerializable(init.serializable());
+    // Set element’s shadow root to shadow.
+    updateShadowRoot(shadow);
+    return shadow;
 }
 } // namespace Starfish
