@@ -153,7 +153,7 @@ void FrameTreeBuilder::clearTree(Node* current)
 
     Frame* f = current->frame();
     current->setFrame(nullptr);
-    Node* n = current->firstChild();
+    Node* n = current->firstRenderingChild();
     while (n) {
         clearTree(n);
         n = n->nextSibling();
@@ -167,7 +167,7 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
         parent->removeChild(parent->firstChild());
     }
 
-    Node* node = f->node()->firstChild();
+    Node* node = f->node()->firstRenderingChild();
     while (node) {
         node->markNeedsFrameTreeBuild();
         node = node->nextSibling();
@@ -176,7 +176,7 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
     node = parent->node();
     while (node) {
         node->markChildNeedsFrameTreeBuild();
-        node = node->parentNode();
+        node = node->renderingParentNode();
     }
 
     parent->propagateMarkNeedsLayout();
@@ -444,7 +444,7 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                                   currentFrame->isNormalFlow();
 
     if (ctx.isInFrameInlineFlow() && !isNormalFlowBlockChild) {
-        auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
+        auto iter = ctx.frameInlineItem().find(currentNode->renderingParentNode());
         if (iter != ctx.frameInlineItem().end()) {
             iter->second->appendChild(currentFrame);
         }
@@ -704,8 +704,8 @@ void FrameTreeBuilder::createPseudoElement(Node* parent,
             pseudoParentFrame = nextFrame->parent();
             parentStyle = nextFrame->style();
         }
-    } else if (pseudoElement->parentNode()) {
-        pseudoParentFrame = pseudoElement->parentNode()->frame();
+    } else if (pseudoElement->renderingParentNode()) {
+        pseudoParentFrame = pseudoElement->renderingParentNode()->frame();
     }
 
     if (!pseudoParentFrame) {
@@ -984,8 +984,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 didSplitBlock = true;
                 currentFrame->markDidSpiltFrameInline();
 
-                STARFISH_ASSERT(current->parentNode());
-                Frame* parent = current->parentNode()->frame();
+                STARFISH_ASSERT(current->renderingParentNode());
+                Frame* parent = current->renderingParentNode()->frame();
                 while (parent) {
                     if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
                         break;
@@ -993,7 +993,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                     parent = parent->parent();
                 }
 
-                Node* nd = current->parentNode();
+                Node* nd = current->renderingParentNode();
                 while (nd) {
                     if (nd->frame()->isFrameBlockBox()) {
                         break;
@@ -1023,7 +1023,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                         stackedFrameInline.push_back(in);
                         iter->second = in;
                     }
-                    nd = nd->parentNode();
+                    nd = nd->renderingParentNode();
                 }
 
                 STARFISH_ASSERT(parent);
@@ -1103,7 +1103,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     // This part was added to build svg frame for showing marker of the select
     // element.
     if (currentFrame->isFrameOptionBox()) {
-        Node* n = current->firstChild();
+        Node* n = current->firstRenderingChild();
         while (n) {
             if (!n->isText()) {
                 buildTree(n, ctx, force);
@@ -1114,26 +1114,37 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
-        if (currentFrame->isFrameDocument() ||
-            currentFrame->needToEstablishBlockFormattingContext()) {
-            currentFrame->markNeedsLayout();
-            if (currentFrame->isFrameTableCellBox() ||
-                currentFrame->isFrameTableCaptionBox()) {
-                Frame* p = currentFrame->parent();
-                while (!p->isFrameTableBox()) {
-                    p = p->parent();
+        Optional<ShadowRoot*> shadowRoot;
+        if (current->isElement()) {
+            shadowRoot = current->asElement()->internalShadowRoot();
+        }
+
+        if (shadowRoot) {
+            Node* n = shadowRoot->firstChild();
+            while (n) {
+                buildTree(n, ctx, force);
+                n = n->nextSibling();
+            }
+        } else {
+            if (currentFrame->isFrameDocument() ||
+                currentFrame->needToEstablishBlockFormattingContext()) {
+                currentFrame->markNeedsLayout();
+                if (currentFrame->isFrameTableCellBox() ||
+                    currentFrame->isFrameTableCaptionBox()) {
+                    Frame* p = currentFrame->parent();
+                    while (!p->isFrameTableBox()) {
+                        p = p->parent();
+                    }
+                    p->markNeedsLayout();
                 }
-                p->markNeedsLayout();
+            }
+
+            Node* n = current->firstChild();
+            while (n) {
+                buildTree(n, ctx, force);
+                n = n->nextSibling();
             }
         }
-
-        Node* n = current->firstChild();
-
-        while (n) {
-            buildTree(n, ctx, force);
-            n = n->nextSibling();
-        }
-
         current->clearChildNeedsFrameTreeBuild();
     } else if (current->isBeforePseudoElement() ||
                current->isAfterPseudoElement()) {
@@ -1399,7 +1410,7 @@ String* dumpText(Node* node, bool* lastTextNode)
             node->asText()->wholeText()->stripAndCollapseASCIIwhitespace());
         *lastTextNode = true;
     }
-    Node* child = node->firstChild();
+    Node* child = node->firstRenderingChild();
     while (child) {
         result = result->concat(dumpText(child, lastTextNode));
         child = child->nextSibling();

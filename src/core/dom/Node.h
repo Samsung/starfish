@@ -252,6 +252,7 @@ public:
 
     Node* getRootNode(GetRootNodeOptions options);
 
+    Node* renderingParentNode() const;
     Node* parentNode() const
     {
         return m_parentNode;
@@ -260,6 +261,16 @@ public:
     virtual Element* parentElement()
     {
         Node* parent = parentNode();
+        if (parent && parent->nodeType() == ELEMENT_NODE) {
+            return parent->asElement();
+        } else {
+            return nullptr;
+        }
+    }
+
+    Element* renderingParentElement()
+    {
+        Node* parent = renderingParentNode();
         if (parent && parent->nodeType() == ELEMENT_NODE) {
             return parent->asElement();
         } else {
@@ -280,6 +291,11 @@ public:
     NodeList* childNodes();
 
     Node* firstChild() const
+    {
+        return m_firstChild;
+    }
+
+    virtual Node* firstRenderingChild()
     {
         return m_firstChild;
     }
@@ -503,13 +519,13 @@ public:
     void setChildNeedsStyleRecalc()
     {
         m_childNeedsStyleRecalc = true;
-        Node* parent = parentNode();
+        Node* parent = renderingParentNode();
         while (parent) {
             if (parent->m_childNeedsStyleRecalc) {
                 break;
             }
             parent->m_childNeedsStyleRecalc = true;
-            parent = parent->parentNode();
+            parent = parent->renderingParentNode();
         }
     }
 

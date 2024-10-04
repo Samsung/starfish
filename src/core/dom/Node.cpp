@@ -39,6 +39,7 @@
 #include "core/dom/MutationObservationScope.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
+#include "core/dom/ShadowRoot.h"
 #include "core/dom/Text.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
@@ -492,6 +493,15 @@ Node* Node::getRootNode(GetRootNodeOptions options)
         }
         return n;
     }
+}
+
+Node* Node::renderingParentNode() const
+{
+    auto nd = parentNode();
+    if (UNLIKELY(nd && nd->isShadowRoot())) {
+        return nd->asShadowRoot()->host();
+    }
+    return nd;
 }
 
 Node* Node::makeShadowClone()
@@ -1449,6 +1459,9 @@ bool Node::isInDocumentScope()
         if (t->isDocument()) {
             return true;
         }
+        if (t->isShadowRoot()) {
+            return t->asShadowRoot()->host()->isInDocumentScope();
+        }
         t = t->parentNode();
     }
     return false;
@@ -1460,6 +1473,11 @@ bool Node::isInDocumentScopeAndDocumentParticipateInRendering()
     while (t) {
         if (t->isDocument()) {
             return t->asDocument()->doesParticipateInRendering();
+        }
+        if (t->isShadowRoot()) {
+            return t->asShadowRoot()
+                ->host()
+                ->isInDocumentScopeAndDocumentParticipateInRendering();
         }
         t = t->parentNode();
     }
@@ -1491,7 +1509,7 @@ static void setChildrenNeedsStyleRecalc(Node* node)
 {
     node->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
 
-    Node* child = node->firstChild();
+    Node* child = node->firstRenderingChild();
     while (child) {
         setChildrenNeedsStyleRecalc(child);
         child = child->nextSibling();
@@ -2158,10 +2176,10 @@ void Node::setNeedsFrameTreeBuild()
             blockParent);
     } else {
         if (isElement() && !needsFrameTreeBuild()) {
-            if (parentElement() && parentElement()->frame()) {
+            if (renderingParentNode() && renderingParentNode()->frame()) {
                 Frame* blockParent = FrameTreeBuilder::
                     findNearestBlockStartPositionOfFrameTreeBuildCandidate(
-                        parentElement()->frame());
+                        renderingParentNode()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
@@ -2170,13 +2188,13 @@ void Node::setNeedsFrameTreeBuild()
             }
 
             markNeedsFrameTreeBuild();
-            Node* node = parentNode();
+            Node* node = renderingParentNode();
             while (node) {
                 if (node->childNeedsFrameTreeBuild()) {
                     break;
                 }
                 node->markChildNeedsFrameTreeBuild();
-                node = node->parentNode();
+                node = node->renderingParentNode();
             }
         }
     }
@@ -2207,10 +2225,10 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
             blockParent);
     } else {
         if (isElement()) {
-            if (parentElement() && parentElement()->frame()) {
+            if (renderingParentNode() && renderingParentNode()->frame()) {
                 Frame* blockParent = FrameTreeBuilder::
                     findNearestBlockStartPositionOfFrameTreeBuildCandidate(
-                        parentElement()->frame());
+                        renderingParentNode()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
@@ -2219,13 +2237,13 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
             }
 
             markNeedsFrameTreeBuild();
-            Node* node = parentNode();
+            Node* node = renderingParentNode();
             while (node) {
                 if (node->childNeedsFrameTreeBuild()) {
                     break;
                 }
                 node->markChildNeedsFrameTreeBuild();
-                node = node->parentNode();
+                node = node->renderingParentNode();
             }
         }
     }
@@ -2238,8 +2256,8 @@ void Node::setNeedsStyleRecalcForAnimation()
         m_needsStyleRecalcOnlyForAnimation = true;
     }
 
-    if (parentNode()) {
-        parentNode()->setChildNeedsStyleRecalc();
+    if (renderingParentNode()) {
+        renderingParentNode()->setChildNeedsStyleRecalc();
     }
 
     window()->browsingContext()->setNeedsStyleRecalc();
@@ -2253,13 +2271,13 @@ void Node::setNeedsStyleRecalc(StyleChangeReason reason)
 
     m_needsStyleRecalcOnlyForAnimation = false;
 
-    if (reason <= StyleChangeReason::AttributeChange) {
+    if (reason <= StyleChangeReason::AttributeChange || isShadowRoot()) {
         if (!m_needsStyleRecalc) {
             m_needsStyleRecalc = true;
         }
 
-        if (parentNode()) {
-            parentNode()->setChildNeedsStyleRecalc();
+        if (renderingParentNode()) {
+            renderingParentNode()->setChildNeedsStyleRecalc();
         }
     } else {
         StyleResolver::StyleDamageSource cmr;
@@ -2271,8 +2289,8 @@ void Node::setNeedsStyleRecalc(StyleChangeReason reason)
 
         if (cmr & reason) {
             m_needsStyleRecalc = true;
-            if (parentNode()) {
-                parentNode()->setChildNeedsStyleRecalc();
+            if (renderingParentNode()) {
+                renderingParentNode()->setChildNeedsStyleRecalc();
             }
         }
     }
@@ -2302,8 +2320,8 @@ void Node::setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 
             if (cmr & reason) {
                 node->m_needsStyleRecalc = true;
-                if (node->parentNode()) {
-                    node->parentNode()->setChildNeedsStyleRecalc();
+                if (node->renderingParentNode()) {
+                    node->renderingParentNode()->setChildNeedsStyleRecalc();
                 }
             }
         }
@@ -2314,7 +2332,7 @@ void Node::setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 
 void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 {
-    Node* child = firstChild();
+    Node* child = firstRenderingChild();
     while (child) {
         if (child->isElement()) {
             StyleResolver::StyleDamageSource cmr;
@@ -2325,8 +2343,8 @@ void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
             }
             if (cmr & reason) {
                 child->m_needsStyleRecalc = true;
-                if (child->parentNode()) {
-                    child->parentNode()->setChildNeedsStyleRecalc();
+                if (child->renderingParentNode()) {
+                    child->renderingParentNode()->setChildNeedsStyleRecalc();
                 }
             }
             child->setChildrenNeedsStyleRecalcIfNeeded(reason);

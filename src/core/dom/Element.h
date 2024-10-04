@@ -199,6 +199,7 @@ public:
     }
     ShadowRoot* internalEnsureShadowRoot();
     ShadowRoot* attachShadow(ShadowRootInit init);
+    virtual Node* firstRenderingChild() override;
 
     Node* createNodeWithHTML(String*);
 

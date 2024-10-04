@@ -2336,7 +2336,7 @@ ShadowRoot* Element::internalEnsureShadowRoot()
     if (!rareMembers->m_shadowRoot) {
         rareMembers->m_shadowRoot =
             new ShadowRoot(document(), ShadowRootMode::Closed, this);
-        setNeedsFrameTreeBuildWithoutSelf();
+        setNeedsFrameTreeBuild();
     }
     return rareMembers->m_shadowRoot.value();
 }
@@ -2349,7 +2349,7 @@ void Element::updateShadowRoot(Optional<ShadowRoot*> sr)
     RareElementMembers* rareData = ensureRareElementMembers();
     STARFISH_ASSERT(rareData->isRareElementMembers());
     rareData->m_shadowRoot = sr;
-    setNeedsFrameTreeBuildWithoutSelf();
+    setNeedsFrameTreeBuild();
 }
 
 // https://dom.spec.whatwg.org/#valid-shadow-host-name
@@ -2396,6 +2396,15 @@ static bool isValidShadowHostName(StaticStrings& ss, AtomicString name)
     }
 
     return false;
+}
+
+Node* Element::firstRenderingChild()
+{
+    auto sr = internalShadowRoot();
+    if (UNLIKELY(sr)) {
+        return sr->firstChild();
+    }
+    return firstChild();
 }
 
 // https://dom.spec.whatwg.org/#dom-element-attachshadow

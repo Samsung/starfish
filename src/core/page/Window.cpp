@@ -373,7 +373,7 @@ static void checkVwVh(Node* nd)
         }
     }
 
-    Node* child = nd->firstChild();
+    Node* child = nd->firstRenderingChild();
     while (child) {
         if (child->isElement()) {
             checkVwVh(child);

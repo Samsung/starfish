@@ -1806,7 +1806,7 @@ Element* Document::elementFromPoint(float x, float y)
         if (node->isElement()) {
             return node->asElement();
         }
-        node = node->parentNode();
+        node = node->renderingParentNode();
     }
 
     return rootElement();
