@@ -48,6 +48,13 @@ public:
     static AtomicString createAtomicString(Starfish* starfish, const char* str);
     static AtomicString createAtomicString(Starfish* starfish, const char* str,
                                            size_t length);
+    template <size_t N>
+    static AtomicString createAtomicString(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return createAtomicString(str, N - 1);
+    }
+
     // only support bmp chars
     static AtomicString createAtomicString(Starfish* starfish,
                                            const char16_t* str, size_t length);

@@ -40,6 +40,11 @@ public:
         return m_content;
     }
 
+    String* shadowRootMode();
+    void setShadowRootMode(String* s);
+
+    virtual void finishParsing() override;
+
 private:
     DocumentFragment* m_content;
 };
