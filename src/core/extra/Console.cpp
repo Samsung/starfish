@@ -22,6 +22,7 @@
 #include "core/extra/Console.h"
 #include "core/inspector/Inspector.h"
 #include "core/page/WebBase.h"
+#include "core/modules/profiling/Profiling.h"
 
 namespace Starfish {
 
@@ -113,4 +114,82 @@ void Console::debug(String* m)
         },
         nullptr);
 }
+
+void Console::time(String* label)
+{
+    if (m_times.find(label) != m_times.end()) {
+        STARFISH_LOG_ERROR("Timer %s has already been started",
+                           label->toUTF8NonGCString().c_str());
+        return;
+    }
+
+    m_times[label] = longTickCount();
+}
+
+void Console::timeLog(String* label, Optional<String*> data)
+{
+    if (m_times.find(label) == m_times.end()) {
+        STARFISH_LOG_ERROR("Timer '%s' does not exist",
+                           label->toUTF8NonGCString().c_str());
+        return;
+    }
+
+    String* m = makeTimeString(label, data);
+
+    m->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
+            STARFISH_LOG_ERROR("console.timeLog: %s", buf);
+#else
+            STARFISH_LOG_INFO("console.timeLog: %s", buf);
+#endif
+            return 0;
+        },
+        nullptr);
+}
+
+void Console::timeEnd(String* label)
+{
+    if (m_times.find(label) == m_times.end()) {
+        STARFISH_LOG_ERROR("Timer '%s' does not exist",
+                           label->toUTF8NonGCString().c_str());
+        return;
+    }
+
+    String* m = makeTimeString(label, nullptr);
+    m_times.erase(label);
+
+    m->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
+            STARFISH_LOG_ERROR("console.timeEnd: %s", buf);
+#else
+            STARFISH_LOG_INFO("console.timeEnd: %s", buf);
+#endif
+            return 0;
+        },
+        nullptr);
+}
+
+String* Console::makeTimeString(String* label, Optional<String*> data)
+{
+    uint64_t now = longTickCount();
+    uint64_t start = m_times[label];
+    double elapsed = (now - start) / 1000.0;
+    std::string elapsedStr = std::to_string(elapsed);
+
+    StringBuilder builder;
+    builder.appendString(label);
+    builder.appendString(": ");
+    builder.appendString(elapsedStr.c_str(), elapsedStr.length());
+    builder.appendString("ms");
+
+    if (data) {
+        builder.appendChar(' ');
+        builder.appendString(data.value());
+    }
+
+    return builder.finalize();
+}
+
 } // namespace Starfish
