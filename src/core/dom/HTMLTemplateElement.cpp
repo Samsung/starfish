@@ -46,4 +46,44 @@ void* HTMLTemplateElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+String* HTMLTemplateElement::shadowRootMode()
+{
+    QualifiedName q(
+        AtomicString::createAtomicString(starfish(), "shadowrootmode"));
+    auto attr = getAttribute(q);
+    if (attr) {
+        if (attr->equals("open")) {
+            return attr.value();
+        } else if (attr->equals("closed")) {
+            return attr.value();
+        }
+    }
+    return String::emptyString;
+}
+
+void HTMLTemplateElement::setShadowRootMode(String* s)
+{
+    QualifiedName q(
+        AtomicString::createAtomicString(starfish(), "shadowrootmode"));
+    setAttribute(q, s);
+}
+
+void HTMLTemplateElement::finishParsing()
+{
+    HTMLElement::finishParsing();
+
+    String* mode = shadowRootMode();
+    if (mode->length()) {
+        if (parentElement()) {
+            Element* parent = parentElement();
+            parent->removeChild(this);
+
+            ShadowRootInit init;
+            init.setMode(mode);
+            parent->attachShadow(init);
+            parent->internalShadowRoot()->appendChild(content());
+        }
+    }
+}
+
 } // namespace Starfish

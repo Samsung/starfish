@@ -429,6 +429,7 @@ public:
     QualifiedName m_gradientUnits;
     QualifiedName m_gradientTransform;
     QualifiedName m_spreadMethod;
+    QualifiedName m_shadowRootMode;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
