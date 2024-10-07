@@ -20,11 +20,16 @@
 #ifndef __StarfishConsole__
 #define __StarfishConsole__
 
+#include <cstdint>
+
 namespace Starfish {
 
 class WebBase;
 
 #define CONSOLE_APIS(F) \
+    F(time)             \
+    F(timeLog)          \
+    F(timeEnd)          \
     F(log)              \
     F(info)             \
     F(error)            \
@@ -39,9 +44,15 @@ public:
     void error(String* m);
     void warn(String* m);
     void debug(String* m);
+    void time(String* label);
+    void timeLog(String* label, Optional<String*> data);
+    void timeEnd(String* label);
 
 protected:
+    String* makeTimeString(String* label, Optional<String*> data);
+
     WebBase* m_webBase;
+    GCUnorderedMap<String*, uint64_t> m_times;
 };
 } // namespace Starfish
 

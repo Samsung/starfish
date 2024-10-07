@@ -220,19 +220,21 @@ ScriptBindingInstance::ScriptBindingInstance(
     m_scriptContext =
         ContextRef::create(engineInstance->engineInstance()).release();
 
-#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) m_string##Value = AtomicStringRef::create(m_scriptContext, #value);
-    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) \
+    m_string##Value = AtomicStringRef::create(m_scriptContext, #value);
+    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(
+        FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
 #undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
 }
 
 #define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) \
-Escargot::StringRef* ScriptBindingInstance::string##Value()          \
-{                                                                    \
-    return m_string##Value->string();                                \
-}
-    STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+    Escargot::StringRef* ScriptBindingInstance::string##Value()      \
+    {                                                                \
+        return m_string##Value->string();                            \
+    }
+STARFISH_COMMONLY_USED_SCRIPT_STRINGS(
+    FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
 #undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
-
 
 class GlobalBindingNameAccessorPropertyData
     : public ObjectRef::NativeDataAccessorPropertyData {
@@ -355,6 +357,62 @@ static String* _createConcatenatedStringForConsole(ExecutionStateRef* state,
     return sb.finalize();
 }
 
+static ValueRef* _timeConsoleFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
+{
+    Document* result = nullptr;
+    ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
+
+    String* value0 = String::fromUTF8("default");
+    if (!arg0->isUndefined()) {
+        value0 = toBrowserString(state, arg0);
+    }
+
+    fetchWebBase(state->context())->console()->time(value0);
+
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _timeLogConsoleFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
+{
+    Document* result = nullptr;
+    ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
+
+    String* value0 = String::fromUTF8("default");
+    if (!arg0->isUndefined()) {
+        value0 = toBrowserString(state, arg0);
+    }
+
+    String* value1 = nullptr;
+    if (argc > 1) {
+        value1 = _createConcatenatedStringForConsole(state, argc - 1, argv + 1);
+    }
+
+    fetchWebBase(state->context())->console()->timeLog(value0, value1);
+
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _timeEndConsoleFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
+{
+    Document* result = nullptr;
+    ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
+
+    String* value0 = String::fromUTF8("default");
+    if (!arg0->isUndefined()) {
+        value0 = toBrowserString(state, arg0);
+    }
+
+    fetchWebBase(state->context())->console()->timeEnd(value0);
+
+    return ValueRef::createUndefined();
+}
+
 static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
@@ -429,15 +487,13 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
             true, false, true,                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                STARFISH_UNSUPPORTED("module \"%s\"",          \
-                                       #exportName);                           \
+                STARFISH_UNSUPPORTED("module \"%s\"", #exportName);            \
                 return ValueRef::createUndefined();                            \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
-                STARFISH_UNSUPPORTED("module \"%s\"",          \
-                                       #exportName);                           \
+                STARFISH_UNSUPPORTED("module \"%s\"", #exportName);            \
                 return false;                                                  \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \
