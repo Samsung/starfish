@@ -923,7 +923,7 @@ void WebView::navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
             document->executionContext(),
             starfish()->staticStrings()->m_popstate.localName(), init);
 
-        struct Params {
+        struct Params : public gc {
             Window* window;
             PopStateEvent* event;
         };
@@ -935,7 +935,6 @@ void WebView::navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
             [](size_t handle, void* data) {
                 Params* params = static_cast<Params*>(data);
                 params->window->dispatchEventByUA(params->event);
-                delete params;
             },
             params);
     }
