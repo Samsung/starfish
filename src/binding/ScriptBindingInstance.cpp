@@ -443,6 +443,24 @@ static ValueRef* _groupEndConsoleFunction(ExecutionStateRef* state,
     return ValueRef::createUndefined();
 }
 
+static ValueRef* _assertConsoleFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
+    bool value0 = false;
+    if (!arg0->isUndefined()) {
+        value0 = arg0->toBoolean(state);
+    }
+
+    String* value1 = nullptr;
+    if (argc > 1) {
+        value1 = _createConcatenatedStringForConsole(state, argc - 1, argv + 1);
+    }
+    fetchWebBase(state->context())->console()->assertion(value0, value1);
+    return ValueRef::createUndefined();
+}
+
 static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)

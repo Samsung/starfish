@@ -167,6 +167,19 @@ void Console::groupEnd()
     }
 }
 
+void Console::assertion(bool condition, Optional<String*> data)
+{
+    if (!condition) {
+        printMessage(LogLevel::Error,
+                     AtomicString::createAtomicString(m_webBase->starfish(),
+                                                      "Assertion failed"),
+                     data.hasValue()
+                         ? data.value()
+                         : AtomicString::createAtomicString(
+                               m_webBase->starfish(), "console.assert"));
+    }
+}
+
 String* Console::makeTimeString(String* label, Optional<String*> data)
 {
     uint64_t now = longTickCount();
