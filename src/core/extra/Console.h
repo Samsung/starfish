@@ -33,6 +33,7 @@ class WebBase;
     F(group)            \
     F(groupCollapsed)   \
     F(groupEnd)         \
+    F(assert)           \
     F(log)              \
     F(info)             \
     F(error)            \
@@ -62,6 +63,7 @@ public:
     void group(String* data);
     void groupCollapsed(String* data);
     void groupEnd();
+    void assertion(bool condition, Optional<String*> data);
 
 protected:
     String* makeTimeString(String* label, Optional<String*> data);
