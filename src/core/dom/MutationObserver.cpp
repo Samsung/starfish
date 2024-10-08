@@ -146,7 +146,9 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
         !(optionType & MutationObserverOptionType::kCharacterData)) {
         throw new DOMException(m_executionContext,
                                DOMException::Code::SCRIPT_TYPE_ERR,
-                               "Invalid MutationObserverInit");
+                               "Invalid MutationObserverInit: The options "
+                               "object must set at least one of 'attributes', "
+                               "'characterData', or 'childList' to true.");
     }
 
     if (options.hasAttributeOldValue() && options.attributeOldValue()) {
@@ -154,16 +156,19 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
     }
     if ((optionType & MutationObserverOptionType::kAttributeOldValue) &&
         !(optionType & MutationObserverOptionType::kAttributes)) {
-        throw new DOMException(m_executionContext,
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "Invalid MutationObserverInit");
+        throw new DOMException(
+            m_executionContext, DOMException::Code::SCRIPT_TYPE_ERR,
+            "Invalid MutationObserverInit: The options object may only set "
+            "'attributeOldValue' to true when 'attributes' is true or not "
+            "present.");
     }
 
     if (options.hasAttributeFilter() &&
         !(optionType & MutationObserverOptionType::kAttributes)) {
-        throw new DOMException(m_executionContext,
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "Invalid MutationObserverInit");
+        throw new DOMException(
+            m_executionContext, DOMException::Code::SCRIPT_TYPE_ERR,
+            "Invalid MutationObserverInit: The options object may only set "
+            "'attributeFilter' when 'attributes' is true or not present.");
     }
     GCUnorderedSet<String*> attributeFilter;
     if (options.hasAttributeFilter()) {
@@ -178,9 +183,11 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
     }
     if ((optionType & MutationObserverOptionType::kCharacterDataOldValue) &&
         !(optionType & MutationObserverOptionType::kCharacterData)) {
-        throw new DOMException(m_executionContext,
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "Invalid MutationObserverInit");
+        throw new DOMException(
+            m_executionContext, DOMException::Code::SCRIPT_TYPE_ERR,
+            "Invalid MutationObserverInit: The options object may only set "
+            "'characterDataOldValue' to true when 'characterData' is true or "
+            "not present.");
     }
 
     std::pair<bool, MutationObserverRegistration*> resultPair =
