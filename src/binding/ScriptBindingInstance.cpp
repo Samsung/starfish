@@ -361,9 +361,7 @@ static ValueRef* _timeConsoleFunction(ExecutionStateRef* state,
                                       ValueRef* thisValue, size_t argc,
                                       ValueRef** argv, bool isNewExpression)
 {
-    Document* result = nullptr;
     ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
-
     String* value0 = String::fromUTF8("default");
     if (!arg0->isUndefined()) {
         value0 = toBrowserString(state, arg0);
@@ -378,9 +376,7 @@ static ValueRef* _timeLogConsoleFunction(ExecutionStateRef* state,
                                          ValueRef* thisValue, size_t argc,
                                          ValueRef** argv, bool isNewExpression)
 {
-    Document* result = nullptr;
     ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
-
     String* value0 = String::fromUTF8("default");
     if (!arg0->isUndefined()) {
         value0 = toBrowserString(state, arg0);
@@ -400,7 +396,6 @@ static ValueRef* _timeEndConsoleFunction(ExecutionStateRef* state,
                                          ValueRef* thisValue, size_t argc,
                                          ValueRef** argv, bool isNewExpression)
 {
-    Document* result = nullptr;
     ValueRef* arg0 = (argc > 0) ? argv[0] : ValueRef::createUndefined();
 
     String* value0 = String::fromUTF8("default");
@@ -410,6 +405,41 @@ static ValueRef* _timeEndConsoleFunction(ExecutionStateRef* state,
 
     fetchWebBase(state->context())->console()->timeEnd(value0);
 
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _groupConsoleFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    String* value0 = String::fromUTF8("console.group");
+    if (argc) {
+        value0 = _createConcatenatedStringForConsole(state, argc, argv);
+    }
+    fetchWebBase(state->context())->console()->group(value0);
+
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _groupCollapsedConsoleFunction(ExecutionStateRef* state,
+                                                ValueRef* thisValue,
+                                                size_t argc, ValueRef** argv,
+                                                bool isNewExpression)
+{
+    String* value0 = String::fromUTF8("console.group");
+    if (argc) {
+        value0 = _createConcatenatedStringForConsole(state, argc, argv);
+    }
+    fetchWebBase(state->context())->console()->groupCollapsed(value0);
+
+    return ValueRef::createUndefined();
+}
+
+static ValueRef* _groupEndConsoleFunction(ExecutionStateRef* state,
+                                          ValueRef* thisValue, size_t argc,
+                                          ValueRef** argv, bool isNewExpression)
+{
+    fetchWebBase(state->context())->console()->groupEnd();
     return ValueRef::createUndefined();
 }
 

@@ -30,29 +30,46 @@ class WebBase;
     F(time)             \
     F(timeLog)          \
     F(timeEnd)          \
+    F(group)            \
+    F(groupCollapsed)   \
+    F(groupEnd)         \
     F(log)              \
     F(info)             \
     F(error)            \
     F(warn)             \
     F(debug)
 
+// https://console.spec.whatwg.org/#loglevel-severity
+enum class LogLevel : uint8_t {
+    Log, // log(), trace(), dir(), dirxml(), group(), groupCollapsed(), debug(),
+         // timeLog()
+    Info,  // count(), info(), timeEnd()
+    Warn,  // warn(), countReset()
+    Error, // error(), assert()
+};
+
 class Console : public gc {
 public:
     Console(WebBase* webBase);
-    void log(String* m);
-    void info(String* m);
-    void error(String* m);
-    void warn(String* m);
-    void debug(String* m);
+    void log(String* data);
+    void info(String* data);
+    void error(String* data);
+    void warn(String* data);
+    void debug(String* data);
     void time(String* label);
     void timeLog(String* label, Optional<String*> data);
     void timeEnd(String* label);
+    void group(String* data);
+    void groupCollapsed(String* data);
+    void groupEnd();
 
 protected:
     String* makeTimeString(String* label, Optional<String*> data);
+    void printMessage(LogLevel level, String* tag, String* dataessage);
 
-    WebBase* m_webBase;
+    WebBase* m_webBase = nullptr;
     GCUnorderedMap<String*, uint64_t> m_times;
+    GCVector<Optional<String*>> m_groupStack;
 };
 } // namespace Starfish
 

@@ -31,88 +31,69 @@ Console::Console(WebBase* webBase)
 {
 }
 
-void Console::log(String* m)
+void Console::log(String* data)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
-        m_webBase->inspector()->sendInfoMessage(m);
+        m_webBase->inspector()->sendInfoMessage(data);
     }
 #endif
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
-            STARFISH_LOG_ERROR("console.log: %s", buf);
-#else
-            STARFISH_LOG_INFO("console.log: %s", buf);
-#endif
-            return 0;
-        },
-        nullptr);
+    printMessage(
+        LogLevel::Log,
+        AtomicString::createAtomicString(m_webBase->starfish(), "console.log"),
+        data);
 }
 
-void Console::info(String* m)
+void Console::info(String* data)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
-        m_webBase->inspector()->sendInfoMessage(m);
+        m_webBase->inspector()->sendInfoMessage(data);
     }
 #endif
-
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
-            STARFISH_LOG_ERROR("console.info: %s", buf);
-#else
-            STARFISH_LOG_INFO("console.info: %s", buf);
-#endif
-            return 0;
-        },
-        nullptr);
+    printMessage(
+        LogLevel::Info,
+        AtomicString::createAtomicString(m_webBase->starfish(), "console.info"),
+        data);
 }
 
-void Console::error(String* m)
+void Console::error(String* data)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
-        m_webBase->inspector()->sendErrorMessage(m);
+        m_webBase->inspector()->sendErrorMessage(data);
     }
 #endif
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.error: %s", buf);
-            return 0;
-        },
-        nullptr);
+    printMessage(LogLevel::Error,
+                 AtomicString::createAtomicString(m_webBase->starfish(),
+                                                  "console.error"),
+                 data);
 }
 
-void Console::warn(String* m)
+void Console::warn(String* data)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
-        m_webBase->inspector()->sendWarnMessage(m);
+        m_webBase->inspector()->sendWarnMessage(data);
     }
 #endif
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.warn: %s", buf);
-            return 0;
-        },
-        nullptr);
+    printMessage(
+        LogLevel::Warn,
+        AtomicString::createAtomicString(m_webBase->starfish(), "console.warn"),
+        data);
 }
 
-void Console::debug(String* m)
+void Console::debug(String* data)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
-        m_webBase->inspector()->sendDebugMessage(m);
+        m_webBase->inspector()->sendDebugMessage(data);
     }
 #endif
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.debug: %s", buf);
-            return 0;
-        },
-        nullptr);
+    printMessage(LogLevel::Log,
+                 AtomicString::createAtomicString(m_webBase->starfish(),
+                                                  "console.debug"),
+                 data);
 }
 
 void Console::time(String* label)
@@ -134,18 +115,11 @@ void Console::timeLog(String* label, Optional<String*> data)
         return;
     }
 
-    String* m = makeTimeString(label, data);
-
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
-            STARFISH_LOG_ERROR("console.timeLog: %s", buf);
-#else
-            STARFISH_LOG_INFO("console.timeLog: %s", buf);
-#endif
-            return 0;
-        },
-        nullptr);
+    String* timeString = makeTimeString(label, data);
+    printMessage(LogLevel::Log,
+                 AtomicString::createAtomicString(m_webBase->starfish(),
+                                                  "console.timeLog"),
+                 timeString);
 }
 
 void Console::timeEnd(String* label)
@@ -156,19 +130,41 @@ void Console::timeEnd(String* label)
         return;
     }
 
-    String* m = makeTimeString(label, nullptr);
-    m_times.erase(label);
+    String* timeString = makeTimeString(label, nullptr);
+    printMessage(LogLevel::Info,
+                 AtomicString::createAtomicString(m_webBase->starfish(),
+                                                  "console.timeEnd"),
+                 timeString);
 
-    m->peekUTF8Buffer(
-        [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
-            STARFISH_LOG_ERROR("console.timeEnd: %s", buf);
-#else
-            STARFISH_LOG_INFO("console.timeEnd: %s", buf);
-#endif
-            return 0;
-        },
-        nullptr);
+    m_times.erase(label);
+}
+
+void Console::group(String* data)
+{
+    // Insert indentation only until supprot interactive groups.
+    //
+    // Interactive groups are only meaningful if the interactive console view is
+    // supported. In our case the Inspector represents it. but this currently
+    // doesn't work properly and needs further improvement.
+
+    m_groupStack.push_back(data);
+    printMessage(LogLevel::Log,
+                 AtomicString::createAtomicString(m_webBase->starfish(),
+                                                  "console.group"),
+                 data);
+}
+
+void Console::groupCollapsed(String* data)
+{
+    // Forward to group() until supprot interactive groups.
+    group(data);
+}
+
+void Console::groupEnd()
+{
+    if (m_groupStack.size()) {
+        m_groupStack.pop_back();
+    }
 }
 
 String* Console::makeTimeString(String* label, Optional<String*> data)
@@ -190,6 +186,61 @@ String* Console::makeTimeString(String* label, Optional<String*> data)
     }
 
     return builder.finalize();
+}
+
+void Console::printMessage(LogLevel level, String* tag, String* message)
+{
+    StringBuilder builder;
+    builder.appendString(tag);
+    builder.appendChar(':');
+    builder.appendChar(' ');
+
+    if (m_groupStack.size()) {
+        // Start from index 1.
+        for (size_t i = 1; i < m_groupStack.size(); ++i) {
+            builder.appendString("  ");
+        }
+    }
+
+    builder.appendString(message);
+    String* finalMessage = builder.finalize();
+
+#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
+    finalMessage->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            STARFISH_LOG_ERROR("%s", buf);
+            return 0;
+        },
+        nullptr);
+#else
+    switch (level) {
+    case LogLevel::Log:
+    case LogLevel::Info:
+        finalMessage->peekUTF8Buffer(
+            [](const char* buf, size_t len, void* data) -> size_t {
+                STARFISH_LOG_INFO("%s", buf);
+                return 0;
+            },
+            nullptr);
+        break;
+    case LogLevel::Warn:
+        finalMessage->peekUTF8Buffer(
+            [](const char* buf, size_t len, void* data) -> size_t {
+                STARFISH_LOG_WARN("%s", buf);
+                return 0;
+            },
+            nullptr);
+        break;
+    case LogLevel::Error:
+        finalMessage->peekUTF8Buffer(
+            [](const char* buf, size_t len, void* data) -> size_t {
+                STARFISH_LOG_ERROR("%s", buf);
+                return 0;
+            },
+            nullptr);
+        break;
+    }
+#endif
 }
 
 } // namespace Starfish
