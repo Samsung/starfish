@@ -250,7 +250,8 @@ void SelectorQuery::traverseDescendants(const CSSSelectorList& selectors,
         &rootNode,
         [](Element* element, void* data) -> bool {
             Data* d = (Data*)data;
-            return d->selectorQuery->selectorMatches(d->selectors, element);
+            return d->selectorQuery->selectorMatches(d->selectors, element,
+                                                     &d->rootNode);
         },
         &d,
         [](Element* e, void* data) {
@@ -261,10 +262,11 @@ void SelectorQuery::traverseDescendants(const CSSSelectorList& selectors,
 }
 
 bool SelectorQuery::selectorMatches(const CSSSelectorList& selector,
-                                    Element* element)
+                                    Element* element, Node* root)
 {
     StyleResolver& resolver = element->document()->styleResolver();
-    StyleResolver::MatchResult result;
+    StyleResolver::MatchResult result(
+        root->isDocument() ? root->document()->documentElement() : root);
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
     const GCAtomicTightVector<AtomicString>& elementClasses =
@@ -288,7 +290,7 @@ void SelectorQuery::executeForTraverseRoot(
         if (!traverseRoot->isElement()) {
             return;
         }
-        if (selectorMatches(selectors, traverseRoot->asElement())) {
+        if (selectorMatches(selectors, traverseRoot->asElement(), &rootNode)) {
             output.push_back(traverseRoot->asElement());
         }
         return;
@@ -311,7 +313,7 @@ void SelectorQuery::executeForTraverseRoots(
     if (matchTraverseRoots) {
         while (!traverseRoots.isEmpty()) {
             Element* element = traverseRoots.next();
-            if (selectorMatches(selectors, element)) {
+            if (selectorMatches(selectors, element, &rootNode)) {
                 output.push_back(element);
                 if (shouldOnlyMatchFirstElement) {
                     return;
@@ -440,7 +442,7 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element)
     size_t len = m_selectorListContainer.size();
 
     for (size_t i = 0; i < len; i++) {
-        if (selectorMatches(*m_selectorListContainer[i], element)) {
+        if (selectorMatches(*m_selectorListContainer[i], element, &rootNode)) {
             return true;
         }
     }
@@ -514,7 +516,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
                       element->isDescendantOf(&rootNode))) {
                     continue;
                 }
-                if (selectorMatches(selectors, element)) {
+                if (selectorMatches(selectors, element, &rootNode)) {
                     output.push_back(element);
 
                     if (shouldOnlyMatchFirstElement) {
@@ -531,7 +533,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
             !(rootNode.isDocument() || element->isDescendantOf(&rootNode))) {
             return;
         }
-        if (selectorMatches(selectors, element)) {
+        if (selectorMatches(selectors, element, &rootNode)) {
             output.push_back(element);
         }
         return;

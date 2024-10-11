@@ -77,7 +77,8 @@ private:
     void collectElementsByTagName(Node& rootNode, const AtomicString& tagName,
                                   std::vector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(const CSSSelectorList& selector, Element* element);
+    bool selectorMatches(const CSSSelectorList& selector, Element* element,
+                         Node* root);
     CSSSelector* selectorForIdLookup(const CSSSelectorList& firstSelector);
 
     GCVector<CSSSelectorList*>& m_selectorListContainer;

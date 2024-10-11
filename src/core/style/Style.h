@@ -3190,12 +3190,13 @@ public:
     };
 
     struct MatchResult {
-        MatchResult()
+        MatchResult(Optional<Node*> scopeRoot)
             : pseudoType(PseudoElementNone)
             , styleDamageFrom(NoDamage)
             , styleDamageSourceNodeStateMap(0)
             , styleDamageSourceNodeStateDOMTreeMap(0)
             , seenCombinator(false)
+            , scope(scopeRoot)
         {
         }
 
@@ -3204,6 +3205,7 @@ public:
         int styleDamageSourceNodeStateMap;
         int styleDamageSourceNodeStateDOMTreeMap;
         bool seenCombinator;
+        Optional<Node*> scope;
     };
 
     StyleResolver(Document* document);

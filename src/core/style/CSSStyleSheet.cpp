@@ -299,7 +299,7 @@ static void invalidateStyleOfMatchedElementWorker(
     while (child) {
         if (child->isElement() && !child->needsStyleRecalc()) {
             StyleResolver& resolver = child->document()->styleResolver();
-            StyleResolver::MatchResult result;
+            StyleResolver::MatchResult result(nullptr);
             AtomicString elementName =
                 child->asElement()->name().localNameAtomic();
             AtomicString elementId = child->asElement()->atomicId();
