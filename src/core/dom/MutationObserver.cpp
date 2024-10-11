@@ -119,7 +119,7 @@ void MutationObserver::observe(Node* node, MutationObserverInit options)
 {
     // https://dom.spec.whatwg.org/#dom-mutationobserver-observe
     // TODO: Consider transient registered observers.
-    MutationObserverOptionType optionType;
+    MutationObserverOptionType optionType = MutationObserverOptionType::kNone;
     if ((options.hasAttributeOldValue() || options.hasAttributeFilter()) &&
         !options.hasAttributes()) {
         optionType |= MutationObserverOptionType::kAttributes;
