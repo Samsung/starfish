@@ -146,4 +146,17 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
         }
     }
 }
+
+// https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
+DocumentFragment* fragmentParsingAlgorithm(Document* document, String* src,
+                                           Element* contextElement)
+{
+    DocumentFragment* df = document->createDocumentFragment();
+    HTMLParser parser(document->starfish(), df, contextElement, src);
+    parser.startParse();
+    parser.parseStep();
+    parser.endParse();
+    return df;
+}
+
 } // namespace Starfish

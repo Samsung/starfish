@@ -45,6 +45,9 @@ public:
 
     virtual void finishParsing() override;
 
+    virtual String* innerHTML() override;
+    virtual void setInnerHTML(String*) override;
+
 private:
     DocumentFragment* m_content;
 };
