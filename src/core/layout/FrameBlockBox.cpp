@@ -265,7 +265,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
 
         if (!ctx.inComputingBasisSize() &&
-               (isFrameTableCellBox() || isFlexItem() || isFrameButtonBox())) {
+            (isFrameTableCellBox() || isFlexItem() || isFrameButtonBox())) {
             ctx.registerContentHeight(this, contentHeight);
         }
 
@@ -346,7 +346,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
                 percent *= parentHeight.percent();
             } else if (parentMaxHeight.isPercent()) {
                 percent *= parentMaxHeight.percent();
-            } else if(parentMaxHeight.isFixed()) {
+            } else if (parentMaxHeight.isFixed()) {
                 fixedHeight = parentMaxHeight.fixed();
                 break;
             } else {

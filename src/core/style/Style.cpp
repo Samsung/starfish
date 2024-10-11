@@ -7660,7 +7660,7 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
 
         const CSSSelectorList& selectorList = rule->selectorList();
 
-        MatchResult result;
+        MatchResult result(nullptr);
         if (matchSelector(element, elementName, elementId, elementClasses,
                           selectorList, 0, result) == Match::SelectorMatches) {
             if (result.pseudoType != PseudoElementType::PseudoElementNone) {
@@ -8321,6 +8321,11 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element == element->document()->documentElement();
+    case CSSSelector::PseudoType::PseudoScope: {
+        Node* scope = result.scope ? result.scope.getValue()
+                                   : element->document()->documentElement();
+        return element == scope;
+    }
     case CSSSelector::PseudoType::PseudoFirstChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
