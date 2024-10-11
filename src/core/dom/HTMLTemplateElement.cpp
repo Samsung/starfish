@@ -21,6 +21,9 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTemplateElement.h"
+#include "core/dom/MutationObservationScope.h"
+#include "core/dom/parser/HTMLParser.h"
+#include "core/dom/xml/XMLSerializer.h"
 
 namespace Starfish {
 
@@ -84,6 +87,23 @@ void HTMLTemplateElement::finishParsing()
             parent->internalShadowRoot()->appendChild(content());
         }
     }
+}
+
+String* HTMLTemplateElement::innerHTML()
+{
+    return XMLSerializer::serializeToXML(m_content, false);
+}
+
+void HTMLTemplateElement::setInnerHTML(String* html)
+{
+    ChildListMutationObservationScope scope;
+    scope.startChildListMutationScope(m_content);
+    while (m_content->firstChild()) {
+        m_content->removeChild(m_content->firstChild());
+    }
+
+    DocumentFragment* df = fragmentParsingAlgorithm(document(), html, this);
+    m_content->appendChild(df);
 }
 
 } // namespace Starfish

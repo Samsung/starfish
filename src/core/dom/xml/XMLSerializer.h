@@ -26,7 +26,7 @@ class Element;
 
 class XMLSerializer : public gc {
 public:
-    static String* serializeToXML(Element* e, bool includeSelf);
+    static String* serializeToXML(Node* e, bool includeSelf);
 };
 } // namespace Starfish
 

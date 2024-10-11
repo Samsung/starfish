@@ -97,9 +97,14 @@ static bool hasSpecialChar(char* str, char* parentTagName)
 }
 
 static rapidxml::xml_node<char>* createXMLNodeFromElement(
-    Element* e, rapidxml::xml_document<char>& xmlDocument)
+    Node* e, rapidxml::xml_document<char>& xmlDocument)
 {
-    auto utf8Data = e->localName()->toUTF8NonGCString();
+    UTF8StringDataNonGCStd utf8Data;
+    if (e->isElement()) {
+        utf8Data = e->localName()->toUTF8NonGCString();
+    } else {
+        utf8Data = e->nodeName()->toUTF8NonGCString();
+    }
     char* allocateName = xmlDocument.allocate_string(utf8Data.data());
     rapidxml::node_type nodeType = rapidxml::node_type::node_element;
     if (isSelfClosingTag(allocateName)) {
@@ -108,18 +113,24 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
     rapidxml::xml_node<char>* xmlNode =
         xmlDocument.allocate_node(nodeType, allocateName);
 
-    size_t attributeCount = e->attributeCount();
-    for (size_t i = 0; i < attributeCount; i++) {
-        auto utf8DataName =
-            e->getAssuredAttributeName(i).localName()->toUTF8NonGCString();
-        char* allocateCountName =
-            xmlDocument.allocate_string(utf8DataName.data());
-        auto utf8DataValue = e->getAssuredAttribute(i)->toUTF8NonGCString();
-        char* allocateCountValue =
-            xmlDocument.allocate_string(utf8DataValue.data());
-        rapidxml::xml_attribute<char>* attr = xmlDocument.allocate_attribute(
-            allocateCountName, allocateCountValue);
-        xmlNode->append_attribute(attr);
+    if (e->isElement()) {
+        Element* ele = e->asElement();
+        size_t attributeCount = ele->attributeCount();
+        for (size_t i = 0; i < attributeCount; i++) {
+            auto utf8DataName = ele->getAssuredAttributeName(i)
+                                    .localName()
+                                    ->toUTF8NonGCString();
+            char* allocateCountName =
+                xmlDocument.allocate_string(utf8DataName.data());
+            auto utf8DataValue =
+                ele->getAssuredAttribute(i)->toUTF8NonGCString();
+            char* allocateCountValue =
+                xmlDocument.allocate_string(utf8DataValue.data());
+            rapidxml::xml_attribute<char>* attr =
+                xmlDocument.allocate_attribute(allocateCountName,
+                                               allocateCountValue);
+            xmlNode->append_attribute(attr);
+        }
     }
 
     Node* child = e->firstChild();
@@ -164,7 +175,7 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
     return xmlNode;
 }
 
-String* XMLSerializer::serializeToXML(Element* e, bool includeSelf)
+String* XMLSerializer::serializeToXML(Node* e, bool includeSelf)
 {
     rapidxml::xml_document<char> doc;
     rapidxml::xml_node<char>* root = createXMLNodeFromElement(e, doc);

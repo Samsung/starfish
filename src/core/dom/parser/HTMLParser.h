@@ -27,6 +27,11 @@
 #include "core/dom/parser/HTMLTreeBuilder.h"
 
 namespace Starfish {
+
+// https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
+DocumentFragment* fragmentParsingAlgorithm(Document* document, String* src,
+                                           Element* contextElement);
+
 class HTMLParser : public gc {
 public:
     HTMLParser(Starfish* starfish, Document* document, String* sourceString)

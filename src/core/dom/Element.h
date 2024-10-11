@@ -147,8 +147,8 @@ public:
 
     virtual Node* clone() override;
 
-    String* innerHTML();
-    void setInnerHTML(String*);
+    virtual String* innerHTML();
+    virtual void setInnerHTML(String*);
     String* outerHTML();
     void setOuterHTML(String*);
     // https://w3c.github.io/DOM-Parsing/#dom-element-insertadjacenthtml

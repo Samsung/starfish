@@ -1737,19 +1737,6 @@ String* Element::innerHTML()
     return XMLSerializer::serializeToXML(this, false);
 }
 
-// https://w3c.github.io/DOM-Parsing/#dfn-fragment-parsing-algorithm
-static DocumentFragment* fragmentParsingAlgorithm(Document* document,
-                                                  String* src,
-                                                  Element* contextElement)
-{
-    DocumentFragment* df = document->createDocumentFragment();
-    HTMLParser parser(document->starfish(), df, contextElement, src);
-    parser.startParse();
-    parser.parseStep();
-    parser.endParse();
-    return df;
-}
-
 Node* Element::createNodeWithHTML(String* html)
 {
     return fragmentParsingAlgorithm(document(), html, this);
