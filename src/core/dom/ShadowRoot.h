@@ -145,9 +145,9 @@ public:
 #undef OVERRIDE
 
 private:
-    ShadowRootMode m_mode : 1;
+    ShadowRootMode m_mode : 8;
     bool m_delegatesFocus : 1;
-    SlotAssignmentMode m_slotAssignment : 1;
+    SlotAssignmentMode m_slotAssignment : 8;
     bool m_clonable : 1;
     bool m_serializable : 1;
     bool m_availableToElementInternals : 1;

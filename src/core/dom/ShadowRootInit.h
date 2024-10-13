@@ -22,8 +22,8 @@
 
 namespace Starfish {
 
-enum class ShadowRootMode { Open, Closed };
-enum class SlotAssignmentMode { Manual, Named };
+enum class ShadowRootMode : uint8_t { Open, Closed };
+enum class SlotAssignmentMode : uint8_t { Manual, Named };
 
 struct ShadowRootInit {
     ShadowRootInit()
