@@ -3482,6 +3482,9 @@ void StyleResolver::applyProperty(
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::None) {
             style->setMaxWidth(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            STARFISH_UNIMPLEMENTED();
         } else {
             Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());

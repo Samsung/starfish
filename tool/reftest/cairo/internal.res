@@ -452,6 +452,7 @@ test/cairo/internal-test/dom/HTMLAnchorElement08.html
 test/cairo/internal-test/dom/HTMLAnchorElement09.html
 test/cairo/internal-test/dom/Text01.html
 test/cairo/internal-test/dom/Text02.html
+test/cairo/internal-test/dom/toggleAttribute.html
 test/cairo/internal-test/dom/Range01.html
 test/cairo/internal-test/dom/Range02.html
 test/cairo/internal-test/dom/Range03.html

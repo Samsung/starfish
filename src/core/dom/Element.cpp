@@ -500,6 +500,36 @@ Attr* Element::removeAttributeNode(Attr* attr)
     return attr;
 }
 
+bool Element::toggleAttribute(String* qualifiedName, Optional<bool> force)
+{
+    if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
+    }
+
+    AttributeName attName = properAttributeName(this, qualifiedName);
+    size_t idx = hasAttribute(attName);
+    if (idx == SIZE_MAX) {
+        if (!force.hasValue() || force.value()) {
+            QualifiedName qname = attName.qname();
+            m_attributes.push_back(Attribute(qname, String::emptyString));
+            invokeDidAttributeChanged(qname, nullptr, String::emptyString, true,
+                                      false);
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        if (!force.hasValue() || !force.value()) {
+            removeAttribute(idx);
+            return false;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
 GCVector<String*> Element::getAttributeNames() const
 {
     GCVector<String*> ret;
