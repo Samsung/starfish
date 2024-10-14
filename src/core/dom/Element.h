@@ -240,6 +240,8 @@ public:
     void removeAttributeNS(Optional<String*> ns, String* localName);
     Attr* removeAttributeNode(Attr* attr);
 
+    bool toggleAttribute(String* qualifiedName, Optional<bool> force = nullptr);
+
     Element* closest(String* selectors);
     bool matches(String* selectors);
 
