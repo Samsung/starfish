@@ -26,6 +26,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLListContainer.h"
 #include "core/dom/HTMLLIElement.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"

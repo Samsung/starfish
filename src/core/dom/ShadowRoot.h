@@ -26,13 +26,20 @@
 
 namespace Starfish {
 
+class HTMLSlotElement;
+
+class SlotAssignment : public gc {
+public:
+private:
+};
+
 class ShadowRoot : public DocumentFragment {
 public:
     ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
         : DocumentFragment(document)
         , m_mode(mode)
         , m_delegatesFocus(false)
-        , m_slotAssignment(SlotAssignmentMode::Named)
+        , m_slotAssignmentEnum(SlotAssignmentMode::Named)
         , m_clonable(false)
         , m_serializable(false)
         , m_availableToElementInternals(false)
@@ -47,6 +54,9 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isShadowRoot() const override;
+
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     String* mode() const;
     ShadowRootMode modeEnum() const
@@ -95,22 +105,22 @@ public:
 
     String* slotAssignment() const
     {
-        if (m_slotAssignment == SlotAssignmentMode::Manual) {
+        if (m_slotAssignmentEnum == SlotAssignmentMode::Manual) {
             return String::createASCIIString("manual");
         } else {
-            STARFISH_ASSERT(m_slotAssignment == SlotAssignmentMode::Named);
+            STARFISH_ASSERT(m_slotAssignmentEnum == SlotAssignmentMode::Named);
             return String::createASCIIString("named");
         }
     }
 
     SlotAssignmentMode slotAssignmentEnum() const
     {
-        return m_slotAssignment;
+        return m_slotAssignmentEnum;
     }
 
     void setSlotAssignment(SlotAssignmentMode slotAssignmentMode)
     {
-        m_slotAssignment = slotAssignmentMode;
+        m_slotAssignmentEnum = slotAssignmentMode;
     }
 
     bool clonable() const
@@ -144,15 +154,29 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
+    Optional<HTMLSlotElement*> assignedSlot(String* name);
+    void assignSlot();
+    void connectSlotWithSlottables();
+
 private:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        DocumentFragment::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_host));
+        markHashTable(desc, GC_WORD_OFFSET(ShadowRoot, m_namedSlotElements));
+    }
+
+    void updateSlotElements(bool shouldConnectSlotWithSlottables = true);
+
     ShadowRootMode m_mode : 8;
     bool m_delegatesFocus : 1;
-    SlotAssignmentMode m_slotAssignment : 8;
+    SlotAssignmentMode m_slotAssignmentEnum : 8;
     bool m_clonable : 1;
     bool m_serializable : 1;
     bool m_availableToElementInternals : 1;
     bool m_declarative : 1;
     Element* m_host;
+    GCUnorderedMap<String*, HTMLSlotElement*> m_namedSlotElements;
 };
 } // namespace Starfish
 

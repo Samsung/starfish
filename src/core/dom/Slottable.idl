@@ -1,0 +1,8 @@
+// https://dom.spec.whatwg.org/#slotable
+
+// mixin
+[PartialInterface,
+ NoInterfaceObject]
+interface Slottable {
+  readonly attribute HTMLSlotElement? assignedSlot;
+};

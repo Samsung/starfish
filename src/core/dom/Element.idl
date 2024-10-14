@@ -26,7 +26,7 @@ interface Element : Node {
   [CEReactions] attribute DOMString id;
   [CEReactions] attribute DOMString className;
   [CEReactions, SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
-  [Unimplemented, CEReactions, Unscopable] attribute DOMString slot;
+  [CEReactions, Reflect, Unscopable] attribute DOMString slot;
 
   boolean hasAttributes();
   [SameObject] readonly attribute NamedNodeMap attributes;
@@ -95,5 +95,5 @@ interface Element : Node {
 Element implements ParentNode;
 Element implements NonDocumentTypeChildNode;
 Element implements ChildNode;
-Element implements Slotable;
+Element implements Slottable;
 Element implements ElementAnimation;

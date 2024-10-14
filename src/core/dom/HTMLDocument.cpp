@@ -56,6 +56,7 @@
 #include "core/dom/HTMLPreElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/HTMLSelectElement.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/HTMLSpanElement.h"
 #include "core/dom/HTMLStyleElement.h"
 #include "core/dom/HTMLTableCaptionElement.h"
@@ -225,6 +226,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLDataElement(document, qname);
     } else if (name == str->m_templateTagName.localNameAtomic()) {
         return new HTMLTemplateElement(document, qname);
+    } else if (name == str->m_slotTagName.localNameAtomic()) {
+        return new HTMLSlotElement(document, qname);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                             \
     else if (name == str->m_##tagName##TagName.localNameAtomic()) \

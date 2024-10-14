@@ -130,9 +130,10 @@ namespace Starfish {
     F(script)                           \
     F(section)                          \
     F(select)                           \
-    F(shadow)                           \
-    F(small)                            \
     F(source)                           \
+    F(shadow)                           \
+    F(slot)                             \
+    F(small)                            \
     F(span)                             \
     F(strike)                           \
     F(strong)                           \
@@ -430,6 +431,7 @@ public:
     QualifiedName m_gradientTransform;
     QualifiedName m_spreadMethod;
     QualifiedName m_shadowRootMode;
+    QualifiedName m_slot;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

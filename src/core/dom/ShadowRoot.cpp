@@ -20,6 +20,9 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/Element.h"
+#include "core/dom/HTMLSlotElement.h"
+#include "core/dom/Traverse.h"
 
 namespace Starfish {
 
@@ -45,6 +48,74 @@ String* ShadowRoot::mode() const
         return starfish()->staticStrings()->m_open.localName();
     }
     return starfish()->staticStrings()->m_close.localName();
+}
+
+void ShadowRoot::updateSlotElements(bool shouldConnectSlotWithSlottables)
+{
+    m_namedSlotElements.clear();
+    if (slotAssignmentEnum() == SlotAssignmentMode::Named) {
+        Traverse::traverse(this, [&](Node* node) {
+            if (node->isHTMLSlotElement()) {
+                auto slot = node->asHTMLSlotElement();
+                m_namedSlotElements[slot->slotName()] = slot;
+                slot->m_assignedNodes.clear();
+            }
+        });
+    } else {
+        STARFISH_UNIMPLEMENTED("SlotAssignmentMode::Manual");
+    }
+
+    if (shouldConnectSlotWithSlottables) {
+        connectSlotWithSlottables();
+    }
+}
+
+void ShadowRoot::assignSlot()
+{
+    updateSlotElements(false);
+    connectSlotWithSlottables();
+}
+
+void ShadowRoot::connectSlotWithSlottables()
+{
+    for (auto iter : m_namedSlotElements) {
+        iter.second->m_assignedNodes.clear();
+    }
+
+    Node* node = firstChild();
+    while (node) {
+        if (node->isElement()) {
+            auto slotName = node->asElement()->slot();
+            if (slotName->length()) {
+                auto iter = m_namedSlotElements.find(slotName);
+                if (iter != m_namedSlotElements.end()) {
+                    iter->second->m_assignedNodes.push_back(node);
+                }
+            }
+        }
+        node = node->nextSibling();
+    }
+}
+
+Optional<HTMLSlotElement*> ShadowRoot::assignedSlot(String* name)
+{
+    auto iter = m_namedSlotElements.find(name);
+    if (iter == m_namedSlotElements.end()) {
+        return nullptr;
+    }
+    return iter->second;
+}
+
+void ShadowRoot::didNodeInserted(Node* parent, Node* newChild)
+{
+    DocumentFragment::didNodeInserted(parent, newChild);
+    updateSlotElements();
+}
+
+void ShadowRoot::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    DocumentFragment::didNodeRemoved(parent, oldChild);
+    updateSlotElements();
 }
 
 } // namespace Starfish
