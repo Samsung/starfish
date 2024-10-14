@@ -3484,7 +3484,9 @@ void StyleResolver::applyProperty(
             style->setMaxWidth(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_UNIMPLEMENTED();
+            // TODO: max-width can have the following keyword values
+            // stretch | fit-content | contain
+            STARFISH_UNIMPLEMENTED("MinWidth: css keyword value kind.");
         } else {
             Optional<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
