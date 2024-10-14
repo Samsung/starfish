@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/scripting.html#htmlslotelement
+[HTMLConstructor]
+interface HTMLSlotElement : HTMLElement {
+  [CEReactions, Reflect] attribute DOMString name;
+  // [Unimplemented] sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
+  // [Unimplemented] sequence<Element> assignedElements(optional AssignedNodesOptions options = {});
+  // [Unimplemented] undefined assign((Element or Text)... nodes);
+};
+
+dictionary AssignedNodesOptions {
+  boolean flatten = false;
+};

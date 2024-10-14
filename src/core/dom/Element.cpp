@@ -37,6 +37,7 @@
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLBodyElement.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
@@ -724,6 +725,25 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
     if (document()->styleResolver().mayHaveAttrSelectorWithName(
             name.localNameAtomic())) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+    }
+}
+
+void Element::didNodeInserted(Node* parent, Node* newChild)
+{
+    Node::didNodeInserted(parent, newChild);
+
+    Optional<ShadowRoot*> shadowRoot;
+    if (parent == this && (shadowRoot = internalShadowRoot())) {
+        shadowRoot->connectSlotWithSlottables();
+    }
+}
+void Element::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    Node::didNodeInserted(parent, oldChild);
+
+    Optional<ShadowRoot*> shadowRoot;
+    if (parent == this && (shadowRoot = internalShadowRoot())) {
+        shadowRoot->connectSlotWithSlottables();
     }
 }
 
@@ -2366,6 +2386,7 @@ void Element::updateShadowRoot(Optional<ShadowRoot*> sr)
     RareElementMembers* rareData = ensureRareElementMembers();
     STARFISH_ASSERT(rareData->isRareElementMembers());
     rareData->m_shadowRoot = sr;
+    sr->assignSlot();
     setNeedsFrameTreeBuild();
 }
 
@@ -2512,4 +2533,21 @@ ShadowRoot* Element::attachShadow(ShadowRootInit init)
     updateShadowRoot(shadow);
     return shadow;
 }
+
+String* Element::slot()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_slot);
+}
+
+Optional<HTMLSlotElement*> Element::assignedSlot()
+{
+    Optional<ShadowRoot*> shadowRoot;
+    if (parentElement() &&
+        (shadowRoot = parentElement()->internalShadowRoot())) {
+        String* slotName = slot();
+        return shadowRoot->assignedSlot(slotName);
+    }
+    return nullptr;
+}
+
 } // namespace Starfish

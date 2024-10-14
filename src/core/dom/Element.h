@@ -33,6 +33,7 @@ namespace Starfish {
 class Attr;
 class CSSStyleDeclaration;
 class HTMLElement;
+class HTMLSlotElement;
 class NamedNodeMap;
 class PseudoElement;
 class DOMStringMap;
@@ -201,6 +202,9 @@ public:
     ShadowRoot* attachShadow(ShadowRootInit init);
     virtual Node* firstRenderingChild() override;
 
+    String* slot();
+    Optional<HTMLSlotElement*> assignedSlot();
+
     Node* createNodeWithHTML(String*);
 
 protected:
@@ -254,6 +258,9 @@ public:
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved);
+
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues)
