@@ -352,6 +352,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
+        case JustifyContentValue::StretchJustifyContentValue:
             break;
         case JustifyContentValue::CenterJustifyContentValue:
         case JustifyContentValue::SpaceAroundJustifyContentValue:
@@ -423,6 +424,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
+        case JustifyContentValue::StretchJustifyContentValue:
             break;
         case JustifyContentValue::CenterJustifyContentValue:
         case JustifyContentValue::SpaceAroundJustifyContentValue:

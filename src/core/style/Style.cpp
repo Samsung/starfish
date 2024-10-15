@@ -2203,6 +2203,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("space-between");
         case SpaceAroundJustifyContentValue:
             return String::fromUTF8("space-around");
+        case StretchJustifyContentValue:
+            return String::fromUTF8("stretch");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -14648,6 +14650,9 @@ bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
     } else if (value.equals("space-around")) {
         m_value.m_justifyContent =
             JustifyContentValue::SpaceAroundJustifyContentValue;
+    } else if (value.equals("stretch")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::StretchJustifyContentValue;
     } else {
         return false;
     }

@@ -4846,7 +4846,7 @@ protected:
     TableLayoutValue m_tableLayout : 1; // table
     FlexDirectionValue m_flexDirection : 2;
     FlexWrapValue m_flexWrap : 2;
-    JustifyContentValue m_justifyContent : 3;
+    JustifyContentValue m_justifyContent : 4;
     AlignItemValue m_alignItems : 3;
     bool m_alignSelfSpecifiedByUser : 1;
     AlignItemValue m_alignSelf : 3;
