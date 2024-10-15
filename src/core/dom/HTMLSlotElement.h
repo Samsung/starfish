@@ -51,9 +51,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLSlotElement() const override;
 
-    virtual void didNodeInserted(Node* parent, Node* newChild) override;
-    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
-
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
@@ -64,6 +61,11 @@ public:
     }
 
     String* slotName();
+
+    GCVector<Node*> assignedNodes(
+        Optional<AssignedNodesOptions> options = nullptr);
+    GCVector<Element*> assignedElements(
+        Optional<AssignedNodesOptions> options = nullptr);
 
 private:
     static inline void fillGCDescriptor(GC_word* desc)
