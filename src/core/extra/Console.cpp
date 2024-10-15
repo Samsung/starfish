@@ -24,6 +24,10 @@
 #include "core/page/WebBase.h"
 #include "core/modules/profiling/Profiling.h"
 
+#if defined(STARFISH_ENABLE_TEST) && !defined(STARFISH_ENABLE_WORKER)
+void customExit(int returnCode);
+#endif
+
 namespace Starfish {
 
 Console::Console(WebBase* webBase)
@@ -177,6 +181,19 @@ void Console::assertion(bool condition, Optional<String*> data)
                          ? data.value()
                          : AtomicString::createAtomicString(
                                m_webBase->starfish(), "console.assert"));
+#if defined(STARFISH_ENABLE_TEST) && !defined(STARFISH_ENABLE_WORKER)
+        customExit(-1);
+#endif
+    } else {
+#if defined(STARFISH_ENABLE_TEST)
+        printMessage(LogLevel::Error,
+                     AtomicString::createAtomicString(m_webBase->starfish(),
+                                                      "Assertion ok"),
+                     data.hasValue()
+                         ? data.value()
+                         : AtomicString::createAtomicString(
+                               m_webBase->starfish(), "console.assert"));
+#endif
     }
 }
 
