@@ -157,6 +157,7 @@ public:
     Optional<HTMLSlotElement*> assignedSlot(String* name);
     void assignSlot();
     void connectSlotWithSlottables();
+    void updateSlotElements(bool shouldConnectSlotWithSlottables = true);
 
 private:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -165,8 +166,6 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_host));
         markHashTable(desc, GC_WORD_OFFSET(ShadowRoot, m_namedSlotElements));
     }
-
-    void updateSlotElements(bool shouldConnectSlotWithSlottables = true);
 
     ShadowRootMode m_mode : 8;
     bool m_delegatesFocus : 1;

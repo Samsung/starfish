@@ -2,8 +2,8 @@
 [HTMLConstructor]
 interface HTMLSlotElement : HTMLElement {
   [CEReactions, Reflect] attribute DOMString name;
-  // [Unimplemented] sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
-  // [Unimplemented] sequence<Element> assignedElements(optional AssignedNodesOptions options = {});
+  sequence<Node> assignedNodes(optional AssignedNodesOptions options);
+  sequence<Element> assignedElements(optional AssignedNodesOptions options);
   // [Unimplemented] undefined assign((Element or Text)... nodes);
 };
 

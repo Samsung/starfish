@@ -82,7 +82,7 @@ void ShadowRoot::connectSlotWithSlottables()
         iter.second->m_assignedNodes.clear();
     }
 
-    Node* node = firstChild();
+    Node* node = host()->firstChild();
     while (node) {
         if (node->isElement()) {
             auto slotName = node->asElement()->slot();

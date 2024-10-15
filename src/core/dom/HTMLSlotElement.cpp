@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLSlotElement.h"
+#include "core/dom/ShadowRoot.h"
 
 namespace Starfish {
 
@@ -55,16 +56,51 @@ void HTMLSlotElement::didAttributeChanged(QualifiedName name,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
+    if (name == starfish()->staticStrings()->m_name) {
+        Node* nd = parentNode();
+        while (nd) {
+            if (nd->isShadowRoot()) {
+                nd->asShadowRoot()->updateSlotElements();
+                break;
+            }
+            nd = nd->parentNode();
+        }
+    }
 }
 
-void HTMLSlotElement::didNodeInserted(Node* parent, Node* newChild)
+GCVector<Node*> HTMLSlotElement::assignedNodes(
+    Optional<AssignedNodesOptions> options)
 {
-    HTMLElement::didNodeInserted(parent, newChild);
+    if (options && options.value().flatten()) {
+        GCVector<Node*> result = m_assignedNodes;
+        for (size_t i = 0; i < result.size(); i++) {
+            Node* nd = result[i];
+            if (nd->isHTMLSlotElement()) {
+                auto subNodes = nd->asHTMLSlotElement()->assignedNodes(options);
+                result.erase(i);
+                for (size_t j = 0; j < subNodes.size(); j++) {
+                    result.insert(i + j, subNodes[j]);
+                }
+                i--;
+            }
+        }
+        return result;
+    } else {
+        return m_assignedNodes;
+    }
 }
 
-void HTMLSlotElement::didNodeRemoved(Node* parent, Node* oldChild)
+GCVector<Element*> HTMLSlotElement::assignedElements(
+    Optional<AssignedNodesOptions> options)
 {
-    HTMLElement::didNodeRemoved(parent, oldChild);
+    GCVector<Node*> tempResult = assignedNodes(options);
+    GCVector<Element*> result;
+    for (Node* nd : tempResult) {
+        if (nd->isElement()) {
+            result.push_back(nd->asElement());
+        }
+    }
+    return result;
 }
 
 } // namespace Starfish
