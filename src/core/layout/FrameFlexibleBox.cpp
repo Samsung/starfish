@@ -618,6 +618,7 @@ void FlexFormattingContext::applyJustifyContent()
         case JustifyContentValue::NormalJustifyContentValue:
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
+        case JustifyContentValue::StretchJustifyContentValue:
             break;
         case JustifyContentValue::EndJustifyContentValue:
         case JustifyContentValue::FlexEndJustifyContentValue:

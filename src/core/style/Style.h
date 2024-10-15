@@ -178,13 +178,18 @@ enum FlexWrapValue ENSURE_ENUM_UNSIGNED {
 
 enum JustifyContentValue ENSURE_ENUM_UNSIGNED {
     NormalJustifyContentValue,
+
+    // Positional alignment
     FlexStartJustifyContentValue,
     FlexEndJustifyContentValue,
     StartJustifyContentValue,
     CenterJustifyContentValue,
     EndJustifyContentValue,
+
+    // Distributed alignment
     SpaceBetweenJustifyContentValue,
     SpaceAroundJustifyContentValue,
+    StretchJustifyContentValue,
 };
 
 enum AlignItemValue ENSURE_ENUM_UNSIGNED {
