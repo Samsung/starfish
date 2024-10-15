@@ -2187,6 +2187,8 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::JustifyContentValueKind:
         switch (justifyContentValue()) {
+        case NormalJustifyContentValue:
+            return String::fromUTF8("normal");
         case FlexStartJustifyContentValue:
             return String::fromUTF8("flex-start");
         case FlexEndJustifyContentValue:
@@ -6381,7 +6383,7 @@ void StyleResolver::applyProperty(
              CSSStyleValuePair::ValueKind::Initial) ||
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
             style->m_justifyContent =
-                JustifyContentValue::FlexStartJustifyContentValue;
+                JustifyContentValue::NormalJustifyContentValue;
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -14623,7 +14625,10 @@ bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::JustifyContentValueKind;
-    if (value.equals("flex-start")) {
+    if (value.equals("normal")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::NormalJustifyContentValue;
+    } else if (value.equals("flex-start")) {
         m_value.m_justifyContent =
             JustifyContentValue::FlexStartJustifyContentValue;
     } else if (value.equals("flex-end")) {

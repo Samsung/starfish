@@ -4791,7 +4791,7 @@ protected:
         m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
         m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
         m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
-        m_justifyContent = JustifyContentValue::FlexStartJustifyContentValue;
+        m_justifyContent = JustifyContentValue::NormalJustifyContentValue;
         m_alignItems = AlignItemValue::StretchAlignItemValue;
         m_alignSelf = AlignItemValue::StretchAlignItemValue;
         m_alignSelfSpecifiedByUser = false;

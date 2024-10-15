@@ -348,6 +348,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         JustifyContentValue justifyContent =
             flexibleBox->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::NormalJustifyContentValue:
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
@@ -375,7 +376,8 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
             offset = flexibleBox->contentWidth() - outerWidth();
             break;
         default:
-            STARFISH_UNSUPPORTED("css property (flex): align-items %d",alignSelf);
+            STARFISH_UNSUPPORTED("css property (flex): align-items %d",
+                                 alignSelf);
             break;
         }
     }
@@ -409,13 +411,15 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
             offset = flexibleBox->contentHeight() - outerHeight();
             break;
         default:
-            STARFISH_UNSUPPORTED("css property (flex): align-items %d",alignSelf);
+            STARFISH_UNSUPPORTED("css property (flex): align-items %d",
+                                 alignSelf);
             break;
         }
     } else {
         JustifyContentValue justifyContent =
             flexibleBox->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::NormalJustifyContentValue:
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
@@ -3747,7 +3751,8 @@ LayoutRect FrameBox::frameScrollingRect()
     return out;
 }
 
-static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b, bool checkBackgroundColor = true)
+static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b,
+                                     bool checkBackgroundColor = true)
 {
     StyleBackgroundData* background = nullptr;
     OutlineData* outline = nullptr;
@@ -3783,7 +3788,8 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b, bool checkB
         }
     }
 
-    if (checkBackgroundColor && background && !background->color().isTransparent()) {
+    if (checkBackgroundColor && background &&
+        !background->color().isTransparent()) {
         return true;
     }
 
@@ -3956,18 +3962,24 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     bool drawableContentsInStyle = true;
     if (ctx.isVisibleRectCollapsible) {
         bool shouldCareBackgroundColor = true;
-        if (node() && (node()->isHTMLHtmlElement() || node()->isHTMLBodyElement())) {
-            auto bgColor = node()->document()->browsingContext()->hasWindowBackgroundColor();
+        if (node() &&
+            (node()->isHTMLHtmlElement() || node()->isHTMLBodyElement())) {
+            auto bgColor = node()
+                               ->document()
+                               ->browsingContext()
+                               ->hasWindowBackgroundColor();
             if (bgColor.first.hasValue() && bgColor.first.value() == node()) {
                 shouldCareBackgroundColor = false;
             }
         } else if (!isScrollingPurpose && contentSurface()) {
-            // there is only background-color on video or canvas element, we should not make graphics buffer
-            // since we can draw background color property with compositor
+            // there is only background-color on video or canvas element, we
+            // should not make graphics buffer since we can draw background
+            // color property with compositor
             shouldCareBackgroundColor = false;
         }
 
-        drawableContentsInStyle = cs && styleHasDrawableContents(cs, this, shouldCareBackgroundColor);
+        drawableContentsInStyle =
+            cs && styleHasDrawableContents(cs, this, shouldCareBackgroundColor);
     }
     if (isFrameBlockBox() && !drawableContentsInStyle) {
         boxHasDrawableContents = false;
