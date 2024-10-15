@@ -584,7 +584,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 static bool absolutePositionIgnorableFlexJustifyContentValue(
     JustifyContentValue value)
 {
-    if (value == JustifyContentValue::StartJustifyContentValue ||
+    if (value == JustifyContentValue::NormalJustifyContentValue ||
+        value == JustifyContentValue::StartJustifyContentValue ||
         value == JustifyContentValue::FlexStartJustifyContentValue ||
         value == JustifyContentValue::SpaceBetweenJustifyContentValue) {
         return false;

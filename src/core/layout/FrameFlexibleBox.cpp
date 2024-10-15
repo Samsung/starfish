@@ -346,7 +346,8 @@ void FlexFormattingContext::applyFlexFactor()
                 if (of != OverflowValue::VisibleOverflow) {
                     hasNonOverflowVisibleItem = true;
                 }
-                everyItemHaveNonLengthFlexBasis &= !flexItems[j]->style()->flexBasis().isWidth();
+                everyItemHaveNonLengthFlexBasis &=
+                    !flexItems[j]->style()->flexBasis().isWidth();
             }
             if (hasNonOverflowVisibleItem && everyItemHaveNonLengthFlexBasis) {
                 for (size_t j = 0; j < flexItems.size(); j++) {
@@ -614,6 +615,7 @@ void FlexFormattingContext::applyJustifyContent()
         JustifyContentValue justifyContent =
             m_container->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::NormalJustifyContentValue:
         case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
             break;
