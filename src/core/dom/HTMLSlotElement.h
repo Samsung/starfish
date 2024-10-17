@@ -62,6 +62,11 @@ public:
 
     String* slotName();
 
+    const GCVector<Node*>& immutableAssignedNodes() const
+    {
+        return m_assignedNodes;
+    }
+
     GCVector<Node*> assignedNodes(
         Optional<AssignedNodesOptions> options = nullptr);
     GCVector<Element*> assignedElements(

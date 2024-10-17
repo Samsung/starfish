@@ -46,6 +46,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/Traverse.h"
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/svg/SVGUseElement.h"
 #include "core/layout/Frame.h"
@@ -9462,8 +9463,13 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
 
     element->clearDidPrepareAnimation();
 
-    Node* child = element->firstRenderingChild();
-    while (child != nullptr) {
+    RenderingSiblingIterator iter(element->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+
         if (child->isElement() == true) {
             child->clearNeedsStyleRecalc();
             if (child->style() != nullptr) {
@@ -9474,7 +9480,6 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
         } else {
             child->setStyle(nullptr);
         }
-        child = child->nextSibling();
     }
 }
 
@@ -9495,8 +9500,13 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
     ctx.m_ancestorSelectorFilter->pushNode(parentElement);
 
-    Node* child = parentElement->firstRenderingChild();
-    while (child) {
+    RenderingSiblingIterator iter(parentElement->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+
         if (child->isElement()) {
             ComputedStyle* oldStyle = child->style();
 
@@ -9508,12 +9518,16 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 oldStyle &&
                 oldStyle->someNonInheritMemberExplicitlyInherited()) {
                 child->markChildNeedsStyleRecalc();
-                Node* grandChild = child->firstRenderingChild();
-                while (grandChild) {
+
+                RenderingSiblingIterator iter(child->firstRenderingChild());
+                while (true) {
+                    Optional<Node*> grandChild = iter.next();
+                    if (!grandChild) {
+                        break;
+                    }
                     if (grandChild->isElement()) {
                         grandChild->markNeedsStyleRecalc();
                     }
-                    grandChild = grandChild->nextSibling();
                 }
             }
 
@@ -9545,7 +9559,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                         ComputedStyle(parentElementStyle);
                     childTextNodeStyle->loadResources(parentElement);
                     childTextNodeStyle->arrangeStyleValues(parentElementStyle,
-                                                           child);
+                                                           child.value());
 
                     ComputedStyle* oldStyle = child->style();
                     if (oldStyle) {
@@ -9588,11 +9602,15 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             }
         }
         STARFISH_ASSERT(!child->needsStyleRecalc());
-        child = child->nextSibling();
     }
 
-    child = parentElement->firstRenderingChild();
-    while (child) {
+    iter = RenderingSiblingIterator(parentElement->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+
         if (child->isElement() && child->childNeedsStyleRecalc()) {
             resolveChildrenStyle(
                 ctx, resolver, child->asElement(), child->style(),
@@ -9629,7 +9647,6 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 shadowFirstChild->setParentNode(sr);
             }
         }
-        child = child->nextSibling();
     }
 
     parentElement->clearChildNeedsStyleRecalc();
@@ -9674,20 +9691,23 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
     STARFISH_ASSERT(parent != nullptr);
     STARFISH_ASSERT(sheet != nullptr);
 
-    Node* child = parent->firstRenderingChild();
-    while (child) {
-        if (!originFound && child == sheet->origin()) {
+    RenderingSiblingIterator iter(parent->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        if (!originFound && child.value() == sheet->origin()) {
             originFound = true;
         } else if (originFound) {
-            if (tryAddSheet(child, sheet)) {
+            if (tryAddSheet(child.value(), sheet)) {
                 return true;
             }
         } else {
-            if (traverseAndTryAddSheet(child, sheet, originFound)) {
+            if (traverseAndTryAddSheet(child.value(), sheet, originFound)) {
                 return true;
             }
         }
-        child = child->nextSibling();
     }
 
     return false;
