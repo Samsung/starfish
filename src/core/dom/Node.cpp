@@ -498,9 +498,25 @@ Node* Node::getRootNode(GetRootNodeOptions options)
 Node* Node::renderingParentNode() const
 {
     auto nd = parentNode();
+
+    if (nd && nd->isElement()) {
+        Element* e = nd->asElement();
+        auto sr = e->internalShadowRoot();
+        if (sr) {
+            String* slot = e->slot();
+            if (slot->length()) {
+                auto slotElement = sr->assignedSlot(slot);
+                if (slotElement) {
+                    return slotElement->renderingParentNode();
+                }
+            }
+        }
+    }
+
     if (UNLIKELY(nd && nd->isShadowRoot())) {
         return nd->asShadowRoot()->host();
     }
+
     return nd;
 }
 
@@ -1509,10 +1525,13 @@ static void setChildrenNeedsStyleRecalc(Node* node)
 {
     node->setNeedsStyleRecalc(Node::JustNeedsRecalcSelf);
 
-    Node* child = node->firstRenderingChild();
-    while (child) {
-        setChildrenNeedsStyleRecalc(child);
-        child = child->nextSibling();
+    RenderingSiblingIterator iter(node->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        setChildrenNeedsStyleRecalc(child.value());
     }
 }
 
@@ -2332,8 +2351,12 @@ void Node::setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 
 void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 {
-    Node* child = firstRenderingChild();
-    while (child) {
+    RenderingSiblingIterator iter(firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
         if (child->isElement()) {
             StyleResolver::StyleDamageSource cmr;
             if (child->style() && child->style()->styleDamageSource()) {
@@ -2349,7 +2372,6 @@ void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
             }
             child->setChildrenNeedsStyleRecalcIfNeeded(reason);
         }
-        child = child->nextSibling();
     }
 }
 

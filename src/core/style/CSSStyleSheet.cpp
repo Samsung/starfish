@@ -25,6 +25,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/SelectorQuery.h"
+#include "core/dom/Traverse.h"
 #include "core/layout/Frame.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -295,8 +296,12 @@ static void invalidateStyleOfMatchedElementWorker(
 {
     filter.pushNode(parentElement);
 
-    Node* child = parentElement->firstRenderingChild();
-    while (child) {
+    RenderingSiblingIterator iter(parentElement->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
         if (child->isElement() && !child->needsStyleRecalc()) {
             StyleResolver& resolver = child->document()->styleResolver();
             StyleResolver::MatchResult result(nullptr);
@@ -326,15 +331,18 @@ static void invalidateStyleOfMatchedElementWorker(
                 }
             }
         }
-        child = child->nextSibling();
     }
 
-    child = parentElement->firstRenderingChild();
-    while (child) {
-        if (child->isElement()) {
-            invalidateStyleOfMatchedElementWorker(child, filter, styleRules);
+    iter = RenderingSiblingIterator(parentElement->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
         }
-        child = child->nextSibling();
+        if (child->isElement()) {
+            invalidateStyleOfMatchedElementWorker(child.value(), filter,
+                                                  styleRules);
+        }
     }
 
     filter.popNode();

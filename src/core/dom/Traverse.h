@@ -20,6 +20,9 @@
 #ifndef __StarfishTraverse__
 #define __StarfishTraverse__
 
+#include "core/dom/Element.h"
+#include "core/dom/HTMLSlotElement.h"
+
 namespace Starfish {
 class Traverse {
     Traverse()
@@ -358,6 +361,82 @@ public:
     {
         return current.previousSibling();
     }
+};
+
+class RenderingSiblingIterator {
+public:
+    RenderingSiblingIterator(Node* node)
+        : m_currentNode(node)
+        , m_slotAssignedNodesIndex(SIZE_MAX)
+    {
+        updateNode(node);
+    }
+
+    RenderingSiblingIterator(const RenderingSiblingIterator& other)
+        : m_currentNode(other.m_currentNode)
+        , m_slotAssignedNodesIndex(other.m_slotAssignedNodesIndex)
+        , m_slotAssignedNodes(other.m_slotAssignedNodes)
+    {
+    }
+
+    const RenderingSiblingIterator& operator=(
+        const RenderingSiblingIterator& other)
+    {
+        m_currentNode = other.m_currentNode;
+        m_slotAssignedNodesIndex = other.m_slotAssignedNodesIndex;
+        m_slotAssignedNodes = other.m_slotAssignedNodes;
+        return *this;
+    }
+
+    Optional<Node*> next()
+    {
+        if (m_slotAssignedNodesIndex != SIZE_MAX) {
+            if (m_slotAssignedNodesIndex < m_slotAssignedNodes.size()) {
+                Node* c = m_slotAssignedNodes[m_slotAssignedNodesIndex];
+                m_slotAssignedNodesIndex++;
+                STARFISH_ASSERT(!c->isHTMLSlotElement());
+                return c;
+            }
+            m_currentNode = m_currentNode->nextSibling();
+        }
+        Optional<Node*> c = m_currentNode;
+        if (m_currentNode) {
+            updateNode(m_currentNode->nextSibling());
+        }
+        STARFISH_ASSERT(!c || !c->isHTMLSlotElement());
+        return c;
+    }
+
+private:
+    void updateNode(Node* node)
+    {
+        while (node) {
+            if (LIKELY(!node->isHTMLSlotElement())) {
+                m_slotAssignedNodes.clear();
+                m_slotAssignedNodesIndex = SIZE_MAX;
+                m_currentNode = node;
+                return;
+            }
+            AssignedNodesOptions opt;
+            opt.setFlatten(true);
+            m_slotAssignedNodes = node->asHTMLSlotElement()->assignedNodes(
+                Optional<AssignedNodesOptions>(opt));
+            if (m_slotAssignedNodes.size()) {
+                m_slotAssignedNodesIndex = 0;
+                m_currentNode = node;
+                return;
+            }
+            node = node->nextSibling();
+        }
+
+        m_slotAssignedNodes.clear();
+        m_slotAssignedNodesIndex = SIZE_MAX;
+        m_currentNode = nullptr;
+    }
+
+    Optional<Node*> m_currentNode;
+    size_t m_slotAssignedNodesIndex;
+    GCVector<Node*> m_slotAssignedNodes;
 };
 } // namespace Starfish
 

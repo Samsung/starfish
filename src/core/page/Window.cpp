@@ -373,12 +373,15 @@ static void checkVwVh(Node* nd)
         }
     }
 
-    Node* child = nd->firstRenderingChild();
-    while (child) {
-        if (child->isElement()) {
-            checkVwVh(child);
+    RenderingSiblingIterator iter(nd->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
         }
-        child = child->nextSibling();
+        if (child->isElement()) {
+            checkVwVh(child.value());
+        }
     }
 }
 

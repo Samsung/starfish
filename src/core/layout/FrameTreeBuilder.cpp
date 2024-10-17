@@ -29,6 +29,7 @@
 #include "core/dom/HTMLSlotElement.h"
 #include "core/dom/PseudoElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/Traverse.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -154,10 +155,14 @@ void FrameTreeBuilder::clearTree(Node* current)
 
     Frame* f = current->frame();
     current->setFrame(nullptr);
-    Node* n = current->firstRenderingChild();
-    while (n) {
-        clearTree(n);
-        n = n->nextSibling();
+
+    RenderingSiblingIterator iter(current->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        clearTree(child.value());
     }
 }
 
@@ -168,13 +173,17 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
         parent->removeChild(parent->firstChild());
     }
 
-    Node* node = f->node()->firstRenderingChild();
-    while (node) {
-        node->markNeedsFrameTreeBuild();
-        node = node->nextSibling();
+    RenderingSiblingIterator iter(f->node()->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        child->markNeedsFrameTreeBuild();
+        clearTree(child.value());
     }
 
-    node = parent->node();
+    Node* node = parent->node();
     while (node) {
         node->markChildNeedsFrameTreeBuild();
         node = node->renderingParentNode();
@@ -1104,49 +1113,52 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     // This part was added to build svg frame for showing marker of the select
     // element.
     if (currentFrame->isFrameOptionBox()) {
-        Node* n = current->firstRenderingChild();
-        while (n) {
-            if (!n->isText()) {
-                buildTree(n, ctx, force);
+        RenderingSiblingIterator iter(current->firstRenderingChild());
+        while (true) {
+            Optional<Node*> child = iter.next();
+            if (!child) {
+                break;
             }
-            n = n->nextSibling();
+            if (!child->isText()) {
+                buildTree(child.value(), ctx, force);
+            }
         }
         current->clearChildNeedsFrameTreeBuild();
     }
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
-        Optional<ShadowRoot*> shadowRoot;
+        Node* frameCreationTarget = current;
+
         if (current->isElement()) {
-            shadowRoot = current->asElement()->internalShadowRoot();
+            Optional<ShadowRoot*> shadowRoot = current->asElement()->internalShadowRoot();
+            if (shadowRoot) {
+                frameCreationTarget = shadowRoot.value();
+            }
         }
 
-        if (shadowRoot) {
-            Node* n = shadowRoot->firstChild();
-            while (n) {
-                buildTree(n, ctx, force);
-                n = n->nextSibling();
-            }
-        } else {
-            if (currentFrame->isFrameDocument() ||
-                currentFrame->needToEstablishBlockFormattingContext()) {
-                currentFrame->markNeedsLayout();
-                if (currentFrame->isFrameTableCellBox() ||
-                    currentFrame->isFrameTableCaptionBox()) {
-                    Frame* p = currentFrame->parent();
-                    while (!p->isFrameTableBox()) {
-                        p = p->parent();
-                    }
-                    p->markNeedsLayout();
+        if (currentFrame->isFrameDocument() ||
+            currentFrame->needToEstablishBlockFormattingContext()) {
+            currentFrame->markNeedsLayout();
+            if (currentFrame->isFrameTableCellBox() ||
+                currentFrame->isFrameTableCaptionBox()) {
+                Frame* p = currentFrame->parent();
+                while (!p->isFrameTableBox()) {
+                    p = p->parent();
                 }
-            }
-
-            Node* n = current->firstChild();
-            while (n) {
-                buildTree(n, ctx, force);
-                n = n->nextSibling();
+                p->markNeedsLayout();
             }
         }
-        current->clearChildNeedsFrameTreeBuild();
+
+        RenderingSiblingIterator iter(frameCreationTarget->firstRenderingChild());
+        while (true) {
+            Optional<Node*> child = iter.next();
+            if (!child) {
+                break;
+            }
+            buildTree(child.value(), ctx, force);
+        }
+        frameCreationTarget->clearChildNeedsFrameTreeBuild();
+
     } else if (current->isBeforePseudoElement() ||
                current->isAfterPseudoElement()) {
         ContentDataGroup* content = current->style()->content();
@@ -1411,10 +1423,14 @@ String* dumpText(Node* node, bool* lastTextNode)
             node->asText()->wholeText()->stripAndCollapseASCIIwhitespace());
         *lastTextNode = true;
     }
-    Node* child = node->firstRenderingChild();
-    while (child) {
-        result = result->concat(dumpText(child, lastTextNode));
-        child = child->nextSibling();
+
+    RenderingSiblingIterator iter(node->firstRenderingChild());
+    while (true) {
+        Optional<Node*> child = iter.next();
+        if (!child) {
+            break;
+        }
+        result = result->concat(dumpText(child.value(), lastTextNode));
     }
     return result;
 }
