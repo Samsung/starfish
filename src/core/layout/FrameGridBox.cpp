@@ -109,6 +109,8 @@ void GridFormattingContext::computeColumnsAndRows()
 {
     buildGridTrackTemplate();
     layoutGridItems();
+    applyJustifyContent();
+    applyAlignItems();
     layoutNonGridItems();
 }
 
@@ -163,7 +165,6 @@ void GridFormattingContext::layoutGridItems()
     sumOfHeights += m_rowGap * (m_gridTemplateRows.size() - 2);
 
     m_container->computeContentHeight(m_layoutContext, sumOfHeights);
-    applyAlignItems();
 }
 
 void GridFormattingContext::insertNamedGridArea(
@@ -1393,7 +1394,7 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
             std::max(track.size(), gridArea.preferredMinWidth());
 
         if (track.isAuto() || track.isImplicitLine()) {
-            track.setSize(minContent);
+            track.setSize(maxContent);
             track.setGrowthLimit(maxContent);
         } else if (track.isMinContent()) {
             track.setSize(minContent);
@@ -2089,6 +2090,52 @@ void GridFormattingContext::applyAlignItems()
     }
 }
 
+void GridFormattingContext::applyJustifyContent()
+{
+    GCVector<LayoutUnit> xOffsetsForColumns;
+    LayoutUnit xOffsetForColumnsSoFar = 0;
+    xOffsetsForColumns.push_back(xOffsetForColumnsSoFar);
+    JustifyContentValue justifyContent = m_container->style()->justifyContent();
+
+    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
+        xOffsetsForColumns.push_back(xOffsetForColumnsSoFar);
+        GridTrack& track = m_gridTemplateColumns[i];
+        xOffsetForColumnsSoFar += m_columnGap + track.size();
+    }
+    LayoutUnit sumOfColumns = xOffsetForColumnsSoFar;
+    LayoutUnit remainingWidth = m_availableWidth - sumOfColumns;
+    for (GridArea& area : m_orderedGridArea) {
+        STARFISH_ASSERT(area.columnStart() < xOffsetsForColumns.size());
+        LayoutUnit xOffset = xOffsetsForColumns[area.columnStart()];
+
+        LayoutUnit trackSize;
+        for (size_t i = area.columnStart(); i < area.columnEnd(); i++) {
+            trackSize += m_gridTemplateColumns[i].size();
+        }
+        trackSize += (area.columnEnd() - area.columnStart() - 1) * m_columnGap;
+
+        switch (justifyContent) {
+        case JustifyContentValue::StartJustifyContentValue:
+        case JustifyContentValue::StretchJustifyContentValue:
+        case JustifyContentValue::NormalJustifyContentValue:
+            // Do nothing.
+            break;
+        case JustifyContentValue::CenterJustifyContentValue: {
+            LayoutUnit xPos = remainingWidth / 2 + xOffset;
+            area.box()->setX(xPos);
+        } break;
+        case JustifyContentValue::EndJustifyContentValue: {
+            LayoutUnit xPos = remainingWidth + xOffset;
+            area.box()->setX(xPos);
+        } break;
+        default:
+            // Other values are not supported.
+            STARFISH_UNSUPPORTED("unsupported ustify-content value in grid");
+            break;
+        }
+    }
+}
+
 void GridFormattingContext::layoutNonGridItems()
 {
     // https://drafts.csswg.org/css-grid/#abspos
@@ -2284,7 +2331,11 @@ bool FrameGridBox::canStratchItem()
             }
         }
     }
-    return true;
+    // return true;
+
+    JustifyContentValue justifyContent = style()->justifyContent();
+    return justifyContent == JustifyContentValue::NormalJustifyContentValue ||
+           justifyContent == JustifyContentValue::StretchJustifyContentValue;
 }
 
 // https://www.w3.org/TR/css-position-3/#inset-properties
