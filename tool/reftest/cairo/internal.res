@@ -342,6 +342,13 @@ test/cairo/internal-test/css/grid/grid_align-items_height_02.html
 test/cairo/internal-test/css/grid/grid_align-items_height_03.html
 test/cairo/internal-test/css/grid/grid_grid-item-margin-inline.html
 test/cairo/internal-test/css/grid/grid_grid-item-margin-left_right.html
+test/cairo/internal-test/css/grid/grid_justify-content-01.html
+test/cairo/internal-test/css/grid/grid_justify-content-02.html
+test/cairo/internal-test/css/grid/grid_justify-content-03.html
+test/cairo/internal-test/css/grid/grid_justify-content-04.html
+test/cairo/internal-test/css/grid/grid_justify-content-05.html
+test/cairo/internal-test/css/grid/grid_justify-content-06.html
+test/cairo/internal-test/css/grid/grid_justify-content-07.html
 test/cairo/internal-test/css/grid/grid-template_01.html
 test/cairo/internal-test/css/grid/grid-template_02.html
 test/cairo/internal-test/css/grid/grid-template_03.html
