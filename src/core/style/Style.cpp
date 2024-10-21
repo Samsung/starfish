@@ -458,6 +458,12 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                                              a.getValue());
             }
         } break;
+        case CSSTransformFunction::Kind::TranslateZ: {
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_has3DTransform = true;
+            STARFISH_UNSUPPORTED("css function: translateZ");
+        } break;
         case CSSTransformFunction::Kind::Scale:
             if (valueSize == 1) {
                 style->setTransformScale(dValues[0], dValues[0]);
@@ -526,8 +532,8 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_has3DTransform = true;
-            STARFISH_LOG_WARN("Unsupported transform function : %s.",
-                              f.functionName()->toUTF8NonGCString().c_str());
+            STARFISH_UNSUPPORTED("Unsupported transform function: [%d]",
+                                 static_cast<int>(f.kind()));
         }
     }
 }

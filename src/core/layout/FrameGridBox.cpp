@@ -2068,6 +2068,7 @@ void GridFormattingContext::applyAlignItems()
         trackSize += (area.rowEnd() - area.rowStart() - 1) * m_rowGap;
 
         switch (area.box()->style()->alignSelf()) {
+        case AlignItemValue::StretchAlignItemValue:
         case AlignItemValue::StartAlignItemValue:
             // Do nothing.
             break;
