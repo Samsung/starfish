@@ -503,9 +503,9 @@ Node* Node::renderingParentNode() const
         Element* e = nd->asElement();
         auto sr = e->internalShadowRoot();
         if (sr) {
-            String* slot = e->slot();
-            if (slot->length()) {
-                auto slotElement = sr->assignedSlot(slot);
+            String* slotName = asElement()->slot();
+            if (slotName->length()) {
+                auto slotElement = sr->assignedSlot(slotName);
                 if (slotElement) {
                     return slotElement->renderingParentNode();
                 }
