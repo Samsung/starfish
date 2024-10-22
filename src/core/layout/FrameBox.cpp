@@ -4009,6 +4009,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                 } else {
                     boxHasDrawableContents = true;
                 }
+            } else if (isFrameSVGSVGBox()) {
+                boxHasDrawableContents = true;
             } else {
                 boxHasDrawableContents = drawableContentsInStyle;
             }
