@@ -1155,7 +1155,7 @@ static bool updateEventNodeSet(Document* document, Node* n,
         GCUnorderedSet<Node*> newSet;
         while (t) {
             newSet.insert(t);
-            t = t->parentNode();
+            t = t->renderingParentNode();
         }
 
         auto iter = set.begin();

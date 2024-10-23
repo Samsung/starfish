@@ -935,8 +935,8 @@ void Node::setState(NodeState state, bool enable)
                 StyleResolver::StyleDamageSource::StyleDamageFromElementState) {
                 if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
                     m_needsStyleRecalc = true;
-                    if (parentNode()) {
-                        parentNode()->setChildNeedsStyleRecalc();
+                    if (renderingParentNode()) {
+                        renderingParentNode()->setChildNeedsStyleRecalc();
                     }
                 }
             }
@@ -2169,7 +2169,7 @@ void Node::propagateMarkChildNeedsFrameTreeBuild()
     Node* n = this;
     while (n) {
         n->markChildNeedsFrameTreeBuild();
-        n = n->parentNode();
+        n = n->renderingParentNode();
     }
 }
 

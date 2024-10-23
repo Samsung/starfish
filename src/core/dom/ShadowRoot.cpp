@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLSlotElement.h"
 #include "core/dom/Traverse.h"
@@ -114,12 +115,20 @@ void ShadowRoot::didNodeInserted(Node* parent, Node* newChild)
 {
     DocumentFragment::didNodeInserted(parent, newChild);
     updateSlotElements();
+
+    if (isInDocumentScope()) {
+        document()->updateDOMVersion();
+    }
 }
 
 void ShadowRoot::didNodeRemoved(Node* parent, Node* oldChild)
 {
     DocumentFragment::didNodeRemoved(parent, oldChild);
     updateSlotElements();
+
+    if (isInDocumentScope()) {
+        document()->updateDOMVersion();
+    }
 }
 
 } // namespace Starfish
