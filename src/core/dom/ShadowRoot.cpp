@@ -57,7 +57,11 @@ void ShadowRoot::updateSlotElements(bool shouldConnectSlotWithSlottables)
         Traverse::traverse(this, [&](Node* node) {
             if (node->isHTMLSlotElement()) {
                 auto slot = node->asHTMLSlotElement();
-                m_namedSlotElements[slot->slotName()] = slot;
+                auto slotName = slot->slotName();
+                auto iter = m_namedSlotElements.find(slotName);
+                if (iter == m_namedSlotElements.end()) {
+                    m_namedSlotElements.insert(std::make_pair(slotName, slot));
+                }
                 slot->m_assignedNodes.clear();
             }
         });

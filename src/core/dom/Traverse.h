@@ -417,16 +417,28 @@ private:
                 m_currentNode = node;
                 return;
             }
+            m_slotAssignedNodesIndex = 0;
+            m_currentNode = node;
             AssignedNodesOptions opt;
             opt.setFlatten(true);
             m_slotAssignedNodes = node->asHTMLSlotElement()->assignedNodes(
                 Optional<AssignedNodesOptions>(opt));
-            if (m_slotAssignedNodes.size()) {
-                m_slotAssignedNodesIndex = 0;
-                m_currentNode = node;
-                return;
+            if (!m_slotAssignedNodes.size()) {
+                RenderingSiblingIterator iter = node->firstRenderingChild();
+                while (true) {
+                    Optional<Node*> child = iter.next();
+                    if (!child) {
+                        break;
+                    }
+                    m_slotAssignedNodes.push_back(child.value());
+                }
             }
-            node = node->nextSibling();
+
+            if (m_slotAssignedNodes.size()) {
+                return;
+            } else {
+                node = node->nextSibling();
+            }
         }
 
         m_slotAssignedNodes.clear();
