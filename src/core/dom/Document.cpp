@@ -1555,6 +1555,7 @@ void Document::updateDOMVersion()
     m_domVersion++;
     invalidFocusRingCacheIfNeeded();
     clearDialogsInShowModalCache();
+    window()->invalidateFramesIfNeeded();
 }
 
 void Document::attachNodeIterator(NodeIterator* ni)
@@ -1584,7 +1585,6 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
     }
 
     updateDOMVersion();
-    window()->invalidateFramesIfNeeded();
 }
 
 void Document::didNodeRemoved(Node* parent, Node* oldChild)
@@ -1596,7 +1596,6 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
     }
 
     updateDOMVersion();
-    window()->invalidateFramesIfNeeded();
 }
 
 HTMLCollection* Document::namedAccess(String* name)
