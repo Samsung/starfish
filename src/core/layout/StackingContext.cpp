@@ -2464,7 +2464,7 @@ void StackingContext::compositeScrollbar(Compositor* compositor)
                               ->browsingContext();
                 {
                     ComputeOverflow<Compositor> r(compositor, this,
-                                                parent()->owner());
+                                                  parent()->owner());
                     compositor->translate(
                         m_owner->borderLeft() + m_owner->paddingLeft(),
                         m_owner->borderTop() + m_owner->paddingTop());
@@ -2539,7 +2539,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
             if (bgColor.first || visibleRect.isEmpty()) {
                 ComputeOverflow<Compositor> r(compositor, this,
-                                            parent()->owner());
+                                              parent()->owner());
 
                 compositor->save();
                 compositor->setFillColor(bgColor.second);
@@ -2788,6 +2788,15 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
     }
 
     if (owner()->shouldApplyOverflow()) {
+        LayoutRect fr = owner()->asFrameBox()->frameRect();
+        if (owner()->style()->overflowX() == OverflowValue::HiddenOverflow &&
+            (x < 0 || x >= fr.width())) {
+            return nullptr;
+        }
+        if (owner()->style()->overflowY() == OverflowValue::HiddenOverflow &&
+            (y < 0 || y >= fr.height())) {
+            return nullptr;
+        }
         if (owner()->isFrameReplaced()) {
             return owner()->hitTest(x, y, HitTestStageEnd);
         }
