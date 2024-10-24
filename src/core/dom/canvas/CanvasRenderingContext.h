@@ -67,6 +67,10 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext,
+                                        m_object)); // ScriptWrappable
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext, m_executionContext));
     }
 
     void calculateDimension(uint32_t& outWidth, uint32_t& outHeight,
