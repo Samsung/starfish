@@ -369,7 +369,7 @@ public:
 
 private:
     LayoutUnit m_size;
-    LayoutUnit m_growthLimit{ intMaxForLayoutUnit };
+    LayoutUnit m_growthLimit;
     LayoutUnit m_flexibleLength;
     GridLength m_min;
     GridLength m_max;
