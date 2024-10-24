@@ -1389,12 +1389,12 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
 
         GridTrack& track = m_gridTemplateColumns[gridArea.columnStart()];
         LayoutUnit maxContent =
-            std::max(track.size(), gridArea.preferredWidth());
+            std::max(track.growthLimit(), gridArea.preferredWidth());
         LayoutUnit minContent =
             std::max(track.size(), gridArea.preferredMinWidth());
 
         if (track.isAuto() || track.isImplicitLine()) {
-            track.setSize(maxContent);
+            track.setSize(minContent);
             track.setGrowthLimit(maxContent);
         } else if (track.isMinContent()) {
             track.setSize(minContent);
