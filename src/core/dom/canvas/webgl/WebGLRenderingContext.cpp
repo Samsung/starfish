@@ -1090,6 +1090,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_STENCIL_CLEAR_VALUE:
     case GL_STENCIL_REF:
     case GL_SUBPIXEL_BITS:
+    case GL_MAX_SAMPLES:
     case GL_UNPACK_ALIGNMENT: {
         std::vector<int> values(1);
         m_gl->getIntegerv(pname, &values[0]);
