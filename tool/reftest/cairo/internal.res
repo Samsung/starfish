@@ -357,6 +357,8 @@ test/cairo/internal-test/css/grid/grid-template-columns_auto_grid-item_width_per
 test/cairo/internal-test/css/grid/grid-template-columns_auto_with_repeat_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_auto_with_stretch.html
 test/cairo/internal-test/css/grid/grid-template-columns_calc_01.html
+test/cairo/internal-test/css/grid/grid-template-columns_min-content_01.html
+test/cairo/internal-test/css/grid/grid-template-columns_min-content_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_02.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_03.html
