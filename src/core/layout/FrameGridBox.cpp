@@ -2332,7 +2332,6 @@ bool FrameGridBox::canStratchItem()
             }
         }
     }
-    // return true;
 
     JustifyContentValue justifyContent = style()->justifyContent();
     return justifyContent == JustifyContentValue::NormalJustifyContentValue ||
