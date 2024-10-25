@@ -1483,7 +1483,8 @@ void GridFormattingContext::increaseColumnGridTracksForSpans(
             GridTrack* track = &m_gridTemplateColumns[i];
             if (track->isAuto()) {
                 track->setSize(std::max(track->size(), eachColumnSize));
-                track->setGrowthLimit(track->size());
+                track->setGrowthLimit(
+                    std::max(track->size(), track->growthLimit()));
             }
         }
     }
