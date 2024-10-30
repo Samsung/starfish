@@ -78,6 +78,9 @@ public:
     String* dir();
     void setDir(String* dir);
 
+    bool hidden();
+    void setHidden(bool h);
+
     void click();
 
     String* contentEditable();
