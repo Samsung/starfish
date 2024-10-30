@@ -143,8 +143,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     } else if (name == ss->m_dir) {
         if (attributeCreated) {
             m_hasDirAttribute = true;
-        }
-        if (attributeRemoved) {
+        } else if (attributeRemoved) {
             m_hasDirAttribute = false;
         }
         String* orgValue = value;
@@ -181,6 +180,13 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         setAttributeEventListener(ss->m_input, value, this);
     } else if (name == ss->m_oninvalid) {
         setAttributeEventListener(ss->m_invalid, value, this);
+    } else if (name == ss->m_hidden) {
+        if (attributeCreated) {
+            m_hasHiddenAttribute = true;
+        } else if (attributeRemoved) {
+            m_hasHiddenAttribute = false;
+        }
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     } else if (name == ss->m_open) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
@@ -222,6 +228,12 @@ void HTMLElement::styleForPresentationAttribute(
             pair.setValue(DirectionValue::LtrDirectionValue);
             cssValues.push_back(pair);
         }
+    } else if (m_hasHiddenAttribute) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        pair.setValue(DisplayValue::NoneDisplayValue);
+        cssValues.push_back(pair);
     }
 }
 
@@ -347,6 +359,21 @@ String* HTMLElement::dir()
         return dir;
     }
     return String::emptyString;
+}
+
+bool HTMLElement::hidden()
+{
+    return hasAttribute(starfish()->staticStrings()->m_hidden);
+}
+
+void HTMLElement::setHidden(bool h)
+{
+    auto s = starfish()->staticStrings()->m_hidden;
+    if (h) {
+        setAttribute(s, String::emptyString);
+    } else {
+        removeAttribute(s);
+    }
 }
 
 void HTMLElement::setDir(String* dir)

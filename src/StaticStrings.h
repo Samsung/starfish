@@ -432,6 +432,7 @@ public:
     QualifiedName m_spreadMethod;
     QualifiedName m_shadowRootMode;
     QualifiedName m_slot;
+    QualifiedName m_hidden;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

@@ -153,6 +153,7 @@ protected:
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
         , m_hasDirAttribute(false)
+        , m_hasHiddenAttribute(false)
         , m_isRunningOpacityAnimation(false)
         , m_isRunningTransformAnimation(false)
         , m_canBeCountingRoot(false)
@@ -908,6 +909,7 @@ protected:
     bool m_gotInheritedStyleDirty : 1; // this flag only used in style resolver
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
+    bool m_hasHiddenAttribute : 1;
     // for animation
     bool m_isRunningOpacityAnimation : 1;
     bool m_isRunningTransformAnimation : 1;

@@ -322,6 +322,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_shadowRootMode = QualifiedName(
         AtomicString::createAtomicString(starfish, "shadowRootMode"));
     m_slot = QualifiedName(AtomicString::createAtomicString(starfish, "slot"));
+    m_hidden =
+        QualifiedName(AtomicString::createAtomicString(starfish, "hidden"));
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =

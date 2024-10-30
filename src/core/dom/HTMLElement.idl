@@ -9,7 +9,7 @@ interface HTMLElement : Element {
   [SameObject] readonly attribute DOMStringMap dataset;
 
   // user interaction
-  [Unimplemented, CEReactions] attribute boolean hidden;
+  [CEReactions] attribute boolean hidden;
   void click();
   [CEReactions] attribute long tabIndex;
   void focus();
