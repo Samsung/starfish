@@ -711,64 +711,72 @@ void Document::notifyDomContentLoaded()
         m_resourceLoader->notifyEndParseDocument();
         m_domContentLoadedFired = true;
 
-        window()->performance()->timing()->m_domContentLoadedEventStart =
-            timestamp();
-
         String* eventType = window()
                                 ->starfish()
                                 ->staticStrings()
                                 ->m_DOMContentLoaded.localName();
         Event* e =
             new Event(executionContext(), eventType, EventInit(true, true));
-        EventTarget::dispatchEventByUA(e);
+
+        if (window()->document() == this) {
+            window()->performance()->timing()->m_domContentLoadedEventStart =
+                timestamp();
+
+            EventTarget::dispatchEventByUA(e);
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        // Trigger HTMLMediaElement's preload
-        // FIXME : Should consider detached HTMLMediaElements as well
-        GCVector<Element*> mediaElements;
-        Traverse::collectDescendants(
-            mediaElements, this,
-            [&](Element* element) { return element->isHTMLMediaElement(); },
-            false);
-        for (size_t i = 0; i < mediaElements.size(); i++) {
-            HTMLMediaElement* target = mediaElements[i]->asHTMLMediaElement();
-            target->onDOMContentLoaded();
-        }
-#endif
-
-        window()->performance()->timing()->m_domContentLoadedEventEnd =
-            timestamp();
-        STARFISH_LOG_INFO("Document::notifyDomContentLoaded");
-#ifdef STARFISH_ENABLE_NETWORK_PROFILING
-        if (browsingContext()->isTopLevelBrowsingContext()) {
-            STARFISH_LOG_INFO(
-                "[NETWORK_PROFILING] Document::notifyDomContentLoaded at "
-                "%dms",
-                (int)(timestamp() - g_profilingBaseTime));
-        }
-#endif
-
-        if (m_compatibilityMode != NoQuirksMode) {
-            std::string s;
-            if (documentURI()->urlString()->length() > 128) {
-                s = documentURI()
-                        ->urlString()
-                        ->substring(0, 128)
-                        ->toUTF8NonGCString();
-                s += "...";
-            } else {
-                s = documentURI()->urlString()->toUTF8NonGCString();
+            // Trigger HTMLMediaElement's preload
+            // FIXME : Should consider detached HTMLMediaElements as well
+            GCVector<Element*> mediaElements;
+            Traverse::collectDescendants(
+                mediaElements, this,
+                [&](Element* element) { return element->isHTMLMediaElement(); },
+                false);
+            for (size_t i = 0; i < mediaElements.size(); i++) {
+                HTMLMediaElement* target =
+                    mediaElements[i]->asHTMLMediaElement();
+                target->onDOMContentLoaded();
             }
+#endif
 
-            STARFISH_LOG_INFO(
-                "No doctype is found or quirks mode is given in "
-                "%s",
-                s.data());
-            STARFISH_LOG_INFO(
-                "Please make sure the document starts with "
-                "\"<!DOCTYPE html>\"");
-            STARFISH_LOG_INFO("Quirks mode is not supported.");
-            STARFISH_LOG_INFO("Processing the document in no-quirks mode.");
+            window()->performance()->timing()->m_domContentLoadedEventEnd =
+                timestamp();
+            STARFISH_LOG_INFO("Document::notifyDomContentLoaded");
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
+            if (browsingContext()->isTopLevelBrowsingContext()) {
+                STARFISH_LOG_INFO(
+                    "[NETWORK_PROFILING] Document::notifyDomContentLoaded at "
+                    "%dms",
+                    (int)(timestamp() - g_profilingBaseTime));
+            }
+#endif
+
+            if (m_compatibilityMode != NoQuirksMode) {
+                std::string s;
+                if (documentURI()->urlString()->length() > 128) {
+                    s = documentURI()
+                            ->urlString()
+                            ->substring(0, 128)
+                            ->toUTF8NonGCString();
+                    s += "...";
+                } else {
+                    s = documentURI()->urlString()->toUTF8NonGCString();
+                }
+
+                STARFISH_LOG_INFO(
+                    "No doctype is found or quirks mode is given in "
+                    "%s",
+                    s.data());
+                STARFISH_LOG_INFO(
+                    "Please make sure the document starts with "
+                    "\"<!DOCTYPE html>\"");
+                STARFISH_LOG_INFO("Quirks mode is not supported.");
+                STARFISH_LOG_INFO("Processing the document in no-quirks mode.");
+            }
+        } else {
+            // In case of DOMParser,
+            // window.document != this
+            EventTarget::dispatchEventByUA(this, e, true);
         }
 
         // if there is a fragment identifier, set cssTarget.
