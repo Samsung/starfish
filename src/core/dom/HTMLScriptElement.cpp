@@ -115,11 +115,13 @@ public:
 
 class DeferredScriptDownloadClient : public ResourceClient {
 public:
-    DeferredScriptDownloadClient(HTMLScriptElement* script, Resource* res)
+    DeferredScriptDownloadClient(HTMLScriptElement* script, Resource* res,
+                                 bool fromParser)
         : ResourceClient(res)
         , m_isModule(script->isModule())
         , m_isLoaded(false)
         , m_successToLoad(false)
+        , m_fromParser(fromParser)
         , m_responseMIMEType(String::emptyString)
         , m_element(script)
     {
@@ -229,15 +231,24 @@ public:
             }
         }
 
-        if (m_element->document()->m_deferredScriptElements.size() == 0 &&
-            m_element->document()->documentBuilder() == nullptr) {
-            m_element->document()->notifyDomContentLoaded();
+        if (m_element->document()->documentBuilder() == nullptr) {
+            size_t fromParserCount = 0;
+            for (const auto& e :
+                 m_element->document()->m_deferredScriptElements) {
+                if (e.second->m_fromParser) {
+                    fromParserCount++;
+                }
+            }
+            if (fromParserCount == 0) {
+                m_element->document()->notifyDomContentLoaded();
+            }
         }
     }
 
     bool m_isModule;
     bool m_isLoaded;
     bool m_successToLoad;
+    bool m_fromParser;
     String* m_responseMIMEType;
     HTMLScriptElement* m_element;
 };
@@ -329,7 +340,8 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
     TextResource* res =
         element->document()->resourceLoader().fetchText(rurl, charset);
     if (module || (!async && defer)) {
-        res->addResourceClient(new DeferredScriptDownloadClient(element, res));
+        res->addResourceClient(
+            new DeferredScriptDownloadClient(element, res, fromParser));
     } else {
         res->addResourceClient(
             new ScriptDownloadClient(element, res, shouldResumeParsing));
