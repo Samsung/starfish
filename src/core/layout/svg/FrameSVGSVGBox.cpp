@@ -67,6 +67,15 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
         result.m_hasAspectRatio = true;
         result.m_hasViewport = true;
     } else {
+        String* widthString = node()->asElement()->getAttributeOrEmpty(
+            node()->starfish()->staticStrings()->m_width);
+        String* heightString = node()->asElement()->getAttributeOrEmpty(
+            node()->starfish()->staticStrings()->m_height);
+        if ((widthString && !widthString->isEmpty()) ||
+            (heightString && !heightString->isEmpty())) {
+            result.m_hasViewport = true;
+        }
+
         if (node()->asSVGSVGElement()->hasViewBox()) {
             Unit::Rect viewBox = node()->asSVGSVGElement()->viewBox();
             height = m_defaultHeight;
