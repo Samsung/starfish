@@ -40,6 +40,8 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/Traverse.h"
+#include "core/dom/ShadowRoot.h"
 #include "core/style/MediaList.h"
 #include "core/style/MediaQuery.h"
 #include "core/style/MediaQuerySet.h"
@@ -77,6 +79,16 @@ String* MediaList::mediaText() const
 // TODO: need to handle the style sheets individually.
 void MediaList::modifyStyleSheet()
 {
+    scriptBindingInstance()
+        ->ownerDocument()
+        ->styleResolver()
+        .setNeedsRecalcRuleSet();
+    Traverse::traverseIncludingShadowDOM(
+        scriptBindingInstance()->ownerDocument(), [&](Node* nd) {
+            if (nd->isShadowRoot()) {
+                nd->styleResolver().setNeedsRecalcRuleSet();
+            }
+        });
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()

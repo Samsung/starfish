@@ -222,6 +222,17 @@ void GetRootNodeOptions::setComposed(bool composed)
     m_composed = composed;
 }
 
+StyleResolver& Node::styleResolver()
+{
+    if (UNLIKELY(isInShadowRoot())) {
+        return parentShadowRoot()->styleResolver();
+    } else if (UNLIKELY(isShadowRoot())) {
+        return asShadowRoot()->styleResolver();
+    } else {
+        return document()->styleResolver();
+    }
+}
+
 NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);
@@ -2131,7 +2142,7 @@ void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
                                "'Document': The provided selector is empty.");
     }
 
-    CSSParser parser(document());
+    CSSParser parser(this);
     RefPtr<CSSToken> token = parser.makeToken(selectors);
 
     GCVector<StyleRuleBase*> nullVec;

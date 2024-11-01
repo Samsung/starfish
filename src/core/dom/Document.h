@@ -103,6 +103,7 @@ class Document : public Node {
     friend class ResourceLoader;
     friend class BrowsingContext;
     friend class FontSelector;
+    friend class StyleResolver;
     friend class DeferredScriptDownloadClient;
     friend class DeferredSVGScriptDownloadClient;
     friend class HTMLResourceClient;

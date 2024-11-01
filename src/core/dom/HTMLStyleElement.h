@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+class StyleResolver;
+
 class HTMLStyleElement : public HTMLElement {
 public:
     HTMLStyleElement(Document* document, const QualifiedName& qname)

@@ -1686,15 +1686,15 @@ ComputedStyle* Frame::createFirstLinePseudoComputedStyle(
 
     Element* element = n->asElement();
     ComputedStyle* result = new ComputedStyle(parentStyle);
-    StyleResolveContext ctx(document());
+    StyleResolveContext ctx(element);
     if (pseudoId == PseudoElementType::PseudoElementFirstLine) {
-        document()->styleResolver().matchAllRules(
+        element->styleResolver().matchAllRules(
             ctx, element, result, parentStyle,
             PseudoElementType::PseudoElementFirstLine);
     } else {
         ComputedStyle::InheritedStyles orgInheritedStyles =
             parentStyle->m_inheritedStyles;
-        document()->styleResolver().matchAllRules(
+        element->styleResolver().matchAllRules(
             ctx, element, result, parentStyle,
             PseudoElementType::PseudoElementFirstLine);
         Unit::Color computedColor = result->color();
@@ -1780,7 +1780,14 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
 
 ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
 {
-    if (document()->styleResolver().usesFirstLineRule()) {
+    StyleResolver* resolver;
+    auto nearNode = nearstNotAnonymousNode();
+    if (nearNode) {
+        resolver = &nearNode->styleResolver();
+    } else {
+        resolver = &document()->styleResolver();
+    }
+    if (resolver->usesFirstLineRule()) {
         if (ComputedStyle* pseudoStyle = firstLineStyleFromCache(
                 frame->isFrameText() ? frame->parent() : frame, frameStyle)) {
             return pseudoStyle;

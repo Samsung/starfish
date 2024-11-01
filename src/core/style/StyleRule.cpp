@@ -269,6 +269,9 @@ public:
             m_ownerRule->m_generatedSheet->parseSheetIfneeds();
             m_ownerRule->m_loading = false;
             m_ownerRule->m_generatedSheet->willAddToDocument();
+            m_ownerRule->m_generatedSheet->root()
+                ->styleResolver()
+                .setNeedsRecalcRuleSet();
             doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         }
 
@@ -292,10 +295,10 @@ void StyleRuleImport::unloadStyleSheetIfExists()
         m_styleSheetTextResource = nullptr;
     }
     if (m_generatedSheet) {
-        Document* doc = document();
         m_generatedSheet->willRemovedFromDocument();
-        doc->styleResolver().removeSheet(m_generatedSheet);
-        doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
+        m_parentStyleSheet->origin()->styleResolver().removeSheet(
+            m_generatedSheet);
+        document()->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }
 }

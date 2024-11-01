@@ -216,14 +216,14 @@ public:
         CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
         sheet->parseSheetIfneeds();
         m_element->m_generatedSheet = sheet;
-        m_element->document()->styleResolver().addSheet(sheet);
+        m_element->styleResolver().addSheet(sheet);
 
-        CSSParser parser(m_element->document());
+        CSSParser parser(m_element);
         parser.makeToken(m_element->media());
         MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
         sheet->setMediaQuerySet(mediaQuerySet);
         const MediaQueryEvaluator& evaluator =
-            m_element->document()->styleResolver().mediaQueryEvaluator();
+            m_element->styleResolver().mediaQueryEvaluator();
         if (evaluator.eval(mediaQuerySet)) {
             m_element->window()->browsingContext()->setNeedsStyleSheetsRecalc();
             m_element->m_generatedSheet->willAddToDocument();
@@ -322,7 +322,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
     if (m_generatedSheet) {
         m_generatedSheet->willRemovedFromDocument();
-        document()->styleResolver().removeSheet(m_generatedSheet);
+        styleResolver().removeSheet(m_generatedSheet);
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }

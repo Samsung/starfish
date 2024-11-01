@@ -77,6 +77,7 @@
 #include "core/style/ShadowData.h"
 #include "core/style/WillChangeData.h"
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 
@@ -2621,9 +2622,9 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
 
 StyleResolver::StyleResolver(Document* document)
     : DocumentHoldable(document)
-    , m_mediumFontSize(document->webView()->defaultFontSize())
-    , m_styleSheetWithAllRules(nullptr)
     , m_usesFirstLineRule(false)
+    , m_needsRecalcRuleSet(true)
+    , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
 {
@@ -2646,10 +2647,18 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* document)
     return ret;
 }
 
-StyleResolveContext::StyleResolveContext(Document* document)
-    : m_document(document)
+StyleResolveContext::StyleResolveContext(Node* node)
+    : m_styleResolver(&node->styleResolver())
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
-    , m_computedElementCount(0)
+    , m_computedStylePool(new GCVector<ComputedStyle*>())
+{
+}
+
+StyleResolveContext::StyleResolveContext(StyleResolver* sr,
+                                         StyleResolveContext& origin)
+    : m_styleResolver(sr)
+    , m_ancestorSelectorFilter(new AncestorSelectorFilter())
+    , m_computedStylePool(origin.m_computedStylePool)
 {
 }
 
@@ -2661,11 +2670,7 @@ void StyleResolveContext::pushIntoComputedStylePool(ComputedStyle* b)
 {
     STARFISH_ASSERT(b != nullptr);
     memset(b, 0, sizeof(ComputedStyle));
-    m_computedStylePool.push_back(b);
-#ifndef NDEBUG
-    STARFISH_ASSERT(m_dbg.find(b) == m_dbg.end());
-    m_dbg.insert(b);
-#endif
+    m_computedStylePool->push_back(b);
 }
 
 void* StyleResolveContext::allocateComputedStyle()
@@ -2711,7 +2716,6 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(parent != nullptr);
 
-    ctx.m_computedElementCount++;
     ComputedStyle* style =
         new (ctx.allocateComputedStyle()) ComputedStyle(parent);
 
@@ -9321,14 +9325,11 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 }
 
 static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
-                                               StyleResolver* resolver,
                                                Element* element,
                                                ComputedStyle* parentStyle,
                                                bool inheritedStyleChanged)
 {
-    STARFISH_ASSERT(resolver != nullptr);
-    STARFISH_ASSERT(element != nullptr);
-
+    StyleResolver* resolver = ctx.m_styleResolver;
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
 
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
@@ -9493,22 +9494,37 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
     }
 }
 
-void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
-                                         StyleResolver* resolver,
+void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                                          Node* parentElement,
                                          ComputedStyle* parentElementStyle,
                                          bool inheritedStyleChanged)
 {
-    STARFISH_ASSERT(resolver != nullptr);
-    STARFISH_ASSERT(parentElement != nullptr);
-    STARFISH_ASSERT(parentElementStyle != nullptr);
-
     ComputedStyle* childTextNodeStyle = nullptr;
     STARFISH_ASSERT(parentElementStyle->display() != NoneDisplayValue);
     ComputedStyleDamage childTextNodeComputedStyleDamage =
         ComputedStyleDamage::ComputedStyleDamageNone;
 
-    ctx.m_ancestorSelectorFilter->pushNode(parentElement);
+    StyleResolveContext* ctx;
+
+    // if parentElement is host
+    bool isParentElementShadowRootHost =
+        parentElement->isElement() &&
+        parentElement->asElement()->internalShadowRoot().hasValue();
+    if (UNLIKELY(isParentElementShadowRootHost)) {
+        parentElement->asElement()->internalShadowRoot()->setStyle(
+            parentElement->document()->style());
+
+        ctx = new (alloca(sizeof(StyleResolveContext)))
+            StyleResolveContext(&parentElement->asElement()
+                                     ->internalShadowRoot()
+                                     .value()
+                                     ->styleResolver(),
+                                parentContext);
+        parentElementStyle = parentElement->document()->style();
+    } else {
+        ctx = &parentContext;
+        ctx->m_ancestorSelectorFilter->pushNode(parentElement);
+    }
 
     RenderingSiblingIterator iter(parentElement->firstRenderingChild());
     while (true) {
@@ -9521,7 +9537,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             ComputedStyle* oldStyle = child->style();
 
             auto damage =
-                resolveElementStyle(ctx, resolver, child->asElement(),
+                resolveElementStyle(*ctx, child->asElement(),
                                     parentElementStyle, inheritedStyleChanged);
 
             if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
@@ -9556,16 +9572,16 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
             if (child->style()->display() == NoneDisplayValue) {
                 child->clearChildNeedsStyleRecalc();
-                clearStyle(ctx, child->asElement());
+                clearStyle(*ctx, child->asElement());
             }
 
             if (oldStyle && oldStyle != child->style()) {
-                ctx.pushIntoComputedStylePool(oldStyle);
+                ctx->pushIntoComputedStylePool(oldStyle);
             }
         } else {
             if (inheritedStyleChanged || child->needsStyleRecalc()) {
                 if (childTextNodeStyle == nullptr) {
-                    childTextNodeStyle = new (ctx.allocateComputedStyle())
+                    childTextNodeStyle = new (ctx->allocateComputedStyle())
                         ComputedStyle(parentElementStyle);
                     childTextNodeStyle->loadResources(parentElement);
                     childTextNodeStyle->arrangeStyleValues(parentElementStyle,
@@ -9622,9 +9638,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
         }
 
         if (child->isElement() && child->childNeedsStyleRecalc()) {
-            resolveChildrenStyle(
-                ctx, resolver, child->asElement(), child->style(),
-                inheritedStyleChanged || child->m_gotInheritedStyleDirty);
+            resolveChildrenStyle(*ctx, child->asElement(), child->style(),
+                                 inheritedStyleChanged ||
+                                     child->m_gotInheritedStyleDirty);
         }
         // Resolve style for shadowtree of SVGUseElement
         if (child->isSVGUseElement() &&
@@ -9639,7 +9655,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 // style resolve
                 ComputedStyle* useStyle = svgUseElement->style();
 
-                StyleResolveContext ctx2(child->document());
+                StyleResolveContext ctx2(svgUseTargetElement);
                 std::vector<Element*> ancestorSelectorList;
                 Element* pe = svgUseTargetElement;
                 while (pe) {
@@ -9653,22 +9669,26 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 shadowFirstChild = sr->firstChild();
                 shadowFirstChild->setParentNode(
                     svgUseTargetElement->parentElement());
-                resolveChildrenStyle(ctx2, resolver, sr, useStyle, true);
+                resolveChildrenStyle(ctx2, sr, useStyle, true);
                 shadowFirstChild->setParentNode(sr);
             }
         }
     }
 
     parentElement->clearChildNeedsStyleRecalc();
-    ctx.m_ancestorSelectorFilter->popNode();
+
+    if (UNLIKELY(isParentElementShadowRootHost)) {
+        ctx->~StyleResolveContext();
+    } else {
+        ctx->m_ancestorSelectorFilter->popNode();
+    }
 }
 
 void StyleResolver::resolveDOMStyle(Document* document, bool force)
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kStyle, "Resolve DOMStyle");
     StyleResolveContext ctx(document);
-    resolveChildrenStyle(ctx, &document->styleResolver(), document,
-                         document->style(), force);
+    resolveChildrenStyle(ctx, document, document->style(), force);
 }
 
 bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
@@ -9725,7 +9745,8 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
 
 void StyleResolver::addSheet(CSSStyleSheet* sheet)
 {
-    STARFISH_ASSERT(sheet != nullptr);
+    m_needsRecalcRuleSet = true;
+    document()->browsingContext()->setNeedsStyleSheetsRecalc();
 
     bool originFound = false;
     if (!traverseAndTryAddSheet(m_document, sheet, originFound)) {
@@ -9733,11 +9754,316 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     }
 }
 
+void StyleResolver::removeSheet(CSSStyleSheet* sheet)
+{
+    m_needsRecalcRuleSet = true;
+    document()->browsingContext()->setNeedsStyleSheetsRecalc();
+
+    auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+    STARFISH_ASSERT(iter != m_sheets.end());
+    m_sheets.erase(iter);
+}
+
 void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
-    m_styleSheetWithAllRules = nullptr;
     m_ruleSetAttrFilter.clear();
+}
+
+class WebFontLoadChecker : public ResourceClient {
+public:
+    WebFontLoadChecker(Resource* res, String* wf)
+        : ResourceClient(res)
+        , m_familyName(wf)
+    {
+    }
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        resource()
+            ->loader()
+            ->document()
+            ->browsingContext()
+            ->setWholeDocumentNeedsStyleRecalc();
+        resource()->loader()->document()->fontSelector()->clearCache(
+            m_familyName);
+        resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
+        STARFISH_LOG_INFO("WebFont %s is failed to load..",
+                          m_familyName->toUTF8NonGCString().data());
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        resource()
+            ->loader()
+            ->document()
+            ->browsingContext()
+            ->setWholeDocumentNeedsStyleRecalc();
+        resource()->loader()->document()->fontSelector()->clearCache(
+            m_familyName);
+        // we needs to rebuild frame tree due to considering pseudo-elements
+        resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
+        STARFISH_LOG_INFO("WebFont %s is downloaded",
+                          m_familyName->toUTF8NonGCString().data());
+        resource()->loader()->document()->updateCanvasWebFontState();
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+    }
+
+    String* m_familyName;
+};
+
+void StyleResolver::recalcRuleSetIfNeeds()
+{
+    if (m_needsRecalcRuleSet) {
+        m_needsRecalcRuleSet = false;
+
+        removeAllRules();
+
+        m_viewportDependentMediaQueryResults.clear();
+        m_deviceDependentMediaQueryResults.clear();
+
+        size_t sheets = m_sheets.size();
+
+        size_t offset = 0;
+        std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
+
+        // We can use non gc vector
+        // because CSSStyleSheets has string reference to each
+        // CSSStyleDeclaration
+        for (size_t i = 0; i < sheets; i++) {
+            CSSStyleSheet* sheet = m_sheets[i];
+
+            if (i > 0) { // i == 0 is UA-sheet
+                sheet->parseSheetIfneeds();
+
+                const MediaQueryEvaluator& evaluator = mediaQueryEvaluator();
+                if (sheet->mediaQuerySet() &&
+                    !sheet->matchesMediaQueries(
+                        evaluator, sheet->mediaQuerySet(),
+                        &m_viewportDependentMediaQueryResults,
+                        &m_deviceDependentMediaQueryResults)) {
+                    continue;
+                }
+
+                sheet->clearStyleRules();
+                sheet->clearKeyframesRules();
+                sheet->collectRulesFromImportedSheet(
+                    sheet->importRules(), webFonts,
+                    &m_viewportDependentMediaQueryResults,
+                    &m_deviceDependentMediaQueryResults);
+                sheet->collectStyleRules(sheet->childRules(), webFonts,
+                                         sheet->url(),
+                                         &m_viewportDependentMediaQueryResults,
+                                         &m_deviceDependentMediaQueryResults);
+            }
+
+            size_t rules = sheet->styleRules().size();
+            for (size_t j = 0; j < rules; j++) {
+                sheet->styleRules()[j].first->setOrder(j + offset);
+                addToRuleSet(sheet->styleRules()[j]);
+            }
+            offset += rules;
+
+            size_t keyframes = sheet->keyframes().size();
+            for (size_t k = 0; k < keyframes; k++) {
+                addToKeyframesRule(sheet->keyframes()[k]);
+            }
+        }
+
+#if !defined(PORT_CANVAS_BACKEND_MOCK)
+        for (size_t i = 0; i < webFonts.size(); i++) {
+            CSSStyleDeclaration* decl = webFonts[i].first;
+            if (!decl->hasCSSValuePair(
+                    CSSStyleValuePair::KeyKind::FontFamily) ||
+                decl->getCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily)
+                        .valueKind() !=
+                    CSSStyleValuePair::ValueKind::KeywordValueKind ||
+                !decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
+                continue;
+            }
+            String* fontFamily =
+                decl->getCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily)
+                    .keywordValue();
+            FontFaceSrcData* src =
+                decl->getCSSValuePair(CSSStyleValuePair::KeyKind::Src)
+                    .fontFaceSrcDataValue();
+            bool isFontWeightSpecified =
+                decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
+            bool isFontStyleSpecified =
+                decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
+            FontStyleValue style = FontStyleValue::NormalFontStyleValue;
+            char weight = FontWeightValue::NormalFontWeightValue;
+            if (isFontWeightSpecified) {
+                auto w = decl->getCSSValuePair(
+                    CSSStyleValuePair::KeyKind::FontWeight);
+                if (w.valueKind() !=
+                    CSSStyleValuePair::ValueKind::FontWeightValueKind) {
+                    isFontWeightSpecified = false;
+                } else {
+                    weight = w.fontWeightValue();
+                }
+            }
+
+            switch (weight) {
+            case OneHundredFontWeightValue:
+                weight = 1;
+                break;
+            case TwoHundredsFontWeightValue:
+                weight = 2;
+                break;
+            case ThreeHundredsFontWeightValue:
+                weight = 3;
+                break;
+            case FourHundredsFontWeightValue:
+            case NormalFontWeightValue:
+                weight = 4;
+                break;
+            case FiveHundredsFontWeightValue:
+                weight = 5;
+                break;
+            case SixHundredsFontWeightValue:
+                weight = 6;
+                break;
+            case SevenHundredsFontWeightValue:
+            case BoldFontWeightValue:
+                weight = 7;
+                break;
+            case EightHundredsFontWeightValue:
+                weight = 8;
+                break;
+            case NineHundredsFontWeightValue:
+                weight = 9;
+                break;
+            default:
+                break;
+            }
+
+            if (isFontStyleSpecified) {
+                auto w = decl->getCSSValuePair(
+                    CSSStyleValuePair::KeyKind::FontStyle);
+                if (w.valueKind() !=
+                    CSSStyleValuePair::ValueKind::FontStyleValueKind) {
+                    isFontStyleSpecified = false;
+                } else {
+                    style = w.fontStyleValue();
+                }
+            }
+
+            // finding suitable font
+            std::vector<size_t> indexes;
+            for (size_t k = 0; k < src->data().size(); k++) {
+                indexes.push_back(k);
+            }
+
+            std::sort(indexes.begin(), indexes.end(),
+                      [&](const size_t& a, const size_t& b) -> bool {
+                          auto sa = src->data()[a];
+                          auto sb = src->data()[b];
+
+                          auto loadFromA = std::get<1>(sa);
+                          auto loadFromB = std::get<1>(sb);
+
+                          // a < b -> true;
+                          if (loadFromA == FontFaceSrcData::Local &&
+                              loadFromB == FontFaceSrcData::Local) {
+                              return a < b;
+                          } else if (loadFromA == FontFaceSrcData::Local &&
+                                     loadFromB == FontFaceSrcData::URL) {
+                              return false;
+                          } else if (loadFromA == FontFaceSrcData::URL &&
+                                     loadFromB == FontFaceSrcData::Local) {
+                              return true;
+                          } else {
+                              auto formatA = std::get<2>(sa);
+                              auto formatB = std::get<2>(sb);
+                              return formatA > formatB;
+                          }
+                      });
+
+            auto fontFaceData = src->data()[indexes[0]];
+
+            if (std::get<1>(fontFaceData) != FontFaceSrcData::Local) {
+                ResourceURL* fontURL = nullptr;
+                FontResource* res = nullptr;
+                if (webFonts[i].second && (webFonts[i].second)->isValid()) {
+                    fontURL =
+                        new ResourceURL(std::get<0>(fontFaceData),
+                                        (webFonts[i].second)->urlString());
+                } else {
+                    fontURL =
+                        new ResourceURL(std::get<0>(fontFaceData),
+                                        document()->documentURI()->urlString());
+                }
+
+                for (size_t i = 0; i < document()->m_loadedWebFontList.size();
+                     i++) {
+                    if (fontURL->urlString()->equals(
+                            document()
+                                ->m_loadedWebFontList[i]
+                                ->url()
+                                ->urlString())) {
+                        res = document()->m_loadedWebFontList[i];
+                        break;
+                    }
+                }
+
+                if (res == nullptr) {
+                    res = document()->resourceLoader().fetchFont(fontURL);
+                    res->addResourceClient(
+                        new WebFontLoadChecker(res, fontFamily));
+
+                    document()->m_loadedWebFontList.push_back(res);
+                }
+
+                WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
+                                fontFamily, style, weight, res);
+
+                bool found = false;
+                for (size_t i = 0; i < document()->m_webFontList.size(); i++) {
+                    if (document()->m_webFontList[i] == webFont) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    document()->m_webFontList.push_back(webFont);
+                }
+
+                if (webView()->needsDownloadWebFontsEarly() &&
+                    !webFont.fontResource()->isRequested()) {
+                    RequestData* reqData = new RequestData();
+                    reqData->m_url = webFont.fontResource()->url();
+                    reqData->m_referrer =
+                        new ReferrerURL(document()->documentURI());
+                    reqData->m_destination = RequestDestination::Font;
+                    reqData->m_syncLevel =
+                        RequestSyncLevel::SyncIfAlreadyLoaded;
+                    webFont.fontResource()->request(reqData, true);
+                }
+            } else {
+                WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
+                                fontFamily, style, weight,
+                                std::get<0>(fontFaceData));
+
+                bool found = false;
+                for (size_t i = 0; i < document()->m_webFontList.size(); i++) {
+                    if (document()->m_webFontList[i] == webFont) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    document()->m_webFontList.push_back(webFont);
+                }
+            }
+        }
+#endif
+    }
 }
 
 static void extractValuesforSelector(const CSSSelector* selector,

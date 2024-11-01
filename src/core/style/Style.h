@@ -3118,37 +3118,33 @@ using MatchedStyleRules = VectorWithInlineStorage<
     std::allocator<std::pair<StyleRule*, ResourceURL*>>>;
 
 class CSSStyleSheet;
+class StyleResolver;
+
 class StyleResolveContext {
 public:
-    StyleResolveContext(Document* document);
+    StyleResolveContext(Node* node);
+    StyleResolveContext(StyleResolver* sr, StyleResolveContext& origin);
     ~StyleResolveContext();
     void pushIntoComputedStylePool(ComputedStyle* b);
 
     bool hasItemInComputedStylePool()
     {
-        return m_computedStylePool.size();
+        return m_computedStylePool->size();
     }
 
     void* takeFromComputedStylePool()
     {
-        void* ret = m_computedStylePool.back();
-#ifndef NDEBUG
-        m_dbg.erase(m_dbg.find((ComputedStyle*)ret));
-#endif
-        m_computedStylePool.pop_back();
+        void* ret = m_computedStylePool->back();
+        m_computedStylePool->pop_back();
         STARFISH_ASSERT(ret);
         return ret;
     }
 
     void* allocateComputedStyle();
 
-    Document* m_document;
+    StyleResolver* m_styleResolver;
     std::unique_ptr<AncestorSelectorFilter> m_ancestorSelectorFilter;
-    GCVector<ComputedStyle*> m_computedStylePool;
-    size_t m_computedElementCount;
-#ifndef NDEBUG
-    std::set<ComputedStyle*> m_dbg;
-#endif
+    GCVector<ComputedStyle*>* m_computedStylePool;
 };
 
 enum PseudoElementType ENSURE_ENUM_UNSIGNED {
@@ -3217,15 +3213,13 @@ public:
     };
 
     StyleResolver(Document* document);
-    void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
-    void addToKeyframesRule(StyleRuleKeyframes* rule);
-    void addSheet(CSSStyleSheet* sheet);
-    void removeSheet(CSSStyleSheet* sheet)
+    void setNeedsRecalcRuleSet()
     {
-        auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
-        STARFISH_ASSERT(iter != m_sheets.end());
-        m_sheets.erase(iter);
+        m_needsRecalcRuleSet = true;
     }
+    void recalcRuleSetIfNeeds();
+    void addSheet(CSSStyleSheet* sheet);
+    void removeSheet(CSSStyleSheet* sheet);
 
     GCVector<CSSStyleSheet*>& sheets()
     {
@@ -3236,8 +3230,6 @@ public:
     {
         return m_ruleSet;
     }
-
-    void removeAllRules();
 
     bool usesFirstLineRule() const
     {
@@ -3293,8 +3285,8 @@ public:
                               m_ruleSetAttrFilter.end(), localName);
         return iter != m_ruleSetAttrFilter.end();
     }
-    void resolveChildrenStyle(StyleResolveContext& ctx, StyleResolver* resolver,
-                              Node* element, ComputedStyle* elementStyle,
+    void resolveChildrenStyle(StyleResolveContext& ctx, Node* element,
+                              ComputedStyle* elementStyle,
                               bool inheritedStyleChanged = false);
 
     static std::string resolveVarReferencedValue(
@@ -3302,6 +3294,10 @@ public:
         Optional<const MutablePropertyValueList*> cssCustomValues);
 
 protected:
+    void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
+    void addToKeyframesRule(StyleRuleKeyframes* rule);
+    void removeAllRules();
+
     CSSStyleDeclaration* resolveVarValue(
         Element* element, const CSSStyleValuePair& cssValuePair,
         CSSStyleValuePair::KeyKind keyKind,
@@ -3348,10 +3344,10 @@ protected:
     bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
                                 bool& originFound);
 
+    bool m_usesFirstLineRule;
+    bool m_needsRecalcRuleSet;
     uint32_t m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
-    CSSStyleSheet* m_styleSheetWithAllRules;
-    bool m_usesFirstLineRule;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
     MediaQueryResultList m_deviceDependentMediaQueryResults;

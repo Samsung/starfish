@@ -2605,7 +2605,7 @@ ComputedStyle* ComputedStyle::pseudoStyleForElementInternal(
         resolveContext = ctx.value();
     } else {
         resolveContext = new (alloca(sizeof(StyleResolveContext)))
-            StyleResolveContext(parent->document());
+            StyleResolveContext(parent);
         VectorWithInlineStorage<16, Node*, std::allocator<Node*>> tree;
 
         Node* n = parent->parentNode();
@@ -2619,8 +2619,8 @@ ComputedStyle* ComputedStyle::pseudoStyleForElementInternal(
         }
     }
 
-    parent->document()->styleResolver().matchAllRules(
-        *resolveContext, parent->asElement(), style, parentStyle, pseudoId);
+    parent->styleResolver().matchAllRules(*resolveContext, parent->asElement(),
+                                          style, parentStyle, pseudoId);
     Length fontSize = style->fontSize();
     fontSize.changeToFixedIfNeeded(
         parentStyle->fontSize(),

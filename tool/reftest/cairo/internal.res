@@ -754,4 +754,6 @@ test/cairo/internal-test/custom-element-registry/definedselector.html
 test/cairo/internal-test/shadowdom/shadowdom.html
 test/cairo/internal-test/shadowdom/shadowdom2.html
 test/cairo/internal-test/shadowdom/shadowdom3.html
+test/cairo/internal-test/shadowdom/shadowdom4.html
+test/cairo/internal-test/shadowdom/shadowdom5.html
 test/cairo/internal-test/shadowdom/template-innerhtml.html

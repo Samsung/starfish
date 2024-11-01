@@ -95,6 +95,25 @@ public:
         return m_localFontName;
     }
 
+    bool operator==(const WebFont& src)
+    {
+        bool e = m_fromLocal == src.m_fromLocal &&
+                 m_isFontStyleSpecified == src.m_isFontStyleSpecified &&
+                 m_isFontWeightSpecified == src.m_isFontWeightSpecified &&
+                 m_fontStyleValue == src.m_fontStyleValue &&
+                 m_fontWeightValue == src.m_fontWeightValue;
+        if (e) {
+            if (m_familyName->equals(src.m_familyName)) {
+                if (m_fromLocal) {
+                    return m_localFontName->equals(src.m_localFontName);
+                } else {
+                    return m_fontResource == src.m_fontResource;
+                }
+            }
+        }
+        return false;
+    }
+
 private:
     bool m_fromLocal;
     bool m_isFontStyleSpecified;
