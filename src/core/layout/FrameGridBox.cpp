@@ -1534,14 +1534,11 @@ void GridFormattingContext::maximizeColumnTracks()
     LayoutUnit remainingSpace =
         m_availableWidth - (sumOfColumnWidths + gapSpace);
 
-    if (remainingSpace <= 0) {
-        return;
-    }
-
     LayoutUnit availableSpace = remainingSpace;
     // Iterate until either all remaining space is allocated or tracks
     // can no longer be extended.
-    while (availableSpace.toInt() > 0 && growableTracks.size() > 0) {
+    // availableSpace can be nagative, so auto tracks is reduced accordingly.
+    while (availableSpace.toInt() != 0 && growableTracks.size() > 0) {
         LayoutUnit additionalWidth = availableSpace / growableTracks.size();
 
         GCVector<GridTrack*> remainingGrowableTracks;
@@ -1551,10 +1548,16 @@ void GridFormattingContext::maximizeColumnTracks()
             if (newWidth >= track->growthLimit()) {
                 availableSpace -= track->growthLimit() - track->size();
                 track->setSize(track->growthLimit());
-            } else {
-                availableSpace -= additionalWidth;
-                track->setSize(newWidth);
-                remainingGrowableTracks.push_back(track);
+            } else if (newWidth > 0) {
+                if (track->isMinMax() && newWidth < track->size()) {
+                    // Do nothing.
+                    // In this case, the track size is already at its minimum
+                    // value. It can't get any smaller.
+                } else {
+                    availableSpace -= additionalWidth;
+                    track->setSize(newWidth);
+                    remainingGrowableTracks.push_back(track);
+                }
             }
         }
 
@@ -1979,6 +1982,9 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             align == AlignItemValue::CenterAlignItemValue ||
             align == AlignItemValue::EndAlignItemValue) {
             height = gridArea.contentHeight();
+            if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+                height += mbp.height() - margin.height();
+            }
         } else {
             height = rowTrackHeight;
         }
