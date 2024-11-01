@@ -102,6 +102,9 @@ void CSSStyleRule::setSelectorText(String* selectorText)
     // However, it should have only one CSSSelectorList like 'div, p, span'.
     m_styleRule->wrapperTakeSelectorList(*list[0]);
 
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -149,7 +152,10 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
             DOMException::INDEX_SIZE_ERR, s.data());
     }
 
-    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    auto parentSheet = parentStyleSheet();
+    Node* node = parentSheet ? parentSheet->root()
+                             : scriptBindingInstance()->ownerDocument();
+    CSSParser parser(node);
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;
@@ -182,6 +188,9 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
     m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index,
                                (CSSRule*)(nullptr));
 
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -212,6 +221,9 @@ void CSSGroupingRule::deleteRule(unsigned index)
     }
     m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
 
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -595,6 +607,9 @@ void CSSKeyframesRule::appendRule(String* rule)
         static_cast<StyleRuleKeyframe*>(keyframe[0]));
     m_childRuleWrappers.resize(length());
 
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -618,6 +633,9 @@ void CSSKeyframesRule::deleteRule(String* keyList)
     }
     m_childRuleWrappers.erase(m_childRuleWrappers.begin() + i);
 
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -657,6 +675,9 @@ CSSRule* CSSKeyframesRule::item(unsigned index)
 
 void CSSKeyframesRule::styleChanged()
 {
+    if (parentStyleSheet()) {
+        parentStyleSheet()->root()->styleResolver().setNeedsRecalcRuleSet();
+    }
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()

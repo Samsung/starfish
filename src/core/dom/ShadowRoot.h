@@ -27,6 +27,7 @@
 namespace Starfish {
 
 class HTMLSlotElement;
+class StyleResolver;
 
 class SlotAssignment : public gc {
 public:
@@ -35,18 +36,7 @@ private:
 
 class ShadowRoot : public DocumentFragment {
 public:
-    ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
-        : DocumentFragment(document)
-        , m_mode(mode)
-        , m_delegatesFocus(false)
-        , m_slotAssignmentEnum(SlotAssignmentMode::Named)
-        , m_clonable(false)
-        , m_serializable(false)
-        , m_availableToElementInternals(false)
-        , m_declarative(false)
-        , m_host(host)
-    {
-    }
+    ShadowRoot(Document* document, ShadowRootMode mode, Element* host);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -148,6 +138,11 @@ public:
         return m_host;
     }
 
+    StyleResolver& styleResolver()
+    {
+        return *m_styleResolver;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(slotchange);
@@ -164,6 +159,7 @@ private:
     {
         DocumentFragment::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_host));
+        GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_styleResolver));
         markHashTable(desc, GC_WORD_OFFSET(ShadowRoot, m_namedSlotElements));
     }
 
@@ -176,6 +172,7 @@ private:
     bool m_declarative : 1;
     Element* m_host;
     GCUnorderedMap<String*, HTMLSlotElement*> m_namedSlotElements;
+    StyleResolver* m_styleResolver;
 };
 } // namespace Starfish
 

@@ -20,7 +20,6 @@
 #ifndef __StarfishCSSParser__
 #define __StarfishCSSParser__
 
-#include "binding/DocumentHoldable.h"
 #include "core/style/Style.h"
 #include "core/style/MediaQuery.h"
 #include "core/style/MediaQuerySet.h"
@@ -1737,7 +1736,10 @@ namespace Starfish {
 
 using CSSSelectorPool = GCUnorderedMap<CSSSelectorPoolKey, CSSSelector*>;
 
-class CSSParser : public DocumentHoldable {
+class Node;
+
+class CSSParser : public gc {
+    STARFISH_MAKE_STACK_ALLOCATED();
     friend class CSSToken;
 
 public:
@@ -1778,11 +1780,13 @@ public:
 
     enum ParseResult { Consumed, ErrorFounded, Failed };
 
-    CSSParser(Document* document);
+    CSSParser(Node* origin);
     inline ~CSSParser()
     {
         m_isPoolEnabled = false;
     }
+
+    Starfish* starfish();
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     bool parseSupportCondition(String* str);
@@ -1862,6 +1866,7 @@ private:
 
     bool m_preserveWS;
     bool m_preserveComments;
+    Node* m_origin;
     GCVector<RefPtr<CSSToken>> m_preservedTokens;
     CSSScanner* m_scanner;
     RefPtr<CSSToken> m_lookAhead;

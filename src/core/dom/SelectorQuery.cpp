@@ -264,7 +264,7 @@ void SelectorQuery::traverseDescendants(const CSSSelectorList& selectors,
 bool SelectorQuery::selectorMatches(const CSSSelectorList& selector,
                                     Element* element, Node* root)
 {
-    StyleResolver& resolver = element->document()->styleResolver();
+    StyleResolver& resolver = element->styleResolver();
     StyleResolver::MatchResult result(
         root->isDocument() ? root->document()->documentElement() : root);
     AtomicString elementName = element->name().localNameAtomic();

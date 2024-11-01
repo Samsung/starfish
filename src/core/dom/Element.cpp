@@ -682,7 +682,7 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
         inlineStyle()->clear();
 
         if (!value->isEmpty()) {
-            CSSParser parser(document());
+            CSSParser parser(this);
             parser.parseStyleDeclaration(value, inlineStyle());
         }
         m_didInlineStyleModifiedAfterAttributeSet = false;
@@ -722,8 +722,7 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
         document()->clearDialogsInShowModalCache();
     }
 
-    if (document()->styleResolver().mayHaveAttrSelectorWithName(
-            name.localNameAtomic())) {
+    if (styleResolver().mayHaveAttrSelectorWithName(name.localNameAtomic())) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
 }
@@ -2312,7 +2311,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
                 document(), String::fromInt(key * i)->concat('%'));
         }
         // make style animation data for Web Animation
-        computeWebAnimationKeyframes(document()->styleResolver(), this, style(),
+        computeWebAnimationKeyframes(styleResolver(), this, style(),
                                      keyframeRules);
     }
 

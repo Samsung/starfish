@@ -5826,10 +5826,12 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     }
     decl->clear();
 
-    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    CSSParser parser(m_node);
     parser.parseStyleDeclaration(text, decl);
     m_cssValues = decl->cssValues();
     m_pointerRooter = decl->m_pointerRooter;
+
+    m_node->styleResolver().setNeedsRecalcRuleSet();
 
     scriptBindingInstance()
         ->ownerWindow()

@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/CSS.h"
+#include "core/dom/Document.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
 #include "core/style/StyleRule.h"

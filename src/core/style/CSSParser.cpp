@@ -759,10 +759,10 @@ bool CSSPropertyParser::stringIsIdent(String* v)
     return token->isIdent();
 }
 
-CSSParser::CSSParser(Document* document)
-    : DocumentHoldable(document)
-    , m_preserveWS(false)
+CSSParser::CSSParser(Node* origin)
+    : m_preserveWS(false)
     , m_preserveComments(false)
+    , m_origin(origin)
     , m_scanner(nullptr)
     , m_error(nullptr)
     , m_state()
@@ -780,6 +780,11 @@ CSSParser::CSSParser(Document* document)
         m_initialTokenMemoryPool[i] = &ptr[i];
     }
     m_isPoolEnabled = true;
+}
+
+Starfish* CSSParser::starfish()
+{
+    return m_origin->starfish();
 }
 
 RefPtr<CSSToken> CSSParser::getToken(bool aSkipWS, bool aSkipComment,
@@ -893,7 +898,7 @@ String* CSSParser::determineNamespace(String* prefix)
         return String::fromUTF8("*"); // We'll match any namespace.
     }
 
-    if (m_document->styleResolver().sheets().size() == 0) {
+    if (m_origin->styleResolver().sheets().size() == 0) {
         return nullptr; // Cannot resolve prefix to namespace without a
                         // stylesheet, syntax error.
     }
@@ -1821,7 +1826,8 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     bool valid = false;
     bool invalidDeclaration = false;
 
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+    CSSStyleDeclaration* declarations =
+        new CSSStyleDeclaration(m_origin->document());
     CSSParser::ParseResult ret = parseStyleDeclarations(
         declarations, valid, invalidDeclaration, list.size() > 0, validSelector,
         isQueryingSelector);
@@ -2069,7 +2075,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
 {
     preserveState();
 
-    CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration(m_origin->document());
 
     RefPtr<CSSToken> token = getToken(true, false);
     bool valid = false;
@@ -2112,7 +2118,8 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
                    decl->hasCSSValuePair(
                        CSSStyleValuePair::KeyKind::FontKerning) ||
                    decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
-            return new StyleRuleFontFace(new CSSStyleDeclaration(document()));
+            return new StyleRuleFontFace(
+                new CSSStyleDeclaration(m_origin->document()));
         } else {
             return nullptr;
         }
@@ -2393,7 +2400,7 @@ bool CSSParser::parseSupportsDeclarationCondition()
         restoreState();
     }
 
-    CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration(m_origin->document());
     parseDeclaration(key, decl);
 
     if (decl->cssText()->equals(String::emptyString)) {
@@ -2508,7 +2515,8 @@ CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
     bool valid = false;
     bool invalidDeclaration = false;
 
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+    CSSStyleDeclaration* declarations =
+        new CSSStyleDeclaration(m_origin->document());
     CSSParser::ParseResult ret = parseStyleDeclarations(
         declarations, valid, invalidDeclaration, true, true, false);
 
@@ -2801,7 +2809,7 @@ void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
 {
     m_parserType = parserType;
     m_blockLevel = 0;
-    m_querySet = MediaQuerySet::create(m_document);
+    m_querySet = MediaQuerySet::create(m_origin);
     if (parserType == MediaQuerySetParser)
         m_state = &CSSParser::readRestrictor;
     else // MediaConditionParser

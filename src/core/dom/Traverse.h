@@ -21,6 +21,7 @@
 #define __StarfishTraverse__
 
 #include "core/dom/Element.h"
+#include "core/dom/ShadowRoot.h"
 #include "core/dom/HTMLSlotElement.h"
 
 namespace Starfish {
@@ -38,6 +39,29 @@ public:
         while (child) {
             traverse(child, func);
             child = child->nextSibling();
+        }
+    }
+
+    template <typename Func>
+    static void traverseIncludingShadowDOM(Node* node, Func func)
+    {
+        func(node);
+        Node* child = node->firstChild();
+        while (child) {
+            traverseIncludingShadowDOM(child, func);
+            child = child->nextSibling();
+        }
+        if (node->isElement()) {
+            auto sr = node->asElement()->internalShadowRoot();
+            if (sr) {
+                func(sr.value());
+                sr->firstChild();
+                Node* child = sr->firstChild();
+                while (child) {
+                    traverseIncludingShadowDOM(child, func);
+                    child = child->nextSibling();
+                }
+            }
         }
     }
 

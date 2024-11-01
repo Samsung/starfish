@@ -29,6 +29,22 @@ namespace Starfish {
 
 DEFINE_EVENT_LISTENER(ShadowRoot, slotchange);
 
+ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
+    : DocumentFragment(document)
+    , m_mode(mode)
+    , m_delegatesFocus(false)
+    , m_slotAssignmentEnum(SlotAssignmentMode::Named)
+    , m_clonable(false)
+    , m_serializable(false)
+    , m_availableToElementInternals(false)
+    , m_declarative(false)
+    , m_host(host)
+    , m_styleResolver(new StyleResolver(m_document))
+{
+    // add ua sheet
+    m_styleResolver->addSheet(document->styleResolver().sheets()[0]);
+}
+
 void* ShadowRoot::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ShadowRoot));
@@ -114,6 +130,9 @@ Optional<HTMLSlotElement*> ShadowRoot::assignedSlot(String* name)
 void ShadowRoot::didNodeInserted(Node* parent, Node* newChild)
 {
     DocumentFragment::didNodeInserted(parent, newChild);
+
+    Traverse::traverse(newChild, [](Node* nd) { nd->setIsInShadowRoot(true); });
+
     updateSlotElements();
 
     if (isInDocumentScope()) {
@@ -124,6 +143,10 @@ void ShadowRoot::didNodeInserted(Node* parent, Node* newChild)
 void ShadowRoot::didNodeRemoved(Node* parent, Node* oldChild)
 {
     DocumentFragment::didNodeRemoved(parent, oldChild);
+
+    Traverse::traverse(oldChild,
+                       [](Node* nd) { nd->setIsInShadowRoot(false); });
+
     updateSlotElements();
 
     if (isInDocumentScope()) {

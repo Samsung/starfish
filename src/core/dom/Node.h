@@ -44,6 +44,7 @@ class RareNodeMembers;
 class RareElementMembers;
 class NodeOrDOMString;
 class PseudoElement;
+class StyleResolver;
 class StyleResolveContext;
 class MutationObserverRegistration;
 
@@ -149,6 +150,7 @@ protected:
         , m_childNeedsFrameTreeBuild(true)
         , m_isConnected(false)
         , m_didPrepareAnimation(false)
+        , m_inShadowRoot(false)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
@@ -229,6 +231,30 @@ public:
     {
         m_isConnected = false;
     }
+
+    void setIsInShadowRoot(bool s)
+    {
+        m_inShadowRoot = s;
+    }
+
+    bool isInShadowRoot() const
+    {
+        return m_inShadowRoot;
+    }
+
+    ShadowRoot* parentShadowRoot() const
+    {
+        STARFISH_ASSERT(isInShadowRoot());
+        Node* nd = parentNode();
+        while (true) {
+            if (nd->isShadowRoot()) {
+                return nd->asShadowRoot();
+            }
+            nd = nd->parentNode();
+        }
+    }
+
+    StyleResolver& styleResolver();
 
     Document* ownerDocument() const
     {
@@ -902,6 +928,7 @@ protected:
     bool m_childNeedsFrameTreeBuild : 1;
     bool m_isConnected : 1;
     bool m_didPrepareAnimation : 1;
+    bool m_inShadowRoot : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;

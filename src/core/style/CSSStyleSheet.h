@@ -116,6 +116,10 @@ public:
     {
         return m_origin;
     }
+    Node* root()
+    {
+        return m_root;
+    }
 
     void parseSheetIfneeds();
 
@@ -231,6 +235,7 @@ protected:
     // before access style rules.
     String* m_sourceString;
     Node* m_origin;
+    Node* m_root;
     CSSRule* m_ownerRule;
     CSSRuleList* m_ruleList;
     MediaQuerySet* m_mediaQuerySet;

@@ -156,17 +156,18 @@ void HTMLStyleElement::generateStyleSheet()
         return;
     }
 
+    StyleResolver& styleResolver = this->styleResolver();
+
     CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
     sheet->parseSheetIfneeds();
     m_generatedSheet = sheet;
-    document()->styleResolver().addSheet(sheet);
+    styleResolver.addSheet(sheet);
 
-    CSSParser parser(document());
+    CSSParser parser(this);
     parser.makeToken(getAttributeOrEmpty(starfish()->staticStrings()->m_media));
     MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
     sheet->setMediaQuerySet(mediaQuerySet);
-    const MediaQueryEvaluator& evaluator =
-        document()->styleResolver().mediaQueryEvaluator();
+    const MediaQueryEvaluator& evaluator = styleResolver.mediaQueryEvaluator();
     if (evaluator.eval(mediaQuerySet)) {
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet->willAddToDocument();
@@ -177,7 +178,7 @@ void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
         m_generatedSheet->willRemovedFromDocument();
-        document()->styleResolver().removeSheet(m_generatedSheet);
+        m_generatedSheet->root()->styleResolver().removeSheet(m_generatedSheet);
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
     }

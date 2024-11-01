@@ -71,10 +71,20 @@ private:
     CSSStyleSheet* m_styleSheet;
 };
 
+static Node* findRootOfStyleSheet(Node* origin)
+{
+    if (origin->isInShadowRoot()) {
+        return origin->parentShadowRoot();
+    } else {
+        return origin->document();
+    }
+}
+
 CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     : StyleSheet(origin->executionContext())
     , m_sourceString(str)
     , m_origin(origin)
+    , m_root(findRootOfStyleSheet(origin))
     , m_ownerRule(nullptr)
     , m_ruleList(nullptr)
     , m_mediaQuerySet(nullptr)
@@ -121,7 +131,7 @@ void CSSStyleSheet::parseSheetIfneeds()
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kStyle, "Parse Style Sheet");
     if (m_sourceString != String::emptyString) {
-        CSSParser parser(m_origin->document());
+        CSSParser parser(m_origin);
         parser.parseStyleSheet(m_sourceString, this);
         m_sourceString = String::emptyString;
     }
@@ -226,10 +236,10 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
         if (rules[i]->isLoading()) {
             continue;
         }
-        if (matchesMediaQueries(
-                origin()->document()->styleResolver().mediaQueryEvaluator(),
-                rules[i]->mediaQuerySet(), viewportDependentResult,
-                deviceDependentResult)) {
+        if (matchesMediaQueries(origin()->styleResolver().mediaQueryEvaluator(),
+                                rules[i]->mediaQuerySet(),
+                                viewportDependentResult,
+                                deviceDependentResult)) {
             if (rules[i]->styleSheet()->importRules().size() > 0) {
                 collectRulesFromImportedSheet(
                     rules[i]->styleSheet()->importRules(), webFonts,
@@ -263,7 +273,7 @@ void CSSStyleSheet::collectStyleRules(
             m_styleRules.push_back(std::make_pair((StyleRule*)(*iter), url));
         } else if (rule->isMediaRule()) {
             StyleRuleMedia* media = (StyleRuleMedia*)(*iter);
-            auto resolver = origin()->document()->styleResolver();
+            auto resolver = origin()->styleResolver();
             const MediaQueryEvaluator& evaluator =
                 resolver.mediaQueryEvaluator();
             if (matchesMediaQueries(evaluator, media->mediaQuerySet(),
@@ -291,7 +301,8 @@ void CSSStyleSheet::collectStyleRules(
 }
 
 static void invalidateStyleOfMatchedElementWorker(
-    Node* parentElement, AncestorSelectorFilter& filter,
+    Node* parentElement, StyleResolver& styleResolver,
+    AncestorSelectorFilter& filter,
     GCVector<std::pair<StyleRule*, ResourceURL*>>& styleRules)
 {
     filter.pushNode(parentElement);
@@ -303,7 +314,7 @@ static void invalidateStyleOfMatchedElementWorker(
             break;
         }
         if (child->isElement() && !child->needsStyleRecalc()) {
-            StyleResolver& resolver = child->document()->styleResolver();
+            StyleResolver& resolver = child->styleResolver();
             StyleResolver::MatchResult result(nullptr);
             AtomicString elementName =
                 child->asElement()->name().localNameAtomic();
@@ -339,9 +350,12 @@ static void invalidateStyleOfMatchedElementWorker(
         if (!child) {
             break;
         }
+        if (child->isShadowRoot()) {
+            continue;
+        }
         if (child->isElement()) {
-            invalidateStyleOfMatchedElementWorker(child.value(), filter,
-                                                  styleRules);
+            invalidateStyleOfMatchedElementWorker(child.value(), styleResolver,
+                                                  filter, styleRules);
         }
     }
 
@@ -357,8 +371,8 @@ void CSSStyleSheet::willRemovedFromDocument()
     }
     LongTaskFinder t("CSSStyleSheet::willRemovedFromDocument", 1);
     AncestorSelectorFilter filter;
-    invalidateStyleOfMatchedElementWorker(m_origin->document(), filter,
-                                          m_styleRules);
+    invalidateStyleOfMatchedElementWorker(m_root, m_root->styleResolver(),
+                                          filter, m_styleRules);
 }
 
 void CSSStyleSheet::willAddToDocument()
@@ -370,12 +384,10 @@ void CSSStyleSheet::willAddToDocument()
     }
     LongTaskFinder t("CSSStyleSheet::willAddToDocument", 1);
 
-    auto viewportDependentResult = &m_origin->document()
-                                        ->styleResolver()
-                                        .viewportDependentMediaQueryResults();
-    auto deviceDependentResult = &m_origin->document()
-                                      ->styleResolver()
-                                      .deviceDependentMediaQueryResults();
+    auto viewportDependentResult =
+        &m_origin->styleResolver().viewportDependentMediaQueryResults();
+    auto deviceDependentResult =
+        &m_origin->styleResolver().deviceDependentMediaQueryResults();
 
     std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     clearStyleRules();
@@ -386,8 +398,8 @@ void CSSStyleSheet::willAddToDocument()
                       deviceDependentResult);
 
     AncestorSelectorFilter filter;
-    invalidateStyleOfMatchedElementWorker(m_origin->document(), filter,
-                                          m_styleRules);
+    invalidateStyleOfMatchedElementWorker(m_root, m_root->styleResolver(),
+                                          filter, m_styleRules);
 }
 
 String* CSSStyleSheet::href() const
@@ -495,7 +507,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
                                DOMException::INDEX_SIZE_ERR, s.data());
     }
 
-    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    CSSParser parser(m_origin);
     RefPtr<CSSToken> token = parser.makeToken(ruleString);
 
     GCVector<StyleRuleBase*> rules;
@@ -520,6 +532,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     }
 
     syncChildRuleWrappers();
+    origin()->styleResolver().setNeedsRecalcRuleSet();
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -577,6 +590,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
         m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
     }
 
+    origin()->styleResolver().setNeedsRecalcRuleSet();
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
@@ -635,6 +649,7 @@ void CSSStyleSheet::setDisabled(bool disabled)
     }
     m_disabled = disabled;
 
+    origin()->styleResolver().setNeedsRecalcRuleSet();
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()

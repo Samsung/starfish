@@ -387,7 +387,22 @@ static void checkVwVh(Node* nd)
 
 void Window::resize(uint32_t w, uint32_t h)
 {
-    if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
+    bool mediaQueryAffectedByViewportChange =
+        document()->styleResolver().mediaQueryAffectedByViewportChange();
+    if (mediaQueryAffectedByViewportChange) {
+        document()->styleResolver().setNeedsRecalcRuleSet();
+    }
+    Traverse::traverseIncludingShadowDOM(document(), [&](Node* nd) {
+        if (nd->isShadowRoot()) {
+            bool b = nd->styleResolver().mediaQueryAffectedByViewportChange();
+            mediaQueryAffectedByViewportChange |= b;
+            if (b) {
+                nd->styleResolver().setNeedsRecalcRuleSet();
+            }
+        }
+    });
+
+    if (mediaQueryAffectedByViewportChange) {
         browsingContext()
             ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
     } else {
