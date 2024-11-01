@@ -9876,6 +9876,14 @@ bool CSSStyleValuePair::updateValueUnitMargin(const CSSTokenValue& value)
                                            CSSPropertyParser::AllowAuto);
 }
 
+bool CSSStyleValuePair::updateValueUnitInset(const CSSTokenValue& value)
+{
+    return updateValueUnitLengthOrCalc(value,
+                                       CSSPropertyParser::AllowNegative |
+                                           CSSPropertyParser::AllowPercent |
+                                           CSSPropertyParser::AllowAuto);
+}
+
 bool CSSStyleValuePair::updateValueUnitPadding(const CSSTokenValue& value)
 {
     return updateValueUnitLengthOrCalc(CSSTokenValue(value),
@@ -15389,6 +15397,8 @@ bool CSSStyleValuePair::updateValueUnitFourSidedShorthandProperty(
         return updateValueUnitBorderStyle(token);
     case CSSStyleValuePair::KeyKind::BorderWidth:
         return updateValueUnitBorderWidth(token);
+    case CSSStyleValuePair::KeyKind::Inset:
+        return updateValueUnitInset(token);
     case CSSStyleValuePair::KeyKind::Margin:
         return updateValueUnitMargin(token);
     case CSSStyleValuePair::KeyKind::Padding:

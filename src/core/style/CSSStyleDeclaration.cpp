@@ -4043,6 +4043,48 @@ String* CSSStyleDeclaration::Margin(bool* isCombined)
     return String::emptyString;
 }
 
+void CSSStyleDeclaration::setInset(const char* value, size_t length,
+                                   bool isImportant)
+{
+    if (length == 0) {
+        removeMargin();
+        return;
+    }
+
+    constexpr CSSStyleValuePair::KeyKind sides[4] = {
+        CSSStyleValuePair::KeyKind::Top, CSSStyleValuePair::KeyKind::Right,
+        CSSStyleValuePair::KeyKind::Bottom, CSSStyleValuePair::KeyKind::Left
+    };
+
+    setFourSidedShorthandProperty(CSSStyleValuePair::KeyKind::Inset, sides,
+                                  value, length, isImportant);
+}
+
+void CSSStyleDeclaration::removeInset()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Top);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Right);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Bottom);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Left);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Inset);
+}
+
+String* CSSStyleDeclaration::Inset(bool* isCombined)
+{
+    String* top = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::Top);
+    String* right = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::Right);
+    String* bottom = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::Bottom);
+    String* left = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::Left);
+    if (top && right && bottom && left) {
+        return combineBoxString(top, right, bottom, left, isCombined);
+    }
+    return String::emptyString;
+}
+
 void CSSStyleDeclaration::setMargin(const char* value, size_t length,
                                     bool isImportant)
 {

@@ -843,6 +843,7 @@ class CSSFilterFunction;
     F(BackgroundPosition, backgroundPosition, "background-position") \
     F(Gap, gap, "gap")                                               \
     F(GridTemplate, gridTemplate, "grid-template")                   \
+    F(Inset, inset, "inset")                                         \
     F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
     F(MarginBlock, marginBlock, "margin-block")                      \
@@ -2542,6 +2543,7 @@ public:
     bool updateValueUnitGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);
     bool updateValueUnitPadding(const CSSTokenValue& token);
+    bool updateValueUnitInset(const CSSTokenValue& token);
     bool updateValueUnitFilterFunction(const CSSTokenValue& token);
     bool updateValueUnitFontSize(const CSSTokenValue& token);
     bool updateValueUnitFontStyle(const CSSTokenValue& token);
