@@ -114,6 +114,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // color
         // clear
         // float
+        // inset
         // width
         // right
         // order
@@ -124,6 +125,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
             if (memcmp(data, "clear", 5) == 0) {
                 return CSSStyleValuePair::KeyKind::Clear;
+            }
+            break;
+        case 'i':
+            if (memcmp(data, "inset", 5) == 0) {
+                return CSSStyleValuePair::KeyKind::Inset;
             }
             break;
         case 'f':

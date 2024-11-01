@@ -331,6 +331,10 @@ protected:
     void setGridTemplate(const char* value, size_t len, bool isImportant);
     void removeGridTemplate();
 
+    String* Inset(bool* isCombined = nullptr);
+    void setInset(const char* value, size_t len, bool isImportant);
+    void removeInset();
+
     String* TextDecoration();
     void setTextDecoration(const char* value, size_t len, bool isImportant);
     void removeTextDecoration();
