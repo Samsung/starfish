@@ -310,9 +310,9 @@ public:
     {
     }
 
-    virtual bool isKindOfTransitionProperty(CSSStyleValuePair::KeyKind k)
+    virtual bool isKindOfTransitionProperty(CSSStyleValuePair::KeyKind key)
     {
-        return k == m_property;
+        return key == m_property;
     }
 
     virtual void resolveUnresolvedAnimatedValues()
@@ -735,6 +735,8 @@ public:
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+    virtual bool isKindOfTransitionProperty(
+        CSSStyleValuePair::KeyKind key) override;
 };
 
 class ActiveLengthAnimationTask : public ActiveAnimationTask {
@@ -761,7 +763,7 @@ public:
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
-        CSSStyleValuePair::KeyKind k) override;
+        CSSStyleValuePair::KeyKind key) override;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -808,7 +810,7 @@ public:
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
-        CSSStyleValuePair::KeyKind k) override;
+        CSSStyleValuePair::KeyKind key) override;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
