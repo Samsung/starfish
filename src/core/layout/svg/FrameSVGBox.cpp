@@ -134,6 +134,14 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         auto matrix =
             style()->transformsToMatrix(cb->width(), cb->height(), this, true);
         if (!matrix.isIdentity()) {
+            SkMatrix test;
+            bool testResult = matrix.invert(&test);
+            if (!testResult) {
+                ctx.m_canvas->restore();
+                // invalid matrix to transform svg
+                return;
+            }
+
             ctx.m_canvas->translate(-x(), -y());
             ctx.m_canvas->postMatrix(matrix);
             ctx.m_canvas->translate(x(), y());
