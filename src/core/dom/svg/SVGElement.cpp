@@ -205,6 +205,13 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             m_maskElement = nullptr;
         }
     }
+
+    if (needsTransformAttributes()) {
+        if (ss->m_transform == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
 }
 
 String* SVGElement::xmlbase()

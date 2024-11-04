@@ -827,7 +827,7 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameReplacedObject(current);
     } else if (current->isSVGSVGElement()) {
         return FrameTreeBuilder::buildSVGFrameTree(
-            current->asSVGSVGElement(), current->parentElement()->frame());
+            current->asSVGSVGElement(), current->renderingParentElement()->frame());
     } else if (current->isHTMLSelectElement()) {
         return new FrameSelectBox(current, nullptr);
     } else if (current->isHTMLOptGroupElement()) {
