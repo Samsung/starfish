@@ -981,6 +981,39 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return false;
 }
 
+bool ActiveColorAnimationTask::isKindOfTransitionProperty(
+    CSSStyleValuePair::KeyKind key)
+{
+    switch (m_property) {
+    case CSSStyleValuePair::KeyKind::BackgroundColor:
+        return key == CSSStyleValuePair::KeyKind::BackgroundColor ||
+               key == CSSStyleValuePair::KeyKind::Background;
+    case CSSStyleValuePair::KeyKind::BorderBottomColor:
+        return key == CSSStyleValuePair::BorderBottomColor ||
+               key == CSSStyleValuePair::BorderColor ||
+               key == CSSStyleValuePair::BorderBottom;
+    case CSSStyleValuePair::KeyKind::BorderLeftColor:
+        return key == CSSStyleValuePair::BorderLeftColor ||
+               key == CSSStyleValuePair::BorderColor ||
+               key == CSSStyleValuePair::BorderLeft;
+    case CSSStyleValuePair::KeyKind::BorderRightColor:
+        return key == CSSStyleValuePair::BorderRightColor ||
+               key == CSSStyleValuePair::BorderColor ||
+               key == CSSStyleValuePair::BorderRight;
+    case CSSStyleValuePair::KeyKind::BorderTopColor:
+        return key == CSSStyleValuePair::BorderTopColor ||
+               key == CSSStyleValuePair::BorderColor ||
+               key == CSSStyleValuePair::BorderTop;
+    case CSSStyleValuePair::KeyKind::TextDecorationColor:
+        return key == CSSStyleValuePair::TextDecorationColor ||
+               key == CSSStyleValuePair::TextDecoration;
+    default:
+        return key == m_property;
+    }
+
+    return false;
+}
+
 ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
@@ -1310,58 +1343,58 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
 }
 
 bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
-    CSSStyleValuePair::KeyKind k)
+    CSSStyleValuePair::KeyKind key)
 {
     switch (m_property) {
     case CSSStyleValuePair::KeyKind::MarginTop:
-        return k == CSSStyleValuePair::KeyKind::MarginTop ||
-               k == CSSStyleValuePair::KeyKind::Margin;
+        return key == CSSStyleValuePair::KeyKind::MarginTop ||
+               key == CSSStyleValuePair::KeyKind::Margin;
     case CSSStyleValuePair::KeyKind::MarginRight:
-        return k == CSSStyleValuePair::KeyKind::MarginRight ||
-               k == CSSStyleValuePair::KeyKind::Margin;
+        return key == CSSStyleValuePair::KeyKind::MarginRight ||
+               key == CSSStyleValuePair::KeyKind::Margin;
     case CSSStyleValuePair::KeyKind::MarginBottom:
-        return k == CSSStyleValuePair::KeyKind::MarginBottom ||
-               k == CSSStyleValuePair::KeyKind::Margin;
+        return key == CSSStyleValuePair::KeyKind::MarginBottom ||
+               key == CSSStyleValuePair::KeyKind::Margin;
     case CSSStyleValuePair::KeyKind::MarginLeft:
-        return k == CSSStyleValuePair::KeyKind::MarginLeft ||
-               k == CSSStyleValuePair::KeyKind::Margin;
+        return key == CSSStyleValuePair::KeyKind::MarginLeft ||
+               key == CSSStyleValuePair::KeyKind::Margin;
     case CSSStyleValuePair::KeyKind::BorderTop:
-        return k == CSSStyleValuePair::KeyKind::BorderTop ||
-               k == CSSStyleValuePair::KeyKind::Border;
+        return key == CSSStyleValuePair::KeyKind::BorderTop ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderRight:
-        return k == CSSStyleValuePair::KeyKind::BorderRight ||
-               k == CSSStyleValuePair::KeyKind::Border;
+        return key == CSSStyleValuePair::KeyKind::BorderRight ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderBottom:
-        return k == CSSStyleValuePair::KeyKind::BorderBottom ||
-               k == CSSStyleValuePair::KeyKind::Border;
+        return key == CSSStyleValuePair::KeyKind::BorderBottom ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderLeft:
-        return k == CSSStyleValuePair::KeyKind::BorderLeft ||
-               k == CSSStyleValuePair::KeyKind::Border;
+        return key == CSSStyleValuePair::KeyKind::BorderLeft ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::PaddingTop:
-        return k == CSSStyleValuePair::KeyKind::PaddingTop ||
-               k == CSSStyleValuePair::KeyKind::Padding;
+        return key == CSSStyleValuePair::KeyKind::PaddingTop ||
+               key == CSSStyleValuePair::KeyKind::Padding;
     case CSSStyleValuePair::KeyKind::PaddingRight:
-        return k == CSSStyleValuePair::KeyKind::PaddingRight ||
-               k == CSSStyleValuePair::KeyKind::Padding;
+        return key == CSSStyleValuePair::KeyKind::PaddingRight ||
+               key == CSSStyleValuePair::KeyKind::Padding;
     case CSSStyleValuePair::KeyKind::PaddingBottom:
-        return k == CSSStyleValuePair::KeyKind::PaddingBottom ||
-               k == CSSStyleValuePair::KeyKind::Padding;
+        return key == CSSStyleValuePair::KeyKind::PaddingBottom ||
+               key == CSSStyleValuePair::KeyKind::Padding;
     case CSSStyleValuePair::KeyKind::PaddingLeft:
-        return k == CSSStyleValuePair::KeyKind::PaddingLeft ||
-               k == CSSStyleValuePair::KeyKind::Padding;
+        return key == CSSStyleValuePair::KeyKind::PaddingLeft ||
+               key == CSSStyleValuePair::KeyKind::Padding;
     case CSSStyleValuePair::KeyKind::BackgroundPositionX:
-        return k == CSSStyleValuePair::KeyKind::BackgroundPositionX ||
-               k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
-               k == CSSStyleValuePair::KeyKind::Background;
+        return key == CSSStyleValuePair::KeyKind::BackgroundPositionX ||
+               key == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+               key == CSSStyleValuePair::KeyKind::Background;
     case CSSStyleValuePair::KeyKind::BackgroundPositionY:
-        return k == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
-               k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
-               k == CSSStyleValuePair::KeyKind::Background;
+        return key == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
+               key == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+               key == CSSStyleValuePair::KeyKind::Background;
     case CSSStyleValuePair::KeyKind::FontSize:
-        return k == CSSStyleValuePair::KeyKind::FontSize ||
-               k == CSSStyleValuePair::KeyKind::Font;
+        return key == CSSStyleValuePair::KeyKind::FontSize ||
+               key == CSSStyleValuePair::KeyKind::Font;
     default:
-        return m_property == k;
+        return m_property == key;
     }
 
     return false;
@@ -1526,17 +1559,13 @@ void ActiveLengthSizeAnimationTask::execute(double progress,
 }
 
 bool ActiveLengthSizeAnimationTask::isKindOfTransitionProperty(
-    CSSStyleValuePair::KeyKind k)
+    CSSStyleValuePair::KeyKind key)
 {
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        if (k == CSSStyleValuePair::KeyKind::BackgroundSize ||
-            k == CSSStyleValuePair::KeyKind::Background) {
-            return true;
-        }
-    } else {
-        return m_property == k;
+        return key == CSSStyleValuePair::KeyKind::BackgroundSize ||
+               key == CSSStyleValuePair::KeyKind::Background;
     }
-    return false;
+    return key == m_property;
 }
 
 bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
