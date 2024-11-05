@@ -463,7 +463,11 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_has3DTransform = true;
-            STARFISH_UNSUPPORTED("css function: translateZ");
+            if ((*f.values())[0].valueKind() !=
+                    CSSStyleValuePair::ValueKind::Length ||
+                (*f.values())[0].lengthValue() != Length(Length::Fixed, 0)) {
+                STARFISH_UNSUPPORTED("css function: translateZ");
+            }
         } break;
         case CSSTransformFunction::Kind::Scale:
             if (valueSize == 1) {
