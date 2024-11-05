@@ -467,6 +467,7 @@ public:
     QualifiedName m_rx;
     QualifiedName m_ry;
     QualifiedName m_transform;
+    QualifiedName m_transformOrigin;
     QualifiedName m_viewBox;
     QualifiedName m_preserveAspectRatio;
     QualifiedName m_d;

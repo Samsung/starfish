@@ -2575,6 +2575,8 @@ public:
                                       bool canIgnoreUnit, ValueList* values);
     bool addTransformValueToList(const CSSTokenVector& transformValueTokens,
                                  CSSTokenVector& transformValueList);
+    bool updateValueTransformOrigin(const CSSTokenVector& tokens,
+                                    bool canIgnoreUnit);
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);

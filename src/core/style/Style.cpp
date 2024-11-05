@@ -13924,97 +13924,7 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
 bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
                                                    const CSSTokenVector& tokens)
 {
-    STARFISH_ASSERT(document != nullptr);
-
-    //  [ left | center | right | top | bottom | <percentage> | <length> ] |
-    //  [ left | center | right | <percentage> | <length> ]
-    //  [ top | center | bottom | <percentage> | <length> ] <length>? |
-    //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
-
-    if (tokens.size() != 1 && tokens.size() != 2 && tokens.size() != 3) {
-        return false;
-    }
-
-    if (tokens.size() >= 2) {
-        const CSSTokenValue& f = tokens[0];
-        const CSSTokenValue& s = tokens[1];
-        if ((f.equals("left") && s.equals("right")) ||
-            (f.equals("right") && s.equals("left")) ||
-            (f.equals("top") && s.equals("bottom")) ||
-            (f.equals("bottom") && s.equals("top")))
-            return false;
-    }
-
-    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(Separator::SpaceSeparator);
-
-    CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind,
-                            SideValue::CenterSideValue);
-    CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind,
-                            SideValue::CenterSideValue);
-    CSSStyleValuePair zPair(CSSStyleValuePair::ValueKind::Length, CSSLength(0));
-
-    uint8_t option =
-        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
-    for (unsigned int i = 0; i < std::min(tokens.size(), (size_t)2); i++) {
-        const CSSTokenValue& value = tokens[i];
-        if (value.equals("left")) {
-            xPair.setValue(SideValue::LeftSideValue);
-        } else if (value.equals("right")) {
-            xPair.setValue(SideValue::RightSideValue);
-        } else if (value.equals("center")) {
-        } else if (value.equals("top")) {
-            yPair.setValue(SideValue::TopSideValue);
-        } else if (value.equals("bottom")) {
-            yPair.setValue(SideValue::BottomSideValue);
-        } else {
-            if (i == 0) {
-                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            } else {
-                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            }
-
-            if (tokens.size() == 2) {
-                if (i == 0) {
-                    if (tokens[1].equals("left") || tokens[1].equals("right")) {
-                        return false;
-                    }
-                } else {
-                    if (tokens[0].equals("top") || tokens[0].equals("bottom")) {
-                        return false;
-                    }
-                }
-            }
-
-            CSSStyleValuePair ret;
-            if (!ret.updateValueUnitLengthOrCalc(value, option)) {
-                return false;
-            }
-            values->push_back(ret);
-        }
-    }
-
-    if (tokens.size() == 3) {
-        const CSSTokenValue& s = tokens[2];
-        if (!zPair.updateValueUnitLengthOrCalc(s, option)) {
-            return false;
-        }
-        if (zPair.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-            return false;
-        }
-    }
-
-    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(xPair);
-    }
-    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(yPair);
-    }
-
-    values->push_back(zPair);
-
-    m_value.m_multiValue = values;
-    return true;
+    return updateValueTransformOrigin(tokens, false);
 }
 
 bool CSSStyleValuePair::updateValueTransform(Document* document,
@@ -15383,6 +15293,103 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
         }
     }
 
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens,
+                                                   bool canIgnoreUnit)
+{
+    //  [ left | center | right | top | bottom | <percentage> | <length> ] |
+    //  [ left | center | right | <percentage> | <length> ]
+    //  [ top | center | bottom | <percentage> | <length> ] <length>? |
+    //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
+
+    if (tokens.size() != 1 && tokens.size() != 2 && tokens.size() != 3) {
+        return false;
+    }
+
+    if (tokens.size() >= 2) {
+        const CSSTokenValue& f = tokens[0];
+        const CSSTokenValue& s = tokens[1];
+        if ((f.equals("left") && s.equals("right")) ||
+            (f.equals("right") && s.equals("left")) ||
+            (f.equals("top") && s.equals("bottom")) ||
+            (f.equals("bottom") && s.equals("top")))
+            return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
+
+    CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind,
+                            SideValue::CenterSideValue);
+    CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind,
+                            SideValue::CenterSideValue);
+    CSSStyleValuePair zPair(CSSStyleValuePair::ValueKind::Length, CSSLength(0));
+
+    uint8_t option =
+        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
+    if (canIgnoreUnit) {
+        option |= CSSPropertyParser::AllowWithoutUnit;
+    }
+    for (unsigned int i = 0; i < std::min(tokens.size(), (size_t)2); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals("left")) {
+            xPair.setValue(SideValue::LeftSideValue);
+        } else if (value.equals("right")) {
+            xPair.setValue(SideValue::RightSideValue);
+        } else if (value.equals("center")) {
+        } else if (value.equals("top")) {
+            yPair.setValue(SideValue::TopSideValue);
+        } else if (value.equals("bottom")) {
+            yPair.setValue(SideValue::BottomSideValue);
+        } else {
+            if (i == 0) {
+                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+            } else {
+                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+            }
+
+            if (tokens.size() == 2) {
+                if (i == 0) {
+                    if (tokens[1].equals("left") || tokens[1].equals("right")) {
+                        return false;
+                    }
+                } else {
+                    if (tokens[0].equals("top") || tokens[0].equals("bottom")) {
+                        return false;
+                    }
+                }
+            }
+
+            CSSStyleValuePair ret;
+            if (!ret.updateValueUnitLengthOrCalc(value, option)) {
+                return false;
+            }
+            values->push_back(ret);
+        }
+    }
+
+    if (tokens.size() == 3) {
+        const CSSTokenValue& s = tokens[2];
+        if (!zPair.updateValueUnitLengthOrCalc(s, option)) {
+            return false;
+        }
+        if (zPair.valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+            return false;
+        }
+    }
+
+    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        values->push_back(xPair);
+    }
+    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        values->push_back(yPair);
+    }
+
+    values->push_back(zPair);
+
+    m_value.m_multiValue = values;
     return true;
 }
 
