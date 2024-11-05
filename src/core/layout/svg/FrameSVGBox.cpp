@@ -142,9 +142,19 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                 return;
             }
 
-            ctx.m_canvas->translate(-x(), -y());
-            ctx.m_canvas->postMatrix(matrix);
-            ctx.m_canvas->translate(x(), y());
+            if (style()->hasTransformOrigin()) {
+                auto to = style()->transformOrigin()->originValue();
+                auto ox = to->getXAxis().specifiedValue(cb->width(), this);
+                auto oy = to->getYAxis().specifiedValue(cb->height(), this);
+                ctx.m_canvas->translate(ox, oy);
+                ctx.m_canvas->postMatrix(matrix);
+                ctx.m_canvas->translate(-ox, -oy);
+            } else {
+                ctx.m_canvas->translate(-x(), -y());
+                ctx.m_canvas->postMatrix(matrix);
+                ctx.m_canvas->translate(x(), y());
+            }
+
         }
     }
 

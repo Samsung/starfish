@@ -207,7 +207,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     }
 
     if (needsTransformAttributes()) {
-        if (ss->m_transform == name) {
+        if (ss->m_transform == name || ss->m_transformOrigin == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
@@ -385,6 +385,20 @@ void SVGElement::styleForPresentationAttribute(
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
             if (pair.updateValueTransform(tokens, true)) {
+                cssValues.push_back(pair);
+            }
+        }
+
+        String* transformOrigin = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_transformOrigin, cssCustomValues);
+        if (transformOrigin->length()) {
+            pair.setKeyKind(CSSStyleValuePair::TransformOrigin);
+
+            auto str = transformOrigin->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueTransformOrigin(tokens, true)) {
                 cssValues.push_back(pair);
             }
         }

@@ -373,6 +373,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_ry = QualifiedName(AtomicString::createAtomicString(starfish, "ry"));
     m_transform =
         QualifiedName(AtomicString::createAtomicString(starfish, "transform"));
+    m_transformOrigin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "transform-origin"));
     m_viewBox =
         QualifiedName(AtomicString::createAtomicString(starfish, "viewBox"));
     m_preserveAspectRatio = QualifiedName(
