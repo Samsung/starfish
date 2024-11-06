@@ -513,6 +513,7 @@ test/cairo/internal-test/css/background/background_radialgradient6.html
 test/cairo/internal-test/css/background/background_radialgradient7.html
 test/cairo/internal-test/css/background/background_radialgradient8.html
 test/cairo/internal-test/css/animation/parse-animation.html
+test/cairo/internal-test/animation/a34.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/transition/parse-transition01.html
 test/cairo/internal-test/css/transition/transition_background_shorthand.html
