@@ -32,9 +32,9 @@ void* SVGUseElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGUseElement)] = { 0 };
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_targetElementURL));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_targetElement));
         SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_href));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_target));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGUseElement));
         typeInited = true;
     }
@@ -43,8 +43,7 @@ void* SVGUseElement::operator new(size_t size)
 
 SVGUseElement::SVGUseElement(Document* document, const QualifiedName& qname)
     : SVGElement(document, qname)
-    , m_targetElementURL(nullptr)
-    , m_targetElement(nullptr)
+    , m_href(String::emptyString)
 {
 }
 
@@ -60,83 +59,68 @@ void SVGUseElement::didAttributeChanged(QualifiedName name,
         (!name.hasPrefix() &&
          ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
          ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
-        if (attributeRemoved) {
-            document()->unregisterUseElement(this);
-            m_targetElementURL = nullptr;
-        } else {
-            m_targetElement = nullptr;
-            document()->registerUseElement(this);
-            // In case that SVG element is loaded as an image resource through
-            // MockHTMLIFrameElement. At this case, we can find baseURI at its
-            // referrerURL.
-            if (document()->baseURL()->isDataURL()) {
-                m_targetElementURL =
-                    new ResourceURL(value, document()->referrer());
-            } else {
-                if (value->startsWith("#")) {
-                    m_targetElementURL = document()->baseURL()->setHash(value);
-                } else {
-                    m_targetElementURL =
-                        new ResourceURL(value, document()->baseURI());
-                }
-            }
-        }
-    } else if (ss->m_rx == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_ry == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        m_href = value;
+        setNeedsStyleRecalc();
+        setNeedsFrameTreeBuild();
     }
 }
 
-void SVGUseElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
-    Optional<const MutablePropertyValueList*> cssCustomValues)
+Optional<SVGElement*> SVGUseElement::updateShadowTree()
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
-}
+    Optional<ResourceURL*> targetElementURL;
+    ShadowRoot* shadowRoot = internalEnsureShadowRoot();
 
-void SVGUseElement::updateShadowTree()
-{
-    if (m_targetElement) {
-        if (!m_targetElement->isConnected() ||
-            m_targetElement->needsFrameTreeBuild()) {
-            m_targetElement = nullptr;
-        } else if (m_targetElement->needsStyleRecalc()) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
-            return;
+    auto oldTarget = m_target;
+    Optional<SVGElement*> newTarget;
+    Optional<Node*> newClonedTarget;
+
+    // In case that SVG element is loaded as an image resource through
+    // MockHTMLIFrameElement. At this case, we can find baseURI at its
+    // referrerURL.
+    if (document()->baseURL()->isDataURL()) {
+        targetElementURL = new ResourceURL(m_href, document()->referrer());
+    } else {
+        if (m_href->startsWith("#")) {
+            targetElementURL = document()->baseURL()->setHash(m_href);
         } else {
-            return;
+            targetElementURL = new ResourceURL(m_href, document()->baseURI());
         }
     }
-
-    auto shadowRoot = internalEnsureShadowRoot();
-    while (shadowRoot->firstChild()) {
-        Frame* frame = shadowRoot->firstChild()->frame();
-        if (frame) {
-            frame->parent()->removeChild(frame);
-        }
-        shadowRoot->parserRemoveChild(shadowRoot->firstChild());
-    }
-
-    if (m_targetElementURL) {
-        String* id = m_targetElementURL->getFragmentIdValue();
+    if (targetElementURL) {
+        String* id = targetElementURL->getFragmentIdValue();
         if (!id->isEmpty()) {
             Element* element = document()->getElementById(id);
             if (element && element->isSVGElement()) {
-                Node* newClonedElement = element->makeShadowClone();
-                if (newClonedElement && newClonedElement->isSVGElement()) {
-                    internalEnsureShadowRoot()->appendChild(newClonedElement);
-                    m_targetElement = element->asSVGElement();
-                    setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
-                    SVGElement* owner = ownerSVGElement();
-                    STARFISH_ASSERT(owner->isSVGSVGElement());
-                    newClonedElement->asSVGElement()->setOrignalOwnerElement(
-                        owner->asSVGSVGElement());
+                if (!element->contains(this)) {
+                    auto newClonedElement = element->makeShadowClone();
+                    if (newClonedElement && newClonedElement->isSVGElement()) {
+                        newTarget = element->asSVGElement();
+                        newClonedTarget = newClonedElement;
+                    }
                 }
             }
         }
     }
+
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+        bool shouldUpdate = true;
+        if (oldTarget != newTarget) {
+            m_target = newTarget;
+        } else if (newClonedTarget && oldTarget &&
+                   oldTarget->isSameNode(newClonedTarget.value())) {
+            shouldUpdate = false;
+        }
+
+        if (shouldUpdate) {
+            while (shadowRoot->hasChildNodes()) {
+                shadowRoot->removeChild(shadowRoot->firstChild());
+            }
+            if (newClonedTarget) {
+                shadowRoot->appendChild(newClonedTarget.value());
+            }
+        }
+    }
+
+    return m_target;
 }
 } // namespace Starfish

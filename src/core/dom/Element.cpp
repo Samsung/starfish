@@ -1007,8 +1007,8 @@ bool Element::handleDefaultEvent(Event* event)
     WebView* wv = document()->window()->webView();
     if (wv->tts()->isAccessibilityMode() ||
         wv->tts()->mode() == LWE::TTSMode::Forced) {
-        if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
-            event->type()->equals("focus")) {
+        if (event->type()->equals("focus") && isHTMLElement() &&
+            isFocusable() && event->isFocusEvent()) {
             TextAlternativeHelper tah(wv);
             String* altText = tah.getComputedTextAlternative(this);
             if (altText->length()) {

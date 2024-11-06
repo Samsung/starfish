@@ -31,6 +31,8 @@ class TimingFunction;
 
 class TransitionApplier : public gc {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
+
     TransitionApplier(Element* element, ComputedStyle* oldStyle,
                       Frame* oldFrame, ComputedStyle* newStyle,
                       const bool* damagedKeys);

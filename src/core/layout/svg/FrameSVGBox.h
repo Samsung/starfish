@@ -77,7 +77,7 @@ public:
         return true;
     }
 
-    virtual CanvasFillStrokeSource* makeCanvasFillStrokeSource(String* url);
+    Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(String* url);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);

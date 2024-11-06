@@ -76,8 +76,10 @@ public:
     String* xmlbase();
     void setXmlbase(String* str);
 
-    SVGElement* ownerSVGElement();
-    SVGElement* viewportElement();
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+
+    Optional<SVGElement*> ownerSVGElement();
+    Optional<SVGElement*> viewportElement();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -92,7 +94,6 @@ public:
         Element::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_clipPathElement));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_maskElement));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_orignalOwnerElement));
     }
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
@@ -186,15 +187,12 @@ public:
 
     SVGElement* getSVGElementById(String* id);
 
-    void setOrignalOwnerElement(SVGSVGElement* SVGSVGElement);
-
 protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
     SVGElement* m_clipPathElement;
     SVGElement* m_maskElement;
-    SVGSVGElement* m_orignalOwnerElement;
 };
 } // namespace Starfish
 

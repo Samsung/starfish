@@ -1640,13 +1640,9 @@ bool applyTransitionIfNeeds(
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress)
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(oldStyle != nullptr);
-    STARFISH_ASSERT(newStyle != nullptr);
-    STARFISH_ASSERT(damagedKeys != nullptr);
-    TransitionApplier* transitionApplier = new TransitionApplier(
-        element, oldStyle, oldFrame, newStyle, damagedKeys);
-    return transitionApplier->apply();
+    TransitionApplier transitionApplier(element, oldStyle, oldFrame, newStyle,
+                                        damagedKeys);
+    return transitionApplier.apply();
 }
 
 static Length backgroundPositionToLength(const CSSStyleValuePair& property)

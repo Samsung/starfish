@@ -21,6 +21,8 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGSVGElement.h"
+#include "core/dom/svg/SVGUseElement.h"
 #include "core/dom/Traverse.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -35,7 +37,6 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
           NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)
     , m_clipPathElement(nullptr)
     , m_maskElement(nullptr)
-    , m_orignalOwnerElement(nullptr)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -214,6 +215,27 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     }
 }
 
+void SVGElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    Element::didNodeRemoved(parent, oldChild);
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+        parent->setNeedsFrameTreeBuild();
+        auto owner = ownerSVGElement();
+        if (owner && owner->isSVGSVGElement()) {
+            const auto& s = owner->asSVGSVGElement()->useElementsPair();
+            for (auto e : s) {
+                if (e.first->asNode() == parent ||
+                    e.first->asNode() == oldChild ||
+                    e.second->asNode() == parent ||
+                    e.second->asNode() == oldChild) {
+                    parent->setNeedsStyleRecalc();
+                    break;
+                }
+            }
+        }
+    }
+}
+
 String* SVGElement::xmlbase()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_xmlBase);
@@ -224,25 +246,28 @@ void SVGElement::setXmlbase(String* str)
     setAttribute(starfish()->staticStrings()->m_xmlBase, str);
 }
 
-SVGElement* SVGElement::ownerSVGElement()
+Optional<SVGElement*> SVGElement::ownerSVGElement()
 {
-    if (m_orignalOwnerElement) {
-        // This node is the first element of ShadowRoot.
-        return reinterpret_cast<SVGElement*>(m_orignalOwnerElement);
-    }
-
     // The nearest ancestor ‘svg’ element. Null if the given element is the
     // outermost svg element.
-    Element* e = parentElement();
 
-    while (!e->isSVGSVGElement()) {
-        e = e->parentElement();
+    if (isSVGSVGElement()) {
+        return nullptr;
+    }
+
+    Element* e = this;
+    while (e && !e->isSVGSVGElement()) {
+        if (e->isShadowRoot()) {
+            e = e->asShadowRoot()->host();
+        } else {
+            e = e->parentElement();
+        }
     }
 
     return (SVGElement*)e;
 }
 
-SVGElement* SVGElement::viewportElement()
+Optional<SVGElement*> SVGElement::viewportElement()
 {
     // The element which established the current viewport. Often, the nearest
     // ancestor ‘svg’ element. Null if the given element is the outermost svg
@@ -556,8 +581,4 @@ SVGElement* SVGElement::getSVGElementById(String* id)
     return descendant->asSVGElement();
 }
 
-void SVGElement::setOrignalOwnerElement(SVGSVGElement* svg)
-{
-    m_orignalOwnerElement = svg;
-}
 } // namespace Starfish

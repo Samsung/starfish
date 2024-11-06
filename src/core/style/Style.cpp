@@ -48,6 +48,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGUseElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
@@ -9510,6 +9511,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
 
     StyleResolveContext* ctx;
 
+    if (UNLIKELY(parentElement->isSVGSVGElement())) {
+        parentElement->asSVGSVGElement()->connectUseElements();
+    }
+
     // if parentElement is host
     bool isParentElementShadowRootHost =
         parentElement->isElement() &&
@@ -9517,14 +9522,18 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
     if (UNLIKELY(isParentElementShadowRootHost)) {
         parentElement->asElement()->internalShadowRoot()->setStyle(
             parentElement->document()->style());
-
-        ctx = new (alloca(sizeof(StyleResolveContext)))
-            StyleResolveContext(&parentElement->asElement()
-                                     ->internalShadowRoot()
-                                     .value()
-                                     ->styleResolver(),
-                                parentContext);
-        parentElementStyle = parentElement->document()->style();
+        if (parentElement->isSVGUseElement()) {
+            ctx = new (alloca(sizeof(StyleResolveContext))) StyleResolveContext(
+                &parentElement->styleResolver(), parentContext);
+        } else {
+            ctx = new (alloca(sizeof(StyleResolveContext)))
+                StyleResolveContext(&parentElement->asElement()
+                                         ->internalShadowRoot()
+                                         .value()
+                                         ->styleResolver(),
+                                    parentContext);
+            parentElementStyle = parentElement->document()->style();
+        }
     } else {
         ctx = &parentContext;
         ctx->m_ancestorSelectorFilter->pushNode(parentElement);
@@ -9645,37 +9654,6 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
             resolveChildrenStyle(*ctx, child->asElement(), child->style(),
                                  inheritedStyleChanged ||
                                      child->m_gotInheritedStyleDirty);
-        }
-        // Resolve style for shadowtree of SVGUseElement
-        if (child->isSVGUseElement() &&
-            !child->document()->isMiddleOfUseElementUpdating()) {
-            Element* svgUseElement = child->asElement();
-            Element* svgUseTargetElement =
-                svgUseElement->asSVGUseElement()->targetElement();
-            auto sr = svgUseElement->internalEnsureShadowRoot();
-            if (sr->hasChildNodes()) {
-                Node* shadowFirstChild = sr->firstChild();
-
-                // style resolve
-                ComputedStyle* useStyle = svgUseElement->style();
-
-                StyleResolveContext ctx2(svgUseTargetElement);
-                std::vector<Element*> ancestorSelectorList;
-                Element* pe = svgUseTargetElement;
-                while (pe) {
-                    ancestorSelectorList.push_back(pe->asElement());
-                    pe = pe->parentElement();
-                }
-                for (auto iter = ancestorSelectorList.rbegin();
-                     iter != ancestorSelectorList.rend(); ++iter) {
-                    ctx2.m_ancestorSelectorFilter->pushNode(*iter);
-                }
-                shadowFirstChild = sr->firstChild();
-                shadowFirstChild->setParentNode(
-                    svgUseTargetElement->parentElement());
-                resolveChildrenStyle(ctx2, sr, useStyle, true);
-                shadowFirstChild->setParentNode(sr);
-            }
         }
     }
 

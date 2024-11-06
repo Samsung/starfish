@@ -132,38 +132,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         shouldVisitChild = true;
         currentFrame = new FrameSVGInvisibleBox(svgElement);
     } else if (svgElement->isSVGUseElement()) {
-        // Style resolve for shadow tree of SVGUseElement
-        {
-            currentFrame = new FrameSVGUseBox(svgElement);
-            parentFrame->appendChild(currentFrame);
-            svgElement->setFrame(currentFrame);
-
-            auto sr = svgElement->asElement()->internalEnsureShadowRoot();
-            Document* document = svgElement->document();
-
-            if (sr->hasChildNodes()) {
-                // build frame tree
-                Node* shadowFirstChild = sr->firstChild();
-                if (shadowFirstChild->isSVGElement()) {
-                    buildSVGFrameTree(shadowFirstChild->asSVGElement(),
-                                      currentFrame);
-                }
-            }
-
-            // update clipPath element
-            if (svgElement->hasClipPath()) {
-                svgElement->clipPathElement();
-                currentFrame->asFrameSVGBox()->markHasClipPath();
-            }
-            if (svgElement->hasMask()) {
-                svgElement->maskElement();
-                currentFrame->asFrameSVGBox()->markHasMask();
-            }
-
-            svgElement->clearNeedsFrameTreeBuild();
-            svgElement->clearChildNeedsFrameTreeBuild();
-            return currentFrame;
-        }
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGUseBox(svgElement);
     } else if (svgElement->isSVGClipPathElement()) {
         shouldContinue = true;
         shouldVisitChild = true;
@@ -234,10 +205,14 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
 
         if (shouldVisitChild) {
             Element* e = svgElement->firstElementChild();
+            if (svgElement->isSVGUseElement()) {
+                e = svgElement->internalEnsureShadowRoot()->firstElementChild();
+            }
             while (e) {
-                if (e->isSVGElement())
+                if (e->isSVGElement()) {
                     buildSVGFrameTree(e->asSVGElement(),
-                                      e->parentElement()->frame());
+                                      e->renderingParentNode()->frame());
+                }
                 e = e->nextElementSibling();
             }
         }

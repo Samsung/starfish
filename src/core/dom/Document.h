@@ -717,14 +717,6 @@ public:
     {
     }
 
-    void registerUseElement(SVGUseElement* element);
-    void unregisterUseElement(SVGUseElement* element);
-    void updateShadowTreeForUseElement();
-    bool isMiddleOfUseElementUpdating()
-    {
-        return m_isMiddleOfUseElementUpdating;
-    }
-
 protected:
     void appendCurrentScript(Element* element)
     {
@@ -773,8 +765,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nativeGradientCache));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
         markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
@@ -844,8 +834,6 @@ protected:
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
     size_t m_nativeGradientCacheTotalSize;
     size_t m_webFontResolveVersionForCanvas;
-    GCVector<SVGUseElement*> m_useElementListNeedUpdating;
-    bool m_isMiddleOfUseElementUpdating;
     GCVector<IntersectionObserver*> m_intersectionObservers;
     GCVector<ResizeObserver*> m_resizeObservers;
     MutationObserverOptionType m_mutationTypes;

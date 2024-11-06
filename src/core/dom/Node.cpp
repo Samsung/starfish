@@ -1849,11 +1849,6 @@ Node* Node::removeChild(Node* child)
         child->setNeedsFrameTreeBuild();
     }
 
-    // TODO: Should be removed later!
-    if (child->isSVGElement()) {
-        child->setNeedsFrameTreeBuild();
-    }
-
     if (document()) {
         document()->willNodeBeRemoved(this, child);
     }

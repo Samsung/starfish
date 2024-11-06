@@ -31,6 +31,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/dom/svg/SVGUseElement.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/layout/Frame.h"

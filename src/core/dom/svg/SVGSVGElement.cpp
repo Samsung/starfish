@@ -21,6 +21,8 @@
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/dom/svg/SVGUseElement.h"
+#include "core/dom/Traverse.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/modules/canvas/image/NativeImageData.h"
@@ -47,6 +49,7 @@ void* SVGSVGElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_y));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_width));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_height));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_useElementsPair));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGSVGElement));
         typeInited = true;
     }
@@ -173,6 +176,20 @@ void SVGSVGElement::pauseAnimations()
 void SVGSVGElement::unpauseAnimations()
 {
     STARFISH_UNSUPPORTED_METHOD();
+}
+
+void SVGSVGElement::connectUseElements()
+{
+    m_useElementsPair.clear();
+    Traverse::traverse(this, [&](Node* node) {
+        if (node->isSVGUseElement()) {
+            auto nd = node->asSVGUseElement()->updateShadowTree();
+            if (nd) {
+                m_useElementsPair.push_back(
+                    std::make_pair(node->asSVGUseElement(), nd.value()));
+            }
+        }
+    });
 }
 
 } // namespace Starfish

@@ -41,30 +41,21 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues,
-        Optional<const MutablePropertyValueList*> cssCustomValues) override;
-
-    void updateShadowTree();
-
     virtual bool needsGeometryAttributes() override
     {
         return true;
     }
 
-    virtual bool isRenderableElement() override
-    {
-        return true;
-    }
+    Optional<SVGElement*> updateShadowTree();
 
-    SVGElement* targetElement()
+    Optional<SVGElement*> target() const
     {
-        return m_targetElement;
+        return m_target;
     }
 
 private:
-    ResourceURL* m_targetElementURL;
-    SVGElement* m_targetElement;
+    String* m_href;
+    Optional<SVGElement*> m_target;
 };
 } // namespace Starfish
 
