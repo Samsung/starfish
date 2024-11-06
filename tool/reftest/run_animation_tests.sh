@@ -36,6 +36,7 @@
 #./Starfish 'test/cairo/internal-test/animation/a31.html'
 ./Starfish 'test/cairo/internal-test/animation/a32.html'
 ./Starfish 'test/cairo/internal-test/animation/a33.html'
+./Starfish 'test/cairo/internal-test/animation/a34.html'
 
 # manual animation tc in wpt
 ./Starfish 'http://web-platform.test:8000/css/css-animations/animation-timing-function-007-manual.html'
@@ -48,4 +49,3 @@
 ./Starfish 'test/cairo/internal-test/transition/t12.html'
 ./Starfish 'test/cairo/internal-test/transition/t14.html'
 ./Starfish 'test/cairo/internal-test/transition/t15.html'
-

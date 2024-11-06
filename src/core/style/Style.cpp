@@ -2687,11 +2687,11 @@ void* StyleResolveContext::allocateComputedStyle()
     }
 }
 
-void StyleResolver::applyAllProperty(
-    Element* element, CSSStyleValuePair::ValueKind valueKind,
-    Optional<const MutablePropertyValueList*> cssCustomValues,
-    ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
-    bool isImportant)
+void StyleResolver::applyAllProperty(Element* element,
+                                     CSSStyleValuePair::ValueKind valueKind,
+                                     ResourceURL* origin, ComputedStyle*& style,
+                                     ComputedStyle* parentStyle,
+                                     bool isImportant)
 {
     STARFISH_ASSERT(element);
     STARFISH_ASSERT(origin);
@@ -2708,8 +2708,7 @@ void StyleResolver::applyAllProperty(
             p.setKeyKind(keyKind);
             p.setValueKind(valueKind);
             p.setFlagImportant(isImportant);
-            applyProperty(element, p, cssCustomValues, origin, style,
-                          parentStyle, isImportant);
+            applyProperty(element, p, origin, style, parentStyle, isImportant);
         }
     }
 }
@@ -3284,10 +3283,23 @@ std::string StyleResolver::resolveVarReferencedValue(
     return newCssValue;
 }
 
+void StyleResolver::clearCssCustomValues()
+{
+    m_cssCustomValues = Optional<MutablePropertyValueList*>();
+}
+
+Optional<const MutablePropertyValueList*> StyleResolver::cssCustomValues()
+{
+    if (m_cssCustomValues.hasValue()) {
+        return Optional<const MutablePropertyValueList*>(
+            m_cssCustomValues.value());
+    }
+    return Optional<const MutablePropertyValueList*>();
+}
+
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
-    CSSStyleValuePair::KeyKind keyKind,
-    Optional<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
+    CSSStyleValuePair::KeyKind keyKind, bool isImportant)
 {
     OptionalUTF8String utf8String =
         cssValuePair.varFunctionValue()->toOptionalUTF8String();
@@ -3306,7 +3318,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     utf8String.m_buffer = utf8String.m_buffer + startIndex;
     utf8String.m_bufferSize = size;
     std::string newCssValue =
-        resolveVarReferencedValue(element, utf8String, cssCustomValues);
+        resolveVarReferencedValue(element, utf8String, cssCustomValues());
 
     if (cssValuePair.temporaryValueKind() ==
         CSSStyleValuePair::ValueKind::CalcValueKind) {
@@ -3324,7 +3336,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
         STARFISH_ASSERT(declaration->cssValues().size() == 1);
         CSSStyleValuePair newCssValuePair = declaration->cssValues()[0];
         return resolveVarValue(element, newCssValuePair,
-                               newCssValuePair.keyKind(), cssCustomValues,
+                               newCssValuePair.keyKind(),
                                newCssValuePair.flagImportant());
     }
 #ifndef NDEBUG
@@ -3336,11 +3348,10 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     return declaration;
 }
 
-void StyleResolver::apply(
-    Element* element, const GCAtomicVector<CSSStyleValuePair>& cssValues,
-    Optional<const MutablePropertyValueList*> cssCustomValues,
-    ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
-    bool isImportant)
+void StyleResolver::apply(Element* element,
+                          const GCAtomicVector<CSSStyleValuePair>& cssValues,
+                          ResourceURL* origin, ComputedStyle* style,
+                          ComputedStyle* parentStyle, bool isImportant)
 {
     STARFISH_ASSERT(element);
     STARFISH_ASSERT(origin);
@@ -3356,24 +3367,23 @@ void StyleResolver::apply(
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
             CSSStyleDeclaration* resolvedDeclaration =
                 resolveVarValue(element, cssValue, cssValue.keyKind(),
-                                cssCustomValues, cssValue.flagImportant());
+                                cssValue.flagImportant());
             for (const auto& resolvedCssValues :
                  resolvedDeclaration->cssValues()) {
-                applyProperty(element, resolvedCssValues, cssCustomValues,
-                              origin, style, parentStyle, isImportant);
+                applyProperty(element, resolvedCssValues, origin, style,
+                              parentStyle, isImportant);
             }
         } else {
-            applyProperty(element, cssValue, cssCustomValues, origin, style,
-                          parentStyle, isImportant);
+            applyProperty(element, cssValue, origin, style, parentStyle,
+                          isImportant);
         }
     }
 }
 
-void StyleResolver::applyProperty(
-    Element* element, const CSSStyleValuePair& newCssValue,
-    Optional<const MutablePropertyValueList*> cssCustomValues,
-    ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
-    bool isImportant)
+void StyleResolver::applyProperty(Element* element,
+                                  const CSSStyleValuePair& newCssValue,
+                                  ResourceURL* origin, ComputedStyle* style,
+                                  ComputedStyle* parentStyle, bool isImportant)
 {
     STARFISH_ASSERT(element);
     STARFISH_ASSERT(origin);
@@ -3426,8 +3436,8 @@ void StyleResolver::applyProperty(
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
 
-            applyAllProperty(element, newCssValue.valueKind(), cssCustomValues,
-                             origin, style, parentStyle, isImportant);
+            applyAllProperty(element, newCssValue.valueKind(), origin, style,
+                             parentStyle, isImportant);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -7767,6 +7777,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     STARFISH_ASSERT(ret != nullptr);
     STARFISH_ASSERT(parent != nullptr);
 
+    clearCssCustomValues();
+
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
     const GCAtomicTightVector<AtomicString>& elementClasses =
@@ -7870,11 +7882,10 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
-    Optional<const MutablePropertyValueList*> cssCustomValues;
     {
         auto list = ret->customProperty();
         if (list) {
-            cssCustomValues = list.value();
+            m_cssCustomValues = list.value();
         }
     }
 
@@ -7884,7 +7895,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = begin;
         while (iter != authorSheetBegin) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  cssCustomValues, iter->second, ret, parent, false);
+                  iter->second, ret, parent, false);
             iter++;
         }
     }
@@ -7892,19 +7903,19 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // Apply presentation attribute's style
     CSSStyleValuePairVectorHolder cssValues;
     if (element->isSVGElement()) {
-        element->styleForPresentationAttribute(cssValues, cssCustomValues);
+        element->styleForPresentationAttribute(cssValues, cssCustomValues());
     } else {
         element->styleForPresentationAttribute(cssValues);
     }
-    apply(element, cssValues.mutableData(), nullptr,
-          element->document()->documentURI(), ret, parent, false);
+    apply(element, cssValues.mutableData(), element->document()->documentURI(),
+          ret, parent, false);
 
     // Apply non-important author-rules
     {
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  cssCustomValues, iter->second, ret, parent, false);
+                  iter->second, ret, parent, false);
             iter++;
         }
     }
@@ -7913,8 +7924,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              cssCustomValues, element->document()->baseURL(), ret, parent,
-              false);
+              element->document()->baseURL(), ret, parent, false);
     }
 
     // Apply important author-rules
@@ -7922,7 +7932,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  cssCustomValues, iter->second, ret, parent, true);
+                  iter->second, ret, parent, true);
             iter++;
         }
     }
@@ -7931,8 +7941,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              cssCustomValues, element->document()->baseURL(), ret, parent,
-              true);
+              element->document()->baseURL(), ret, parent, true);
     }
 }
 
@@ -8983,7 +8992,18 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
             size_t cssValueSize = cssValues.size();
             for (size_t k = 0; k < cssValueSize; k++) {
                 CSSStyleValuePair::KeyKind p = cssValues[k].keyKind();
-                if (p == CSSStyleValuePair::KeyKind::AnimationTimingFunction) {
+                if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+                    CSSStyleDeclaration* resolvedDeclaration =
+                        const_cast<StyleResolver&>(resolver).resolveVarValue(
+                            element, cssValues[k], cssValues[k].keyKind(),
+                            cssValues[k].flagImportant());
+                    for (const auto& resolvedCssValues :
+                         resolvedDeclaration->cssValues()) {
+                        setPropertyIfNeeds(keyframeList, resolvedCssValues);
+                    }
+                } else if (p == CSSStyleValuePair::KeyKind::
+                                    AnimationTimingFunction) {
                     CSSStyleValuePair::ValueKind valueKind =
                         cssValues[k].valueKind();
                     if (valueKind == CSSStyleValuePair::ValueKind::Inherit &&

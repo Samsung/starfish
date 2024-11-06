@@ -3295,33 +3295,31 @@ public:
         Element* element, OptionalUTF8String utf8String,
         Optional<const MutablePropertyValueList*> cssCustomValues);
 
+    void clearCssCustomValues();
+    Optional<const MutablePropertyValueList*> cssCustomValues();
+    CSSStyleDeclaration* resolveVarValue(Element* element,
+                                         const CSSStyleValuePair& cssValuePair,
+                                         CSSStyleValuePair::KeyKind keyKind,
+                                         bool isImportant);
+
 protected:
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void addToKeyframesRule(StyleRuleKeyframes* rule);
     void removeAllRules();
 
-    CSSStyleDeclaration* resolveVarValue(
-        Element* element, const CSSStyleValuePair& cssValuePair,
-        CSSStyleValuePair::KeyKind keyKind,
-        Optional<const MutablePropertyValueList*> cssCustomValues,
-        bool isImportant);
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
-               Optional<const MutablePropertyValueList*> cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
 
-    void applyProperty(
-        Element* element, const CSSStyleValuePair& cssValues,
-        Optional<const MutablePropertyValueList*> cssCustomValues,
-        ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
-        bool isImportant = false);
+    void applyProperty(Element* element, const CSSStyleValuePair& cssValues,
+                       ResourceURL* origin, ComputedStyle* style,
+                       ComputedStyle* parentStyle, bool isImportant = false);
 
-    void applyAllProperty(
-        Element* element, CSSStyleValuePair::ValueKind valueKind,
-        Optional<const MutablePropertyValueList*> cssCustomValues,
-        ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
-        bool isImportant = false);
+    void applyAllProperty(Element* element,
+                          CSSStyleValuePair::ValueKind valueKind,
+                          ResourceURL* origin, ComputedStyle*& style,
+                          ComputedStyle* parentStyle, bool isImportant = false);
 
     Match matchForRelation(
         Element* element, AtomicString elementName, AtomicString elementId,
@@ -3355,6 +3353,7 @@ protected:
     MediaQueryResultList m_deviceDependentMediaQueryResults;
     RuleSet* m_ruleSet;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
+    Optional<MutablePropertyValueList*> m_cssCustomValues;
 };
 
 } // namespace Starfish
