@@ -100,6 +100,12 @@ public:
     void pauseAnimations();
     void unpauseAnimations();
 
+    void connectUseElements();
+    const GCVector<std::pair<SVGUseElement*, SVGElement*>>& useElementsPair()
+    {
+        return m_useElementsPair;
+    }
+
 protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
@@ -108,6 +114,8 @@ protected:
     SVGAnimatedLength* m_y{ nullptr };
     SVGAnimatedLength* m_width{ nullptr };
     SVGAnimatedLength* m_height{ nullptr };
+
+    GCVector<std::pair<SVGUseElement*, SVGElement*>> m_useElementsPair;
 };
 } // namespace Starfish
 

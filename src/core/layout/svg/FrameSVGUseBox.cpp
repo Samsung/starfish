@@ -38,6 +38,7 @@ void* FrameSVGUseBox::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
+
 Path* FrameSVGUseBox::path()
 {
     Path* path = nullptr;
@@ -60,4 +61,6 @@ Path* FrameSVGUseBox::path()
     }
     return path;
 }
+
+
 } // namespace Starfish

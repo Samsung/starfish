@@ -313,8 +313,11 @@ Optional<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
     }
 
     String* id = urlString->substring(1, urlString->length() - 1);
-    SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
-    SVGElement* matchingSvg = owner->getSVGElementById(id);
+    auto owner = node()->asSVGElement()->ownerSVGElement();
+    if (!owner) {
+        return nullptr;
+    }
+    auto matchingSvg = owner->getSVGElementById(id);
     if (!matchingSvg) {
         return nullptr;
     }
@@ -423,7 +426,7 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     return result;
 }
 
-CanvasFillStrokeSource* FrameSVGBox::makeCanvasFillStrokeSource(String* url)
+Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(String* url)
 {
     ResourceURL* resourceUrl = new ResourceURL(url);
     if (!resourceUrl->isValid()) {
@@ -437,8 +440,11 @@ CanvasFillStrokeSource* FrameSVGBox::makeCanvasFillStrokeSource(String* url)
         }
 
         String* id = urlString->substring(1, urlString->length() - 1);
-        SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
-        SVGElement* matchingSvg = owner->getSVGElementById(id);
+        auto owner = node()->asSVGElement()->ownerSVGElement();
+        if (!owner) {
+            return nullptr;
+        }
+        auto matchingSvg = owner->getSVGElementById(id);
         if (!matchingSvg) {
             return nullptr;
         }
@@ -530,7 +536,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
 
-    CanvasFillStrokeSource* info = nullptr;
+    Optional<CanvasFillStrokeSource*> info;
 
     Path* newPath = path();
     if (newPath) {
@@ -561,8 +567,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             }
         }
         ctx.m_canvas->save();
-        if (info != nullptr) {
-            ctx.m_canvas->setFillSource(info);
+        if (info) {
+            ctx.m_canvas->setFillSource(info.value());
         } else {
             Unit::Color fillColor = style()->fill()->color();
             ctx.m_canvas->setFillColor(

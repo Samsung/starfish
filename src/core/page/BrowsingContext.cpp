@@ -222,9 +222,6 @@ void BrowsingContext::resolveStyleIfNeeds()
             });
         }
 
-        // Update shadow tree for SVGUseElement
-        document()->updateShadowTreeForUseElement();
-
         // resolve style
         INSTALL_PROFILE_TIMER("resolve style");
 

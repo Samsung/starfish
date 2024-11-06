@@ -151,7 +151,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheTotalSize(0)
     , m_webFontResolveVersionForCanvas(0)
-    , m_isMiddleOfUseElementUpdating(false)
     , m_mutationTypes(MutationObserverOptionType::kNone)
     , m_isMutationObserverMicroTaskQueued(false)
 {
@@ -819,7 +818,6 @@ void Document::dispose()
 
     resourceLoader().clear();
 
-    m_useElementListNeedUpdating.clear();
     executionContext()->disposeActiveResourceRequests();
 #ifdef STARFISH_ENABLE_WEBSOCKET
     executionContext()->disposeActiveWebSockets();
@@ -2728,29 +2726,4 @@ DEFINE_EVENT_LISTENER(Document, pause);
 DEFINE_EVENT_LISTENER(Document, ratechange);
 DEFINE_EVENT_LISTENER(Document, volumechange);
 #endif
-
-void Document::registerUseElement(SVGUseElement* element)
-{
-    m_useElementListNeedUpdating.push_back(element);
-}
-
-void Document::unregisterUseElement(SVGUseElement* element)
-{
-    auto iter = std::find(m_useElementListNeedUpdating.begin(),
-                          m_useElementListNeedUpdating.end(), element);
-    if (iter != m_useElementListNeedUpdating.end()) {
-        m_useElementListNeedUpdating.erase(iter);
-    }
-}
-void Document::updateShadowTreeForUseElement()
-{
-    if (!m_isMiddleOfUseElementUpdating) {
-        m_isMiddleOfUseElementUpdating = true;
-        for (auto it = m_useElementListNeedUpdating.begin();
-             it != m_useElementListNeedUpdating.end(); ++it) {
-            ((SVGUseElement*)(*it))->updateShadowTree();
-        }
-        m_isMiddleOfUseElementUpdating = false;
-    }
-}
 } // namespace Starfish
