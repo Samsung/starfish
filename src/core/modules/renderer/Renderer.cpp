@@ -39,6 +39,9 @@
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/renderer/RendererFactory.h"
 #include "platform/event/PlatformKeyEventData.h"
+#include "core/modules/profiling/Profiling.h"
+
+#define MOUSE_MOVE_EVENT_THRESHOLD 100
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -84,6 +87,7 @@ Renderer::Renderer(Starfish* starfish)
     , m_compostiorContext(nullptr)
     , m_lastMouseMoveX(std::numeric_limits<float>::max())
     , m_lastMouseMoveY(std::numeric_limits<float>::max())
+    , m_lastMouseMoveEventFiredTime(0)
     , m_isDestroyed(false)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
@@ -180,8 +184,16 @@ void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
     webView()->dispatchTouchEvent(kind, touches, touchCount);
 }
 
-void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data)
+void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data,
+                                  bool isSimulation)
 {
+    uint64_t dt = timestamp() - m_lastMouseMoveEventFiredTime;
+
+    if (!isSimulation && kind == MouseEventKind::MouseEventMove &&
+        (dt < MOUSE_MOVE_EVENT_THRESHOLD)) {
+        return;
+    }
+
     if (kind == MouseEventKind::MouseEventMove) {
         if (m_lastMouseMoveX == data.screenX() &&
             m_lastMouseMoveY == data.screenY()) {
@@ -200,6 +212,8 @@ void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     data.setPageX(data.pageX() / webView()->screenInfo().devicePixelRatio);
     data.setPageY(data.pageY() / webView()->screenInfo().devicePixelRatio);
     webView()->dispatchMouseEvent(kind, data);
+
+    m_lastMouseMoveEventFiredTime = timestamp();
 }
 
 void Renderer::dispatchMouseWheelEvent(float screenX, float screenY, int z,

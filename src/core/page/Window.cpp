@@ -627,7 +627,7 @@ void Window::simulateMouseDown(float x, float y)
                    x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio, 0);
     webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventDown,
-                                              data);
+                                              data, true);
 }
 
 void Window::simulateMouseUp(float x, float y)
@@ -636,7 +636,7 @@ void Window::simulateMouseUp(float x, float y)
                    x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio, 0);
     webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventUp,
-                                              data);
+                                              data, true);
 }
 
 void Window::simulateMouseMove(float x, float y)
@@ -645,7 +645,7 @@ void Window::simulateMouseMove(float x, float y)
                    x * webView()->screenInfo().devicePixelRatio,
                    y * webView()->screenInfo().devicePixelRatio, 0);
     webView()->renderer()->dispatchMouseEvent(MouseEventKind::MouseEventMove,
-                                              data);
+                                              data, true);
 }
 
 void Window::simulateVisibilitychange(bool show)
