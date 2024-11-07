@@ -198,6 +198,7 @@ public:
     {
         return shadowRoot(false);
     }
+    bool isShadowRootHost();
     ShadowRoot* internalEnsureShadowRoot();
     ShadowRoot* attachShadow(ShadowRootInit init);
     virtual Node* firstRenderingChild() override;
