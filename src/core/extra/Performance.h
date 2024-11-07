@@ -22,6 +22,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/extra/PerformanceResourceTiming.h"
+#include "PerformanceEntry.h"
 
 namespace Starfish {
 
@@ -34,6 +35,16 @@ public:
     PerformanceResourceTiming* timing()
     {
         return m_performanceResourceTiming;
+    }
+
+    GCVector<PerformanceEntry*> getEntriesByType()
+    {
+        // TODO
+        STARFISH_UNIMPLEMENTED(
+            "Performance.getEntriesByType() is enabled but not yet "
+            "implemented.");
+        GCVector<PerformanceEntry*> entries;
+        return entries;
     }
 
     static Performance* create(ExecutionContext* executionContext)
