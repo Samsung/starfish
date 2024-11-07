@@ -2365,6 +2365,11 @@ Optional<ShadowRoot*> Element::shadowRoot(bool returnNullWhenMeetClosed)
     return rareData->m_shadowRoot;
 }
 
+bool Element::isShadowRootHost()
+{
+    return internalShadowRoot().hasValue();
+}
+
 ShadowRoot* Element::internalEnsureShadowRoot()
 {
     RareElementMembers* rareMembers = ensureRareElementMembers();

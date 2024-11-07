@@ -9537,10 +9537,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
     // if parentElement is host
     bool isParentElementShadowRootHost =
         parentElement->isElement() &&
-        parentElement->asElement()->internalShadowRoot().hasValue();
+        parentElement->asElement()->isShadowRootHost();
     if (UNLIKELY(isParentElementShadowRootHost)) {
         parentElement->asElement()->internalShadowRoot()->setStyle(
-            parentElement->document()->style());
+            parentElementStyle);
         if (parentElement->isSVGUseElement()) {
             ctx = new (alloca(sizeof(StyleResolveContext))) StyleResolveContext(
                 &parentElement->styleResolver(), parentContext);
@@ -9551,7 +9551,6 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                                          .value()
                                          ->styleResolver(),
                                     parentContext);
-            parentElementStyle = parentElement->document()->style();
         }
     } else {
         ctx = &parentContext;
