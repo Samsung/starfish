@@ -7777,8 +7777,6 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     STARFISH_ASSERT(ret != nullptr);
     STARFISH_ASSERT(parent != nullptr);
 
-    clearCssCustomValues();
-
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
     const GCAtomicTightVector<AtomicString>& elementClasses =
@@ -9144,6 +9142,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     if (animationData != nullptr) {
         computeCSSAnimationKeyframes(resolver, element, toStyle);
     }
+    resolver.clearCssCustomValues();
 
     uint64_t tick =
         element->document()->browsingContext()->styleResolveStartTick();

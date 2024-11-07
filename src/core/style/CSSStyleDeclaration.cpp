@@ -5420,14 +5420,14 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
 
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair v, v0, v1, v2, v3, v4, v5, v6, v7;
+        CSSStyleValuePair v0, v1, v2, v3, v4, v5, v6, v7;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length(), "", 0,
                          true);
-        if (v.updateValueVarReferences(tokens)) {
-            v.setValue(String::fromUTF8(value, length));
-            v.setFlagImportant(isImportant);
-            addCSSValuePair(CSSStyleValuePair::KeyKind::Animation, v);
+        if (v0.updateValueVarReferences(tokens)) {
+            v0.setValue(String::fromUTF8(value, length));
+            v0.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::Animation, v0);
             return;
         } else if (layerSize == 1 && v0.updateValueCommon(tokens)) {
             v1 = v2 = v3 = v4 = v5 = v6 = v7 = v0;
