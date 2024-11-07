@@ -313,7 +313,8 @@ public:
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
-    void dispatchMouseEvent(MouseEventKind kind, MouseData data);
+    void dispatchMouseEvent(MouseEventKind kind, MouseData data,
+                            bool isSimulation = false);
     void dispatchMouseWheelEvent(
         float screenX, float screenY, int z,
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
@@ -379,6 +380,7 @@ protected:
     EventModifierData m_eventModifierData;
     float m_lastMouseMoveX;
     float m_lastMouseMoveY;
+    uint64_t m_lastMouseMoveEventFiredTime;
     bool m_isDestroyed;
 
     std::function<void(Renderer* renderer)> m_setNeedsRenderingCallback;
