@@ -119,6 +119,12 @@ Optional<SVGElement*> SVGUseElement::updateShadowTree()
                 shadowRoot->appendChild(newClonedTarget.value());
             }
         }
+
+#ifndef NDEBUG
+        if (m_target) {
+            STARFISH_ASSERT(internalEnsureShadowRoot()->firstElementChild());
+        }
+#endif
     }
 
     return m_target;

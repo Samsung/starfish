@@ -62,6 +62,7 @@ class InlineBoxLayoutParentBox;
 class LineBox;
 class LineFormattingContext;
 class Node;
+class Element;
 class StackingContext;
 
 enum PaintingStage {

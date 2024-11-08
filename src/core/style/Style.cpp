@@ -2657,6 +2657,17 @@ StyleResolveContext::StyleResolveContext(Node* node)
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
     , m_computedStylePool(new GCVector<ComputedStyle*>())
 {
+    VectorWithInlineStorage<16, Node*, std::allocator<Node*>> tree;
+
+    auto n = node->parentNode();
+    while (n) {
+        tree.push_back(n);
+        n = n->parentNode();
+    }
+
+    for (size_t i = tree.size(); i > 0; i--) {
+        m_ancestorSelectorFilter->pushNode(tree[i - 1]);
+    }
 }
 
 StyleResolveContext::StyleResolveContext(StyleResolver* sr,
@@ -9348,6 +9359,134 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     }
 }
 
+static ComputedStyleDamage applyStyleToElement(Element* element,
+                                               ComputedStyle* style,
+                                               StyleResolveContext& ctx)
+{
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    // TODO use needsStyleRecalcOnlyForAnimation
+    // bool needsStyleRecalcOnlyForAnimation =
+    // element->needsStyleRecalcForAnimation();
+    // bool canCareOnlyAnimation = needsStyleRecalcOnlyForAnimation &&
+    // !inheritedStyleChanged;
+    element->clearNeedsStyleRecalcForAnimation();
+
+    if (style->display() == DisplayValue::NoneDisplayValue &&
+        (!element->style() ||
+         element->style()->display() == DisplayValue::NoneDisplayValue)) {
+        element->setStyle(style, &ctx);
+        element->clearNeedsStyleRecalc();
+        return damage;
+    }
+
+    bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+        false,
+    };
+
+    if (!element->style()) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+    } else {
+        if (!element->frame()) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+        }
+        damage = (ComputedStyleDamage)(
+            damage | compareStyle(element->style(), style, damagedKeys));
+
+        if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
+            damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
+            element->clearDidPrepareAnimation();
+        }
+    }
+
+    ComputedStyle* oldStyle = element->style();
+    Frame* oldFrame = element->frame();
+
+    computeTransition(element, oldStyle, oldFrame, style, damage, damagedKeys);
+#if defined(STARFISH_ENABLE_ANIMATION)
+    computeAnimation(*ctx.m_styleResolver, element, oldStyle, oldFrame, style,
+                     damage, damagedKeys);
+#endif
+    element->markDidPrepareAnimation();
+
+    {
+// #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
+#if defined(STARFISH_ENABLE_PRINT_STYLE_DAMAGE)
+        if (damage && element->style()) {
+            for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+                if (damagedKeys[i]) {
+                    switch (i) {
+#define ADD_CSS_KEYKIND(Name, name, cssname)                                \
+    case CSSStyleValuePair::KeyKind::Name:                                  \
+        STARFISH_LOG_INFO("element %p, #%s, .%s %s damaged", element,       \
+                          element->id()->toUTF8NonGCString().data(),        \
+                          element->className()->toUTF8NonGCString().data(), \
+                          #Name "");                                        \
+        break;
+                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
+#undef ADD_CSS_KEYKIND
+                    default:
+                        STARFISH_UNIMPLEMENTED();
+                    }
+                }
+            }
+        }
+#endif
+    }
+
+    if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
+        if (style->display() != DisplayValue::NoneDisplayValue &&
+            element->frame() == nullptr && element->renderingParentElement()) {
+            // special path for Node::appendChild
+
+            Element* e = element->renderingParentElement();
+            while (e) {
+                if (e->style() && e->style()->hasBlockLikeDisplay()) {
+                    break;
+                }
+                e = e->renderingParentElement();
+            }
+
+            if (e && e->frame() && !e->frame()->isFrameDocument()) {
+                e->window()->browsingContext()->setNeedsFrameTreeBuild();
+                FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(
+                    e->frame());
+            }
+        } else {
+            element->setNeedsFrameTreeBuild();
+        }
+    }
+
+    if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
+        element->setNeedsLayout();
+    }
+
+    if (damage &
+        ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext) {
+        element->webView()->setNeedsEstablishesStackingContext();
+    }
+
+    if (damage & ComputedStyleDamage::
+                     ComputedStyleDamageComputeStackingContextProperties) {
+        element->webView()->setNeedsComputeStackingContextProperties();
+    }
+
+    if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
+        element->setNeedsPainting();
+    }
+
+    if (damage & ComputedStyleDamage::ComputedStyleDamageComposite) {
+        element->setNeedsComposite();
+    }
+
+    element->setStyle(style, &ctx);
+    element->clearNeedsStyleRecalc();
+
+    return damage;
+}
+
 static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                                                Element* element,
                                                ComputedStyle* parentStyle,
@@ -9359,138 +9498,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
         ComputedStyle* style =
             resolver->resolveStyle(ctx, element, parentStyle);
-
-        STARFISH_ASSERT(style != nullptr);
-
-        // TODO use needsStyleRecalcOnlyForAnimation
-        // bool needsStyleRecalcOnlyForAnimation =
-        // element->needsStyleRecalcForAnimation();
-        // bool canCareOnlyAnimation = needsStyleRecalcOnlyForAnimation &&
-        // !inheritedStyleChanged;
-        element->clearNeedsStyleRecalcForAnimation();
-
-        if (style->display() == DisplayValue::NoneDisplayValue &&
-            (!element->style() ||
-             element->style()->display() == DisplayValue::NoneDisplayValue)) {
-            element->setStyle(style, &ctx);
-            element->clearNeedsStyleRecalc();
-            return damage;
-        }
-
-        bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
-            false,
-        };
-
-        if (!element->style()) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageInherited |
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
-        } else {
-            if (!element->frame()) {
-                damage = (ComputedStyleDamage)(
-                    ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
-            }
-            damage = (ComputedStyleDamage)(
-                damage | compareStyle(element->style(), style, damagedKeys));
-
-            if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
-                damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
-                element->clearDidPrepareAnimation();
-            }
-        }
-
-        ComputedStyle* oldStyle = element->style();
-        Frame* oldFrame = element->frame();
-
-        computeTransition(element, oldStyle, oldFrame, style, damage,
-                          damagedKeys);
-#if defined(STARFISH_ENABLE_ANIMATION)
-        computeAnimation(*resolver, element, oldStyle, oldFrame, style, damage,
-                         damagedKeys);
-#endif
-        element->markDidPrepareAnimation();
-
-        {
-// #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
-#if defined(STARFISH_ENABLE_PRINT_STYLE_DAMAGE)
-            if (damage && element->style()) {
-                for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
-                    if (damagedKeys[i]) {
-                        switch (i) {
-#define ADD_CSS_KEYKIND(Name, name, cssname)                                \
-    case CSSStyleValuePair::KeyKind::Name:                                  \
-        STARFISH_LOG_INFO("element %p, #%s, .%s %s damaged", element,       \
-                          element->id()->toUTF8NonGCString().data(),        \
-                          element->className()->toUTF8NonGCString().data(), \
-                          #Name "");                                        \
-        break;
-                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
-#undef ADD_CSS_KEYKIND
-                        default:
-                            STARFISH_UNIMPLEMENTED();
-                        }
-                    }
-                }
-            }
-#endif
-        }
-
-        if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {
-            inheritedStyleChanged = inheritedStyleChanged | true;
-        }
-
-        if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
-            if (style->display() != DisplayValue::NoneDisplayValue &&
-                element->frame() == nullptr &&
-                element->renderingParentElement()) {
-                // special path for Node::appendChild
-
-                Element* e = element->renderingParentElement();
-                while (e) {
-                    if (e->style() && e->style()->hasBlockLikeDisplay()) {
-                        break;
-                    }
-                    e = e->renderingParentElement();
-                }
-
-                if (e && e->frame() && !e->frame()->isFrameDocument()) {
-                    e->window()->browsingContext()->setNeedsFrameTreeBuild();
-                    FrameTreeBuilder::
-                        needsFrameTreeBuildFromChildrenOfThisFrame(e->frame());
-                }
-            } else {
-                element->setNeedsFrameTreeBuild();
-            }
-        }
-
-        if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
-            element->setNeedsLayout();
-        }
-
-        if (damage & ComputedStyleDamage::
-                         ComputedStyleDamageEstablishesStackingContext) {
-            element->webView()->setNeedsEstablishesStackingContext();
-        }
-
-        if (damage & ComputedStyleDamage::
-                         ComputedStyleDamageComputeStackingContextProperties) {
-            element->webView()->setNeedsComputeStackingContextProperties();
-        }
-
-        if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
-            element->setNeedsPainting();
-        }
-
-        if (damage & ComputedStyleDamage::ComputedStyleDamageComposite) {
-            element->setNeedsComposite();
-        }
-
-        element->setStyle(style, &ctx);
-        element->clearNeedsStyleRecalc();
+        damage = applyStyleToElement(element, style, ctx);
     }
 
     return damage;
-} // namespace Starfish
+}
 
 static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
@@ -9518,6 +9530,45 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
     }
 }
 
+static void markStyleDirtyOfSVGUseElement(SVGSVGElement* svgElement)
+{
+    for (auto e : svgElement->useElementsPair()) {
+        if (e.second->needsStyleRecalc() || e.second->childNeedsStyleRecalc()) {
+            e.first->markChildNeedsStyleRecalc();
+        }
+    }
+}
+
+static void resolveSVGUseElementStyle(SVGSVGElement* svgElement)
+{
+    for (auto e : svgElement->useElementsPair()) {
+        if (e.first->childNeedsStyleRecalc()) {
+            ShadowRoot* sr = e.first->internalShadowRoot().value();
+            StyleResolveContext ctx(e.second);
+            ComputedStyle* style = e.second->styleResolver().resolveStyle(
+                ctx, e.second, e.second->parentElement()->style());
+            sr->setStyle(
+                new ComputedStyle(style)); // just set style here for inherit
+            applyStyleToElement(sr->firstElementChild(), style, ctx);
+            if (style->display() != NoneDisplayValue) {
+                RenderingSiblingIterator iter(sr->firstRenderingChild());
+                while (true) {
+                    Optional<Node*> child = iter.next();
+                    if (!child) {
+                        break;
+                    }
+
+                    if (child->isElement()) {
+                        e.second->styleResolver().resolveChildrenStyle(
+                            ctx, child->asElement(), style, true);
+                    }
+                }
+            }
+            e.first->clearChildNeedsStyleRecalc();
+        }
+    }
+}
+
 void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                                          Node* parentElement,
                                          ComputedStyle* parentElementStyle,
@@ -9530,8 +9581,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
 
     StyleResolveContext* ctx;
 
-    if (UNLIKELY(parentElement->isSVGSVGElement())) {
+    bool isSVGSVGElement = parentElement->isSVGSVGElement();
+    if (UNLIKELY(isSVGSVGElement)) {
         parentElement->asSVGSVGElement()->connectUseElements();
+        markStyleDirtyOfSVGUseElement(parentElement->asSVGSVGElement());
     }
 
     // if parentElement is host
@@ -9542,8 +9595,8 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
         parentElement->asElement()->internalShadowRoot()->setStyle(
             parentElementStyle);
         if (parentElement->isSVGUseElement()) {
-            ctx = new (alloca(sizeof(StyleResolveContext))) StyleResolveContext(
-                &parentElement->styleResolver(), parentContext);
+            // svg use element style will be resolved after
+            return;
         } else {
             ctx = new (alloca(sizeof(StyleResolveContext)))
                 StyleResolveContext(&parentElement->asElement()
@@ -9676,6 +9729,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
     }
 
     parentElement->clearChildNeedsStyleRecalc();
+
+    if (UNLIKELY(isSVGSVGElement)) {
+        resolveSVGUseElementStyle(parentElement->asSVGSVGElement());
+    }
 
     if (UNLIKELY(isParentElementShadowRootHost)) {
         ctx->~StyleResolveContext();
