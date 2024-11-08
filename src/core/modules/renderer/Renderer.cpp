@@ -187,14 +187,17 @@ void Renderer::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
 void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data,
                                   bool isSimulation)
 {
-    uint64_t dt = timestamp() - m_lastMouseMoveEventFiredTime;
-
-    if (!isSimulation && kind == MouseEventKind::MouseEventMove &&
-        (dt < MOUSE_MOVE_EVENT_THRESHOLD)) {
-        return;
+    bool isMouseEventMove = kind == MouseEventKind::MouseEventMove;
+    if (!isSimulation && isMouseEventMove) {
+        bool isHoldingDowngLButton =
+            data.buttons() & MouseButtonsValue::LeftButtonDown;
+        uint64_t dt = timestamp() - m_lastMouseMoveEventFiredTime;
+        if (!isHoldingDowngLButton && (dt < MOUSE_MOVE_EVENT_THRESHOLD)) {
+            return;
+        }
     }
 
-    if (kind == MouseEventKind::MouseEventMove) {
+    if (isMouseEventMove) {
         if (m_lastMouseMoveX == data.screenX() &&
             m_lastMouseMoveY == data.screenY()) {
             return;
@@ -213,7 +216,9 @@ void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data,
     data.setPageY(data.pageY() / webView()->screenInfo().devicePixelRatio);
     webView()->dispatchMouseEvent(kind, data);
 
-    m_lastMouseMoveEventFiredTime = timestamp();
+    if (isMouseEventMove) {
+        m_lastMouseMoveEventFiredTime = timestamp();
+    }
 }
 
 void Renderer::dispatchMouseWheelEvent(float screenX, float screenY, int z,
