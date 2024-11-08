@@ -61,6 +61,4 @@ Path* FrameSVGUseBox::path()
     }
     return path;
 }
-
-
 } // namespace Starfish

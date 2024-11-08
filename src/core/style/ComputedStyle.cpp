@@ -2606,17 +2606,6 @@ ComputedStyle* ComputedStyle::pseudoStyleForElementInternal(
     } else {
         resolveContext = new (alloca(sizeof(StyleResolveContext)))
             StyleResolveContext(parent);
-        VectorWithInlineStorage<16, Node*, std::allocator<Node*>> tree;
-
-        Node* n = parent->parentNode();
-        while (n) {
-            tree.push_back(n);
-            n = n->parentNode();
-        }
-
-        for (size_t i = tree.size(); i > 0; i--) {
-            resolveContext->m_ancestorSelectorFilter->pushNode(tree[i - 1]);
-        }
     }
 
     parent->styleResolver().matchAllRules(*resolveContext, parent->asElement(),
