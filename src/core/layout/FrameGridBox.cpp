@@ -22,6 +22,7 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "core/dom/Element.h"
 #include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -1359,7 +1360,8 @@ void GridFormattingContext::initializePreferredWidths()
             auto cache = m_layoutContext.testGridItemPreferredWidthCache(
                 gridItemBox, m_availableWidth);
             if (cache.hasValue()) {
-                contentWidth = cache.getValue() + mbp.width();
+                contentWidth = cache.getValue().first + mbp.width();
+                preferredMinWidth = cache.getValue().second + mbp.width();
             } else {
                 PreferredWidthContext p(m_layoutContext, nullptr, gridItemBox,
                                         gridItemBox, m_availableWidth);
@@ -1367,7 +1369,8 @@ void GridFormattingContext::initializePreferredWidths()
                 contentWidth = p.preferredWidth() + mbp.width();
                 preferredMinWidth = p.preferredMinWidth() + mbp.width();
                 m_layoutContext.registerToGridItemPreferredWidthCache(
-                    gridItemBox, m_availableWidth, p.preferredWidth());
+                    gridItemBox, m_availableWidth, p.preferredWidth(),
+                    p.preferredMinWidth());
             }
         }
         gridArea.setPreferredWidth(contentWidth);

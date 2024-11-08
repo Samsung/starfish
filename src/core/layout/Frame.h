@@ -654,11 +654,12 @@ public:
     void unregisterToBasisSizeCache(Frame* flexItem,
                                     LayoutUnit availableMainCrossSize);
 
-    Optional<LayoutUnit> testGridItemPreferredWidthCache(
+    Optional<std::pair<LayoutUnit, LayoutUnit>> testGridItemPreferredWidthCache(
         Frame* gridItem, LayoutUnit availableWidth);
     void registerToGridItemPreferredWidthCache(Frame* gridItem,
                                                LayoutUnit availableWidth,
-                                               LayoutUnit preferredWidth);
+                                               LayoutUnit preferredWidth,
+                                               LayoutUnit preferredMinWidth);
     void registerModifiedStyleFlexItem(Frame* flexItem);
     void unregisterModifiedStyleFlexItem(Frame* flexItem);
     bool isModifiedStyleFlexItem(Frame* flexItem);
@@ -758,7 +759,7 @@ private:
     std::vector<Frame*> m_modifiedStyleFlexItems;
 
     // <availableWidth, result>
-    typedef std::vector<std::tuple<LayoutUnit, LayoutUnit>>
+    typedef std::vector<std::tuple<LayoutUnit, LayoutUnit, LayoutUnit>>
         CachedGridItemPreferredWidthVector;
     std::unordered_map<Frame*, CachedGridItemPreferredWidthVector>
         m_gridItemPreferredWidthCache;

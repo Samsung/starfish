@@ -914,7 +914,8 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
-Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* box)
+Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(
+    FrameBox* box)
 {
     bool exists = false;
     LayoutUnit result = 0;
@@ -922,8 +923,10 @@ Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* bo
         if (child->isAbsolutePositioned()) {
             return false;
         }
-        if (box != child && child->style() && child->style()->height().isDefinite(false)) {
-            LayoutUnit height = child->style()->height().specifiedValue(0, child);
+        if (box != child && child->style() &&
+            child->style()->height().isDefinite(false)) {
+            LayoutUnit height =
+                child->style()->height().specifiedValue(0, child);
             height = child->contentHeightAfterApplyingBoxSizing(height);
             auto pt = child->absolutePoint(box);
             result = std::max(result, pt.y() + height);
@@ -932,7 +935,8 @@ Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(FrameBox* bo
         if (child->isFrameReplaced()) {
             auto siz = child->asFrameReplaced()->intrinsicSize();
             auto pt = child->absolutePoint(box);
-            result = std::max(result, pt.y() + siz.m_intrinsicContentSize.height());
+            result =
+                std::max(result, pt.y() + siz.m_intrinsicContentSize.height());
             exists = true;
             return false;
         }
@@ -1081,31 +1085,35 @@ void LayoutContext::unregisterToBasisSizeCache(
     }
 }
 
-Optional<LayoutUnit> LayoutContext::testGridItemPreferredWidthCache(
-    Frame* gridItem, LayoutUnit availableWidth)
+Optional<std::pair<LayoutUnit, LayoutUnit>>
+LayoutContext::testGridItemPreferredWidthCache(Frame* gridItem,
+                                               LayoutUnit availableWidth)
 {
     auto iter = m_gridItemPreferredWidthCache.find(gridItem);
     if (iter != m_gridItemPreferredWidthCache.end()) {
         LayoutContext::CachedGridItemPreferredWidthVector& v = iter->second;
         for (size_t i = 0; i < v.size(); i++) {
             if (std::get<0>(v[i]) == availableWidth) {
-                return std::get<1>(v[i]);
+                return std::make_pair(std::get<1>(v[i]), std::get<2>(v[i]));
             }
         }
     }
-    return Optional<LayoutUnit>();
+    return Optional<std::pair<LayoutUnit, LayoutUnit>>();
 }
 
 void LayoutContext::registerToGridItemPreferredWidthCache(
-    Frame* gridItem, LayoutUnit availableWidth, LayoutUnit preferredWidth)
+    Frame* gridItem, LayoutUnit availableWidth, LayoutUnit preferredWidth,
+    LayoutUnit preferredMinWidth)
 {
     auto iter = m_gridItemPreferredWidthCache.find(gridItem);
     if (iter != m_gridItemPreferredWidthCache.end()) {
         LayoutContext::CachedGridItemPreferredWidthVector& v = iter->second;
-        v.push_back(std::make_tuple(availableWidth, preferredWidth));
+        v.push_back(
+            std::make_tuple(availableWidth, preferredWidth, preferredMinWidth));
     } else {
         LayoutContext::CachedGridItemPreferredWidthVector v;
-        v.push_back(std::make_tuple(availableWidth, preferredWidth));
+        v.push_back(
+            std::make_tuple(availableWidth, preferredWidth, preferredMinWidth));
         m_gridItemPreferredWidthCache.insert(
             std::make_pair(gridItem, std::move(v)));
     }

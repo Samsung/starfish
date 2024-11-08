@@ -417,6 +417,7 @@ test/cairo/internal-test/css/grid/gridbox_auto_07.html
 test/cairo/internal-test/css/grid/gridbox_auto_08.html
 test/cairo/internal-test/css/grid/gridbox_example_01.html
 test/cairo/internal-test/css/grid/gridbox_example_02.html
+test/cairo/internal-test/css/grid/gridbox_preferredWidths_cache.html
 test/cairo/internal-test/css/grid/gridbox_cell_01.html
 test/cairo/internal-test/css/grid/gridbox_cell_02.html
 test/cairo/internal-test/css/grid/gridbox_cell_03.html
