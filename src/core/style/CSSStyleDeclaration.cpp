@@ -1989,7 +1989,12 @@ bool CSSStyleDeclaration::setPropertyInternalFor<
         addCSSValuePair(keyKind, cssStyleValuePair);
         return true;
     } else if (cssStyleValuePair.updateValueVarReferences(tokens)) {
-        cssStyleValuePair.setValue(String::fromUTF8(value, valueLength));
+        String* s = String::fromUTF8(value, valueLength);
+        cssStyleValuePair.setValue(s);
+        if (s->startsWith("calc", false)) {
+            cssStyleValuePair.setTemporaryValueKind(
+                CSSStyleValuePair::ValueKind::CalcValueKind);
+        }
         cssStyleValuePair.setFlagImportant(isImportant);
         if (needToRemoveAndUpdate) {
             removeCSSValuePair(keyKind);

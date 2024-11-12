@@ -354,10 +354,12 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
 
     for (unsigned c = 0; c < this->size(); c++) {
         CSSTransformFunction f = this->at(c);
-        int valueSize = f.values()->size();
+        size_t valueSize = f.values()->size();
         float* dValues = ALLOCA(valueSize * sizeof(float), float);
-        for (int i = 0; i < valueSize; i++) {
-            const CSSStyleValuePair& item = (*f.values())[i];
+        ValueList convertedValueList(*f.values());
+
+        for (size_t i = 0; i < valueSize; i++) {
+            CSSStyleValuePair item = convertedValueList.at(i);
             if (item.valueKind() == CSSStyleValuePair::ValueKind::Number) {
                 dValues[i] = item.numberValue();
             } else if (item.valueKind() ==
@@ -372,35 +374,30 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                 }
             } else if (item.valueKind() ==
                        CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
-                STARFISH_ASSERT(valueSize == 1);
-
-                OptionalUTF8String utf8String =
-                    item.varFunctionValue()->toOptionalUTF8String();
-                volatile const char* forceKeepPointer = utf8String.m_buffer;
-
-                Optional<const MutablePropertyValueList*> cssCustomValues;
-                if (style->customProperty()) {
-                    cssCustomValues = style->customProperty().value();
-                }
-                bool isRemoved = removeCalcFuncNameIfNeeds(item, utf8String);
-                std::string transformFuncValue =
-                    StyleResolver::resolveVarReferencedValue(
-                        element, utf8String, cssCustomValues);
-                if (isRemoved) {
-                    transformFuncValue = "calc(" + transformFuncValue + ")";
-                }
-
+                auto refValue =
+                    element->styleResolver().resolveVarReferencedValue(element,
+                                                                       item);
                 ValueList* values = new ValueList(f.values()->separator());
-                CSSStyleValuePair ret;
-                if (!ret.updateValueTransformFunction(
-                        transformFuncValue.c_str(), f.kind(), false, values)) {
+                CSSStyleValuePair newPair;
+                newPair.updateValueTransformFunction(refValue, f.kind(), false,
+                                                     values);
+                if (!values->size()) {
+                    // resolved var value failed or resolved value is not valid
                     return;
                 }
 
-                f = CSSTransformFunction(f.kind(), values);
-                valueSize = f.values()->size();
-                dValues = ALLOCA(valueSize * sizeof(float), float);
+                if (values->size() == 1) {
+                    convertedValueList[i] = values->at(0);
+                } else {
+                    valueSize = values->size();
+                    dValues = ALLOCA(valueSize * sizeof(float), float);
+                    convertedValueList.clear();
+                    for (const auto& item : *values) {
+                        convertedValueList.push_back(item);
+                    }
+                }
                 i--;
+                continue;
             }
         }
 
@@ -419,16 +416,18 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         case CSSTransformFunction::Kind::Translate3D:
         case CSSTransformFunction::Kind::Translate: {
             Length a, b(Length::Fixed, 0);
-            Optional<Length> nA = convertValueToLength(
-                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            Optional<Length> nA =
+                convertValueToLength(convertedValueList[0].valueKind(),
+                                     convertedValueList[0].value());
             if (nA.hasValue() == true) {
                 a = nA.getValue();
             } else {
                 break;
             }
             if (valueSize > 1) {
-                Optional<Length> nB = convertValueToLength(
-                    (*f.values())[1].valueKind(), (*f.values())[1].value());
+                Optional<Length> nB =
+                    convertValueToLength(convertedValueList[1].valueKind(),
+                                         convertedValueList[1].value());
                 if (nB.hasValue()) {
                     b = nB.getValue();
                 } else {
@@ -445,16 +444,18 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             break;
         }
         case CSSTransformFunction::Kind::TranslateX: {
-            Optional<Length> a = convertValueToLength(
-                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            Optional<Length> a =
+                convertValueToLength(convertedValueList[0].valueKind(),
+                                     convertedValueList[0].value());
             if (a.hasValue() == true) {
                 style->setTransformTranslate(a.getValue(),
                                              Length(Length::Fixed, 0));
             }
         } break;
         case CSSTransformFunction::Kind::TranslateY: {
-            Optional<Length> a = convertValueToLength(
-                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            Optional<Length> a =
+                convertValueToLength(convertedValueList[0].valueKind(),
+                                     convertedValueList[0].value());
             if (a.hasValue() == true) {
                 style->setTransformTranslate(Length(Length::Fixed, 0),
                                              a.getValue());
@@ -464,9 +465,10 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_has3DTransform = true;
-            if ((*f.values())[0].valueKind() !=
+            if (convertedValueList[0].valueKind() !=
                     CSSStyleValuePair::ValueKind::Length ||
-                (*f.values())[0].lengthValue() != Length(Length::Fixed, 0)) {
+                convertedValueList[0].lengthValue() !=
+                    Length(Length::Fixed, 0)) {
                 STARFISH_UNSUPPORTED("css function: translateZ");
             }
         } break;
@@ -488,16 +490,18 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         case CSSTransformFunction::Kind::Rotate:
             if (valueSize > 1) {
                 Length a, b(Length::Fixed, 0);
-                Optional<Length> nA = convertValueToLength(
-                    (*f.values())[1].valueKind(), (*f.values())[1].value());
+                Optional<Length> nA =
+                    convertValueToLength(convertedValueList[1].valueKind(),
+                                         convertedValueList[1].value());
                 if (nA.hasValue() == true) {
                     a = nA.getValue();
                 } else {
                     break;
                 }
                 if (valueSize > 2) {
-                    Optional<Length> nB = convertValueToLength(
-                        (*f.values())[2].valueKind(), (*f.values())[2].value());
+                    Optional<Length> nB =
+                        convertValueToLength(convertedValueList[2].valueKind(),
+                                             convertedValueList[2].value());
                     if (nB.hasValue()) {
                         b = nB.getValue();
                     } else {
@@ -3209,11 +3213,40 @@ static void tokenize(TokenVector& tokens, const char* data, size_t length)
     }
 }
 
-std::string StyleResolver::resolveVarReferencedValue(
+CSSTokenValue StyleResolver::resolveVarReferencedValue(
+    Element* element, const CSSStyleValuePair& cssValuePair)
+{
+    OptionalUTF8String utf8String =
+        cssValuePair.varFunctionValue()->toOptionalUTF8String();
+    size_t startIndex = 0;
+    size_t size = utf8String.m_bufferSize;
+    if (cssValuePair.temporaryValueKind() ==
+        CSSStyleValuePair::ValueKind::CalcValueKind) {
+        // This is the length of "calc(".
+        startIndex = 5;
+        // consider ')' too
+        size -= 6;
+    }
+    // we should keep reference of utf8String.m_buffer
+    // for bdwgc find the pointer of `utf8String.m_buffer`
+    volatile const char* forceKeepPointer = utf8String.m_buffer;
+    utf8String.m_buffer = utf8String.m_buffer + startIndex;
+    utf8String.m_bufferSize = size;
+    CSSTokenValue newCssValue =
+        resolveVarReferencedValue(element, utf8String, cssCustomValues());
+
+    if (cssValuePair.temporaryValueKind() ==
+        CSSStyleValuePair::ValueKind::CalcValueKind) {
+        newCssValue = "calc(" + newCssValue + ")";
+    }
+    return newCssValue;
+}
+
+CSSTokenValue StyleResolver::resolveVarReferencedValue(
     Element* element, OptionalUTF8String utf8String,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    std::string newCssValue;
+    CSSTokenValue newCssValue;
     TokenVector cssValueTokens;
     tokenize(cssValueTokens, utf8String.m_buffer, utf8String.m_bufferSize);
 
@@ -3291,7 +3324,8 @@ std::string StyleResolver::resolveVarReferencedValue(
             }
         }
     }
-    return newCssValue;
+
+    return newCssValue.trim();
 }
 
 void StyleResolver::clearCssCustomValues()
@@ -3312,29 +3346,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
     CSSStyleValuePair::KeyKind keyKind, bool isImportant)
 {
-    OptionalUTF8String utf8String =
-        cssValuePair.varFunctionValue()->toOptionalUTF8String();
-    size_t startIndex = 0;
-    size_t size = utf8String.m_bufferSize;
-    if (cssValuePair.temporaryValueKind() ==
-        CSSStyleValuePair::ValueKind::CalcValueKind) {
-        // This is the length of "calc(".
-        startIndex = 5;
-        // consider ')' too
-        size -= 6;
-    }
-    // we should keep reference of utf8String.m_buffer
-    // for bdwgc find the pointer of `utf8String.m_buffer`
-    volatile const char* forceKeepPointer = utf8String.m_buffer;
-    utf8String.m_buffer = utf8String.m_buffer + startIndex;
-    utf8String.m_bufferSize = size;
-    std::string newCssValue =
-        resolveVarReferencedValue(element, utf8String, cssCustomValues());
-
-    if (cssValuePair.temporaryValueKind() ==
-        CSSStyleValuePair::ValueKind::CalcValueKind) {
-        newCssValue = "calc(" + newCssValue + ")";
-    }
+    auto newCssValue = resolveVarReferencedValue(element, cssValuePair);
 
     CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
     declaration->setPropertyInternal(keyKind, newCssValue.c_str(),
@@ -3346,6 +3358,10 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
         STARFISH_ASSERT(declaration->cssValues().size() == 1);
         CSSStyleValuePair newCssValuePair = declaration->cssValues()[0];
+        if (newCssValue.find("calc(") == 0) {
+            newCssValuePair.setTemporaryValueKind(
+                CSSStyleValuePair::ValueKind::CalcValueKind);
+        }
         return resolveVarValue(element, newCssValuePair,
                                newCssValuePair.keyKind(),
                                newCssValuePair.flagImportant());
@@ -15237,14 +15253,6 @@ bool CSSStyleValuePair::updateValueTransformFunction(
                                           transformValue.data(),
                                           transformValue.size(), ",", 1);
 
-    CSSStyleValuePair ret;
-    if (ret.updateValueVarReferences(transformValueTokens)) {
-        ret.setValue(
-            String::fromUTF8(transformValue.data(), transformValue.size()));
-        values->emplace_back(ret);
-        return true;
-    }
-
     CSSTokenVector transformValueList;
     if (!addTransformValueToList(transformValueTokens, transformValueList)) {
         return false;
@@ -15256,9 +15264,22 @@ bool CSSStyleValuePair::updateValueTransformFunction(
     for (; idx < maxArgCnt && idx < valueListSize; idx++) {
         TransformUnit unit = units[idx];
         CSSStyleValuePair ret;
-        if (unit == TransformUnit::Number &&
-            ret.updateValueUnitNumber(transformValueList[idx].trim(),
-                                      CSSPropertyParser::AllowNegative)) {
+
+        if (hasValidVarFunction(transformValueList[idx])) {
+            ret.setValueKind(
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+            if (transformValueList[idx].startsWith("calc(")) {
+                ret.setTemporaryValueKind(ValueKind::CalcValueKind);
+            }
+
+            ret.setValue(String::fromUTF8(transformValueList[idx].data(),
+                                          transformValueList[idx].size()));
+
+            values->emplace_back(ret);
+        } else if (unit == TransformUnit::Number &&
+                   ret.updateValueUnitNumber(
+                       transformValueList[idx].trim(),
+                       CSSPropertyParser::AllowNegative)) {
             values->emplace_back(ret);
         } else if (unit == TransformUnit::Angle &&
                    ret.updateValueUnitAngleOrCalc(
