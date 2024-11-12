@@ -1,0 +1,96 @@
+name: Release flutter port
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_tizen_60:
+    runs-on: [code-extra-2xlarge]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root --privileged
+
+    # Set reasonable timeout value.
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: true
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: container fix
+        run: |
+          sudo /usr/sbin/update-binfmts --disable
+          sudo systemctl disable binfmt-support.service
+          sudo systemctl enable binfmt-support.service
+          sudo /usr/sbin/update-binfmts --enable
+          sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/status"
+
+      - name: Build flutter_i586
+        run: |
+          gbs -c .github/gbs.conf build -A i586 -P profile.60emul --define 'build_profile flutter' --with-submodules --include-all --clean
+          mkdir -p i586_so && cd i586_so
+          mkdir -p release
+          find ~/GBS-ROOT/60emul/local/repos/tizen60emul/i586/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so"
+          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          cd ..
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish_flutter_port_i586_so
+          path: |
+            ./i586_so/release/*.so
+
+      - name: Build flutter_x86_64
+        run: |
+          gbs -c .github/gbs.conf build -A x86_64 -P profile.60emul --define 'build_profile flutter' --with-submodules --include-all --clean
+          mkdir -p x86_64_so && cd x86_64_so
+          mkdir -p release
+          find ~/GBS-ROOT/60emul/local/repos/tizen60emul/x86_64/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so"
+          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          cd ..
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish_flutter_port_x86_64_so
+          path: |
+            ./x86_64_so/release/*.so
+
+      - name: Build flutter_arm
+        run: |
+          gbs -c .github/gbs.conf build -A armv7l -P profile.60std --define 'build_profile flutter' --with-submodules --include-all --clean
+          mkdir -p arm_so && cd arm_so
+          mkdir -p release
+          find ~/GBS-ROOT/60std/local/repos/tizen60std/armv7l/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib/lwe/flutter/*.so"
+          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          cd ..
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish_flutter_port_arm_so
+          path: |
+            ./arm_so/release/*.so
+
+      - name: Build flutter_arm64
+        run: |
+          gbs -c .github/gbs.conf build -A aarch64 -P profile.60std --define 'build_profile flutter' --with-submodules --include-all --clean
+          mkdir -p arm64_so && cd arm64_so
+          mkdir -p release
+          find ~/GBS-ROOT/60std/local/repos/tizen60std/aarch64/RPMS -name '*.rpm' | xargs -I {} sh -c "cp {} ./"
+          find -name 'lightweight-web-engine-profile_flutter*' | xargs -I {} sh -c "rpm2cpio {} | cpio -idv ./usr/lib64/lwe/flutter/*.so"
+          find ./usr/ -name '*.so' | xargs -I {} sh -c "cp {} ./release"
+          cd ..
+
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish_flutter_port_arm64_so
+          path: |
+            ./arm64_so/release/*.so
