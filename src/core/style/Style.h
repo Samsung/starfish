@@ -3291,9 +3291,12 @@ public:
                               ComputedStyle* elementStyle,
                               bool inheritedStyleChanged = false);
 
-    static std::string resolveVarReferencedValue(
+    static CSSTokenValue resolveVarReferencedValue(
         Element* element, OptionalUTF8String utf8String,
         Optional<const MutablePropertyValueList*> cssCustomValues);
+
+    CSSTokenValue resolveVarReferencedValue(
+        Element* element, const CSSStyleValuePair& cssValuePair);
 
     void clearCssCustomValues();
     Optional<const MutablePropertyValueList*> cssCustomValues();

@@ -40,6 +40,13 @@
 using namespace Escargot;
 
 #ifdef STARFISH_ENABLE_TEST
+
+static bool g_gotFailure = false;
+void starfishRecordTestFailure()
+{
+    g_gotFailure = true;
+}
+
 #include <signal.h>
 void customExit(int returnCode)
 {
@@ -654,7 +661,7 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
                                  size_t argc, ValueRef** argv,
                                  bool isNewExpression)
 {
-    if (argc > 0 && argv[0]->isBoolean() && argv[0]->isFalse()) {
+    if (g_gotFailure || (argc > 0 && argv[0]->isBoolean() && argv[0]->isFalse())) {
         puts("[FAIL]");
         STARFISH_LOG_ERROR("[FAIL]");
         customExit(1);
