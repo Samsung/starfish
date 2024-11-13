@@ -1063,7 +1063,8 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
     if (!m_isEveryAnimiatedValueResolved) {
         bool isEveryValueHasPercent = true;
         for (size_t i = 0; i < m_values.size(); i++) {
-            if (!m_values[i]->getLength().isPercent()) {
+            if (!m_values[i]->getLength().isPercent() &&
+                !m_values[i]->getLength().isZero()) {
                 isEveryValueHasPercent = false;
                 break;
             }
@@ -1244,9 +1245,18 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
                 }
             }
         } else {
-            if (toValue->getLength().isPercent() == true) {
-                float fromPercent = fromValue->getLength().percent();
-                float toPercent = toValue->getLength().percent();
+            if ((toValue->getLength().isPercent() ||
+                 toValue->getLength().isZero()) &&
+                (fromValue->getLength().isPercent() ||
+                 fromValue->getLength().isZero())) {
+                float fromPercent = 0;
+                if (!fromValue->getLength().isZero()) {
+                    fromPercent = fromValue->getLength().percent();
+                }
+                float toPercent = 0;
+                if (!toValue->getLength().isZero()) {
+                    toPercent = toValue->getLength().percent();
+                }
                 newLength =
                     Length(Length::Percent, interpolate(fromPercent, toPercent,
                                                         progress, m_isForward));
