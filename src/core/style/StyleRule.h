@@ -207,6 +207,11 @@ public:
         return m_isSimpleTagSelector;
     }
 
+    bool isSimplePseudoClassHostSelector()
+    {
+        return m_isSimplePseudoClassHostSelector;
+    }
+
     bool isPseudoClassHostSelector()
     {
         return m_isPseudoClassHostSelector;
@@ -223,6 +228,7 @@ protected:
     bool m_isSimpleIDSelector : 1;
     bool m_isSimpleClassSelector : 1;
     bool m_isSimpleTagSelector : 1;
+    bool m_isSimplePseudoClassHostSelector : 1;
     bool m_isPseudoClassHostSelector : 1;
 
     unsigned m_identifierHashes[maximumIdentifierCount];

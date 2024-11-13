@@ -3312,7 +3312,7 @@ protected:
     void addToKeyframesRule(StyleRuleKeyframes* rule);
     void removeAllRules();
     size_t nextRuleSetOrder();
-    void resetnextRuleSetOrder();
+    void resetNextRuleSetOrder();
 
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,

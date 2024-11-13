@@ -9850,7 +9850,7 @@ void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
     m_ruleSetAttrFilter.clear();
-    resetnextRuleSetOrder();
+    resetNextRuleSetOrder();
 }
 
 size_t StyleResolver::nextRuleSetOrder()
@@ -9858,7 +9858,7 @@ size_t StyleResolver::nextRuleSetOrder()
     return m_nextRuleSetOrder++;
 }
 
-void StyleResolver::resetnextRuleSetOrder()
+void StyleResolver::resetNextRuleSetOrder()
 {
     m_nextRuleSetOrder = 0;
 }
@@ -9958,10 +9958,13 @@ void StyleResolver::recalcRuleSetIfNeeds()
             size_t rules = sheet->styleRules().size();
             for (size_t j = 0; j < rules; j++) {
                 StyleRule* rule = sheet->styleRules()[j].first;
-                if (rule->isPseudoClassHostSelector()) {
-                    // If selector has a pseud class host, add to rule set of
-                    // parent. other case, we give up to add.
-                    if (&m_document->styleResolver() != this) {
+                if (UNLIKELY(rule->isPseudoClassHostSelector())) {
+                    // If styleRules has a single pseudo class host, add to
+                    // rule set of parent. other case, we simply give up to add.
+                    if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
+                                 &m_document->styleResolver() != this)) {
+                        // `m_document->styleResolver() != this` means that
+                        // this style resolver is for shadow-dom.
                         m_document->styleResolver().addToRuleSet(
                             sheet->styleRules()[j]);
                     }
