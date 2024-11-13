@@ -1396,6 +1396,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         selectorList->push_back(CSSSelectorListItem(compoundSelector));
     }
 
+    bool foundPseudoClassHost = false;
     while (CSSSelector* simpleSelector = getSimpleSelector()) {
         if (compoundPseudoElement != CSSSelector::PseudoNone) {
             m_failedParsing = true;
@@ -1404,8 +1405,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         if (simpleSelector->type() == CSSSelector::Type::PseudoClass &&
             simpleSelector->pseudotype() ==
                 CSSSelector::PseudoType::PseudoHost) {
-            m_failedParsing = true;
-            return;
+            foundPseudoClassHost = true;
         }
         if (simpleSelector->type() == CSSSelector::PseudoElement) {
             compoundPseudoElement =
@@ -1420,7 +1420,12 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
 
     if (elementName.length()) {
         bool isStar = elementName.equals("*");
-        if (isStar && selectorList->size() > 0) {
+        if (isStar && selectorList->size() > 0 && !foundPseudoClassHost) {
+            // Note: foundPseudoClassHost
+            // We suppress the creation of universal selectors in most cases.
+            // but in the case of Pseudo class host, the two types must be
+            // strictly distinguished.
+            // For example: :host{}, *:host
             return;
         }
 
@@ -1487,13 +1492,6 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         }
 
         if (previousCompoundFlags & HasPseudoElementForRightmostCompound) {
-            m_failedParsing = true;
-        }
-
-        if (secondSelectorList[0].m_selector->type() ==
-                CSSSelector::Type::PseudoClass &&
-            secondSelectorList[0].m_selector->pseudotype() ==
-                CSSSelector::PseudoType::PseudoHost) {
             m_failedParsing = true;
         }
 

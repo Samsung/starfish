@@ -106,6 +106,7 @@ void StyleRule::initFlagsRelatedWithSelectorList()
     m_isSimpleIDSelector = false;
     m_isSimpleClassSelector = false;
     m_isSimpleTagSelector = false;
+    m_isSimplePseudoClassHostSelector = false;
     m_isPseudoClassHostSelector = false;
 
     unsigned size = m_selectorList.size();
@@ -122,7 +123,16 @@ void StyleRule::initFlagsRelatedWithSelectorList()
                        CSSSelector::Type::PseudoClass &&
                    m_selectorList[0].m_selector->pseudotype() ==
                        CSSSelector::PseudoType::PseudoHost) {
+            m_isSimplePseudoClassHostSelector = true;
             m_isPseudoClassHostSelector = true;
+        }
+    } else {
+        for (unsigned i = 0; i < size; ++i) {
+            CSSSelector* selector = m_selectorList[i].m_selector;
+            if (selector->type() == CSSSelector::Type::PseudoClass &&
+                selector->pseudotype() == CSSSelector::PseudoType::PseudoHost) {
+                m_isPseudoClassHostSelector = true;
+            }
         }
     }
 
