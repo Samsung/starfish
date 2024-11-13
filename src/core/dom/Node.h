@@ -151,6 +151,7 @@ protected:
         , m_isConnected(false)
         , m_didPrepareAnimation(false)
         , m_inShadowRoot(false)
+        , m_isSlotted(false)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
@@ -240,6 +241,16 @@ public:
     bool isInShadowRoot() const
     {
         return m_inShadowRoot;
+    }
+
+    void setIsSlotted(bool s)
+    {
+        m_isSlotted = s;
+    }
+
+    bool isSlotted() const
+    {
+        return m_isSlotted;
     }
 
     ShadowRoot* parentShadowRoot() const
@@ -929,6 +940,7 @@ protected:
     bool m_isConnected : 1;
     bool m_didPrepareAnimation : 1;
     bool m_inShadowRoot : 1;
+    bool m_isSlotted : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;

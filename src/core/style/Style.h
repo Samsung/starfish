@@ -3124,7 +3124,9 @@ class StyleResolver;
 
 class StyleResolveContext {
 public:
-    StyleResolveContext(Node* node);
+    StyleResolveContext(
+        Node* node,
+        Optional<GCVector<ComputedStyle*>*> computedStylePool = nullptr);
     StyleResolveContext(StyleResolver* sr, StyleResolveContext& origin);
     ~StyleResolveContext();
     void pushIntoComputedStylePool(ComputedStyle* b);

@@ -79,6 +79,9 @@ void ShadowRoot::updateSlotElements(bool shouldConnectSlotWithSlottables)
                 if (iter == m_namedSlotElements.end()) {
                     m_namedSlotElements.insert(std::make_pair(slotName, slot));
                 }
+                for (auto n : slot->m_assignedNodes) {
+                    n->setIsSlotted(false);
+                }
                 slot->m_assignedNodes.clear();
             }
         });
@@ -100,6 +103,9 @@ void ShadowRoot::assignSlot()
 void ShadowRoot::connectSlotWithSlottables()
 {
     for (auto iter : m_namedSlotElements) {
+        for (auto n : iter.second->m_assignedNodes) {
+            n->setIsSlotted(false);
+        }
         iter.second->m_assignedNodes.clear();
     }
 
@@ -111,6 +117,7 @@ void ShadowRoot::connectSlotWithSlottables()
                 auto iter = m_namedSlotElements.find(slotName);
                 if (iter != m_namedSlotElements.end()) {
                     iter->second->m_assignedNodes.push_back(node);
+                    node->setIsSlotted(true);
                 }
             }
         }
