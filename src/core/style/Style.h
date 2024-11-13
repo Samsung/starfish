@@ -2999,7 +2999,7 @@ public:
 
 protected:
     Type m_type : 4;
-    PseudoType m_pseudotype : 6;
+    PseudoType m_pseudotype : 7;
     AttributeMatchType m_attributeMatch : 1;
     AtomicString m_selectorText;
 };
@@ -3311,6 +3311,8 @@ protected:
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void addToKeyframesRule(StyleRuleKeyframes* rule);
     void removeAllRules();
+    size_t nextRuleSetOrder();
+    void resetnextRuleSetOrder();
 
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
@@ -3357,6 +3359,7 @@ protected:
     MediaQueryResultList m_viewportDependentMediaQueryResults;
     MediaQueryResultList m_deviceDependentMediaQueryResults;
     RuleSet* m_ruleSet;
+    size_t m_nextRuleSetOrder;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
     Optional<MutablePropertyValueList*> m_cssCustomValues;
 };

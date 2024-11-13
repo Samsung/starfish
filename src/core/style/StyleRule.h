@@ -207,6 +207,11 @@ public:
         return m_isSimpleTagSelector;
     }
 
+    bool isPseudoClassHostSelector()
+    {
+        return m_isPseudoClassHostSelector;
+    }
+
     void initFlagsRelatedWithSelectorList();
     void wrapperTakeSelectorList(CSSSelectorList& selectors);
 
@@ -218,6 +223,7 @@ protected:
     bool m_isSimpleIDSelector : 1;
     bool m_isSimpleClassSelector : 1;
     bool m_isSimpleTagSelector : 1;
+    bool m_isPseudoClassHostSelector : 1;
 
     unsigned m_identifierHashes[maximumIdentifierCount];
 };

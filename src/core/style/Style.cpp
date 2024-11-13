@@ -951,7 +951,6 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
                                          bool hasArguments)
 {
     STARFISH_ASSERT(starfish != nullptr);
-
     m_selectorText = name;
     m_pseudotype = parsePseudoType(starfish, name, hasArguments);
 
@@ -1037,12 +1036,11 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     case PseudoFullScreen:
     // case PseudoFullScreenAncestor:
     case PseudoFuture:
-    /*
-        case PseudoFutureCue:
-        case PseudoHorizontal:
-        case PseudoHost:
-        case PseudoHostContext:
-    */
+
+    // case PseudoFutureCue:
+    // case PseudoHorizontal:
+    case PseudoHost:
+    // case PseudoHostContext:
     case PseudoHover:
     case PseudoInRange:
     /*
@@ -2636,6 +2634,7 @@ StyleResolver::StyleResolver(Document* document)
     , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
+    , m_nextRuleSetOrder(0)
 {
 }
 
@@ -8542,6 +8541,11 @@ bool StyleResolver::checkPseudoClass(Element* element,
         }
         return false;
     }
+    case CSSSelector::PseudoType::PseudoHost: {
+        // TODO: The :host() CSS pseudo-class function selects
+        return element->isShadowRootHost();
+    }
+
     default:
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -9846,6 +9850,17 @@ void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
     m_ruleSetAttrFilter.clear();
+    resetnextRuleSetOrder();
+}
+
+size_t StyleResolver::nextRuleSetOrder()
+{
+    return m_nextRuleSetOrder++;
+}
+
+void StyleResolver::resetnextRuleSetOrder()
+{
+    m_nextRuleSetOrder = 0;
 }
 
 class WebFontLoadChecker : public ResourceClient {
@@ -9942,8 +9957,17 @@ void StyleResolver::recalcRuleSetIfNeeds()
 
             size_t rules = sheet->styleRules().size();
             for (size_t j = 0; j < rules; j++) {
-                sheet->styleRules()[j].first->setOrder(j + offset);
-                addToRuleSet(sheet->styleRules()[j]);
+                StyleRule* rule = sheet->styleRules()[j].first;
+                if (rule->isPseudoClassHostSelector()) {
+                    // If selector has a pseud class host, add to rule set of
+                    // parent. other case, we give up to add.
+                    if (&m_document->styleResolver() != this) {
+                        m_document->styleResolver().addToRuleSet(
+                            sheet->styleRules()[j]);
+                    }
+                } else {
+                    addToRuleSet(sheet->styleRules()[j]);
+                }
             }
             offset += rules;
 
@@ -10202,6 +10226,9 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
             }
         }
     }
+
+    size_t order = nextRuleSetOrder();
+    rule.first->setOrder(order);
 
     if (!id.isEmptyAtomicString()) {
         m_ruleSet->idRules().insert(std::make_pair(id, rule));

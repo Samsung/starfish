@@ -1705,7 +1705,7 @@ class StyleRuleKeyframes;
 
 struct CSSSelectorPoolKey {
     CSSSelector::Type m_type : 4;
-    CSSSelector::PseudoType m_pseudotype : 6;
+    CSSSelector::PseudoType m_pseudotype : 7;
     CSSSelector::AttributeMatchType m_attributeMatch : 1;
     AtomicString m_selectorText;
 };
