@@ -2656,10 +2656,12 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* document)
     return ret;
 }
 
-StyleResolveContext::StyleResolveContext(Node* node)
+StyleResolveContext::StyleResolveContext(
+    Node* node, Optional<GCVector<ComputedStyle*>*> computedStylePool)
     : m_styleResolver(&node->styleResolver())
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
-    , m_computedStylePool(new GCVector<ComputedStyle*>())
+    , m_computedStylePool(computedStylePool ? computedStylePool.value()
+                                            : new GCVector<ComputedStyle*>())
 {
     VectorWithInlineStorage<16, Node*, std::allocator<Node*>> tree;
 
@@ -9626,6 +9628,12 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
 
         if (child->isElement()) {
             ComputedStyle* oldStyle = child->style();
+            StyleResolveContext* originalContext = ctx;
+            if (UNLIKELY(child->isSlotted())) {
+                ctx = new (alloca(sizeof(StyleResolveContext)))
+                    StyleResolveContext(child.value(),
+                                        ctx->m_computedStylePool);
+            }
 
             auto damage =
                 resolveElementStyle(*ctx, child->asElement(),
@@ -9669,6 +9677,12 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
             if (oldStyle && oldStyle != child->style()) {
                 ctx->pushIntoComputedStylePool(oldStyle);
             }
+
+            if (UNLIKELY(child->isSlotted())) {
+                ctx->~StyleResolveContext();
+            }
+
+            ctx = originalContext;
         } else {
             if (inheritedStyleChanged || child->needsStyleRecalc()) {
                 if (childTextNodeStyle == nullptr) {
