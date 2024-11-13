@@ -1401,7 +1401,12 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             m_failedParsing = true;
             return;
         }
-
+        if (simpleSelector->type() == CSSSelector::Type::PseudoClass &&
+            simpleSelector->pseudotype() ==
+                CSSSelector::PseudoType::PseudoHost) {
+            m_failedParsing = true;
+            return;
+        }
         if (simpleSelector->type() == CSSSelector::PseudoElement) {
             compoundPseudoElement =
                 simpleSelector->asCSSPseudoSelector()->pseudoType();
@@ -1484,6 +1489,14 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
         if (previousCompoundFlags & HasPseudoElementForRightmostCompound) {
             m_failedParsing = true;
         }
+
+        if (secondSelectorList[0].m_selector->type() ==
+                CSSSelector::Type::PseudoClass &&
+            secondSelectorList[0].m_selector->pseudotype() ==
+                CSSSelector::PseudoType::PseudoHost) {
+            m_failedParsing = true;
+        }
+
         if (m_failedParsing) {
             return;
         }
