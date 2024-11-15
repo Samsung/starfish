@@ -990,6 +990,10 @@ public:
             }
         };
         config.onSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
+        // Since tizen 9, we always needs glFence
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 9
+            mayNeedsSync = true;
+#endif
             if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
                 int attr[] = { EVAS_GL_NONE };
                 m_glSync = m_glGlapi->evasglCreateSync(
