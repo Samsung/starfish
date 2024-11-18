@@ -2554,4 +2554,20 @@ Optional<HTMLSlotElement*> Element::assignedSlot()
     return nullptr;
 }
 
+void Element::setPointerCapture(int32_t param)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void Element::releasePointerCapture(int32_t param)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+bool Element::hasPointerCapture(int32_t param)
+{
+    STARFISH_UNIMPLEMENTED();
+    return false;
+}
+
 } // namespace Starfish
