@@ -553,28 +553,46 @@ void FrameBox::paintOutline(Canvas* canvas)
 
         canvas->setFillColor(style()->outlineColor());
 
-        canvas->beginPath();
+        if (hasFrameBorderRadius()) {
+            canvas->beginPath();
 
-        canvas->moveTo(rect.x().floor(), rect.y().floor());
-        canvas->lineTo(rect.maxX().floor(), rect.y().floor());
-        canvas->lineTo(rect.maxX().floor(), rect.maxY().floor());
-        canvas->lineTo(rect.x().floor(), rect.maxY().floor());
-        canvas->lineTo(rect.x().floor(), rect.y().floor());
+            applyBorderRadius(canvas,
+                              LayoutRect(rect.x().floor(), rect.y().floor(),
+                                         (rect.maxX() + outlineWidth).floor(),
+                                         (rect.maxY() + outlineWidth).floor()));
+            applyBorderRadius(canvas,
+                              LayoutRect((rect.x() + outlineWidth).floor(),
+                                         (rect.y() + outlineWidth).floor(),
+                                         (rect.maxX() - outlineWidth).floor(),
+                                         (rect.maxY() - outlineWidth).floor()));
 
-        canvas->lineTo((rect.x() + outlineWidth).floor(),
-                       (rect.y() + outlineWidth).floor());
-        canvas->lineTo((rect.x() + outlineWidth).floor(),
-                       (rect.maxY() - outlineWidth).floor());
-        canvas->lineTo((rect.maxX() - outlineWidth).floor(),
-                       (rect.maxY() - outlineWidth).floor());
-        canvas->lineTo((rect.maxX() - outlineWidth).floor(),
-                       (rect.y() + outlineWidth).floor());
-        canvas->lineTo((rect.x() + outlineWidth).floor(),
-                       (rect.y() + outlineWidth).floor());
-        canvas->lineTo(rect.x().floor(), rect.y().floor());
-        canvas->fill();
+            canvas->setFillRule(false);
+            canvas->fill();
+            canvas->restore();
+        } else {
+            canvas->beginPath();
 
-        canvas->restore();
+            canvas->moveTo(rect.x().floor(), rect.y().floor());
+            canvas->lineTo(rect.maxX().floor(), rect.y().floor());
+            canvas->lineTo(rect.maxX().floor(), rect.maxY().floor());
+            canvas->lineTo(rect.x().floor(), rect.maxY().floor());
+            canvas->lineTo(rect.x().floor(), rect.y().floor());
+
+            canvas->lineTo((rect.x() + outlineWidth).floor(),
+                           (rect.y() + outlineWidth).floor());
+            canvas->lineTo((rect.x() + outlineWidth).floor(),
+                           (rect.maxY() - outlineWidth).floor());
+            canvas->lineTo((rect.maxX() - outlineWidth).floor(),
+                           (rect.maxY() - outlineWidth).floor());
+            canvas->lineTo((rect.maxX() - outlineWidth).floor(),
+                           (rect.y() + outlineWidth).floor());
+            canvas->lineTo((rect.x() + outlineWidth).floor(),
+                           (rect.y() + outlineWidth).floor());
+            canvas->lineTo(rect.x().floor(), rect.y().floor());
+            canvas->fill();
+
+            canvas->restore();
+        }
     }
 }
 
@@ -4012,7 +4030,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             } else {
                 boxHasDrawableContents = drawableContentsInStyle;
             }
-        } else if(isFrameSVGSVGBox()) {
+        } else if (isFrameSVGSVGBox()) {
             boxHasDrawableContents = true;
         } else {
             boxHasDrawableContents = drawableContentsInStyle;
