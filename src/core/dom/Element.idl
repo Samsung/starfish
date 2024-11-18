@@ -5,6 +5,7 @@
 // REF5. https://dom.spec.whatwg.org/#slotable
 // REF6. https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
 // REF7. https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
+// REF8. https://w3c.github.io/pointerevents/#dom-element-setpointercapture
 
 // [REF7]----------------------------------------------------------------
 enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
@@ -90,6 +91,12 @@ interface Element : Node {
   readonly attribute long clientLeft;
   readonly attribute long clientWidth;
   readonly attribute long clientHeight;
+
+  // [REF8]--------------------------------------------------------------
+
+  void setPointerCapture (long pointerId);
+  void releasePointerCapture (long pointerId);
+  boolean hasPointerCapture (long pointerId);
 };
 
 Element implements ParentNode;
