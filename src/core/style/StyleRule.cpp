@@ -119,18 +119,15 @@ void StyleRule::initFlagsRelatedWithSelectorList()
         } else if (m_selectorList[0].m_selector->type() ==
                    CSSSelector::Type::Tag) {
             m_isSimpleTagSelector = true;
-        } else if (m_selectorList[0].m_selector->type() ==
-                       CSSSelector::Type::PseudoClass &&
-                   m_selectorList[0].m_selector->pseudotype() ==
-                       CSSSelector::PseudoType::PseudoHost) {
+        } else if (m_selectorList[0]
+                       .m_selector->isPseudoClassHostFamilySelector()) {
             m_isSimplePseudoClassHostSelector = true;
             m_isPseudoClassHostSelector = true;
         }
     } else {
         for (unsigned i = 0; i < size; ++i) {
             CSSSelector* selector = m_selectorList[i].m_selector;
-            if (selector->type() == CSSSelector::Type::PseudoClass &&
-                selector->pseudotype() == CSSSelector::PseudoType::PseudoHost) {
+            if (selector->isPseudoClassHostFamilySelector()) {
                 m_isPseudoClassHostSelector = true;
             }
         }

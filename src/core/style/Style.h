@@ -2996,6 +2996,7 @@ public:
 
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
+    bool isPseudoClassHostFamilySelector();
 
 protected:
     Type m_type : 4;

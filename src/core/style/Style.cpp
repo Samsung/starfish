@@ -905,6 +905,13 @@ bool CSSSelector::isSimple(CSSSelectorList* selectorList)
     return false;
 }
 
+bool CSSSelector::isPseudoClassHostFamilySelector()
+{
+    return m_type == CSSSelector::Type::PseudoClass &&
+           (m_pseudotype == CSSSelector::PseudoType::PseudoHost ||
+            m_pseudotype == CSSSelector::PseudoType::PseudoHostFunction);
+}
+
 bool CSSPseudoSelector::matchNth(int count)
 {
     if (!nthAValue()) {
@@ -1040,6 +1047,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     // case PseudoFutureCue:
     // case PseudoHorizontal:
     case PseudoHost:
+    case PseudoHostFunction:
     // case PseudoHostContext:
     case PseudoHover:
     case PseudoInRange:
@@ -8542,10 +8550,22 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return false;
     }
     case CSSSelector::PseudoType::PseudoHost: {
-        // TODO: The :host() CSS pseudo-class function selects
         return element->isShadowRootHost();
     }
+    case CSSSelector::PseudoType::PseudoHostFunction: {
+        if (!element->isShadowRootHost()) {
+            return false;
+        }
 
+        STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
+        result.styleDamageFrom = StyleDamageFromAll;
+        AtomicString elementName = element->name().localNameAtomic();
+        AtomicString elementId = element->atomicId();
+        const GCAtomicTightVector<AtomicString>& elementClasses =
+            element->classNames();
+        return checkOne(element, elementName, elementId, elementClasses,
+                        selector->pseudoSelectorList()[0].m_selector, result);
+    }
     default:
 #ifdef STARFISH_ENABLE_TEST
     {
