@@ -216,6 +216,7 @@ namespace Starfish {
     F(FocusWithin, focusWithin, "focus-within")                \
     F(Future, future, "future")                                \
     F(Host, host, "host")                                      \
+    F(HostFunction, hostFunction, "host(")                     \
     F(Hover, hover, "hover")                                   \
     F(InRange, inRange, "in-range")                            \
     F(Indeterminate, indeterminate, "indeterminate")           \

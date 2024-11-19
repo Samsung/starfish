@@ -955,6 +955,7 @@ CSSSelector* CSSParser::getPseudoSelector()
     getToken(true, true);
 
     switch (selector->pseudoType()) {
+    case CSSSelector::PseudoHostFunction:
     case CSSSelector::PseudoNot: {
         CSSSelectorList selectorList;
         parseCompoundSelector(&selectorList);
@@ -1402,9 +1403,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             m_failedParsing = true;
             return;
         }
-        if (simpleSelector->type() == CSSSelector::Type::PseudoClass &&
-            simpleSelector->pseudotype() ==
-                CSSSelector::PseudoType::PseudoHost) {
+        if (simpleSelector->isPseudoClassHostFamilySelector()) {
             foundPseudoClassHost = true;
         }
         if (simpleSelector->type() == CSSSelector::PseudoElement) {
