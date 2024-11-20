@@ -8023,9 +8023,21 @@ StyleResolver::Match StyleResolver::matchForRelation(
 
     CSSSelector* selector = selectorList[idx].m_selector;
     STARFISH_ASSERT(selector != nullptr);
+
+    std::function<Element*(Element*)> nextParentElement =
+        [](Element* element) -> Element* { return element->parentElement(); };
+    if (UNLIKELY(selector->isPseudoClassHostFamilySelector())) {
+        nextParentElement = [](Element* element) -> Element* {
+            if (element->isShadowRootHost()) {
+                return nullptr;
+            }
+            return element->renderingParentElement();
+        };
+    }
+
     switch (relation) {
     case CSSSelectorListItem::RelationType::Descendant: {
-        Element* parent = element->parentElement();
+        Element* parent = nextParentElement(element);
         while (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
             AtomicString elementId = parent->atomicId();
@@ -8036,13 +8048,13 @@ StyleResolver::Match StyleResolver::matchForRelation(
                               result) == Match::SelectorMatches) {
                 return Match::SelectorMatches;
             }
-            parent = parent->parentElement();
+            parent = nextParentElement(parent);
         }
 
         return Match::SelectorFailsCompletely;
     }
     case CSSSelectorListItem::RelationType::Child: {
-        Element* parent = element->parentElement();
+        Element* parent = nextParentElement(element);
         if (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
             AtomicString elementId = parent->atomicId();
@@ -9977,16 +9989,15 @@ void StyleResolver::recalcRuleSetIfNeeds()
             size_t rules = sheet->styleRules().size();
             for (size_t j = 0; j < rules; j++) {
                 StyleRule* rule = sheet->styleRules()[j].first;
-                if (UNLIKELY(rule->isPseudoClassHostSelector())) {
-                    // If styleRules has a single pseudo class host, add to
-                    // rule set of parent. other case, we simply give up to add.
-                    if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
-                                 &m_document->styleResolver() != this)) {
-                        // `m_document->styleResolver() != this` means that
-                        // this style resolver is for shadow-dom.
-                        m_document->styleResolver().addToRuleSet(
-                            sheet->styleRules()[j]);
-                    }
+                // If a styleRule has a simple pseudo class host, add a
+                // styleRule to rule set of parent. if not, add a styleRule to
+                // this rule set to support Combinators.
+                if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
+                             &m_document->styleResolver() != this)) {
+                    // `m_document->styleResolver() != this` means that
+                    // this style resolver is for shadow-dom.
+                    m_document->styleResolver().addToRuleSet(
+                        sheet->styleRules()[j]);
                 } else {
                     addToRuleSet(sheet->styleRules()[j]);
                 }
