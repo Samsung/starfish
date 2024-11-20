@@ -3223,7 +3223,7 @@ static void tokenize(TokenVector& tokens, const char* data, size_t length)
 }
 
 CSSTokenValue StyleResolver::resolveVarReferencedValue(
-    Element* element, const CSSStyleValuePair& cssValuePair)
+    Node* node, const CSSStyleValuePair& cssValuePair)
 {
     OptionalUTF8String utf8String =
         cssValuePair.varFunctionValue()->toOptionalUTF8String();
@@ -3242,7 +3242,7 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
     utf8String.m_buffer = utf8String.m_buffer + startIndex;
     utf8String.m_bufferSize = size;
     CSSTokenValue newCssValue =
-        resolveVarReferencedValue(element, utf8String, cssCustomValues());
+        resolveVarReferencedValue(node, utf8String, cssCustomValues());
 
     if (cssValuePair.temporaryValueKind() ==
         CSSStyleValuePair::ValueKind::CalcValueKind) {
@@ -3252,7 +3252,7 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
 }
 
 CSSTokenValue StyleResolver::resolveVarReferencedValue(
-    Element* element, OptionalUTF8String utf8String,
+    Node* node, OptionalUTF8String utf8String,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     CSSTokenValue newCssValue;
@@ -3260,13 +3260,12 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
     tokenize(cssValueTokens, utf8String.m_buffer, utf8String.m_bufferSize);
 
     for (size_t i = 0; i < cssValueTokens.size(); ++i) {
-        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(
-            element->starfish());
+        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(node->starfish());
         variablesSyntaxBuilder.build(cssValueTokens[i].data(),
                                      cssValueTokens[i].size());
         if (variablesSyntaxBuilder.isValid()) {
             auto styleValue =
-                variablesSyntaxBuilder.generateStyle(element, cssCustomValues);
+                variablesSyntaxBuilder.generateStyle(node, cssCustomValues);
             TokenVector tempCssValueTokens;
             tokenize(tempCssValueTokens, styleValue.data(),
                      styleValue.length());
@@ -3300,7 +3299,7 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
                                                  nextToken.size());
                     if (variablesSyntaxBuilder.isValid()) {
                         auto styleValue = variablesSyntaxBuilder.generateStyle(
-                            element, cssCustomValues);
+                            node, cssCustomValues);
                         TokenVector tempCssValueTokens;
                         tokenize(tempCssValueTokens, styleValue.data(),
                                  styleValue.length());

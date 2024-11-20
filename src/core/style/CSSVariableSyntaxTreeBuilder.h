@@ -118,7 +118,7 @@ public:
 
     typedef VectorWithInlineStorage<256, char, std::allocator<char>>
         StyleString;
-    StyleString generateStyle(Element* element,
+    StyleString generateStyle(Node* node,
                               Optional<const MutablePropertyValueList*>);
 
     void dump();

@@ -82,13 +82,13 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
 
     // Perform the minimum action required to resolve the style about |keykind|.
     switch (requiredStage(keyKind)) {
-    case RequreidStyleResolveStage::kStayleResolution:
+    case RequiredStyleResolveStage::StyleResolution:
         browsingContext->resolveStyleIfNeeds();
         break;
-    case RequreidStyleResolveStage::kFrameTreeBuild:
+    case RequiredStyleResolveStage::FrameTreeBuild:
         browsingContext->buildFrameTreeIfNeeds();
         break;
-    case RequreidStyleResolveStage::kLayout:
+    case RequiredStyleResolveStage::Layout:
         browsingContext->layoutIfNeeded();
         break;
     default:
@@ -97,7 +97,7 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
     }
 }
 
-ComputedStyleCSSStyleDeclaration::RequreidStyleResolveStage
+ComputedStyleCSSStyleDeclaration::RequiredStyleResolveStage
 ComputedStyleCSSStyleDeclaration::requiredStage(
     CSSStyleValuePair::KeyKind keyKind)
 {
@@ -126,15 +126,15 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
     case CSSStyleValuePair::KeyKind::MarginInlineStart:
     case CSSStyleValuePair::KeyKind::GridTemplateRows:
     case CSSStyleValuePair::KeyKind::GridTemplateColumns:
-        return RequreidStyleResolveStage::kLayout;
+        return RequiredStyleResolveStage::Layout;
     case CSSStyleValuePair::KeyKind::MinWidth:
     case CSSStyleValuePair::KeyKind::MinHeight:
-        return RequreidStyleResolveStage::kFrameTreeBuild;
+        return RequiredStyleResolveStage::FrameTreeBuild;
     default:
-        return RequreidStyleResolveStage::kStayleResolution;
+        return RequiredStyleResolveStage::StyleResolution;
     }
 
-    return RequreidStyleResolveStage::kStayleResolution;
+    return RequiredStyleResolveStage::StyleResolution;
 }
 
 static CSSStyleValuePair stylePaintDataToCSSStyleValue(
@@ -2651,6 +2651,24 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 Optional<String*> value =
                     customPropertyties.value()->property(key);
                 if (value) {
+                    CSSTokenValue refValue = value->toUTF8NonGCString();
+                    Element* element = m_node->asElement();
+
+                    while (true) {
+                        auto newRefValue =
+                            StyleResolver::resolveVarReferencedValue(
+                                element,
+                                OptionalUTF8String(refValue.data(),
+                                                   refValue.length()),
+                                element->styleResolver().cssCustomValues());
+                        if (newRefValue == refValue) {
+                            break;
+                        }
+                        refValue = newRefValue;
+                    }
+                    value =
+                        String::fromUTF8(refValue.data(), refValue.length());
+
                     setCustomProperty(key, value.value());
                 }
             }
