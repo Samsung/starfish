@@ -10245,17 +10245,34 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
     }
 
     for (size_t i = 0; i < size; i++) {
-        if (selectorList[i].m_selector->isAttributeSelector()) {
-            if (!mayHaveAttrSelectorWithName(
-                    selectorList[i]
-                        .m_selector->asCSSAttributeSelector()
-                        ->attribute()
-                        .localNameAtomic())) {
-                m_ruleSetAttrFilter.push_back(
-                    selectorList[i]
-                        .m_selector->asCSSAttributeSelector()
-                        ->attribute()
-                        .localNameAtomic());
+        CSSSelector* selector = selectorList[i].m_selector;
+        CSSSelector* currentSelector = selector;
+        size_t subSelectorIndex = 0;
+        size_t subSelectorSize =
+            UNLIKELY(selector->type() == CSSSelector::Type::PseudoClass)
+                ? selector->asCSSPseudoSelector()->pseudoSelectorList().size()
+                : 0;
+        while (currentSelector) {
+            if (currentSelector->isAttributeSelector()) {
+                if (!mayHaveAttrSelectorWithName(
+                        currentSelector->asCSSAttributeSelector()
+                            ->attribute()
+                            .localNameAtomic())) {
+                    m_ruleSetAttrFilter.push_back(
+                        currentSelector->asCSSAttributeSelector()
+                            ->attribute()
+                            .localNameAtomic());
+                }
+            }
+
+            if (UNLIKELY(subSelectorIndex < subSelectorSize)) {
+                // For functional pseudo class selector such as :not(), :host()
+                // can have compound selector
+                currentSelector = selector->asCSSPseudoSelector()
+                                      ->pseudoSelectorList()[subSelectorIndex++]
+                                      .m_selector;
+            } else {
+                currentSelector = nullptr;
             }
         }
     }
