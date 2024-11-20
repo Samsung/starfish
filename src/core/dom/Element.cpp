@@ -725,6 +725,13 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
     if (styleResolver().mayHaveAttrSelectorWithName(name.localNameAtomic())) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
+    if (UNLIKELY(isShadowRootHost())) {
+        ShadowRoot* shadowRoot = internalShadowRoot().value();
+        auto& resolver = shadowRoot->styleResolver();
+        if (resolver.mayHaveAttrSelectorWithName(name.localNameAtomic())) {
+            shadowRoot->setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        }
+    }
 }
 
 void Element::didNodeInserted(Node* parent, Node* newChild)
