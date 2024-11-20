@@ -307,7 +307,7 @@ static void appendString(CSSVariableSyntaxTreeBuilder::StyleString& str,
 
 CSSVariableSyntaxTreeBuilder::StyleString
 CSSVariableSyntaxTreeBuilder::generateStyle(
-    Element* element, Optional<const MutablePropertyValueList*> cssCustomValues)
+    Node* node, Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     struct Context {
         Context(Block* b, size_t i)
@@ -341,10 +341,10 @@ CSSVariableSyntaxTreeBuilder::generateStyle(
                 if (block->isVariable()) {
                     Variable* variable = (Variable*)block;
                     if (isFirst) {
-                        auto currentElement = element;
+                        auto currentNode = node;
                         Optional<const MutablePropertyValueList*>
                             currentCustomValues = cssCustomValues;
-                        while (currentElement && !found) {
+                        while (currentNode && !found) {
                             if (currentCustomValues) {
                                 for (size_t k = 0;
                                      k < currentCustomValues->values().size();
@@ -360,10 +360,10 @@ CSSVariableSyntaxTreeBuilder::generateStyle(
                                 }
                             }
 
-                            currentElement = currentElement->parentElement();
-                            if (currentElement) {
+                            currentNode = currentNode->renderingParentElement();
+                            if (currentNode) {
                                 auto cp =
-                                    currentElement->style()->customProperty();
+                                    currentNode->style()->customProperty();
                                 if (cp) {
                                     currentCustomValues = cp.value();
                                 } else {

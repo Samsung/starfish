@@ -518,15 +518,15 @@ public:
                      String* customPropertyName) override;
 
 private:
-    enum class RequreidStyleResolveStage {
-        kStayleResolution,
-        kFrameTreeBuild,
-        kLayout,
+    enum class RequiredStyleResolveStage {
+        StyleResolution,
+        FrameTreeBuild,
+        Layout,
     };
 
     void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
 
-    RequreidStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind);
+    RequiredStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind);
 };
 } // namespace Starfish
 
