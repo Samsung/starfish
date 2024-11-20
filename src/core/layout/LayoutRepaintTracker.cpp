@@ -172,6 +172,19 @@ static void traceRepaintRegionJob(
                 }
 
                 if (frameRectChanged) {
+                    LayoutRect dirtyRect = currentFrameBox->frameRect();
+                    dirtyRect.unite(iter->second.first);
+                    dirtyRect.setX(0);
+                    dirtyRect.setY(0);
+
+                    auto iter2 = dirtyAreaMapPerStackingContext.find(node);
+                    if (iter2 == dirtyAreaMapPerStackingContext.end()) {
+                        dirtyAreaMapPerStackingContext.insert(
+                            std::make_pair(node, dirtyRect));
+                    } else {
+                        iter2->second.unite(dirtyRect);
+                    }
+
                     iter->second.first.setX(LayoutUnit::min());
                     iter->second.first.setY(LayoutUnit::min());
                 }

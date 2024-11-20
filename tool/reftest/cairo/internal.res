@@ -706,6 +706,7 @@ test/cairo/internal-test/css/presentational-hints/body-margin-presentational-hin
 test/cairo/internal-test/css/repaint/outline-repaint.html
 test/cairo/internal-test/css/repaint/element-style-changing-text-node-repaint.html
 test/cairo/internal-test/css/repaint/element-style-changing-opacity-repaint.html
+test/cairo/internal-test/css/repaint/stacking-context-owner-element-animation-repaint-test-1.html
 test/cairo/internal-test/css/pseudo/before-element-damage.html
 test/cairo/internal-test/css/pseudo/pseudo-before-display-changing.html
 test/cairo/internal-test/css/pseudo/pseudo-class-host_01.html
