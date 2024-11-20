@@ -1413,7 +1413,7 @@ void StackingContext::fillGraphicsBufferContents(
     }
 
     bool needsComputeScroll = !isRootContext() && !isIFrameStackingContext() &&
-                              m_owner->isFrameBlockBox();
+                              m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow();
     if (needsComputeScroll) {
         canvas->save();
         canvas->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
