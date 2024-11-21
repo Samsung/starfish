@@ -1,0 +1,22 @@
+// https://svgwg.org/specs/animations/#InterfaceSVGAnimationElement
+
+[Exposed=Window]
+interface SVGAnimationElement : SVGElement {
+
+  [Unimplemented] readonly attribute SVGElement? targetElement;
+
+  [Unimplemented] attribute EventHandler onbegin;
+  [Unimplemented] attribute EventHandler onend;
+  [Unimplemented] attribute EventHandler onrepeat;
+
+  [Unimplemented] float getStartTime();
+  [Unimplemented] float getCurrentTime();
+  [Unimplemented] float getSimpleDuration();
+
+  undefined beginElement();
+  [Unimplemented] undefined beginElementAt(float offset);
+  [Unimplemented] undefined endElement();
+  [Unimplemented] undefined endElementAt(float offset);
+};
+
+// TODO: SVGAnimationElement includes SVGTests;

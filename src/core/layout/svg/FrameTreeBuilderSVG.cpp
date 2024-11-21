@@ -174,6 +174,10 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         auto ft = new FrameText(textNode, textStyle);
         textNode->setFrame(ft);
         box->appendChild(ft);
+    } else if (svgElement->isSVGAnimateElement()) {
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGInvisibleBox(svgElement);
     }
 
     // update clipPath element

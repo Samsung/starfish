@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
+#include "core/dom/svg/SVGAnimateElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGRectElement.h"
 #include "core/dom/svg/SVGPathElement.h"
@@ -101,6 +102,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGMarkerElement(document, qname);
     } else if (str->m_svgswitchTagName == localName) {
         return new SVGSwitchElement(document, qname);
+    } else if (str->m_svganimateTagName == localName) {
+        return new SVGAnimateElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }
