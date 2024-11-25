@@ -37,7 +37,7 @@ public:
         return "FrameSVGEllipseBox";
     }
 
-    virtual Path* path() override;
+    virtual Optional<Path*> path() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

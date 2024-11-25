@@ -51,7 +51,7 @@ void* FrameSVGEllipseBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGEllipseBox::path()
+Optional<Path*> FrameSVGEllipseBox::path()
 {
     Path* path = Path::create();
     FrameBox* cb = layoutParent()->asFrameBox();

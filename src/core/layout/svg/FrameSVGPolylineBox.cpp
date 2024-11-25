@@ -43,7 +43,7 @@ void* FrameSVGPolylineBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGPolylineBox::path()
+Optional<Path*> FrameSVGPolylineBox::path()
 {
     auto points =
         parsePointsFromString(node()->asElement()->getAttributeOrEmpty(

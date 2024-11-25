@@ -24,11 +24,20 @@
 
 namespace Starfish {
 
+class Path;
+
 class SVGPathElement : public SVGElement {
 public:
     SVGPathElement(Document* document, const QualifiedName& qname)
         : SVGElement(document, qname)
     {
+    }
+
+    static Path* parsePath(String* d);
+
+    Optional<Path*> path()
+    {
+        return m_path;
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -49,9 +58,19 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void didComputedStyleChanged(
+        ComputedStyle* oldStyle, ComputedStyle* newStyle,
+        Optional<StyleResolveContext*> ctx) override;
+
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+private:
+    Optional<Path*> m_path;
 };
 } // namespace Starfish
 

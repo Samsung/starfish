@@ -167,10 +167,10 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         Frame* clipPathFrame =
             node()->asSVGElement()->clipPathElement()->frame();
         if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
-            Path* clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
+            auto clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
             if (clipPath) {
                 ctx.m_canvas->translate(-x(), -y());
-                ctx.m_canvas->clipPath(clipPath);
+                ctx.m_canvas->clipPath(clipPath.value());
                 ctx.m_canvas->translate(x(), y());
             }
         }
@@ -541,7 +541,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
     Optional<CanvasFillStrokeSource*> fillInfo;
     Optional<CanvasFillStrokeSource*> strokeInfo;
 
-    Path* newPath = path();
+    auto newPath = path();
     if (newPath) {
         if (fillHasUrl) {
             // TODO: Only support linear gradient
@@ -594,10 +594,10 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
                             strokeColor.a() * style()->strokeOpacity()));
         }
-        ctx.m_canvas->fillPath(newPath);
+        ctx.m_canvas->fillPath(newPath.value());
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->strokePath(newPath);
+        ctx.m_canvas->strokePath(newPath.value());
         ctx.m_canvas->restore();
     }
 }

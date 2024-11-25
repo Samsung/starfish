@@ -43,7 +43,7 @@ void* FrameSVGRectBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGRectBox::path()
+Optional<Path*> FrameSVGRectBox::path()
 {
     Path* path = Path::create();
 
