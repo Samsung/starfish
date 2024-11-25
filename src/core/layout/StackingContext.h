@@ -220,6 +220,11 @@ public:
         return needsGraphicsBufferReason() || needsGraphicsBuffer();
     }
 
+    bool hasFilterEffect()
+    {
+        return m_hasFilterEffect;
+    }
+
     const LayoutRect& screenExtent()
     {
         return m_screenExtent;

@@ -192,7 +192,8 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
 
     bool dontSplitGraphicsBufferCond = false;
 
-    if (sc->owner()->style()->hasFilter()) {
+    if (sc->owner()->style()->hasFilter() ||
+            sc->owner()->isFrameSVGSVGBox()) {
         dontSplitGraphicsBufferCond = true;
     }
 
@@ -882,6 +883,20 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
         }
         iter++;
     }
+}
+
+static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc)
+{
+    if (sc->owner()->isFrameSVGSVGBox()) {
+        return static_cast<CanvasSurface::CanvasSurfaceFlag>(
+                CanvasSurface::PreferEGLImage |
+                CanvasSurface::PreferRetainCPUBufferWhenUnmap |
+                CanvasSurface::PreferUnitedTexture);
+    }
+    if (sc->hasFilterEffect()) {
+        return CanvasSurface::PreferUnitedTexture;
+    }
+    return CanvasSurface::PlainElement;
 }
 
 void StackingContext::applyStackingContextProperties(
@@ -1876,9 +1891,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                     m_owner->document()->webView()->renderer(),
                                     tileDataWidth, tileDataHeight,
                                     additionalPixelRatio(),
-                                    m_hasFilterEffect
-                                        ? CanvasSurface::PreferUnitedTexture
-                                        : CanvasSurface::PlainElement);
+                                    computeSurfaceFlag(this));
                             Canvas* canvas = Canvas::create(
                                 m_owner->node()->webView(), canvasSurface);
 
@@ -2075,9 +2088,7 @@ bool StackingContext::fillGraphicsBufferContents(
                             m_owner->document()->webView()->renderer(),
                             tileDataWidth, tileDataHeight,
                             additionalPixelRatio(),
-                            m_hasFilterEffect
-                                ? CanvasSurface::PreferUnitedTexture
-                                : CanvasSurface::PlainElement);
+                            computeSurfaceFlag(this));
                     gotNewBuffer = true;
                 }
 
