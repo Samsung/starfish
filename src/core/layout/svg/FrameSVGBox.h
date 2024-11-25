@@ -57,7 +57,7 @@ public:
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx);
 
-    virtual Path* path()
+    virtual Optional<Path*> path()
     {
         return nullptr;
     }

@@ -39,7 +39,7 @@ void* FrameSVGLineBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGLineBox::path()
+Optional<Path*> FrameSVGLineBox::path()
 {
     Path* path = Path::create();
 

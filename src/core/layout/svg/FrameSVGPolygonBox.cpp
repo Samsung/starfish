@@ -44,7 +44,7 @@ void* FrameSVGPolygonBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGPolygonBox::path()
+Optional<Path*> FrameSVGPolygonBox::path()
 {
     auto points =
         parsePointsFromString(node()->asElement()->getAttributeOrEmpty(

@@ -54,19 +54,19 @@ void FrameSVGClipPathBox::paintSVG(PaintingContext& ctx)
     // ‘clipPath’ elements are never rendered directly
 }
 
-Path* FrameSVGClipPathBox::path()
+Optional<Path*> FrameSVGClipPathBox::path()
 {
-    Path* path = nullptr;
+    Optional<Path*> path = nullptr;
     Frame* child = firstChild();
     while (child) {
         if (child && child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
-            Path* childPath = childBox->path();
+            auto childPath = childBox->path();
             if (childPath) {
                 childPath->translate(childBox->x().toInt(),
                                      childBox->y().toInt());
                 if (path) {
-                    path->append(childPath);
+                    path->append(childPath.value());
                 } else {
                     path = childPath;
                 }

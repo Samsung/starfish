@@ -44,7 +44,7 @@ void* FrameSVGCircleBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Path* FrameSVGCircleBox::path()
+Optional<Path*> FrameSVGCircleBox::path()
 {
     Path* path = Path::create();
 
