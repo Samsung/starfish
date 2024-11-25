@@ -451,10 +451,10 @@ public:
                         postMatrixIfNeeds(stackingContext);
                     }
 
-                    if (overflowOrScroll.first) {
+                    if (overflowOrScroll.first && childFrameBox != frameBox) {
                         clipFrameBoxRect(frameBox);
+                        clipBorderRadiusIfNeeds(frameBox);
                     }
-                    clipBorderRadiusIfNeeds(frameBox);
 
                     if (style->isAbsolutePositioned()) {
                         applyStyleClip(style);
@@ -542,8 +542,8 @@ public:
 
                 if (overflowOrScroll.first && childFrameBox != frameBox) {
                     clipFrameBoxRect(frameBox);
+                    clipBorderRadiusIfNeeds(frameBox);
                 }
-                clipBorderRadiusIfNeeds(frameBox);
 
                 if (style->isAbsolutePositioned()) {
                     applyStyleClip(style);
