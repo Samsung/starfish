@@ -700,7 +700,12 @@ unsigned CSSSelector::specificityForOneSelector() const
     case Id:
         return specificity + 0x010000;
     case Class:
-    case PseudoClass:
+    case PseudoClass: {
+        if (UNLIKELY(m_pseudotype == CSSSelector::PseudoType::PseudoHost)) {
+            return 0;
+        }
+        return specificity + 0x000100;
+    }
     case CSSSelector::AttributeExact:   // Example: E[foo="bar"]
     case CSSSelector::AttributeSet:     // Example: E[foo]
     case CSSSelector::AttributeHyphen:  // Example: E[foo|="bar"]
@@ -2639,6 +2644,7 @@ StyleResolver::StyleResolver(Document* document)
     : DocumentHoldable(document)
     , m_usesFirstLineRule(false)
     , m_needsRecalcRuleSet(true)
+    , m_hasSimplePseudoClassHostSelector(false)
     , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
@@ -7792,10 +7798,12 @@ static bool comparingRules(const std::pair<StyleRule*, ResourceURL*>& r1,
         return false;
     }
 
-    if (a->selectorList().specificity() == b->selectorList().specificity()) {
+    unsigned int specificityA = a->selectorList().specificity();
+    unsigned int specificityB = b->selectorList().specificity();
+    if (specificityA == specificityB) {
         return a->order() < b->order();
     }
-    return a->selectorList().specificity() < b->selectorList().specificity();
+    return specificityA < specificityB;
 }
 
 template <typename Iter, typename Func>
@@ -9881,6 +9889,16 @@ void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
     m_ruleSetAttrFilter.clear();
+
+    if (m_hasSimplePseudoClassHostSelector) {
+        Traverse::traverseIncludingShadowDOM(document(), [](Node* node) {
+            if (node->isShadowRoot()) {
+                node->asShadowRoot()->styleResolver().setNeedsRecalcRuleSet();
+            }
+        });
+    }
+    m_hasSimplePseudoClassHostSelector = false;
+
     resetNextRuleSetOrder();
 }
 
@@ -9998,6 +10016,8 @@ void StyleResolver::recalcRuleSetIfNeeds()
                     // this style resolver is for shadow-dom.
                     m_document->styleResolver().addToRuleSet(
                         sheet->styleRules()[j]);
+                    m_document->styleResolver()
+                        .m_hasSimplePseudoClassHostSelector = true;
                 } else {
                     addToRuleSet(sheet->styleRules()[j]);
                 }

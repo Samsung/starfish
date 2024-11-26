@@ -3354,6 +3354,7 @@ protected:
 
     bool m_usesFirstLineRule;
     bool m_needsRecalcRuleSet;
+    bool m_hasSimplePseudoClassHostSelector;
     uint32_t m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
     MediaQueryEvaluator* m_mediaQueryEvaluator;

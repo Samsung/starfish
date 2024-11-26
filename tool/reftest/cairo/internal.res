@@ -715,6 +715,8 @@ test/cairo/internal-test/css/pseudo/pseudo-class-host_02.html
 test/cairo/internal-test/css/pseudo/pseudo-class-host_03.html
 test/cairo/internal-test/css/pseudo/pseudo-class-host_04.html
 test/cairo/internal-test/css/pseudo/pseudo-class-host_05.html
+test/cairo/internal-test/css/pseudo/pseudo-class-host_06.html
+test/cairo/internal-test/css/pseudo/pseudo-class-host_07.html
 test/cairo/internal-test/css/pseudo/pseudo-class-scope_01.html
 test/cairo/internal-test/css/css-ui/pointer-events_01.html
 test/cairo/internal-test/css/inset/inset.html
