@@ -154,7 +154,6 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                 ctx.m_canvas->postMatrix(matrix);
                 ctx.m_canvas->translate(x(), y());
             }
-
         }
     }
 
@@ -426,7 +425,8 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     return result;
 }
 
-Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(String* url)
+Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
+    String* url)
 {
     ResourceURL* resourceUrl = new ResourceURL(url);
     if (!resourceUrl->isValid()) {
@@ -536,18 +536,21 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
 
-    Optional<CanvasFillStrokeSource*> info;
+    bool fillHasUrl = style()->fill()->hasUrl();
+    bool strokeHasUrl = style()->stroke()->hasUrl();
+    Optional<CanvasFillStrokeSource*> fillInfo;
+    Optional<CanvasFillStrokeSource*> strokeInfo;
 
     Path* newPath = path();
     if (newPath) {
-        if (style()->fill()->hasUrl()) {
+        if (fillHasUrl) {
             // TODO: Only support linear gradient
-            info = makeCanvasFillStrokeSource(style()->fill()->url());
+            fillInfo = makeCanvasFillStrokeSource(style()->fill()->url());
 
             // TODO: Remove ME!
             // Temporarily use the existing path until implementing radial
             // gradient at makeCanvasFillStrokeSource.
-            if (!info) {
+            if (!fillInfo) {
                 Optional<GradientDrawingInfo*> radialGradientInfo =
                     makeGradientDrawingInfo(style()->fill()->url());
                 if (radialGradientInfo.hasValue()) {
@@ -566,9 +569,15 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 }
             }
         }
+
+        if (strokeHasUrl) {
+            // TODO: Only support linear gradient
+            strokeInfo = makeCanvasFillStrokeSource(style()->stroke()->url());
+        }
+
         ctx.m_canvas->save();
-        if (info) {
-            ctx.m_canvas->setFillSource(info.value());
+        if (fillInfo.hasValue()) {
+            ctx.m_canvas->setFillSource(fillInfo.value());
         } else {
             Unit::Color fillColor = style()->fill()->color();
             ctx.m_canvas->setFillColor(
@@ -576,11 +585,16 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                             fillColor.a() * style()->fillOpacity()));
             ctx.m_canvas->setFillRule(style()->fillRule());
         }
+
+        if (strokeInfo.hasValue()) {
+            ctx.m_canvas->setStrokeSource(strokeInfo.value());
+        } else {
+            Unit::Color strokeColor = style()->stroke()->color();
+            ctx.m_canvas->setStrokeColor(
+                Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                            strokeColor.a() * style()->strokeOpacity()));
+        }
         ctx.m_canvas->fillPath(newPath);
-        Unit::Color strokeColor = style()->stroke()->color();
-        ctx.m_canvas->setStrokeColor(
-            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                        strokeColor.a() * style()->strokeOpacity()));
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
         ctx.m_canvas->strokePath(newPath);

@@ -664,6 +664,8 @@ test/cairo/internal-test/svg/svg_mask_01.html
 test/cairo/internal-test/svg/svg_transform_rotate.html
 test/cairo/internal-test/svg/svg_use_shadowRoot_01.html
 test/cairo/internal-test/svg/svg_flex_size_01.html
+test/cairo/internal-test/svg/svg_stroke_gradient01.html
+test/cairo/internal-test/svg/svg_stroke_gradient02.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
