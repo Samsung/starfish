@@ -6705,6 +6705,9 @@ void StyleResolver::applyProperty(Element* element,
                     new StylePaintData(NamedColor::namedColorToColor(
                         newCssValue.namedColorValue())));
             }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::UrlValueKind) {
+            style->setStroke(new StylePaintData(newCssValue.urlStringValue()));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -15654,8 +15657,11 @@ bool CSSStyleValuePair::updateValueStroke(Document* document,
             return true;
         }
     }
-
-    return updateValueUnitColor(tokens[0]);
+    if (CSSPropertyParser::parseUrl(tokens[0].data(), this)) {
+        return true;
+    } else {
+        return updateValueUnitColor(tokens[0]);
+    }
 }
 
 bool CSSStyleValuePair::updateValueStrokeWidth(Document* document,
