@@ -37,11 +37,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGGElement() const override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool isRenderableElement() override
     {
         return true;

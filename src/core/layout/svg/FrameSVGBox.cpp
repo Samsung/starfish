@@ -24,6 +24,7 @@
 #include "FrameSVGBox.h"
 #include "FrameSVGClipPathBox.h"
 #include "FrameSVGMaskBox.h"
+#include "FrameSVGSVGBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/CanvasGradient.h"
@@ -55,16 +56,21 @@ void* FrameSVGBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+bool FrameSVGBox::needsSVGGeometryAttributes()
+{
+    return node()->asSVGElement()->needsGeometryAttributes();
+}
+
 void FrameSVGBox::layout(LayoutContext& ctx,
                          Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBox* cb = layoutParent()->asFrameBox();
-    if (node()->asSVGElement()->needsGeometryAttributes()) {
+    auto vp = viewport();
+    if (node()->asSVGElement()->needsSizingAttributes()) {
         if (resolveWhat & Frame::ResolveWidth) {
             auto styleWidth = style()->width();
             LayoutUnit width;
             if (!styleWidth.isAuto()) {
-                width = styleWidth.specifiedValue(cb->width(), this);
+                width = styleWidth.specifiedValue(vp.width(), this);
             }
             setWidth(width);
         }
@@ -73,21 +79,30 @@ void FrameSVGBox::layout(LayoutContext& ctx,
             auto styleHeight = style()->height();
             LayoutUnit height;
             if (!styleHeight.isAuto()) {
-                height = styleHeight.specifiedValue(cb->height(), this);
+                height = styleHeight.specifiedValue(vp.height(), this);
             }
             setHeight(height);
         }
     } else {
         if (resolveWhat & Frame::ResolveWidth) {
-            setWidth(cb->width());
+            setWidth(0);
         }
 
         if (resolveWhat & Frame::ResolveHeight) {
-            setHeight(cb->height());
+            setHeight(0);
         }
     }
 
     layoutSVG();
+
+    if (!needsSVGGeometryAttributes()) {
+        auto p = path();
+        if (p) {
+            Unit::Rect pixelSnappedRect = p->boundingRect(false).snapSizeToPixel();
+            m_frameRect = LayoutRect(pixelSnappedRect.x(), pixelSnappedRect.y(),
+                    pixelSnappedRect.width(), pixelSnappedRect.height());
+        }
+    }
 
     Frame* f = firstChild();
     while (f) {
@@ -97,20 +112,35 @@ void FrameSVGBox::layout(LayoutContext& ctx,
         }
         f = f->next();
     }
+
+    postLayoutSVG();
+}
+
+LayoutSize FrameSVGBox::viewport()
+{
+    Frame* f = this;
+    while (true) {
+        if (f->isFrameSVGSVGBox()) {
+            return f->asFrameSVGSVGBox()->viewport();
+        }
+        f = f->layoutParent();
+    }
 }
 
 void FrameSVGBox::resolvePosition(LayoutContext& ctx)
 {
-    if (node()->asSVGElement()->needsGeometryAttributes()) {
-        FrameBox* cb = layoutParent()->asFrameBox();
+    if (needsSVGGeometryAttributes()) {
+        auto vp = viewport();
         auto styleX = style()->x();
         LayoutUnit xResult;
-        if (styleX.isSpecified())
-            xResult = styleX.specifiedValue(cb->width(), this);
+        if (styleX.isSpecified()) {
+            xResult = styleX.specifiedValue(vp.width(), this);
+        }
         auto styleY = style()->y();
         LayoutUnit yResult;
-        if (styleY.isSpecified())
-            yResult = styleY.specifiedValue(cb->height(), this);
+        if (styleY.isSpecified()) {
+            yResult = styleY.specifiedValue(vp.height(), this);
+        }
         setX(xResult);
         setY(yResult);
     } else {
@@ -129,6 +159,8 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
+    bool needsGeometryAttributes = needsSVGGeometryAttributes();
+
     if (style()->hasTransforms()) {
         FrameBox* cb = layoutParent()->asFrameBox();
         auto matrix =
@@ -144,15 +176,24 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
 
             if (style()->hasTransformOrigin()) {
                 auto to = style()->transformOrigin()->originValue();
-                auto ox = to->getXAxis().specifiedValue(cb->width(), this);
-                auto oy = to->getYAxis().specifiedValue(cb->height(), this);
-                ctx.m_canvas->translate(ox, oy);
+                auto vp = viewport();
+                auto ox = to->getXAxis().specifiedValue(vp.width(), this);
+                auto oy = to->getYAxis().specifiedValue(vp.height(), this);
+                if (needsGeometryAttributes) {
+                    ctx.m_canvas->translate(ox, oy);
+                }
                 ctx.m_canvas->postMatrix(matrix);
-                ctx.m_canvas->translate(-ox, -oy);
+                if (needsGeometryAttributes) {
+                    ctx.m_canvas->translate(-ox, -oy);
+                }
             } else {
-                ctx.m_canvas->translate(-x(), -y());
+                if (needsGeometryAttributes) {
+                    ctx.m_canvas->translate(-x(), -y());
+                }
                 ctx.m_canvas->postMatrix(matrix);
-                ctx.m_canvas->translate(x(), y());
+                if (needsGeometryAttributes) {
+                    ctx.m_canvas->translate(x(), y());
+                }
             }
         }
     }
@@ -169,9 +210,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
             auto clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
             if (clipPath) {
-                ctx.m_canvas->translate(-x(), -y());
                 ctx.m_canvas->clipPath(clipPath.value());
-                ctx.m_canvas->translate(x(), y());
             }
         }
     }
@@ -180,14 +219,32 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         node()->asSVGElement()->maskElement()) {
         Frame* maskFrame = node()->asSVGElement()->maskElement()->frame();
         if (maskFrame && maskFrame->isFrameSVGMaskBox()) {
-            maskFrame->asFrameSVGMaskBox()->applyMask(ctx, x(), y());
+            if (needsGeometryAttributes) {
+                maskFrame->asFrameSVGMaskBox()->applyMask(ctx, x(), y());
+            } else {
+                maskFrame->asFrameSVGMaskBox()->applyMask(ctx, 0, 0);
+            }
         }
     }
 
     ctx.m_canvas->save();
     paintSVG(ctx);
     ctx.m_canvas->restore();
-    paintChildrenWith(ctx);
+
+    Frame* child = firstChild();
+    while (child) {
+        bool needsGeometryAttributes = child->needsSVGGeometryAttributes();
+        if (needsGeometryAttributes) {
+            ctx.m_canvas->translate(child->asFrameBox()->x(),
+                                    child->asFrameBox()->y());
+        }
+        child->asFrameBox()->paintContent(ctx);
+        if (needsGeometryAttributes) {
+            ctx.m_canvas->translate(-child->asFrameBox()->x(),
+                                    -child->asFrameBox()->y());
+        }
+        child = child->next();
+    }
 
     if (opacity != 1) {
         ctx.m_canvas->endOpacityLayer();
@@ -202,7 +259,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
 
 static Optional<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
     SVGLinearGradientElement* svgLinearGradientElement, LayoutRect layoutRect,
-    FrameBox* frameBox)
+    FrameBox* frameBox, LayoutSize viewport)
 {
     ComputedStyle* computedStyle = svgLinearGradientElement->style();
     Length x1 = computedStyle->x1();
@@ -240,10 +297,10 @@ static Optional<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
     Optional<GradientDrawingInfo*> gradientDrawingInfo =
         gradientData->asLinearGradientData()->makeGradientDrawingInfo(unitRect,
                                                                       frameBox);
-    gradientDrawingInfo->x1 = x1.specifiedValue(unitRect.width(), frameBox);
-    gradientDrawingInfo->y1 = y1.specifiedValue(unitRect.height(), frameBox);
-    gradientDrawingInfo->x2 = x2.specifiedValue(unitRect.width(), frameBox);
-    gradientDrawingInfo->y2 = y2.specifiedValue(unitRect.height(), frameBox);
+    gradientDrawingInfo->x1 = x1.specifiedValue(viewport.width(), frameBox);
+    gradientDrawingInfo->y1 = y1.specifiedValue(viewport.height(), frameBox);
+    gradientDrawingInfo->x2 = x2.specifiedValue(viewport.width(), frameBox);
+    gradientDrawingInfo->y2 = y2.specifiedValue(viewport.height(), frameBox);
 
     return gradientDrawingInfo;
 }
@@ -328,7 +385,7 @@ Optional<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
         // gradient direction is not normally drawn in cases other than 0, 90,
         // 180, 270 degrees by a given x1, x2, y1, y2 value.
         gradientDrawingInfo = makeLinearGradientDrawingInfo(
-            matchingSvg->asSVGLinearGradientElement(), layoutRect, this);
+            matchingSvg->asSVGLinearGradientElement(), layoutRect, this, viewport());
     } else if (matchingSvg->isSVGRadialGradientElement()) {
         gradientDrawingInfo = makeRadialGradientDrawingInfo(
             matchingSvg->asSVGRadialGradientElement(), layoutRect, this);
@@ -534,7 +591,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
 
 void FrameSVGBox::paintSVG(PaintingContext& ctx)
 {
-    FrameBox* cb = layoutParent()->asFrameBox();
+    auto vp = viewport();
 
     bool fillHasUrl = style()->fill()->hasUrl();
     bool strokeHasUrl = style()->stroke()->hasUrl();
@@ -596,7 +653,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
         ctx.m_canvas->fillPath(newPath.value());
         ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(cb->width(), this));
+            style()->strokeWidth().specifiedValue(vp.width(), this));
         ctx.m_canvas->strokePath(newPath.value());
         ctx.m_canvas->restore();
     }

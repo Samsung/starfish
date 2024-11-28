@@ -56,7 +56,6 @@ Optional<Path*> FrameSVGRectBox::path()
         ry = height() / 2;
     }
 
-    // ctx.m_canvas->beginPath();
     path->clear();
 
     if (rx == 0 && ry == 0) {

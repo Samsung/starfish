@@ -44,11 +44,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGPathElement() const override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool isRenderableElement() override
     {
         return true;

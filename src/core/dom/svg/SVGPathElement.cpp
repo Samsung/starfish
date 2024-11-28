@@ -547,6 +547,7 @@ void SVGPathElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_d == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsLayout();
         setNeedsPainting();
     }
 }

@@ -27,6 +27,8 @@
 
 namespace Starfish {
 
+class FrameSVGSVGBox;
+
 class FrameSVGBox : public FrameBox {
 public:
     FrameSVGBox(Node* node)
@@ -41,16 +43,24 @@ public:
         return true;
     }
 
+    virtual bool needsSVGGeometryAttributes() override;
+
     virtual const char* name() override
     {
         return "FrameSVGBox";
     }
+
+    LayoutSize viewport();
 
     void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 
     virtual void layoutSVG()
+    {
+    }
+
+    virtual void postLayoutSVG()
     {
     }
 

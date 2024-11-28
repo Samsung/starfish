@@ -42,17 +42,28 @@ public:
         return true;
     }
 
+    virtual bool needsSVGGeometryAttributes() override
+    {
+        return true;
+    }
+
     virtual const char* name() override
     {
         return "FrameSVGSVGBox";
     }
 
+    LayoutSize computeViewport();
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual IntrinsicSize intrinsicSize() override;
     virtual void paintReplaced(Canvas* canvas) override;
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+    LayoutSize viewport()
+    {
+        return m_viewport;
+    }
 
     Optional<Unit::Rect> viewBox()
     {
@@ -96,6 +107,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
     }
 
+    LayoutSize m_viewport;
     Optional<Unit::Rect> m_viewBox;
     float m_svgScale;
     NativeImageData* m_surface;

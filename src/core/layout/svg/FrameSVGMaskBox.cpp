@@ -25,6 +25,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/svg/SVGElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/page/WebView.h"
@@ -106,7 +107,9 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
         if (child && child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
             newCanvas->save();
-            newCanvas->translate(childBox->x(), childBox->y());
+            if (childBox->needsSVGGeometryAttributes()) {
+                newCanvas->translate(childBox->x(), childBox->y());
+            }
             childBox->paintContent(newCtx);
             newCanvas->restore();
         }

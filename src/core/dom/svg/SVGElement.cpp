@@ -210,6 +210,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     if (needsTransformAttributes()) {
         if (ss->m_transform == name || ss->m_transformOrigin == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
             setNeedsPainting();
         }
     }

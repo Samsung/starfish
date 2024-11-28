@@ -41,6 +41,7 @@
 #include "core/layout/svg/FrameSVGInvisibleBox.h"
 #include "core/layout/svg/FrameSVGUseBox.h"
 #include "core/layout/svg/FrameSVGMaskBox.h"
+#include "core/layout/svg/FrameSVGGBox.h"
 #include "core/layout/FrameBlockBox.h"
 
 #include "core/dom/Document.h"
@@ -71,7 +72,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         currentFrame = new FrameSVGRectBox(svgElement);
     } else if (svgElement->isSVGGElement()) {
         shouldContinue = true;
-        currentFrame = new FrameSVGBox(svgElement);
+        currentFrame = new FrameSVGGBox(svgElement);
         shouldVisitChild = true;
     } else if (svgElement->isSVGPathElement()) {
         shouldContinue = true;

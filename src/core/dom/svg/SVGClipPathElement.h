@@ -37,10 +37,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGClipPathElement() const override;
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,

@@ -61,11 +61,6 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool needsClipPathAttributes() override
     {
         return false;
