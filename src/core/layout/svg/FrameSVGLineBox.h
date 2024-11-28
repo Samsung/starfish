@@ -24,12 +24,6 @@
 
 namespace Starfish {
 
-/*
-void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
-                         double ry, double xAxisRotation, bool isLargeArc,
-                         bool isPositiveSweep, double x2, double y2);
-*/
-
 class FrameSVGLineBox final : public FrameSVGBox {
 public:
     FrameSVGLineBox(Node* node)

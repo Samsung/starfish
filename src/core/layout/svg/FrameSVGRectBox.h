@@ -47,15 +47,15 @@ public:
         auto styleRX = style()->rx();
         auto styleRY = style()->ry();
 
-        FrameBox* cb = layoutParent()->asFrameBox();
+        auto vp = viewport();
 
         if (styleRX.isSpecified() && styleRY.isSpecified()) {
-            m_rx = styleRX.specifiedValue(cb->width(), this);
-            m_ry = styleRY.specifiedValue(cb->height(), this);
+            m_rx = styleRX.specifiedValue(vp.width(), this);
+            m_ry = styleRY.specifiedValue(vp.height(), this);
         } else if (styleRX.isSpecified() && !styleRY.isSpecified()) {
-            m_rx = m_ry = styleRX.specifiedValue(cb->width(), this);
+            m_rx = m_ry = styleRX.specifiedValue(vp.width(), this);
         } else if (!styleRX.isSpecified() && styleRY.isSpecified()) {
-            m_rx = m_ry = styleRY.specifiedValue(cb->height(), this);
+            m_rx = m_ry = styleRY.specifiedValue(vp.height(), this);
         }
     }
 

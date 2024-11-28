@@ -35,11 +35,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGPolylineElement() const override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool isRenderableElement() override
     {
         return true;

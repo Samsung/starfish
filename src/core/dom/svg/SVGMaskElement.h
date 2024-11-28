@@ -50,6 +50,11 @@ public:
         return true;
     }
 
+    virtual bool needsSizingAttributes() override
+    {
+        return true;
+    }
+
     virtual bool isRenderableElement() override
     {
         return true;

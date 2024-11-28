@@ -38,11 +38,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGCircleElement() const override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool isRenderableElement() override
     {
         return true;

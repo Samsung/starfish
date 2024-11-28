@@ -48,19 +48,19 @@ Optional<Path*> FrameSVGCircleBox::path()
 {
     Path* path = Path::create();
 
-    FrameBox* cb = layoutParent()->asFrameBox();
+    auto vp = viewport();
 
     double cx = 0;
     if (style()->cx().isSpecified()) {
-        cx = style()->cx().specifiedValue(cb->width(), this);
+        cx = style()->cx().specifiedValue(vp.width(), this);
     }
     double cy = 0;
     if (style()->cy().isSpecified()) {
-        cy = style()->cy().specifiedValue(cb->height(), this);
+        cy = style()->cy().specifiedValue(vp.height(), this);
     }
     double r = 0;
     if (style()->r().isSpecified()) {
-        r = style()->r().specifiedValue(cb->width(), this);
+        r = style()->r().specifiedValue(vp.width(), this);
     }
 
     path->arc(cx, cy, r, 0.0, 2 * M_PI);

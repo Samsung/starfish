@@ -54,22 +54,22 @@ void* FrameSVGEllipseBox::operator new(size_t size)
 Optional<Path*> FrameSVGEllipseBox::path()
 {
     Path* path = Path::create();
-    FrameBox* cb = layoutParent()->asFrameBox();
+    auto vp = viewport();
     double cx = 0;
     if (style()->cx().isSpecified()) {
-        cx = style()->cx().specifiedValue(cb->width(), this);
+        cx = style()->cx().specifiedValue(vp.width(), this);
     }
     double cy = 0;
     if (style()->cy().isSpecified()) {
-        cy = style()->cy().specifiedValue(cb->height(), this);
+        cy = style()->cy().specifiedValue(vp.height(), this);
     }
     double rx = 0;
     if (style()->rx().isSpecified()) {
-        rx = style()->rx().specifiedValue(cb->width(), this);
+        rx = style()->rx().specifiedValue(vp.width(), this);
     }
     double ry = 0;
     if (style()->ry().isSpecified()) {
-        ry = style()->ry().specifiedValue(cb->height(), this);
+        ry = style()->ry().specifiedValue(vp.height(), this);
     }
     if (rx && ry) {
         path->ellipse(cx, cy, rx, ry, 0, 0, 2 * M_PI);

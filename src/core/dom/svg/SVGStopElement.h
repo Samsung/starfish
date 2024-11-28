@@ -38,11 +38,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGStopElement() const override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return false;
-    }
-
     virtual bool needsClipPathAttributes() override
     {
         return false;

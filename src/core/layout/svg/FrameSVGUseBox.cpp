@@ -48,8 +48,10 @@ Optional<Path*> FrameSVGUseBox::path()
             FrameSVGBox* childBox = child->asFrameSVGBox();
             auto childPath = childBox->path();
             if (childPath) {
-                childPath->translate(childBox->x().toInt(),
-                                     childBox->y().toInt());
+                if (childBox->needsSVGGeometryAttributes()) {
+                    childPath->translate(childBox->x().toInt(),
+                                         childBox->y().toInt());
+                }
                 if (path) {
                     path->append(childPath.value());
                 } else {

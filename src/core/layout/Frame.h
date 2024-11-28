@@ -1309,6 +1309,11 @@ public:
         return false;
     }
 
+    virtual bool needsSVGGeometryAttributes()
+    {
+        return false;
+    }
+
     virtual bool isFrameSVGSVGBox()
     {
         return false;

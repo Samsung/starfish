@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2024-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,35 +17,39 @@
  *  USA
  */
 
-#ifndef __StarfishSVGDefsElement__
-#define __StarfishSVGDefsElement__
+#ifndef __StarfishFrameSVGGBox__
+#define __StarfishFrameSVGGBox__
 
-#include "core/dom/svg/SVGElement.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 namespace Starfish {
 
-class SVGSVGElement;
-
-class SVGDefsElement : public SVGElement {
+class FrameSVGGBox final : public FrameSVGBox {
 public:
-    SVGDefsElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
+    FrameSVGGBox(Node* node)
+        : FrameSVGBox(node)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSVGDefsElement() const override;
-
-    virtual bool needsClipPathAttributes() override
+    virtual const char* name() override
     {
-        return false;
+        return "FrameSVGGBox";
     }
 
-    virtual bool needsTransparentAttributes() override
+    virtual void postLayoutSVG() override
     {
-        return false;
+        LayoutRect rt;
+        Frame* f = firstChild();
+        while (f) {
+            if (f->isFrameSVGBox()) {
+                rt.unite(f->asFrameBox()->frameRect());
+            }
+            f = f->next();
+        }
+        m_frameRect = rt;
     }
+
+protected:
 };
 } // namespace Starfish
 

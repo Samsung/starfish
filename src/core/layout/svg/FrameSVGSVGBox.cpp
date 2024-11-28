@@ -134,6 +134,16 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
             setY(y);
         }
 
+
+        // compute viewport
+        if (m_viewBox.hasValue()) {
+            m_viewport.setWidth(m_viewBox.value().width());
+            m_viewport.setHeight(m_viewBox.value().height());
+        } else {
+            m_viewport.setWidth(contentWidth().toFloat());
+            m_viewport.setHeight(contentHeight().toFloat());
+        }
+
         Frame* f = firstChild();
         while (f) {
             if (f->isFrameSVGSVGBox()) {
@@ -277,9 +287,13 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     Frame* child = firstChild();
     while (child) {
         ctx.m_canvas->save();
-        ctx.m_canvas->translate(
-            child->asFrameBox()->x() - borderLeft() - paddingLeft(),
-            child->asFrameBox()->y() - borderTop() - paddingTop());
+        if (child->needsSVGGeometryAttributes()) {
+            ctx.m_canvas->translate(
+                child->asFrameBox()->x() - borderLeft() - paddingLeft(),
+                child->asFrameBox()->y() - borderTop() - paddingTop());
+        } else {
+            ctx.m_canvas->translate(-borderLeft() - paddingLeft(), -borderTop() - paddingTop());
+        }
         if (child->isFrameSVGSVGBox()) {
             FrameSVGSVGBox* svg = (FrameSVGSVGBox*)child;
             svg->paintReplaced(canvas);
