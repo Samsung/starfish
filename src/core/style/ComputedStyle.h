@@ -4531,6 +4531,29 @@ public:
         }
     }
 
+    MaskTypeValue maskType(uint32_t layer = 0)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return MaskTypeValue::LuminanceMaskTypeValue;
+        }
+        return positionedMaskData->maskType(layer);
+    }
+
+    void setMaskType(MaskTypeValue value, uint32_t layer = 0)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setMaskType(value,
+                                                                     layer);
+    }
+
+    void resetMaskTypes()
+    {
+        PositionedMaskData* data = mask();
+        if (data) {
+            data->shrinkImages(0);
+        }
+    }
+
     void resetMaskImage()
     {
         PositionedMaskData* data = mask();

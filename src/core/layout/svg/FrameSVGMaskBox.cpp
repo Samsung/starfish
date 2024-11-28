@@ -116,8 +116,9 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
         child = child->next();
     }
     delete newCanvas;
-
-    makeLuminanceMask(nativeImageMask);
+    if(style()->maskType()==MaskTypeValue::LuminanceMaskTypeValue){
+        makeLuminanceMask(nativeImageMask);
+    }
     ctx.m_canvas->maskNativeImage(
         nativeImageMask,
         Unit::Rect(x, y, nativeImageMask->width(), nativeImageMask->height()));

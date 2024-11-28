@@ -2169,6 +2169,18 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         repeatY.setValueList(maskRepeatYValues);
         addValuePair(repeatY);
     } break;
+    case CSSStyleValuePair::KeyKind::MaskType: {
+        CSSStyleValuePair maskType;
+        if (!style->maskLayerSize()) {
+            maskType.setValueKind(CSSStyleValuePair::None);
+            addValuePair(maskType);
+            return;
+        }
+        maskType.setKeyKind(CSSStyleValuePair::KeyKind::MaskType);
+        maskType.setValueKind(CSSStyleValuePair::ValueKind::MaskTypeValueKind);
+        maskType.setMaskTypeValue(style->maskType());
+        addValuePair(maskType);
+    } break;
     case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
         // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;

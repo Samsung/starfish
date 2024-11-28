@@ -655,6 +655,7 @@ public:
     QualifiedName m_xlinkTo;
     QualifiedName m_close;
     QualifiedName m_mask;
+    QualifiedName m_maskType;
     QualifiedName m_tspan;
 
 #ifdef STARFISH_ENABLE_WEBRTC

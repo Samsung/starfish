@@ -726,6 +726,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(m_xlink, m_xlinkNamespaceURI,
                       AtomicString::createAtomicString(starfish, "close"));
     m_mask = QualifiedName(AtomicString::createAtomicString(starfish, "mask"));
+    m_maskType =
+        QualifiedName(AtomicString::createAtomicString(starfish, "mask-type"));
     m_tspan =
         QualifiedName(AtomicString::createAtomicString(starfish, "tspan"));
 

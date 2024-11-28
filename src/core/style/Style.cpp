@@ -2481,6 +2481,14 @@ String* CSSStyleValuePair::toString() const
     case CSSStyleValuePair::ValueKind::TimingFunctionPointerKind:
         STARFISH_ASSERT(timingFunctionPointerValue());
         return timingFunctionPointerValue()->toString();
+    case CSSStyleValuePair::ValueKind::MaskTypeValueKind:
+        switch (maskTypeValue()) {
+        case MaskTypeValue::LuminanceMaskTypeValue:
+            return String::fromUTF8("luminance");
+        case MaskTypeValue::AlphaMaskTypeValue:
+            return String::fromUTF8("alpha");
+        }
+        break;
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -4835,6 +4843,24 @@ void StyleResolver::applyProperty(Element* element,
             }
         }
         break;
+    case CSSStyleValuePair::KeyKind::MaskType:
+        style->resetMaskTypes();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskType(parentStyle->maskType(i), i);
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaskType(MaskTypeValue::LuminanceMaskTypeValue, 0);
+        } else {
+            style->setMaskType(newCssValue.maskTypeValue(), 0);
+        }
+        break;
+
     case CSSStyleValuePair::KeyKind::TransitionProperty:
         style->resetTransitionProperties();
         if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
@@ -15861,6 +15887,31 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
     setKeyKind(KeyKind::Src);
     setFontFaceSrcData(src);
 
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueMaskType(Document* document,
+                                            const CSSTokenVector& tokens)
+{
+    return updateValueMaskType(tokens, true);
+}
+
+bool CSSStyleValuePair::updateValueMaskType(const CSSTokenVector& tokens,
+                                            bool allowComma)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::MaskTypeValueKind;
+    if (value.equals("luminance")) {
+        m_value = MaskTypeValue::LuminanceMaskTypeValue;
+    } else if (value.equals("alpha")) {
+        m_value = MaskTypeValue::AlphaMaskTypeValue;
+    } else {
+        return false;
+    }
     return true;
 }
 

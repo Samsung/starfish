@@ -200,7 +200,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     }
 
     if (needsMaskAttributes()) {
-        if (ss->m_mask == name) {
+        if (ss->m_mask == name || ss->m_maskType == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
             m_maskElement = nullptr;
@@ -469,12 +469,12 @@ void SVGElement::styleForPresentationAttribute(
     if (needsMaskAttributes()) {
         // Value:  <funciri> | none | inherit
         // <FuncIRI> : Functional notation for an IRI: "url(" <IRI> ")".
-        String* value = getAttributeOrVarReferencedValue(
+        String* maskStr = getAttributeOrVarReferencedValue(
             starfish()->staticStrings()->m_mask, cssCustomValues);
-        if (!value->isEmpty()) {
+        if (!maskStr->isEmpty()) {
             pair.setKeyKind(CSSStyleValuePair::MaskImage);
 
-            auto str = value->toUTF8NonGCString();
+            auto str = maskStr->toUTF8NonGCString();
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
@@ -487,6 +487,20 @@ void SVGElement::styleForPresentationAttribute(
                     CSSStyleValuePair::ValueKind::UrlValueKind) {
                     cssValues.push_back(pair);
                 }
+            }
+        }
+
+        String* maskTypeStr = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_maskType, cssCustomValues);
+        if (!maskTypeStr->isEmpty()) {
+            pair.setKeyKind(CSSStyleValuePair::MaskType);
+
+            auto str = maskTypeStr->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueMaskType(tokens, false)) {
+                cssValues.push_back(pair);
             }
         }
     }
