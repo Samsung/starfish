@@ -159,6 +159,21 @@ public:
         m_repeatY = RepeatRepeatValue;
     }
 
+    void setMaskType(MaskTypeValue maskType)
+    {
+        m_maskType = maskType;
+    }
+
+    MaskTypeValue maskType() const
+    {
+        return m_maskType;
+    }
+
+    void resetMaskType()
+    {
+        m_maskType = LuminanceMaskTypeValue;
+    }
+
     bool operator==(const MaskLayer& other);
 
     bool operator!=(const MaskLayer& other)
@@ -177,6 +192,8 @@ public:
     MaskSize m_size;
     Length m_positionX;
     Length m_positionY;
+
+    MaskTypeValue m_maskType;
 };
 
 class PositionedMaskData : public gc {
@@ -196,6 +213,8 @@ public:
 
     RepeatStyleValue repeatY(uint32_t index) const;
 
+    MaskTypeValue maskType(uint32_t index) const;
+
     ImageResource* imageResource(uint32_t layer) const;
 
     void setImage(ImageValue* value, uint32_t layer);
@@ -213,6 +232,8 @@ public:
     void setRepeatX(RepeatStyleValue repeat, uint32_t index);
 
     void setRepeatY(RepeatStyleValue repeat, uint32_t index);
+
+    void setMaskType(MaskTypeValue maskType, uint32_t index);
 
     bool maskSizeIsLength(uint32_t layer) const;
 

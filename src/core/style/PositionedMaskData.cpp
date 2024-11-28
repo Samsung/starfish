@@ -205,6 +205,15 @@ RepeatStyleValue PositionedMaskData::repeatY(uint32_t layer) const
     return m_layers[layer].repeatY();
 }
 
+MaskTypeValue PositionedMaskData::maskType(uint32_t layer) const
+{
+    if (m_layers.size() <= layer) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return LuminanceMaskTypeValue;
+    }
+    return m_layers[layer].maskType();
+}
+
 ImageResource* PositionedMaskData::imageResource(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
@@ -261,6 +270,12 @@ void PositionedMaskData::setRepeatY(RepeatStyleValue repeat, uint32_t layer)
 {
     uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerRepeatY);
     m_layers[layer].setRepeatY(repeat);
+}
+
+void PositionedMaskData::setMaskType(MaskTypeValue maskType, uint32_t layer)
+{
+    uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerSize);
+    m_layers[layer].setMaskType(maskType);
 }
 
 bool PositionedMaskData::maskSizeIsLength(uint32_t layer) const

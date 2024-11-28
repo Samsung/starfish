@@ -573,6 +573,11 @@ enum class Separator {
     SlashSeparator
 };
 
+enum MaskTypeValue ENSURE_ENUM_UNSIGNED {
+    LuminanceMaskTypeValue,
+    AlphaMaskTypeValue,
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -766,6 +771,7 @@ class CSSFilterFunction;
     F(MaskPositionY, maskPositionY, "mask-position-Y")                         \
     F(MaskRepeatX, maskRepeatX, "mask-repeat-x")                               \
     F(MaskRepeatY, maskRepeatY, "mask-repeat-Y")                               \
+    F(MaskType, maskType, "mask-type")                                         \
     F(FontSize, fontSize, "font-size")                                         \
     F(FontWeight, fontWeight, "font-weight")                                   \
     F(FontStyle, fontStyle, "font-style")                                      \
@@ -1156,6 +1162,9 @@ public:
 
         // pointer-events
         PointerEventsValueKind,
+
+        // mask
+        MaskTypeValueKind,
     };
 
     enum class TransformUnit {
@@ -1822,6 +1831,12 @@ public:
         return m_value.m_filterFunction;
     }
 
+    MaskTypeValue maskTypeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == MaskTypeValueKind);
+        return m_value.m_maskType;
+    }
+
     bool valueEquals(const CSSStyleValuePair& src);
     bool operator==(const CSSStyleValuePair& src);
     bool operator!=(const CSSStyleValuePair& src)
@@ -1911,6 +1926,7 @@ public:
         BoxDecorationBreakValue m_boxDecorationBreakValue;
         TimingFunction* m_timingFunction;
         CSSFilterFunction* m_filterFunction;
+        MaskTypeValue m_maskType;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2254,6 +2270,11 @@ public:
             : m_filterFunction(v)
         {
         }
+
+        ValueData(MaskTypeValue v)
+            : m_maskType(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2505,6 +2526,12 @@ public:
         m_value.m_transforms = transforms;
     }
 
+    void setMaskTypeValue(MaskTypeValue maskType)
+    {
+        m_valueKind = MaskTypeValueKind;
+        m_value.m_maskType = maskType;
+    }
+
     bool updateValueForAttributeBasic(Document* document,
                                       CSSStyleValuePair::KeyKind keyKind,
                                       const CSSTokenVector& tokens);
@@ -2623,6 +2650,7 @@ public:
     bool updateValueUnitAnimationFillMode(const CSSTokenValue& value);
 
     bool updateValueMaskImage(const CSSTokenVector& tokens, bool allowComma);
+    bool updateValueMaskType(const CSSTokenVector& tokens, bool allowComma);
 
     bool updateValueUnitFourSidedShorthandProperty(
         CSSStyleValuePair::KeyKind keyKind, const CSSTokenValue& token);

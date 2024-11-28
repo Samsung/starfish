@@ -347,6 +347,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             if (memcmp(data, "mask-size", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
             }
+            if (memcmp(data, "mask-type", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskType;
+            }
             break;
         case 'w':
             if (memcmp(data, "word-wrap", 9) == 0) {
