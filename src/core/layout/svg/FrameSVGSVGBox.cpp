@@ -164,18 +164,15 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
     }
 }
 
-void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
+std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
 {
-    canvas->setNeedsGoodQualityAntialias();
-    canvas->save();
-
     LayoutUnit svgWidth = contentWidth();
     LayoutUnit svgHeight = contentHeight();
     IntrinsicSize intrinsicSizeInfo = intrinsicSize();
 
+    SkMatrix result = SkMatrix::I();
     if (svgWidth == 0 || svgHeight == 0) {
-        canvas->restore();
-        return;
+        return std::make_pair(false, result);
     }
 
     Unit::Rect viewport;
@@ -189,16 +186,12 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         viewport.setHeight(contentHeight());
     }
 
-    canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
-    canvas->clip(Unit::Rect(0, 0, viewport.width(), viewport.height()));
-
     double sxToViewport = viewport.width() / svgWidth;
     double syToViewport = viewport.height() / svgHeight;
     double sToViewport = 1;
     if (sxToViewport == 0 || syToViewport == 0 || std::isnan(sxToViewport) ||
         std::isnan(syToViewport)) {
-        canvas->restore();
-        return;
+        return std::make_pair(false, result);
     }
 
     bool hasViewBox = node()->asSVGSVGElement()->hasViewBox();
@@ -208,14 +201,14 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         sToViewport = std::min(sxToViewport, syToViewport);
         svgAlign = node()->asSVGSVGElement()->preserveAspectRatioAlign();
         if (svgAlign == NativeImageData::None) {
-            canvas->scale(sxToViewport, syToViewport);
+            result.preScale(sxToViewport, syToViewport);
         } else {
             // TODO: Should consider preserveAspectRatio meetOrSlice.
-            canvas->scale(sToViewport, sToViewport);
+            result.preScale(sToViewport, sToViewport);
         }
     } else {
         if (intrinsicSizeInfo.m_hasViewport) {
-            canvas->scale(sxToViewport, syToViewport);
+            result.preScale(sxToViewport, syToViewport);
         }
     }
 
@@ -226,27 +219,25 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         double sToContentSize = std::min(sx, sy);
 
         if (sToContentSize == 0 || std::isnan(sToContentSize)) {
-            canvas->restore();
-            return;
+            return std::make_pair(false, result);
         }
 
         if (svgAlign == NativeImageData::None) {
-            canvas->scale(sx, sy);
+            result.preScale(sx, sy);
         } else {
-            canvas->scale(sToContentSize, sToContentSize);
+            result.preScale(sToContentSize, sToContentSize);
         }
 
-        double tx = viewBox.x();
-        double ty = viewBox.y();
+        float tx = viewBox.x();
+        float ty = viewBox.y();
         if (std::isnan(tx) || std::isnan(ty)) {
-            canvas->restore();
-            return;
+            return std::make_pair(false, result);
         }
 
-        canvas->translate(-tx, -ty);
+        result.preTranslate(-tx, -ty);
 
-        double dx = 0;
-        double dy = 0;
+        float dx = 0;
+        float dy = 0;
         if (intrinsicSizeInfo.m_hasViewport) {
             if (svgAlign == NativeImageData::None) {
                 dx = (svgWidth - viewBox.width() * sx) / 2;
@@ -274,14 +265,39 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         }
 
         if (svgAlign == NativeImageData::None) {
-            canvas->translate(dx / (sx * sxToViewport),
-                              dy / (sy * syToViewport));
+            result.preTranslate(dx / (sx * sxToViewport), dy / (sy * syToViewport));
         } else {
             // TODO: Should consider preserveAspectRatio alignment.
-            canvas->translate(dx / (sToContentSize * sToViewport),
-                              dy / (sToContentSize * sToViewport));
+            result.preTranslate(dx / (sToContentSize * sToViewport), dy / (sToContentSize * sToViewport));
         }
     }
+
+    return std::make_pair(true, result);
+}
+
+void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
+{
+    auto tranlateScaleValue = computeTranlateScaleOnPaint();
+    if (!tranlateScaleValue.first) {
+        return;
+    }
+
+    canvas->setNeedsGoodQualityAntialias();
+    canvas->save();
+
+    Unit::Rect viewport;
+    if (m_containerViewport.hasValue() &&
+        !m_containerViewport.value().isEmpty()) {
+        viewport = m_containerViewport.value();
+    } else {
+        viewport.setWidth(contentWidth());
+        viewport.setHeight(contentHeight());
+    }
+
+    canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
+    canvas->clip(Unit::Rect(0, 0, viewport.width(), viewport.height()));
+
+    canvas->postMatrix(tranlateScaleValue.second);
 
     PaintingContext ctx(canvas);
     Frame* child = firstChild();

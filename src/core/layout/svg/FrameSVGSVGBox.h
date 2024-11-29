@@ -64,6 +64,8 @@ public:
         return m_viewport;
     }
 
+    std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
+
     // https://svgwg.org/svg2-draft/coords.html#Units
     // For any other length value expressed as a percentage of the SVG viewport, the percentage must be calculated as a percentage of the normalized diagonal of the ‘viewBox’ applied to that viewport. If no ‘viewBox’ is specified, then the normalized diagonal of the SVG viewport must be used.
     // The normalized diagonal length must be calculated with sqrt((width)**2 + (height)**2)/sqrt(2).
