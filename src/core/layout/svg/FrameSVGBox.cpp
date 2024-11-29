@@ -127,6 +127,17 @@ LayoutSize FrameSVGBox::viewport()
     }
 }
 
+LayoutUnit FrameSVGBox::normalizedDiagonalViewportLength()
+{
+    Frame* f = this;
+    while (true) {
+        if (f->isFrameSVGSVGBox()) {
+            return f->asFrameSVGSVGBox()->normalizedDiagonalViewportLength();
+        }
+        f = f->layoutParent();
+    }
+}
+
 void FrameSVGBox::resolvePosition(LayoutContext& ctx)
 {
     if (needsSVGGeometryAttributes()) {
@@ -653,7 +664,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
         ctx.m_canvas->fillPath(newPath.value());
         ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(vp.width(), this));
+            style()->strokeWidth().specifiedValue(normalizedDiagonalViewportLength(), this));
         ctx.m_canvas->strokePath(newPath.value());
         ctx.m_canvas->restore();
     }

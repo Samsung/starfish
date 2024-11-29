@@ -51,6 +51,7 @@ public:
     }
 
     LayoutSize viewport();
+    LayoutUnit normalizedDiagonalViewportLength();
 
     void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
