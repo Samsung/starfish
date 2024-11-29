@@ -52,7 +52,6 @@ public:
         return "FrameSVGSVGBox";
     }
 
-    LayoutSize computeViewport();
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual IntrinsicSize intrinsicSize() override;
@@ -63,6 +62,16 @@ public:
     LayoutSize viewport()
     {
         return m_viewport;
+    }
+
+    // https://svgwg.org/svg2-draft/coords.html#Units
+    // For any other length value expressed as a percentage of the SVG viewport, the percentage must be calculated as a percentage of the normalized diagonal of the ‘viewBox’ applied to that viewport. If no ‘viewBox’ is specified, then the normalized diagonal of the SVG viewport must be used.
+    // The normalized diagonal length must be calculated with sqrt((width)**2 + (height)**2)/sqrt(2).
+    LayoutUnit normalizedDiagonalViewportLength()
+    {
+        float w = m_viewport.width();
+        float h = m_viewport.height();
+        return sqrt(w * w + h * h) / sqrt(2);
     }
 
     Optional<Unit::Rect> viewBox()
