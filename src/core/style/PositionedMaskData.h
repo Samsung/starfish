@@ -159,21 +159,6 @@ public:
         m_repeatY = RepeatRepeatValue;
     }
 
-    void setMaskType(MaskTypeValue maskType)
-    {
-        m_maskType = maskType;
-    }
-
-    MaskTypeValue maskType() const
-    {
-        return m_maskType;
-    }
-
-    void resetMaskType()
-    {
-        m_maskType = LuminanceMaskTypeValue;
-    }
-
     bool operator==(const MaskLayer& other);
 
     bool operator!=(const MaskLayer& other)
@@ -192,8 +177,6 @@ public:
     MaskSize m_size;
     Length m_positionX;
     Length m_positionY;
-
-    MaskTypeValue m_maskType;
 };
 
 class PositionedMaskData : public gc {
@@ -213,7 +196,7 @@ public:
 
     RepeatStyleValue repeatY(uint32_t index) const;
 
-    MaskTypeValue maskType(uint32_t index) const;
+    MaskTypeValue maskType() const;
 
     ImageResource* imageResource(uint32_t layer) const;
 
@@ -233,13 +216,18 @@ public:
 
     void setRepeatY(RepeatStyleValue repeat, uint32_t index);
 
-    void setMaskType(MaskTypeValue maskType, uint32_t index);
+    void setMaskType(MaskTypeValue maskType);
 
     bool maskSizeIsLength(uint32_t layer) const;
 
     LengthSize maskSizeLengthValue(uint32_t layer) const;
 
     BackgroundSizeValue maskSizeTypeValue(uint32_t layer) const;
+
+    void resetMaskType()
+    {
+        m_maskType = LuminanceMaskTypeValue;
+    }
 
     void shrinkImages(uint32_t size);
 
@@ -284,6 +272,7 @@ private:
     uint32_t m_maxLayerRepeatX = 0;
     uint32_t m_maxLayerRepeatY = 0;
 
+    MaskTypeValue m_maskType;
     GCVector<MaskLayer> m_layers;
 };
 } // namespace Starfish
