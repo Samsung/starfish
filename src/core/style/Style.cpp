@@ -4860,7 +4860,6 @@ void StyleResolver::applyProperty(Element* element,
             style->setMaskType(newCssValue.maskTypeValue(), 0);
         }
         break;
-
     case CSSStyleValuePair::KeyKind::TransitionProperty:
         style->resetTransitionProperties();
         if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
