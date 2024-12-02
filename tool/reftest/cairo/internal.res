@@ -663,6 +663,7 @@ test/cairo/internal-test/svg/svg_linearGradient05.html
 test/cairo/internal-test/svg/svg_radialGradient01.html
 test/cairo/internal-test/svg/svg_mask_01.html
 test/cairo/internal-test/svg/svg_mask_02.html
+test/cairo/internal-test/svg/svg_mask_03.html
 test/cairo/internal-test/svg/svg_transform_rotate.html
 test/cairo/internal-test/svg/svg_use_shadowRoot_01.html
 test/cairo/internal-test/svg/svg_flex_size_01.html

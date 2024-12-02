@@ -260,6 +260,8 @@ Optional<SVGElement*> SVGElement::ownerSVGElement()
     while (e && !e->isSVGSVGElement()) {
         if (e->isShadowRoot()) {
             e = e->asShadowRoot()->host();
+        } else if (e->parentNode() && e->parentNode()->isShadowRoot()) {
+            e = e->parentNode()->asShadowRoot()->host();
         } else {
             e = e->parentElement();
         }
