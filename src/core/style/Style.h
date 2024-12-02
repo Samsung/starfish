@@ -34,6 +34,7 @@
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
 #include "core/style/GridTrackSize.h"
+#include "core/style/GridAreaData.h"
 #include "core/style/RectData.h"
 #include "core/style/TextOverflowData.h"
 #include "core/style/MutablePropertyValue.h"
@@ -1133,6 +1134,7 @@ public:
 
         // grid
         GridTemplateUnits,
+        GridTemplateAreasValueKind,
 
         // img
         ImageRenderingValueKind,
@@ -1754,6 +1756,12 @@ public:
         return m_value.m_gridTemplateUnits;
     }
 
+    NamedGridAreaDataMap* gridTemplateAreas() const
+    {
+        STARFISH_ASSERT(m_valueKind == GridTemplateAreasValueKind);
+        return m_value.m_gridTemplateAreas;
+    }
+
     CSSCounterFunction* counterFunctionValue() const
     {
         STARFISH_ASSERT(m_valueKind == CounterFunctionValueKind);
@@ -1894,6 +1902,7 @@ public:
         AppearanceValue m_appearance;
         RectData* m_rect;
         GCVector<GridTrackSize*>* m_gridTemplateUnits;
+        NamedGridAreaDataMap* m_gridTemplateAreas;
         CSSCounterFunction* m_counterFunctionValue;
         TextOverflowData* m_textOverflowData;
         CSSGradientValue* m_gradientValue;
@@ -2200,6 +2209,11 @@ public:
         {
         }
 
+        ValueData(NamedGridAreaDataMap* v)
+            : m_gridTemplateAreas(v)
+        {
+        }
+
         ValueData(CSSCounterFunction* v)
             : m_counterFunctionValue(v)
         {
@@ -2404,6 +2418,12 @@ public:
     {
         m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateUnits;
         m_value.m_gridTemplateUnits = val;
+    }
+
+    void setGridTemplateAreas(NamedGridAreaDataMap* val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateAreasValueKind;
+        m_value.m_gridTemplateAreas = val;
     }
 
     void setCounterFunctionValue(CSSCounterFunction* v)

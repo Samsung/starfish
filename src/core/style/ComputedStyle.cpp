@@ -2352,10 +2352,15 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->gridTemplateAreas() != oldStyle->gridTemplateAreas()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateAreas] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    NamedGridAreaDataMap* newGridTemplateAreas = newStyle->gridTemplateAreas();
+    NamedGridAreaDataMap* oldGridTemplateAreas = oldStyle->gridTemplateAreas();
+    if (newGridTemplateAreas != oldGridTemplateAreas) {
+        if ((!newGridTemplateAreas || !oldGridTemplateAreas) ||
+            !oldGridTemplateAreas->compare(newGridTemplateAreas)) {
+            damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateAreas] = true;
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
     }
 
     if (newStyle->boxDecorationBreak() != oldStyle->boxDecorationBreak()) {

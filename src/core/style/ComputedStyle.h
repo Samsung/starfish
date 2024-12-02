@@ -201,6 +201,7 @@ public:
         RectData* m_clip;
         UserSelectValue m_userSelect;
         GCVector<GridTrackSize*>* m_gridTemplateUnits;
+        NamedGridAreaDataMap* m_gridTemplateAreas;
         Unit::Color m_color;
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
@@ -384,6 +385,11 @@ public:
         {
         }
 
+        RareComputedStyleValue(NamedGridAreaDataMap* gridTemplateAreas)
+            : m_gridTemplateAreas(gridTemplateAreas)
+        {
+        }
+
         RareComputedStyleValue(Unit::Color c)
             : m_color(c)
         {
@@ -518,8 +524,6 @@ public:
     GETTER_VALUE(float, floatValue, flexShrink, FlexShrink, 0);
     GETTER_VALUE(float, floatValue, opacity, Opacity, 0);
     GETTER_VALUE(String*, stringValue, d, D, nullptr);
-    GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas,
-                 nullptr);
     GETTER_VALUE(int32_t, int32Value, lineClamp, LineClamp, 0);
 
     GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart, nullptr);
@@ -666,6 +670,8 @@ public:
                GridTemplateColumns);
     GETTER_PTR(GCVector<GridTrackSize*>, gridTemplateUnits, gridTemplateRows,
                GridTemplateRows);
+    GETTER_PTR(NamedGridAreaDataMap, gridTemplateAreas, gridTemplateAreas,
+               GridTemplateAreas);
     GETTER_PTR(TextOverflowData, textOverflow, textOverflow, TextOverflow);
     GETTER_PTR(CounterBaseList, counterBaseList, counterReset, CounterReset);
     GETTER_PTR(CounterBaseList, counterBaseList, counterIncrement,
@@ -1014,6 +1020,11 @@ public:
     void setGridTemplateRows(GCVector<GridTrackSize*>* gridTemplate)
     {
         *m_rareComputedStyleData.ensureGridTemplateRows() = *gridTemplate;
+    }
+
+    void setGridTemplateAreas(NamedGridAreaDataMap* gridTemplateAreas)
+    {
+        *m_rareComputedStyleData.ensureGridTemplateAreas() = *gridTemplateAreas;
     }
 
     FloatValue floating()
@@ -1956,25 +1967,6 @@ public:
     void setD(String* d)
     {
         *m_rareComputedStyleData.ensureD() = d;
-    }
-
-    void setGridTemplateAreas(String* areas)
-    {
-        *m_rareComputedStyleData.ensureGridTemplateAreas() = areas;
-    }
-
-    String* gridTemplateAreas()
-    {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return String::emptyString;
-        }
-
-        Optional<String*> areas = m_rareComputedStyleData.gridTemplateAreas();
-        if (areas.hasValue()) {
-            return areas.getValue();
-        }
-
-        return String::emptyString;
     }
 
     Length x()
@@ -3953,6 +3945,11 @@ public:
     GCVector<GridTrackSize*>* gridTemplateRows()
     {
         return m_rareComputedStyleData.gridTemplateRows();
+    }
+
+    NamedGridAreaDataMap* gridTemplateAreas()
+    {
+        return m_rareComputedStyleData.gridTemplateAreas();
     }
 
     TextOverflowData textOverflow()

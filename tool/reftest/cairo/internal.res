@@ -351,6 +351,7 @@ test/cairo/internal-test/css/grid/grid_justify-content-04.html
 test/cairo/internal-test/css/grid/grid_justify-content-05.html
 test/cairo/internal-test/css/grid/grid_justify-content-06.html
 test/cairo/internal-test/css/grid/grid_justify-content-07.html
+test/cairo/internal-test/css/grid/grid-template-areas.html
 test/cairo/internal-test/css/grid/grid-template_01.html
 test/cairo/internal-test/css/grid/grid-template_02.html
 test/cairo/internal-test/css/grid/grid-template_03.html

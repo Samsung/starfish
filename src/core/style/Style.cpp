@@ -1424,6 +1424,9 @@ void* CSSStyleValuePair::toPointerValueIfPossible() const
     case GridTemplateUnits:
         ptr = m_value.m_gridTemplateUnits;
         break;
+    case GridTemplateAreasValueKind:
+        ptr = m_value.m_gridTemplateAreas;
+        break;
     case CounterFunctionValueKind:
         ptr = m_value.m_counterFunctionValue;
         break;
@@ -2407,6 +2410,8 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::GridTemplateUnits:
         return GridTrackSize::toStringWithGridLengths(gridTemplateUnits());
+    case CSSStyleValuePair::ValueKind::GridTemplateAreasValueKind:
+        return gridTemplateAreas()->toString();
     case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
         return counterFunctionValue()->toString();
     case CSSStyleValuePair::ValueKind::VarFunctionValueKind:
@@ -7565,11 +7570,8 @@ void StyleResolver::applyProperty(Element* element,
         break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas:
         if (newCssValue.valueKind() ==
-            CSSStyleValuePair::ValueKind::StringValueKind) {
-            style->setGridTemplateAreas(newCssValue.stringValue());
-        } else if (newCssValue.valueKind() ==
-                   CSSStyleValuePair::ValueKind::None) {
-            style->setGridTemplateAreas(String::emptyString);
+            CSSStyleValuePair::ValueKind::GridTemplateAreasValueKind) {
+            style->setGridTemplateAreas(newCssValue.gridTemplateAreas());
         }
         break;
     case CSSStyleValuePair::KeyKind::GridArea:
@@ -13873,13 +13875,6 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
 {
     STARFISH_ASSERT(document != nullptr);
 
-    struct Area {
-        size_t columnStart;
-        size_t columnEnd;
-        size_t rowStart;
-        size_t rowEnd;
-    };
-
     if (!tokens.size()) {
         return false;
     }
@@ -13890,8 +13885,9 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
     }
 
     size_t count = 0;
-    std::unordered_multimap<std::string, struct Area> collector;
+    std::unordered_multimap<std::string, GridAreaData> collector;
     std::unordered_set<std::string> areaSet;
+    NamedGridAreaDataMap* namedGridAreaMap = new NamedGridAreaDataMap();
 
     for (size_t row = 0; row < tokens.size(); row++) {
         auto ss = tokens[row];
@@ -13907,7 +13903,7 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
         CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
         for (size_t col = 0; col < areas.size(); col++) {
             std::string str = areas[col];
-            Area area;
+            GridAreaData area;
             area.columnStart = col + 1;
             area.columnEnd = area.columnStart + 1;
             area.rowStart = row + 1;
@@ -13927,7 +13923,7 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
     // "nav  nav"
     // "foot foot"
     for (const std::string& name : areaSet) {
-        std::vector<struct Area> stack;
+        std::vector<GridAreaData> stack;
         for (auto it = collector.find(name); it != collector.end(); it++) {
             if (name.compare(it->first)) {
                 break;
@@ -13937,9 +13933,9 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
                 stack.push_back(it->second);
             } else {
                 bool merge = false;
-                struct Area target = it->second;
+                GridAreaData target = it->second;
                 for (size_t i = 0; i < stack.size(); i++) {
-                    struct Area* area = &stack[i];
+                    GridAreaData* area = &stack[i];
                     std::set<size_t> set;
                     if (area->columnStart == target.columnStart &&
                         area->columnEnd == target.columnEnd) {
@@ -14009,11 +14005,11 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
 
         if (stack.size() != 1) {
             while (stack.size() != 1) {
-                struct Area target = stack.back();
+                GridAreaData target = stack.back();
                 stack.pop_back();
                 bool merge = false;
                 for (size_t i = 0; i < stack.size(); i++) {
-                    struct Area* area = &stack[i];
+                    GridAreaData* area = &stack[i];
                     std::set<size_t> set;
                     if (area->columnStart == target.columnStart &&
                         area->columnEnd == target.columnEnd) {
@@ -14075,26 +14071,22 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
                     }
                 }
 
-                if (!merge) {
+                if (merge) {
+                    namedGridAreaMap->insertNamedGridAreaData(
+                        String::createASCIIString(name.c_str(), name.length()),
+                        stack.back());
+                } else {
                     return false;
                 }
             }
+        } else {
+            namedGridAreaMap->insertNamedGridAreaData(
+                String::createASCIIString(name.c_str(), name.length()),
+                stack.back());
         }
     }
 
-    CSSTokenValue value;
-    for (size_t i = 0; i < tokens.size(); i++) {
-        auto ss = tokens[i];
-        ss.trim();
-        value += ss;
-        if (i != tokens.size() - 1) {
-            value += " ";
-        }
-    }
-
-    String* str = String::createASCIIString(value.c_str(), value.size());
-    setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-    setStringValue(str);
+    setGridTemplateAreas(namedGridAreaMap);
 
     return true;
 }

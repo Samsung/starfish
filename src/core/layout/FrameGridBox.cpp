@@ -169,7 +169,7 @@ void GridFormattingContext::layoutGridItems()
 }
 
 void GridFormattingContext::insertNamedGridArea(
-    const std::pair<std::string, GridArea>& pair)
+    const std::pair<String*, GridArea>& pair)
 {
     auto iter = m_namedAreaMap.find(pair.first);
     if (iter != m_namedAreaMap.end()) {
@@ -183,7 +183,7 @@ void GridFormattingContext::insertNamedGridArea(
 
 GridArea* GridFormattingContext::getNamedGridArea(String* name)
 {
-    auto it = m_namedAreaMap.find(name->toUTF8NonGCString());
+    auto it = m_namedAreaMap.find(name);
     if (it != m_namedAreaMap.end()) {
         return it.value().data();
     }
@@ -815,209 +815,17 @@ std::string GridCellTable::toString()
     return str;
 }
 
-void GridFormattingContext::parseGridTemplateAreas()
+void GridFormattingContext::initializeGridTemplateAreas()
 {
-    // FIXME: Unless the style changes, it is inefficient to continue parsing
-    // the style during layout stage. and most of this method is redundant with
-    // CSSStyleValuePair::updateValueGridTemplateAreas.
-    // Please fix it so that don't repeat parsing during layout stage.
-    struct Area {
-        size_t columnStart;
-        size_t columnEnd;
-        size_t rowStart;
-        size_t rowEnd;
-    };
-
-    // Parsing GridTemplateAreas.
-    String* str = m_container->style()->gridTemplateAreas();
-
-    if (!str) {
-        return;
-    }
-
-    auto raw = str->toUTF8NonGCString();
-
-    CSSTokenVector tokens;
-    CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
-
-    std::unordered_multimap<std::string, Area> collector;
-    SetForGrid<std::string> areaSet;
-
-    for (size_t row = 0; row < tokens.size(); row++) {
-        auto ss = tokens[row];
-        ss.trim();
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-        parser.consumeContentString();
-        const auto& separator = parser.parsedString();
-        if (separator.length() == 0) {
-            return;
-        }
-
-        auto s = separator;
-        CSSTokenVector areas;
-        CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
-
-        for (size_t col = 0; col < areas.size(); col++) {
-            const std::string& name = areas[col];
-            Area area;
-            area.columnStart = col + 1;
-            area.columnEnd = area.columnStart + 1;
-            area.rowStart = row + 1;
-            area.rowEnd = area.rowStart + 1;
-            collector.insert(std::make_pair(name, area));
-            areaSet.insert(name);
-        }
-    }
-
-    for (const std::string& name : areaSet.set()) {
-        std::vector<struct Area> stack;
-        for (auto it = collector.find(name); it != collector.end(); it++) {
-            if (name.compare(it->first)) {
-                break;
+    NamedGridAreaDataMap* gridTemplateArea =
+        m_container->style()->gridTemplateAreas();
+    if (gridTemplateArea) {
+        for (auto& pair : gridTemplateArea->map()) {
+            for (auto& value : pair.second) {
+                GridArea gridArea(nullptr, -1, value.rowStart, value.rowEnd,
+                                  value.columnStart, value.columnEnd);
+                insertNamedGridArea(std::make_pair(pair.first, gridArea));
             }
-
-            if (!stack.size()) {
-                stack.push_back(it->second);
-            } else {
-                bool merge = false;
-                struct Area target = it->second;
-                for (size_t i = 0; i < stack.size(); i++) {
-                    struct Area* area = &stack[i];
-                    SetForGrid<size_t> set;
-                    if (area->columnStart == target.columnStart &&
-                        area->columnEnd == target.columnEnd) {
-                        set.insert(area->rowStart);
-                        set.insert(area->rowEnd);
-                        set.insert(target.rowStart);
-                        set.insert(target.rowEnd);
-
-                        if (set.size() != 3) {
-                            continue;
-                        }
-
-                        std::vector<size_t>& orderedTracks = set.set();
-                        size_t previous = orderedTracks[0];
-                        for (size_t i = 1; i < orderedTracks.size(); i++) {
-                            if ((orderedTracks[i] - previous) != 1) {
-                                continue;
-                            }
-                            previous = orderedTracks[i];
-                        }
-
-                        area->rowStart = orderedTracks[0];
-                        area->rowEnd = orderedTracks[2];
-                        merge = true;
-
-                        break;
-                    } else if (area->rowStart == target.rowStart &&
-                               area->rowEnd == target.rowEnd) {
-                        set.insert(area->columnStart);
-                        set.insert(area->columnEnd);
-                        set.insert(target.columnStart);
-                        set.insert(target.columnEnd);
-                        if (set.size() != 3) {
-                            continue;
-                        }
-
-                        std::vector<size_t>& orderedTracks = set.set();
-                        size_t previous = orderedTracks[0];
-
-                        for (size_t i = 1; i < orderedTracks.size(); i++) {
-                            if ((orderedTracks[i] - previous) != 1) {
-                                continue;
-                            }
-                            previous = orderedTracks[i];
-                        }
-
-                        area->columnStart = orderedTracks[0];
-                        area->columnEnd = orderedTracks[2];
-                        merge = true;
-                        break;
-                    }
-                }
-
-                if (!merge) {
-                    stack.push_back(it->second);
-                }
-            }
-        }
-
-        if (stack.size() != 1) {
-            while (stack.size() != 1) {
-                struct Area target = stack.back();
-                stack.pop_back();
-                bool merge = false;
-                for (size_t i = 0; i < stack.size(); i++) {
-                    struct Area* area = &stack[i];
-                    SetForGrid<size_t> set;
-                    if (area->columnStart == target.columnStart &&
-                        area->columnEnd == target.columnEnd) {
-                        set.insert(area->rowStart);
-                        set.insert(area->rowEnd);
-                        set.insert(target.rowStart);
-                        set.insert(target.rowEnd);
-
-                        if (set.size() != 3) {
-                            continue;
-                        }
-
-                        std::vector<size_t>& orderedTracks = set.set();
-
-                        size_t previous = orderedTracks[0];
-
-                        for (size_t i = 1; i < orderedTracks.size(); i++) {
-                            if ((orderedTracks[i] - previous) != 1) {
-                                continue;
-                            }
-                            previous = orderedTracks[i];
-                        }
-
-                        area->rowStart = orderedTracks[0];
-                        area->rowEnd = orderedTracks[2];
-                        merge = true;
-                        break;
-                    } else if (area->rowStart == target.rowStart &&
-                               area->rowEnd == target.rowEnd) {
-                        set.insert(area->columnStart);
-                        set.insert(area->columnEnd);
-                        set.insert(target.columnStart);
-                        set.insert(target.columnEnd);
-                        if (set.size() != 3) {
-                            continue;
-                        }
-
-                        std::vector<size_t>& orderedTracks = set.set();
-
-                        size_t previous = orderedTracks[0];
-
-                        for (size_t i = 1; i < orderedTracks.size(); i++) {
-                            if ((orderedTracks[i] - previous) != 1) {
-                                continue;
-                            }
-                            previous = orderedTracks[i];
-                        }
-
-                        area->columnStart = orderedTracks[0];
-                        area->columnEnd = orderedTracks[2];
-                        merge = true;
-                        break;
-                    }
-                }
-
-                if (merge) {
-                    struct Area area = stack.back();
-                    GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
-                                      area.columnStart, area.columnEnd);
-                    insertNamedGridArea(std::make_pair(name, gridArea));
-                } else {
-                    return;
-                }
-            }
-        } else {
-            struct Area area = stack.back();
-            GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
-                              area.columnStart, area.columnEnd);
-            insertNamedGridArea(std::make_pair(name, gridArea));
         }
     }
 }
@@ -1254,7 +1062,7 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
 
 void GridFormattingContext::buildGridTrackTemplate()
 {
-    parseGridTemplateAreas();
+    initializeGridTemplateAreas();
     placeGridItemsIntoCells();
 
     initializePreferredWidths();
