@@ -417,7 +417,7 @@ private:
     void buildGridTrackTemplate();
     void layoutGridItems();
 
-    void parseGridTemplateAreas();
+    void initializeGridTemplateAreas();
 
     void initializeGridTracksFromGridTemplateColumnsAndRows(
         const GCVector<GridArea*>& areas);
@@ -479,7 +479,7 @@ private:
     LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
                                              ComputedStyle* style);
 
-    void insertNamedGridArea(const std::pair<std::string, GridArea>& pair);
+    void insertNamedGridArea(const std::pair<String*, GridArea>& pair);
     GCVector<GridArea*> createGridAreas();
     void classifyGridAreas(const GCVector<GridArea*>& areas,
                            GCVector<GridArea*>& definiteAreas,
@@ -491,7 +491,7 @@ private:
     GCVector<GridTrack> m_gridTemplateColumns;
     GCVector<GridTrack> m_gridTemplateRows;
     GCVector<GridArea> m_orderedGridArea;
-    GCUnorderedMap<std::string, GCVector<GridArea>> m_namedAreaMap;
+    GCUnorderedMap<String*, GCVector<GridArea>> m_namedAreaMap;
 
     LayoutUnit m_rowGap;
     LayoutUnit m_columnGap;

@@ -2275,13 +2275,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas: {
-        // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;
-        String* areas = style->gridTemplateAreas();
-        if (areas) {
-            p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateAreas);
-            p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-            p.setStringValue(areas);
+        p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateAreas);
+        NamedGridAreaDataMap* gridTemplateAreas = style->gridTemplateAreas();
+        if (gridTemplateAreas) {
+            p.setGridTemplateAreas(gridTemplateAreas);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         }
