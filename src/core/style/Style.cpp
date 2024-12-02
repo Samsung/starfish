@@ -4847,17 +4847,14 @@ void StyleResolver::applyProperty(Element* element,
         style->resetMaskTypes();
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            uint32_t size = parentStyle->maskLayerSize();
-            for (uint32_t i = 0; i < size; i++) {
-                style->setMaskType(parentStyle->maskType(i), i);
-            }
+            style->setMaskType(parentStyle->maskType());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
-            style->setMaskType(MaskTypeValue::LuminanceMaskTypeValue, 0);
+            style->setMaskType(MaskTypeValue::LuminanceMaskTypeValue);
         } else {
-            style->setMaskType(newCssValue.maskTypeValue(), 0);
+            style->setMaskType(newCssValue.maskTypeValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:

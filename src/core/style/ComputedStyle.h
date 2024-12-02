@@ -4531,26 +4531,25 @@ public:
         }
     }
 
-    MaskTypeValue maskType(uint32_t layer = 0)
+    MaskTypeValue maskType()
     {
         PositionedMaskData* positionedMaskData = mask();
         if (positionedMaskData == nullptr) {
             return MaskTypeValue::LuminanceMaskTypeValue;
         }
-        return positionedMaskData->maskType(layer);
+        return positionedMaskData->maskType();
     }
 
-    void setMaskType(MaskTypeValue value, uint32_t layer = 0)
+    void setMaskType(MaskTypeValue value)
     {
-        rareComputedStyleData()->ensurePositionedMask()->setMaskType(value,
-                                                                     layer);
+        rareComputedStyleData()->ensurePositionedMask()->setMaskType(value);
     }
 
     void resetMaskTypes()
     {
         PositionedMaskData* data = mask();
         if (data) {
-            data->shrinkImages(0);
+            data->resetMaskType();
         }
     }
 
