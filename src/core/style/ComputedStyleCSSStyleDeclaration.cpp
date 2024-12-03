@@ -2171,11 +2171,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     } break;
     case CSSStyleValuePair::KeyKind::MaskType: {
         CSSStyleValuePair maskType;
-        if (!style->maskLayerSize()) {
-            maskType.setValueKind(CSSStyleValuePair::None);
-            addValuePair(maskType);
-            return;
-        }
         maskType.setKeyKind(CSSStyleValuePair::KeyKind::MaskType);
         maskType.setValueKind(CSSStyleValuePair::ValueKind::MaskTypeValueKind);
         maskType.setMaskTypeValue(style->maskType());
