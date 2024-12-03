@@ -55,6 +55,8 @@ public:
 
     bool compare(const NamedGridAreaDataMap* other) const;
 
+    void reset();
+
     void* operator new(size_t size)
     {
         static bool typeInited = false;

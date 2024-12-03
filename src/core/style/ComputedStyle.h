@@ -1027,6 +1027,14 @@ public:
         *m_rareComputedStyleData.ensureGridTemplateAreas() = *gridTemplateAreas;
     }
 
+    void resetGridTemplateAreas()
+    {
+        NamedGridAreaDataMap* data = gridTemplateAreas();
+        if (data) {
+            data->reset();
+        }
+    }
+
     FloatValue floating()
     {
         return m_float;
