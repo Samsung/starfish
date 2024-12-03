@@ -7569,6 +7569,7 @@ void StyleResolver::applyProperty(Element* element,
         }
         break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas:
+        style->resetGridTemplateAreas();
         if (newCssValue.valueKind() ==
             CSSStyleValuePair::ValueKind::GridTemplateAreasValueKind) {
             style->setGridTemplateAreas(newCssValue.gridTemplateAreas());

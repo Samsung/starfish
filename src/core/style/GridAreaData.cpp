@@ -140,4 +140,15 @@ bool NamedGridAreaDataMap::compare(const NamedGridAreaDataMap* other) const
     }
     return true;
 }
+
+void NamedGridAreaDataMap::reset()
+{
+    m_minRow = SIZE_MAX;
+    m_maxRow = 0;
+    m_minColumn = SIZE_MAX;
+    m_maxColumn = 0;
+    GCUnorderedMap<String*, GCVector<GridAreaData>>().swap(
+        m_namedGridAreaDataMap);
+}
+
 } // namespace Starfish
