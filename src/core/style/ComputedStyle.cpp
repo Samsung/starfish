@@ -2310,16 +2310,32 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->gridTemplateColumns() != oldStyle->gridTemplateColumns()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateColumns] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    GCVector<GridTrackSize*>* newGridTemplateColumns =
+        newStyle->gridTemplateColumns();
+    GCVector<GridTrackSize*>* oldGridTemplateColumns =
+        oldStyle->gridTemplateColumns();
+    if (newGridTemplateColumns != oldGridTemplateColumns) {
+        if ((!newGridTemplateColumns || !oldGridTemplateColumns) ||
+            !GridTrackSize::equals(*newGridTemplateColumns,
+                                   *oldGridTemplateColumns)) {
+            damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateColumns] = true;
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
     }
 
-    if (newStyle->gridTemplateRows() != oldStyle->gridTemplateRows()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateRows] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    GCVector<GridTrackSize*>* newGridTemplateRows =
+        newStyle->gridTemplateRows();
+    GCVector<GridTrackSize*>* oldGridTemplateRows =
+        oldStyle->gridTemplateRows();
+    if (newGridTemplateRows != oldGridTemplateRows) {
+        if ((!newGridTemplateRows || !oldGridTemplateRows) ||
+            !GridTrackSize::equals(*newGridTemplateRows,
+                                   *oldGridTemplateRows)) {
+            damagedKeys[CSSStyleValuePair::KeyKind::GridTemplateRows] = true;
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        }
     }
 
     if (newStyle->caretColor() != oldStyle->caretColor()) {

@@ -36,6 +36,8 @@ enum class GridTrackSizeType {
 class GridTrackSize : public gc {
 public:
     static String* toStringWithGridLengths(GCVector<GridTrackSize*>* v);
+    static bool equals(const GCVector<GridTrackSize*>& lhs,
+                       const GCVector<GridTrackSize*>& rhs);
 
     GridTrackSize(GridTrackSizeType type);
 
