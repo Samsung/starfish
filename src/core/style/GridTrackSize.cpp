@@ -36,6 +36,20 @@ String* GridTrackSize::toStringWithGridLengths(GCVector<GridTrackSize*>* v)
     return builder.finalize();
 }
 
+bool GridTrackSize::equals(const GCVector<GridTrackSize*>& lhs,
+                           const GCVector<GridTrackSize*>& rhs)
+{
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < lhs.size(); i++) {
+        if (!lhs[i]->equals(rhs[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 GridTrackSize::GridTrackSize(GridTrackSizeType type)
     : m_type(type)
 {
