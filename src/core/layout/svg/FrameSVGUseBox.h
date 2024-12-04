@@ -37,6 +37,7 @@ public:
     }
 
     virtual Optional<Path*> path() override;
+    virtual void prepareChildPainting(Canvas* canvas) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

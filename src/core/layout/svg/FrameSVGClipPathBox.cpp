@@ -58,15 +58,12 @@ Optional<Path*> FrameSVGClipPathBox::path()
 {
     Optional<Path*> path = nullptr;
     Frame* child = firstChild();
+
     while (child) {
         if (child && child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
             auto childPath = childBox->path();
             if (childPath) {
-                if (childBox->needsSVGGeometryAttributes()) {
-                    childPath->translate(childBox->x().toInt(),
-                                         childBox->y().toInt());
-                }
                 if (path) {
                     path->append(childPath.value());
                 } else {

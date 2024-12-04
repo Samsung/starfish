@@ -37,52 +37,47 @@ public:
         return "FrameSVGImageBox";
     }
 
-    virtual void layoutSVG() override
+    virtual void paintSVG(PaintingContext& ctx) override
     {
         // https://www.w3.org/TR/SVG11/struct.html#ImageElement
         // For most raster content (PNG, JPEG) the bounds of the image should be
         // used (i.e. the ‘image’ element has an implicit ‘viewBox’ of '0 0
         // raster-image-width raster-image-height').
-        auto vp = viewport();
-        NativeImageData* id = node()->asSVGImageElement()->imageData();
-        if (id && node()->asSVGImageElement()->preserveAspectRatioAlign() ==
-                      NativeImageData::None) {
-            auto styleWidth = style()->width();
-            auto styleHeight = style()->height();
-            FrameBox* cb = layoutParent()->asFrameBox();
-            if (styleWidth.isAuto() && styleHeight.isAuto()) {
-                setWidth(id->width());
-                setHeight(id->height());
-            } else if (styleWidth.isAuto()) {
-                setHeight(styleHeight.specifiedValue(vp.height(), this));
-                if (id->width() && id->height()) {
-                    setWidth(height() * id->width() / id->height());
-                } else {
-                    setWidth(0);
-                }
-            } else if (styleHeight.isAuto()) {
-                setWidth(styleWidth.specifiedValue(vp.width(), this));
-                if (id->width() && id->height()) {
-                    setHeight(width() * id->height() / id->width());
-                } else {
-                    setHeight(0);
-                }
-            }
-        }
-    }
 
-    virtual void paintSVG(PaintingContext& ctx) override
-    {
         SVGImageElement* e = node()->asSVGImageElement();
-        if (e->imageData()) {
+        auto id = e->imageData();
+        if (id) {
+            auto vp = viewport();
             auto svgAlign = e->preserveAspectRatioAlign();
             if (svgAlign == NativeImageData::None) {
+                LayoutSize imageSize;
+                auto styleWidth = style()->width();
+                auto styleHeight = style()->height();
+                if (styleWidth.isAuto() && styleHeight.isAuto()) {
+                    imageSize.setWidth(id->width());
+                    imageSize.setHeight(id->height());
+                } else if (styleWidth.isAuto()) {
+                    imageSize.setHeight(styleHeight.specifiedValue(vp.height(), this));
+                    if (id->width() && id->height()) {
+                        imageSize.setWidth(imageSize.height() * id->width() / id->height());
+                    } else {
+                        imageSize.setWidth(0);
+                    }
+                } else if (styleHeight.isAuto()) {
+                    imageSize.setWidth(styleWidth.specifiedValue(vp.width(), this));
+                    if (id->width() && id->height()) {
+                        imageSize.setHeight(imageSize.width() * id->height() / id->width());
+                    } else {
+                        imageSize.setHeight(0);
+                    }
+                }
+
                 ctx.m_canvas->drawImage(e->imageData(),
-                                        Unit::Rect(0, 0, width(), height()));
+                                        Unit::Rect(0, 0, imageSize.width(), imageSize.height()));
             } else {
-                NativeImageData* id = e->imageData();
-                LayoutUnit containerWidth = width();
-                LayoutUnit containerHeight = height();
+                auto styleSize = resolveStyleSize(vp);
+                LayoutUnit containerWidth = styleSize.width();
+                LayoutUnit containerHeight = styleSize.height();
 
                 if (containerWidth == LayoutUnit(0) ||
                     containerHeight == LayoutUnit(0)) {

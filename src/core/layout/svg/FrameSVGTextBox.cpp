@@ -91,6 +91,8 @@ void FrameSVGTextBox::paintSVG(PaintingContext& ctx)
         newCtx.m_canvas->translate(
             0, -(float)style()->font()->metrics().m_ascender);
     }
+    auto stylePos = resolveStylePosition(viewport());
+    newCtx.m_canvas->translate(stylePos.x(), stylePos.y());
     firstChild()->asFrameBlockBox()->paintContent(newCtx);
     newCtx.m_canvas->restore();
 }

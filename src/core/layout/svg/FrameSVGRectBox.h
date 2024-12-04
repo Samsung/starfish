@@ -42,20 +42,18 @@ public:
         return "FrameSVGRectBox";
     }
 
-    virtual void layoutSVG() override
+    virtual void layoutSVG(SVGLayoutContext& ctx) override
     {
         auto styleRX = style()->rx();
         auto styleRY = style()->ry();
 
-        auto vp = viewport();
-
         if (styleRX.isSpecified() && styleRY.isSpecified()) {
-            m_rx = styleRX.specifiedValue(vp.width(), this);
-            m_ry = styleRY.specifiedValue(vp.height(), this);
+            m_rx = styleRX.specifiedValue(ctx.viewport.width(), this);
+            m_ry = styleRY.specifiedValue(ctx.viewport.height(), this);
         } else if (styleRX.isSpecified() && !styleRY.isSpecified()) {
-            m_rx = m_ry = styleRX.specifiedValue(vp.width(), this);
+            m_rx = m_ry = styleRX.specifiedValue(ctx.viewport.width(), this);
         } else if (!styleRX.isSpecified() && styleRY.isSpecified()) {
-            m_rx = m_ry = styleRY.specifiedValue(vp.height(), this);
+            m_rx = m_ry = styleRY.specifiedValue(ctx.viewport.height(), this);
         }
     }
 

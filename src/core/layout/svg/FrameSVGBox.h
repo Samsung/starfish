@@ -72,7 +72,7 @@ public:
     {
     }
 
-    virtual void postLayoutSVG()
+    virtual void prepareChildPainting(Canvas* canvas)
     {
     }
 
@@ -99,7 +99,7 @@ public:
         return true;
     }
 
-    Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(String* url);
+    Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(String* url, const Unit::Rect& rect);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
@@ -131,7 +131,7 @@ protected:
         return &m_treeItemModel;
     }
 
-    Optional<GradientDrawingInfo*> makeGradientDrawingInfo(String* url);
+    Optional<GradientDrawingInfo*> makeGradientDrawingInfo(String* url, const Unit::Rect& rect);
 
     FrameTreeItemModel m_treeItemModel;
     bool m_hasClipPath;

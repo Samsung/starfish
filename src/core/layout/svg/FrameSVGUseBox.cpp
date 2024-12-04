@@ -48,10 +48,6 @@ Optional<Path*> FrameSVGUseBox::path()
             FrameSVGBox* childBox = child->asFrameSVGBox();
             auto childPath = childBox->path();
             if (childPath) {
-                if (childBox->needsSVGGeometryAttributes()) {
-                    childPath->translate(childBox->x().toInt(),
-                                         childBox->y().toInt());
-                }
                 if (path) {
                     path->append(childPath.value());
                 } else {
@@ -61,6 +57,18 @@ Optional<Path*> FrameSVGUseBox::path()
         }
         child = child->next();
     }
+
+    if (path) {
+        auto stylePos = resolveStylePosition(viewport());
+        path->translate(stylePos.x(), stylePos.y());
+    }
+
     return path;
+}
+
+void FrameSVGUseBox::prepareChildPainting(Canvas* canvas)
+{
+    auto stylePos = resolveStylePosition(viewport());
+    canvas->translate(stylePos.x(), stylePos.y());
 }
 } // namespace Starfish
