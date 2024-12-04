@@ -43,6 +43,11 @@ public:
         return true;
     }
 
+    virtual bool isShapeElement() override
+    {
+        return true;
+    }
+
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;

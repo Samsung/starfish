@@ -61,59 +61,132 @@ bool FrameSVGBox::needsSVGGeometryAttributes()
     return node()->asSVGElement()->needsGeometryAttributes();
 }
 
-void FrameSVGBox::layout(LayoutContext& ctx,
-                         Frame::LayoutWantToResolve resolveWhat)
+LayoutLocation FrameSVGBox::resolveStylePosition(FrameBox* box, const LayoutSize& viewport)
 {
-    auto vp = viewport();
-    if (node()->asSVGElement()->needsSizingAttributes()) {
-        if (resolveWhat & Frame::ResolveWidth) {
-            auto styleWidth = style()->width();
-            LayoutUnit width;
-            if (!styleWidth.isAuto()) {
-                width = styleWidth.specifiedValue(vp.width(), this);
-            }
-            setWidth(width);
-        }
-
-        if (resolveWhat & Frame::ResolveHeight) {
-            auto styleHeight = style()->height();
-            LayoutUnit height;
-            if (!styleHeight.isAuto()) {
-                height = styleHeight.specifiedValue(vp.height(), this);
-            }
-            setHeight(height);
-        }
+    STARFISH_ASSERT(box->needsSVGGeometryAttributes());
+    if (box->isFrameSVGBox()) {
+        return box->asFrameSVGBox()->resolveStylePosition(viewport);
     } else {
-        if (resolveWhat & Frame::ResolveWidth) {
-            setWidth(0);
-        }
+        return box->frameRect().location();
+    }
+}
 
-        if (resolveWhat & Frame::ResolveHeight) {
-            setHeight(0);
-        }
+LayoutLocation FrameSVGBox::resolveStylePosition(const LayoutSize& viewport)
+{
+    STARFISH_ASSERT(node()->asSVGElement()->needsGeometryAttributes());
+    LayoutLocation result;
+    auto styleX = style()->x();
+    if (styleX.isSpecified()) {
+        result.setX(styleX.specifiedValue(viewport.width(), this));
+    }
+    auto styleY = style()->y();
+    LayoutUnit yResult;
+    if (styleY.isSpecified()) {
+        result.setY(styleY.specifiedValue(viewport.height(), this));
+    }
+    return result;
+}
+
+LayoutSize FrameSVGBox::resolveStyleSize(const LayoutSize& viewport)
+{
+    STARFISH_ASSERT(node()->asSVGElement()->needsSizingAttributes());
+    LayoutSize result;
+    auto styleWidth = style()->width();
+    LayoutUnit width;
+    if (!styleWidth.isAuto()) {
+        width = styleWidth.specifiedValue(viewport.width(), this);
     }
 
-    layoutSVG();
+    result.setWidth(width);
 
-    if (!needsSVGGeometryAttributes()) {
+    auto styleHeight = style()->height();
+    LayoutUnit height;
+    if (!styleHeight.isAuto()) {
+        height = styleHeight.specifiedValue(viewport.height(), this);
+    }
+    result.setHeight(height);
+    return result;
+}
+
+void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
+{
+    if (node()->asSVGElement()->needsSizingAttributes()) {
+        m_frameRect.setSize(resolveStyleSize(ctx.viewport));
+    }
+
+    bool needsGeometryAttributes = needsSVGGeometryAttributes();
+    LayoutLocation stylePos;
+    bool needsComputeFrameRect = needsGeometryAttributes || node()->asSVGElement()->isShapeElement();
+    if (needsGeometryAttributes) {
+        stylePos = resolveStylePosition(ctx.viewport);
+        m_frameRect.setLocation(stylePos);
+    } else if (node()->asSVGElement()->isShapeElement()) {
         auto p = path();
         if (p) {
             Unit::Rect pixelSnappedRect = p->boundingRect(false).snapSizeToPixel();
             m_frameRect = LayoutRect(pixelSnappedRect.x(), pixelSnappedRect.y(),
                     pixelSnappedRect.width(), pixelSnappedRect.height());
+        } else {
+            m_frameRect = LayoutRect();
         }
+    }
+
+    layoutSVG(ctx);
+
+    // expand frameRect with stroke width
+    if (!needsGeometryAttributes && !style()->stroke()->color().isTransparent() && !style()->stroke()->hasUrl() && !m_frameRect.isEmpty()) {
+        LayoutUnit strokeWidth(style()->strokeWidth().specifiedValue(ctx.normalizedDiagonalViewportLength, this));
+        LayoutUnit halfStrokeWidth = strokeWidth / 2;
+
+        m_frameRect.setX(m_frameRect.x() - halfStrokeWidth);
+        m_frameRect.setY(m_frameRect.y() - halfStrokeWidth);
+        m_frameRect.setWidth(m_frameRect.width() + strokeWidth);
+        m_frameRect.setHeight(m_frameRect.height() + strokeWidth);
+    }
+
+    // update frameRect to
+    if (UNLIKELY(style()->hasTransforms())) {
+        auto styleMatrix = style()->transformsToMatrix(ctx.viewport.width(), ctx.viewport.height(), this, true);
+        if (!styleMatrix.isIdentity()) {
+            if (style()->hasTransformOrigin()) {
+                auto to = style()->transformOrigin()->originValue();
+                auto ox = to->getXAxis().specifiedValue(ctx.viewport.width(), this);
+                auto oy = to->getYAxis().specifiedValue(ctx.viewport.height(), this);
+                matrix.postTranslate(ox, oy);
+                matrix.preConcat(styleMatrix);
+                matrix.postTranslate(-ox, -oy);
+            } else {
+                if (needsGeometryAttributes) {
+                    matrix.postTranslate(-stylePos.x().toFloat(), -stylePos.y().toFloat());
+                }
+                matrix.preConcat(styleMatrix);
+                if (needsGeometryAttributes) {
+                    matrix.postTranslate(stylePos.x().toFloat(), stylePos.y().toFloat());
+                }
+            }
+        }
+    }
+
+    if (!matrix.isIdentity() && needsComputeFrameRect) {
+        m_frameRect = computeBoxExtent(m_frameRect, matrix);
     }
 
     Frame* f = firstChild();
     while (f) {
         if (f->isFrameSVGBox()) {
-            f->asFrameSVGBox()->resolvePosition(ctx);
-            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            f->asFrameSVGBox()->layout(ctx, matrix);
+        } else if (f->isFrameSVGSVGBox()) {
+            f->layout(ctx.layoutContext, Frame::LayoutWantToResolve::ResolveAll);
         }
+
         f = f->next();
     }
+}
 
-    postLayoutSVG();
+void FrameSVGBox::layout(LayoutContext& ctx,
+                         Frame::LayoutWantToResolve resolveWhat)
+{
+    STARFISH_ASSERT_NOT_REACHED();
 }
 
 LayoutSize FrameSVGBox::viewport()
@@ -135,28 +208,6 @@ LayoutUnit FrameSVGBox::normalizedDiagonalViewportLength()
             return f->asFrameSVGSVGBox()->normalizedDiagonalViewportLength();
         }
         f = f->layoutParent();
-    }
-}
-
-void FrameSVGBox::resolvePosition(LayoutContext& ctx)
-{
-    if (needsSVGGeometryAttributes()) {
-        auto vp = viewport();
-        auto styleX = style()->x();
-        LayoutUnit xResult;
-        if (styleX.isSpecified()) {
-            xResult = styleX.specifiedValue(vp.width(), this);
-        }
-        auto styleY = style()->y();
-        LayoutUnit yResult;
-        if (styleY.isSpecified()) {
-            yResult = styleY.specifiedValue(vp.height(), this);
-        }
-        setX(xResult);
-        setY(yResult);
-    } else {
-        setX(0);
-        setY(0);
     }
 }
 

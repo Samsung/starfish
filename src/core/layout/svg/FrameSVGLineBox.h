@@ -40,9 +40,8 @@ public:
         return "FrameSVGLineBox";
     }
 
-    virtual void layoutSVG() override
+    virtual void layoutSVG(SVGLayoutContext& ctx) override
     {
-        FrameBox* cb = layoutParent()->asFrameBox();
         auto x1 = style()->x1();
         auto y1 = style()->y1();
         auto x2 = style()->x2();
@@ -51,25 +50,25 @@ public:
         if (x1.isSpecified()) {
             m_x1 = x1.numberData();
         } else if (x1.isPercent()) {
-            m_x1 = x1.percentValue(cb->width());
+            m_x1 = x1.percentValue(ctx.viewport.width());
         }
 
         if (y1.isSpecified()) {
             m_y1 = y1.numberData();
         } else if (y1.isPercent()) {
-            m_y1 = y1.percentValue(cb->height());
+            m_y1 = y1.percentValue(ctx.viewport.height());
         }
 
         if (x2.isSpecified()) {
             m_x2 = x2.numberData();
         } else if (x2.isPercent()) {
-            m_x2 = x2.percentValue(cb->width());
+            m_x2 = x2.percentValue(ctx.viewport.width());
         }
 
         if (y2.isSpecified()) {
             m_y2 = y2.numberData();
         } else if (y2.isPercent()) {
-            m_y2 = y2.percentValue(cb->height());
+            m_y2 = y2.percentValue(ctx.viewport.height());
         }
     }
 

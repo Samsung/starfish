@@ -211,7 +211,8 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         if (ss->m_transform == name || ss->m_transformOrigin == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
-            setNeedsPainting();
+            Traverse::traverseIncludingShadowDOM(
+                this, [](Node* nd) { nd->setNeedsPainting(); });
         }
     }
 }

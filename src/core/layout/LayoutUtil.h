@@ -1219,6 +1219,10 @@ public:
     {
         m_size.setHeight(height);
     }
+    void setLocation(const LayoutLocation& location)
+    {
+        m_location = location;
+    }
     void setSize(const LayoutSize& size)
     {
         m_size = size;

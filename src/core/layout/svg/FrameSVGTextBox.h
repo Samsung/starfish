@@ -36,7 +36,7 @@ public:
         return "FrameSVGTextBox";
     }
 
-    virtual void layoutSVG() override;
+    virtual void layoutSVG(SVGLayoutContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
 
     void* operator new(size_t size);

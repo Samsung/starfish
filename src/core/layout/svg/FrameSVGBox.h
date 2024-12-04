@@ -53,11 +53,22 @@ public:
     LayoutSize viewport();
     LayoutUnit normalizedDiagonalViewportLength();
 
-    void resolvePosition(LayoutContext& ctx);
+    LayoutLocation resolveStylePosition(const LayoutSize& viewport);
+    LayoutSize resolveStyleSize(const LayoutSize& viewport);
+
+    // util function for FrameSVGBox and FrameSVGSVGBox
+    static LayoutLocation resolveStylePosition(FrameBox* box, const LayoutSize& viewport);
+
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+    struct SVGLayoutContext {
+        LayoutContext& layoutContext;
+        LayoutSize viewport;
+        LayoutUnit normalizedDiagonalViewportLength;
+    };
+    void layout(SVGLayoutContext& ctx, SkMatrix matrix);
 
-    virtual void layoutSVG()
+    virtual void layoutSVG(SVGLayoutContext& ctx)
     {
     }
 
