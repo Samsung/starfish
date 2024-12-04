@@ -149,6 +149,10 @@ static void traceRepaintRegionJob(
         rootedNodeSet.insert(node);
         rootedNodeSet.insert(lastStackingContextOwner->node());
 
+        LayoutRect newLayoutResultRect =
+            currentFrameBox->absoluteRectIncludingScroll(
+                lastStackingContextOwner);
+
         // if frame box establish StackingContext, this box cared by
         // RepaintTracker
         bool needToEstablishStackingContext =
@@ -156,9 +160,6 @@ static void traceRepaintRegionJob(
         if (needToEstablishStackingContext) {
             // check last result
             auto iter = oldResultMap.find(node);
-            LayoutRect newLayoutResultRect =
-                currentFrameBox->absoluteRectIncludingScroll(
-                    lastStackingContextOwner);
 
             bool gotNewNode = iter == oldResultMap.end();
             bool frameRectChanged =
@@ -166,11 +167,6 @@ static void traceRepaintRegionJob(
             if (gotNewNode || frameRectChanged) {
                 // got new node || frameRectChanged -> dirty
                 gotPaintingDirty = true;
-                LayoutRect rt = newLayoutResultRect;
-                if (iter != oldResultMap.end()) {
-                    rt.unite(iter->second.first);
-                }
-
                 if (frameRectChanged) {
                     LayoutRect dirtyRect = currentFrameBox->frameRect();
                     dirtyRect.unite(iter->second.first);
@@ -214,10 +210,6 @@ static void traceRepaintRegionJob(
         } else {
             // check last result
             auto iter = oldResultMap.find(node);
-            LayoutRect newLayoutResultRect =
-                currentFrameBox->absoluteRectIncludingScroll(
-                    lastStackingContextOwner);
-
             bool gotNewNode = iter == oldResultMap.end();
             bool frameRectChanged =
                 !gotNewNode && (iter->second.first != newLayoutResultRect);

@@ -157,6 +157,12 @@ public:
         return false;
     }
 
+    virtual bool isShapeElement()
+    {
+        // https://svgwg.org/svg2-draft/shapes.html#TermShapeElemenet
+        return false;
+    }
+
     int tabIndex() override;
 
     virtual NativeImageData::PreserveAspectRatioAlign preserveAspectRatioAlign()

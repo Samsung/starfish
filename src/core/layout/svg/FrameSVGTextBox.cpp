@@ -42,11 +42,11 @@ void* FrameSVGTextBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FrameSVGTextBox::layoutSVG()
+void FrameSVGTextBox::layoutSVG(SVGLayoutContext& ctx)
 {
-    LayoutContext ctx(node()->starfish(),
+    LayoutContext layoutContext(node()->starfish(),
                       node()->document()->frame()->asFrameDocument());
-    firstChild()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+    firstChild()->layout(layoutContext, Frame::LayoutWantToResolve::ResolveAll);
     firstChild()->establishesStackingContextIfNeedsAndComputingPaintingFlags();
 }
 
