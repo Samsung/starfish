@@ -119,16 +119,17 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 
         if (isInnerSVG()) {
             FrameBox* cb = layoutParent()->asFrameBox();
+            LayoutSize viewport = cb->isFrameSVGBox() ? cb->asFrameSVGBox()->viewport() : cb->asFrameSVGSVGBox()->viewport();
             auto styleX = style()->x();
             auto styleY = style()->y();
             float x = 0, y = 0;
             if (styleX.isSpecified() && styleY.isSpecified()) {
-                x = styleX.specifiedValue(cb->width(), this);
-                y = styleY.specifiedValue(cb->height(), this);
+                x = styleX.specifiedValue(viewport.width(), this);
+                y = styleY.specifiedValue(viewport.height(), this);
             } else if (styleX.isSpecified() && !styleY.isSpecified()) {
-                x = styleX.specifiedValue(cb->width(), this);
+                x = styleX.specifiedValue(viewport.width(), this);
             } else if (!styleX.isSpecified() && styleY.isSpecified()) {
-                y = styleY.specifiedValue(cb->height(), this);
+                y = styleY.specifiedValue(viewport.height(), this);
             }
             setX(x);
             setY(y);
@@ -144,23 +145,28 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
             m_viewport.setHeight(contentHeight().toFloat());
         }
 
+        setContentWidth(orgWidth);
+        setContentHeight(orgHeight);
+
+        FrameSVGBox::SVGLayoutContext svgLayoutContext = {
+                ctx, m_viewport, normalizedDiagonalViewportLength()
+        };
+
+        SkMatrix matrix = SkMatrix::I();
+        matrix.postConcat(computeTranlateScaleOnPaint().second);
+
         Frame* f = firstChild();
         while (f) {
             if (f->isFrameSVGSVGBox()) {
-                FrameSVGSVGBox* svg = (FrameSVGSVGBox*)f;
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
             } else {
-                f->asFrameSVGBox()->resolvePosition(ctx);
+                f->asFrameSVGBox()->layout(svgLayoutContext, matrix);
                 f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
                 f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
-                f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
             }
 
             f = f->next();
         }
-
-        setContentWidth(orgWidth);
-        setContentHeight(orgHeight);
     }
 }
 
@@ -285,6 +291,10 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     canvas->setNeedsGoodQualityAntialias();
     canvas->save();
 
+    if (isInnerSVG()) {
+        canvas->translate(x(), y());
+    }
+
     Unit::Rect viewport;
     if (m_containerViewport.hasValue() &&
         !m_containerViewport.value().isEmpty()) {
@@ -303,13 +313,6 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     Frame* child = firstChild();
     while (child) {
         ctx.m_canvas->save();
-        if (child->needsSVGGeometryAttributes()) {
-            ctx.m_canvas->translate(
-                child->asFrameBox()->x() - borderLeft() - paddingLeft(),
-                child->asFrameBox()->y() - borderTop() - paddingTop());
-        } else {
-            ctx.m_canvas->translate(-borderLeft() - paddingLeft(), -borderTop() - paddingTop());
-        }
         if (child->isFrameSVGSVGBox()) {
             FrameSVGSVGBox* svg = (FrameSVGSVGBox*)child;
             svg->paintReplaced(canvas);

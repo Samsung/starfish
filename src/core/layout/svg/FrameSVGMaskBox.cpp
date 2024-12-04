@@ -83,7 +83,7 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
-void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
+void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
 {
     FrameBox* svgBox = this;
 
@@ -101,15 +101,14 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
     Canvas* newCanvas = Canvas::create(node()->webView(), nativeImageMask);
     newCanvas->clearColor(Unit::Color(0, 0, 0, 0));
 
+    auto vp = viewport();
+
     PaintingContext newCtx(newCanvas);
     Frame* child = firstChild();
     while (child) {
         if (child && child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
             newCanvas->save();
-            if (childBox->needsSVGGeometryAttributes()) {
-                newCanvas->translate(childBox->x(), childBox->y());
-            }
             childBox->paintContent(newCtx);
             newCanvas->restore();
         }
@@ -121,6 +120,6 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
     }
     ctx.m_canvas->maskNativeImage(
         nativeImageMask,
-        Unit::Rect(x, y, nativeImageMask->width(), nativeImageMask->height()));
+        Unit::Rect(0, 0, nativeImageMask->width(), nativeImageMask->height()));
 }
 } // namespace Starfish

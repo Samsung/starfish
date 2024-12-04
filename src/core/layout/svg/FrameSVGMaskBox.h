@@ -44,7 +44,7 @@ public:
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
 
-    void applyMask(PaintingContext& ctx, float x, float y);
+    void applyMask(PaintingContext& ctx);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
