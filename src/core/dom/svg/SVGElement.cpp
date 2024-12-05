@@ -143,29 +143,27 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
     }
 
     if (needsPreserveAspectRatioValue()) {
-        if (name == starfish()->staticStrings()->m_preserveAspectRatio) {
-            auto utf8Str = value->toUTF8NonGCString();
+        if (ss->m_preserveAspectRatio == name) {
+            GCVector<StringView> result;
+            StringUtils::tokenize(value, " ", 1, result);
 
-            String* align = String::emptyString;
-            String* meetOrSlice = String::fromUTF8("meet");
+            StringView align;
+            StringView meetOrSlice;
 
-            auto p = utf8Str.find(' ');
-            if (p != std::string::npos) {
-                std::string a = utf8Str.substr(0, p);
-                std::string b = utf8Str.substr(p, utf8Str.size());
-                align = String::fromUTF8(a.data(), a.size());
-                meetOrSlice = String::fromUTF8(b.data(), b.size());
-            } else {
-                align = String::fromUTF8(utf8Str.data(), utf8Str.size());
+            if (result.size() > 1) {
+                align = result.at(0);
+                meetOrSlice = result.at(1);
+            } else if (result.size()) {
+                align = result.at(0);
             }
 
 #define SET_PARV(name)                                      \
-    else if (align->equals(#name))                          \
+    else if (align.equals(#name))                           \
     {                                                       \
         m_preserveAspectRatioAlign = NativeImageData::name; \
     }
 
-            if (align->equals("none")) {
+            if (align.equals("none")) {
                 m_preserveAspectRatioAlign = NativeImageData::None;
             }
             SET_PARV(xMinYMin)
@@ -180,13 +178,13 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             else
             {
                 STARFISH_UNSUPPORTED("Unsupported svg attribute align value %s",
-                                     align->toUTF8NonGCString().data());
+                                     align.toUTF8NonGCString().data());
             }
 #undef SET_PARV
 
-            if (meetOrSlice->equals("meet")) {
+            if (meetOrSlice.equals("meet") || meetOrSlice.isEmpty()) {
                 m_preserveAspectRatioMeetOrSlice = NativeImageData::Meet;
-            } else if (meetOrSlice->equals("slice")) {
+            } else if (meetOrSlice.equals("slice")) {
                 m_preserveAspectRatioMeetOrSlice = NativeImageData::Slice;
             }
         }

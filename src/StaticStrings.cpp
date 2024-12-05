@@ -378,7 +378,6 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_viewBox =
         QualifiedName(AtomicString::createAtomicString(starfish, "viewBox"));
     m_preserveAspectRatio = QualifiedName(
-        AtomicString::emptyAtomicString(),
         AtomicString::createAtomicString(starfish, "preserveAspectRatio"));
     m_d = QualifiedName(AtomicString::createAtomicString(starfish, "d"));
     m_points =
