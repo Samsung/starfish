@@ -32,6 +32,7 @@
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/svg/FrameSVGBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -1140,6 +1141,18 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 }
                 case CSSStyleValuePair::FontSize:
                     break;
+                case CSSStyleValuePair::RX: {
+                    if (frm->isFrameSVGBox()) {
+                        auto viewport = frm->asFrameSVGBox()->viewport();
+                        parentLength = viewport.width();
+                    }
+                } break;
+                case CSSStyleValuePair::RY: {
+                    if (frm->isFrameSVGBox()) {
+                        auto viewport = frm->asFrameSVGBox()->viewport();
+                        parentLength = viewport.height();
+                    }
+                } break;
                 default:
                     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
@@ -1346,6 +1359,12 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
     case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);
         style->loadFont(m_targetElement);
+        break;
+    case CSSStyleValuePair::KeyKind::RX:
+        style->setRX(newLength);
+        break;
+    case CSSStyleValuePair::KeyKind::RY:
+        style->setRY(newLength);
         break;
     default:
         break;
@@ -2054,6 +2073,16 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
             return nullptr;
         }
         break;
+    case CSSStyleValuePair::KeyKind::RX:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->rx());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::KeyKind::RY:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->ry());
+        }
+        return animatedLengthValue(property);
     default:
         break;
     }
@@ -2518,6 +2547,31 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                 gotAnimation = true;
             }
 
+            if (CHECK_ANIMATION(CSSStyleValuePair::KeyKind::RX) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::RX, values[0], offsets,
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::KeyKind::RX);
+                executor->registerAnimation(task, style, name, s,
+                                            iterationCount, direction,
+                                            playState, isCSSAnimationTask);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::KeyKind::RY) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::RY, values[0], offsets,
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::KeyKind::RY);
+                executor->registerAnimation(task, style, name, s,
+                                            iterationCount, direction,
+                                            playState, isCSSAnimationTask);
+                gotAnimation = true;
+            }
 #define APPLY_SIDE_ANIMATION(propertyName)                                     \
     if (CHECK_ANIMATION(CSSStyleValuePair::propertyName) == true) {            \
         auto task = new ActiveLengthAnimationTask(                             \

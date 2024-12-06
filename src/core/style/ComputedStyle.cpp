@@ -2464,7 +2464,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
-
+    if (newStyle->rx() != oldStyle->rx()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::RX] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->ry() != oldStyle->ry()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::RY] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
     return damage;
 }
 
