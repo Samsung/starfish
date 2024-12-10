@@ -43,8 +43,9 @@ public:
         SVG_LENGTHTYPE_PC
     };
 
+    SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute);
     SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-              unsigned short unitType = SVG_LENGTHTYPE_NUMBER, float value = 0);
+              unsigned short unitType, float value);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -70,6 +71,7 @@ public:
     void detach();
     void attach(SVGElement* sourceElement, QualifiedName targetAttribute);
     bool isDetached();
+    bool hasSpecificValue();
 
 protected:
     SVGElement* m_sourceElement;
@@ -79,6 +81,7 @@ protected:
     float m_valueInSpecifiedUnits;
 
     bool m_readOnly;
+    bool m_hasSpecificValue;
 };
 } // namespace Starfish
 

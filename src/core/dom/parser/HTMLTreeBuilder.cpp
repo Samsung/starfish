@@ -705,6 +705,14 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute = Attribute(
                 token->starfish()->staticStrings()->m_preserveAspectRatio,
                 tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("gradientunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_gradientUnits,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("spreadMethod")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_spreadMethod,
+                          tokenAttribute.value());
         }
     }
 }

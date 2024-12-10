@@ -34,6 +34,17 @@
 
 namespace Starfish {
 
+SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
+    : ScriptWrappable(this)
+    , m_sourceElement(sourceElement)
+    , m_targetAttribute(targetAttribute)
+    , m_unitType(SVG_LENGTHTYPE_NUMBER)
+    , m_valueInSpecifiedUnits(0)
+    , m_readOnly(false)
+    , m_hasSpecificValue(false)
+{
+}
+
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
                      unsigned short unitType, float value)
     : ScriptWrappable(this)
@@ -42,6 +53,7 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
     , m_unitType(unitType)
     , m_valueInSpecifiedUnits(value)
     , m_readOnly(false)
+    , m_hasSpecificValue(true)
 {
 }
 
@@ -58,6 +70,11 @@ unsigned short SVGLength::unitType()
     return m_unitType;
 }
 
+bool SVGLength::hasSpecificValue()
+{
+    return m_hasSpecificValue;
+}
+
 void SVGLength::setUnitType(unsigned short unitType)
 {
     if (isReadOnly()) {
@@ -66,7 +83,6 @@ void SVGLength::setUnitType(unsigned short unitType)
                                "NoModificationAllowedError");
         return;
     }
-
     m_unitType = unitType;
 }
 
@@ -192,14 +208,18 @@ void SVGLength::setValueInSpecifiedUnits(float v)
                                "The provided float value is non-finite");
         return;
     }
-
     m_valueInSpecifiedUnits = v;
+    m_hasSpecificValue = true;
 
     m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 String* SVGLength::valueAsString()
 {
+    if (!m_hasSpecificValue) {
+        return String::emptyString;
+    }
+
     String* str = String::fromFloat(valueInSpecifiedUnits());
 
     // unimplemented EMS, EXS

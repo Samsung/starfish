@@ -139,6 +139,9 @@ public:
         Y2,
         CX,
         CY,
+        FX,
+        FY,
+        FR,
         RX,
         RY,
         R,
@@ -574,6 +577,9 @@ public:
     GETTER_VALUE(Length, length, cy, CY, 0);
     GETTER_VALUE(Length, length, rx, RX, 0);
     GETTER_VALUE(Length, length, ry, RY, 0);
+    GETTER_VALUE(Length, length, fx, FX, 0);
+    GETTER_VALUE(Length, length, fy, FY, 0);
+    GETTER_VALUE(Length, length, fr, FR, 0);
     GETTER_VALUE(StylePaintData*, stopColor, stopColor, StopColor, nullptr);
     GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
@@ -2184,6 +2190,63 @@ public:
     void setRY(Length y)
     {
         *m_rareComputedStyleData.ensureRY() = y;
+    }
+
+    Length fx()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Optional<Length> fx = m_rareComputedStyleData.fx();
+        if (fx.hasValue()) {
+            return fx.getValue();
+        }
+
+        return Length();
+    }
+
+    void setFX(Length fx)
+    {
+        *m_rareComputedStyleData.ensureFX() = fx;
+    }
+
+    Length fy()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Optional<Length> fy = m_rareComputedStyleData.fy();
+        if (fy.hasValue()) {
+            return fy.getValue();
+        }
+
+        return Length();
+    }
+
+    void setFY(Length fy)
+    {
+        *m_rareComputedStyleData.ensureFY() = fy;
+    }
+
+    Length fr()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Optional<Length> fr = m_rareComputedStyleData.fr();
+        if (fr.hasValue()) {
+            return fr.getValue();
+        }
+
+        return Length();
+    }
+
+    void setFR(Length fr)
+    {
+        *m_rareComputedStyleData.ensureFR() = fr;
     }
 
     StyleBackgroundData* background()
