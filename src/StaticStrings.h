@@ -477,6 +477,9 @@ public:
     QualifiedName m_points;
     QualifiedName m_cx;
     QualifiedName m_cy;
+    QualifiedName m_fx;
+    QualifiedName m_fy;
+    QualifiedName m_fr;
     QualifiedName m_fontDashFamily;
     QualifiedName m_fontDashSize;
     QualifiedName m_start;

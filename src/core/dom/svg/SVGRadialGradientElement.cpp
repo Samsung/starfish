@@ -62,6 +62,18 @@ void SVGRadialGradientElement::didAttributeChanged(QualifiedName name,
         if (value->equals(r()->baseVal()->valueAsString()) == false) {
             r()->baseVal()->setValueAsString(value, false);
         }
+    } else if (ss->m_fx == name) {
+        if (value->equals(fx()->baseVal()->valueAsString()) == false) {
+            fx()->baseVal()->setValueAsString(value, false);
+        }
+    } else if (ss->m_fy == name) {
+        if (value->equals(fy()->baseVal()->valueAsString()) == false) {
+            fy()->baseVal()->setValueAsString(value, false);
+        }
+    } else if (ss->m_fr == name) {
+        if (value->equals(fr()->baseVal()->valueAsString()) == false) {
+            fr()->baseVal()->setValueAsString(value, false);
+        }
     }
 }
 
@@ -76,6 +88,12 @@ void SVGRadialGradientElement::updateSVGAttributeNeeded(QualifiedName name)
         setAttribute(ss->m_cy, cy()->baseVal()->valueAsString());
     } else if (ss->m_r == name) {
         setAttribute(ss->m_r, r()->baseVal()->valueAsString());
+    } else if (ss->m_fx == name) {
+        setAttribute(ss->m_fx, fx()->baseVal()->valueAsString());
+    } else if (ss->m_fy == name) {
+        setAttribute(ss->m_fy, fy()->baseVal()->valueAsString());
+    } else if (ss->m_fr == name) {
+        setAttribute(ss->m_fr, fr()->baseVal()->valueAsString());
     }
 }
 
@@ -87,6 +105,9 @@ void SVGRadialGradientElement::styleForPresentationAttribute(
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fx, FX, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fy, FY, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fr, FR, cssCustomValues);
 }
 
 void* SVGRadialGradientElement::operator new(size_t size)

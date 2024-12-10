@@ -384,6 +384,9 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "points"));
     m_cx = QualifiedName(AtomicString::createAtomicString(starfish, "cx"));
     m_cy = QualifiedName(AtomicString::createAtomicString(starfish, "cy"));
+    m_fx = QualifiedName(AtomicString::createAtomicString(starfish, "fx"));
+    m_fy = QualifiedName(AtomicString::createAtomicString(starfish, "fy"));
+    m_fr = QualifiedName(AtomicString::createAtomicString(starfish, "fr"));
     m_fontDashFamily = QualifiedName(
         AtomicString::createAtomicString(starfish, "font-family"));
     m_fontDashSize =

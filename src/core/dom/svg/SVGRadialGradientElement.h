@@ -44,6 +44,10 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_cx));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_cy));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_r));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_fx));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_fy));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRadialGradientElement, m_fr));
+
         SVGGradientElement::fillGCDescriptor(desc);
     }
 
@@ -80,11 +84,17 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cx);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cy);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(r);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(fx);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(fy);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(fr);
 
 private:
     SVGAnimatedLength* m_cx{ nullptr };
     SVGAnimatedLength* m_cy{ nullptr };
     SVGAnimatedLength* m_r{ nullptr };
+    SVGAnimatedLength* m_fx{ nullptr };
+    SVGAnimatedLength* m_fy{ nullptr };
+    SVGAnimatedLength* m_fr{ nullptr };
 };
 } // namespace Starfish
 

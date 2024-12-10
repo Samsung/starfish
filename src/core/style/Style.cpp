@@ -15818,6 +15818,24 @@ bool CSSStyleValuePair::updateValueCY(Document* document,
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
+bool CSSStyleValuePair::updateValueFX(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueFY(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueFR(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
 bool CSSStyleValuePair::updateValueOutlineColor(Document* document,
                                                 const CSSTokenVector& tokens)
 {

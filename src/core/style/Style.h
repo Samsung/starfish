@@ -743,6 +743,9 @@ class CSSFilterFunction;
     F(RY, ry, "ry")                                                            \
     F(CX, cx, "cx")                                                            \
     F(CY, cy, "cy")                                                            \
+    F(FX, fx, "fx")                                                            \
+    F(FY, fy, "fy")                                                            \
+    F(FR, fr, "fr")                                                            \
     F(FlexDirection, flexDirection, "flex-direction")                          \
     F(FlexWrap, flexWrap, "flex-wrap")                                         \
     F(Order, order, "order")                                                   \

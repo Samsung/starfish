@@ -385,6 +385,9 @@ class CanvasCairo : public Canvas {
             if (canvasStyle.isCanvasGradientValue() == true) {
                 auto gradientValue =
                     canvasStyle.getCanvasGradientValue()->nativeGradient();
+
+                cairo_scale(m_canvas, gradientValue->scaleX(),
+                            gradientValue->scaleY());
                 cairo_set_source(
                     m_canvas,
                     ((NativeGradientCairo*)gradientValue.get())->pattern());

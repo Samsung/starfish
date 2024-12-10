@@ -1974,6 +1974,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::CY);
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::FX: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->fx());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FX);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::FY: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->fy());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FY);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::FR: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->fr());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::FR);
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::R: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->r());
         p.setKeyKind(CSSStyleValuePair::KeyKind::R);
