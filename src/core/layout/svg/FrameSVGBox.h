@@ -44,6 +44,7 @@ public:
     }
 
     virtual bool needsSVGGeometryAttributes() override;
+    virtual bool isAlwaysInvisible() override;
 
     virtual const char* name() override
     {

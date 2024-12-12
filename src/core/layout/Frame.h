@@ -1668,7 +1668,7 @@ public:
         frameTreeItemModel()->m_lastChild = newChild;
     }
 
-    void insertBefore(Frame* nextChild, Frame* newChild)
+    void insertBefore(Optional<Frame*> nextChild, Frame* newChild)
     {
         STARFISH_ASSERT(!newChild->parent());
 
@@ -1685,7 +1685,7 @@ public:
         }
         newChild->setParent(this);
         newChild->frameTreeItemModel()->m_previous = prev;
-        newChild->frameTreeItemModel()->m_next = nextChild;
+        newChild->frameTreeItemModel()->m_next = nextChild.value();
         nextChild->frameTreeItemModel()->m_previous = newChild;
     }
 
@@ -1919,6 +1919,11 @@ public:
     virtual void computeVisibleRect(ComputeVisibleRectContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    virtual bool isAlwaysInvisible()
+    {
+        return false;
     }
 
     void propagateMarkNeedsLayout()

@@ -9585,8 +9585,18 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
             if (e && e->frame() && !e->frame()->isFrameDocument()) {
                 e->window()->browsingContext()->setNeedsFrameTreeBuild();
-                FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(
-                    e->frame());
+                bool isSVGChildElement =
+                    e->isSVGElement() && !e->isSVGSVGElement();
+                if (isSVGChildElement) {
+                    element->markNeedsFrameTreeBuild();
+                    while (e) {
+                        e->markChildNeedsFrameTreeBuild();
+                        e = e->renderingParentElement();
+                    }
+                } else {
+                    FrameTreeBuilder::
+                        needsFrameTreeBuildFromChildrenOfThisFrame(e->frame());
+                }
             }
         } else {
             element->setNeedsFrameTreeBuild();

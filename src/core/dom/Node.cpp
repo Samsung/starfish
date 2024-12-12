@@ -2189,6 +2189,23 @@ void Node::setNeedsFrameTreeBuild()
 
     Frame* old = frame();
     if (old) {
+        // fast path for SVG
+        if (UNLIKELY(isSVGElement() && !isSVGSVGElement())) {
+            if (old->parent()) {
+                Node* node = renderingParentNode();
+                while (node) {
+                    if (node->childNeedsFrameTreeBuild()) {
+                        break;
+                    }
+                    node->markChildNeedsFrameTreeBuild();
+                    node = node->renderingParentNode();
+                }
+
+                old->parent()->removeChild(old);
+                return;
+            }
+        }
+
         Frame* blockParent = FrameTreeBuilder::
             findNearestBlockStartPositionOfFrameTreeBuildCandidate(
                 old->parent());
