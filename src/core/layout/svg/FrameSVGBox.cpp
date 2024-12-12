@@ -61,6 +61,11 @@ bool FrameSVGBox::needsSVGGeometryAttributes()
     return node()->asSVGElement()->needsGeometryAttributes();
 }
 
+bool FrameSVGBox::isAlwaysInvisible()
+{
+    return node()->asSVGElement()->isStructuralElement();
+}
+
 LayoutLocation FrameSVGBox::resolveStylePosition(FrameBox* box, const LayoutSize& viewport)
 {
     STARFISH_ASSERT(box->needsSVGGeometryAttributes());

@@ -196,7 +196,15 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
             }
         }
         if (parentFrame) {
-            parentFrame->appendChild(newFrame.value());
+            Optional<Element*> prevElement = svgElement->previousElementSibling();
+            while (prevElement.hasValue() && !prevElement->frame()) {
+                prevElement = prevElement->previousElementSibling();
+            }
+            if (prevElement) {
+                parentFrame->insertBefore(prevElement->frame()->next(), newFrame.value());
+            } else {
+                parentFrame->insertBefore(parentFrame->firstChild(), newFrame.value());
+            }
         }
         svgElement->setFrame(newFrame.value());
     }

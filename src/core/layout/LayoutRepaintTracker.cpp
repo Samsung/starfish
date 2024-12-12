@@ -149,7 +149,7 @@ static void traceRepaintRegionJob(
     }
 
     // collect results related with box
-    if (!currentFrame->isAnonymous() && currentFrame->isFrameBox()) {
+    if (!currentFrame->isAlwaysInvisible() && !currentFrame->isAnonymous() && currentFrame->isFrameBox()) {
         FrameBox* currentFrameBox = currentFrame->asFrameBox();
         Node* node = currentFrame->node();
 
