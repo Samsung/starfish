@@ -191,11 +191,10 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                 for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
                     if ((std::get<1>(m_boundMaxExtentDueToOverflow[i]) == s) &&
                             co.canApplyOverflow(std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
-                        tmp = LayoutRect::overlappedRect(
-                            tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
+                        r = LayoutRect::overlappedRect(
+                            r, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
                     }
                 }
-
 
                 m_repaintRegionPerGraphicsLayer
                     [findNearestStackingContextOwner(frame)->node()]

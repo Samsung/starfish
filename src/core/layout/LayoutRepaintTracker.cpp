@@ -138,8 +138,8 @@ static void traceRepaintRegionJob(
                         LayoutRepaintTracker::InlineLayoutResult*>>&
         newInlineResultMap,
     std::unordered_map<Node*, LayoutRect>& dirtyAreaMapPerStackingContext,
-    std::unordered_set<Node*, std::hash<Node*>, std::equal_to<Node*>,
-                       GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
+    GCUnorderedSet<Node*, std::hash<Node*>, std::equal_to<Node*>,
+                   GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
     bool& gotPaintingDirty)
 {
     // if box is invisible from here, ignore from currentBox
@@ -216,6 +216,9 @@ static void traceRepaintRegionJob(
             lastStackingContextOwner = currentFrameBox;
         } else {
             // check last result
+            LayoutRepaintTracker::ComputeOverflow::reduceRect(
+                        tracker, newLayoutResultRect, lastStackingContextOwner);
+
             auto iter = oldResultMap.find(node);
             bool gotNewNode = iter == oldResultMap.end();
             bool frameRectChanged =
@@ -232,9 +235,6 @@ static void traceRepaintRegionJob(
                     iter->second.first.setX(LayoutUnit::min());
                     iter->second.first.setY(LayoutUnit::min());
                 }
-
-                LayoutRepaintTracker::ComputeOverflow::reduceRect(
-                    tracker, rt, lastStackingContextOwner);
 
                 if (currentFrameBox->isVisible()) {
                     Node* stackingContextOwner =

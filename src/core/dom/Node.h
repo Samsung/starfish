@@ -907,6 +907,11 @@ public:
         Node* target, const MutationObserverOptionType optionTypes,
         const Optional<QualifiedName>& name);
 
+    bool isSVGChildElement()
+    {
+        return isSVGElement() && !isSVGSVGElement();
+    }
+
 private:
     void validateReplace(Node* node, Node* child);
 

@@ -85,9 +85,7 @@ public:
     }
 
 protected:
-    std::unordered_set<Node*, std::hash<Node*>, std::equal_to<Node*>,
-                       GCUtil::gc_malloc_allocator<Node*>>
-        m_rootedNodeSet;
+    GCUnorderedSet<Node*> m_rootedNodeSet;
 
     // layout results
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>> m_lastLayoutResult;
