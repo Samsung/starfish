@@ -1522,10 +1522,6 @@ void Frame::computeStyleFlags()
         return;
     }
 
-    if (node && node->isSVGElement() && !node->isSVGSVGElement()) {
-        return;
-    }
-
     PositionValue position = style->position();
     bool isAbsolutePositioned =
         (position == PositionValue::AbsolutePositionValue ||

@@ -52,6 +52,12 @@ public:
         return "FrameSVGSVGBox";
     }
 
+    virtual void computeStyleFlags() override
+    {
+        FrameReplaced::computeStyleFlags();
+        m_flags.m_shouldApplyOverflow = true;
+    }
+
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual IntrinsicSize intrinsicSize() override;

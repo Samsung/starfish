@@ -2190,7 +2190,7 @@ void Node::setNeedsFrameTreeBuild()
     Frame* old = frame();
     if (old) {
         // fast path for SVG
-        if (UNLIKELY(isSVGElement() && !isSVGSVGElement())) {
+        if (UNLIKELY(isSVGChildElement())) {
             if (old->parent()) {
                 Node* node = renderingParentNode();
                 while (node) {

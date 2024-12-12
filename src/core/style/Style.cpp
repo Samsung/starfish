@@ -9585,9 +9585,7 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
             if (e && e->frame() && !e->frame()->isFrameDocument()) {
                 e->window()->browsingContext()->setNeedsFrameTreeBuild();
-                bool isSVGChildElement =
-                    e->isSVGElement() && !e->isSVGSVGElement();
-                if (isSVGChildElement) {
+                if (e->isSVGChildElement()) {
                     element->markNeedsFrameTreeBuild();
                     while (e) {
                         e->markChildNeedsFrameTreeBuild();

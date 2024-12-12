@@ -43,6 +43,11 @@ public:
         return true;
     }
 
+    virtual void computeStyleFlags() override
+    {
+        // DO NOTHING
+    }
+
     virtual bool needsSVGGeometryAttributes() override;
     virtual bool isAlwaysInvisible() override;
 
