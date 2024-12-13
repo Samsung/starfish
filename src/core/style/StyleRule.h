@@ -411,18 +411,19 @@ private:
     String* m_prefix;
 };
 
+// <keyframe-block> = <keyframe-selector># { <declaration-list> }
 class StyleRuleKeyframe : public StyleRuleBase {
 public:
-    StyleRuleKeyframe(GCAtomicVector<double>& keyList,
+    StyleRuleKeyframe(GCAtomicVector<double>& selectorList,
                       CSSStyleDeclaration* decl);
 
-    String* keyText();
-    bool setKeyText(Document* doc, String* text);
+    String* selectorListText();
+    bool setSelectorListText(Document* doc, String* text);
     String* cssText();
 
-    GCAtomicVector<double>& keyList()
+    GCAtomicVector<double>& selectorList()
     {
-        return m_keyList;
+        return m_selectorList;
     }
 
     CSSStyleDeclaration* styleDeclaration()
@@ -431,28 +432,34 @@ public:
     }
 
 private:
-    GCAtomicVector<double> m_keyList;
+    GCAtomicVector<double> m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
 };
 
+// https://drafts.csswg.org/css-animations-1/#keyframes
+// @keyframes = @keyframes <keyframes-name> { <qualified-rule-list> }
+// <keyframes-name> = <custom-ident> | <string>
+// <keyframe-block> = <keyframe-selector># { <declaration-list> }
+// <keyframe-selector> = from | to | <percentage [0,100]>
 class StyleRuleKeyframes : public StyleRuleBase {
 public:
     // TODO: Consider <keyframe-block-list>
-    StyleRuleKeyframes(String* name, GCVector<StyleRuleBase*>& keyframes);
+    StyleRuleKeyframes(String* keyframesName,
+                       GCVector<StyleRuleKeyframe*>& keyframeList);
 
-    String* name() const
+    String* keyframesName() const
     {
-        return m_name;
+        return m_keyframesName;
     }
 
-    void setName(String* name)
+    void setKeyframesName(String* keyframesName)
     {
-        m_name = name;
+        m_keyframesName = keyframesName;
     }
 
-    const GCVector<StyleRuleBase*>& keyframes() const
+    const GCVector<StyleRuleKeyframe*>& keyframeList() const
     {
-        return m_keyframes;
+        return m_keyframeList;
     }
 
     void styleChanged()
@@ -467,11 +474,11 @@ public:
 
     void wrapperAppendKeyframe(StyleRuleKeyframe*);
     void wrapperRemoveKeyframe(int);
-    int findKeyframeIndex(Document* doc, String* key) const;
+    int findKeyframeIndex(Document* doc, String* keyframeSelector) const;
 
 private:
-    String* m_name;
-    GCVector<StyleRuleBase*> m_keyframes;
+    String* m_keyframesName;
+    GCVector<StyleRuleKeyframe*> m_keyframeList;
     unsigned int m_version;
 };
 

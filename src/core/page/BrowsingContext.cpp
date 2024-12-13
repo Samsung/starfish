@@ -249,7 +249,8 @@ void BrowsingContext::resolveStyleIfNeeds()
             }
 
             if (canceled == true) {
-                document()->animationExecutor()->checkActiveExecutorInWebView();
+                webView()->updateActiveAnimationExecutorRegistration(
+                    document()->animationExecutor());
             }
 
             if (webView()->inRendering() == false) {
@@ -284,11 +285,13 @@ void BrowsingContext::resolveStyleIfNeeds()
                 if (canceled == true) {
                     Element* e = animationIter.key()->m_element;
                     String* n = animationIter.key()->m_name;
-                    document()->animationExecutor()->fireAnimationCancelEvent(
-                        e, n, cancelTick);
-                    document()
-                        ->animationExecutor()
-                        ->checkActiveExecutorInWebView();
+                    AnimationExecutor* animationExecutor =
+                        document()->animationExecutor();
+                    animationExecutor->fireAnimationCancelEvent(e, n,
+                                                                cancelTick);
+
+                    webView()->updateActiveAnimationExecutorRegistration(
+                        animationExecutor);
                 }
                 if (webView()->inRendering() == false) {
                     webView()->setNeedsRendering();

@@ -4900,8 +4900,7 @@ void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 
 void computeAnimation(StyleResolver& resolver, Element* element,
-                      NULLABLE ComputedStyle* oldStyle,
-                      NULLABLE Frame* oldFrame, ComputedStyle* style,
+                      Optional<ComputedStyle*> oldStyle, ComputedStyle* style,
                       ComputedStyleDamage& damage,
                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 void computeCSSAnimationKeyframes(const StyleResolver& resolver,

@@ -1816,8 +1816,8 @@ public:
     StyleRuleKeyframes* parseKeyframesRule();
     Optional<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
-    bool parseKeyframeKeyList(RefPtr<CSSToken>& token,
-                              GCAtomicVector<double>& keyList);
+    bool parseKeyframeSelectorList(RefPtr<CSSToken>& token,
+                                   GCAtomicVector<double>& selectorList);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
     bool parseSupportsCondition(); // for supports rule

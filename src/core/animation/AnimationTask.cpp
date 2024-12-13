@@ -99,27 +99,6 @@ uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
     return result;
 }
 
-void AnimationExecutor::checkActiveExecutorInWebView()
-{
-    auto& v = window()->webView()->m_activeAnimationExecutor;
-
-    if (m_activeTransitions.size() > 0 || m_activeAnimations.size() > 0) {
-        for (size_t i = 0; i < v.size(); i++) {
-            if (v[i] == this) {
-                return;
-            }
-        }
-        v.push_back(this);
-    } else {
-        for (size_t i = 0; i < v.size(); i++) {
-            if (v[i] == this) {
-                v.erase(i);
-                return;
-            }
-        }
-    }
-}
-
 void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
                                                 double delay)
 {
@@ -2110,6 +2089,9 @@ static void resolveLengthAnimatedValueIfNeeded(AnimatedValue* value, Font* font,
 bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                            bool isCSSAnimationTask)
 {
+    // TODO: The purpose of this unowned global method is to eventually register
+    // an animation task in the executor. Therefore, it would be better to move
+    // it as a method of the executor.
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
 
@@ -2133,21 +2115,20 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
     Window* w = element->window();
     LayoutSize windowSize(w->innerWidth(), w->innerHeight());
 
-    StyleAnimationData* animation = style->animation();
-    size_t keyframesSize = animation->keyframesSize();
-    for (size_t s = 0; s < keyframesSize; s++) {
-        String* name = animation->animationName(s);
+    StyleAnimationData* styleAnimationData = style->animation();
+    for (size_t s = 0; s < styleAnimationData->keyframesListSize(); s++) {
+        String* name = styleAnimationData->animationName(s);
         if (name->equals(String::emptyString) == true ||
             name->equalsIgnoreCase("none") == true) {
             continue;
         }
 
-        double duration = animation->duration(s).toTimeValue();
+        double duration = styleAnimationData->duration(s).toTimeValue();
         if (duration == 0.0) {
             continue;
         }
 
-        AnimationKeyframes& keyframes = animation->keyframes(s);
+        AnimationKeyframes& keyframes = styleAnimationData->keyframes(s);
         if (keyframes.keyframeList().size() == 0) {
             continue;
         }
@@ -2157,11 +2138,11 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             continue;
         }
 
-        double delay = animation->delay(s).toTimeValue();
-        float iterationCount = animation->iterationCount(s);
-        AnimationDirectionValue direction = animation->direction(s);
-        AnimationPlayStateValue playState = animation->playState(s);
-        AnimationFillModeValue fillMode = animation->fillMode(s);
+        double delay = styleAnimationData->delay(s).toTimeValue();
+        float iterationCount = styleAnimationData->iterationCount(s);
+        AnimationDirectionValue direction = styleAnimationData->direction(s);
+        AnimationPlayStateValue playState = styleAnimationData->playState(s);
+        AnimationFillModeValue fillMode = styleAnimationData->fillMode(s);
 
         size_t keyframeSize = keyframes.keyframeListSize();
         bool neededOriginProperty = false;
@@ -2201,7 +2182,7 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
 
             GCAtomicVector<double> offsets;
             GCVector<TimingFunction*> timingFunctions;
-            offsets.push_back(fromKeyframe->keyframeName());
+            offsets.push_back(fromKeyframe->keyframeSelector());
             timingFunctions.push_back(fromKeyframe->timingFunction());
 
             for (size_t k = 1; k < keyframeSize; k++) {
@@ -2243,11 +2224,19 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     continue;
                 }
 
-                offsets.push_back(keyframe->keyframeName());
+                offsets.push_back(keyframe->keyframeSelector());
                 timingFunctions.push_back(keyframe->timingFunction());
             }
 
             bool gotAnimation = false;
+
+            // FIXME: Introduce AnimationApplier like TransitionApplier, This
+            // method is too verbose.
+            // FIXME: Remove CHECK_ANIMATION macro, It is not very helpful for
+            // readability or convenience.
+            // FIXME: The numerous individual if statements below are based on
+            // one keyKind per loop. Therefore, they all need to be if-else if
+            // or switch statements instead of individual if statements.
 
             // color series
             if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundColor) == true) {
@@ -2706,6 +2695,11 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (gotAnimation == true) {
                 // TODO reduce animation duration here with
                 // canceledAnimationProgress
+
+                // FIXME: During the loop, gotAnimation may be either true or
+                // false, but even a single opportunity for gotAnimation to
+                // become true is enough for ret to become True as well. This is
+                // quite ambiguous.
                 ret = true;
             }
         }

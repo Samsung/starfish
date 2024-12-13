@@ -58,6 +58,7 @@ interface CSSKeyframesRule : CSSRule {
     CSSKeyframeRule? findRule(CSSOMString select);
 };
 
+// https://drafts.csswg.org/css-animations/#interface-csskeyframerule-idl
 interface CSSKeyframeRule : CSSRule {
     [RaisesException=Setter] attribute DOMString keyText;
     [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;

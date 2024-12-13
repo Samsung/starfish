@@ -2283,8 +2283,9 @@ void Element::makeKeyframesFromObject(
         object, declarations);
 
     if (declarations->length() > 0) {
-        GCAtomicVector<double> keyList;
-        keyframeRules.push_back(new StyleRuleKeyframe(keyList, declarations));
+        GCAtomicVector<double> selectorList;
+        keyframeRules.push_back(
+            new StyleRuleKeyframe(selectorList, declarations));
     }
 }
 
@@ -2314,7 +2315,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
     if (keyframeRules.size() > 0) {
         double key = 100.0 / (keyframeRules.size() - 1);
         for (size_t i = 0; i < keyframeRules.size(); i++) {
-            keyframeRules[i]->asStyleRuleKeyframe()->setKeyText(
+            keyframeRules[i]->asStyleRuleKeyframe()->setSelectorListText(
                 document(), String::fromInt(key * i)->concat('%'));
         }
         // make style animation data for Web Animation
@@ -2327,7 +2328,8 @@ Animation* Element::animate(ExecutionContext* executionContext,
         if (!applyAnimationIfNeeds(this, Element::style(), false)) {
             return new Animation(executionContext);
         }
-        document()->animationExecutor()->checkActiveExecutorInWebView();
+        webView()->updateActiveAnimationExecutorRegistration(
+            document()->animationExecutor());
 
         auto& animations = document()->animationExecutor()->activeAnimations();
         uint64_t tick = tickCount();

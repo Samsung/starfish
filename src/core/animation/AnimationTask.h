@@ -1042,8 +1042,6 @@ public:
 
     uint64_t transformOpacityAnimationRemainTime();
 
-    void checkActiveExecutorInWebView();
-
     void fireAnimationStartEvent(Element* element, String* name, double delay);
     void fireAnimationEndEvent(Element* element, String* name,
                                double elapsedTime);
