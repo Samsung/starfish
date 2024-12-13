@@ -820,6 +820,11 @@ public:
     {
     }
 
+    virtual LayoutRect overflowRepaintRect()
+    {
+        return LayoutRect(0, 0, width(), height());
+    }
+
     SkMatrix computeScreenMatrix();
     LayoutRect computeScreenExtent();
 

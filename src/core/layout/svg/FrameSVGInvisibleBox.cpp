@@ -46,4 +46,8 @@ void FrameSVGInvisibleBox::paintContent(PaintingContext& ctx)
 void FrameSVGInvisibleBox::paintSVG(PaintingContext& ctx)
 {
 }
+
+void FrameSVGInvisibleBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
+{
+}
 } // namespace Starfish

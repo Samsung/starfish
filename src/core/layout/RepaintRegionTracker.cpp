@@ -42,16 +42,14 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
     if (frame->shouldApplyOverflow()) {
         if (tracker.m_willCompositing) {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
-                computeBoxExtent(
-                    LayoutRect(0, 0, frame->width(), frame->height()),
+                computeBoxExtent(frame->overflowRepaintRect(),
                     frame->computeMatrixOnGraphicsBuffer()),
                 tracker.findNearestStackingContextOwner(frame)
                     ->stackingContext(),
                 frame));
         } else {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
-                computeBoxExtent(
-                    LayoutRect(0, 0, frame->width(), frame->height()), matrix),
+                computeBoxExtent(frame->overflowRepaintRect(), matrix),
                 nullptr, frame));
         }
     }

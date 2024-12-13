@@ -218,7 +218,7 @@ Frame* FrameTreeBuilder::findNearestBlockStartPositionOfFrameTreeBuildCandidate(
         while (f) {
             if (!f->isAnonymous() && !f->didSpiltFrameInline() &&
                 (f->isBlockLevel(true) || f->isFrameTableCellBox() ||
-                 f->isFrameInputBox())) {
+                 f->isFrameInputBox() || f->isFrameSVGBox() || f->isFrameSVGSVGBox())) {
                 break;
             }
             f = f->parent();
@@ -254,7 +254,7 @@ void FrameTreeBuilder::insertFlexItemChild(FrameBlockBox* blockContainer,
                                            Node* currentNode,
                                            FrameTreeBuilderContext& ctx)
 {
-    bool isFlexItem = currentFrame->isBlockLevel() &&
+    bool isFlexItem = (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) &&
                       !currentFrame->isFrameLineBreak() &&
                       !currentFrame->isAbsolutePositioned();
     if (isFlexItem) {
@@ -282,7 +282,7 @@ void FrameTreeBuilder::insertGridItemChild(FrameBlockBox* blockContainer,
 {
     // FIXME
     bool isGridItem =
-        currentFrame->isBlockLevel() && !currentFrame->isFrameLineBreak();
+            (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) && !currentFrame->isFrameLineBreak();
 
     if (isGridItem) {
         blockContainer->appendChild(currentFrame);
@@ -826,9 +826,6 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameLineBreak(current);
     } else if (current->isHTMLObjectElement()) {
         return new FrameReplacedObject(current);
-    } else if (current->isSVGSVGElement()) {
-        return FrameTreeBuilder::buildSVGFrameTree(
-            current->asSVGSVGElement(), current->renderingParentElement()->frame());
     } else if (current->isHTMLSelectElement()) {
         return new FrameSelectBox(current, nullptr);
     } else if (current->isHTMLOptGroupElement()) {
@@ -964,104 +961,113 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
     }
 
-    if ((current->needsFrameTreeBuild() || force)) {
-        if (current->frame()) {
-            clearTree(current);
-        }
-
-        needsCreatePseudoElement = true;
-
-        if (current->needsFrameTreeBuild()) {
-            force = true;
-        }
-
-        currentFrame = createFrame(current, ctx, force);
-        if (!currentFrame) {
-            if (current->parentElement() && current->parentElement()->frame()) {
-                current->parentElement()->frame()->markNeedsLayout();
-            }
-            return nullptr;
-        }
-
-        current->setFrame(currentFrame);
-        current->clearNeedsFrameTreeBuild();
-
-        if (currentFrame->isNormalFlow()) {
-            if ((currentFrame->isBlockLevel() &&
-                 (!currentFrame->isFrameTableObjectBox() ||
-                  currentFrame->isFrameTableBox())) &&
-                ctx.isInFrameInlineFlow()) {
-                // divide block. when comes Inline.. + Block(normal flow)
-                didSplitBlock = true;
-                currentFrame->markDidSpiltFrameInline();
-
-                STARFISH_ASSERT(current->renderingParentNode());
-                Frame* parent = current->renderingParentNode()->frame();
-                while (parent) {
-                    if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
-                        break;
-                    }
-                    parent = parent->parent();
-                }
-
-                Node* nd = current->renderingParentNode();
-                while (nd) {
-                    if (nd->frame()->isFrameBlockBox()) {
-                        break;
-                    }
-                    auto iter = ctx.frameInlineItem().find(nd);
-                    if (iter != ctx.frameInlineItem().end()) {
-                        FrameInline* in = new FrameInline(nd);
-                        if (in->style()->boxDecorationBreak() ==
-                            SliceBoxDecorationBreakValue) {
-                            if (iter->second->isLeftMBPCleared()) {
-                                in->setLeftMBPCleared(true);
-                            }
-                            if (iter->second->isRightMBPCleared()) {
-                                in->setRightMBPCleared(true);
-                            }
-
-                            if (in->style()->direction() ==
-                                DirectionValue::LtrDirectionValue) {
-                                in->setLeftMBPCleared(true);
-                                iter->second->setRightMBPCleared(true);
-                            } else {
-                                iter->second->setLeftMBPCleared(true);
-                                in->setRightMBPCleared(true);
-                            }
-                        }
-
-                        stackedFrameInline.push_back(in);
-                        iter->second = in;
-                    }
-                    nd = nd->renderingParentNode();
-                }
-
-                STARFISH_ASSERT(parent);
-                ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
-                ctx.setIsInFrameInlineFlow(false);
-            }
-        }
-
+    if (UNLIKELY(current->isSVGSVGElement())) {
+        currentFrame = FrameTreeBuilder::buildSVGFrameTree(current->asSVGElement(),
+                nullptr, force);
         if (!currentFrame->parent()) {
-            FrameBlockBox* oldBlockContainer = ctx.currentBlockContainer();
-            FrameTreeBuilder::insertChild(oldBlockContainer, currentFrame,
+            FrameTreeBuilder::insertChild(ctx.currentBlockContainer(), currentFrame,
                                           current, ctx);
-            STARFISH_ASSERT(oldBlockContainer == ctx.currentBlockContainer());
-
-            if (currentFrame->isFrameText() &&
-                currentFrame->style()->textTransform() !=
-                    NoneTextTransformValue) {
-                currentFrame->asFrameText()->transformText(
-                    currentFrame->asFrameText()->text());
-            }
         }
     } else {
-        currentFrame = current->frame();
-        if (currentFrame && currentFrame->isFrameInputBox() &&
-            current->childNeedsFrameTreeBuild()) {
-            FrameInputBox::buildFrameTree(current, ctx, false);
-            current->clearChildNeedsFrameTreeBuild();
+        if (current->needsFrameTreeBuild() || force) {
+            if (current->frame()) {
+                clearTree(current);
+            }
+
+            needsCreatePseudoElement = true;
+
+            if (current->needsFrameTreeBuild()) {
+                force = true;
+            }
+
+            currentFrame = createFrame(current, ctx, force);
+            if (!currentFrame) {
+                if (current->parentElement() && current->parentElement()->frame()) {
+                    current->parentElement()->frame()->markNeedsLayout();
+                }
+                return nullptr;
+            }
+
+            current->setFrame(currentFrame);
+            current->clearNeedsFrameTreeBuild();
+
+            if (currentFrame->isNormalFlow()) {
+                if ((currentFrame->isBlockLevel() &&
+                     (!currentFrame->isFrameTableObjectBox() ||
+                      currentFrame->isFrameTableBox())) &&
+                    ctx.isInFrameInlineFlow()) {
+                    // divide block. when comes Inline.. + Block(normal flow)
+                    didSplitBlock = true;
+                    currentFrame->markDidSpiltFrameInline();
+
+                    STARFISH_ASSERT(current->renderingParentNode());
+                    Frame* parent = current->renderingParentNode()->frame();
+                    while (parent) {
+                        if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
+                            break;
+                        }
+                        parent = parent->parent();
+                    }
+
+                    Node* nd = current->renderingParentNode();
+                    while (nd) {
+                        if (nd->frame()->isFrameBlockBox()) {
+                            break;
+                        }
+                        auto iter = ctx.frameInlineItem().find(nd);
+                        if (iter != ctx.frameInlineItem().end()) {
+                            FrameInline* in = new FrameInline(nd);
+                            if (in->style()->boxDecorationBreak() ==
+                                SliceBoxDecorationBreakValue) {
+                                if (iter->second->isLeftMBPCleared()) {
+                                    in->setLeftMBPCleared(true);
+                                }
+                                if (iter->second->isRightMBPCleared()) {
+                                    in->setRightMBPCleared(true);
+                                }
+
+                                if (in->style()->direction() ==
+                                    DirectionValue::LtrDirectionValue) {
+                                    in->setLeftMBPCleared(true);
+                                    iter->second->setRightMBPCleared(true);
+                                } else {
+                                    iter->second->setLeftMBPCleared(true);
+                                    in->setRightMBPCleared(true);
+                                }
+                            }
+
+                            stackedFrameInline.push_back(in);
+                            iter->second = in;
+                        }
+                        nd = nd->renderingParentNode();
+                    }
+
+                    STARFISH_ASSERT(parent);
+                    ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
+                    ctx.setIsInFrameInlineFlow(false);
+                }
+            }
+
+            if (!currentFrame->parent()) {
+                FrameBlockBox* oldBlockContainer = ctx.currentBlockContainer();
+                FrameTreeBuilder::insertChild(oldBlockContainer, currentFrame,
+                                              current, ctx);
+                STARFISH_ASSERT(oldBlockContainer == ctx.currentBlockContainer());
+
+                if (currentFrame->isFrameText() &&
+                    currentFrame->style()->textTransform() !=
+                        NoneTextTransformValue) {
+                    currentFrame->asFrameText()->transformText(
+                        currentFrame->asFrameText()->text());
+                }
+            }
+        } else {
+            currentFrame = current->frame();
+            if (currentFrame && currentFrame->isFrameInputBox() &&
+                current->childNeedsFrameTreeBuild()) {
+                FrameInputBox::buildFrameTree(current, ctx, false);
+                current->clearChildNeedsFrameTreeBuild();
+            }
         }
     }
 

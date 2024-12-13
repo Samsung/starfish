@@ -163,6 +163,12 @@ public:
         return false;
     }
 
+    virtual bool isStructuralElement()
+    {
+        // https://svgwg.org/svg2-draft/struct.html#TermStructuralElement
+        return false;
+    }
+
     int tabIndex() override;
 
     virtual NativeImageData::PreserveAspectRatioAlign preserveAspectRatioAlign()
