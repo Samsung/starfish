@@ -9523,7 +9523,8 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
             Element* e = element->renderingParentElement();
             while (e) {
-                if (e->style() && e->style()->hasBlockLikeDisplay()) {
+                if (e->style() &&
+                    (e->style()->hasBlockLikeDisplay() || e->isSVGElement())) {
                     break;
                 }
                 e = e->renderingParentElement();

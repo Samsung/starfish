@@ -170,6 +170,21 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
     }
 }
 
+LayoutRect FrameSVGSVGBox::overflowRepaintRect()
+{
+    LayoutRect rt(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+                contentWidth(), contentHeight());
+    SkMatrix matrix = computeTranlateScaleOnPaint().second;
+
+    rt.setX(rt.x() + matrix.getTranslateX());
+    rt.setY(rt.y() + matrix.getTranslateY());
+
+    rt.setWidth(rt.width() - matrix.getTranslateX() * 2);
+    rt.setHeight(rt.height() - matrix.getTranslateY() * 2);
+
+    return rt;
+}
+
 std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
 {
     LayoutUnit svgWidth = contentWidth();
@@ -295,19 +310,29 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         canvas->translate(x(), y());
     }
 
-    Unit::Rect viewport;
-    if (m_containerViewport.hasValue() &&
-        !m_containerViewport.value().isEmpty()) {
-        viewport = m_containerViewport.value();
-    } else {
-        viewport.setWidth(contentWidth());
-        viewport.setHeight(contentHeight());
-    }
-
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
-    canvas->clip(Unit::Rect(0, 0, viewport.width(), viewport.height()));
 
-    canvas->postMatrix(tranlateScaleValue.second);
+    if (!m_containerViewport) {
+        bool hasBiggerViewBoxThenContentArea = false;
+        if (m_viewBox) {
+            hasBiggerViewBoxThenContentArea = contentWidth() < m_viewBox.value().width() || contentHeight() < m_viewBox.value().height();
+        }
+        if (hasBiggerViewBoxThenContentArea) {
+            canvas->clip(Unit::Rect(0, 0, contentWidth(), contentHeight()));
+        }
+        canvas->postMatrix(tranlateScaleValue.second);
+        auto vp = viewport();
+
+        if (!hasBiggerViewBoxThenContentArea) {
+            if (m_viewBox) {
+                canvas->clip(Unit::Rect(m_viewBox.value().x(), m_viewBox.value().y(), vp.width(), vp.height()));
+            } else {
+                canvas->clip(Unit::Rect(0, 0, vp.width(), vp.height()));
+            }
+        }
+    } else {
+        canvas->postMatrix(tranlateScaleValue.second);
+    }
 
     PaintingContext ctx(canvas);
     Frame* child = firstChild();

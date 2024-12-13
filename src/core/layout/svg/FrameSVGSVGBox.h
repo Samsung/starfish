@@ -59,6 +59,8 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    virtual LayoutRect overflowRepaintRect() override;
+
     LayoutSize viewport()
     {
         return m_viewport;

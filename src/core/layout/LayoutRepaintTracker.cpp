@@ -35,9 +35,16 @@ LayoutRepaintTracker::ComputeOverflow::ComputeOverflow(
     , frame(frame)
 {
     if (frame->shouldApplyOverflow()) {
+        LayoutRect repaintRect = frame->asFrameBox()->overflowRepaintRect();
+        repaintRect.setX(repaintRect.x() + frame->asFrameBox()->x());
+        repaintRect.setY(repaintRect.y() + frame->asFrameBox()->y());
+        LayoutLocation pos = frame->asFrameBox()->absolutePointIncludingScroll(stackingContextOwner);
+        LayoutRect overflowRect(
+            LayoutLocation(pos.x() + repaintRect.x(),
+                    pos.y() + repaintRect.y()),
+            repaintRect.size());
         tracker.m_boundMaxExtentDueToOverflow.push_back(
-            std::make_tuple(frame->asFrameBox()->absoluteRectIncludingScroll(
-                                stackingContextOwner),
+            std::make_tuple(overflowRect,
                             stackingContextOwner));
     }
 }

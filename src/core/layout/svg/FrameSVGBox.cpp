@@ -123,9 +123,9 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     } else if (node()->asSVGElement()->isShapeElement()) {
         auto p = path();
         if (p) {
-            Unit::Rect pixelSnappedRect = p->boundingRect(false).snapSizeToPixel();
-            m_frameRect = LayoutRect(pixelSnappedRect.x(), pixelSnappedRect.y(),
-                    pixelSnappedRect.width(), pixelSnappedRect.height());
+            Unit::Rect boundingRect = p->boundingRect(true);
+            m_frameRect = LayoutRect(boundingRect.x(), boundingRect.y(),
+                    boundingRect.width(), boundingRect.height());
         } else {
             m_frameRect = LayoutRect();
         }
@@ -134,14 +134,16 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     layoutSVG(ctx);
 
     // expand frameRect with stroke width
-    if (!needsGeometryAttributes && !style()->stroke()->color().isTransparent() && !style()->stroke()->hasUrl() && !m_frameRect.isEmpty()) {
+    if (!needsGeometryAttributes && (!style()->stroke()->color().isTransparent() || style()->stroke()->hasUrl()) && !m_frameRect.isEmpty()) {
         LayoutUnit strokeWidth(style()->strokeWidth().specifiedValue(ctx.normalizedDiagonalViewportLength, this));
-        LayoutUnit halfStrokeWidth = strokeWidth / 2;
+        if (strokeWidth > 1) {
+            LayoutUnit halfStrokeWidth = strokeWidth / 2;
 
-        m_frameRect.setX(m_frameRect.x() - halfStrokeWidth);
-        m_frameRect.setY(m_frameRect.y() - halfStrokeWidth);
-        m_frameRect.setWidth(m_frameRect.width() + strokeWidth);
-        m_frameRect.setHeight(m_frameRect.height() + strokeWidth);
+            m_frameRect.setX(m_frameRect.x() - halfStrokeWidth);
+            m_frameRect.setY(m_frameRect.y() - halfStrokeWidth);
+            m_frameRect.setWidth(m_frameRect.width() + strokeWidth);
+            m_frameRect.setHeight(m_frameRect.height() + strokeWidth);
+        }
     }
 
     // update frameRect to
@@ -180,6 +182,23 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
 
         f = f->next();
+    }
+
+    if (node()->asSVGElement()->isStructuralElement()) {
+        m_frameRect = LayoutRect();
+        f = firstChild();
+        while (f) {
+            m_frameRect.unite(f->asFrameBox()->frameRect());
+            f = f->next();
+        }
+
+        f = firstChild();
+        while (f) {
+            LayoutRect childRect = f->asFrameBox()->frameRect();
+            f->asFrameBox()->setX(childRect.x() - m_frameRect.x());
+            f->asFrameBox()->setY(childRect.y() - m_frameRect.y());
+            f = f->next();
+        }
     }
 }
 

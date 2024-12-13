@@ -36,8 +36,10 @@ public:
         return "FrameSVGInvisibleBox";
     }
 
+
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
+    virtual void layout(SVGLayoutContext& ctx, SkMatrix matrix) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

@@ -66,7 +66,7 @@ public:
         LayoutSize viewport;
         LayoutUnit normalizedDiagonalViewportLength;
     };
-    void layout(SVGLayoutContext& ctx, SkMatrix matrix);
+    virtual void layout(SVGLayoutContext& ctx, SkMatrix matrix);
 
     virtual void layoutSVG(SVGLayoutContext& ctx)
     {
