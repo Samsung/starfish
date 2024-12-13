@@ -378,30 +378,30 @@ StyleRuleNamespace::StyleRuleNamespace(String* namespaceURI, String* prefix)
 {
 }
 
-StyleRuleKeyframe::StyleRuleKeyframe(GCAtomicVector<double>& keyList,
+StyleRuleKeyframe::StyleRuleKeyframe(GCAtomicVector<double>& selectorList,
                                      CSSStyleDeclaration* decl)
     : StyleRuleBase(CSSRule::Type::KEYFRAME_RULE)
-    , m_keyList(std::move(keyList))
+    , m_selectorList(std::move(selectorList))
     , m_styleDeclaration(decl)
 {
     STARFISH_ASSERT(decl != nullptr);
 }
 
-String* StyleRuleKeyframe::keyText()
+String* StyleRuleKeyframe::selectorListText()
 {
-    STARFISH_ASSERT(!m_keyList.empty());
-    StringBuilder keyText;
-    for (unsigned i = 0; i < m_keyList.size(); ++i) {
+    STARFISH_ASSERT(!m_selectorList.empty());
+    StringBuilder builder;
+    for (unsigned i = 0; i < m_selectorList.size(); ++i) {
         if (i) {
-            keyText.appendString(", ");
+            builder.appendString(", ");
         }
-        keyText.appendString(String::fromDouble(m_keyList[i] * 100));
-        keyText.appendChar('%');
+        builder.appendString(String::fromDouble(m_selectorList[i] * 100));
+        builder.appendChar('%');
     }
-    return keyText.finalize();
+    return builder.finalize();
 }
 
-bool StyleRuleKeyframe::setKeyText(Document* doc, String* text)
+bool StyleRuleKeyframe::setSelectorListText(Document* doc, String* text)
 {
     STARFISH_ASSERT(doc != nullptr);
     STARFISH_ASSERT(text != nullptr);
@@ -409,21 +409,21 @@ bool StyleRuleKeyframe::setKeyText(Document* doc, String* text)
 
     CSSParser parser(doc);
     RefPtr<CSSToken> token = parser.makeToken(text);
-    GCAtomicVector<double> keys;
-    parser.parseKeyframeKeyList(token, keys);
+    GCAtomicVector<double> selectorList;
+    parser.parseKeyframeSelectorList(token, selectorList);
 
-    if (keys.empty()) {
+    if (selectorList.empty()) {
         return false;
     }
 
-    m_keyList = keys;
+    m_selectorList = selectorList;
     return true;
 }
 
 String* StyleRuleKeyframe::cssText()
 {
     StringBuilder result;
-    result.appendString(keyText());
+    result.appendString(selectorListText());
     result.appendString(" { ");
     String* decls = styleDeclaration()->cssText();
     result.appendString(decls);
@@ -432,46 +432,46 @@ String* StyleRuleKeyframe::cssText()
     return result.finalize();
 }
 
-StyleRuleKeyframes::StyleRuleKeyframes(String* name,
-                                       GCVector<StyleRuleBase*>& keyframes)
+StyleRuleKeyframes::StyleRuleKeyframes(
+    String* keyframesName, GCVector<StyleRuleKeyframe*>& keyframeList)
     : StyleRuleBase(CSSRule::Type::KEYFRAMES_RULE)
-    , m_name(name)
-    , m_keyframes(std::move(keyframes))
+    , m_keyframesName(keyframesName)
+    , m_keyframeList(std::move(keyframeList))
     , m_version(0)
 {
-    STARFISH_ASSERT(name != nullptr);
+    STARFISH_ASSERT(m_keyframesName != nullptr);
 }
 
 void StyleRuleKeyframes::wrapperAppendKeyframe(StyleRuleKeyframe* keyframe)
 {
     STARFISH_ASSERT(keyframe != nullptr);
-    m_keyframes.push_back(keyframe);
+    m_keyframeList.push_back(keyframe);
     styleChanged();
 }
 
 void StyleRuleKeyframes::wrapperRemoveKeyframe(int index)
 {
-    m_keyframes.erase(m_keyframes.begin() + index);
+    m_keyframeList.erase(m_keyframeList.begin() + index);
     styleChanged();
 }
 
-int StyleRuleKeyframes::findKeyframeIndex(Document* doc, String* key) const
+int StyleRuleKeyframes::findKeyframeIndex(Document* doc,
+                                          String* keyframeSelector) const
 {
     STARFISH_ASSERT(doc != nullptr);
-    STARFISH_ASSERT(key != nullptr);
+    STARFISH_ASSERT(keyframeSelector != nullptr);
     CSSParser parser(doc);
-    RefPtr<CSSToken> token = parser.makeToken(key);
+    RefPtr<CSSToken> token = parser.makeToken(keyframeSelector);
 
-    GCAtomicVector<double> keyList;
-    parser.parseKeyframeKeyList(token, keyList);
+    GCAtomicVector<double> selectorList;
+    parser.parseKeyframeSelectorList(token, selectorList);
 
-    if (keyList.size() == 0) {
+    if (selectorList.size() == 0) {
         return -1;
     }
 
-    for (size_t i = m_keyframes.size(); i--;) {
-        if (static_cast<StyleRuleKeyframe*>(m_keyframes[i])->keyList() ==
-            keyList) {
+    for (size_t i = m_keyframeList.size(); i--;) {
+        if (m_keyframeList[i]->selectorList() == selectorList) {
             return i;
         }
     }

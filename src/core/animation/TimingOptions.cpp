@@ -81,8 +81,9 @@ bool TimingOptions::makeTimingOptions(Element* element,
         return false;
     }
 
-    StyleAnimationData* animation = style->animation();
-    size_t animationNameSize = animation ? animation->animationNameSize() : 0;
+    StyleAnimationData* styleAnimationData = style->animation();
+    size_t animationNameSize =
+        styleAnimationData ? styleAnimationData->animationNameSize() : 0;
 
     // TimingOutput to StyleAnimationData
     style->setAnimationName(options.id(), animationNameSize);

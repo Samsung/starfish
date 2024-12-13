@@ -496,7 +496,7 @@ String* CSSNamespaceRule::prefix() const
 CSSKeyframeRule::CSSKeyframeRule(StyleRuleKeyframe* keyframeRule,
                                  NULLABLE CSSStyleSheet* parent)
     : CSSRule(parent)
-    , m_keyframe(keyframeRule)
+    , m_keyframeRule(keyframeRule)
     , m_propertiesWrapper(nullptr)
 {
     STARFISH_ASSERT(keyframeRule != nullptr);
@@ -504,19 +504,22 @@ CSSKeyframeRule::CSSKeyframeRule(StyleRuleKeyframe* keyframeRule,
 
 String* CSSKeyframeRule::cssText()
 {
-    return m_keyframe->cssText();
+    return m_keyframeRule->cssText();
 }
 
 String* CSSKeyframeRule::keyText() const
 {
-    return m_keyframe->keyText();
+    // This attribute represents the keyframe selector as a comma-separated list
+    // of percentage values. The from and to keywords map to 0% and 100%,
+    // respectively.
+    return m_keyframeRule->selectorListText();
 }
 
 void CSSKeyframeRule::setKeyText(String* text)
 {
     STARFISH_ASSERT(text != nullptr);
-    bool ret =
-        m_keyframe->setKeyText(scriptBindingInstance()->ownerDocument(), text);
+    bool ret = m_keyframeRule->setSelectorListText(
+        scriptBindingInstance()->ownerDocument(), text);
     if (!ret) {
         StringBuilder msg;
         msg.appendString(
@@ -539,7 +542,7 @@ CSSStyleDeclaration* CSSKeyframeRule::style()
 {
     if (!m_propertiesWrapper) {
         m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
-            m_keyframe->styleDeclaration(), this->asCSSKeyframeRule());
+            m_keyframeRule->styleDeclaration(), this->asCSSKeyframeRule());
     }
 
     return m_propertiesWrapper;
@@ -552,7 +555,7 @@ CSSKeyframesRule::CSSKeyframesRule(StyleRuleKeyframes* keyframesRule,
     , m_ruleListWrapper(nullptr)
 {
     STARFISH_ASSERT(keyframesRule != nullptr);
-    m_childRuleWrappers.resize(m_keyframesRule->keyframes().size());
+    m_childRuleWrappers.resize(m_keyframesRule->keyframeList().size());
 }
 
 String* CSSKeyframesRule::cssText()
@@ -563,12 +566,9 @@ String* CSSKeyframesRule::cssText()
     result.appendString(name());
     result.appendString(" { \n");
 
-    size_t size = m_keyframesRule->keyframes().size();
-    for (size_t i = 0; i < size; ++i) {
+    for (StyleRuleKeyframe* keyframe : m_keyframesRule->keyframeList()) {
         result.appendString("  ");
-        result.appendString(
-            (static_cast<StyleRuleKeyframe*>(m_keyframesRule->keyframes()[i]))
-                ->cssText());
+        result.appendString(keyframe->cssText());
         result.appendChar('\n');
     }
 
@@ -589,9 +589,9 @@ void CSSKeyframesRule::appendRule(String* rule)
 {
     STARFISH_ASSERT(rule != nullptr);
     STARFISH_ASSERT(m_childRuleWrappers.size() ==
-                    m_keyframesRule->keyframes().size());
+                    m_keyframesRule->keyframeList().size());
 
-    CSSStyleSheet* style_sheet = parentStyleSheet();
+    CSSStyleSheet* styleSheet = parentStyleSheet();
 
     CSSParser parser(scriptBindingInstance()->ownerDocument());
     RefPtr<CSSToken> token = parser.makeToken(rule);
@@ -620,7 +620,7 @@ void CSSKeyframesRule::deleteRule(String* keyList)
 {
     STARFISH_ASSERT(keyList != nullptr);
     STARFISH_ASSERT(m_childRuleWrappers.size() ==
-                    m_keyframesRule->keyframes().size());
+                    m_keyframesRule->keyframeList().size());
     int i = m_keyframesRule->findKeyframeIndex(
         scriptBindingInstance()->ownerDocument(), keyList);
     if (i < 0) {
@@ -652,7 +652,7 @@ CSSKeyframeRule* CSSKeyframesRule::findRule(String* keyList)
 
 unsigned CSSKeyframesRule::length() const
 {
-    return m_keyframesRule->keyframes().size();
+    return m_keyframesRule->keyframeList().size();
 }
 
 CSSRule* CSSKeyframesRule::item(unsigned index)
@@ -662,11 +662,11 @@ CSSRule* CSSKeyframesRule::item(unsigned index)
     }
 
     STARFISH_ASSERT(m_childRuleWrappers.size() ==
-                    m_keyframesRule->keyframes().size());
+                    m_keyframesRule->keyframeList().size());
 
     if (!m_childRuleWrappers[index]) {
         m_childRuleWrappers[index] =
-            m_keyframesRule->keyframes()[index]->createCSSOMWrapper(
+            m_keyframesRule->keyframeList()[index]->createCSSOMWrapper(
                 const_cast<CSSKeyframesRule*>(this));
     }
 
@@ -687,11 +687,11 @@ void CSSKeyframesRule::styleChanged()
 
 String* CSSKeyframesRule::name() const
 {
-    return m_keyframesRule->name();
+    return m_keyframesRule->keyframesName();
 }
 
 void CSSKeyframesRule::setName(String* name)
 {
-    return m_keyframesRule->setName(name);
+    return m_keyframesRule->setKeyframesName(name);
 }
 } // namespace Starfish

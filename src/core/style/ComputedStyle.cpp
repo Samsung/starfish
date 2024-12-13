@@ -2101,6 +2101,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    // TODO: The comparison for animation is wrong.
     StyleAnimationData* oldAnimation =
         oldStyle->hasRareComputeStyleData() ? oldStyle->animation() : nullptr;
     StyleAnimationData* newAnimation =

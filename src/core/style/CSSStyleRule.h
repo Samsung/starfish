@@ -250,7 +250,7 @@ public:
 
     StyleRuleKeyframe* styleRule() const
     {
-        return m_keyframe;
+        return m_keyframeRule;
     }
 
 private:
@@ -259,7 +259,7 @@ private:
         return CSSRule::Type::KEYFRAME_RULE;
     }
 
-    StyleRuleKeyframe* m_keyframe;
+    StyleRuleKeyframe* m_keyframeRule;
     CSSStyleDeclaration* m_propertiesWrapper;
 };
 

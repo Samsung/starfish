@@ -2353,6 +2353,35 @@ bool WebView::hasActiveAnimationExecutor(Element* e)
     return false;
 }
 
+void WebView::updateActiveAnimationExecutorRegistration(
+    AnimationExecutor* animationExecutor)
+{
+    // NOTE: This method has been moved from AnimationTask for readability and
+    // semantic reasons.
+    // TODO: The animation executor is held by the document. Why not store it as
+    // a document and executor pair?
+    if (animationExecutor->activeTransitions().size() > 0 ||
+        animationExecutor->activeAnimations().size() > 0) {
+        for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
+            if (m_activeAnimationExecutor[i] == animationExecutor) {
+                return;
+            }
+        }
+
+        // Register the animationExecutor in the activeAnimationExecutor.
+        m_activeAnimationExecutor.push_back(animationExecutor);
+    } else {
+        for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
+            if (m_activeAnimationExecutor[i] == animationExecutor) {
+                // Unregister the animationExecutor in the
+                // activeAnimationExecutor.
+                m_activeAnimationExecutor.erase(i);
+                return;
+            }
+        }
+    }
+}
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
 void WebView::setupInspector(uint32_t portNumber)
 {

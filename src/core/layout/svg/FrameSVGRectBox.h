@@ -54,6 +54,8 @@ public:
             m_rx = m_ry = styleRX.specifiedValue(ctx.viewport.width(), this);
         } else if (!styleRX.isSpecified() && styleRY.isSpecified()) {
             m_rx = m_ry = styleRY.specifiedValue(ctx.viewport.height(), this);
+        } else {
+            m_rx = m_ry = 0;
         }
     }
 

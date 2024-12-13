@@ -2486,18 +2486,18 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
     return new StyleRuleNamespace(namespaceURI.getValue(), prefix);
 }
 
-bool CSSParser::parseKeyframeKeyList(RefPtr<CSSToken>& token,
-                                     GCAtomicVector<double>& keyList)
+bool CSSParser::parseKeyframeSelectorList(RefPtr<CSSToken>& token,
+                                          GCAtomicVector<double>& selectorList)
 {
     while (token->isNotNull() && !token->isSymbol('{')) {
         if (token->isPercentage() && token->numericValue() >= 0 &&
             token->numericValue() <= 100) {
-            keyList.push_back(token->numericValue() / 100);
+            selectorList.push_back(token->numericValue() / 100);
         } else if (token->isIdent()) {
             if (token->value()->toString()->equalsIgnoreCase("from")) {
-                keyList.push_back(0);
+                selectorList.push_back(0);
             } else if (token->value()->toString()->equalsIgnoreCase("to")) {
-                keyList.push_back(1);
+                selectorList.push_back(1);
             }
         } else {
             return false; // parse error
@@ -2517,8 +2517,8 @@ CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
     AllowedRulesType allowedRules)
 {
     preserveState();
-    GCAtomicVector<double> keyList;
-    if (!parseKeyframeKeyList(token, keyList)) {
+    GCAtomicVector<double> selectorList;
+    if (!parseKeyframeSelectorList(token, selectorList)) {
         return CSSParser::ParseResult::Failed;
     }
 
@@ -2531,7 +2531,7 @@ CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
         declarations, valid, invalidDeclaration, true, true, false);
 
     if (valid) {
-        rootRule.push_back(new StyleRuleKeyframe(keyList, declarations));
+        rootRule.push_back(new StyleRuleKeyframe(selectorList, declarations));
         forgetState();
         return invalidDeclaration ? ParseResult::ErrorFounded
                                   : ParseResult::Consumed;
@@ -2547,9 +2547,9 @@ StyleRuleKeyframes* CSSParser::parseKeyframesRule()
     preserveState();
     RefPtr<CSSToken> token = getToken(true, true);
 
-    String* name = String::emptyString;
+    String* keyframesName = String::emptyString;
     if (token->isIdent()) {
-        name = token->value()->toString();
+        keyframesName = token->value()->toString();
     } else {
         ungetToken();
         forgetState();
@@ -2557,11 +2557,19 @@ StyleRuleKeyframes* CSSParser::parseKeyframesRule()
     }
     token = getToken(true, true);
 
-    GCVector<StyleRuleBase*> keyframeRules;
+    GCVector<StyleRuleBase*> rules;
     if (token->isSymbol('{')) {
-        parseRules(token, keyframeRules, RuleListType::KeyframesRuleList);
+        parseRules(token, rules, RuleListType::KeyframesRuleList);
         forgetState();
-        return new StyleRuleKeyframes(name, keyframeRules);
+
+        // Convert to use the type strictly.
+        GCVector<StyleRuleKeyframe*> keyframeRules;
+        keyframeRules.reserve(rules.size());
+        for (auto* rule : rules) {
+            STARFISH_ASSERT(rule->isKeyframeRule());
+            keyframeRules.push_back(reinterpret_cast<StyleRuleKeyframe*>(rule));
+        }
+        return new StyleRuleKeyframes(keyframesName, keyframeRules);
     }
 
     forgetState();
@@ -2734,17 +2742,17 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
                 addUnknownAtRule();
             }
         } else {
-            // plain style rules
+            // plain style rules or keyframes rule.
             GCVector<StyleRuleBase*> rules;
 
             CSSParser::ParseResult res = ParseResult::Failed;
             if (allowedRules <= RegularRules) {
                 res =
                     parseStyleRule(token, rules, allowedRules, nullptr, false);
-            }
-            if (allowedRules == KeyframeRules) {
+            } else if (allowedRules == KeyframeRules) {
                 res = parseKeyframeStyleRule(token, rules, allowedRules);
             }
+
             if (res != ParseResult::Failed) {
                 allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());

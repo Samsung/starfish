@@ -91,7 +91,6 @@ class WebView : public WebBase {
     friend class StackingContext;
     friend class Renderer;
     friend class Timer;
-    friend class AnimationExecutor;
     friend class ResourceLoader;
     friend class FileURLResourceRequestJobDelegate; // Custom file IO
 public:
@@ -247,6 +246,9 @@ public:
     {
         return m_activeAnimationExecutor;
     }
+
+    void updateActiveAnimationExecutorRegistration(
+        AnimationExecutor* animationExecutor);
 
     bool needsComposite()
     {
