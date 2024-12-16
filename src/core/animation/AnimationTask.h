@@ -45,6 +45,11 @@ class AnimatedValue : public gc {
     };
 
 public:
+    static AnimatedValue* create(ComputedStyle* style, Element* element,
+                                 const CSSStyleValuePair& property,
+                                 const CSSStyleValuePair::KeyKind& keyKind,
+                                 size_t layer, bool neededOriginProperty);
+
     AnimatedValue()
     {
         m_type = UNDEFINED;
