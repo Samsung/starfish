@@ -652,6 +652,10 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
 
 void FrameSVGBox::paintSVG(PaintingContext& ctx)
 {
+    if (!node()->asSVGElement()->isShapeElement()) {
+        return;
+    }
+
     auto vp = viewport();
 
     bool fillHasUrl = style()->fill()->hasUrl();

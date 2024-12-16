@@ -46,6 +46,11 @@ public:
         return true;
     }
 
+    virtual bool isStructuralElement() override
+    {
+        return true;
+    }
+
     Optional<SVGElement*> updateShadowTree();
 
     Optional<SVGElement*> target() const
