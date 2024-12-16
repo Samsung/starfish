@@ -22,6 +22,7 @@
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "FrameSVGMaskBox.h"
+#include "FrameSVGSVGBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -85,28 +86,34 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
 
 void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
 {
-    FrameBox* svgBox = this;
-
-    while (!svgBox->isFrameSVGSVGBox()) {
-        svgBox = svgBox->parent()->asFrameBox();
+    LayoutRect childrenRect;
+    Frame* f = firstChild();
+    while (f) {
+        childrenRect.unite(f->asFrameBox()->frameRect());
+        f = f->next();
     }
 
-    size_t svgElementWidth = svgBox->width().toUnsigned();
-    size_t svgElementHeight = svgBox->height().toUnsigned();
+    auto pixelSnappedRect = childrenRect.snapSizeToPixel();
 
     NativeImageData* nativeImageMask = BufferedNativeImageData::create(
-        std::max(svgElementWidth, ctx.m_canvas->renderTargetInfo().m_width),
-        std::max(svgElementHeight, ctx.m_canvas->renderTargetInfo().m_height));
+            node()->webView()->screenInfo().devicePixelRatio,
+            pixelSnappedRect.width().toUnsigned(),
+            pixelSnappedRect.height().toUnsigned());
+
+    FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
+            asFrameSVGSVGBox();
 
     Canvas* newCanvas = Canvas::create(node()->webView(), nativeImageMask);
     newCanvas->clearColor(Unit::Color(0, 0, 0, 0));
-
-    auto vp = viewport();
+    auto transScale = viewportBox->computeTranlateScaleOnPaint();
+    newCanvas->translate(-childrenRect.x() + transScale.second.getTranslateX(),
+            -childrenRect.y() + transScale.second.getTranslateY());
+    newCanvas->scale(transScale.second.getScaleX(), transScale.second.getScaleX());
 
     PaintingContext newCtx(newCanvas);
     Frame* child = firstChild();
     while (child) {
-        if (child && child->isFrameSVGBox()) {
+        if (child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
             newCanvas->save();
             childBox->paintContent(newCtx);
@@ -115,11 +122,18 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
         child = child->next();
     }
     delete newCanvas;
-    if(style()->maskType()==MaskTypeValue::LuminanceMaskTypeValue){
+
+    if (style()->maskType() == MaskTypeValue::LuminanceMaskTypeValue) {
         makeLuminanceMask(nativeImageMask);
     }
+
+    auto ctm = ctx.m_canvas->currentTransformMatrix();
+    SkMatrix maskMatrix = viewportBox->svgPaintingMatrix();
+    maskMatrix.preTranslate(childrenRect.x(), childrenRect.y());
+    ctx.m_canvas->setMatrix(maskMatrix);
     ctx.m_canvas->maskNativeImage(
         nativeImageMask,
-        Unit::Rect(0, 0, nativeImageMask->width(), nativeImageMask->height()));
+        Unit::Rect(0, 0, childrenRect.width(), childrenRect.height()));
+    ctx.m_canvas->setMatrix(ctm);
 }
 } // namespace Starfish

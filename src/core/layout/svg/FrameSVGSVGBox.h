@@ -119,6 +119,11 @@ public:
         m_defaultHeight = height;
     }
 
+    const SkMatrix& svgPaintingMatrix()
+    {
+        return m_svgPaintingMatrix;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -134,6 +139,7 @@ protected:
     size_t m_defaultWidth;
     size_t m_defaultHeight;
     Optional<Unit::Rect> m_containerViewport;
+    SkMatrix m_svgPaintingMatrix;
 };
 } // namespace Starfish
 
