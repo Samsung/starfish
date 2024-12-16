@@ -46,6 +46,11 @@ public:
     {
         return false;
     }
+
+    virtual bool isStructuralElement() override
+    {
+        return true;
+    }
 };
 } // namespace Starfish
 
