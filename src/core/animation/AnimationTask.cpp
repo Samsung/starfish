@@ -1120,13 +1120,15 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 }
                 case CSSStyleValuePair::FontSize:
                     break;
-                case CSSStyleValuePair::RX: {
+                case CSSStyleValuePair::CX: {
+                case CSSStyleValuePair::RX:
                     if (frm->isFrameSVGBox()) {
                         auto viewport = frm->asFrameSVGBox()->viewport();
                         parentLength = viewport.width();
                     }
                 } break;
-                case CSSStyleValuePair::RY: {
+                case CSSStyleValuePair::CY: {
+                case CSSStyleValuePair::RY:
                     if (frm->isFrameSVGBox()) {
                         auto viewport = frm->asFrameSVGBox()->viewport();
                         parentLength = viewport.height();
@@ -1338,6 +1340,12 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
     case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);
         style->loadFont(m_targetElement);
+        break;
+    case CSSStyleValuePair::KeyKind::CX:
+        style->setCX(newLength);
+        break;
+    case CSSStyleValuePair::KeyKind::CY:
+        style->setCY(newLength);
         break;
     case CSSStyleValuePair::KeyKind::RX:
         style->setRX(newLength);
@@ -2052,6 +2060,16 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
             return nullptr;
         }
         break;
+    case CSSStyleValuePair::KeyKind::CX:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->cx());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::KeyKind::CY:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->cy());
+        }
+        return animatedLengthValue(property);
     case CSSStyleValuePair::KeyKind::RX:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->rx());
@@ -2556,6 +2574,31 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::KeyKind::RY);
+                executor->registerAnimation(task, style, name, s,
+                                            iterationCount, direction,
+                                            playState, isCSSAnimationTask);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::KeyKind::CX) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::CX, values[0], offsets,
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::KeyKind::CX);
+                executor->registerAnimation(task, style, name, s,
+                                            iterationCount, direction,
+                                            playState, isCSSAnimationTask);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::KeyKind::CY) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::KeyKind::CY, values[0], offsets,
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::KeyKind::CY);
                 executor->registerAnimation(task, style, name, s,
                                             iterationCount, direction,
                                             playState, isCSSAnimationTask);

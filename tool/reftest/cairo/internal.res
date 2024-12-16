@@ -520,6 +520,7 @@ test/cairo/internal-test/animation/a34.html
 test/cairo/internal-test/animation/a35.html
 test/cairo/internal-test/animation/a36.html
 test/cairo/internal-test/animation/animation_svg_rx_ry.html
+test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/transition/parse-transition01.html
 test/cairo/internal-test/css/transition/transition_background_shorthand.html
