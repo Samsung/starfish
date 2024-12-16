@@ -76,6 +76,15 @@ LayoutLocation FrameSVGBox::resolveStylePosition(FrameBox* box, const LayoutSize
     }
 }
 
+Optional<LayoutUnit> FrameSVGBox::resolveStyleLength(const Length& length, const LayoutUnit& viewportLength)
+{
+    Optional<LayoutUnit> result;
+    if (length.isSpecified()) {
+        result = LayoutUnit(length.specifiedValue(viewportLength, this));
+    }
+    return result;
+}
+
 LayoutLocation FrameSVGBox::resolveStylePosition(const LayoutSize& viewport)
 {
     STARFISH_ASSERT(node()->asSVGElement()->needsGeometryAttributes());
@@ -151,7 +160,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
-    // update frameRect to
+    // update frameRect with transform
     if (UNLIKELY(style()->hasTransforms())) {
         auto styleMatrix = style()->transformsToMatrix(ctx.viewport.width(), ctx.viewport.height(), this, true);
         if (!styleMatrix.isIdentity()) {
@@ -205,6 +214,8 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             f = f->next();
         }
     }
+
+    postLayoutSVG(ctx);
 }
 
 void FrameSVGBox::layout(LayoutContext& ctx,

@@ -71,4 +71,17 @@ void FrameSVGUseBox::prepareChildPainting(Canvas* canvas)
     auto stylePos = resolveStylePosition(viewport());
     canvas->translate(stylePos.x(), stylePos.y());
 }
+
+void FrameSVGUseBox::postLayoutSVG(SVGLayoutContext& ctx)
+{
+    auto x = resolveStyleLength(style()->x(), ctx.viewport.width());
+    if (x) {
+        setX(x.value());
+    }
+    auto y = resolveStyleLength(style()->y(), ctx.viewport.height());
+    if (y) {
+        setY(y.value());
+    }
+}
+
 } // namespace Starfish

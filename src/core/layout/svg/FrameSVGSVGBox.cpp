@@ -312,6 +312,8 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
 
+    m_svgPaintingMatrix = canvas->currentTransformMatrix();
+
     if (!m_containerViewport) {
         bool hasBiggerViewBoxThenContentArea = false;
         if (m_viewBox) {

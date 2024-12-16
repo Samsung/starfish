@@ -59,6 +59,7 @@ public:
     LayoutSize viewport();
     LayoutUnit normalizedDiagonalViewportLength();
 
+    Optional<LayoutUnit> resolveStyleLength(const Length& length, const LayoutUnit& viewportLength);
     LayoutLocation resolveStylePosition(const LayoutSize& viewport);
     LayoutSize resolveStyleSize(const LayoutSize& viewport);
 
@@ -75,6 +76,10 @@ public:
     virtual void layout(SVGLayoutContext& ctx, SkMatrix matrix);
 
     virtual void layoutSVG(SVGLayoutContext& ctx)
+    {
+    }
+
+    virtual void postLayoutSVG(SVGLayoutContext& ctx)
     {
     }
 

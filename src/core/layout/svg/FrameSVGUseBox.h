@@ -38,6 +38,7 @@ public:
 
     virtual Optional<Path*> path() override;
     virtual void prepareChildPainting(Canvas* canvas) override;
+    virtual void postLayoutSVG(SVGLayoutContext& ctx) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
