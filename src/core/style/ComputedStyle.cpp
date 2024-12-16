@@ -2460,6 +2460,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    if (newStyle->cx() != oldStyle->cx()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->cy() != oldStyle->cy()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CY] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
     if (newStyle->pointerEvents() != oldStyle->pointerEvents()) {
         damagedKeys[CSSStyleValuePair::KeyKind::PointerEvents] = true;
         damage = static_cast<ComputedStyleDamage>(
