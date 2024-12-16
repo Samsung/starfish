@@ -1815,11 +1815,10 @@ static AnimatedValue* animatedLengthValue(const CSSStyleValuePair& property)
     }
 }
 
-static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
-                                    const CSSStyleValuePair& property,
-                                    const CSSStyleValuePair::KeyKind& keyKind,
-                                    size_t layer = 0,
-                                    bool neededOriginProperty = false)
+AnimatedValue* AnimatedValue::create(ComputedStyle* style, Element* element,
+                                     const CSSStyleValuePair& property,
+                                     const CSSStyleValuePair::KeyKind& keyKind,
+                                     size_t layer, bool neededOriginProperty)
 {
     STARFISH_ASSERT(style != nullptr);
 
@@ -2180,7 +2179,7 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             values.resize(layerSize);
             bool isAvailable = true;
             for (size_t l = 0; l < layerSize; l++) {
-                AnimatedValue* value = animatedValue(
+                AnimatedValue* value = AnimatedValue::create(
                     style, element, property, keyKind, l, neededOriginProperty);
                 if (value == nullptr) {
                     isAvailable = false;
@@ -2223,8 +2222,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                         neededOriginProperty = true;
                     }
                     AnimatedValue* value =
-                        animatedValue(style, element, property, keyKind, l,
-                                      neededOriginProperty);
+                        AnimatedValue::create(style, element, property, keyKind,
+                                              l, neededOriginProperty);
                     if (value == nullptr) {
                         isAvailable = false;
                         break;
