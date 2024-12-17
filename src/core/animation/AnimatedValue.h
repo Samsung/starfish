@@ -45,22 +45,23 @@ class AnimatedValue : public gc {
     };
 
 public:
-    static AnimatedValue* create(ComputedStyle* style, Element* element,
-                                 const CSSStyleValuePair& property,
-                                 const CSSStyleValuePair::KeyKind& keyKind,
-                                 size_t layer, bool neededOriginProperty);
+    static Optional<AnimatedValue*> create(
+        ComputedStyle* style, Element* element,
+        const CSSStyleValuePair& property,
+        const CSSStyleValuePair::KeyKind& keyKind, size_t layer,
+        bool neededOriginProperty);
 
-    static AnimatedValue* createAnimatedValueFromColor(
+    static Optional<AnimatedValue*> createAnimatedValueFromColor(
         const CSSStyleValuePair& property);
 
-    static AnimatedValue* createAnimatedValueFromLength(
+    static Optional<AnimatedValue*> createAnimatedValueFromLength(
         const CSSStyleValuePair& property);
 
-    static AnimatedValue* createAnimatedValueFromBackgroundPosition(
+    static Optional<AnimatedValue*> createAnimatedValueFromBackgroundPosition(
         ComputedStyle* style, Element* element,
         const CSSStyleValuePair& property, size_t layer);
 
-    static AnimatedValue* createAnimatedValueFromBackgroundSize(
+    static Optional<AnimatedValue*> createAnimatedValueFromBackgroundSize(
         ComputedStyle* style, Element* element,
         const CSSStyleValuePair& property, size_t layer);
 
