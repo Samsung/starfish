@@ -178,7 +178,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         }
 
         if (svgElement->hasMask()) {
-            svgElement->maskElement();
             if (newFrame && newFrame->isFrameSVGBox()) {
                 newFrame->asFrameSVGBox()->markHasMask();
             }

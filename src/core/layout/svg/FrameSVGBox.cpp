@@ -139,7 +139,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     } else if (node()->asSVGElement()->isShapeElement()) {
         auto p = path();
         if (p) {
-            Unit::Rect boundingRect = p->boundingRect(true);
+            Unit::Rect boundingRect = p->boundingRect(false);
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
                            boundingRect.width(), boundingRect.height());
@@ -912,8 +912,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 
     auto newPath = path();
     if (newPath) {
-        Unit::Rect rect = newPath->boundingRect(true);
         if (fillHasUrl) {
+            Unit::Rect rect = newPath->boundingRect(true);
             fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
             if (!fillInfo) {
                 Optional<GradientDrawingInfo*> radialGradientInfo =
@@ -934,6 +934,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         if (strokeHasUrl) {
+            Unit::Rect rect = newPath->boundingRect(false);
             // TODO: Only support linear gradient
             strokeInfo =
                 makeCanvasFillStrokeSource(style()->stroke()->url(), rect);
