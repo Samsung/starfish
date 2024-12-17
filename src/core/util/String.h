@@ -1572,6 +1572,8 @@ public:
     static std::vector<std::string> split(const std::string& src,
                                           const char delimiter);
     static std::string toLowerCase(const std::string& str);
+    static size_t strstr(const char* haystack, size_t haystackLength,
+                         const char* needle, size_t needleSize);
     static std::string createAlignedString(
         const std::vector<std::string>& strings, const size_t numColumns);
     static std::string formatString(const char* format, ...);

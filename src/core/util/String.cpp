@@ -1487,6 +1487,28 @@ std::string StringUtils::toLowerCase(const std::string& str)
     return lower;
 }
 
+size_t StringUtils::strstr(const char* haystack, size_t haystackSize,
+                           const char* needle, size_t needleSize)
+{
+    size_t haypos, needlepos;
+    if (haystackSize < needleSize) {
+        return SIZE_MAX;
+    }
+    haystackSize -= needleSize;
+    for (haypos = 0; haypos <= haystackSize; haypos++) {
+        for (needlepos = 0; needlepos < needleSize; needlepos++) {
+            if (haystack[haypos + needlepos] != needle[needlepos]) {
+                // Next character in haystack.
+                break;
+            }
+        }
+        if (needlepos == needleSize) {
+            return haypos;
+        }
+    }
+    return SIZE_MAX;
+}
+
 std::string StringUtils::createAlignedString(
     const std::vector<std::string>& strings, const size_t numColumns)
 {
