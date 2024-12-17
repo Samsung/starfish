@@ -9038,9 +9038,12 @@ void computeWebAnimationKeyframes(const StyleResolver& resolver,
         }
     }
 
-    styleAnimationData->keyframes(index).keyframeList().clear();
-    styleAnimationData->keyframes(index).keyframeList().assign(
-        keyframeList.begin(), keyframeList.end());
+    styleAnimationData->animationKeyframes(index)
+        .animationKeyframeList()
+        .clear();
+    styleAnimationData->animationKeyframes(index)
+        .animationKeyframeList()
+        .assign(keyframeList.begin(), keyframeList.end());
 }
 
 void computeCSSAnimationKeyframes(const StyleResolver& resolver,
@@ -9229,9 +9232,12 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
         // rarely change animation property values. Therefore, the animation
         // keyframe list should not be newly created unless animation properties
         // or keyframes rules are changed.
-        styleAnimationData->keyframes(i).keyframeList().clear();
-        styleAnimationData->keyframes(i).keyframeList().assign(
-            animationKeyframeList.begin(), animationKeyframeList.end());
+        styleAnimationData->animationKeyframes(i)
+            .animationKeyframeList()
+            .clear();
+        styleAnimationData->animationKeyframes(i)
+            .animationKeyframeList()
+            .assign(animationKeyframeList.begin(), animationKeyframeList.end());
     }
 }
 
@@ -9354,17 +9360,24 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     if (animationTasks[i]->isCSSAnimationTask()) {
                         if (element->style() && element->style()->animation()) {
                             bool found = false;
-                            auto animation = element->style()->animation();
+                            auto styleAnimationData =
+                                element->style()->animation();
                             for (size_t n = 0;
-                                 n < animation->keyframesListSize(); n++) {
+                                 n < styleAnimationData
+                                         ->animationKeyframesListSize();
+                                 n++) {
                                 if (!name->equals(
-                                        animation->animationName(n))) {
+                                        styleAnimationData->animationName(n))) {
                                     continue;
                                 }
-                                auto keyframes = animation->keyframes(n);
-                                if (keyframes.keyframeListSize() > 0) {
-                                    auto keyframe = keyframes.keyframe(0);
-                                    for (auto& keyKind : keyframe->keyKinds()) {
+                                AnimationKeyframes& animationKeyframes =
+                                    styleAnimationData->animationKeyframes(n);
+                                if (animationKeyframes
+                                        .animationKeyframeListSize() > 0) {
+                                    AnimationKeyframe* animationKeyframe =
+                                        animationKeyframes.animationKeyframe(0);
+                                    for (auto& keyKind :
+                                         animationKeyframe->keyKinds()) {
                                         if (animationTasks[i]
                                                 ->isKindOfTransitionProperty(
                                                     keyKind) == true) {
@@ -9434,7 +9447,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         styleAnimationData != nullptr &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
         element->didPrepareAnimation() == false) {
-        if (styleAnimationData->totalKeyframeListSize() > 0 &&
+        if (styleAnimationData->totalAnimationKeyframesListSize() > 0 &&
             applyAnimationIfNeeds(element, toStyle) == true) {
             elementHasAnimation = true;
             needsToCheckActiveExecutorInWebView = true;

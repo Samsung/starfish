@@ -100,7 +100,8 @@ bool AnimationApplier::apply()
     LayoutSize windowSize(w->innerWidth(), w->innerHeight());
 
     StyleAnimationData* styleAnimationData = m_style->animation();
-    for (size_t s = 0; s < styleAnimationData->keyframesListSize(); s++) {
+    for (size_t s = 0; s < styleAnimationData->animationKeyframesListSize();
+         s++) {
         String* name = styleAnimationData->animationName(s);
         if (name->equals(String::emptyString) == true ||
             name->equalsIgnoreCase("none") == true) {
@@ -112,13 +113,15 @@ bool AnimationApplier::apply()
             continue;
         }
 
-        AnimationKeyframes& keyframes = styleAnimationData->keyframes(s);
-        if (keyframes.keyframeList().size() == 0) {
+        AnimationKeyframes& animationKeyframes =
+            styleAnimationData->animationKeyframes(s);
+        if (animationKeyframes.animationKeyframeListSize() == 0) {
             continue;
         }
 
-        AnimationKeyframe* fromKeyframe = keyframes.keyframe(0);
-        if (fromKeyframe == nullptr) {
+        AnimationKeyframe* fromAnimationKeyframe =
+            animationKeyframes.animationKeyframe(0);
+        if (fromAnimationKeyframe == nullptr) {
             continue;
         }
 
@@ -128,11 +131,11 @@ bool AnimationApplier::apply()
         AnimationPlayStateValue playState = styleAnimationData->playState(s);
         AnimationFillModeValue fillMode = styleAnimationData->fillMode(s);
 
-        size_t keyframeSize = keyframes.keyframeListSize();
+        size_t keyframeSize = animationKeyframes.animationKeyframeListSize();
         bool neededOriginProperty = false;
-        for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
-            auto property = fromKeyframe->properties()[i];
-            auto keyKind = fromKeyframe->keyKinds()[i];
+        for (size_t i = 0; i < fromAnimationKeyframe->propertySize(); i++) {
+            auto property = fromAnimationKeyframe->properties()[i];
+            auto keyKind = fromAnimationKeyframe->keyKinds()[i];
             neededOriginProperty = false;
 
             if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown &&
@@ -168,14 +171,15 @@ bool AnimationApplier::apply()
 
             GCAtomicVector<double> offsets;
             GCVector<TimingFunction*> timingFunctions;
-            offsets.push_back(fromKeyframe->keyframeSelector());
-            timingFunctions.push_back(fromKeyframe->timingFunction());
+            offsets.push_back(fromAnimationKeyframe->keyframeSelector());
+            timingFunctions.push_back(fromAnimationKeyframe->timingFunction());
 
             for (size_t k = 1; k < keyframeSize; k++) {
-                auto keyframe = keyframes.keyframe(k);
+                AnimationKeyframe* animationKeyframe =
+                    animationKeyframes.animationKeyframe(k);
 
-                property = keyframe->properties()[i];
-                if (keyKind != keyframe->keyKinds()[i]) {
+                property = animationKeyframe->properties()[i];
+                if (keyKind != animationKeyframe->keyKinds()[i]) {
                     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
                 if ((keyframeSize - 1 != k) &&
@@ -210,8 +214,8 @@ bool AnimationApplier::apply()
                     continue;
                 }
 
-                offsets.push_back(keyframe->keyframeSelector());
-                timingFunctions.push_back(keyframe->timingFunction());
+                offsets.push_back(animationKeyframe->keyframeSelector());
+                timingFunctions.push_back(animationKeyframe->timingFunction());
             }
 
             bool gotAnimation =
