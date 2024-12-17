@@ -136,6 +136,8 @@ private:
     CSSTime m_delay;
     TimingFunction* m_timingFunction;
     GCVector<CSSStyleValuePair> m_properties;
+    // TODO: This is legacy code. CSSStyleValuePair is a key value pair. Why do
+    // we need to have another vector for the KeyKind?
     GCVector<CSSStyleValuePair::KeyKind> m_keyKinds;
 };
 
@@ -235,20 +237,20 @@ public:
         return m_fillMode;
     }
 
-    size_t keyframeListSize() const
+    size_t animationKeyframeListSize() const
     {
-        return m_keyframeList.size();
+        return m_animationKeyframeList.size();
     }
 
-    GCVector<AnimationKeyframe*>& keyframeList()
+    GCVector<AnimationKeyframe*>& animationKeyframeList()
     {
-        return m_keyframeList;
+        return m_animationKeyframeList;
     }
 
-    AnimationKeyframe* keyframe(size_t index)
+    AnimationKeyframe* animationKeyframe(size_t index)
     {
-        STARFISH_ASSERT(m_keyframeList.size() > index);
-        return m_keyframeList[index];
+        STARFISH_ASSERT(m_animationKeyframeList.size() > index);
+        return m_animationKeyframeList[index];
     }
 
 private:
@@ -260,9 +262,24 @@ private:
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
     AnimationFillModeValue m_fillMode;
-    GCVector<AnimationKeyframe*> m_keyframeList;
+    GCVector<AnimationKeyframe*> m_animationKeyframeList;
 };
 
+// https://drafts.csswg.org/css-animations/#animation
+// StyleAnimationData represent CSS animation shorthand property.
+// Constituent properties:
+/// animation-delay
+/// animation-direction
+/// animation-duration
+/// animation-fill-mode
+/// animation-iteration-count
+/// animation-name
+/// animation-play-state
+/// animation-timeline
+/// animation-timing-function
+
+// animation has a layer.
+// animation = <single-animation>#
 class StyleAnimationData : public gc {
 public:
     StyleAnimationData()
@@ -277,30 +294,30 @@ public:
     {
     }
 
-    size_t totalKeyframeListSize()
+    size_t totalAnimationKeyframesListSize()
     {
         size_t size = 0;
-        for (const AnimationKeyframes& keyframes : m_keyframesList) {
-            size += keyframes.keyframeListSize();
+        for (const AnimationKeyframes& keyframes : m_animationKeyframesList) {
+            size += keyframes.animationKeyframeListSize();
         }
         return size;
     }
 
-    size_t keyframesListSize()
+    size_t animationKeyframesListSize()
     {
-        return m_keyframesList.size();
+        return m_animationKeyframesList.size();
     }
 
-    AnimationKeyframes& keyframes(size_t index)
+    AnimationKeyframes& animationKeyframes(size_t index)
     {
-        STARFISH_ASSERT(m_keyframesList.size() > index);
-        return m_keyframesList[index];
+        STARFISH_ASSERT(m_animationKeyframesList.size() > index);
+        return m_animationKeyframesList[index];
     }
 
     void resizeIfNeeds(size_t index, size_t& currentSize)
     {
-        if (m_keyframesList.size() <= index) {
-            m_keyframesList.resize(index + 1);
+        if (m_animationKeyframesList.size() <= index) {
+            m_animationKeyframesList.resize(index + 1);
         }
         if (currentSize <= index) {
             currentSize = index + 1;
@@ -328,14 +345,14 @@ public:
     {
         STARFISH_ASSERT(name != nullptr);
         resizeIfNeeds(index, m_nameSize);
-        m_keyframesList[index].setName(name);
+        m_animationKeyframesList[index].setName(name);
     }
 
     String* animationName(size_t index)
     {
-        STARFISH_ASSERT(m_nameSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_nameSize <= m_animationKeyframesList.size());
         STARFISH_ASSERT(index < m_nameSize);
-        return m_keyframesList[index].name();
+        return m_animationKeyframesList[index].name();
     }
 
     size_t animationNameSize()
@@ -353,18 +370,20 @@ public:
     {
         STARFISH_ASSERT(f != nullptr);
         resizeIfNeeds(index, m_timingFunctionSize);
-        m_keyframesList[index].setTimingFunction(f);
+        m_animationKeyframesList[index].setTimingFunction(f);
     }
 
     TimingFunction* timingFunction(size_t index) const
     {
-        STARFISH_ASSERT(m_timingFunctionSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_timingFunctionSize <=
+                        m_animationKeyframesList.size());
         if (m_timingFunctionSize == 0) {
             return AnimationKeyframe::defaultTimingFunction();
         }
         uint16_t p = index % m_timingFunctionSize;
-        STARFISH_ASSERT(m_keyframesList[p].timingFunction() != nullptr);
-        return m_keyframesList[p].timingFunction();
+        STARFISH_ASSERT(m_animationKeyframesList[p].timingFunction() !=
+                        nullptr);
+        return m_animationKeyframesList[p].timingFunction();
     }
 
     size_t timingFunctionSize() const
@@ -381,17 +400,17 @@ public:
     void setDuration(CSSTime duration, size_t index)
     {
         resizeIfNeeds(index, m_durationSize);
-        m_keyframesList[index].setDuration(duration);
+        m_animationKeyframesList[index].setDuration(duration);
     }
 
     CSSTime duration(size_t index) const
     {
-        STARFISH_ASSERT(m_durationSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_durationSize <= m_animationKeyframesList.size());
         if (m_durationSize == 0) {
             return CSSTime(0);
         }
         uint16_t p = index % m_durationSize;
-        return m_keyframesList[p].duration();
+        return m_animationKeyframesList[p].duration();
     }
 
     size_t durationSize() const
@@ -408,17 +427,17 @@ public:
     void setDelay(CSSTime delay, size_t index)
     {
         resizeIfNeeds(index, m_delaySize);
-        m_keyframesList[index].setDelay(delay);
+        m_animationKeyframesList[index].setDelay(delay);
     }
 
     CSSTime delay(size_t index) const
     {
-        STARFISH_ASSERT(m_delaySize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_delaySize <= m_animationKeyframesList.size());
         if (m_delaySize == 0) {
             return CSSTime(0);
         }
         uint16_t p = index % m_delaySize;
-        return m_keyframesList[p].delay();
+        return m_animationKeyframesList[p].delay();
     }
 
     size_t delaySize() const
@@ -435,17 +454,18 @@ public:
     void setIterationCount(float value, size_t index)
     {
         resizeIfNeeds(index, m_iterationCountSize);
-        m_keyframesList[index].setIterationCount(value);
+        m_animationKeyframesList[index].setIterationCount(value);
     }
 
     float iterationCount(size_t index) const
     {
-        STARFISH_ASSERT(m_iterationCountSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_iterationCountSize <=
+                        m_animationKeyframesList.size());
         if (m_iterationCountSize == 0) {
             return 1;
         }
         uint16_t p = index % m_iterationCountSize;
-        return m_keyframesList[p].iterationCount();
+        return m_animationKeyframesList[p].iterationCount();
     }
 
     size_t iterationCountSize() const
@@ -462,17 +482,17 @@ public:
     void setDirection(AnimationDirectionValue value, size_t index)
     {
         resizeIfNeeds(index, m_directionSize);
-        m_keyframesList[index].setDirection(value);
+        m_animationKeyframesList[index].setDirection(value);
     }
 
     AnimationDirectionValue direction(size_t index) const
     {
-        STARFISH_ASSERT(m_directionSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_directionSize <= m_animationKeyframesList.size());
         if (m_directionSize == 0) {
             return AnimationDirectionValue::AnimationDirectionNormalValue;
         }
         uint16_t p = index % m_directionSize;
-        return m_keyframesList[p].direction();
+        return m_animationKeyframesList[p].direction();
     }
 
     size_t directionSize() const
@@ -489,17 +509,17 @@ public:
     void setPlayState(AnimationPlayStateValue value, size_t index)
     {
         resizeIfNeeds(index, m_playStateSize);
-        m_keyframesList[index].setPlayState(value);
+        m_animationKeyframesList[index].setPlayState(value);
     }
 
     AnimationPlayStateValue playState(size_t index) const
     {
-        STARFISH_ASSERT(m_playStateSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_playStateSize <= m_animationKeyframesList.size());
         if (m_playStateSize == 0) {
             return AnimationPlayStateValue::AnimationPlayStateRunningValue;
         }
         uint16_t p = index % m_playStateSize;
-        return m_keyframesList[p].playState();
+        return m_animationKeyframesList[p].playState();
     }
 
     size_t playStateSize() const
@@ -516,17 +536,17 @@ public:
     void setFillMode(AnimationFillModeValue value, size_t index)
     {
         resizeIfNeeds(index, m_fillModeSize);
-        m_keyframesList[index].setFillMode(value);
+        m_animationKeyframesList[index].setFillMode(value);
     }
 
     AnimationFillModeValue fillMode(size_t index) const
     {
-        STARFISH_ASSERT(m_fillModeSize <= m_keyframesList.size());
+        STARFISH_ASSERT(m_fillModeSize <= m_animationKeyframesList.size());
         if (m_fillModeSize == 0) {
             return AnimationFillModeValue::AnimationFillModeNoneValue;
         }
         uint16_t p = index % m_fillModeSize;
-        return m_keyframesList[p].fillMode();
+        return m_animationKeyframesList[p].fillMode();
     }
 
     size_t fillModeSize() const
@@ -535,7 +555,7 @@ public:
     }
 
 private:
-    GCVector<AnimationKeyframes> m_keyframesList;
+    GCVector<AnimationKeyframes> m_animationKeyframesList;
     size_t m_nameSize;
     size_t m_durationSize;
     size_t m_timingFunctionSize;
