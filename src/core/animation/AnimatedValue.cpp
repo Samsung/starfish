@@ -204,7 +204,7 @@ Optional<AnimatedValue*> AnimatedValue::create(
 
         if (style->backgroundLayerSize() > 0) {
             return AnimatedValue::createAnimatedValueFromBackgroundPosition(
-                style, element, property, layer);
+                property, layer);
         } else {
             // TODO: Consider how to handle in this case.
             STARFISH_UNIMPLEMENTED();
@@ -217,7 +217,7 @@ Optional<AnimatedValue*> AnimatedValue::create(
 
         if (style->backgroundLayerSize() > 0) {
             return AnimatedValue::createAnimatedValueFromBackgroundPosition(
-                style, element, property, layer);
+                property, layer);
         } else {
             // TODO: Consider how to handle in this case.
             STARFISH_UNIMPLEMENTED();
@@ -230,7 +230,7 @@ Optional<AnimatedValue*> AnimatedValue::create(
                     style->backgroundSizeLengthValue(layer));
             }
             return AnimatedValue::createAnimatedValueFromBackgroundSize(
-                style, element, property, layer);
+                property, layer);
         } else {
             // TODO: Consider how to handle in this case.
             STARFISH_UNIMPLEMENTED();
@@ -341,8 +341,7 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromLength(
 
 Optional<AnimatedValue*>
 AnimatedValue::createAnimatedValueFromBackgroundPosition(
-    ComputedStyle* style, Element* element, const CSSStyleValuePair& property,
-    size_t layer)
+    const CSSStyleValuePair& property, size_t layer)
 {
     Optional<Length> maybeLength;
     if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
@@ -366,8 +365,7 @@ AnimatedValue::createAnimatedValueFromBackgroundPosition(
 }
 
 Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromBackgroundSize(
-    ComputedStyle* style, Element* element, const CSSStyleValuePair& property,
-    size_t layer)
+    const CSSStyleValuePair& property, size_t layer)
 {
     Optional<LengthSize> maybeLengthSize;
     if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {

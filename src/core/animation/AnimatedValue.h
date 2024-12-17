@@ -58,11 +58,9 @@ public:
         const CSSStyleValuePair& property);
 
     static Optional<AnimatedValue*> createAnimatedValueFromBackgroundPosition(
-        ComputedStyle* style, Element* element,
         const CSSStyleValuePair& property, size_t layer);
 
     static Optional<AnimatedValue*> createAnimatedValueFromBackgroundSize(
-        ComputedStyle* style, Element* element,
         const CSSStyleValuePair& property, size_t layer);
 
     AnimatedValue()
