@@ -3645,15 +3645,17 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, len, ",", 1);
+    if (StringUtils::strstr(value, len, "var(", 4) != SIZE_MAX) {
+        CSSTokenVector tokens;
+        tokenizeCSSValue(tokens, value, len, ",", 1);
 
-    CSSStyleValuePair v;
-    if (v.updateValueVarReferences(tokens)) {
-        v.setValue(String::fromUTF8(value, len));
-        v.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::D, v);
-        return;
+        CSSStyleValuePair v;
+        if (v.updateValueVarReferences(tokens)) {
+            v.setValue(String::fromUTF8(value, len));
+            v.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::D, v);
+            return;
+        }
     }
 
     Optional<CSSTokenValue> mayFunctionBlock =
