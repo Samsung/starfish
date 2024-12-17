@@ -761,7 +761,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             }
 
             // Default value: cx
-            double fx = cx;
+            double fx = rect.x();
             if (gradientElement->fx()->baseVal()->hasSpecificValue()) {
                 if (gradientElement->fx()->baseVal()->unitType() ==
                     SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
@@ -782,7 +782,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             }
 
             // Default value: cy
-            double fy = cy;
+            double fy = rect.y();
             if (gradientElement->fy()->baseVal()->hasSpecificValue()) {
                 if (gradientElement->fy()->baseVal()->unitType() ==
                     SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
