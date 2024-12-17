@@ -688,7 +688,6 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             // TODO: RadialGradient works partially, 'fx', 'fy', 'fr' need to be
             // implemented.
             STARFISH_UNIMPLEMENTED();
-
             SVGRadialGradientElement* gradientElement =
                 matchingSvg->asSVGRadialGradientElement();
 
@@ -824,15 +823,14 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                 }
             }
 
-            if (isUserSpaceOnUseMode) {
-                SVGTransformList* gradientTransform =
-                    gradientElement->gradientTransform()->baseVal();
-                SkMatrix mat = SkMatrix::I();
-                for (size_t i = 0; i < gradientTransform->length(); ++i) {
-                    mat =
-                        mat * gradientTransform->getItem(i)->matrix()->matrix();
-                }
+            SVGTransformList* gradientTransform =
+                gradientElement->gradientTransform()->baseVal();
+            SkMatrix mat = SkMatrix::I();
+            for (size_t i = 0; i < gradientTransform->length(); ++i) {
+                mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+            }
 
+            if (isUserSpaceOnUseMode) {
                 double xx1 = fx * mat[0] + fy * mat[1] + rect.width() * mat[2];
                 double yy1 = fx * mat[3] + fy * mat[4] + rect.height() * mat[5];
                 double xx2 = cx * mat[0] + cy * mat[1] + rect.width() * mat[2];
@@ -842,8 +840,6 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                                               xx1, yy1, fr, xx2, yy2, r);
 
             } else {
-                // TODO : Apply gradientTransform.
-
                 GradientData* gradientData = new RadialGradientData();
                 gradientData->setHorizontalSide(SideValue::LeftSideValue);
                 gradientData->setVerticalSide(SideValue::TopSideValue);
@@ -860,8 +856,15 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                     Length(Length::Type::Percent, r));
                 radialGradient->colorStopList() = gradientElement->colorStops();
 
+                double xx1 = rect.x() * mat[0] + rect.y() * mat[1] +
+                             rect.width() * mat[2];
+                double yy1 = rect.x() * mat[3] + rect.y() * mat[4] +
+                             rect.height() * mat[5];
+
                 Optional<GradientDrawingInfo*> gradientDrawingInfo =
-                    radialGradient->makeGradientDrawingInfo(rect, this);
+                    radialGradient->makeGradientDrawingInfo(
+                        Unit::Rect(xx1, yy1, rect.width(), rect.height()),
+                        this);
 
                 fx = gradientDrawingInfo.getValue()->x1;
                 fy = gradientDrawingInfo.getValue()->y1;
