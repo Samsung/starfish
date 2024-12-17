@@ -1754,16 +1754,18 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             values.resize(layerSize);
             bool isAvailable = true;
             for (size_t l = 0; l < layerSize; l++) {
-                AnimatedValue* value = AnimatedValue::create(
-                    style, element, property, keyKind, l, neededOriginProperty);
-                if (value == nullptr) {
+                Optional<AnimatedValue*> maybeAnimatedValue =
+                    AnimatedValue::create(style, element, property, keyKind, l,
+                                          neededOriginProperty);
+                if (!maybeAnimatedValue) {
                     isAvailable = false;
                     break;
                 }
-
-                resolveLengthAnimatedValueIfNeeded(
-                    value, font, curFontSize, rootFontSize, root, windowSize);
-                values[l].push_back(value);
+                AnimatedValue* animatedValue = maybeAnimatedValue.value();
+                resolveLengthAnimatedValueIfNeeded(animatedValue, font,
+                                                   curFontSize, rootFontSize,
+                                                   root, windowSize);
+                values[l].push_back(animatedValue);
             }
             if (isAvailable == false) {
                 continue;
@@ -1796,18 +1798,18 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                          keyKind != CSSStyleValuePair::KeyKind::Unknown)) {
                         neededOriginProperty = true;
                     }
-                    AnimatedValue* value =
+                    Optional<AnimatedValue*> maybeAnimatedValue =
                         AnimatedValue::create(style, element, property, keyKind,
                                               l, neededOriginProperty);
-                    if (value == nullptr) {
+                    if (!maybeAnimatedValue) {
                         isAvailable = false;
                         break;
                     }
-
-                    resolveLengthAnimatedValueIfNeeded(value, font, curFontSize,
-                                                       rootFontSize, root,
-                                                       windowSize);
-                    values[l].push_back(value);
+                    AnimatedValue* animatedValue = maybeAnimatedValue.value();
+                    resolveLengthAnimatedValueIfNeeded(
+                        animatedValue, font, curFontSize, rootFontSize, root,
+                        windowSize);
+                    values[l].push_back(animatedValue);
                 }
                 if (isAvailable == false) {
                     continue;
