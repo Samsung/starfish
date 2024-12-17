@@ -470,7 +470,7 @@ enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
     AnimationDirectionAlternateReverseValue,
 };
 
-enum AnimationPlayStateValue ENSURE_ENUM_UNSIGNED {
+enum class AnimationPlayStateValue ENSURE_ENUM_UNSIGNED {
     AnimationPlayStateRunningValue,
     AnimationPlayStatePausedValue,
 };

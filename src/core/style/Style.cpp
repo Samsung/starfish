@@ -2124,9 +2124,9 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::AnimationPlayStateValueKind:
         switch (animationPlayStateValue()) {
-        case AnimationPlayStateRunningValue:
+        case AnimationPlayStateValue::AnimationPlayStateRunningValue:
             return String::fromUTF8("running");
-        case AnimationPlayStatePausedValue:
+        case AnimationPlayStateValue::AnimationPlayStatePausedValue:
             return String::fromUTF8("paused");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -16613,9 +16613,11 @@ bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
     const CSSTokenValue& value)
 {
     if (value.equals("running") == true) {
-        setAnimationPlayStateValue(AnimationPlayStateRunningValue);
+        setAnimationPlayStateValue(
+            AnimationPlayStateValue::AnimationPlayStateRunningValue);
     } else if (value.equals("paused") == true) {
-        setAnimationPlayStateValue(AnimationPlayStatePausedValue);
+        setAnimationPlayStateValue(
+            AnimationPlayStateValue::AnimationPlayStatePausedValue);
     } else {
         return false;
     }

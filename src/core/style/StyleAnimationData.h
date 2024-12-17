@@ -148,7 +148,7 @@ public:
         , m_timingFunction(AnimationKeyframe::defaultTimingFunction())
         , m_iterationCount(1.0f)
         , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
-        , m_playState(AnimationPlayStateRunningValue)
+        , m_playState(AnimationPlayStateValue::AnimationPlayStateRunningValue)
         , m_fillMode(AnimationFillModeValue::AnimationFillModeNoneValue)
     {
     }
