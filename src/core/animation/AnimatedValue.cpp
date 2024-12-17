@@ -26,41 +26,6 @@
 
 namespace Starfish {
 
-static AnimatedValue* animatedColorValue(const CSSStyleValuePair& property)
-{
-    if (property.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
-        return new AnimatedValue(property.colorValue());
-    } else if (property.valueKind() ==
-               CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-        return new AnimatedValue(
-            NamedColor::namedColorToColor(property.namedColorValue()));
-    } else {
-        // TODO: Consider how to handle in this case.
-        STARFISH_UNIMPLEMENTED();
-        return new AnimatedValue(Unit::Color(0, 0, 0, 0));
-    }
-}
-
-static AnimatedValue* animatedLengthValue(const CSSStyleValuePair& property)
-{
-    if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-        return new AnimatedValue(property.lengthValue());
-    } else if (property.valueKind() ==
-               CSSStyleValuePair::ValueKind::CalcValueKind) {
-        return new AnimatedValue(property.lengthValue());
-    } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-        return new AnimatedValue(Length());
-    } else if (property.valueKind() ==
-               CSSStyleValuePair::ValueKind::Percentage) {
-        return new AnimatedValue(
-            Length(Length::Percent, property.percentageValue()));
-    } else {
-        // TODO: Consider how to handle in this case.
-        STARFISH_UNIMPLEMENTED();
-        return new AnimatedValue(Length(Length::Fixed, 0));
-    }
-}
-
 static Length backgroundPositionToLength(const CSSStyleValuePair& property)
 {
     Length value;
@@ -195,162 +160,162 @@ AnimatedValue* AnimatedValue::create(ComputedStyle* style, Element* element,
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->color());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::BackgroundColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->backgroundColor());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::BorderBottomColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().bottom().color());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::BorderLeftColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().left().color());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::BorderRightColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().right().color());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::BorderTopColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().top().color());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::CaretColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->caretColor());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::OutlineColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->outlineColor());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::TextDecorationColor:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->textDecorationColor());
         }
-        return animatedColorValue(property);
+        return createAnimatedValueColor(property);
     case CSSStyleValuePair::Width:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->width());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MaxWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->maxWidth());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MinWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->minWidth());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MarginTop:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->margin().top());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MarginRight:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->margin().right());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MarginBottom:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->margin().bottom());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MarginLeft:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->margin().left());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::BorderTopWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().top().width());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::BorderRightWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().right().width());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::BorderBottomWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().bottom().width());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::BorderLeftWidth:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->border().left().width());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::PaddingTop:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->padding().top());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::PaddingRight:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->padding().right());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::PaddingBottom:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->padding().bottom());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::PaddingLeft:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->padding().left());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::Height:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->height());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MaxHeight:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->maxHeight());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::MinHeight:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->minHeight());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::Left:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->left());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::Right:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->right());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::Top:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->top());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::Bottom:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->bottom());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::FontSize:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->fontSize());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
         break;
     case CSSStyleValuePair::BackgroundPositionX:
         if (neededOriginProperty == true) {
@@ -428,27 +393,64 @@ AnimatedValue* AnimatedValue::create(ComputedStyle* style, Element* element,
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->cx());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::KeyKind::CY:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->cy());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::KeyKind::RX:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->rx());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     case CSSStyleValuePair::KeyKind::RY:
         if (neededOriginProperty == true) {
             return new AnimatedValue(style->ry());
         }
-        return animatedLengthValue(property);
+        return createAnimatedValueLength(property);
     default:
         break;
     }
 
     return nullptr;
+}
+
+AnimatedValue* AnimatedValue::createAnimatedValueColor(
+    const CSSStyleValuePair& property)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+        return new AnimatedValue(property.colorValue());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+        return new AnimatedValue(
+            NamedColor::namedColorToColor(property.namedColorValue()));
+    } else {
+        // TODO: Consider how to handle in this case.
+        STARFISH_UNIMPLEMENTED();
+        return new AnimatedValue(Unit::Color(0, 0, 0, 0));
+    }
+}
+
+AnimatedValue* AnimatedValue::createAnimatedValueLength(
+    const CSSStyleValuePair& property)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+        return new AnimatedValue(property.lengthValue());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::CalcValueKind) {
+        return new AnimatedValue(property.lengthValue());
+    } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+        return new AnimatedValue(Length());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::Percentage) {
+        return new AnimatedValue(
+            Length(Length::Percent, property.percentageValue()));
+    } else {
+        // TODO: Consider how to handle in this case.
+        STARFISH_UNIMPLEMENTED();
+        return new AnimatedValue(Length(Length::Fixed, 0));
+    }
 }
 
 } // namespace Starfish

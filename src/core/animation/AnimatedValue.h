@@ -50,6 +50,11 @@ public:
                                  const CSSStyleValuePair::KeyKind& keyKind,
                                  size_t layer, bool neededOriginProperty);
 
+    static AnimatedValue* createAnimatedValueColor(
+        const CSSStyleValuePair& property);
+    static AnimatedValue* createAnimatedValueLength(
+        const CSSStyleValuePair& property);
+
     AnimatedValue()
     {
         m_type = UNDEFINED;
