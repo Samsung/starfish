@@ -53,30 +53,23 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
-static void resolveLengthAnimatedValueIfNeeded(AnimatedValue* value, Font* font,
-                                               const Length& curFontSize,
-                                               const Length& rootFontSize,
-                                               HTMLHtmlElement* root,
-                                               const LayoutSize& windowSize)
-{
-    if (value->isLength()) {
-        if (!value->getLength().isFixed()) {
-            auto v = value->getLength();
-            v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                    windowSize.width(), windowSize.height(),
-                                    nullptr);
-            value->setLength(v);
-        }
-    }
-}
-
 AnimationApplier::AnimationApplier(Element* element, ComputedStyle* style,
                                    bool isCSSAnimationTask)
     : m_element(element)
     , m_style(style)
     , m_isCSSAnimationTask(isCSSAnimationTask)
+    , m_font(style->font())
+    , m_currentFontSize(m_style->fontSize())
+    , m_windowSize(element->window()->innerWidth(),
+                   element->window()->innerHeight())
     , m_executor(element->document()->animationExecutor())
 {
+    m_rootFontSize = Length(
+        Length::Fixed, m_element->document()->webView()->defaultFontSize());
+    HTMLHtmlElement* root = m_element->document()->rootElement();
+    if (root && root->style()) {
+        m_rootFontSize = root->style()->fontSize();
+    }
 }
 
 bool AnimationApplier::apply()
@@ -86,18 +79,6 @@ bool AnimationApplier::apply()
     if (m_style->animation() == nullptr) {
         return false;
     }
-
-    Font* font = m_style->font();
-    Length curFontSize = m_style->fontSize();
-    Length rootFontSize = Length(
-        Length::Fixed, m_element->document()->webView()->defaultFontSize());
-    HTMLHtmlElement* root = m_element->document()->rootElement();
-    if (root && root->style()) {
-        rootFontSize = root->style()->fontSize();
-    }
-
-    Window* w = m_element->window();
-    LayoutSize windowSize(w->innerWidth(), w->innerHeight());
 
     StyleAnimationData* styleAnimationData = m_style->animation();
     for (size_t s = 0; s < styleAnimationData->animationKeyframesListSize();
@@ -160,9 +141,9 @@ bool AnimationApplier::apply()
                     break;
                 }
                 AnimatedValue* animatedValue = maybeAnimatedValue.value();
-                resolveLengthAnimatedValueIfNeeded(animatedValue, font,
-                                                   curFontSize, rootFontSize,
-                                                   root, windowSize);
+                animatedValue->changeToFixedIfNeeded(
+                    m_currentFontSize, m_rootFontSize, m_font,
+                    m_windowSize.width(), m_windowSize.height(), nullptr);
                 values[l].push_back(animatedValue);
             }
             if (isAvailable == false) {
@@ -205,9 +186,9 @@ bool AnimationApplier::apply()
                         break;
                     }
                     AnimatedValue* animatedValue = maybeAnimatedValue.value();
-                    resolveLengthAnimatedValueIfNeeded(
-                        animatedValue, font, curFontSize, rootFontSize, root,
-                        windowSize);
+                    animatedValue->changeToFixedIfNeeded(
+                        m_currentFontSize, m_rootFontSize, m_font,
+                        m_windowSize.width(), m_windowSize.height(), nullptr);
                     values[l].push_back(animatedValue);
                 }
                 if (isAvailable == false) {

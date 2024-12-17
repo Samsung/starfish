@@ -388,4 +388,20 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromBackgroundSize(
     return Optional<AnimatedValue*>();
 }
 
+void AnimatedValue::changeToFixedIfNeeded(Length curFontSize,
+                                          Length rootFontSize, Font* font,
+                                          LayoutUnit viewportWidth,
+                                          LayoutUnit viewportHeight,
+                                          Optional<ComputedStyle*> cs)
+{
+    if (isLength()) {
+        if (!getLength().isFixed()) {
+            Length length = getLength();
+            length.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                         viewportWidth, viewportHeight, cs);
+            setLength(length);
+        }
+    }
+}
+
 } // namespace Starfish
