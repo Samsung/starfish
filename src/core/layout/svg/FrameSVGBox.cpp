@@ -875,9 +875,8 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
 
                 gradient = new CanvasGradient(matchingSvg->executionContext(),
                                               fx, fy, fr, cx, cy, r);
-                gradient->nativeGradient()->setRadialGradientScale(
-                    gradientDrawingInfo.getValue()->firstRadius,
-                    gradientDrawingInfo.getValue()->secondRadius);
+                gradient->nativeGradient()->setGradientDrawingInfo(
+                    gradientDrawingInfo.getValue());
             }
 
             const auto colorStops = gradientElement->colorStops();

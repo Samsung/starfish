@@ -386,8 +386,26 @@ class CanvasCairo : public Canvas {
                 auto gradientValue =
                     canvasStyle.getCanvasGradientValue()->nativeGradient();
 
-                cairo_scale(m_canvas, gradientValue->scaleX(),
-                            gradientValue->scaleY());
+                GradientDrawingInfo* gradientDrawingInfo =
+                    gradientValue->gradientDrawingInfo();
+                if (gradientDrawingInfo) {
+                    float xScale = 1;
+                    float yScale = 1;
+                    if (gradientDrawingInfo->secondRadius != 0 &&
+                        gradientDrawingInfo->firstRadius >
+                            gradientDrawingInfo->secondRadius) {
+                        xScale = 1;
+                        yScale = gradientDrawingInfo->secondRadius /
+                                 gradientDrawingInfo->firstRadius;
+                    } else if (gradientDrawingInfo->secondRadius != 0 &&
+                               gradientDrawingInfo->firstRadius <
+                                   gradientDrawingInfo->secondRadius) {
+                        xScale = gradientDrawingInfo->firstRadius /
+                                 gradientDrawingInfo->secondRadius;
+                        yScale = 1;
+                    }
+                    cairo_scale(m_canvas, xScale, yScale);
+                }
                 cairo_set_source(
                     m_canvas,
                     ((NativeGradientCairo*)gradientValue.get())->pattern());

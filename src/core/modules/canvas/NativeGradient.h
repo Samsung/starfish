@@ -64,41 +64,27 @@ public:
         return false;
     }
 
-    void setRadialGradientScale(float firstRadius, float secondRadius)
+    void setGradientDrawingInfo(GradientDrawingInfo* gradientDrawingInfo)
     {
-        if (secondRadius != 0 && firstRadius > secondRadius) {
-            m_xScale = 1;
-            m_yScale = secondRadius / firstRadius;
-        } else if (secondRadius != 0 && firstRadius < secondRadius) {
-            m_xScale = firstRadius / secondRadius;
-            m_yScale = 1;
-        }
+        STARFISH_ASSERT(gradientDrawingInfo != nullptr);
+        m_gradientDrawingInfo = gradientDrawingInfo;
     }
 
-    float scaleX()
+    GradientDrawingInfo* gradientDrawingInfo()
     {
-        return m_xScale;
-    }
-
-    float scaleY()
-    {
-        return m_yScale;
+        return m_gradientDrawingInfo;
     }
 
 protected:
     NativeGradient()
         : m_gradientDrawingInfo(nullptr)
         , m_gradientImageDataCached(nullptr)
-        , m_xScale(1)
-        , m_yScale(1)
     {
     }
 
     NativeGradient(GradientDrawingInfo* info)
         : m_gradientDrawingInfo(info)
         , m_gradientImageDataCached(nullptr)
-        , m_xScale(1)
-        , m_yScale(1)
     {
         STARFISH_ASSERT(info != nullptr);
     }
@@ -117,9 +103,6 @@ protected:
 
     GradientDrawingInfo* m_gradientDrawingInfo;
     NativeImageData* m_gradientImageDataCached;
-
-    float m_xScale;
-    float m_yScale;
 };
 } // namespace Starfish
 #endif
