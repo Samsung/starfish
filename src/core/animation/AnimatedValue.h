@@ -224,6 +224,11 @@ public:
         return m_data.m_visibilityValue;
     }
 
+    void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
+                               Font* font, LayoutUnit viewportWidth,
+                               LayoutUnit viewportHeight,
+                               Optional<ComputedStyle*> cs);
+
     inline void* operator new(size_t size, void* p)
     {
         STARFISH_ASSERT(p != nullptr);

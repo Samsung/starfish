@@ -53,6 +53,10 @@ private:
     Element* m_element;
     ComputedStyle* m_style;
     bool m_isCSSAnimationTask;
+    Font* m_font;
+    Length m_currentFontSize;
+    Length m_rootFontSize;
+    LayoutSize m_windowSize;
     AnimationExecutor* m_executor;
 };
 
