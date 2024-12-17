@@ -50,10 +50,19 @@ public:
                                  const CSSStyleValuePair::KeyKind& keyKind,
                                  size_t layer, bool neededOriginProperty);
 
-    static AnimatedValue* createAnimatedValueColor(
+    static AnimatedValue* createAnimatedValueFromColor(
         const CSSStyleValuePair& property);
-    static AnimatedValue* createAnimatedValueLength(
+
+    static AnimatedValue* createAnimatedValueFromLength(
         const CSSStyleValuePair& property);
+
+    static AnimatedValue* createAnimatedValueFromBackgroundPosition(
+        ComputedStyle* style, Element* element,
+        const CSSStyleValuePair& property, size_t layer);
+
+    static AnimatedValue* createAnimatedValueFromBackgroundSize(
+        ComputedStyle* style, Element* element,
+        const CSSStyleValuePair& property, size_t layer);
 
     AnimatedValue()
     {
