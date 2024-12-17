@@ -70,6 +70,15 @@ public:
     virtual Unit::Rect boundingRect(bool isFill) override;
 
 private:
+    void notifyBoundingRectDirty()
+    {
+        m_needsComputeStrokeBoundingRect = m_needsComputedFillBoundingRect =
+            true;
+    }
+    bool m_needsComputeStrokeBoundingRect;
+    bool m_needsComputedFillBoundingRect;
+    Unit::Rect m_computedStrokeBoundingRect;
+    Unit::Rect m_computedFillBoundingRect;
     cairo_t* m_cairoContext;
     cairo_surface_t* m_dumyCairoSurface;
 };

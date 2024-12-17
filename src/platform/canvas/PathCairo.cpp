@@ -66,7 +66,9 @@ Path* Path::create()
 }
 
 PathCairo::PathCairo()
-    : m_cairoContext(nullptr)
+    : m_needsComputeStrokeBoundingRect(true)
+    , m_needsComputedFillBoundingRect(true)
+    , m_cairoContext(nullptr)
     , m_dumyCairoSurface(nullptr)
 {
     init();
@@ -94,6 +96,7 @@ void PathCairo::init()
     m_matrix.reset();
     m_dumyCairoSurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
     m_cairoContext = cairo_create(m_dumyCairoSurface);
+    notifyBoundingRectDirty();
 }
 
 void PathCairo::clear()
@@ -101,6 +104,7 @@ void PathCairo::clear()
     m_matrix.reset();
     cairo_identity_matrix(m_cairoContext);
     cairo_new_path(m_cairoContext);
+    notifyBoundingRectDirty();
 }
 
 bool PathCairo::isEmpty()
@@ -126,6 +130,7 @@ void PathCairo::copy(Path* src)
 
 void PathCairo::append(Path* path)
 {
+    notifyBoundingRectDirty();
     auto p = cairo_copy_path(((PathCairo*)path)->context());
     cairo_append_path(m_cairoContext, p);
     cairo_path_destroy(p);
@@ -156,6 +161,7 @@ bool PathCairo::isPointInStroke(float x, float y)
 
 void PathCairo::applyPathDrawingStyles(Canvas* canvas)
 {
+    notifyBoundingRectDirty();
     cairo_set_line_width(m_cairoContext, canvas->lineWidth());
     cairo_set_line_cap(
         m_cairoContext,
@@ -173,12 +179,14 @@ void PathCairo::closePath()
 
 void PathCairo::moveTo(float x, float y)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_move_to(m_cairoContext, x, y);
 }
 
 void PathCairo::lineTo(float x, float y)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_line_to(m_cairoContext, x, y);
 }
@@ -192,6 +200,7 @@ void PathCairo::translate(float x, float y)
 
 void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
 
     double x0, y0;
@@ -205,12 +214,14 @@ void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
 void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                               float x, float y)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_curve_to(m_cairoContext, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
 void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
 
     double x0, y0;
@@ -305,6 +316,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
 
 void PathCairo::rect(float x, float y, float w, float h)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_rectangle(m_cairoContext, x, y, w, h);
 }
@@ -314,6 +326,7 @@ void PathCairo::rect(float x, float y, float w, float h)
 void PathCairo::arc(float x, float y, float radius, float startAngle,
                     float endAngle, bool anticlockwise /*=false*/)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
 
     float sweep = endAngle - startAngle;
@@ -345,6 +358,7 @@ void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
                         float rotation, float startAngle, float endAngle,
                         bool anticlockwise /*=false*/)
 {
+    notifyBoundingRectDirty();
     m_needNewSubPath = false;
 
     cairo_save(m_cairoContext);
@@ -400,12 +414,21 @@ Unit::Rect PathCairo::boundingRect(bool isFill)
     double x1 = 0;
     double y0 = 0;
     double y1 = 0;
+
     if (isFill) {
         cairo_fill_extents(m_cairoContext, &x0, &y0, &x1, &y1);
     } else {
         cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
     }
-    return Unit::Rect(x0, y0, x1 - x0, y1 - y0);
+    Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
+    if (isFill) {
+        m_needsComputedFillBoundingRect = false;
+        m_computedFillBoundingRect = result;
+    } else {
+        m_needsComputeStrokeBoundingRect = false;
+        m_computedStrokeBoundingRect = result;
+    }
+    return result;
 }
 } // namespace Starfish
 #endif
