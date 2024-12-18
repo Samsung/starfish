@@ -84,7 +84,7 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
-void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
+void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 {
     LayoutRect childrenRect;
     Frame* f = firstChild();
@@ -110,6 +110,7 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
             -childrenRect.y() + transScale.second.getTranslateY());
     newCanvas->scale(transScale.second.getScaleX(), transScale.second.getScaleX());
 
+    // painting mask content
     PaintingContext newCtx(newCanvas);
     Frame* child = firstChild();
     while (child) {
@@ -121,6 +122,7 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
         }
         child = child->next();
     }
+
     delete newCanvas;
 
     if (style()->maskType() == MaskTypeValue::LuminanceMaskTypeValue) {
@@ -128,12 +130,27 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx)
     }
 
     auto ctm = ctx.m_canvas->currentTransformMatrix();
+    std::vector<Frame*> tree;
+    f = targetBox->parent();
+    while (f != viewportBox) {
+        tree.push_back(f);
+        f = f->parent();
+    }
+    for (auto iter = tree.rbegin(); iter != tree.rend(); iter++) {
+        Frame* f = *iter;
+        f->asFrameSVGBox()->applyTransformTo(ctx.m_canvas, viewportBox->viewport());
+    }
+    auto transformedCTM = ctx.m_canvas->currentTransformMatrix();
     SkMatrix maskMatrix = viewportBox->svgPaintingMatrix();
-    maskMatrix.preTranslate(childrenRect.x(), childrenRect.y());
     ctx.m_canvas->setMatrix(maskMatrix);
+    ctx.m_canvas->translate(childrenRect.x(), childrenRect.y());
     ctx.m_canvas->maskNativeImage(
         nativeImageMask,
-        Unit::Rect(0, 0, childrenRect.width(), childrenRect.height()));
+        Unit::Rect(transformedCTM.getTranslateX() - ctm.getTranslateX(),
+                transformedCTM.getTranslateY() - ctm.getTranslateY(),
+                childrenRect.width(), childrenRect.height()));
     ctx.m_canvas->setMatrix(ctm);
+
+
 }
 } // namespace Starfish

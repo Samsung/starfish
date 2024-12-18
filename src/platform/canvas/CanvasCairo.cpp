@@ -1392,7 +1392,13 @@ public:
                 m.set(5, matrix.y0);
                 lastState()->m_maskTM = m;
             }
-            cairo_matrix_init_translate(&matrix, -dst.x(), -dst.y());
+
+            float dpr = m_renderTargetInfo.m_devicePixelRatio;
+            if (m_targetSurface) {
+                dpr *= m_targetSurface->additionalPixelRatio();
+            }
+            cairo_matrix_init_scale(&matrix, dpr, dpr);
+            cairo_matrix_translate(&matrix, -dst.x(), -dst.y());
             cairo_pattern_set_matrix(
                 (cairo_pattern_t*)lastState()->m_maskPattern, &matrix);
 

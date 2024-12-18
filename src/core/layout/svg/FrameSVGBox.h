@@ -89,6 +89,7 @@ public:
 
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx);
+    bool applyTransformTo(Canvas* canvas, const LayoutSize& vp);
 
     virtual Optional<Path*> path()
     {

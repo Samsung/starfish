@@ -272,35 +272,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     auto vp = viewport();
     bool needsGeometryAttributes = needsSVGGeometryAttributes();
 
-    if (style()->hasTransforms()) {
-        auto matrix =
-            style()->transformsToMatrix(vp.width(), vp.height(), this, true);
-        if (!matrix.isIdentity()) {
-            SkMatrix test;
-            bool testResult = matrix.invert(&test);
-            if (!testResult) {
-                ctx.m_canvas->restore();
-                // invalid matrix to transform svg
-                return;
-            }
-
-            if (style()->hasTransformOrigin()) {
-                auto to = style()->transformOrigin()->originValue();
-                auto vp = viewport();
-                auto ox = to->getXAxis().specifiedValue(vp.width(), this);
-                auto oy = to->getYAxis().specifiedValue(vp.height(), this);
-                if (needsGeometryAttributes) {
-                    ctx.m_canvas->translate(ox, oy);
-                }
-                ctx.m_canvas->postMatrix(matrix);
-                if (needsGeometryAttributes) {
-                    ctx.m_canvas->translate(-ox, -oy);
-                }
-            } else {
-                ctx.m_canvas->postMatrix(matrix);
-            }
-        }
-    }
+    applyTransformTo(ctx.m_canvas, vp);
 
     float opacity = style()->opacity();
     if (opacity != 1) {
@@ -323,7 +295,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         node()->asSVGElement()->maskElement()) {
         Frame* maskFrame = node()->asSVGElement()->maskElement()->frame();
         if (maskFrame && maskFrame->isFrameSVGMaskBox()) {
-            maskFrame->asFrameSVGMaskBox()->applyMask(ctx);
+            maskFrame->asFrameSVGMaskBox()->applyMask(ctx, this);
         }
     }
 
@@ -895,6 +867,35 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
         return new CanvasFillStrokeSource(canvasStyle);
     }
     return nullptr;
+}
+
+bool FrameSVGBox::applyTransformTo(Canvas* canvas, const LayoutSize& vp)
+{
+    if (style()->hasTransforms()) {
+        auto matrix =
+            style()->transformsToMatrix(vp.width(), vp.height(), this, true);
+        if (!matrix.isIdentity()) {
+            SkMatrix test;
+            bool testResult = matrix.invert(&test);
+            if (!testResult) {
+                // invalid matrix to transform svg
+                return false;
+            }
+
+            if (style()->hasTransformOrigin()) {
+                auto to = style()->transformOrigin()->originValue();
+                auto vp = viewport();
+                auto ox = to->getXAxis().specifiedValue(vp.width(), this);
+                auto oy = to->getYAxis().specifiedValue(vp.height(), this);
+                canvas->translate(ox, oy);
+                canvas->postMatrix(matrix);
+                canvas->translate(-ox, -oy);
+            } else {
+                canvas->postMatrix(matrix);
+            }
+        }
+    }
+    return true;
 }
 
 void FrameSVGBox::paintSVG(PaintingContext& ctx)
