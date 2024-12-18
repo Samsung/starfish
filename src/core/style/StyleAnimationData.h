@@ -102,7 +102,7 @@ public:
         return m_keyKinds;
     }
 
-    void setProperty(CSSStyleValuePair::KeyKind keyKind,
+    void addProperty(CSSStyleValuePair::KeyKind keyKind,
                      CSSStyleValuePair property)
     {
         size_t idx = keyKindIndex(keyKind);
