@@ -8890,16 +8890,16 @@ static void setPropertyIfNeeds(
     // animationKeyframeList, fill it with the default value. That is, items in
     // animationKeyframeList have the same CSS property list.
 
-    // keyframeList.rbegin() is current frame in this context.
-    auto frame = animationKeyframeList.rbegin();
-    (*frame)->setProperty(property.keyKind(), property);
+    // keyframeList.back() is current frame in this context.
+    auto lastAnimationKeyframe = animationKeyframeList.back();
+    lastAnimationKeyframe->addProperty(property.keyKind(), property);
 
     for (auto keyframe : animationKeyframeList) {
         size_t idx = keyframe->keyKindIndex(property.keyKind());
         if (idx == SIZE_MAX) {
             // Syncs the property list of the items in the
             // animationKeyframeList.
-            keyframe->setProperty(property.keyKind(), CSSStyleValuePair());
+            keyframe->addProperty(property.keyKind(), CSSStyleValuePair());
         }
     }
 }
@@ -9001,7 +9001,7 @@ void computeWebAnimationKeyframes(const StyleResolver& resolver,
         keyframeList.push_back(start);
     } else if (keyframeList.front()->keyframeSelector() != 0.0) {
         for (auto keyKind : keyframeList.front()->keyKinds()) {
-            start->setProperty(keyKind, CSSStyleValuePair());
+            start->addProperty(keyKind, CSSStyleValuePair());
         }
         keyframeList.insert(keyframeList.begin(), start);
     }
@@ -9172,7 +9172,7 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
             //
             // Synchronize the keyKinds that explicitly appeared in the
             // AnimationKeyframeList.
-            dummyAnimationKeyframe->setProperty(keyKind, CSSStyleValuePair());
+            dummyAnimationKeyframe->addProperty(keyKind, CSSStyleValuePair());
         }
 
         if (animationKeyframeList.empty()) {
