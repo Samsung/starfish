@@ -80,15 +80,17 @@ bool AnimationApplier::apply()
     }
 
     StyleAnimationData* styleAnimationData = m_style->animation();
-    // CSS animation has mulitple AnimationKeyframes
+    // CSS animation has mulitple AnimationKeyframes such as,
+    // animation: x-animation 5s, r-animation 5s;
+    //
     // i means animation index.
     for (size_t i = 0; i < styleAnimationData->animationKeyframesListSize();
          i++) {
-        if (!styleAnimationData->isValid(i)) {
+        if (!styleAnimationData->isValidToApply(i)) {
             continue;
         }
 
-        bool hasAnimatedProperty = false;
+        bool hasAnyAnimatedProperty = false;
         AnimationKeyframes& currentKeyFrames =
             styleAnimationData->animationKeyframes(i);
 
@@ -115,6 +117,12 @@ bool AnimationApplier::apply()
             GCVector<TimingFunction*> timingFunctions;
             for (auto* animationKeyframe :
                  currentKeyFrames.animationKeyframeList()) {
+                if (isIntermediateDummyAnimationKeyframe(
+                        animationKeyframe,
+                        animationKeyframe->properties()[j].valueKind(),
+                        &currentKeyFrames)) {
+                    continue;
+                }
                 offsets.push_back(animationKeyframe->keyframeSelector());
                 // Legacy
                 // TODO: It seems that one timing function is used for each
@@ -123,7 +131,7 @@ bool AnimationApplier::apply()
                 timingFunctions.push_back(animationKeyframe->timingFunction());
             }
 
-            hasAnimatedProperty |= applyProperty(
+            hasAnyAnimatedProperty |= applyProperty(
                 i, currentKeyFrames.name(), currentKeyKind, layeredValues,
                 layeredValues.size(), offsets, timingFunctions,
                 styleAnimationData->duration(i).toTimeValue(),
@@ -134,7 +142,7 @@ bool AnimationApplier::apply()
                 styleAnimationData->fillMode(i));
         }
 
-        if (hasAnimatedProperty) {
+        if (hasAnyAnimatedProperty) {
             m_executor->fireAnimationStartEvent(
                 m_element, currentKeyFrames.name(),
                 currentKeyFrames.delay().toTimeValue());
@@ -145,7 +153,7 @@ bool AnimationApplier::apply()
 }
 
 bool AnimationApplier::createLayerdValues(
-    const AnimationKeyframes* currentKeyFrames,
+    AnimationKeyframes* currentKeyFrames,
     CSSStyleValuePair::KeyKind currentKeyKind, size_t currentPropertyIndex,
     GCVector<GCVector<AnimatedValue*>>& layeredValues)
 {
@@ -171,7 +179,7 @@ bool AnimationApplier::createLayerdValues(
     return true;
 }
 
-bool AnimationApplier::createValues(const AnimationKeyframes* currentKeyFrames,
+bool AnimationApplier::createValues(AnimationKeyframes* currentKeyFrames,
                                     CSSStyleValuePair::KeyKind currentKeyKind,
                                     size_t currentPropertyIndex, size_t layer,
                                     GCVector<AnimatedValue*>& values)
@@ -190,12 +198,18 @@ bool AnimationApplier::createValues(const AnimationKeyframes* currentKeyFrames,
     //     }
     // }
     // values: 0, 200, 400;
+    AnimationKeyframe* from = currentKeyFrames->animationKeyframeList().front();
+    AnimationKeyframe* to = currentKeyFrames->animationKeyframeList().front();
     for (auto* animationKeyframe : currentKeyFrames->animationKeyframeList()) {
         auto property = animationKeyframe->properties()[currentPropertyIndex];
         auto keyKind = animationKeyframe->keyKinds()[currentPropertyIndex];
         STARFISH_ASSERT(currentKeyKind == keyKind);
 
-        // TODO: I don't understand why this is necessary.
+        if (isIntermediateDummyAnimationKeyframe(
+                animationKeyframe, property.valueKind(), currentKeyFrames)) {
+            continue;
+        }
+
         bool neededOriginProperty = false;
         if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown &&
             keyKind != CSSStyleValuePair::KeyKind::Unknown) {
@@ -216,6 +230,19 @@ bool AnimationApplier::createValues(const AnimationKeyframes* currentKeyFrames,
     }
 
     return true;
+}
+
+bool AnimationApplier::isIntermediateDummyAnimationKeyframe(
+    AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
+    AnimationKeyframes* owner)
+{
+    AnimationKeyframe* from = owner->animationKeyframeList().front();
+    AnimationKeyframe* to = owner->animationKeyframeList().back();
+    if ((current != from && current != to) &&
+        valueKind == CSSStyleValuePair::ValueKind::None) {
+        return true;
+    }
+    return false;
 }
 
 // TODO: There are so many parameters that it's so annoying.
