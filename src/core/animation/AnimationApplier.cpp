@@ -115,21 +115,10 @@ bool AnimationApplier::apply()
 
             GCAtomicVector<double> offsets;
             GCVector<TimingFunction*> timingFunctions;
-            for (auto* animationKeyframe :
-                 currentKeyFrames.animationKeyframeList()) {
-                if (isIntermediateDummyAnimationKeyframe(
-                        animationKeyframe,
-                        animationKeyframe->properties()[j].valueKind(),
-                        &currentKeyFrames)) {
-                    continue;
-                }
-                offsets.push_back(animationKeyframe->keyframeSelector());
-                // Legacy
-                // TODO: It seems that one timing function is used for each
-                // animation, but I don't think there is a need to save it as a
-                // vector for each keyframe.
-                timingFunctions.push_back(animationKeyframe->timingFunction());
-            }
+            createOffsetAndTimingFunction(&currentKeyFrames, j, offsets,
+                                          timingFunctions);
+            STARFISH_ASSERT(layeredValues[0].size() == offsets.size());
+            STARFISH_ASSERT(offsets.size() == timingFunctions.size());
 
             hasAnyAnimatedProperty |= applyProperty(
                 i, currentKeyFrames.name(), currentKeyKind, layeredValues,
@@ -176,6 +165,13 @@ bool AnimationApplier::createLayerdValues(
         layeredValues[layer] = std::move(values);
     }
 
+#ifdef STARFISH_ENABLE_TEST
+    size_t valuesSize = layeredValues[0].size();
+    for (size_t i = 1; i < layeredValues.size(); i++) {
+        STARFISH_ASSERT(valuesSize == layeredValues[i].size());
+    }
+#endif
+
     return true;
 }
 
@@ -198,8 +194,6 @@ bool AnimationApplier::createValues(AnimationKeyframes* currentKeyFrames,
     //     }
     // }
     // values: 0, 200, 400;
-    AnimationKeyframe* from = currentKeyFrames->animationKeyframeList().front();
-    AnimationKeyframe* to = currentKeyFrames->animationKeyframeList().front();
     for (auto* animationKeyframe : currentKeyFrames->animationKeyframeList()) {
         auto property = animationKeyframe->properties()[currentPropertyIndex];
         auto keyKind = animationKeyframe->keyKinds()[currentPropertyIndex];
@@ -232,6 +226,27 @@ bool AnimationApplier::createValues(AnimationKeyframes* currentKeyFrames,
     return true;
 }
 
+void AnimationApplier::createOffsetAndTimingFunction(
+    AnimationKeyframes* currentKeyFrames, size_t currentPropertyIndex,
+    GCAtomicVector<double>& offsets, GCVector<TimingFunction*>& timingFunctions)
+{
+    for (auto* animationKeyframe : currentKeyFrames->animationKeyframeList()) {
+        if (isIntermediateDummyAnimationKeyframe(
+                animationKeyframe,
+                animationKeyframe->properties()[currentPropertyIndex]
+                    .valueKind(),
+                currentKeyFrames)) {
+            continue;
+        }
+        offsets.push_back(animationKeyframe->keyframeSelector());
+        // Legacy
+        // TODO: It seems that one timing function is used for each
+        // animation, but I don't think there is a need to save it as a
+        // vector for each keyframe.
+        timingFunctions.push_back(animationKeyframe->timingFunction());
+    }
+}
+
 bool AnimationApplier::isIntermediateDummyAnimationKeyframe(
     AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
     AnimationKeyframes* owner)
@@ -245,7 +260,6 @@ bool AnimationApplier::isIntermediateDummyAnimationKeyframe(
     return false;
 }
 
-// TODO: There are so many parameters that it's so annoying.
 bool AnimationApplier::applyProperty(
     size_t s, String* name, CSSStyleValuePair::KeyKind keyKind,
     const GCVector<GCVector<AnimatedValue*>>& values, size_t layerSize,
@@ -254,9 +268,10 @@ bool AnimationApplier::applyProperty(
     int64_t delay, float iterationCount, AnimationDirectionValue direction,
     AnimationPlayStateValue playState, AnimationFillModeValue fillMode)
 {
+    // TODO: There are so many parameters that it's so annoying.
     // TODO: This comes from AnimationTask. below verbose if-else statement
-    // can be refactored
-
+    // can be refactored.
+    // It would be so grateful if you could do this.
     bool gotAnimation = false;
     // color series
     if (AnimationUtil::checkCSSProperty(keyKind,

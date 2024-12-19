@@ -59,6 +59,11 @@ private:
                       CSSStyleValuePair::KeyKind currentKeyKind,
                       size_t currentPropertyIndex, size_t layer,
                       GCVector<AnimatedValue*>& values);
+    void createOffsetAndTimingFunction(
+        AnimationKeyframes* currentKeyFrames, size_t currentPropertyIndex,
+        GCAtomicVector<double>& offsets,
+        GCVector<TimingFunction*>& timingFunctions);
+
     bool isIntermediateDummyAnimationKeyframe(
         AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
         AnimationKeyframes* owner);
