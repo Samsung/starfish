@@ -84,13 +84,13 @@ bool AnimationApplier::apply()
     // i means animation index.
     for (size_t i = 0; i < styleAnimationData->animationKeyframesListSize();
          i++) {
-        bool hasAnimatedProperty = false;
-        const AnimationKeyframes& currentKeyFrames =
-            styleAnimationData->animationKeyframes(i);
-
-        if (!currentKeyFrames.isValid()) {
+        if (!styleAnimationData->isValid(i)) {
             continue;
         }
+
+        bool hasAnimatedProperty = false;
+        AnimationKeyframes& currentKeyFrames =
+            styleAnimationData->animationKeyframes(i);
 
         // All AnimationKeyframe in animationKeyframeList have the same CSS
         // properties kind in the same order for generating animation tasks.
@@ -126,10 +126,12 @@ bool AnimationApplier::apply()
             hasAnimatedProperty |= applyProperty(
                 i, currentKeyFrames.name(), currentKeyKind, layeredValues,
                 layeredValues.size(), offsets, timingFunctions,
-                currentKeyFrames.duration().toTimeValue(),
-                currentKeyFrames.delay().toTimeValue(),
-                currentKeyFrames.iterationCount(), currentKeyFrames.direction(),
-                currentKeyFrames.playState(), currentKeyFrames.fillMode());
+                styleAnimationData->duration(i).toTimeValue(),
+                styleAnimationData->delay(i).toTimeValue(),
+                styleAnimationData->iterationCount(i),
+                styleAnimationData->direction(i),
+                styleAnimationData->playState(i),
+                styleAnimationData->fillMode(i));
         }
 
         if (hasAnimatedProperty) {

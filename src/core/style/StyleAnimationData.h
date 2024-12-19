@@ -258,8 +258,6 @@ public:
         return m_animationKeyframeList[index];
     }
 
-    bool isValid() const;
-
 private:
     String* m_name;
     CSSTime m_duration;
@@ -355,7 +353,7 @@ public:
         m_animationKeyframesList[index].setName(name);
     }
 
-    String* animationName(size_t index)
+    String* animationName(size_t index) const
     {
         STARFISH_ASSERT(m_nameSize <= m_animationKeyframesList.size());
         STARFISH_ASSERT(index < m_nameSize);
@@ -560,6 +558,8 @@ public:
     {
         return m_fillModeSize;
     }
+
+    bool isValid(size_t index) const;
 
 private:
     GCVector<AnimationKeyframes> m_animationKeyframesList;
