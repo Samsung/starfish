@@ -29,6 +29,7 @@ class ComputedStyle;
 class TimingFunction;
 class AnimatedValue;
 class AnimationExecutor;
+class AnimationKeyframe;
 class AnimationKeyframes;
 
 class AnimationApplier : public gc {
@@ -50,14 +51,17 @@ private:
                        AnimationDirectionValue direction,
                        AnimationPlayStateValue playState,
                        AnimationFillModeValue fillMode);
-    bool createLayerdValues(const AnimationKeyframes* currentKeyFrames,
+    bool createLayerdValues(AnimationKeyframes* currentKeyFrames,
                             CSSStyleValuePair::KeyKind currentKeyKind,
                             size_t currentPropertyIndex,
                             GCVector<GCVector<AnimatedValue*>>& layeredValues);
-    bool createValues(const AnimationKeyframes* currentKeyFrames,
+    bool createValues(AnimationKeyframes* currentKeyFrames,
                       CSSStyleValuePair::KeyKind currentKeyKind,
                       size_t currentPropertyIndex, size_t layer,
                       GCVector<AnimatedValue*>& values);
+    bool isIntermediateDummyAnimationKeyframe(
+        AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
+        AnimationKeyframes* owner);
 
     Element* m_element;
     ComputedStyle* m_style;

@@ -29,7 +29,7 @@ TimingFunction* AnimationKeyframe::defaultTimingFunction()
     return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
 }
 
-bool StyleAnimationData::isValid(size_t index) const
+bool StyleAnimationData::isValidToApply(size_t index) const
 {
     if (animationName(index)->equals(String::emptyString) == true ||
         animationName(index)->equalsIgnoreCase("none") == true) {

@@ -559,7 +559,7 @@ public:
         return m_fillModeSize;
     }
 
-    bool isValid(size_t index) const;
+    bool isValidToApply(size_t index) const;
 
 private:
     GCVector<AnimationKeyframes> m_animationKeyframesList;
