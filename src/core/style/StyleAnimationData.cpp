@@ -29,18 +29,18 @@ TimingFunction* AnimationKeyframe::defaultTimingFunction()
     return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
 }
 
-bool AnimationKeyframes::isValid() const
+bool StyleAnimationData::isValid(size_t index) const
 {
-    if (m_name->equals(String::emptyString) == true ||
-        m_name->equalsIgnoreCase("none") == true) {
+    if (animationName(index)->equals(String::emptyString) == true ||
+        animationName(index)->equalsIgnoreCase("none") == true) {
         return false;
     }
 
-    if (m_duration.toTimeValue() == 0.0) {
+    if (duration(index).toTimeValue() == 0.0) {
         return false;
     }
 
-    if (!animationKeyframeListSize()) {
+    if (!m_animationKeyframesList[index].animationKeyframeListSize()) {
         return false;
     }
 
