@@ -104,62 +104,11 @@ bool AnimationApplier::apply()
             CSSStyleValuePair::KeyKind currentKeyKind =
                 fromAnimationKeyframe->keyKinds()[j];
 
-            // layer means to the layer index and is for properties that have a
-            // layer, such as the background. Otherwise it is 1.
             GCVector<GCVector<AnimatedValue*>> layeredValues;
-            size_t layerSize = 1;
-            if (isAnimatableBackgroundProperty(currentKeyKind)) {
-                layerSize = m_style->backgroundLayerSize();
-            }
-            layeredValues.resize(layerSize);
-            for (size_t layer = 0; layer < layerSize; layer++) {
-                bool isAvailable = true;
-                // Property values ​​corresponding to each AnimationKeyframe
-                // For example:
-                // @keyframes rx-animation {
-                //     0% {
-                //         left: 0px;
-                //     }
-                //     50% {
-                //         left: 200px;
-                //     }
-                //     100% {
-                //         left: 400px;
-                //     }
-                // }
-                // values: 0, 200, 400;
-                GCVector<AnimatedValue*> values;
-                for (auto* animationKeyframe :
-                     currentKeyFrames.animationKeyframeList()) {
-                    auto property = animationKeyframe->properties()[j];
-                    auto keyKind = animationKeyframe->keyKinds()[j];
-                    STARFISH_ASSERT(currentKeyKind == keyKind);
-
-                    bool neededOriginProperty = false;
-                    if (property.keyKind() ==
-                            CSSStyleValuePair::KeyKind::Unknown &&
-                        keyKind != CSSStyleValuePair::KeyKind::Unknown) {
-                        neededOriginProperty = true;
-                    }
-
-                    Optional<AnimatedValue*> maybeAnimatedValue =
-                        AnimatedValue::create(m_style, m_element, property,
-                                              keyKind, layer,
-                                              neededOriginProperty);
-                    if (!maybeAnimatedValue) {
-                        isAvailable = false;
-                        break;
-                    }
-                    AnimatedValue* animatedValue = maybeAnimatedValue.value();
-                    animatedValue->changeToFixedIfNeeded(
-                        m_currentFontSize, m_rootFontSize, m_font,
-                        m_windowSize.width(), m_windowSize.height(), nullptr);
-                    values.push_back(animatedValue);
-                }
-                if (!isAvailable) {
-                    continue;
-                }
-                layeredValues[layer] = std::move(values);
+            if (!createLayerdValues(&currentKeyFrames, currentKeyKind, j,
+                                    layeredValues)) {
+                // Failed to create AnimatedValue.
+                continue;
             }
 
             GCAtomicVector<double> offsets;
@@ -167,7 +116,6 @@ bool AnimationApplier::apply()
             for (auto* animationKeyframe :
                  currentKeyFrames.animationKeyframeList()) {
                 offsets.push_back(animationKeyframe->keyframeSelector());
-
                 // Legacy
                 // TODO: It seems that one timing function is used for each
                 // animation, but I don't think there is a need to save it as a
@@ -177,7 +125,7 @@ bool AnimationApplier::apply()
 
             hasAnimatedProperty |= applyProperty(
                 i, currentKeyFrames.name(), currentKeyKind, layeredValues,
-                layerSize, offsets, timingFunctions,
+                layeredValues.size(), offsets, timingFunctions,
                 currentKeyFrames.duration().toTimeValue(),
                 currentKeyFrames.delay().toTimeValue(),
                 currentKeyFrames.iterationCount(), currentKeyFrames.direction(),
@@ -192,6 +140,80 @@ bool AnimationApplier::apply()
         }
     }
     return hasAppliedAnimation;
+}
+
+bool AnimationApplier::createLayerdValues(
+    const AnimationKeyframes* currentKeyFrames,
+    CSSStyleValuePair::KeyKind currentKeyKind, size_t currentPropertyIndex,
+    GCVector<GCVector<AnimatedValue*>>& layeredValues)
+{
+    size_t layerSize = 1;
+    // TODO: there is another property that has layers
+    if (isAnimatableBackgroundProperty(currentKeyKind)) {
+        layerSize = m_style->backgroundLayerSize();
+    }
+    layeredValues.resize(layerSize);
+
+    // layer means to the layer index and is for properties that have a
+    // layer, such as the background. Otherwise it is 1.
+    for (size_t layer = 0; layer < layerSize; layer++) {
+        bool isAvailable = true;
+        GCVector<AnimatedValue*> values;
+        if (!createValues(currentKeyFrames, currentKeyKind,
+                          currentPropertyIndex, layer, values)) {
+            return false;
+        }
+        layeredValues[layer] = std::move(values);
+    }
+
+    return true;
+}
+
+bool AnimationApplier::createValues(const AnimationKeyframes* currentKeyFrames,
+                                    CSSStyleValuePair::KeyKind currentKeyKind,
+                                    size_t currentPropertyIndex, size_t layer,
+                                    GCVector<AnimatedValue*>& values)
+{
+    // Property values ​​corresponding to each AnimationKeyframe
+    // For example:
+    // @keyframes rx-animation {
+    //     0% {
+    //         left: 0px;
+    //     }
+    //     50% {
+    //         left: 200px;
+    //     }
+    //     100% {
+    //         left: 400px;
+    //     }
+    // }
+    // values: 0, 200, 400;
+    for (auto* animationKeyframe : currentKeyFrames->animationKeyframeList()) {
+        auto property = animationKeyframe->properties()[currentPropertyIndex];
+        auto keyKind = animationKeyframe->keyKinds()[currentPropertyIndex];
+        STARFISH_ASSERT(currentKeyKind == keyKind);
+
+        // TODO: I don't understand why this is necessary.
+        bool neededOriginProperty = false;
+        if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown &&
+            keyKind != CSSStyleValuePair::KeyKind::Unknown) {
+            neededOriginProperty = true;
+        }
+
+        Optional<AnimatedValue*> maybeAnimatedValue = AnimatedValue::create(
+            m_style, m_element, property, keyKind, layer, neededOriginProperty);
+        if (!maybeAnimatedValue) {
+            return false;
+        }
+
+        AnimatedValue* animatedValue = maybeAnimatedValue.value();
+        animatedValue->changeToFixedIfNeeded(m_currentFontSize, m_rootFontSize,
+                                             m_font, m_windowSize.width(),
+                                             m_windowSize.height(), nullptr);
+        values.push_back(animatedValue);
+    }
+
+    return true;
 }
 
 // TODO: There are so many parameters that it's so annoying.
