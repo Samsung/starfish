@@ -28,4 +28,23 @@ TimingFunction* AnimationKeyframe::defaultTimingFunction()
 {
     return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
 }
+
+bool AnimationKeyframes::isValid() const
+{
+    if (m_name->equals(String::emptyString) == true ||
+        m_name->equalsIgnoreCase("none") == true) {
+        return false;
+    }
+
+    if (m_duration.toTimeValue() == 0.0) {
+        return false;
+    }
+
+    if (!animationKeyframeListSize()) {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace Starfish
