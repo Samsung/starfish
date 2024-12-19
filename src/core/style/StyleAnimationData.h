@@ -161,7 +161,7 @@ public:
         m_name = name;
     }
 
-    String* name()
+    String* name() const
     {
         return m_name;
     }
@@ -247,11 +247,18 @@ public:
         return m_animationKeyframeList;
     }
 
+    const GCVector<AnimationKeyframe*>& animationKeyframeList() const
+    {
+        return m_animationKeyframeList;
+    }
+
     AnimationKeyframe* animationKeyframe(size_t index)
     {
         STARFISH_ASSERT(m_animationKeyframeList.size() > index);
         return m_animationKeyframeList[index];
     }
+
+    bool isValid() const;
 
 private:
     String* m_name;

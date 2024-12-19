@@ -74,113 +74,78 @@ AnimationApplier::AnimationApplier(Element* element, ComputedStyle* style,
 
 bool AnimationApplier::apply()
 {
-    bool ret = false;
-
+    bool hasAppliedAnimation = false;
     if (m_style->animation() == nullptr) {
         return false;
     }
 
     StyleAnimationData* styleAnimationData = m_style->animation();
-    for (size_t s = 0; s < styleAnimationData->animationKeyframesListSize();
-         s++) {
-        String* name = styleAnimationData->animationName(s);
-        if (name->equals(String::emptyString) == true ||
-            name->equalsIgnoreCase("none") == true) {
+    // CSS animation has mulitple AnimationKeyframes
+    // i means animation index.
+    for (size_t i = 0; i < styleAnimationData->animationKeyframesListSize();
+         i++) {
+        bool hasAnimatedProperty = false;
+        const AnimationKeyframes& currentKeyFrames =
+            styleAnimationData->animationKeyframes(i);
+
+        if (!currentKeyFrames.isValid()) {
             continue;
         }
 
-        double duration = styleAnimationData->duration(s).toTimeValue();
-        if (duration == 0.0) {
-            continue;
-        }
-
-        AnimationKeyframes& animationKeyframes =
-            styleAnimationData->animationKeyframes(s);
-        if (animationKeyframes.animationKeyframeListSize() == 0) {
-            continue;
-        }
-
+        // All AnimationKeyframe in animationKeyframeList have the same CSS
+        // properties kind in the same order for generating animation tasks.
+        // Therefore, based on the CSS properties of a from AnimationKeyframe,
+        // create animation values for each property in each AnimationKeyframe.
         AnimationKeyframe* fromAnimationKeyframe =
-            animationKeyframes.animationKeyframe(0);
-        if (fromAnimationKeyframe == nullptr) {
-            continue;
-        }
+            currentKeyFrames.animationKeyframeList()[0];
 
-        double delay = styleAnimationData->delay(s).toTimeValue();
-        float iterationCount = styleAnimationData->iterationCount(s);
-        AnimationDirectionValue direction = styleAnimationData->direction(s);
-        AnimationPlayStateValue playState = styleAnimationData->playState(s);
-        AnimationFillModeValue fillMode = styleAnimationData->fillMode(s);
+        // j means property index.
+        for (size_t j = 0; j < fromAnimationKeyframe->propertySize(); j++) {
+            CSSStyleValuePair::KeyKind currentKeyKind =
+                fromAnimationKeyframe->keyKinds()[j];
 
-        size_t keyframeSize = animationKeyframes.animationKeyframeListSize();
-        bool neededOriginProperty = false;
-        for (size_t i = 0; i < fromAnimationKeyframe->propertySize(); i++) {
-            auto property = fromAnimationKeyframe->properties()[i];
-            auto keyKind = fromAnimationKeyframe->keyKinds()[i];
-            neededOriginProperty = false;
-
-            if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown &&
-                keyKind != CSSStyleValuePair::KeyKind::Unknown) {
-                neededOriginProperty = true;
-            }
-
+            // layer means to the layer index and is for properties that have a
+            // layer, such as the background. Otherwise it is 1.
+            GCVector<GCVector<AnimatedValue*>> layeredValues;
             size_t layerSize = 1;
-            if (isAnimatableBackgroundProperty(keyKind)) {
+            if (isAnimatableBackgroundProperty(currentKeyKind)) {
                 layerSize = m_style->backgroundLayerSize();
             }
+            layeredValues.resize(layerSize);
+            for (size_t layer = 0; layer < layerSize; layer++) {
+                bool isAvailable = true;
+                // Property values ​​corresponding to each AnimationKeyframe
+                // For example:
+                // @keyframes rx-animation {
+                //     0% {
+                //         left: 0px;
+                //     }
+                //     50% {
+                //         left: 200px;
+                //     }
+                //     100% {
+                //         left: 400px;
+                //     }
+                // }
+                // values: 0, 200, 400;
+                GCVector<AnimatedValue*> values;
+                for (auto* animationKeyframe :
+                     currentKeyFrames.animationKeyframeList()) {
+                    auto property = animationKeyframe->properties()[j];
+                    auto keyKind = animationKeyframe->keyKinds()[j];
+                    STARFISH_ASSERT(currentKeyKind == keyKind);
 
-            GCVector<GCVector<AnimatedValue*>> values;
-            values.resize(layerSize);
-            bool isAvailable = true;
-            for (size_t l = 0; l < layerSize; l++) {
-                Optional<AnimatedValue*> maybeAnimatedValue =
-                    AnimatedValue::create(m_style, m_element, property, keyKind,
-                                          l, neededOriginProperty);
-                if (!maybeAnimatedValue) {
-                    isAvailable = false;
-                    break;
-                }
-                AnimatedValue* animatedValue = maybeAnimatedValue.value();
-                animatedValue->changeToFixedIfNeeded(
-                    m_currentFontSize, m_rootFontSize, m_font,
-                    m_windowSize.width(), m_windowSize.height(), nullptr);
-                values[l].push_back(animatedValue);
-            }
-            if (isAvailable == false) {
-                continue;
-            }
-
-            GCAtomicVector<double> offsets;
-            GCVector<TimingFunction*> timingFunctions;
-            offsets.push_back(fromAnimationKeyframe->keyframeSelector());
-            timingFunctions.push_back(fromAnimationKeyframe->timingFunction());
-
-            for (size_t k = 1; k < keyframeSize; k++) {
-                AnimationKeyframe* animationKeyframe =
-                    animationKeyframes.animationKeyframe(k);
-
-                property = animationKeyframe->properties()[i];
-                if (keyKind != animationKeyframe->keyKinds()[i]) {
-                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-                }
-                if ((keyframeSize - 1 != k) &&
-                    property.valueKind() ==
-                        CSSStyleValuePair::ValueKind::None) {
-                    continue;
-                }
-
-                isAvailable = true;
-                for (size_t l = 0; l < layerSize; l++) {
-                    neededOriginProperty = false;
-                    if ((keyframeSize - 1 == k) &&
-                        (property.keyKind() ==
-                             CSSStyleValuePair::KeyKind::Unknown &&
-                         keyKind != CSSStyleValuePair::KeyKind::Unknown)) {
+                    bool neededOriginProperty = false;
+                    if (property.keyKind() ==
+                            CSSStyleValuePair::KeyKind::Unknown &&
+                        keyKind != CSSStyleValuePair::KeyKind::Unknown) {
                         neededOriginProperty = true;
                     }
+
                     Optional<AnimatedValue*> maybeAnimatedValue =
                         AnimatedValue::create(m_style, m_element, property,
-                                              keyKind, l, neededOriginProperty);
+                                              keyKind, layer,
+                                              neededOriginProperty);
                     if (!maybeAnimatedValue) {
                         isAvailable = false;
                         break;
@@ -189,38 +154,44 @@ bool AnimationApplier::apply()
                     animatedValue->changeToFixedIfNeeded(
                         m_currentFontSize, m_rootFontSize, m_font,
                         m_windowSize.width(), m_windowSize.height(), nullptr);
-                    values[l].push_back(animatedValue);
+                    values.push_back(animatedValue);
                 }
-                if (isAvailable == false) {
+                if (!isAvailable) {
                     continue;
                 }
+                layeredValues[layer] = std::move(values);
+            }
 
+            GCAtomicVector<double> offsets;
+            GCVector<TimingFunction*> timingFunctions;
+            for (auto* animationKeyframe :
+                 currentKeyFrames.animationKeyframeList()) {
                 offsets.push_back(animationKeyframe->keyframeSelector());
+
+                // Legacy
+                // TODO: It seems that one timing function is used for each
+                // animation, but I don't think there is a need to save it as a
+                // vector for each keyframe.
                 timingFunctions.push_back(animationKeyframe->timingFunction());
             }
 
-            bool gotAnimation =
-                applyProperty(s, name, keyKind, values, layerSize, offsets,
-                              timingFunctions, duration, delay, iterationCount,
-                              direction, playState, fillMode);
-
-            if (gotAnimation == true) {
-                // TODO reduce animation duration here with
-                // canceledAnimationProgress
-
-                // FIXME: During the loop, gotAnimation may be either true or
-                // false, but even a single opportunity for gotAnimation to
-                // become true is enough for ret to become True as well. This is
-                // quite ambiguous.
-                ret = true;
-            }
+            hasAnimatedProperty |= applyProperty(
+                i, currentKeyFrames.name(), currentKeyKind, layeredValues,
+                layerSize, offsets, timingFunctions,
+                currentKeyFrames.duration().toTimeValue(),
+                currentKeyFrames.delay().toTimeValue(),
+                currentKeyFrames.iterationCount(), currentKeyFrames.direction(),
+                currentKeyFrames.playState(), currentKeyFrames.fillMode());
         }
 
-        if (ret == true) {
-            m_executor->fireAnimationStartEvent(m_element, name, delay);
+        if (hasAnimatedProperty) {
+            m_executor->fireAnimationStartEvent(
+                m_element, currentKeyFrames.name(),
+                currentKeyFrames.delay().toTimeValue());
+            hasAppliedAnimation = true;
         }
     }
-    return ret;
+    return hasAppliedAnimation;
 }
 
 // TODO: There are so many parameters that it's so annoying.
