@@ -45,7 +45,7 @@ private:
     bool applyProperty(size_t s, String* name,
                        CSSStyleValuePair::KeyKind keyKind,
                        const GCVector<GCVector<AnimatedValue*>>& values,
-                       size_t layerSize, const GCAtomicVector<double>& offsets,
+                       const GCAtomicVector<double>& offsets,
                        const GCVector<TimingFunction*>& timingFunctions,
                        uint64_t duration, int64_t delay, float iterationCount,
                        AnimationDirectionValue direction,
