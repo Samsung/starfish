@@ -29,9 +29,9 @@ class FrameSVGSVGBox final : public FrameReplaced {
 public:
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
-        , m_svgScale(1)
-        , m_surface(nullptr)
         , m_isInnerSVG(false)
+        , m_svgMaskPaintingDepth(0)
+        , m_svgScale(1)
         , m_defaultWidth(300)
         , m_defaultHeight(150)
     {
@@ -124,18 +124,22 @@ public:
         return m_svgPaintingMatrix;
     }
 
+    size_t& svgMaskPaintingDepth()
+    {
+        return m_svgMaskPaintingDepth;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         FrameReplaced::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
     }
 
+    bool m_isInnerSVG;
+    size_t m_svgMaskPaintingDepth;
     LayoutSize m_viewport;
     Optional<Unit::Rect> m_viewBox;
     float m_svgScale;
-    NativeImageData* m_surface;
-    bool m_isInnerSVG;
     size_t m_defaultWidth;
     size_t m_defaultHeight;
     Optional<Unit::Rect> m_containerViewport;

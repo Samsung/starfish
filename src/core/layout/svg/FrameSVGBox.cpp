@@ -272,7 +272,11 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     auto vp = viewport();
     bool needsGeometryAttributes = needsSVGGeometryAttributes();
 
-    applyTransformTo(ctx.m_canvas, vp);
+    if (!applyTransformTo(ctx.m_canvas, vp)) {
+        // ignore invalid matrix
+        ctx.m_canvas->restore();
+        return;
+    }
 
     float opacity = style()->opacity();
     if (opacity != 1) {

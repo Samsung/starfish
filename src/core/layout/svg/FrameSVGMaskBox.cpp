@@ -84,6 +84,22 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
+class SVGMaskPaintingDetphMarker {
+public:
+    SVGMaskPaintingDetphMarker(size_t& d)
+        : depth(d)
+    {
+        depth++;
+    }
+
+    ~SVGMaskPaintingDetphMarker()
+    {
+        depth--;
+    }
+
+    size_t& depth;
+};
+
 void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 {
     LayoutRect childrenRect;
@@ -102,9 +118,20 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 
     FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
             asFrameSVGSVGBox();
+    SVGMaskPaintingDetphMarker marker(viewportBox->svgMaskPaintingDepth());
+
+    bool applyMaskOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 1;
+
+    std::vector<Frame*> tree;
+    f = targetBox->parent();
+    while (f != viewportBox) {
+        tree.push_back(f);
+        f = f->parent();
+    }
 
     Canvas* newCanvas = Canvas::create(node()->webView(), nativeImageMask);
     newCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+
     auto transScale = viewportBox->computeTranlateScaleOnPaint();
     newCanvas->translate(-childrenRect.x() + transScale.second.getTranslateX(),
             -childrenRect.y() + transScale.second.getTranslateY());
@@ -130,27 +157,36 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
     }
 
     auto ctm = ctx.m_canvas->currentTransformMatrix();
-    std::vector<Frame*> tree;
-    f = targetBox->parent();
-    while (f != viewportBox) {
-        tree.push_back(f);
-        f = f->parent();
-    }
     for (auto iter = tree.rbegin(); iter != tree.rend(); iter++) {
         Frame* f = *iter;
         f->asFrameSVGBox()->applyTransformTo(ctx.m_canvas, viewportBox->viewport());
     }
     auto transformedCTM = ctx.m_canvas->currentTransformMatrix();
-    SkMatrix maskMatrix = viewportBox->svgPaintingMatrix();
-    ctx.m_canvas->setMatrix(maskMatrix);
-    ctx.m_canvas->translate(childrenRect.x(), childrenRect.y());
-    ctx.m_canvas->maskNativeImage(
-        nativeImageMask,
-        Unit::Rect(transformedCTM.getTranslateX() - ctm.getTranslateX(),
-                transformedCTM.getTranslateY() - ctm.getTranslateY(),
-                childrenRect.width(), childrenRect.height()));
+
+    if (applyMaskOnSVGViewport) {
+        ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
+    } else {
+        ctx.m_canvas->setMatrix(ctm);
+    }
+
+    if (applyMaskOnSVGViewport) {
+        ctx.m_canvas->translate(childrenRect.x(), childrenRect.y());
+        ctx.m_canvas->maskNativeImage(
+            nativeImageMask,
+            Unit::Rect(transformedCTM.getTranslateX() - ctm.getTranslateX(),
+                    transformedCTM.getTranslateY() - ctm.getTranslateY(),
+                    childrenRect.width(), childrenRect.height()));
+    } else {
+        SkMatrix invertedMatrix;
+        transScale.second.invert(&invertedMatrix);
+        auto rt = SkRect::MakeXYWH(childrenRect.x(), childrenRect.y(),
+                                   childrenRect.width(), childrenRect.height());
+        invertedMatrix.mapRect(&rt);
+        ctx.m_canvas->translate(rt.x(), rt.y());
+        ctx.m_canvas->maskNativeImage(
+            nativeImageMask,
+            Unit::Rect(0, 0, rt.width(), rt.height()));
+    }
     ctx.m_canvas->setMatrix(ctm);
-
-
 }
 } // namespace Starfish
