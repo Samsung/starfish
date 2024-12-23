@@ -142,7 +142,7 @@ bool AnimationApplier::apply()
 }
 
 bool AnimationApplier::createLayerdValues(
-    AnimationKeyframes* currentKeyFrames,
+    const AnimationKeyframes* currentKeyFrames,
     CSSStyleValuePair::KeyKind currentKeyKind, size_t currentPropertyIndex,
     GCVector<GCVector<AnimatedValue*>>& layeredValues)
 {
@@ -175,7 +175,7 @@ bool AnimationApplier::createLayerdValues(
     return true;
 }
 
-bool AnimationApplier::createValues(AnimationKeyframes* currentKeyFrames,
+bool AnimationApplier::createValues(const AnimationKeyframes* currentKeyFrames,
                                     CSSStyleValuePair::KeyKind currentKeyKind,
                                     size_t currentPropertyIndex, size_t layer,
                                     GCVector<AnimatedValue*>& values)
@@ -249,7 +249,7 @@ void AnimationApplier::createOffsetAndTimingFunction(
 
 bool AnimationApplier::isIntermediateDummyAnimationKeyframe(
     AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
-    AnimationKeyframes* owner)
+    const AnimationKeyframes* owner)
 {
     AnimationKeyframe* from = owner->animationKeyframeList().front();
     AnimationKeyframe* to = owner->animationKeyframeList().back();

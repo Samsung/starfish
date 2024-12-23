@@ -51,11 +51,11 @@ private:
                        AnimationDirectionValue direction,
                        AnimationPlayStateValue playState,
                        AnimationFillModeValue fillMode);
-    bool createLayerdValues(AnimationKeyframes* currentKeyFrames,
+    bool createLayerdValues(const AnimationKeyframes* currentKeyFrames,
                             CSSStyleValuePair::KeyKind currentKeyKind,
                             size_t currentPropertyIndex,
                             GCVector<GCVector<AnimatedValue*>>& layeredValues);
-    bool createValues(AnimationKeyframes* currentKeyFrames,
+    bool createValues(const AnimationKeyframes* currentKeyFrames,
                       CSSStyleValuePair::KeyKind currentKeyKind,
                       size_t currentPropertyIndex, size_t layer,
                       GCVector<AnimatedValue*>& values);
@@ -66,7 +66,7 @@ private:
 
     bool isIntermediateDummyAnimationKeyframe(
         AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
-        AnimationKeyframes* owner);
+        const AnimationKeyframes* owner);
 
     Element* m_element;
     ComputedStyle* m_style;
