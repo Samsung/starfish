@@ -31,6 +31,8 @@
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/ImageBitmapRenderingContext.h"
 #include "core/dom/DOMException.h"
+#include "StaticStrings.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -47,7 +49,43 @@ void HTMLCanvasElement::didAttributeChanged(QualifiedName name,
         if (m_canvasRenderingContext) {
             m_canvasRenderingContext->onResize();
         }
+        setNeedsStyleRecalc();
         setNeedsLayout();
+    }
+}
+
+void HTMLCanvasElement::styleForPresentationAttribute(
+    CSSStyleValuePairVectorHolder& cssValues)
+{
+    HTMLElement::styleForPresentationAttribute(cssValues);
+
+    // TODO: Since this patch, the width and height retrieved from the
+    // attributes of the canvas element will be included in the calculation of
+    // styles. Therefore, it is no longer necessary to directly call
+    // setneedslayout in HTMLCanvasElement::didAttributeChanged. Also, in
+    // FrameReplacedCanvas::intrinsicSize(), you should no longer refer to the
+    // the canvas element's width and height directly.
+
+    // Note: Ignore unit. The unit is always px.
+    // width
+    Optional<String*> maybeWidth =
+        getAttribute(starfish()->staticStrings()->m_width);
+    if (maybeWidth) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
+        uint32_t width = String::parseInt(maybeWidth.getValue());
+        pair.setLengthValue(CSSLength(width));
+        cssValues.push_back(pair);
+    }
+    // height
+    Optional<String*> maybeHeight =
+        getAttribute(starfish()->staticStrings()->m_height);
+    if (maybeHeight) {
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::Height);
+        uint32_t height = String::parseInt(maybeHeight.getValue());
+        pair.setLengthValue(CSSLength(height));
+        cssValues.push_back(pair);
     }
 }
 
