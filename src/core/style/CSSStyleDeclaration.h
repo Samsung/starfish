@@ -519,14 +519,17 @@ public:
 
 private:
     enum class RequiredStyleResolveStage {
-        StyleResolution,
+        None,
         FrameTreeBuild,
         Layout,
     };
 
     void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
 
-    RequiredStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind);
+    RequiredStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind,
+                                            ComputedStyle* style);
+
+    RequiredStyleResolveStage requiredStageForLength(const Length& length);
 };
 } // namespace Starfish
 
