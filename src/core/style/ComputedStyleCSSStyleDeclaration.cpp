@@ -94,7 +94,6 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
     switch (requiredStage(keyKind, style)) {
     case RequiredStyleResolveStage::None:
         return;
-        break;
     case RequiredStyleResolveStage::FrameTreeBuild:
         if (m_node->needsFrameTreeBuild()) {
             browsingContext->buildFrameTreeIfNeeds();
