@@ -163,6 +163,10 @@ void Renderer::destroy()
     m_isDestroyed = true;
     clearResources();
     clearNativeHandlers();
+    if (m_compostiorContext) {
+        delete m_compostiorContext;
+        m_compostiorContext = nullptr;
+    }
 #if !defined(STARFISH_EFL_HEADLESS)
     m_gl = nullptr;
 #endif
