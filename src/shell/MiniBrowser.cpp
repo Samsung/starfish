@@ -165,6 +165,8 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
             env.glCompositorScale = argv[i] + strlen("--gl-compositor-scale=");
         } else if (strstr(argv[i], "--show-fps") == argv[i]) {
             settings.showFps = true;
+        } else if (strstr(argv[i], "--timeout=") == argv[i]) {
+            others.timeout = std::atoi(argv[i] + strlen("--timeout="));
         }
     }
 }
@@ -333,6 +335,11 @@ void MiniBrowser::setRotate(int degree)
 int MiniBrowser::runMainLoop()
 {
     return m_window->appLoop()->start();
+}
+
+int MiniBrowser::runMainLoopWithTimeout(double timeoutInSec)
+{
+    return m_window->appLoop()->start(timeoutInSec);
 }
 
 void MiniBrowser::runConsole()

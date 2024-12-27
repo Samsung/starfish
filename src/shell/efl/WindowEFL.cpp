@@ -169,6 +169,7 @@ void* WindowEFL::getNativeWindowHandle()
 
 void WindowEFL::terminate()
 {
+    evas_object_del(m_window);
 }
 
 void WindowEFL::addAutoFitChild(void* child)

@@ -92,6 +92,7 @@ public:
     struct OtherOptions {
         bool crashTest = false;
         bool disableConsole = false;
+        double timeout = 0; // seconds, 0 means no timeout.
     };
 
     static void parseArgs(int argc, char* argv[],
@@ -118,6 +119,8 @@ public:
     void setRotate(int degree);
 
     int runMainLoop();
+
+    int runMainLoopWithTimeout(double timeoutInSec);
 
     void runConsole();
 
