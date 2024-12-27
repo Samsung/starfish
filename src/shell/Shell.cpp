@@ -36,6 +36,8 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include <vector>
+
 namespace {
 constexpr uint32_t kDefaultWidth = 1920;
 constexpr uint32_t kDefaultHeight = 1080;
@@ -69,6 +71,9 @@ int Shell::run(int argc, char* argv[])
 
     if (strstr(argv[1], "unit-test")) {
         return runUnitTest(argc, argv);
+    } else if (strstr(argv[1], "create-destroy-test")) {
+        // Usage: ./Starfish create-destroy-test {repeat-count} {interval} {URL}
+        return runCreateDestroyTest(argc, argv);
     } else {
         return runMiniBrowser(argc, argv);
     }
@@ -79,6 +84,31 @@ int Shell::runUnitTest(int argc, char* argv[])
     UnitTestRunner runner;
     runner.initialize(argc, argv);
     return runner.runAllTests();
+}
+
+int Shell::runCreateDestroyTest(int argc, char* argv[])
+{
+    if (argc != 5) {
+        printf(
+            "Usage: ./Starfish create-destroy-test {repeat-count} {interval} "
+            "{URL}");
+        return false;
+    }
+
+    int repeatCount = std::atoi(argv[2]);
+    int interval = std::atoi(argv[3]); // seconds
+    std::string timeout = "--timeout=" + std::string(argv[3]);
+    std::string url = argv[4];
+    std::vector<const char*> newArgv;
+
+    newArgv.push_back("Starfish");
+    newArgv.push_back(url.c_str());
+    newArgv.push_back(timeout.c_str());
+
+    while (repeatCount--) {
+        runMiniBrowser(newArgv.size(), const_cast<char**>(newArgv.data()));
+    }
+    return true;
 }
 
 int Shell::runMiniBrowser(int argc, char* argv[])
@@ -113,8 +143,12 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     if (others.crashTest) {
         runCrashTestThread();
     }
-
-    int ret = browser->runMainLoop();
+    int ret = 0;
+    if (others.timeout > 0.0) {
+        ret = browser->runMainLoopWithTimeout(others.timeout);
+    } else {
+        ret = browser->runMainLoop();
+    }
     if (ret != 0) {
         return ret;
     }
