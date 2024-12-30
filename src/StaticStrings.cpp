@@ -557,6 +557,18 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "clip-path"));
     m_clipPathUnits = QualifiedName(
         AtomicString::createAtomicString(starfish, "clipPathUnits"));
+
+    // SVG animate
+    m_attributename = QualifiedName(
+        AtomicString::createAtomicString(starfish, "attributename"));
+    m_calcMode =
+        QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
+    m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));
+    m_from = QualifiedName(AtomicString::createAtomicString(starfish, "from"));
+    m_to = QualifiedName(AtomicString::createAtomicString(starfish, "to"));
+    m_values =
+        QualifiedName(AtomicString::createAtomicString(starfish, "values"));
+
     m_textAnchor = QualifiedName(
         AtomicString::createAtomicString(starfish, "text-anchor"));
     m_alignmentBaseline = QualifiedName(
