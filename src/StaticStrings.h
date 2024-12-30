@@ -490,6 +490,14 @@ public:
     QualifiedName m_markerUnits;
     QualifiedName m_clipPathUnits;
 
+    // SVG animate
+    QualifiedName m_attributename;
+    QualifiedName m_calcMode;
+    QualifiedName m_dur;
+    QualifiedName m_from;
+    QualifiedName m_to;
+    QualifiedName m_values;
+
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;
     QualifiedName m_pause;
