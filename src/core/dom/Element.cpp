@@ -2334,8 +2334,10 @@ Animation* Element::animate(ExecutionContext* executionContext,
         auto& animations = document()->animationExecutor()->activeAnimations();
         uint64_t tick = tickCount();
 
-        ActiveElementAnimation* key =
-            new ActiveElementAnimation(options.id(), this);
+        ActiveElementAnimation* key = new ActiveElementAnimation(
+            options.id(), this, 0, 1.0f,
+            AnimationDirectionValue::AnimationDirectionNormalValue,
+            AnimationPlayStateValue::AnimationPlayStateRunningValue);
         auto iter = animations.find(key);
         if (iter != animations.end()) {
             for (auto task : iter->second) {

@@ -652,13 +652,10 @@ struct ActiveElementAnimation : public gc {
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
 
-    ActiveElementAnimation(
-        String* name, Element* element, size_t index = 0,
-        float iterationCount = 1.0f,
-        AnimationDirectionValue direction =
-            AnimationDirectionValue::AnimationDirectionNormalValue,
-        AnimationPlayStateValue playState =
-            AnimationPlayStateValue::AnimationPlayStateRunningValue)
+    ActiveElementAnimation(String* name, Element* element, size_t index,
+                           float iterationCount,
+                           AnimationDirectionValue direction,
+                           AnimationPlayStateValue playState)
         : m_name(name)
         , m_element(element)
         , m_index(index)
