@@ -111,7 +111,7 @@ void SVGAnimateElement::beginElementAt(float offset)
         // can proceed using the default value.
         calcMode = SVGAnimationCalcMode::Linear;
     }
-    CubicBezier::EaseType easeType =
+    CubicBezierEaseType easeType =
         svgAnimationCalcModeToCubicBezierEaseType(calcMode);
     animationKeyframes->setTimingFunction(
         CubicBezier::createCubicBezier(easeType));

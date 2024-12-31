@@ -22,9 +22,10 @@
 
 #include "core/dom/svg/SVGElement.h"
 #include "core/style/StyleAnimationData.h"
-#include "core/animation/CubicBezier.h"
 
 namespace Starfish {
+
+enum class CubicBezierEaseType : uint8_t;
 
 // https://svgwg.org/specs/animations/#FillAttribute
 enum class SVGAnimationFill {
@@ -43,7 +44,7 @@ enum class SVGAnimationCalcMode {
     Spline,
 };
 
-CubicBezier::EaseType svgAnimationCalcModeToCubicBezierEaseType(
+CubicBezierEaseType svgAnimationCalcModeToCubicBezierEaseType(
     SVGAnimationCalcMode calcMode);
 
 class SVGAnimationElement : public SVGElement {

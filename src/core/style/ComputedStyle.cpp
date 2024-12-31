@@ -243,16 +243,15 @@ TimingFunction* ComputedStyle::knownTimingFunction(TimingFunctionValue v)
 {
     switch (v) {
     case TimingFunctionValue::TimingFunctionEaseValue:
-        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
+        return CubicBezier::createCubicBezier(CubicBezierEaseType::Ease);
     case TimingFunctionValue::TimingFunctionLinearValue:
-        return CubicBezier::createCubicBezier(CubicBezier::EaseType::LINEAR);
+        return CubicBezier::createCubicBezier(CubicBezierEaseType::Linear);
     case TimingFunctionValue::TimingFunctionEaseInValue:
-        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE_IN);
+        return CubicBezier::createCubicBezier(CubicBezierEaseType::Easein);
     case TimingFunctionValue::TimingFunctionEaseOutValue:
-        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE_OUT);
+        return CubicBezier::createCubicBezier(CubicBezierEaseType::EaseOut);
     case TimingFunctionValue::TimingFunctionEaseInOutValue:
-        return CubicBezier::createCubicBezier(
-            CubicBezier::EaseType::EASE_IN_OUT);
+        return CubicBezier::createCubicBezier(CubicBezierEaseType::EaseInout);
     case TimingFunctionValue::TimingFunctionStepStartValue:
         return Steps::createSteps(1, Steps::StepPosition::START);
     case TimingFunctionValue::TimingFunctionStepEndValue:
