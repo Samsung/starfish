@@ -28,12 +28,7 @@ class Path;
 
 class SVGPathElement : public SVGElement {
 public:
-    SVGPathElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
-
-    static Path* parsePath(String* d);
+    SVGPathElement(Document* document, const QualifiedName& qname);
 
     Optional<Path*> path()
     {
@@ -70,7 +65,8 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    Optional<Path*> m_path;
+    static void parsePath(String* d, Path* path);
+    Path* m_path;
 };
 } // namespace Starfish
 
