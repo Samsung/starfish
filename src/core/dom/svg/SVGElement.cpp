@@ -23,6 +23,7 @@
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGUseElement.h"
+#include "core/dom/svg/SVGAnimateElement.h"
 #include "core/dom/Traverse.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -211,6 +212,17 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             setNeedsLayout();
             Traverse::traverseIncludingShadowDOM(
                 this, [](Node* nd) { nd->setNeedsPainting(); });
+        }
+    }
+}
+
+void SVGElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    Element::didNodeInserted(parent, newChild);
+    if (newChild->isSVGAnimateElement()) {
+        SVGAnimateElement* animate = newChild->asSVGAnimateElement();
+        if (parent == animate->targetElement()) {
+            animate->beginElement();
         }
     }
 }

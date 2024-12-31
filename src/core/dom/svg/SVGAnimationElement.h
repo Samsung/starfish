@@ -21,8 +21,30 @@
 #define __StarfishSVGAnimationElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "core/style/StyleAnimationData.h"
+#include "core/animation/CubicBezier.h"
 
 namespace Starfish {
+
+// https://svgwg.org/specs/animations/#FillAttribute
+enum class SVGAnimationFill {
+    Freeze,
+    Remove,
+};
+
+AnimationFillModeValue svgAnimationFillToAnimationFillModeValue(
+    SVGAnimationFill fill);
+
+// https://svgwg.org/specs/animations/#CalcModeAttribute
+enum class SVGAnimationCalcMode {
+    Discrete,
+    Linear,
+    Paced,
+    Spline,
+};
+
+CubicBezier::EaseType svgAnimationCalcModeToCubicBezierEaseType(
+    SVGAnimationCalcMode calcMode);
 
 class SVGAnimationElement : public SVGElement {
 public:
@@ -51,9 +73,19 @@ public:
         return false;
     }
 
+    Optional<Element*> targetElement();
+
     virtual void beginElement();
 
+    virtual void beginElementAt(float offset);
+
 protected:
+    bool parseAttributeName(CSSStyleValuePair::KeyKind& keyKind);
+    bool parseFrom(CSSStyleValuePair::KeyKind keyKind, CSSStyleValuePair& from);
+    bool parseTo(CSSStyleValuePair::KeyKind keyKind, CSSStyleValuePair& to);
+    bool parseDur(CSSTime& duration);
+    bool parseFill(SVGAnimationFill& fill);
+    bool parseCalcMode(SVGAnimationCalcMode& calcMode);
 };
 } // namespace Starfish
 

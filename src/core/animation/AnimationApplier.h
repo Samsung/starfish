@@ -31,6 +31,7 @@ class AnimatedValue;
 class AnimationExecutor;
 class AnimationKeyframe;
 class AnimationKeyframes;
+class SVGAnimateElement;
 
 class AnimationApplier : public gc {
 public:
@@ -40,6 +41,8 @@ public:
                      bool isCSSAnimationTask);
 
     bool apply();
+
+    bool applySVGAnimateElement(SVGAnimateElement* animationElement);
 
 private:
     bool applyProperty(size_t s, String* name,

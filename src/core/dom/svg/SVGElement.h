@@ -76,6 +76,7 @@ public:
     String* xmlbase();
     void setXmlbase(String* str);
 
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
     virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     Optional<SVGElement*> ownerSVGElement();
