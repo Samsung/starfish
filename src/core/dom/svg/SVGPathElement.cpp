@@ -27,6 +27,12 @@
 
 namespace Starfish {
 
+SVGPathElement::SVGPathElement(Document* document, const QualifiedName& qname)
+    : SVGElement(document, qname)
+    , m_path(Path::create())
+{
+}
+
 void* SVGPathElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGPathElement));
@@ -363,10 +369,10 @@ static PathTokenVector tokenizePathValue(const StringBufferAccessData& bad)
     return tokens;
 }
 
-Path* SVGPathElement::parsePath(String* d)
+void SVGPathElement::parsePath(String* d, Path* path)
 {
+    STARFISH_ASSERT(path->isEmpty());
     if (d->length()) {
-        Path* path = Path::create();
         auto bad = d->bufferAccessData();
         auto tokens = tokenizePathValue(bad);
 
@@ -720,9 +726,7 @@ Path* SVGPathElement::parsePath(String* d)
                 }
             }
         }
-        return path;
     }
-    return nullptr;
 }
 
 void SVGPathElement::didAttributeChanged(QualifiedName name,
@@ -745,9 +749,9 @@ void SVGPathElement::didComputedStyleChanged(ComputedStyle* oldStyle,
                                              ComputedStyle* newStyle,
                                              Optional<StyleResolveContext*> ctx)
 {
-    m_path = nullptr;
+    m_path->clear();
     if (newStyle) {
-        m_path = parsePath(newStyle->d());
+        parsePath(newStyle->d(), m_path);
     }
 }
 
