@@ -2110,13 +2110,13 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::AnimationDirectionValueKind:
         switch (animationDirectionValue()) {
-        case AnimationDirectionValue::AnimationDirectionNormalValue:
+        case AnimationDirectionValue::Normal:
             return String::fromUTF8("normal");
-        case AnimationDirectionValue::AnimationDirectionReverseValue:
+        case AnimationDirectionValue::Reverse:
             return String::fromUTF8("reverse");
-        case AnimationDirectionValue::AnimationDirectionAlternateValue:
+        case AnimationDirectionValue::Alternate:
             return String::fromUTF8("alternate");
-        case AnimationDirectionValue::AnimationDirectionAlternateReverseValue:
+        case AnimationDirectionValue::AlternateReverse:
             return String::fromUTF8("alternate-reverse");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -2124,9 +2124,9 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::AnimationPlayStateValueKind:
         switch (animationPlayStateValue()) {
-        case AnimationPlayStateValue::AnimationPlayStateRunningValue:
+        case AnimationPlayStateValue::Running:
             return String::fromUTF8("running");
-        case AnimationPlayStateValue::AnimationPlayStatePausedValue:
+        case AnimationPlayStateValue::Paused:
             return String::fromUTF8("paused");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -2134,13 +2134,13 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::AnimationFillModeValueKind:
         switch (animationFillModeValue()) {
-        case AnimationFillModeValue::AnimationFillModeNoneValue:
+        case AnimationFillModeValue::None:
             return String::fromUTF8("none");
-        case AnimationFillModeValue::AnimationFillModeForwardsValue:
+        case AnimationFillModeValue::Forwards:
             return String::fromUTF8("forwards");
-        case AnimationFillModeValue::AnimationFillModeBackwardsValue:
+        case AnimationFillModeValue::Backwards:
             return String::fromUTF8("backwards");
-        case AnimationFillModeValue::AnimationFillModeBothValue:
+        case AnimationFillModeValue::Both:
             return String::fromUTF8("both");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -3072,8 +3072,7 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationDirection(
-            AnimationDirectionValue::AnimationDirectionNormalValue, index);
+        style->setAnimationDirection(AnimationDirectionValue::Normal, index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
@@ -3101,8 +3100,7 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationPlayState(
-            AnimationPlayStateValue::AnimationPlayStateRunningValue, index);
+        style->setAnimationPlayState(AnimationPlayStateValue::Running, index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
@@ -3130,8 +3128,7 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationFillMode(
-            AnimationFillModeValue::AnimationFillModeNoneValue, index);
+        style->setAnimationFillMode(AnimationFillModeValue::None, index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
@@ -9322,13 +9319,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                         std::fmod(animationTasks[i]->iterationStart(), 2) >= 1;
                 }
                 bool isForwardDirection =
-                    (direction ==
-                     AnimationDirectionValue::AnimationDirectionNormalValue) ||
-                    (direction == AnimationDirectionValue::
-                                      AnimationDirectionAlternateValue &&
+                    (direction == AnimationDirectionValue::Normal) ||
+                    (direction == AnimationDirectionValue::Alternate &&
                      isOddIteration) ||
-                    (direction == AnimationDirectionValue::
-                                      AnimationDirectionAlternateReverseValue &&
+                    (direction == AnimationDirectionValue::AlternateReverse &&
                      !isOddIteration);
                 animationTasks[i]->setIsForward(isForwardDirection);
                 if (animationTasks[i]->fraction(tick) >= 1) {
@@ -9415,8 +9409,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     animationTasks[i]->detachFromElement(toStyle);
 
                     if (animationTasks[i]->fillMode() !=
-                        AnimationFillModeValue::
-                            AnimationFillModeForwardsValue) {
+                        AnimationFillModeValue::Forwards) {
                         animationTasks.erase(i);
                         i--;
                     } else {
@@ -16640,11 +16633,9 @@ bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
     const CSSTokenValue& value)
 {
     if (value.equals("running") == true) {
-        setAnimationPlayStateValue(
-            AnimationPlayStateValue::AnimationPlayStateRunningValue);
+        setAnimationPlayStateValue(AnimationPlayStateValue::Running);
     } else if (value.equals("paused") == true) {
-        setAnimationPlayStateValue(
-            AnimationPlayStateValue::AnimationPlayStatePausedValue);
+        setAnimationPlayStateValue(AnimationPlayStateValue::Paused);
     } else {
         return false;
     }
@@ -16655,17 +16646,13 @@ bool CSSStyleValuePair::updateValueUnitAnimationFillMode(
     const CSSTokenValue& value)
 {
     if (value.equals("none") == true) {
-        setAnimationFillModeValue(
-            AnimationFillModeValue::AnimationFillModeNoneValue);
+        setAnimationFillModeValue(AnimationFillModeValue::None);
     } else if (value.equals("forwards") == true) {
-        setAnimationFillModeValue(
-            AnimationFillModeValue::AnimationFillModeForwardsValue);
+        setAnimationFillModeValue(AnimationFillModeValue::Forwards);
     } else if (value.equals("backwards") == true) {
-        setAnimationFillModeValue(
-            AnimationFillModeValue::AnimationFillModeBackwardsValue);
+        setAnimationFillModeValue(AnimationFillModeValue::Backwards);
     } else if (value.equals("both") == true) {
-        setAnimationFillModeValue(
-            AnimationFillModeValue::AnimationFillModeBothValue);
+        setAnimationFillModeValue(AnimationFillModeValue::Both);
     } else {
         return false;
     }
@@ -16760,17 +16747,13 @@ bool CSSStyleValuePair::updateValueUnitAnimationDirection(
     const CSSTokenValue& value)
 {
     if (value.equals("normal") == true) {
-        setAnimationDirectionValue(
-            AnimationDirectionValue::AnimationDirectionNormalValue);
+        setAnimationDirectionValue(AnimationDirectionValue::Normal);
     } else if (value.equals("reverse") == true) {
-        setAnimationDirectionValue(
-            AnimationDirectionValue::AnimationDirectionReverseValue);
+        setAnimationDirectionValue(AnimationDirectionValue::Reverse);
     } else if (value.equals("alternate") == true) {
-        setAnimationDirectionValue(
-            AnimationDirectionValue::AnimationDirectionAlternateValue);
+        setAnimationDirectionValue(AnimationDirectionValue::Alternate);
     } else if (value.equals("alternate-reverse") == true) {
-        setAnimationDirectionValue(
-            AnimationDirectionValue::AnimationDirectionAlternateReverseValue);
+        setAnimationDirectionValue(AnimationDirectionValue::AlternateReverse);
     } else {
         return false;
     }

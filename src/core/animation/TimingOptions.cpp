@@ -36,11 +36,11 @@ static size_t gAnimationCount = 0;
 TimingOutput::TimingOutput()
     : m_startDelay(0)
     , m_endDelay(0)
-    , m_fill(AnimationFillModeValue::AnimationFillModeNoneValue)
+    , m_fill(AnimationFillModeValue::None)
     , m_iterationStart(0.0)
     , m_iterationCount(1.0)
     , m_iterationDuration(0.0)
-    , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
+    , m_direction(AnimationDirectionValue::Normal)
     , m_easing(CubicBezier::createCubicBezier(CubicBezierEaseType::Ease))
 {
 }
@@ -166,17 +166,13 @@ void TimingOptions::setDirection(TimingOutput& output,
                                  KeyframeAnimationOptions& options)
 {
     if (options.direction()->equals("reverse")) {
-        output.m_direction =
-            AnimationDirectionValue::AnimationDirectionReverseValue;
+        output.m_direction = AnimationDirectionValue::Reverse;
     } else if (options.direction()->equals("alternate")) {
-        output.m_direction =
-            AnimationDirectionValue::AnimationDirectionAlternateValue;
+        output.m_direction = AnimationDirectionValue::Alternate;
     } else if (options.direction()->equals("alternate-reverse")) {
-        output.m_direction =
-            AnimationDirectionValue::AnimationDirectionAlternateReverseValue;
+        output.m_direction = AnimationDirectionValue::AlternateReverse;
     } else {
-        output.m_direction =
-            AnimationDirectionValue::AnimationDirectionNormalValue;
+        output.m_direction = AnimationDirectionValue::Normal;
     }
 }
 
@@ -184,15 +180,15 @@ void TimingOptions::setFillMode(TimingOutput& output,
                                 KeyframeAnimationOptions& options)
 {
     if (options.fill()->equals("none")) {
-        output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
+        output.m_fill = AnimationFillModeValue::None;
     } else if (options.fill()->equals("forwards")) {
-        output.m_fill = AnimationFillModeValue::AnimationFillModeForwardsValue;
+        output.m_fill = AnimationFillModeValue::Forwards;
     } else if (options.fill()->equals("backwards")) {
-        output.m_fill = AnimationFillModeValue::AnimationFillModeBackwardsValue;
+        output.m_fill = AnimationFillModeValue::Backwards;
     } else if (options.fill()->equals("both")) {
-        output.m_fill = AnimationFillModeValue::AnimationFillModeBothValue;
+        output.m_fill = AnimationFillModeValue::Both;
     } else {
-        output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
+        output.m_fill = AnimationFillModeValue::None;
     }
 }
 

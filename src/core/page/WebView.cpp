@@ -1842,8 +1842,7 @@ RenderResult WebView::rendering(bool force)
                         // because style of pseudo element is computed by
                         // its parent element
                         if (animation.first->m_playState ==
-                            AnimationPlayStateValue::
-                                AnimationPlayStateRunningValue) {
+                            AnimationPlayStateValue::Running) {
                             task->targetElement()
                                 ->asPseudoElement()
                                 ->originElement()
@@ -1851,30 +1850,25 @@ RenderResult WebView::rendering(bool force)
                             needsContinuousRendering = true;
 
                             if (task->playState() ==
-                                AnimationPlayStateValue::
-                                    AnimationPlayStatePausedValue) {
+                                AnimationPlayStateValue::Paused) {
                                 task->setStartTime(tick - task->gapTime());
                                 task->setGapTime(0);
                                 task->setIsRunning(true);
                                 task->setPlayState(
-                                    AnimationPlayStateValue::
-                                        AnimationPlayStateRunningValue);
+                                    AnimationPlayStateValue::Running);
                             }
                         } else {
                             if (task->playState() ==
-                                AnimationPlayStateValue::
-                                    AnimationPlayStateRunningValue) {
+                                AnimationPlayStateValue::Running) {
                                 task->setGapTime(tick - task->startTime());
                                 task->setIsRunning(false);
                                 task->setPlayState(
-                                    AnimationPlayStateValue::
-                                        AnimationPlayStatePausedValue);
+                                    AnimationPlayStateValue::Paused);
                             }
                         }
                     } else {
                         if (animation.first->m_playState ==
-                            AnimationPlayStateValue::
-                                AnimationPlayStateRunningValue) {
+                            AnimationPlayStateValue::Running) {
                             if (!task->isInForwardsFillMode()) {
                                 task->targetElement()
                                     ->setNeedsStyleRecalcForAnimation();
@@ -1882,24 +1876,20 @@ RenderResult WebView::rendering(bool force)
                             }
 
                             if (task->playState() ==
-                                AnimationPlayStateValue::
-                                    AnimationPlayStatePausedValue) {
+                                AnimationPlayStateValue::Paused) {
                                 task->setStartTime(tick - task->gapTime());
                                 task->setGapTime(0);
                                 task->setIsRunning(true);
                                 task->setPlayState(
-                                    AnimationPlayStateValue::
-                                        AnimationPlayStateRunningValue);
+                                    AnimationPlayStateValue::Running);
                             }
                         } else {
                             if (task->playState() ==
-                                AnimationPlayStateValue::
-                                    AnimationPlayStateRunningValue) {
+                                AnimationPlayStateValue::Running) {
                                 task->setGapTime(tick - task->startTime());
                                 task->setIsRunning(false);
                                 task->setPlayState(
-                                    AnimationPlayStateValue::
-                                        AnimationPlayStatePausedValue);
+                                    AnimationPlayStateValue::Paused);
                             }
                         }
                     }

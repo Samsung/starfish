@@ -2085,7 +2085,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (size == 0) {
             p.multiValue()->emplace_back(
                 CSSStyleValuePair::AnimationDirectionValueKind,
-                AnimationDirectionValue::AnimationDirectionNormalValue);
+                AnimationDirectionValue::Normal);
         } else {
             for (size_t i = 0; i < size; i++) {
                 p.multiValue()->emplace_back(
@@ -2104,7 +2104,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (size == 0) {
             p.multiValue()->emplace_back(
                 CSSStyleValuePair::AnimationPlayStateValueKind,
-                AnimationPlayStateValue::AnimationPlayStateRunningValue);
+                AnimationPlayStateValue::Running);
         } else {
             for (size_t i = 0; i < size; i++) {
                 p.multiValue()->emplace_back(
@@ -2123,7 +2123,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (size == 0) {
             p.multiValue()->emplace_back(
                 CSSStyleValuePair::AnimationFillModeValueKind,
-                AnimationFillModeValue::AnimationFillModeNoneValue);
+                AnimationFillModeValue::None);
         } else {
             for (size_t i = 0; i < size; i++) {
                 p.multiValue()->emplace_back(

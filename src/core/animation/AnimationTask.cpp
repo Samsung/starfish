@@ -175,8 +175,8 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_durationMs(durationInms)
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
-    , m_playState(AnimationPlayStateValue::AnimationPlayStateRunningValue)
-    , m_fillMode(AnimationFillModeValue::AnimationFillModeNoneValue)
+    , m_playState(AnimationPlayStateValue::Running)
+    , m_fillMode(AnimationFillModeValue::None)
     , m_gapTimeMs(0)
     , m_iterationCount(0)
     , m_iterationStart(0)
@@ -289,8 +289,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         }
 
         if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
-            m_fillMode ==
-                AnimationFillModeValue::AnimationFillModeForwardsValue) {
+            m_fillMode == AnimationFillModeValue::Forwards) {
             return;
         }
 

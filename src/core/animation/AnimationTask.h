@@ -798,9 +798,7 @@ public:
 
         task->attachToElement(style);
         task->setIterationStart(iterationCount);
-        task->setIsRunning(
-            playState ==
-            AnimationPlayStateValue::AnimationPlayStateRunningValue);
+        task->setIsRunning(playState == AnimationPlayStateValue::Running);
         task->setIsCSSAnimationTask(isCSSAnimationTask);
         ActiveElementAnimation* key =
             new ActiveElementAnimation(name, task->targetElement(), index,
