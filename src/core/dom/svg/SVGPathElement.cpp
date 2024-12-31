@@ -168,20 +168,208 @@ void paintPathArcCommand(Path* path, double x1, double y1, double rx, double ry,
     }
 }
 
+// PathToken has two mode
+// first one is plainMode, and it holds start and end position of input string
+// second one is bufferMode,
+// it holds std::string comes from combination of input string
+class PathToken {
+public:
+    PathToken(size_t s = 0, size_t e = 0)
+        : m_start(s)
+        , m_end(e)
+    {
+    }
+
+    PathToken(const PathToken& t)
+    {
+        m_start = t.m_start;
+        m_end = t.m_end;
+        m_buffer = t.m_buffer;
+    }
+
+    const PathToken& operator=(const PathToken& t)
+    {
+        m_start = t.m_start;
+        m_end = t.m_end;
+        m_buffer = t.m_buffer;
+        return *this;
+    }
+
+    void setRange(size_t s, size_t e)
+    {
+        m_start = s;
+        m_end = e;
+    }
+
+    void shrink()
+    {
+        STARFISH_ASSERT(!isBufferMode());
+        m_end--;
+    }
+
+    void expand()
+    {
+        STARFISH_ASSERT(!isBufferMode());
+        m_end++;
+    }
+
+    void setString(std::string&& str)
+    {
+        m_end = SIZE_MAX;
+        m_start = SIZE_MAX - str.length();
+        m_buffer = std::move(str);
+    }
+
+    PathToken substr(size_t s, size_t n) const
+    {
+        PathToken r;
+        if (UNLIKELY(isBufferMode())) {
+            r.setString(m_buffer.substr(s, n));
+        } else {
+            r.setRange(s + m_start, m_start + s + n);
+        }
+        return r;
+    }
+
+    size_t length() const
+    {
+        return m_end - m_start;
+    }
+
+    size_t size() const
+    {
+        return length();
+    }
+
+    bool equals(const StringBufferAccessData& bad, char c) const
+    {
+        if (UNLIKELY(isBufferMode())) {
+            return length() == 1 && m_buffer[0] == c;
+        }
+        return length() == 1 && static_cast<char>(bad.charAt(m_start)) == c;
+    }
+
+    char charAt(const StringBufferAccessData& bad, size_t index) const
+    {
+        if (UNLIKELY(isBufferMode())) {
+            return m_buffer[index];
+        }
+        STARFISH_ASSERT(m_start + index < m_end);
+        return bad.charAt(m_start + index);
+    }
+
+    std::string toString(const StringBufferAccessData& bad) const
+    {
+        if (UNLIKELY(isBufferMode())) {
+            return m_buffer;
+        }
+        std::string ret;
+        for (size_t i = m_start; i < m_end; i++) {
+            ret += bad.charAt(i);
+        }
+        return ret;
+    }
+
+    bool parseNumber(const StringBufferAccessData& bad, float* n) const
+    {
+        size_t len = length();
+        if (UNLIKELY(isBufferMode())) {
+            return CSSPropertyParser::parseNumber(m_buffer.data(), len, 0, n);
+        }
+        char* buffer = ALLOCA(len + 1, char);
+        size_t bufferIndex = 0;
+        for (size_t i = m_start; i < m_end; i++) {
+            buffer[bufferIndex++] = bad.charAt(i);
+        }
+        buffer[bufferIndex] = 0;
+        return CSSPropertyParser::parseNumber(buffer, len, 0, n);
+    }
+
+private:
+    bool isBufferMode() const
+    {
+        return m_end == SIZE_MAX;
+    }
+
+    size_t m_start;
+    size_t m_end;
+    std::string m_buffer;
+};
+
+typedef std::vector<PathToken> PathTokenVector;
+
+// this array comes from these separator
+// ",mMzZlLhHvVcCsSqQtTaA-e"
+static constexpr bool s_sepArray[] = {
+    false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false,
+    true,  true,  false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, true,
+    false, true,  false, false, false, false, true,  false, false, false, true,
+    true,  false, false, false, true,  false, true,  true,  false, true,  false,
+    false, false, true,  false, false, false, false, false, false, true,  false,
+    true,  false, true,  false, false, true,  false, false, false, true,  true,
+    false, false, false, true,  false, true,  true,  false, true,  false, false,
+    false, true,  false, false, false, false, false
+};
+
+static PathTokenVector tokenizePathValue(const StringBufferAccessData& bad)
+{
+    PathTokenVector tokens;
+    tokens.reserve(16);
+    PathToken str;
+    char prevChar, currentChar;
+    for (size_t i = 0; i < bad.length; i++) {
+        auto ch = bad.charAt(i);
+        if (ch > static_cast<char32_t>(std::numeric_limits<char>::max())) {
+            return PathTokenVector();
+        }
+        currentChar = static_cast<char>(ch);
+
+        if (str.length() == 0) {
+            str.setRange(i, i + 1);
+        } else {
+            str.expand();
+        }
+        bool hasSepChar = s_sepArray[static_cast<size_t>(currentChar)];
+        // below line cover this case "1.37916809e-13"
+        if (currentChar == '-' && i >= 1 && prevChar == 'e') {
+            hasSepChar = false;
+        }
+
+        if ((String::isSpaceOrNewline(currentChar) || hasSepChar)) {
+            str.shrink();
+            bool onlyWhiteSpace = true;
+            for (size_t i = 0; i < str.length(); i++) {
+                if (!String::isASCIISpace(str.charAt(bad, i))) {
+                    onlyWhiteSpace = false;
+                }
+            }
+
+            if (!onlyWhiteSpace) {
+                tokens.push_back(str);
+                str.setRange(0, 0);
+            }
+            if (hasSepChar) {
+                tokens.push_back(PathToken(i, i + 1));
+            }
+        } else if (i == bad.length - 1 && str.length()) {
+            tokens.push_back(str);
+        }
+        prevChar = currentChar;
+    }
+    return tokens;
+}
+
 Path* SVGPathElement::parsePath(String* d)
 {
     if (d->length()) {
         Path* path = Path::create();
-        auto utf8Str = d->toUTF8NonGCString();
-        CSSTokenVector tokensInput;
-        const char* sep = ",mMzZlLhHvVcCsSqQtTaA-e";
-        CSSStyleDeclaration::tokenizeCSSValue(tokensInput, utf8Str.data(),
-                                              utf8Str.length(), sep, 23, true);
-        std::vector<CSSTokenValue> tokens;
-        tokens.reserve(tokensInput.size());
-        for (size_t i = 0; i < tokensInput.size(); i++) {
-            tokens.push_back(std::move(tokensInput[i]));
-        }
+        auto bad = d->bufferAccessData();
+        auto tokens = tokenizePathValue(bad);
+
         enum Mode {
             WaitCommand,
             WaitCoordsX,
@@ -207,22 +395,22 @@ Path* SVGPathElement::parsePath(String* d)
     paintMode = p;             \
     mode = Mode::WaitCoordsX;
 
-#define READ_NUMBER(n)                                                       \
-    if (!CSSPropertyParser::parseNumber(token.data(), token.length(), &n)) { \
-        break;                                                               \
-    }                                                                        \
-    if (gotMinus) {                                                          \
-        n = -n;                                                              \
-    }                                                                        \
+#define READ_NUMBER(n)                 \
+    if (!token.parseNumber(bad, &n)) { \
+        break;                         \
+    }                                  \
+    if (gotMinus) {                    \
+        n = -n;                        \
+    }                                  \
     gotMinus = false;
 
 #define REWIND_IF_NEEDED()                                    \
     bool isLookAheadNumber = false;                           \
     for (size_t j = i + 1; j < tokens.size(); j++) {          \
-        if (tokens[j].equals(",")) {                          \
+        if (tokens[j].equals(bad, ',')) {                     \
             continue;                                         \
         }                                                     \
-        char c = tokens[j][0];                                \
+        char c = tokens[j].charAt(bad, 0);                    \
         if (c == '.' || c == '-' || (c >= '0' && c <= '9')) { \
             isLookAheadNumber = true;                         \
         }                                                     \
@@ -236,10 +424,11 @@ Path* SVGPathElement::parsePath(String* d)
 
         for (size_t i = 0; i < tokens.size(); i++) {
             auto& token = tokens[i];
-            if (token.equals(",")) {
+
+            if (token.equals(bad, ',')) {
                 continue;
             }
-            if (token.equals("-") && (mode != Mode::WaitCommand)) {
+            if (token.equals(bad, '-') && (mode != Mode::WaitCommand)) {
                 if (gotMinus) {
                     // error
                     break;
@@ -249,19 +438,17 @@ Path* SVGPathElement::parsePath(String* d)
             }
 
             if (mode != Mode::WaitCommand) {
-                auto token = tokens[i];
                 bool hasMultipleDot = false;
                 bool seenDot = false;
                 for (size_t k = 0; k < token.size(); k++) {
-                    if (token[k] == '.') {
+                    if (token.charAt(bad, k) == '.') {
                         if (!seenDot) {
                             seenDot = true;
                         } else {
                             hasMultipleDot = true;
                             tokens.erase(tokens.begin() + i);
-                            CSSTokenValue s1 = token.substr(0, k);
-                            CSSTokenValue s2 =
-                                token.substr(k, token.size() - k);
+                            PathToken s1 = token.substr(0, k);
+                            PathToken s2 = token.substr(k, token.size() - k);
                             tokens.insert(tokens.begin() + i, s1);
                             tokens.insert(tokens.begin() + i + 1, s2);
                             i--;
@@ -274,14 +461,15 @@ Path* SVGPathElement::parsePath(String* d)
                 }
             }
             if (mode != Mode::WaitCommand) {
-                if (i + 1 < tokens.size() && tokens[i + 1].size() == 1 &&
-                    tokens[i + 1][0] == 'e') {
+                if (i + 1 < tokens.size() && tokens[i + 1].equals(bad, 'e')) {
                     if (i + 2 < tokens.size()) {
-                        token = token + tokens[i + 1] + tokens[i + 2];
-                        if (tokens[i + 2].size() == 1 &&
-                            tokens[i + 2][0] == '-') {
+                        token.setString(token.toString(bad) +
+                                        tokens[i + 1].toString(bad) +
+                                        tokens[i + 2].toString(bad));
+                        if (tokens[i + 2].equals(bad, '-')) {
                             if (i + 3 < tokens.size()) {
-                                token += tokens[i + 3];
+                                token.setString(token.toString(bad) +
+                                                tokens[i + 3].toString(bad));
                                 i += 3;
                             } else {
                                 // error
@@ -298,49 +486,50 @@ Path* SVGPathElement::parsePath(String* d)
             }
 
             if (mode == Mode::WaitCommand) {
-                if (token.equals("m")) {
+                if (token.equals(bad, 'm')) {
                     TO_WAIT_COORDS_MODE('m');
-                } else if (token.equals("M")) {
+                } else if (token.equals(bad, 'M')) {
                     TO_WAIT_COORDS_MODE('M');
-                } else if (token.equals("z") || token.equals("Z")) {
+                } else if (token.equals(bad, 'z') || token.equals(bad, 'Z')) {
                     path->closePath();
                     lastX = lastMoveX;
                     lastY = lastMoveY;
                     continue;
-                } else if (token.equals("l")) {
+                } else if (token.equals(bad, 'l')) {
                     TO_WAIT_COORDS_MODE('l');
-                } else if (token.equals("L")) {
+                } else if (token.equals(bad, 'L')) {
                     TO_WAIT_COORDS_MODE('L');
-                } else if (token.equals("c")) {
+                } else if (token.equals(bad, 'c')) {
                     TO_WAIT_COORDS_MODE('c');
-                } else if (token.equals("C")) {
+                } else if (token.equals(bad, 'C')) {
                     TO_WAIT_COORDS_MODE('C');
-                } else if (token.equals("s")) {
+                } else if (token.equals(bad, 's')) {
                     TO_WAIT_COORDS_MODE('s');
-                } else if (token.equals("S")) {
+                } else if (token.equals(bad, 'S')) {
                     TO_WAIT_COORDS_MODE('S');
-                } else if (token.equals("q")) {
+                } else if (token.equals(bad, 'q')) {
                     TO_WAIT_COORDS_MODE('q');
-                } else if (token.equals("Q")) {
+                } else if (token.equals(bad, 'Q')) {
                     TO_WAIT_COORDS_MODE('Q');
-                } else if (token.equals("t")) {
+                } else if (token.equals(bad, 't')) {
                     TO_WAIT_COORDS_MODE('t');
-                } else if (token.equals("T")) {
+                } else if (token.equals(bad, 'T')) {
                     TO_WAIT_COORDS_MODE('T');
-                } else if (token.equals("a")) {
+                } else if (token.equals(bad, 'a')) {
                     TO_WAIT_COORDS_MODE('a');
-                } else if (token.equals("A")) {
+                } else if (token.equals(bad, 'A')) {
                     TO_WAIT_COORDS_MODE('A');
-                } else if (token.equals("h")) {
+                } else if (token.equals(bad, 'h')) {
                     TO_WAIT_COORDS_MODE('h');
-                } else if (token.equals("H")) {
+                } else if (token.equals(bad, 'H')) {
                     TO_WAIT_COORDS_MODE('H');
-                } else if (token.equals("v")) {
+                } else if (token.equals(bad, 'v')) {
                     TO_WAIT_COORDS_MODE('v');
-                } else if (token.equals("V")) {
+                } else if (token.equals(bad, 'V')) {
                     TO_WAIT_COORDS_MODE('V');
                 } else {
-                    STARFISH_UNSUPPORTED("SVGPath token: %s", token.data());
+                    STARFISH_UNSUPPORTED("SVGPath token: %s",
+                                         token.toString(bad).data());
                     // error
                     break;
                 }
@@ -570,13 +759,7 @@ void SVGPathElement::styleForPresentationAttribute(
 
     String* d = getAttributeOrVarReferencedValue(
         starfish()->staticStrings()->m_d, cssCustomValues);
-    CSSStyleDeclaration decl(this);
-    auto buf = d->toUTF8NonGCString();
-    decl.setPropertyInternal(CSSStyleValuePair::KeyKind::D, buf.data(),
-                             buf.length(), false);
-    if (decl.hasCSSValuePair(CSSStyleValuePair::KeyKind::D)) {
-        cssValues.push_back(decl.cssValues()[0]);
-    } else if (d->length()) {
+    if (d->length()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
         pair.setPathFunctionValue(d);

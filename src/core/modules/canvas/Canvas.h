@@ -400,6 +400,7 @@ public:
     virtual CanvasBlendMode blendMode() = 0;
 
     virtual void beginOpacityLayer(float c) = 0;
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
     virtual void resetTextDecorationData() = 0;
