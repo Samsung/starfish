@@ -334,6 +334,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         }
     } else {
         canvas->postMatrix(tranlateScaleValue.second);
+
+        m_svgPaintingMatrix.preConcat(tranlateScaleValue.second);
+        m_svgPaintingMatrix.preScale(m_svgScale, m_svgScale);
     }
 
     PaintingContext ctx(canvas);

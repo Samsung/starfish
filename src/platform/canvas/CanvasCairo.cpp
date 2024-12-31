@@ -660,6 +660,16 @@ public:
         cairo_push_group(m_canvas);
     }
 
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
+    {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
+        save();
+        clip(rt);
+        lastState()->m_layerOpacity =
+            std::max<float>(0, std::min<float>(1.0, c));
+        cairo_push_group(m_canvas);
+    }
+
     virtual void endOpacityLayer() override
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
@@ -1685,9 +1695,13 @@ public:
     virtual void setMatrix(const SkMatrix& matrix) override
     {
         cairo_matrix_t cm;
-        cairo_matrix_init(&cm, matrix.getScaleX(), matrix.getSkewY(),
-                          matrix.getSkewX(), matrix.getScaleY(),
-                          matrix.getTranslateX(), matrix.getTranslateY());
+        cm.xx = matrix.get(0);
+        cm.yx = matrix.get(1);
+        cm.x0 = matrix.get(2);
+        cm.xy = matrix.get(3);
+        cm.yy = matrix.get(4);
+        cm.y0 = matrix.get(5);
+
         cairo_set_matrix(m_canvas, &cm);
         checkError();
     }

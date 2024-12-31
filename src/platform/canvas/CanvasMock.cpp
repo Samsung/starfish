@@ -165,6 +165,10 @@ public:
     {
     }
 
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
+    {
+    }
+
     virtual void endOpacityLayer()
     {
     }

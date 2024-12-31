@@ -11945,7 +11945,8 @@ bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token,
 {
     float f;
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    if (CSSPropertyParser::parseNumber(token.data(), option, &f)) {
+    if (CSSPropertyParser::parseNumber(token.data(), token.length(), option,
+                                       &f)) {
         m_value.m_floatValue = f;
         return true;
     }
@@ -12331,7 +12332,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageOutset(
     float result = 0.f;
     for (unsigned int i = 0; i < size; i++) {
         CSSTokenValue value = tokens[i];
-        if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+        if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,
+                                           &result)) {
             values->push_back(CSSStyleValuePair(
                 CSSStyleValuePair::ValueKind::Number, (float)result));
         } else {
@@ -12369,7 +12371,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
     float result = 0.f;
     for (unsigned int i = 0; i < size; i++) {
         CSSTokenValue value = tokens[i];
-        if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+        if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,
+                                           &result)) {
             values->push_back(CSSStyleValuePair(
                 CSSStyleValuePair::ValueKind::Number, (float)result));
         } else {
@@ -12675,7 +12678,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageSlice(
         CSSTokenValue value = tokens[i];
         if (value.equals("fill")) {
             return false;
-        } else if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+        } else if (CSSPropertyParser::parseNumber(value.data(), value.length(),
+                                                  0, &result)) {
             values->push_back(CSSStyleValuePair(
                 CSSStyleValuePair::ValueKind::Number, (float)result));
         } else {
@@ -12769,7 +12773,8 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
     if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
-    } else if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
+    } else if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,
+                                              &result)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
         m_value.m_floatValue = result;
         return true;
@@ -13631,7 +13636,8 @@ bool CSSStyleValuePair::updateValueGridArea(Document* document,
             list.push_back(parts[0]);
             result = isValidForGridStartEnd(list);
             float x;
-            if (CSSPropertyParser::parseNumber(parts[0].c_str(), 0, &x)) {
+            if (CSSPropertyParser::parseNumber(parts[0].c_str(),
+                                               parts[0].length(), 0, &x)) {
                 if (result == true) {
                     rs.setValueKind(
                         CSSStyleValuePair::ValueKind::StringValueKind);
@@ -16483,20 +16489,28 @@ static bool parseCubicBezierFunction(const CSSTokenValue& value,
         return false;
     }
     float x1, y1, x2, y2;
-    if (!CSSPropertyParser::parseNumber(
-            tokens[0].trim().data(), CSSPropertyParser::AllowNegative, &x1)) {
+    auto trimmed = tokens[0].trim();
+    if (!CSSPropertyParser::parseNumber(trimmed.data(), trimmed.length(),
+                                        CSSPropertyParser::AllowNegative,
+                                        &x1)) {
         return false;
     }
-    if (!CSSPropertyParser::parseNumber(
-            tokens[1].trim().data(), CSSPropertyParser::AllowNegative, &y1)) {
+    trimmed = tokens[1].trim();
+    if (!CSSPropertyParser::parseNumber(trimmed.data(), trimmed.length(),
+                                        CSSPropertyParser::AllowNegative,
+                                        &y1)) {
         return false;
     }
-    if (!CSSPropertyParser::parseNumber(
-            tokens[2].trim().data(), CSSPropertyParser::AllowNegative, &x2)) {
+    trimmed = tokens[2].trim();
+    if (!CSSPropertyParser::parseNumber(trimmed.data(), trimmed.length(),
+                                        CSSPropertyParser::AllowNegative,
+                                        &x2)) {
         return false;
     }
-    if (!CSSPropertyParser::parseNumber(
-            tokens[3].trim().data(), CSSPropertyParser::AllowNegative, &y2)) {
+    trimmed = tokens[3].trim();
+    if (!CSSPropertyParser::parseNumber(trimmed.data(), trimmed.length(),
+                                        CSSPropertyParser::AllowNegative,
+                                        &y2)) {
         return false;
     }
     if (x1 < 0 || x1 > 1 || x2 < 0 || x2 > 1) {
@@ -16722,7 +16736,8 @@ bool CSSStyleValuePair::updateValueUnitAnimationIterationCount(
         m_value.m_floatValue = std::numeric_limits<float>::infinity();
     } else {
         float f;
-        if (CSSPropertyParser::parseNumber(value.data(), 0, &f) == true) {
+        if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,
+                                           &f) == true) {
             m_valueKind = CSSStyleValuePair::ValueKind::Number;
             m_value.m_floatValue = f;
         } else {

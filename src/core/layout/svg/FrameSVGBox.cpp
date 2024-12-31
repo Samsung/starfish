@@ -280,7 +280,13 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
 
     float opacity = style()->opacity();
     if (opacity != 1) {
-        ctx.m_canvas->beginOpacityLayer(opacity);
+        auto svgFrame = node()->asSVGElement()->viewportElement()->frame()->asFrameSVGSVGBox();
+        LayoutRect absRect = absoluteRect(svgFrame);
+        Unit::Rect rt(absRect.x(), absRect.y(), absRect.width(), absRect.height());
+        auto ctm = ctx.m_canvas->currentTransformMatrix();
+        ctx.m_canvas->setMatrix(svgFrame->svgPaintingMatrix());
+        ctx.m_canvas->beginOpacityLayer(opacity, rt);
+        ctx.m_canvas->setMatrix(ctm);
     }
 
     if (m_hasClipPath && node()->isSVGElement() &&
@@ -495,7 +501,7 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
 
 #define READ_NUMBER(n)                                             \
     if (!CSSPropertyParser::parseNumber(                           \
-            token.data(), CSSPropertyParser::AllowNegative, &n)) { \
+            token.data(), token.length(), CSSPropertyParser::AllowNegative, &n)) { \
         break;                                                     \
     }                                                              \
     if (gotMinus) {                                                \

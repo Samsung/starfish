@@ -255,7 +255,7 @@ void SVGLength::setValueAsString(String* valueAsString,
         auto s = valueAsString->toUTF8NonGCString();
         CSSStyleValuePair pair;
         float v;
-        if (CSSPropertyParser::parseNumber(s.data(), 0, &v)) {
+        if (CSSPropertyParser::parseNumber(s.data(), s.length(), 0, &v)) {
             setUnitType(SVG_LENGTHTYPE_NUMBER);
             setValueInSpecifiedUnits(v);
         } else if (CSSPropertyParser::parseLength(

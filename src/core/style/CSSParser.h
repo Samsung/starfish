@@ -738,10 +738,11 @@ public:
         return !(length && token[length - 1] == ',') && layers.size();
     }
 
-    static bool parseNumber(const char* token, uint32_t option, float* val)
+    static bool parseNumber(const char* token, size_t tokenLength,
+                            uint32_t option, float* val)
     {
         bool allowNegative = option & AllowNegative;
-        CSSPropertyParser parser((char*)token);
+        CSSPropertyParser parser((char*)token, tokenLength);
         if (parser.consumeNumber()) {
             float t = parser.parsedNumber();
             if (!allowNegative && t < 0) {

@@ -3635,8 +3635,7 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
-    if (strlen("inherit") == strlen(value) &&
-        (memcmp(value, "inherit", strlen("inherit"))) == 0) {
+    if (7 == len && (memcmp(value, "inherit", 7) == 0)) {
         CSSStyleValuePair pair;
         pair.setFlagImportant(isImportant);
         pair.setKeyKind(CSSStyleValuePair::KeyKind::D);
