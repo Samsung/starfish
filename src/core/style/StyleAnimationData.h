@@ -149,9 +149,9 @@ public:
         , m_delay(0)
         , m_timingFunction(AnimationKeyframe::defaultTimingFunction())
         , m_iterationCount(1.0f)
-        , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
-        , m_playState(AnimationPlayStateValue::AnimationPlayStateRunningValue)
-        , m_fillMode(AnimationFillModeValue::AnimationFillModeNoneValue)
+        , m_direction(AnimationDirectionValue::Normal)
+        , m_playState(AnimationPlayStateValue::Running)
+        , m_fillMode(AnimationFillModeValue::None)
     {
     }
 
@@ -494,7 +494,7 @@ public:
     {
         STARFISH_ASSERT(m_directionSize <= m_animationKeyframesList.size());
         if (m_directionSize == 0) {
-            return AnimationDirectionValue::AnimationDirectionNormalValue;
+            return AnimationDirectionValue::Normal;
         }
         uint16_t p = index % m_directionSize;
         return m_animationKeyframesList[p].direction();
@@ -521,7 +521,7 @@ public:
     {
         STARFISH_ASSERT(m_playStateSize <= m_animationKeyframesList.size());
         if (m_playStateSize == 0) {
-            return AnimationPlayStateValue::AnimationPlayStateRunningValue;
+            return AnimationPlayStateValue::Running;
         }
         uint16_t p = index % m_playStateSize;
         return m_animationKeyframesList[p].playState();
@@ -548,7 +548,7 @@ public:
     {
         STARFISH_ASSERT(m_fillModeSize <= m_animationKeyframesList.size());
         if (m_fillModeSize == 0) {
-            return AnimationFillModeValue::AnimationFillModeNoneValue;
+            return AnimationFillModeValue::None;
         }
         uint16_t p = index % m_fillModeSize;
         return m_animationKeyframesList[p].fillMode();

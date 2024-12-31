@@ -386,13 +386,10 @@ bool BrowsingContext::layoutIfNeeded()
                     isOddIteration = std::fmod(l[i]->iterationStart(), 2) >= 1;
                 }
                 bool isForwardDirection =
-                    (direction ==
-                     AnimationDirectionValue::AnimationDirectionNormalValue) ||
-                    (direction == AnimationDirectionValue::
-                                      AnimationDirectionAlternateValue &&
+                    (direction == AnimationDirectionValue::Normal) ||
+                    (direction == AnimationDirectionValue::Alternate &&
                      isOddIteration) ||
-                    (direction == AnimationDirectionValue::
-                                      AnimationDirectionAlternateReverseValue &&
+                    (direction == AnimationDirectionValue::AlternateReverse &&
                      !isOddIteration);
 
                 l[i]->setIsForward(isForwardDirection);

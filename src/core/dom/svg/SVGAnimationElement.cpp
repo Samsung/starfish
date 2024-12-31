@@ -44,15 +44,15 @@ AnimationFillModeValue svgAnimationFillToAnimationFillModeValue(
 {
     switch (fill) {
     case SVGAnimationFill::Freeze:
-        return AnimationFillModeValue::AnimationFillModeForwardsValue;
+        return AnimationFillModeValue::Forwards;
     case SVGAnimationFill::Remove:
-        return AnimationFillModeValue::AnimationFillModeNoneValue;
+        return AnimationFillModeValue::None;
     default:
         STARFISH_UNIMPLEMENTED("Unimplemented fill value");
         break;
     }
 
-    return AnimationFillModeValue::AnimationFillModeNoneValue;
+    return AnimationFillModeValue::None;
 }
 
 CubicBezierEaseType svgAnimationCalcModeToCubicBezierEaseType(

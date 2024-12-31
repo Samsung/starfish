@@ -464,22 +464,22 @@ enum TimingFunctionValue ENSURE_ENUM_UNSIGNED {
 };
 
 enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
-    AnimationDirectionNormalValue,
-    AnimationDirectionReverseValue,
-    AnimationDirectionAlternateValue,
-    AnimationDirectionAlternateReverseValue,
+    Normal,
+    Reverse,
+    Alternate,
+    AlternateReverse,
 };
 
 enum class AnimationPlayStateValue ENSURE_ENUM_UNSIGNED {
-    AnimationPlayStateRunningValue,
-    AnimationPlayStatePausedValue,
+    Running,
+    Paused,
 };
 
 enum class AnimationFillModeValue ENSURE_ENUM_UNSIGNED {
-    AnimationFillModeNoneValue,
-    AnimationFillModeForwardsValue,
-    AnimationFillModeBackwardsValue,
-    AnimationFillModeBothValue,
+    None,
+    Forwards,
+    Backwards,
+    Both,
 };
 
 enum BoxSizingValue ENSURE_ENUM_UNSIGNED {

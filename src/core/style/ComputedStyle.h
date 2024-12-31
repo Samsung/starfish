@@ -2877,7 +2877,7 @@ public:
         if (a != nullptr) {
             return a->direction(layer);
         }
-        return AnimationDirectionValue::AnimationDirectionNormalValue;
+        return AnimationDirectionValue::Normal;
     }
 
     AnimationPlayStateValue animationPlayState(size_t layer = 0)
@@ -2886,7 +2886,7 @@ public:
         if (a != nullptr) {
             return a->playState(layer);
         }
-        return AnimationPlayStateValue::AnimationPlayStateRunningValue;
+        return AnimationPlayStateValue::Running;
     }
 
     AnimationFillModeValue animationFillMode(size_t layer = 0)
@@ -2895,7 +2895,7 @@ public:
         if (a != nullptr) {
             return a->fillMode(layer);
         }
-        return AnimationFillModeValue::AnimationFillModeNoneValue;
+        return AnimationFillModeValue::None;
     }
 
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
