@@ -22,18 +22,15 @@
 #include "AnimationApplier.h"
 
 #include "core/animation/AnimationTask.h"
+#include "core/animation/util/AnimationUtil.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "core/animation/AnimationTask.h"
-#include "core/layout/Frame.h"
-#include "core/layout/FrameBox.h"
-#include "core/style/CalcData.h"
-#include "core/animation/util/AnimationUtil.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/svg/SVGAnimateElement.h"
 
 namespace Starfish {
 
@@ -139,6 +136,43 @@ bool AnimationApplier::apply()
         }
     }
     return hasAppliedAnimation;
+}
+
+bool AnimationApplier::applySVGAnimateElement(
+    SVGAnimateElement* animationElement)
+{
+    AnimationKeyframes* currentKeyFrames =
+        animationElement->animationKeyframes();
+    AnimationKeyframe* fromAnimationKeyframe =
+        currentKeyFrames->animationKeyframeList()[0];
+
+    for (size_t i = 0; i < fromAnimationKeyframe->propertySize(); i++) {
+        CSSStyleValuePair::KeyKind currentKeyKind =
+            fromAnimationKeyframe->keyKinds()[i];
+
+        GCVector<GCVector<AnimatedValue*>> layeredValues;
+        if (!createLayerdValues(currentKeyFrames, currentKeyKind, i,
+                                layeredValues)) {
+            // Failed to create AnimatedValue.
+            continue;
+        }
+
+        GCAtomicVector<double> offsets;
+        GCVector<TimingFunction*> timingFunctions;
+        createOffsetAndTimingFunction(currentKeyFrames, i, offsets,
+                                      timingFunctions);
+        STARFISH_ASSERT(layeredValues[0].size() == offsets.size());
+        STARFISH_ASSERT(offsets.size() == timingFunctions.size());
+
+        applyProperty(
+            0, currentKeyFrames->name(), currentKeyKind, layeredValues, offsets,
+            timingFunctions, currentKeyFrames->duration().toTimeValue(),
+            currentKeyFrames->delay().toTimeValue(),
+            currentKeyFrames->iterationCount(), currentKeyFrames->direction(),
+            currentKeyFrames->playState(), currentKeyFrames->fillMode());
+    }
+
+    return true;
 }
 
 bool AnimationApplier::createLayerdValues(

@@ -21,6 +21,14 @@
 
 #include "SVGAnimateElement.h"
 
+#include "core/animation/AnimatedValue.h"
+#include "core/animation/AnimationApplier.h"
+#include "core/animation/AnimationTask.h"
+#include "core/animation/CubicBezier.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/dom/Document.h"
+
 namespace Starfish {
 
 SVGAnimateElement::SVGAnimateElement(Document* document,
@@ -42,6 +50,112 @@ void* SVGAnimateElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void SVGAnimateElement::beginElement()
+{
+    beginElementAt(0);
+}
+
+void SVGAnimateElement::beginElementAt(float offset)
+{
+    // TODO: Apply offset to animation.
+
+    window()->webView()->layoutIfNeeded(false);
+
+    // Parse target keyKind from attribute name.
+    CSSStyleValuePair::KeyKind keyKind;
+    if (!parseAttributeName(keyKind)) {
+        STARFISH_LOG_WARN("Invalid attribute name.");
+        return;
+    }
+
+    AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
+
+    // TODO: If a list of values is used, the animation will apply the
+    // values in order over the course of the animation. If a list of
+    // ‘values’ is specified, any ‘from’, ‘to’ and ‘by’ attribute values are
+    // ignored.
+
+    // Parse from and to value.
+    CSSStyleValuePair from;
+    CSSStyleValuePair to;
+    if (!parseFrom(keyKind, from) || !parseTo(keyKind, to)) {
+        STARFISH_LOG_WARN("Invalid from, to attributes.");
+        return;
+    }
+
+    // Parse duration.
+    CSSTime duration;
+    if (!parseDur(duration)) {
+        STARFISH_LOG_WARN("Invalid dur attribute.");
+        return;
+    }
+    animationKeyframes->setDuration(duration);
+
+    // Parse fill.
+    SVGAnimationFill fill;
+    if (!parseFill(fill)) {
+        // Default values is remove.
+        // can proceed using the default value.
+        fill = SVGAnimationFill::Remove;
+    }
+    AnimationFillModeValue fillMode =
+        svgAnimationFillToAnimationFillModeValue(fill);
+    animationKeyframes->setFillMode(fillMode);
+
+    // Parse calcMode.
+    SVGAnimationCalcMode calcMode;
+    if (!parseCalcMode(calcMode)) {
+        // Default values is Linear.
+        // can proceed using the default value.
+        calcMode = SVGAnimationCalcMode::Linear;
+    }
+    CubicBezier::EaseType easeType =
+        svgAnimationCalcModeToCubicBezierEaseType(calcMode);
+    animationKeyframes->setTimingFunction(
+        CubicBezier::createCubicBezier(easeType));
+
+    // Add keyframes using from and to value to animationKeyframes.
+    AddAnimationKeyframe(keyKind, animationKeyframes, from, to);
+
+    Optional<Element*> maybeTargetElement = targetElement();
+    if (!maybeTargetElement) {
+        STARFISH_LOG_WARN("Invalid animation target element.");
+        return;
+    }
+    Element* targetElement = maybeTargetElement;
+
+    // Apply animation for svg.
+    m_animationKeyframes = animationKeyframes;
+    AnimationApplier applier(targetElement, targetElement->style(), false);
+    applier.applySVGAnimateElement(this);
+
+    webView()->updateActiveAnimationExecutorRegistration(
+        document()->animationExecutor());
+    setNeedsStyleRecalcForAnimation();
+
+    // TODO: onbegin
+    // https://svgwg.org/svg2-draft/interact.html#OnBeginEventAttribute
+}
+
+void SVGAnimateElement::AddAnimationKeyframe(
+    CSSStyleValuePair::KeyKind keyKind, AnimationKeyframes* animationKeyframes,
+    const CSSStyleValuePair& from, const CSSStyleValuePair& to)
+{
+    AnimationKeyframe* fromKeyframe = new AnimationKeyframe();
+    fromKeyframe->setKeyframeSelector(0.0);
+    fromKeyframe->addProperty(keyKind, from);
+    fromKeyframe->setDuration(animationKeyframes->duration());
+    fromKeyframe->setTimingFunction(animationKeyframes->timingFunction());
+    animationKeyframes->animationKeyframeList().push_back(fromKeyframe);
+
+    AnimationKeyframe* toKeyframe = new AnimationKeyframe();
+    toKeyframe->setKeyframeSelector(1.0);
+    toKeyframe->addProperty(keyKind, to);
+    toKeyframe->setDuration(animationKeyframes->duration());
+    toKeyframe->setTimingFunction(animationKeyframes->timingFunction());
+    animationKeyframes->animationKeyframeList().push_back(toKeyframe);
 }
 
 } // namespace Starfish
