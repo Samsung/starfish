@@ -24,21 +24,21 @@
 
 namespace Starfish {
 
+enum class CubicBezierEaseType : uint8_t {
+    Linear,
+    Ease,
+    Easein,
+    EaseOut,
+    EaseInout,
+    Custom,
+};
+
 class CubicBezier : public TimingFunction {
 public:
-    enum class EaseType {
-        LINEAR,
-        EASE,
-        EASE_IN,
-        EASE_OUT,
-        EASE_IN_OUT,
-        CUSTOM
-    };
-
-    static CubicBezier* createCubicBezier(EaseType type);
+    static CubicBezier* createCubicBezier(CubicBezierEaseType type);
 
     CubicBezier(double X1, double Y1, double X2, double Y2,
-                EaseType type = EaseType::CUSTOM);
+                CubicBezierEaseType type = CubicBezierEaseType::Custom);
     double getValue(double x) override;
 
     TimingFunctionType timingFunctionType()
@@ -59,7 +59,7 @@ public:
     String* toString() const override
     {
         StringBuilder builder;
-        if (m_easeType == EaseType::CUSTOM) {
+        if (m_easeType == CubicBezierEaseType::Custom) {
             double x1 = m_coffX3 / 3.0;
             double y1 = m_coffY3 / 3.0;
             double x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
@@ -74,15 +74,15 @@ public:
             builder.appendString(", ");
             builder.appendString(String::fromDouble(y2));
             builder.appendString(")");
-        } else if (m_easeType == EaseType::EASE) {
+        } else if (m_easeType == CubicBezierEaseType::Ease) {
             builder.appendString("ease");
-        } else if (m_easeType == EaseType::EASE_IN) {
+        } else if (m_easeType == CubicBezierEaseType::Easein) {
             builder.appendString("ease-in");
-        } else if (m_easeType == EaseType::EASE_OUT) {
+        } else if (m_easeType == CubicBezierEaseType::EaseOut) {
             builder.appendString("ease-out");
-        } else if (m_easeType == EaseType::EASE_IN_OUT) {
+        } else if (m_easeType == CubicBezierEaseType::EaseInout) {
             builder.appendString("ease-in-out");
-        } else if (m_easeType == EaseType::LINEAR) {
+        } else if (m_easeType == CubicBezierEaseType::Linear) {
             builder.appendString("linear");
         }
 
@@ -136,7 +136,7 @@ private:
     double m_startGradient;
     double m_endGradient;
 
-    EaseType m_easeType;
+    CubicBezierEaseType m_easeType;
 };
 } // namespace Starfish
 #endif

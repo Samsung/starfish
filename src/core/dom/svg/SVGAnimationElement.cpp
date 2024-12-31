@@ -26,6 +26,7 @@
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleLookupTrie.h"
+#include "core/animation/CubicBezier.h"
 
 namespace Starfish {
 
@@ -54,17 +55,17 @@ AnimationFillModeValue svgAnimationFillToAnimationFillModeValue(
     return AnimationFillModeValue::AnimationFillModeNoneValue;
 }
 
-CubicBezier::EaseType svgAnimationCalcModeToCubicBezierEaseType(
+CubicBezierEaseType svgAnimationCalcModeToCubicBezierEaseType(
     SVGAnimationCalcMode calcMode)
 {
     switch (calcMode) {
     case SVGAnimationCalcMode::Linear:
-        return CubicBezier::EaseType::LINEAR;
+        return CubicBezierEaseType::Linear;
     default:
         STARFISH_UNIMPLEMENTED("Unimplemented calcMode value");
         break;
     }
-    return CubicBezier::EaseType::LINEAR;
+    return CubicBezierEaseType::Linear;
 }
 
 SVGAnimationElement::SVGAnimationElement(Document* document,

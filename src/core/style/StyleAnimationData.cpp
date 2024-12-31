@@ -26,7 +26,7 @@
 namespace Starfish {
 TimingFunction* AnimationKeyframe::defaultTimingFunction()
 {
-    return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
+    return CubicBezier::createCubicBezier(CubicBezierEaseType::Ease);
 }
 
 bool StyleAnimationData::isValidToApply(size_t index) const
