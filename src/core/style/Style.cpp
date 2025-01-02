@@ -8712,19 +8712,19 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                 }
 
                 // element invisible
-                if (shouldRemove == false &&
+                if (!shouldRemove &&
                     style->display() == DisplayValue::NoneDisplayValue) {
                     shouldRemove = true;
                 }
 
                 // transition targetToValue changed
-                if (shouldRemove == false &&
+                if (!shouldRemove &&
                     activeAnimations[i]->taskCanContinue(style) == false) {
                     shouldRemove = true;
                 }
 
                 // transition property gone || other properties changed
-                if (shouldRemove == false) {
+                if (!shouldRemove) {
                     StyleTransitionData* data = style->transition();
                     if (data == nullptr) {
                         shouldRemove = true;
@@ -8742,14 +8742,14 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                                 break;
                             }
                         }
-                        if (found == false) {
+                        if (!found) {
                             shouldRemove = true;
                         }
                     }
                 }
 
-                if (shouldRemove == true) {
-                    if (isCancel == false) {
+                if (shouldRemove) {
+                    if (!isCancel) {
                         damagedKeys[activeAnimations[i]->property()] = false;
                         activeAnimations[i]->fireTransitionEndEvent();
                     } else {
@@ -9344,13 +9344,13 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                 }
 
                 // element invisible
-                if (shouldRemove == false &&
+                if (!shouldRemove &&
                     toStyle->display() == DisplayValue::NoneDisplayValue) {
                     shouldRemove = true;
                 }
 
                 // animation property gone || other properties changed
-                if (shouldRemove == false) {
+                if (!shouldRemove) {
                     if (animationTasks[i]->isCSSAnimationTask()) {
                         if (element->style() && element->style()->animation()) {
                             bool found = false;
@@ -9380,7 +9380,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                                         }
                                     }
                                 }
-                                if (found == false) {
+                                if (!found) {
                                     shouldRemove = true;
                                 }
                             }
@@ -9390,8 +9390,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     }
                 }
 
-                if (shouldRemove == true) {
-                    if (isCancel == false) {
+                if (shouldRemove) {
+                    if (!isCancel) {
                         endTick = animationTasks[i]->duration() / 1000.0;
                         needsToFireAnimationEndEvent = true;
                     } else {
