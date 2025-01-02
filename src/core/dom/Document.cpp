@@ -138,7 +138,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
     , m_brokenImage(nullptr)
-    , m_animationExecutor(new AnimationExecutor(window))
+    , m_animationExecutor(new AnimationExecutor())
     , m_domVersion(0)
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(MessageLoopInvalidID)
