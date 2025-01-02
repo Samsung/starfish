@@ -8760,7 +8760,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                             std::make_pair(key, progress));
                         activeAnimations[i]->fireTransitionCancelEvent();
                     }
-                    activeAnimations[i]->detachFromElement(style);
+                    activeAnimations[i]->detachFromElement();
                     activeAnimations.erase(i);
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveAnimationExecutorInWebView = true;
@@ -9407,7 +9407,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     }
                     // FIXME
                     // TODO: What is FIXME for?
-                    animationTasks[i]->detachFromElement(toStyle);
+                    animationTasks[i]->detachFromElement();
 
                     if (animationTasks[i]->fillMode() !=
                         AnimationFillModeValue::Forwards) {

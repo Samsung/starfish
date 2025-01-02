@@ -82,11 +82,11 @@ public:
         return false;
     }
 
-    virtual void attachToElement(ComputedStyle* style)
+    virtual void attachToElement()
     {
     }
 
-    virtual void detachFromElement(ComputedStyle* style)
+    virtual void detachFromElement()
     {
     }
 
@@ -383,8 +383,8 @@ public:
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
-    virtual void attachToElement(ComputedStyle* style) override;
-    virtual void detachFromElement(ComputedStyle* style) override;
+    virtual void attachToElement() override;
+    virtual void detachFromElement() override;
 };
 
 class ActiveTransformAnimationTask : public ActiveAnimationTask {
@@ -436,8 +436,8 @@ public:
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
-    virtual void attachToElement(ComputedStyle* style) override;
-    virtual void detachFromElement(ComputedStyle* style) override;
+    virtual void attachToElement() override;
+    virtual void detachFromElement() override;
 
     const MatrixDecomposed2D& decomposedFrom()
     {

@@ -317,7 +317,7 @@ void TransitionApplier::applyOpacity(double duration, double delay,
         m_element, CSSStyleValuePair::Opacity,
         AnimatedValue(m_oldStyle->opacity()),
         AnimatedValue(m_newStyle->opacity()), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -336,7 +336,7 @@ void TransitionApplier::applyTransform(double duration, double delay,
                 m_oldStyle->rareComputedStyleData()->ensureTransforms()),
             AnimatedValue(newTransform), duration, delay, timingFunction,
             newTransform);
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -352,7 +352,7 @@ void TransitionApplier::applyBackgroundColor(double duration, double delay,
         AnimatedValue(m_oldStyle->backgroundColor()),
         AnimatedValue(m_newStyle->backgroundColor()), duration, delay,
         timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -368,7 +368,7 @@ void TransitionApplier::applyBorderBottomColor(double duration, double delay,
         m_element, CSSStyleValuePair::BorderBottomColor,
         AnimatedValue(oldColor), AnimatedValue(newColor), duration, delay,
         timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -383,7 +383,7 @@ void TransitionApplier::applyBorderLeftColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::BorderLeftColor, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -398,7 +398,7 @@ void TransitionApplier::applyBorderRightColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::BorderRightColor, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -413,7 +413,7 @@ void TransitionApplier::applyBorderTopColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::BorderTopColor, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -428,7 +428,7 @@ void TransitionApplier::applyColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -443,7 +443,7 @@ void TransitionApplier::applyCaretColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::CaretColor, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -458,7 +458,7 @@ void TransitionApplier::applyOutlineColor(double duration, double delay,
     auto task = new ActiveColorAnimationTask(
         m_element, CSSStyleValuePair::OutlineColor, AnimatedValue(oldColor),
         AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -474,7 +474,7 @@ void TransitionApplier::applyTextDecorationColor(double duration, double delay,
         m_element, CSSStyleValuePair::TextDecorationColor,
         AnimatedValue(oldColor), AnimatedValue(newColor), duration, delay,
         timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -525,7 +525,7 @@ void TransitionApplier::applyWidth(double duration, double delay,
                 m_element, CSSStyleValuePair::Width, AnimatedValue(fromValue),
                 AnimatedValue(toValue), duration, delay, timingFunction,
                 m_newStyle->width());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -578,7 +578,7 @@ void TransitionApplier::applyHeight(double duration, double delay,
                 m_element, CSSStyleValuePair::Height, AnimatedValue(fromValue),
                 AnimatedValue(toValue), duration, delay, timingFunction,
                 m_newStyle->height());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -631,7 +631,7 @@ void TransitionApplier::applyMinWidth(double duration, double delay,
                 m_element, CSSStyleValuePair::MinWidth,
                 AnimatedValue(fromValue), AnimatedValue(toValue), duration,
                 delay, timingFunction, m_newStyle->minWidth());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -684,7 +684,7 @@ void TransitionApplier::applyMinHeight(double duration, double delay,
                 m_element, CSSStyleValuePair::MinHeight,
                 AnimatedValue(fromValue), AnimatedValue(toValue), duration,
                 delay, timingFunction, m_newStyle->minHeight());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -737,7 +737,7 @@ void TransitionApplier::applyMaxWidth(double duration, double delay,
                 m_element, CSSStyleValuePair::MaxWidth,
                 AnimatedValue(fromValue), AnimatedValue(toValue), duration,
                 delay, timingFunction, m_newStyle->maxWidth());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -790,7 +790,7 @@ void TransitionApplier::applyMaxHeight(double duration, double delay,
                 m_element, CSSStyleValuePair::MaxHeight,
                 AnimatedValue(fromValue), AnimatedValue(toValue), duration,
                 delay, timingFunction, m_newStyle->maxHeight());
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -809,7 +809,7 @@ void TransitionApplier::applyMarginTop(double duration, double delay,
             m_element, CSSStyleValuePair::MarginTop, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->margin().top());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -827,7 +827,7 @@ void TransitionApplier::applyMarginRight(double duration, double delay,
             m_element, CSSStyleValuePair::MarginRight, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->margin().right());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -845,7 +845,7 @@ void TransitionApplier::applyMarginBottom(double duration, double delay,
             m_element, CSSStyleValuePair::MarginBottom, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->margin().bottom());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -863,7 +863,7 @@ void TransitionApplier::applyMarginLeft(double duration, double delay,
             m_element, CSSStyleValuePair::MarginLeft, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->margin().left());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -881,7 +881,7 @@ void TransitionApplier::applyBorderTop(double duration, double delay,
             m_element, CSSStyleValuePair::BorderTop, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->border().top().width());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -899,7 +899,7 @@ void TransitionApplier::applyBorderRight(double duration, double delay,
             m_element, CSSStyleValuePair::BorderRight, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->border().right().width());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -917,7 +917,7 @@ void TransitionApplier::applyBorderBottom(double duration, double delay,
             m_element, CSSStyleValuePair::BorderBottom, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->border().bottom().width());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -935,7 +935,7 @@ void TransitionApplier::applyBorderLeft(double duration, double delay,
             m_element, CSSStyleValuePair::BorderLeft, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->border().left().width());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -953,7 +953,7 @@ void TransitionApplier::applyPaddingTop(double duration, double delay,
             m_element, CSSStyleValuePair::PaddingTop, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->padding().top());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -971,7 +971,7 @@ void TransitionApplier::applyPaddingRight(double duration, double delay,
             m_element, CSSStyleValuePair::PaddingRight, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->padding().right());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -989,7 +989,7 @@ void TransitionApplier::applyPaddingBottom(double duration, double delay,
             m_element, CSSStyleValuePair::PaddingBottom, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->padding().bottom());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1007,7 +1007,7 @@ void TransitionApplier::applyPaddingLeft(double duration, double delay,
             m_element, CSSStyleValuePair::PaddingLeft, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->padding().left());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1025,7 +1025,7 @@ void TransitionApplier::applyLeft(double duration, double delay,
             m_element, CSSStyleValuePair::Left, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->left());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1043,7 +1043,7 @@ void TransitionApplier::applyRight(double duration, double delay,
             m_element, CSSStyleValuePair::Right, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->right());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1061,7 +1061,7 @@ void TransitionApplier::applyTop(double duration, double delay,
             m_element, CSSStyleValuePair::Top, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->top());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1079,7 +1079,7 @@ void TransitionApplier::applyBottom(double duration, double delay,
             m_element, CSSStyleValuePair::Bottom, AnimatedValue(v1),
             AnimatedValue(v2), duration, delay, timingFunction,
             m_newStyle->bottom());
-        m_executor->registerTransition(task, m_newStyle);
+        m_executor->registerTransition(task);
         m_gotTransition = true;
     }
 }
@@ -1106,7 +1106,7 @@ void TransitionApplier::applyBackgroundPositionX(double duration, double delay,
                 m_element, CSSStyleValuePair::BackgroundPositionX,
                 AnimatedValue(pos1), AnimatedValue(pos2), duration, delay,
                 timingFunction, m_newStyle->backgroundPositionX(i), i);
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -1134,7 +1134,7 @@ void TransitionApplier::applyBackgroundPositionY(double duration, double delay,
                 m_element, CSSStyleValuePair::BackgroundPositionY,
                 AnimatedValue(pos1), AnimatedValue(pos2), duration, delay,
                 timingFunction, m_newStyle->backgroundPositionY(i), i);
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -1162,7 +1162,7 @@ void TransitionApplier::applyBackgroundSize(double duration, double delay,
                 m_element, CSSStyleValuePair::BackgroundSize,
                 AnimatedValue(size1), AnimatedValue(size2), duration, delay,
                 timingFunction, m_newStyle->backgroundSizeLengthValue(i), i);
-            m_executor->registerTransition(task, m_newStyle);
+            m_executor->registerTransition(task);
             m_gotTransition = true;
         }
     }
@@ -1180,7 +1180,7 @@ void TransitionApplier::applyFontSize(double duration, double delay,
         AnimatedValue(Length(Length::Fixed, m_newStyle->fixedFontSize())),
         duration, delay, timingFunction,
         Length(Length::Fixed, m_newStyle->fixedFontSize()));
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 
@@ -1195,7 +1195,7 @@ void TransitionApplier::applyVisibility(double duration, double delay,
         AnimatedValue(m_oldStyle->visibility()),
         AnimatedValue(m_newStyle->visibility()), duration, delay,
         timingFunction);
-    m_executor->registerTransition(task, m_newStyle);
+    m_executor->registerTransition(task);
     m_gotTransition = true;
 }
 

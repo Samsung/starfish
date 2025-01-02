@@ -243,7 +243,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                         DisplayValue::NoneDisplayValue) {
                     canceled = true;
                     l[i]->fireTransitionCancelEvent();
-                    l[i]->detachFromElement(nullptr);
+                    l[i]->detachFromElement();
                     l.erase(i);
                     i--;
                 }
@@ -275,7 +275,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                         (*task)->targetElement()->style()->display() ==
                             DisplayValue::NoneDisplayValue) {
                         canceled = true;
-                        (*task)->detachFromElement(nullptr);
+                        (*task)->detachFromElement();
                         double progress = (*task)->fraction(currentTick);
                         cancelTick = (*task)->duration() * progress / 1000;
                         task = animation.erase(task);

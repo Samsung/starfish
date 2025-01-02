@@ -85,14 +85,10 @@ bool AnimationExecutor::hasActiveTransition(Element* element,
     return false;
 }
 
-void AnimationExecutor::registerTransition(ActiveAnimationTask* task,
-                                           ComputedStyle* style)
+void AnimationExecutor::registerTransition(ActiveAnimationTask* task)
 {
-    STARFISH_ASSERT(task != nullptr);
-    STARFISH_ASSERT(style != nullptr);
-
     m_activeTransitions.push_back(task);
-    task->attachToElement(style);
+    task->attachToElement();
     task->fireTransitionStartEvent();
 }
 
@@ -122,17 +118,13 @@ void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
 }
 
 void AnimationExecutor::registerAnimation(ActiveAnimationTask* task,
-                                          ComputedStyle* style, String* name,
-                                          size_t index, float iterationCount,
+                                          String* name, size_t index,
+                                          float iterationCount,
                                           AnimationDirectionValue direction,
                                           AnimationPlayStateValue playState,
                                           bool isCSSAnimationTask)
 {
-    STARFISH_ASSERT(task != nullptr);
-    STARFISH_ASSERT(style != nullptr);
-    STARFISH_ASSERT(name != nullptr);
-
-    task->attachToElement(style);
+    task->attachToElement();
     task->setIterationStart(iterationCount);
     task->setIsRunning(playState == AnimationPlayStateValue::Running);
     task->setIsCSSAnimationTask(isCSSAnimationTask);
