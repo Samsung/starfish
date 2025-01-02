@@ -68,6 +68,7 @@
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/StyleRule.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/dom/ShadowRoot.h"
 
 #include <EscargotPublic.h>
@@ -2331,6 +2332,10 @@ Animation* Element::animate(ExecutionContext* executionContext,
         webView()->updateActiveAnimationExecutorRegistration(
             document()->animationExecutor());
 
+        // FIXME: Start tick registration also occurs in WebView::rendering, so
+        // it is redundant. Additionally, because the timing of tick count
+        // registration differs, subtle differences occur in animation results
+        // depending on the animation method.
         auto& animations = document()->animationExecutor()->activeAnimations();
         uint64_t tick = tickCount();
 

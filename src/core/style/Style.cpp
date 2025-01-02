@@ -33,6 +33,7 @@
 
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 #include "core/dom/Document.h"

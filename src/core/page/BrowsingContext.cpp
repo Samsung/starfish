@@ -67,6 +67,7 @@
 #include "core/util/URL.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/InputEvent.h"
