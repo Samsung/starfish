@@ -161,10 +161,6 @@ public:
     {
     }
 
-    virtual void beginOpacityLayer(float c)
-    {
-    }
-
     virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
     {
     }

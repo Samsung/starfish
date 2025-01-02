@@ -2227,7 +2227,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     canvas->save();
 
     if (opacity != 1) {
-        canvas->beginOpacityLayer(owner()->style()->opacity());
+        canvas->beginOpacityLayer(owner()->style()->opacity(), visibleRect());
     }
 
     {
@@ -2695,9 +2695,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             default:
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
-            compositor->beginOpacityLayer(0.5);
-            compositor->drawRect(
-                Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+            auto rt = Unit::Rect(minX, minY, bufferWidth, bufferHeight);
+            compositor->beginOpacityLayer(0.5, rt);
+            compositor->drawRect(rt);
             compositor->endOpacityLayer();
         }
 
@@ -2709,7 +2709,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
             if (iter !=
                 owner()->node()->webView()->repaintRegionInRendering().end()) {
-                compositor->beginOpacityLayer(0.5);
+                compositor->beginOpacityLayer(0.5, iter->second);
                 compositor->setFillColor(Unit::Color(0, 255, 0, 64));
                 compositor->drawRect(iter->second);
                 compositor->endOpacityLayer();

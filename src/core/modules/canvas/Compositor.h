@@ -89,7 +89,12 @@ public:
     virtual void resetClip() = 0;
 
     virtual void setFillColor(const Unit::Color& clr) = 0;
-    virtual void beginOpacityLayer(float c) = 0;
+    void beginOpacityLayer(float c, const LayoutRect& rt)
+    {
+        beginOpacityLayer(c,
+                          Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
+    }
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt) = 0;
     virtual void endOpacityLayer() = 0;
 
     virtual void drawRect(const Unit::Rect& rt) = 0;

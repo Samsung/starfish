@@ -566,7 +566,7 @@ public:
 
         m_opacity = opacity;
         if (m_opacity != 1) {
-            compositor->beginOpacityLayer(m_opacity);
+            compositor->beginOpacityLayer(m_opacity, childStackingContext->visibleRect());
         }
     }
 
