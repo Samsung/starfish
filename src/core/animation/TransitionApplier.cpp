@@ -21,6 +21,7 @@
 #include "Starfish.h"
 
 #include "core/animation/TransitionApplier.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"

@@ -27,7 +27,7 @@
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
-#include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 
 namespace Starfish {
 

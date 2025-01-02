@@ -49,6 +49,7 @@
 #include "core/util/URL.h"
 
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"

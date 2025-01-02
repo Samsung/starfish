@@ -22,6 +22,7 @@
 #include "AnimationApplier.h"
 
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/animation/util/AnimationUtil.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"

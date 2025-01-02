@@ -29,6 +29,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/Scrolling.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -192,8 +193,7 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
 
     bool dontSplitGraphicsBufferCond = false;
 
-    if (sc->owner()->style()->hasFilter() ||
-            sc->owner()->isFrameSVGSVGBox()) {
+    if (sc->owner()->style()->hasFilter() || sc->owner()->isFrameSVGSVGBox()) {
         dontSplitGraphicsBufferCond = true;
     }
 
@@ -889,9 +889,9 @@ static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc)
 {
     if (sc->owner()->isFrameSVGSVGBox()) {
         return static_cast<CanvasSurface::CanvasSurfaceFlag>(
-                CanvasSurface::PreferEGLImage |
-                CanvasSurface::PreferRetainCPUBufferWhenUnmap |
-                CanvasSurface::PreferUnitedTexture);
+            CanvasSurface::PreferEGLImage |
+            CanvasSurface::PreferRetainCPUBufferWhenUnmap |
+            CanvasSurface::PreferUnitedTexture);
     }
     if (sc->hasFilterEffect()) {
         return CanvasSurface::PreferUnitedTexture;
@@ -1428,7 +1428,8 @@ void StackingContext::fillGraphicsBufferContents(
     }
 
     bool needsComputeScroll = !isRootContext() && !isIFrameStackingContext() &&
-                              m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow();
+                              m_owner->isFrameBlockBox() &&
+                              m_owner->shouldApplyOverflow();
     if (needsComputeScroll) {
         canvas->save();
         canvas->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
@@ -2087,8 +2088,7 @@ bool StackingContext::fillGraphicsBufferContents(
                         CanvasSurface::create(
                             m_owner->document()->webView()->renderer(),
                             tileDataWidth, tileDataHeight,
-                            additionalPixelRatio(),
-                            computeSurfaceFlag(this));
+                            additionalPixelRatio(), computeSurfaceFlag(this));
                     gotNewBuffer = true;
                 }
 
