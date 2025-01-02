@@ -33,7 +33,6 @@ enum class AnimationPlayStateValue ENSURE_ENUM_UNSIGNED;
 class String;
 class Element;
 class ActiveAnimationTask;
-class Window;
 
 struct ActiveElementAnimation : public gc {
     String* m_name;
@@ -95,16 +94,8 @@ namespace Starfish {
 
 class AnimationExecutor : public gc {
 public:
-    AnimationExecutor(Window* window)
-        : m_window(window)
+    AnimationExecutor()
     {
-        STARFISH_ASSERT(window != nullptr);
-        m_window = window;
-    }
-
-    Window* window()
-    {
-        return m_window;
     }
 
     GCVector<ActiveAnimationTask*>& activeTransitions()
@@ -145,7 +136,6 @@ public:
                                   double elapsedTime);
 
 private:
-    Window* m_window;
     GCVector<ActiveAnimationTask*> m_activeTransitions;
     GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>>
         m_activeAnimations;
