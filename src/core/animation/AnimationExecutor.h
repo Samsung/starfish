@@ -115,14 +115,14 @@ public:
 
     bool hasActiveTransition(Element* element, CSSStyleValuePair::KeyKind p);
 
-    void registerTransition(ActiveAnimationTask* task, ComputedStyle* style);
+    void registerTransition(ActiveAnimationTask* task);
 
     void removeActiveAnimationTaskIfNeeds(Element* element,
                                           CSSStyleValuePair::KeyKind p,
                                           size_t layer = 0);
 
-    void registerAnimation(ActiveAnimationTask* task, ComputedStyle* style,
-                           String* name, size_t index, float iterationCount,
+    void registerAnimation(ActiveAnimationTask* task, String* name,
+                           size_t index, float iterationCount,
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState,
                            bool isCSSAnimationTask);

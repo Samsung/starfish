@@ -321,12 +321,12 @@ bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return true;
 }
 
-void ActiveOpacityAnimationTask::attachToElement(ComputedStyle* style)
+void ActiveOpacityAnimationTask::attachToElement()
 {
     m_targetElement->markRunningOpacityAnimation();
 }
 
-void ActiveOpacityAnimationTask::detachFromElement(ComputedStyle* style)
+void ActiveOpacityAnimationTask::detachFromElement()
 {
     m_targetElement->clearRunningOpacityAnimation();
 }
@@ -769,12 +769,12 @@ bool ActiveTransformAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return true;
 }
 
-void ActiveTransformAnimationTask::attachToElement(ComputedStyle* style)
+void ActiveTransformAnimationTask::attachToElement()
 {
     m_targetElement->markRunningTransformAnimation();
 }
 
-void ActiveTransformAnimationTask::detachFromElement(ComputedStyle* style)
+void ActiveTransformAnimationTask::detachFromElement()
 {
     m_targetElement->clearRunningTransformAnimation();
 }
