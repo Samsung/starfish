@@ -190,14 +190,12 @@ public:
     {
         m_start = t.m_start;
         m_end = t.m_end;
-        m_buffer = t.m_buffer;
     }
 
     const PathToken& operator=(const PathToken& t)
     {
         m_start = t.m_start;
         m_end = t.m_end;
-        m_buffer = t.m_buffer;
         return *this;
     }
 
@@ -209,37 +207,22 @@ public:
 
     void shrink()
     {
-        STARFISH_ASSERT(!isBufferMode());
         m_end--;
     }
 
     void expand()
     {
-        STARFISH_ASSERT(!isBufferMode());
         m_end++;
-    }
-
-    void setString(std::string&& str)
-    {
-        m_end = SIZE_MAX;
-        m_start = SIZE_MAX - str.length();
-        m_buffer = std::move(str);
-    }
-
-    PathToken substr(size_t s, size_t n) const
-    {
-        PathToken r;
-        if (UNLIKELY(isBufferMode())) {
-            r.setString(m_buffer.substr(s, n));
-        } else {
-            r.setRange(s + m_start, m_start + s + n);
-        }
-        return r;
     }
 
     size_t length() const
     {
         return m_end - m_start;
+    }
+
+    size_t end() const
+    {
+        return m_end;
     }
 
     size_t size() const
@@ -249,26 +232,17 @@ public:
 
     bool equals(const StringBufferAccessData& bad, char c) const
     {
-        if (UNLIKELY(isBufferMode())) {
-            return length() == 1 && m_buffer[0] == c;
-        }
         return length() == 1 && static_cast<char>(bad.charAt(m_start)) == c;
     }
 
     char charAt(const StringBufferAccessData& bad, size_t index) const
     {
-        if (UNLIKELY(isBufferMode())) {
-            return m_buffer[index];
-        }
         STARFISH_ASSERT(m_start + index < m_end);
         return bad.charAt(m_start + index);
     }
 
     std::string toString(const StringBufferAccessData& bad) const
     {
-        if (UNLIKELY(isBufferMode())) {
-            return m_buffer;
-        }
         std::string ret;
         for (size_t i = m_start; i < m_end; i++) {
             ret += bad.charAt(i);
@@ -279,9 +253,6 @@ public:
     bool parseNumber(const StringBufferAccessData& bad, float* n) const
     {
         size_t len = length();
-        if (UNLIKELY(isBufferMode())) {
-            return CSSPropertyParser::parseNumber(m_buffer.data(), len, 0, n);
-        }
         char* buffer = ALLOCA(len + 1, char);
         size_t bufferIndex = 0;
         for (size_t i = m_start; i < m_end; i++) {
@@ -292,17 +263,9 @@ public:
     }
 
 private:
-    bool isBufferMode() const
-    {
-        return m_end == SIZE_MAX;
-    }
-
     size_t m_start;
     size_t m_end;
-    std::string m_buffer;
 };
-
-typedef std::vector<PathToken> PathTokenVector;
 
 // this array comes from these separator
 // ",mMzZlLhHvVcCsSqQtTaA-e"
@@ -321,52 +284,84 @@ static constexpr bool s_sepArray[] = {
     false, true,  false, false, false, false, false
 };
 
-static PathTokenVector tokenizePathValue(const StringBufferAccessData& bad)
+static PathToken lex(const StringBufferAccessData& bad, size_t& pos)
 {
-    PathTokenVector tokens;
-    tokens.reserve(16);
-    PathToken str;
-    char prevChar, currentChar;
-    for (size_t i = 0; i < bad.length; i++) {
+    PathToken newToken;
+    char currentChar;
+    bool seenDot = false;
+    bool onlyWhiteSpace = true;
+    for (size_t i = pos; i < bad.length; i++) {
         auto ch = bad.charAt(i);
-        if (ch > static_cast<char32_t>(std::numeric_limits<char>::max())) {
-            return PathTokenVector();
+        if (UNLIKELY(ch >
+                     static_cast<char32_t>(std::numeric_limits<char>::max()))) {
+            pos = SIZE_MAX;
+            return PathToken();
         }
+
         currentChar = static_cast<char>(ch);
+        bool isSpaceOrNewline = String::isASCIISpace(currentChar);
+        if (!isSpaceOrNewline) {
+            onlyWhiteSpace = false;
+        }
 
-        if (str.length() == 0) {
-            str.setRange(i, i + 1);
+        if (newToken.length() == 0) {
+            newToken.setRange(i, i + 1);
         } else {
-            str.expand();
-        }
-        bool hasSepChar = s_sepArray[static_cast<size_t>(currentChar)];
-        // below line cover this case "1.37916809e-13"
-        if (currentChar == '-' && i >= 1 && prevChar == 'e') {
-            hasSepChar = false;
+            newToken.expand();
         }
 
-        if ((String::isSpaceOrNewline(currentChar) || hasSepChar)) {
-            str.shrink();
-            bool onlyWhiteSpace = true;
-            for (size_t i = 0; i < str.length(); i++) {
-                if (!String::isASCIISpace(str.charAt(bad, i))) {
-                    onlyWhiteSpace = false;
+        bool hasSepChar = s_sepArray[static_cast<size_t>(currentChar)];
+        if (UNLIKELY(currentChar == '.')) {
+            // the line below covers this case "M150.0.5 L75"
+            if (seenDot) {
+                newToken.shrink();
+                pos = newToken.end();
+                return newToken;
+            } else {
+                seenDot = true;
+            }
+        } else if (UNLIKELY(currentChar == 'e' && i >= 1 && newToken.size())) {
+            if (String::isASCIIDigit(bad.charAt(i - 1))) {
+                if (i + 1 < bad.length) {
+                    auto ch = bad.charAt(i + 1);
+                    if (ch == '-') {
+                        // the line below covers this case  "1.37916809e-13"
+                        if (i + 2 < bad.length &&
+                            String::isASCIIDigit(bad.charAt(i + 2))) {
+                            newToken.expand();
+                            newToken.expand();
+                            i = i + 2;
+                            hasSepChar = false;
+                        }
+                    } else if (String::isASCIIDigit(ch)) {
+                        // the line below covers this case "1.37916809e13"
+                        newToken.expand();
+                        i = i + 1;
+                        hasSepChar = false;
+                    }
                 }
             }
-
-            if (!onlyWhiteSpace) {
-                tokens.push_back(str);
-                str.setRange(0, 0);
-            }
-            if (hasSepChar) {
-                tokens.push_back(PathToken(i, i + 1));
-            }
-        } else if (i == bad.length - 1 && str.length()) {
-            tokens.push_back(str);
         }
-        prevChar = currentChar;
+
+        if (isSpaceOrNewline || hasSepChar) {
+            newToken.shrink();
+            if (hasSepChar) {
+                if (newToken.size()) {
+                    pos = newToken.end();
+                    return newToken;
+                }
+                pos = i + 1;
+                return PathToken(i, i + 1);
+            } else if (!onlyWhiteSpace) {
+                pos = newToken.end();
+                return newToken;
+            }
+        } else if (UNLIKELY(i == bad.length - 1 && newToken.length())) {
+            pos = bad.length;
+            return newToken;
+        }
     }
-    return tokens;
+    return PathToken();
 }
 
 void SVGPathElement::parsePath(String* d, Path* path)
@@ -374,8 +369,6 @@ void SVGPathElement::parsePath(String* d, Path* path)
     STARFISH_ASSERT(path->isEmpty());
     if (d->length()) {
         auto bad = d->bufferAccessData();
-        auto tokens = tokenizePathValue(bad);
-
         enum Mode {
             WaitCommand,
             WaitCoordsX,
@@ -412,11 +405,18 @@ void SVGPathElement::parsePath(String* d, Path* path)
 
 #define REWIND_IF_NEEDED()                                    \
     bool isLookAheadNumber = false;                           \
-    for (size_t j = i + 1; j < tokens.size(); j++) {          \
-        if (tokens[j].equals(bad, ',')) {                     \
+    for (size_t j = i; j < bad.length;) {                     \
+        auto token = lex(bad, j);                             \
+        if (UNLIKELY(token.length() == 0)) {                  \
+            if (i == SIZE_MAX) {                              \
+                path->clear();                                \
+            }                                                 \
+            return;                                           \
+        }                                                     \
+        if (token.equals(bad, ',')) {                         \
             continue;                                         \
         }                                                     \
-        char c = tokens[j].charAt(bad, 0);                    \
+        char c = token.charAt(bad, 0);                        \
         if (c == '.' || c == '-' || (c >= '0' && c <= '9')) { \
             isLookAheadNumber = true;                         \
         }                                                     \
@@ -428,12 +428,20 @@ void SVGPathElement::parsePath(String* d, Path* path)
         mode = Mode::WaitCommand;                             \
     }
 
-        for (size_t i = 0; i < tokens.size(); i++) {
-            auto& token = tokens[i];
+        for (size_t i = 0; i < bad.length;) {
+            auto token = lex(bad, i);
+            if (UNLIKELY(token.length() == 0)) {
+                // parse error
+                if (i == SIZE_MAX) {
+                    path->clear();
+                }
+                return;
+            }
 
             if (token.equals(bad, ',')) {
                 continue;
             }
+
             if (token.equals(bad, '-') && (mode != Mode::WaitCommand)) {
                 if (gotMinus) {
                     // error
@@ -441,54 +449,6 @@ void SVGPathElement::parsePath(String* d, Path* path)
                 }
                 gotMinus = true;
                 continue;
-            }
-
-            if (mode != Mode::WaitCommand) {
-                bool hasMultipleDot = false;
-                bool seenDot = false;
-                for (size_t k = 0; k < token.size(); k++) {
-                    if (token.charAt(bad, k) == '.') {
-                        if (!seenDot) {
-                            seenDot = true;
-                        } else {
-                            hasMultipleDot = true;
-                            tokens.erase(tokens.begin() + i);
-                            PathToken s1 = token.substr(0, k);
-                            PathToken s2 = token.substr(k, token.size() - k);
-                            tokens.insert(tokens.begin() + i, s1);
-                            tokens.insert(tokens.begin() + i + 1, s2);
-                            i--;
-                            break;
-                        }
-                    }
-                }
-                if (hasMultipleDot) {
-                    continue;
-                }
-            }
-            if (mode != Mode::WaitCommand) {
-                if (i + 1 < tokens.size() && tokens[i + 1].equals(bad, 'e')) {
-                    if (i + 2 < tokens.size()) {
-                        token.setString(token.toString(bad) +
-                                        tokens[i + 1].toString(bad) +
-                                        tokens[i + 2].toString(bad));
-                        if (tokens[i + 2].equals(bad, '-')) {
-                            if (i + 3 < tokens.size()) {
-                                token.setString(token.toString(bad) +
-                                                tokens[i + 3].toString(bad));
-                                i += 3;
-                            } else {
-                                // error
-                                break;
-                            }
-                        } else {
-                            i += 2;
-                        }
-                    } else {
-                        // error
-                        break;
-                    }
-                }
             }
 
             if (mode == Mode::WaitCommand) {
