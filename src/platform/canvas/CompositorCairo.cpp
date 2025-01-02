@@ -141,9 +141,10 @@ public:
         translate(x.toDouble(), y.toDouble());
     }
 
-    virtual void beginOpacityLayer(float c)
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
     {
         save();
+        clip(rt);
         m_opacityVector.push_back(c * m_opacityVector.back());
     }
 

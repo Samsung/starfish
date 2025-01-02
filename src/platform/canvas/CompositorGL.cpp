@@ -2312,9 +2312,10 @@ public:
         m_state.back().matrix.preTranslate((double)x, (double)y);
     }
 
-    virtual void beginOpacityLayer(float c) override
+    virtual void beginOpacityLayer(float c, const Unit::Rect& rt) override
     {
         save();
+        clip(rt);
         m_state.back().opacity *= c;
     }
 

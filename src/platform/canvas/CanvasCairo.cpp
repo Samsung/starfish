@@ -651,15 +651,6 @@ public:
         translate(x.toDouble(), y.toDouble());
     }
 
-    virtual void beginOpacityLayer(float c) override
-    {
-        INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
-        save();
-        lastState()->m_layerOpacity =
-            std::max<float>(0, std::min<float>(1.0, c));
-        cairo_push_group(m_canvas);
-    }
-
     virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
@@ -1410,6 +1401,7 @@ public:
             cairo_pattern_set_matrix(
                 (cairo_pattern_t*)lastState()->m_maskPattern, &matrix);
 
+            clip(dst);
             cairo_push_group(m_canvas);
         }
     }
@@ -2184,10 +2176,18 @@ private:
             if (fontStrokeWidth) {
                 cairo_save(canvas);
 
-                cairo_push_group_with_content(canvas, CAIRO_CONTENT_ALPHA);
                 cairo_set_source_rgba(canvas, 0, 0, 0, 1);
                 cairo_set_line_width(canvas, fontStrokeWidth);
                 cairo_set_operator(canvas, CAIRO_OPERATOR_SOURCE);
+
+                double x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+                cairo_stroke_extents(canvas, &x1, &y1, &x2, &y2);
+                cairo_rectangle(canvas, x1, y1, x2 - x1, y2 - y1);
+                cairo_clip(canvas);
+                checkError();
+
+                cairo_push_group_with_content(canvas, CAIRO_CONTENT_ALPHA);
+                cairo_glyph_path(canvas, glyphs, glyphCount);
                 cairo_stroke_preserve(canvas);
 
                 cairo_set_operator(canvas, CAIRO_OPERATOR_CLEAR);

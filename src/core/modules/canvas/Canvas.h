@@ -399,7 +399,11 @@ public:
     virtual CanvasCompositeOperator compositeOperator() = 0;
     virtual CanvasBlendMode blendMode() = 0;
 
-    virtual void beginOpacityLayer(float c) = 0;
+    void beginOpacityLayer(float c, const LayoutRect& rt)
+    {
+        beginOpacityLayer(c,
+                          Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
+    }
     virtual void beginOpacityLayer(float c, const Unit::Rect& rt) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;

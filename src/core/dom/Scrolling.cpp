@@ -563,8 +563,7 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
             }
         }
 
-        canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f));
-
+        LayoutRect rr(0, 0, 0, 0);
         if (hasVerticalScroll && needsToDrawScrollbar) {
             canvas->setFillColor(Unit::Color(64, 64, 64, 255));
             float scrollMoveRatio =
@@ -581,7 +580,6 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
             if (hasHorizontalScroll) {
                 scrollMovableArea -= scrollBarWidth;
             }
-            LayoutRect rr(0, 0, 0, 0);
 
             rr.setWidth(scrollBarWidth);
             rr.setHeight(scrollBarHeight);
@@ -595,8 +593,6 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
 
             rr.setY(frame->borderTop() +
                     scrollMoveRatio * (scrollMovableArea - scrollBarHeight));
-
-            canvas->drawRect(rr);
         }
         if (hasHorizontalScroll && needsToDrawScrollbar) {
             canvas->setFillColor(Unit::Color(64, 64, 64, 255));
@@ -613,18 +609,16 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                 scrollMovableArea -= scrollBarHeight;
             }
 
-            LayoutRect rr(0, 0, 0, 0);
-
             rr.setWidth(scrollBarWidth);
             rr.setHeight(scrollBarHeight);
 
             rr.setY(frame->height() - frame->borderBottom() - scrollBarHeight);
             rr.setX(frame->borderLeft() +
                     scrollMoveRatio * (scrollMovableArea - scrollBarWidth));
-
-            canvas->drawRect(rr);
         }
 
+        canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f), rr);
+        canvas->drawRect(rr);
         canvas->endOpacityLayer();
         canvas->restore();
     }
