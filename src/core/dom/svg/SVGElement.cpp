@@ -221,7 +221,8 @@ void SVGElement::didNodeInserted(Node* parent, Node* newChild)
     Element::didNodeInserted(parent, newChild);
     if (newChild->isSVGAnimateElement()) {
         SVGAnimateElement* animate = newChild->asSVGAnimateElement();
-        if (this == animate->targetElement()) {
+        Optional<Element*> maybeTargetElement = animate->targetElement();
+        if (maybeTargetElement && this == maybeTargetElement.value()) {
             animate->beginElement();
         }
     }

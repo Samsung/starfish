@@ -754,12 +754,6 @@ public:
         return hasValue();
     }
 
-    operator T*() const
-    {
-        STARFISH_RELEASE_ASSERT(hasValue());
-        return m_value;
-    }
-
     T* operator->()
     {
         STARFISH_ASSERT(hasValue());

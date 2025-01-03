@@ -118,7 +118,7 @@ bool SVGAnimationElement::parseAttributeName(
         return false;
     }
 
-    String* targetAttrName = maybeAttributeName;
+    String* targetAttrName = maybeAttributeName.value();
     keyKind = CSSStyleLookupTrie::lookupCSSStyle(
         targetAttrName->toUTF8NonGCString().data(), targetAttrName->length());
 
@@ -139,7 +139,7 @@ bool SVGAnimationElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
     uint8_t option =
         CSSPropertyParser::AllowWithoutUnit | CSSPropertyParser::AllowPercent;
     auto str = maybeFrom->toUTF8NonGCString();
-    if (!parseLengthValue(maybeFrom, option, from)) {
+    if (!parseLengthValue(maybeFrom.value(), option, from)) {
         return false;
     }
     from.setKeyKind(keyKind);
@@ -157,7 +157,7 @@ bool SVGAnimationElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
     uint8_t option =
         CSSPropertyParser::AllowWithoutUnit | CSSPropertyParser::AllowPercent;
     auto str = maybeTo->toUTF8NonGCString();
-    if (!parseLengthValue(maybeTo, option, to)) {
+    if (!parseLengthValue(maybeTo.value(), option, to)) {
         return false;
     }
     to.setKeyKind(keyKind);
@@ -173,7 +173,7 @@ bool SVGAnimationElement::parseDur(CSSTime& duration)
     }
 
     CSSStyleValuePair temp;
-    auto str = maybeDur->toUTF8NonGCString();
+    auto str = maybeDur.value()->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, str.c_str(), str.length());
     if (!temp.updateValueTime(tokens, 0)) {
@@ -190,16 +190,16 @@ bool SVGAnimationElement::parseFill(SVGAnimationFill& fill)
     if (!maybeFill) {
         return false;
     }
-
-    if (maybeFill->equals("remove")) {
+    String* fillValue = maybeFill.value();
+    if (fillValue->equals("remove")) {
         fill = SVGAnimationFill::Remove;
         return true;
-    } else if (maybeFill->equals("freeze")) {
+    } else if (fillValue->equals("freeze")) {
         fill = SVGAnimationFill::Freeze;
         return true;
     } else {
         STARFISH_LOG_WARN("Unknown fill value: %s",
-                          maybeFill->toUTF8NonGCString().c_str());
+                          fillValue->toUTF8NonGCString().c_str());
     }
     return false;
 }
