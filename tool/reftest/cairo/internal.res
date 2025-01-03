@@ -639,6 +639,7 @@ test/cairo/internal-test/css/flex/flex_flex_left_right_abs_pos.html
 test/cairo/internal-test/css/flex/flex_flex_top_bottom_abs_pos.html
 test/cairo/internal-test/css/flex/overflow-hidden-flexitem-height-shrink.html
 test/cairo/internal-test/css/flex/flex-item-minheight.html
+test/cairo/internal-test/svg/animation/animate_beginElement_01.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/svg_03.html
