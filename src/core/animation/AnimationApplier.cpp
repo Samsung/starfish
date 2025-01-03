@@ -146,7 +146,7 @@ bool AnimationApplier::applySVGAnimateElement(
         animationElement->animationKeyframes();
     AnimationKeyframe* fromAnimationKeyframe =
         currentKeyFrames->animationKeyframeList()[0];
-
+    bool hasAppliedAnimation = false;
     for (size_t i = 0; i < fromAnimationKeyframe->propertySize(); i++) {
         CSSStyleValuePair::KeyKind currentKeyKind =
             fromAnimationKeyframe->keyKinds()[i];
@@ -165,7 +165,7 @@ bool AnimationApplier::applySVGAnimateElement(
         STARFISH_ASSERT(layeredValues[0].size() == offsets.size());
         STARFISH_ASSERT(offsets.size() == timingFunctions.size());
 
-        applyProperty(
+        hasAppliedAnimation |= applyProperty(
             0, currentKeyFrames->name(), currentKeyKind, layeredValues, offsets,
             timingFunctions, currentKeyFrames->duration().toTimeValue(),
             currentKeyFrames->delay().toTimeValue(),
@@ -173,7 +173,7 @@ bool AnimationApplier::applySVGAnimateElement(
             currentKeyFrames->playState(), currentKeyFrames->fillMode());
     }
 
-    return true;
+    return hasAppliedAnimation;
 }
 
 bool AnimationApplier::createLayerdValues(
