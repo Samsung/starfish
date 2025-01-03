@@ -561,6 +561,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
     // SVG animate
     m_attributename = QualifiedName(
         AtomicString::createAtomicString(starfish, "attributename"));
+    m_beginEvent =
+        QualifiedName(AtomicString::createAtomicString(starfish, "beginEvent"));
     m_calcMode =
         QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
     m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));

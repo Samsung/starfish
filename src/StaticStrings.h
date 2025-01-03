@@ -492,6 +492,7 @@ public:
 
     // SVG animate
     QualifiedName m_attributename;
+    QualifiedName m_beginEvent;
     QualifiedName m_calcMode;
     QualifiedName m_dur;
     QualifiedName m_from;

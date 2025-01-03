@@ -135,6 +135,8 @@ public:
     void fireAnimationCancelEvent(Element* element, String* name,
                                   double elapsedTime);
 
+    void fireSVGAnimateBeginEvent(Element* element);
+
 private:
     GCVector<ActiveAnimationTask*> m_activeTransitions;
     GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>>
