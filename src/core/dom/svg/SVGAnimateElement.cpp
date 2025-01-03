@@ -125,7 +125,7 @@ void SVGAnimateElement::beginElementAt(float offset)
         STARFISH_LOG_WARN("Invalid animation target element.");
         return;
     }
-    Element* targetElement = maybeTargetElement;
+    Element* targetElement = maybeTargetElement.value();
 
     // Apply animation for svg.
     m_animationKeyframes = animationKeyframes;

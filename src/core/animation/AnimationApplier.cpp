@@ -142,8 +142,13 @@ bool AnimationApplier::apply()
 bool AnimationApplier::applySVGAnimateElement(
     SVGAnimateElement* animationElement)
 {
-    AnimationKeyframes* currentKeyFrames =
+    Optional<AnimationKeyframes*> maybekeyFrames =
         animationElement->animationKeyframes();
+    if (!maybekeyFrames) {
+        return false;
+    }
+
+    AnimationKeyframes* currentKeyFrames = maybekeyFrames.value();
     AnimationKeyframe* fromAnimationKeyframe =
         currentKeyFrames->animationKeyframeList()[0];
     bool hasAppliedAnimation = false;
