@@ -111,6 +111,11 @@ public:
         return true;
     }
 
+    Optional<SkMatrix*> computedSVGTransform()
+    {
+        return m_computedSVGTransform;
+    }
+
     Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(String* url, const Unit::Rect& rect);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
@@ -131,6 +136,7 @@ protected:
                    GC_WORD_OFFSET(FrameSVGBox, m_treeItemModel.m_firstChild));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(FrameSVGBox, m_treeItemModel.m_lastChild));
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGBox, m_computedSVGTransform));
     }
 
     virtual bool hasFrameTreeItemModel() override
@@ -145,9 +151,10 @@ protected:
 
     Optional<GradientDrawingInfo*> makeGradientDrawingInfo(String* url, const Unit::Rect& rect);
 
-    FrameTreeItemModel m_treeItemModel;
     bool m_hasClipPath;
     bool m_hasMask;
+    FrameTreeItemModel m_treeItemModel;
+    Optional<SkMatrix*> m_computedSVGTransform;
 };
 } // namespace Starfish
 

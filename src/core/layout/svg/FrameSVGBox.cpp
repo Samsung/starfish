@@ -185,6 +185,12 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 
     if (!matrix.isIdentity() && needsComputeFrameRect) {
         m_frameRect = computeBoxExtent(m_frameRect, matrix);
+        if (!m_computedSVGTransform) {
+            m_computedSVGTransform = new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();
+        }
+        *m_computedSVGTransform = matrix;
+    } else {
+        m_computedSVGTransform = nullptr;
     }
 
     Frame* f = firstChild();

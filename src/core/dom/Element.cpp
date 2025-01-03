@@ -47,10 +47,12 @@
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/dom/UIEvent.h"
 #include "core/dom/Scrolling.h"
+#include "core/dom/svg/SVGElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/svg/FrameSVGBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
@@ -1621,16 +1623,48 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
     if (!frameObject) {
         return;
     }
-    // TODO : support SVG model
-    // there is Getting bounding rectangle from the SVG model in the spec, but
-    // SVG model is not supported
-
     if (frameObject->isFrameBox()) {
-        SkMatrix m = frameObject->asFrameBox()->computeScreenMatrix();
+        auto frameBox = frameObject->asFrameBox();
+        auto frameRect = frameBox->frameRect();
+        SkMatrix m = frameBox->computeScreenMatrix();
         LayoutRect rect;
-        rect.setWidth(frameObject->asFrameBox()->width());
-        rect.setHeight(frameObject->asFrameBox()->height());
-        rect = computeBoxExtent(rect, m);
+        rect.setWidth(frameRect.width());
+        rect.setHeight(frameRect.height());
+
+        // NOTE
+        // frameRect of svgElement stores actual visible rect for hittesting &
+        // repainting but spec want to return don't include stroke-width here :(
+        if (isSVGElement() && asSVGElement()->isShapeElement()) {
+            auto path = frameBox->asFrameSVGBox()->path();
+            if (path) {
+                SkMatrix svgMatrix = SkMatrix::I();
+                if (frameBox->asFrameSVGBox()->computedSVGTransform()) {
+                    svgMatrix =
+                        *frameBox->asFrameSVGBox()->computedSVGTransform();
+                }
+
+                auto viewportFrame =
+                    asSVGElement()->viewportElement()->frame()->asFrameBox();
+                auto viewportScreenMatrix =
+                    viewportFrame->computeScreenMatrix();
+                auto fillRect = path->fillBoundingRect();
+                if (fillRect.isEmpty()) {
+                    // fallback
+                    fillRect = path->strokeBoundingRect(1);
+                }
+                rect = LayoutRect(fillRect.x(), fillRect.y(), fillRect.width(),
+                                  fillRect.height());
+                rect = computeBoxExtent(rect, svgMatrix);
+                LayoutRect viewportRect =
+                    computeBoxExtent(LayoutRect(0, 0, viewportFrame->width(),
+                                                viewportFrame->height()),
+                                     viewportScreenMatrix);
+                rect.setX(rect.x() + viewportRect.x());
+                rect.setY(rect.y() + viewportRect.y());
+            }
+        } else {
+            rect = computeBoxExtent(rect, m);
+        }
 
         DOMQuad* q = new DOMQuad(
             executionContext(),
