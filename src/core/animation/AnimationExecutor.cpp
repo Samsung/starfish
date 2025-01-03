@@ -232,4 +232,13 @@ void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
     element->dispatchEventIdleTimeByUA(event);
 }
 
+void AnimationExecutor::fireSVGAnimateBeginEvent(Element* element)
+{
+    String* eventType =
+        element->starfish()->staticStrings()->m_beginEvent.localName();
+    Event* e = new Event(element->executionContext(), eventType,
+                         EventInit(false, false));
+    element->EventTarget::dispatchEventIdleTimeByUA(e);
+}
+
 } // namespace Starfish

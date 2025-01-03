@@ -24,6 +24,7 @@
 #include "core/animation/AnimatedValue.h"
 #include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationExecutor.h"
 #include "core/animation/CubicBezier.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -135,8 +136,7 @@ void SVGAnimateElement::beginElementAt(float offset)
         document()->animationExecutor());
     setNeedsStyleRecalcForAnimation();
 
-    // TODO: onbegin
-    // https://svgwg.org/svg2-draft/interact.html#OnBeginEventAttribute
+    document()->animationExecutor()->fireSVGAnimateBeginEvent(this);
 }
 
 void SVGAnimateElement::AddAnimationKeyframe(
