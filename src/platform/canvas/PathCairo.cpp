@@ -66,11 +66,10 @@ Path* Path::create()
 }
 
 PathCairo::PathCairo()
-    : m_needsComputeStrokeBoundingRect(true)
-    , m_needsComputedFillBoundingRect(true)
-    , m_cairoContext(nullptr)
+    : m_cairoContext(nullptr)
     , m_dumyCairoSurface(nullptr)
 {
+    notifyBoundingRectDirty();
     init();
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -408,27 +407,44 @@ void PathCairo::setCTM(const SkMatrix& matrix)
     cairo_set_matrix(m_cairoContext, &result_matrix);
 }
 
-Unit::Rect PathCairo::boundingRect(bool isFill)
+Unit::Rect PathCairo::fillBoundingRect()
 {
+    if (!m_needsComputeFillBoundingRect) {
+        return m_computedFillBoundingRect;
+    }
     double x0 = 0;
     double x1 = 0;
     double y0 = 0;
     double y1 = 0;
 
-    if (isFill) {
-        cairo_fill_extents(m_cairoContext, &x0, &y0, &x1, &y1);
-    } else {
-        cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
-    }
+    cairo_fill_extents(m_cairoContext, &x0, &y0, &x1, &y1);
     Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
-    if (isFill) {
-        m_needsComputedFillBoundingRect = false;
-        m_computedFillBoundingRect = result;
-    } else {
-        m_needsComputeStrokeBoundingRect = false;
-        m_computedStrokeBoundingRect = result;
-    }
+    m_needsComputeFillBoundingRect = false;
+    m_computedFillBoundingRect = result;
     return result;
 }
+
+Unit::Rect PathCairo::strokeBoundingRect(float strokeWidth)
+{
+    if (m_needsComputeStrokeBoundingRect == strokeWidth) {
+        return m_computedStrokeBoundingRect;
+    }
+
+    double x0 = 0;
+    double x1 = 0;
+    double y0 = 0;
+    double y1 = 0;
+
+    // line-width == stroke-width * 2
+    cairo_set_line_width(m_cairoContext, strokeWidth * 2);
+    cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+    // reset to default value
+    cairo_set_line_width(m_cairoContext, 2);
+    Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
+    m_needsComputeStrokeBoundingRect = strokeWidth;
+    m_computedStrokeBoundingRect = result;
+    return result;
+}
+
 } // namespace Starfish
 #endif

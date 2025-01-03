@@ -723,9 +723,14 @@ void Canvas::drawStrokePathShadow(Path* path)
 
 void Canvas::drawPathShadowInner(Path* path, bool isFill)
 {
-    CanvasShadowData& shadow = lastState()->m_shadowData;
+    const CanvasShadowData& shadow = lastState()->m_shadowData;
     Unit::Color shadowColor = shadow.color();
-    Unit::Rect boundRect = path->boundingRect(isFill);
+    Unit::Rect boundRect;
+    if (isFill) {
+        boundRect = path->fillBoundingRect();
+    } else {
+        boundRect = path->strokeBoundingRect(lineWidth());
+    }
     size_t width = (size_t)(ceil(boundRect.width()));
     size_t height = (size_t)(ceil(boundRect.height()));
     float radius = shadow.radius();
@@ -733,7 +738,7 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     float shadowOffsetY = shadow.offsetY();
     float radiusOffset = 0.0f;
 
-    if (radius == 0) {
+    if (radius <= 0) {
         save();
         translate(shadowOffsetX, shadowOffsetY);
         if (isFill) {
@@ -757,10 +762,10 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
         }
         restore();
         return;
-    } else {
-        radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
-        radiusOffset *= 2;
     }
+
+    radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
+    radiusOffset *= 2;
 
     auto imageWidth = width + ceil(radiusOffset);
     auto imageHeight = height + ceil(radiusOffset);
@@ -769,21 +774,21 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
                                 nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->translate(-boundRect.x(), -boundRect.y());
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
     if (isFill) {
         cv->setFillColor(shadowColor);
         cv->drawPathInner(path);
     } else {
         cv->setStrokeColor(shadowColor);
+        cv->setLineWidth(lineWidth());
         cv->drawStrokePathInner(path);
     }
     delete cv;
 
-    if (radius > 0) {
-        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                      nativeImage->height(), nativeImage->stride());
-        sb.process(radius / 2);
-    }
+    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                  nativeImage->height(), nativeImage->stride());
+    sb.process(radius / 2);
 
     save();
     Unit::Rect rect(0, 0, imageWidth, imageHeight);
