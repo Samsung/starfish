@@ -133,39 +133,27 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     LayoutLocation stylePos;
     bool needsComputeFrameRect =
         needsGeometryAttributes || node()->asSVGElement()->isShapeElement();
-    if (needsGeometryAttributes) {
-        stylePos = resolveStylePosition(ctx.viewport);
-        m_frameRect.setLocation(stylePos);
-    } else if (node()->asSVGElement()->isShapeElement()) {
+
+    float strokeWidth(style()->strokeWidth().specifiedValue(
+        ctx.normalizedDiagonalViewportLength, this));
+
+    if (node()->asSVGElement()->isShapeElement()) {
         auto p = path();
         if (p) {
-            Unit::Rect boundingRect = p->boundingRect(false);
+            Unit::Rect boundingRect = p->strokeBoundingRect(strokeWidth);
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
                            boundingRect.width(), boundingRect.height());
         } else {
             m_frameRect = LayoutRect();
         }
+    } else if (needsGeometryAttributes) {
+        stylePos = resolveStylePosition(ctx.viewport);
+        m_frameRect.setLocation(stylePos);
     }
+
 
     layoutSVG(ctx);
-
-    // expand frameRect with stroke width
-    if (!needsGeometryAttributes &&
-        (!style()->stroke()->color().isTransparent() ||
-         style()->stroke()->hasUrl()) &&
-        !m_frameRect.isEmpty()) {
-        LayoutUnit strokeWidth(style()->strokeWidth().specifiedValue(
-            ctx.normalizedDiagonalViewportLength, this));
-        if (strokeWidth > 1) {
-            LayoutUnit halfStrokeWidth = strokeWidth / 2;
-
-            m_frameRect.setX(m_frameRect.x() - halfStrokeWidth);
-            m_frameRect.setY(m_frameRect.y() - halfStrokeWidth);
-            m_frameRect.setWidth(m_frameRect.width() + strokeWidth);
-            m_frameRect.setHeight(m_frameRect.height() + strokeWidth);
-        }
-    }
 
     // update frameRect with transform
     if (UNLIKELY(style()->hasTransforms())) {
@@ -923,8 +911,14 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 
     auto newPath = path();
     if (newPath) {
+        auto strokeWidth = style()->strokeWidth().specifiedValue(
+                    normalizedDiagonalViewportLength(), this);
+
+        // fill and stroke need same boundingRect for cover this case
+        // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
+        Unit::Rect rect = newPath->strokeBoundingRect(strokeWidth);
+
         if (fillHasUrl) {
-            Unit::Rect rect = newPath->boundingRect(true);
             fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
             if (!fillInfo) {
                 Optional<GradientDrawingInfo*> radialGradientInfo =
@@ -945,7 +939,6 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         if (strokeHasUrl) {
-            Unit::Rect rect = newPath->boundingRect(false);
             // TODO: Only support linear gradient
             strokeInfo =
                 makeCanvasFillStrokeSource(style()->stroke()->url(), rect);
@@ -972,8 +965,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         ctx.m_canvas->fillPath(newPath.value());
-        ctx.m_canvas->setLineWidth(style()->strokeWidth().specifiedValue(
-            normalizedDiagonalViewportLength(), this));
+        ctx.m_canvas->setLineWidth(strokeWidth);
         ctx.m_canvas->strokePath(newPath.value());
         ctx.m_canvas->restore();
     }

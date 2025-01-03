@@ -67,16 +67,19 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) override;
     virtual void setCTM(const SkMatrix& matrix) override;
     virtual void translate(float x, float y) override;
-    virtual Unit::Rect boundingRect(bool isFill) override;
+    virtual Unit::Rect fillBoundingRect() override;
+    virtual Unit::Rect strokeBoundingRect(float strokeWidth) override;
 
 private:
     void notifyBoundingRectDirty()
     {
-        m_needsComputeStrokeBoundingRect = m_needsComputedFillBoundingRect =
-            true;
+        m_needsComputeStrokeBoundingRect =
+            std::numeric_limits<float>::quiet_NaN();
+        m_needsComputeFillBoundingRect = true;
     }
-    bool m_needsComputeStrokeBoundingRect;
-    bool m_needsComputedFillBoundingRect;
+
+    float m_needsComputeStrokeBoundingRect; // NaN means needs computing
+    bool m_needsComputeFillBoundingRect;
     Unit::Rect m_computedStrokeBoundingRect;
     Unit::Rect m_computedFillBoundingRect;
     cairo_t* m_cairoContext;

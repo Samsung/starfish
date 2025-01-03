@@ -78,7 +78,8 @@ public:
         return m_matrix;
     }
 
-    virtual Unit::Rect boundingRect(bool isFill) = 0;
+    virtual Unit::Rect fillBoundingRect() = 0;
+    virtual Unit::Rect strokeBoundingRect(float strokeWidth) = 0;
 
     bool needNewSubPath()
     {

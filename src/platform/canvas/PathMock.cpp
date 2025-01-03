@@ -108,7 +108,12 @@ void PathMock::setCTM(const SkMatrix& matrix)
 {
 }
 
-Unit::Rect PathMock::boundingRect(bool isFill)
+Unit::Rect PathMock::strokeBoundingRect(float strokeWidth)
+{
+    return Unit::Rect();
+}
+
+Unit::Rect PathMock::fillBoundingRect()
 {
     return Unit::Rect();
 }
