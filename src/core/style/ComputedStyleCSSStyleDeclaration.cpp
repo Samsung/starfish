@@ -412,6 +412,39 @@ static CSSStyleValuePair resolveFlowRelativeBlockProperties(
     return ret;
 }
 
+void ComputedStyleCSSStyleDeclaration::updateWithLengthValueForMBP(
+    CSSStyleValuePair::KeyKind keykind, Frame* frame, ComputedStyle* style,
+    const std::function<Length(ComputedStyle*)>& valueFromStyle,
+    const std::function<LayoutUnit(FrameBox*)>& valueFromFrameBox)
+{
+    CSSStyleValuePair cssStyleValuePair;
+
+    // Update keykind.
+    cssStyleValuePair.setKeyKind(keykind);
+
+    // Set initial value as auto.
+    cssStyleValuePair.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+
+    // Update value for each case.
+    if (valueFromStyle(style).isFixed()) {
+        cssStyleValuePair.setLengthValue(
+            CSSLength(valueFromStyle(style).fixed()));
+    } else if (frame && frame->isFrameBox()) {
+        cssStyleValuePair.setLengthValue(
+            CSSLength(valueFromFrameBox(frame->asFrameBox())));
+    } else if (frame && frame->isFrameInline()) {
+        InlineNonReplacedBox* inb =
+            blockContainer(frame)->firstInlineNonReplacedBox(
+                frame->asFrameInline());
+        if (inb != nullptr) {
+            cssStyleValuePair.setLengthValue(CSSLength(valueFromFrameBox(inb)));
+        }
+    }
+
+    // Updated this ComputedStyleCSSStyleDeclaration with cssStyleValuePair.
+    addValuePair(cssStyleValuePair);
+}
+
 void ComputedStyleCSSStyleDeclaration::updateValue(
     CSSStyleValuePair::KeyKind keyKind, String* customPropertyName)
 {
@@ -438,292 +471,137 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 #undef IGNORE_SHORTHANDS_ETC
 
     case CSSStyleValuePair::KeyKind::MarginTop: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginTop);
-        if (style->margin().top().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->margin().top().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->marginTop()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->marginTop()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->margin().top();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->marginTop();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::MarginRight: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginRight);
-        if (style->margin().right().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->margin().right().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->marginRight()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->marginRight()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->margin().right();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->marginRight();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::MarginBottom: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginBottom);
-        if (style->margin().bottom().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->margin().bottom().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->marginBottom()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->marginBottom()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->margin().bottom();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->marginBottom();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::MarginLeft: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginLeft);
-        if (style->margin().left().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->margin().left().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->marginLeft()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->marginLeft()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->margin().left();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->marginLeft();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::PaddingTop: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingTop);
-        if (style->padding().top().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->padding().top().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->paddingTop()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->paddingTop()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->padding().top();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->paddingTop();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::PaddingRight: {
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->padding().right();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->paddingRight();
+                return ret;
+            });
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingRight);
-        if (style->padding().right().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->padding().right().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->paddingRight()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->paddingRight()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::PaddingBottom: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingBottom);
-        if (style->padding().bottom().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->padding().bottom().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->paddingBottom()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->paddingBottom()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->padding().bottom();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->paddingBottom();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::PaddingLeft: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingLeft);
-        if (style->padding().left().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->padding().left().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->paddingLeft()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->paddingLeft()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->padding().left();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->paddingLeft();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::BorderTopWidth: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderTopWidth);
-        if (style->border().top().width().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->border().top().width().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->borderTop()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->borderTop()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->border().top().width();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->borderTop();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::BorderRightWidth: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderRightWidth);
-        if (style->border().right().width().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->border().right().width().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->borderRight()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->borderRight()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->border().right().width();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->borderRight();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::BorderBottomWidth: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderBottomWidth);
-        if (style->border().bottom().width().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->border().bottom().width().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->borderBottom()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->borderBottom()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->border().bottom().width();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->borderBottom();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::BorderLeftWidth: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderLeftWidth);
-        if (style->border().left().width().isFixed()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(style->border().left().width().fixed()));
-        } else if (frame && frame->isFrameBox()) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(frame->asFrameBox()->borderLeft()));
-        } else if (frame && frame->isFrameInline()) {
-            InlineNonReplacedBox* inb =
-                blockContainer(frame)->firstInlineNonReplacedBox(
-                    frame->asFrameInline());
-            if (inb != nullptr) {
-                p.setValue(CSSLength(inb->borderLeft()));
-                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            } else {
-                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-            }
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
-        }
-        addValuePair(p);
+        updateWithLengthValueForMBP(
+            keyKind, frame, style,
+            [](ComputedStyle* style) -> Length {
+                return style->border().left().width();
+            },
+            [](FrameBox* frame) -> LayoutUnit {
+                auto ret = frame->borderLeft();
+                return ret;
+            });
     } break;
     case CSSStyleValuePair::KeyKind::BorderBlockStartWidth: {
         CSSStyleValuePair p;
