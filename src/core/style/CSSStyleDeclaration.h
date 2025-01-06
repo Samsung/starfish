@@ -23,9 +23,16 @@
 #include "binding/ScriptWrappable.h"
 #include "core/style/Style.h"
 
+#include <functional>
+
 namespace Starfish {
 
 class CSSRule;
+class Element;
+class Document;
+class Frame;
+class FrameBox;
+class InlineNonReplacedBox;
 
 CSSStyleValuePair::KeyKind lookupName(const char* buf, size_t len);
 
@@ -523,6 +530,11 @@ private:
         FrameTreeBuild,
         Layout,
     };
+
+    void updateWithLengthValueForMBP(
+        CSSStyleValuePair::KeyKind keykind, Frame* frame, ComputedStyle* style,
+        const std::function<Length(ComputedStyle*)>& valueFromStyle,
+        const std::function<LayoutUnit(FrameBox*)>& valueFromFrameBox);
 
     void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
 
