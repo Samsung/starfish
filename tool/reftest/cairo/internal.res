@@ -519,6 +519,7 @@ test/cairo/internal-test/css/animation/parse-animation.html
 test/cairo/internal-test/animation/a34.html
 test/cairo/internal-test/animation/a35.html
 test/cairo/internal-test/animation/a36.html
+test/cairo/internal-test/animation/animation_cancel_01.html
 test/cairo/internal-test/animation/animation_svg_rx_ry.html
 test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/css/transition/parse-transition.html
