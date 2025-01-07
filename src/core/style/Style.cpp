@@ -9286,18 +9286,17 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     // Check animation have to remove(End or Cancel).
     /// NOTE: Because the style is recalculated for each Animation Frame,
     /// element->style()->animation() registered by animate() may disappear.
-    /// However, each animation task in css animation has to be in order.
     std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
         canceledAnimationProgress;
-    for (auto iter = executor->activeAnimations().begin();
-         iter != executor->activeAnimations().end(); iter++) {
+    auto iter = executor->activeAnimations().begin();
+    while (iter != executor->activeAnimations().end()) {
         ActiveElementAnimation* activeElementAnimation = iter.key();
         GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
         if (activeElementAnimation->m_element != element) {
+            iter++;
             continue;
         }
 
-        String* name = activeElementAnimation->m_name;
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
         auto iterationCount = activeElementAnimation->m_iterationCount;
@@ -9310,7 +9309,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                 bool isCancel = true;
 
                 bool isOddIteration;
-                if (std::isinf(iterationCount) == false) {
+                if (!std::isinf(iterationCount)) {
                     isOddIteration =
                         std::fmod(iterationCount -
                                       animationTasks[i]->iterationStart() + 1,
@@ -9327,7 +9326,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                      !isOddIteration);
                 animationTasks[i]->setIsForward(isForwardDirection);
                 if (animationTasks[i]->fraction(tick) >= 1) {
-                    if (std::isinf(iterationCount) == false) {
+                    if (!std::isinf(iterationCount)) {
                         float f = animationTasks[i]->iterationStart() - 1;
                         animationTasks[i]->setIterationStart(f);
                         if (animationTasks[i]->iterationStart() < 1) {
@@ -9353,18 +9352,23 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                 // animation property gone || other properties changed
                 if (!shouldRemove) {
                     if (animationTasks[i]->isCSSAnimationTask()) {
-                        if (element->style() && element->style()->animation()) {
-                            bool found = false;
-                            auto styleAnimationData =
-                                element->style()->animation();
+                        if (toStyle->animation()) {
                             for (size_t n = 0;
                                  n < styleAnimationData
                                          ->animationKeyframesListSize();
                                  n++) {
-                                if (!name->equals(
+                                if (styleAnimationData->animationName(n)
+                                        ->equals("none")) {
+                                    // animation name is gone.
+                                    shouldRemove = true;
+                                }
+
+                                if (!activeElementAnimation->m_name->equals(
                                         styleAnimationData->animationName(n))) {
                                     continue;
                                 }
+
+                                bool found = false;
                                 AnimationKeyframes& animationKeyframes =
                                     styleAnimationData->animationKeyframes(n);
                                 if (animationKeyframes
@@ -9375,7 +9379,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                                          animationKeyframe->keyKinds()) {
                                         if (animationTasks[i]
                                                 ->isKindOfTransitionProperty(
-                                                    keyKind) == true) {
+                                                    keyKind)) {
                                             found = true;
                                             break;
                                         }
@@ -9430,9 +9434,21 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         }
 
         if (needsToFireAnimationCancelEvent == true) {
-            executor->fireAnimationCancelEvent(element, name, cancelTick);
+            executor->fireAnimationCancelEvent(
+                element, activeElementAnimation->m_name, cancelTick);
         } else if (needsToFireAnimationEndEvent == true) {
-            executor->fireAnimationEndEvent(element, name, endTick);
+            executor->fireAnimationEndEvent(
+                element, activeElementAnimation->m_name, endTick);
+        }
+
+        if (animationTasks.empty()) {
+            // if animationTasks is empty, remove it from activeAnimations in
+            // executor. if both activeTransitions and activeAnimations in the
+            // executor are empty, it is removed from the webview's active
+            // animation executor list.
+            iter = executor->activeAnimations().erase(iter);
+        } else {
+            iter++;
         }
     }
 
@@ -9615,7 +9631,6 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     if (damage & ComputedStyleDamage::ComputedStyleDamageComposite) {
         element->setNeedsComposite();
     }
-
     element->setStyle(style, &ctx);
     element->clearNeedsStyleRecalc();
 
