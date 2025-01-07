@@ -45,8 +45,8 @@ public:
 
     virtual bool isPointInPath(float x, float y,
                                CanvasFillRule fillRule) override;
-    virtual bool isPointInStroke(float x, float y) override;
-    virtual void applyPathDrawingStyles(Canvas* canvas) override;
+    virtual bool isPointInStroke(const StrokeStyle& style, float x,
+                                 float y) override;
 
     // For CanvasPath
     virtual void closePath() override;
@@ -68,17 +68,20 @@ public:
     virtual void setCTM(const SkMatrix& matrix) override;
     virtual void translate(float x, float y) override;
     virtual Unit::Rect fillBoundingRect() override;
-    virtual Unit::Rect strokeBoundingRect(float strokeWidth) override;
+    virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) override;
 
 private:
     void notifyBoundingRectDirty()
     {
-        m_needsComputeStrokeBoundingRect =
+        m_needsComputeStrokeBoundingRect.strokeWidth =
             std::numeric_limits<float>::quiet_NaN();
         m_needsComputeFillBoundingRect = true;
     }
 
-    float m_needsComputeStrokeBoundingRect; // NaN means needs computing
+    void applyStrokeStyle(const StrokeStyle& style);
+
+    StrokeStyle m_needsComputeStrokeBoundingRect; // NaN stroke-width means
+                                                  // needs computing
     bool m_needsComputeFillBoundingRect;
     Unit::Rect m_computedStrokeBoundingRect;
     Unit::Rect m_computedFillBoundingRect;

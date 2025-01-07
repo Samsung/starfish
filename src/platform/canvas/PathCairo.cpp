@@ -58,6 +58,9 @@
 #include "platform/canvas/CanvasCairoUtils.h"
 #include "platform/canvas/PathCairo.h"
 
+#include "core/style/StrokeLineCap.h"
+#include "core/style/StrokeLineJoin.h"
+
 namespace Starfish {
 
 Path* Path::create()
@@ -69,6 +72,9 @@ PathCairo::PathCairo()
     : m_cairoContext(nullptr)
     , m_dumyCairoSurface(nullptr)
 {
+    m_needsComputeStrokeBoundingRect.strokeMiterLimit = 0;
+    m_needsComputeStrokeBoundingRect.strokeLineCap = StrokeLineCap::Butt;
+    m_needsComputeStrokeBoundingRect.strokeLineJoin = StrokeLineJoin::Miter;
     notifyBoundingRectDirty();
     init();
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -153,22 +159,23 @@ bool PathCairo::isPointInPath(float x, float y, CanvasFillRule fillRule)
     return ret;
 }
 
-bool PathCairo::isPointInStroke(float x, float y)
+bool PathCairo::isPointInStroke(const StrokeStyle& style, float x, float y)
 {
+    applyStrokeStyle(style);
     return cairo_in_stroke(m_cairoContext, x, y);
 }
 
-void PathCairo::applyPathDrawingStyles(Canvas* canvas)
+void PathCairo::applyStrokeStyle(const StrokeStyle& style)
 {
-    notifyBoundingRectDirty();
-    cairo_set_line_width(m_cairoContext, canvas->lineWidth());
+    // line-width == stroke-width * 2
+    cairo_set_line_width(m_cairoContext, style.strokeWidth * 2);
     cairo_set_line_cap(
         m_cairoContext,
-        CanvasCairoUtils::cavansLineCapToCairoLineCap(canvas->lineCap()));
+        CanvasCairoUtils::canvasLineCapToCairoLineCap(style.strokeLineCap));
     cairo_set_line_join(
         m_cairoContext,
-        CanvasCairoUtils::canvasLineJoinToCairoLineJoin(canvas->lineJoine()));
-    cairo_set_miter_limit(m_cairoContext, canvas->miterLimit());
+        CanvasCairoUtils::canvasLineJoinToCairoLineJoin(style.strokeLineJoin));
+    cairo_set_miter_limit(m_cairoContext, style.strokeMiterLimit);
 }
 
 void PathCairo::closePath()
@@ -424,9 +431,9 @@ Unit::Rect PathCairo::fillBoundingRect()
     return result;
 }
 
-Unit::Rect PathCairo::strokeBoundingRect(float strokeWidth)
+Unit::Rect PathCairo::strokeBoundingRect(const StrokeStyle& style)
 {
-    if (m_needsComputeStrokeBoundingRect == strokeWidth) {
+    if (m_needsComputeStrokeBoundingRect == style) {
         return m_computedStrokeBoundingRect;
     }
 
@@ -435,13 +442,10 @@ Unit::Rect PathCairo::strokeBoundingRect(float strokeWidth)
     double y0 = 0;
     double y1 = 0;
 
-    // line-width == stroke-width * 2
-    cairo_set_line_width(m_cairoContext, strokeWidth * 2);
+    applyStrokeStyle(style);
+    m_needsComputeStrokeBoundingRect = style;
     cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
-    // reset to default value
-    cairo_set_line_width(m_cairoContext, 2);
     Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
-    m_needsComputeStrokeBoundingRect = strokeWidth;
     m_computedStrokeBoundingRect = result;
     return result;
 }

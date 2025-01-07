@@ -122,6 +122,15 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             setNeedsPainting();
         } else if (ss->m_strokeWidth == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+            setNeedsPainting();
+        } else if (ss->m_strokeLineCap == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+            setNeedsPainting();
+        } else if (ss->m_strokeLineJoin == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
             setNeedsPainting();
         } else if (ss->m_strokeOpacity == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
@@ -310,108 +319,38 @@ void SVGElement::styleForPresentationAttribute(
                                                    cssCustomValues);
     }
 
+#define UPDATE_SVG_PRESENTATION_ATTRIBUTE(name, keyName)                \
+    {                                                                   \
+        String* value = getAttributeOrVarReferencedValue(               \
+            starfish()->staticStrings()->m_##name, cssCustomValues);    \
+        if (value->length()) {                                          \
+            pair.setKeyKind(CSSStyleValuePair::keyName);                \
+            auto u8str = value->toUTF8NonGCString();                    \
+            CSSTokenVector tokens;                                      \
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, u8str.data(), \
+                                                  u8str.length());      \
+            if (pair.updateValue##keyName(document(), tokens)) {        \
+                cssValues.push_back(pair);                              \
+            }                                                           \
+        }                                                               \
+    }
+
     if (needsFillAttributes()) {
-        String* fill = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_fill, cssCustomValues);
-        if (fill->length()) {
-            pair.setKeyKind(CSSStyleValuePair::Fill);
-
-            auto fillStr = fill->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, fillStr.data(),
-                                                  fillStr.length());
-            if (pair.updateValueFill(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
-
-        String* fillRule = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_fillRule, cssCustomValues);
-        if (fillRule->length()) {
-            pair.setKeyKind(CSSStyleValuePair::FillRule);
-
-            auto str = fillRule->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueFillRule(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
-
-        String* fillOpacity = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_fillOpacity, cssCustomValues);
-        if (fillOpacity->length()) {
-            pair.setKeyKind(CSSStyleValuePair::FillOpacity);
-
-            auto str = fillOpacity->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueFillOpacity(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(fill, Fill);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(fillRule, FillRule);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(fillOpacity, FillOpacity);
     }
 
     if (needsStrokeAttributes()) {
-        String* stroke = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_stroke, cssCustomValues);
-        if (stroke->length()) {
-            pair.setKeyKind(CSSStyleValuePair::Stroke);
-
-            auto str = stroke->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueStroke(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
-
-        String* strokeWidth = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_strokeWidth, cssCustomValues);
-        if (strokeWidth->length()) {
-            pair.setKeyKind(CSSStyleValuePair::StrokeWidth);
-
-            auto str = strokeWidth->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueStrokeWidth(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
-
-        String* strokeOpacity = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_strokeOpacity, cssCustomValues);
-        if (strokeOpacity->length()) {
-            pair.setKeyKind(CSSStyleValuePair::StrokeOpacity);
-
-            auto str = strokeOpacity->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueStrokeOpacity(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(stroke, Stroke);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeWidth, StrokeWidth);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeLineCap, StrokeLineCap);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeLineJoin, StrokeLineJoin);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeMiterLimit, StrokeMiterLimit);
     }
 
     if (needsTransparentAttributes()) {
-        String* opacity = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_opacity, cssCustomValues);
-        if (opacity->length()) {
-            pair.setKeyKind(CSSStyleValuePair::Opacity);
-
-            auto str = opacity->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueOpacity(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(opacity, Opacity);
     }
 
     if (needsTransformAttributes()) {
@@ -428,55 +367,16 @@ void SVGElement::styleForPresentationAttribute(
                 cssValues.push_back(pair);
             }
         }
-
-        String* transformOrigin = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_transformOrigin, cssCustomValues);
-        if (transformOrigin->length()) {
-            pair.setKeyKind(CSSStyleValuePair::TransformOrigin);
-
-            auto str = transformOrigin->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueTransformOrigin(tokens, true)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(transformOrigin, TransformOrigin);
     }
 
     if (needsClipPathAttributes()) {
-        String* clipPathStr = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_clipPath, cssCustomValues);
-
-        if (clipPathStr->length()) {
-            pair.setKeyKind(CSSStyleValuePair::ClipPath);
-
-            auto str = clipPathStr->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueClipPath(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(clipPath, ClipPath);
     }
 
     if (isRenderableElement()) {
         // The display property only applies to renderable elements.
-        String* displayStr = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_display, cssCustomValues);
-
-        if (displayStr->length()) {
-            pair.setKeyKind(CSSStyleValuePair::Display);
-
-            auto str = displayStr->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueDisplay(document(), tokens)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(display, Display);
     }
 
     // https://www.w3.org/TR/SVG11/masking.html#MaskProperty
@@ -503,20 +403,7 @@ void SVGElement::styleForPresentationAttribute(
                 }
             }
         }
-
-        String* maskTypeStr = getAttributeOrVarReferencedValue(
-            starfish()->staticStrings()->m_maskType, cssCustomValues);
-        if (!maskTypeStr->isEmpty()) {
-            pair.setKeyKind(CSSStyleValuePair::MaskType);
-
-            auto str = maskTypeStr->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-            if (pair.updateValueMaskType(tokens, false)) {
-                cssValues.push_back(pair);
-            }
-        }
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(maskType, MaskType);
     }
 }
 

@@ -393,7 +393,7 @@ public:
     {
     }
 
-    virtual CanvasLineJoin lineJoine()
+    virtual CanvasLineJoin lineJoin()
     {
         return CanvasLineJoin::Miter;
     }

@@ -140,7 +140,12 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     if (node()->asSVGElement()->isShapeElement()) {
         auto p = path();
         if (p) {
-            Unit::Rect boundingRect = p->strokeBoundingRect(strokeWidth);
+            Unit::Rect boundingRect = p->strokeBoundingRect({
+                strokeWidth,
+                style()->strokeMiterLimit(),
+                style()->strokeLineCap(),
+                style()->strokeLineJoin()
+            });
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
                            boundingRect.width(), boundingRect.height());
@@ -919,10 +924,15 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
     if (newPath) {
         auto strokeWidth = style()->strokeWidth().specifiedValue(
                     normalizedDiagonalViewportLength(), this);
-
+        Path::StrokeStyle ss({
+           strokeWidth,
+           style()->strokeMiterLimit(),
+           style()->strokeLineCap(),
+           style()->strokeLineJoin()
+        });
         // fill and stroke need same boundingRect for cover this case
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
-        Unit::Rect rect = newPath->strokeBoundingRect(strokeWidth);
+        Unit::Rect rect = newPath->strokeBoundingRect(ss);
 
         if (fillHasUrl) {
             fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
@@ -969,6 +979,10 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
                             strokeColor.a() * style()->strokeOpacity()));
         }
+
+        ctx.m_canvas->setLineCap(ss.strokeLineCap);
+        ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
+        ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
 
         ctx.m_canvas->fillPath(newPath.value());
         ctx.m_canvas->setLineWidth(strokeWidth);

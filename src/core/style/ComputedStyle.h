@@ -31,6 +31,8 @@
 #include "core/style/CounterBaseList.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/FlexBasisData.h"
+#include "core/style/StrokeLineCap.h"
+#include "core/style/StrokeLineJoin.h"
 #include "core/style/Style.h"
 #include "core/style/StyleAnimationData.h"
 #include "core/style/StyleBackgroundData.h"
@@ -801,11 +803,14 @@ class ComputedStyle : public gc {
         Length m_horizontalBorderSpacing; // table
         Length m_verticalBorderSpacing;   // table
 
-        StylePaintData* m_fill;   // svg
-        float m_fillOpacity;      // svg
-        StylePaintData* m_stroke; // svg
-        float m_strokeOpacity;    // svg
-        Length m_strokeWidth;     // svg
+        StylePaintData* m_fill;          // svg
+        float m_fillOpacity;             // svg
+        StylePaintData* m_stroke;        // svg
+        float m_strokeOpacity;           // svg
+        Length m_strokeWidth;            // svg
+        StrokeLineCap m_strokeLineCap;   // svg
+        StrokeLineJoin m_strokeLineJoin; // svg
+        float m_strokeMiterLimit;        // svg
 
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
@@ -826,6 +831,9 @@ class ComputedStyle : public gc {
             m_strokeOpacity = 1;
             m_stroke = new StylePaintData(Unit::Color(0, 0, 0, 0));
             m_strokeWidth = Length(Length::Fixed, 1);
+            m_strokeLineCap = StrokeLineCap::Butt;
+            m_strokeLineJoin = StrokeLineJoin::Miter;
+            m_strokeMiterLimit = 4;
 
             m_textTransform = NoneTextTransformValue;
             m_caretColor = Unit::Color(0, 0, 0, 255);
@@ -3655,6 +3663,45 @@ public:
     {
         if (!v.isFixed() || v != strokeWidth())
             ensureInheritedRareData()->m_strokeWidth = v;
+    }
+
+    void setStrokeLineCap(StrokeLineCap cap)
+    {
+        ensureInheritedRareData()->m_strokeLineCap = cap;
+    }
+
+    StrokeLineCap strokeLineCap()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeLineCap;
+        }
+        return StrokeLineCap::Butt;
+    }
+
+    void setStrokeLineJoin(StrokeLineJoin join)
+    {
+        ensureInheritedRareData()->m_strokeLineJoin = join;
+    }
+
+    StrokeLineJoin strokeLineJoin()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeLineJoin;
+        }
+        return StrokeLineJoin::Miter;
+    }
+
+    void setStrokeMiterLimit(float m)
+    {
+        ensureInheritedRareData()->m_strokeMiterLimit = m;
+    }
+
+    float strokeMiterLimit()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeMiterLimit;
+        }
+        return 4;
     }
 
     BorderCollapseValue borderCollapse()

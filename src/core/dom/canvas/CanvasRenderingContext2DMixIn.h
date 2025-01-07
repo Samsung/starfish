@@ -25,6 +25,8 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasPathInterfaceMixIn.h"
 #include "core/dom/canvas/CanvasImageSource.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/dom/DOMExceptionOr.h"
 #include "core/dom/DOMMatrix2DInit.h"
 #include "core/dom/DOMMatrix.h"
@@ -41,8 +43,6 @@ class ExecutionContext;
 class HTMLCanvasElement;
 class NativeImageData;
 
-enum class CanvasLineCap;
-enum class CanvasLineJoin;
 enum class CanvasTextAlign;
 enum class CanvasTextBaseline;
 enum class CanvasDirection;

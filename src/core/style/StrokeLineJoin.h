@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2025-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasLineCap__
-#define __StarfishCanvasLineCap__
-
-#include "core/style/StrokeLineCap.h"
+#ifndef __StarfishStrokeLineJoin__
+#define __StarfishStrokeLineJoin__
 
 namespace Starfish {
-using CanvasLineCap = StrokeLineCap;
+enum class StrokeLineJoin { Round, Bevel, Miter };
+String* strokeLineJoinToString(StrokeLineJoin lineJoin);
+bool stringToStrokeLineJoin(String* lineJoin, StrokeLineJoin& out);
 } // namespace Starfish
 #endif

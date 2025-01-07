@@ -1747,17 +1747,17 @@ public:
     virtual void setLineCap(CanvasLineCap lineCap) override
     {
         cairo_line_cap_t cap =
-            CanvasCairoUtils::cavansLineCapToCairoLineCap(lineCap);
+            CanvasCairoUtils::canvasLineCapToCairoLineCap(lineCap);
         cairo_set_line_cap(m_canvas, cap);
     }
 
-    virtual CanvasLineJoin lineJoine() override
+    virtual CanvasLineJoin lineJoin() override
     {
         auto join = cairo_get_line_join(m_canvas);
         return CanvasCairoUtils::cairoLineJoinToCanvasLineJoin(join);
     }
 
-    virtual void setLineJoin(CanvasLineJoin lineJoin) override
+    virtual void setLineJoin(StrokeLineJoin lineJoin) override
     {
         cairo_line_join_t join =
             CanvasCairoUtils::canvasLineJoinToCairoLineJoin(lineJoin);

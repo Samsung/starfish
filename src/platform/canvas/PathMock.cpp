@@ -51,13 +51,9 @@ bool PathMock::isPointInPath(float x, float y, CanvasFillRule fillRule)
     return false;
 }
 
-bool PathMock::isPointInStroke(float x, float y)
+bool PathMock::isPointInStroke(const StrokeStyle& style, float x, float y)
 {
     return false;
-}
-
-void PathMock::applyPathDrawingStyles(Canvas* canvas)
-{
 }
 
 void PathMock::closePath()
@@ -108,7 +104,7 @@ void PathMock::setCTM(const SkMatrix& matrix)
 {
 }
 
-Unit::Rect PathMock::strokeBoundingRect(float strokeWidth)
+Unit::Rect PathMock::strokeBoundingRect(const StrokeStyle& style)
 {
     return Unit::Rect();
 }

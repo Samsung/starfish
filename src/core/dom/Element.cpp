@@ -1650,7 +1650,8 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                 auto fillRect = path->fillBoundingRect();
                 if (fillRect.isEmpty()) {
                     // fallback
-                    fillRect = path->strokeBoundingRect(1);
+                    fillRect = path->strokeBoundingRect(
+                        { 1, 0, StrokeLineCap::Butt, StrokeLineJoin::Miter });
                 }
                 rect = LayoutRect(fillRect.x(), fillRect.y(), fillRect.width(),
                                   fillRect.height());

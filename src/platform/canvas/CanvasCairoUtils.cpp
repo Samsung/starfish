@@ -46,7 +46,7 @@ namespace CanvasCairoUtils {
         }
     }
 
-    cairo_line_cap_t cavansLineCapToCairoLineCap(const CanvasLineCap& cap)
+    cairo_line_cap_t canvasLineCapToCairoLineCap(const CanvasLineCap& cap)
     {
         switch (cap) {
         case CanvasLineCap::Butt:

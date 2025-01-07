@@ -20,7 +20,9 @@
 #ifndef __StarfishCanvasLineJoin__
 #define __StarfishCanvasLineJoin__
 
+#include "core/style/StrokeLineJoin.h"
+
 namespace Starfish {
-enum class CanvasLineJoin { Round, Bevel, Miter };
-}
+using CanvasLineJoin = StrokeLineJoin;
+} // namespace Starfish
 #endif
