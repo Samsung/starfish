@@ -28,6 +28,8 @@
 #include "core/modules/canvas/CanvasFillStrokeSource.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/modules/canvas/image/SVGNativeImageData.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 
 namespace Starfish {
 
@@ -39,8 +41,6 @@ class Path;
 
 struct GradientDrawingInfo;
 
-enum class CanvasLineCap;
-enum class CanvasLineJoin;
 enum class CanvasTextAlign;
 enum class CanvasTextBaseline;
 enum class CanvasDirection;
@@ -349,7 +349,7 @@ public:
 
     virtual CanvasLineCap lineCap() = 0;
     virtual void setLineCap(CanvasLineCap lineCap) = 0;
-    virtual CanvasLineJoin lineJoine() = 0;
+    virtual CanvasLineJoin lineJoin() = 0;
     virtual void setLineJoin(CanvasLineJoin lineJoin) = 0;
     virtual double miterLimit() = 0;
     virtual void setMiterLimit(double limit) = 0;

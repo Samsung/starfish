@@ -33,8 +33,8 @@ public:
     virtual void copy(Path* src) override;
     virtual bool isPointInPath(float x, float y,
                                CanvasFillRule fillRule) override;
-    virtual bool isPointInStroke(float x, float y) override;
-    virtual void applyPathDrawingStyles(Canvas* canvas) override;
+    virtual bool isPointInStroke(const StrokeStyle& style, float x,
+                                 float y) override;
 
     // For CanvasPath
     virtual void closePath() override;
@@ -55,7 +55,7 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) override;
     virtual void setCTM(const SkMatrix& matrix) override;
     virtual Unit::Rect fillBoundingRect() override;
-    virtual Unit::Rect strokeBoundingRect(float strokeWidth) override;
+    virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) override;
     virtual void append(Path* path) override;
     virtual void translate(float x, float y) override;
 

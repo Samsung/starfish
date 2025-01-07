@@ -460,6 +460,9 @@ public:
     QualifiedName m_stopColor;
     QualifiedName m_stroke;
     QualifiedName m_strokeWidth;
+    QualifiedName m_strokeLineCap;
+    QualifiedName m_strokeLineJoin;
+    QualifiedName m_strokeMiterLimit;
     QualifiedName m_x;
     QualifiedName m_y;
     QualifiedName m_x1;

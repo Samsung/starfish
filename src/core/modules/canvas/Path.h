@@ -24,10 +24,24 @@ namespace Starfish {
 
 class Canvas;
 enum class CanvasFillRule;
+enum class StrokeLineCap;
+enum class StrokeLineJoin;
 
 class Path : public gc {
 public:
     static Path* create();
+
+    struct StrokeStyle {
+        float strokeWidth;
+        float strokeMiterLimit;
+        StrokeLineCap strokeLineCap;
+        StrokeLineJoin strokeLineJoin;
+
+        bool operator==(const StrokeStyle& src)
+        {
+            return memcmp(this, &src, sizeof(StrokeStyle)) == 0;
+        }
+    };
 
     virtual ~Path()
     {
@@ -39,8 +53,8 @@ public:
     virtual void currentPoint(float& x, float& y) = 0;
     virtual void copy(Path* src) = 0;
     virtual bool isPointInPath(float x, float y, CanvasFillRule fillRule) = 0;
-    virtual bool isPointInStroke(float x, float y) = 0;
-    virtual void applyPathDrawingStyles(Canvas* canvas) = 0;
+    virtual bool isPointInStroke(const StrokeStyle& style, float x,
+                                 float y) = 0;
 
     // For CanvasPath
     virtual void closePath() = 0;
@@ -79,7 +93,7 @@ public:
     }
 
     virtual Unit::Rect fillBoundingRect() = 0;
-    virtual Unit::Rect strokeBoundingRect(float strokeWidth) = 0;
+    virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) = 0;
 
     bool needNewSubPath()
     {

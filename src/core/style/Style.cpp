@@ -74,6 +74,8 @@
 #include "core/style/MediaValues.h"
 #include "core/style/NamedColors.h"
 #include "core/style/RectData.h"
+#include "core/style/StrokeLineCap.h"
+#include "core/style/StrokeLineJoin.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
 #include "core/style/ShadowData.h"
@@ -2468,6 +2470,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("alpha");
         }
         break;
+    case CSSStyleValuePair::ValueKind::StrokeLineCapValueKind:
+        return strokeLineCapToString(strokeLineCap());
+    case CSSStyleValuePair::ValueKind::StrokeLineJoinValueKind:
+        return strokeLineJoinToString(strokeLineJoin());
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -4835,6 +4841,45 @@ void StyleResolver::applyProperty(Element* element,
             style->setMaskType(MaskTypeValue::LuminanceMaskTypeValue);
         } else {
             style->setMaskType(newCssValue.maskTypeValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StrokeLineCap:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeLineCap(parentStyle->strokeLineCap());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeLineCap(StrokeLineCap::Butt);
+        } else {
+            style->setStrokeLineCap(newCssValue.strokeLineCap());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StrokeLineJoin:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeLineJoin(parentStyle->strokeLineJoin());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeLineJoin(StrokeLineJoin::Miter);
+        } else {
+            style->setStrokeLineJoin(newCssValue.strokeLineJoin());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StrokeMiterLimit:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeMiterLimit(parentStyle->strokeMiterLimit());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeMiterLimit(4);
+        } else {
+            style->setStrokeMiterLimit(newCssValue.numberValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:
@@ -15764,6 +15809,48 @@ bool CSSStyleValuePair::updateValueStrokeWidth(Document* document,
     return updateValueUnitLengthOrCalc(
         tokens[0], CSSPropertyParser::ParserOption::AllowPercent |
                        CSSPropertyParser::ParserOption::AllowWithoutUnit);
+}
+
+bool CSSStyleValuePair::updateValueStrokeLineCap(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    StringDataOnStackASCII ascii(value.data(), value.length());
+    ::Starfish::StrokeLineCap e;
+    bool result = stringToStrokeLineCap(&ascii, e);
+    if (result) {
+        setStrokeLineCapValue(e);
+        return true;
+    }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueStrokeLineJoin(Document* document,
+                                                  const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    StringDataOnStackASCII ascii(value.data(), value.length());
+    ::Starfish::StrokeLineJoin e;
+    bool result = stringToStrokeLineJoin(&ascii, e);
+    if (result) {
+        setStrokeLineJoinValue(e);
+        return true;
+    }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueStrokeMiterLimit(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueNumber(tokens, CSSPropertyParser::AllowNone);
 }
 
 bool CSSStyleValuePair::updateValueX(Document* document,

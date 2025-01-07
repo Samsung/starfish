@@ -62,6 +62,9 @@ class MutablePropertyValue;
 class CSSCounterFunction;
 class CSSGradientValue;
 
+enum class StrokeLineCap;
+enum class StrokeLineJoin;
+
 typedef VectorWithInlineStorage<4, CSSTokenValue, std::allocator<CSSTokenValue>>
     CSSTokenVector;
 
@@ -732,6 +735,9 @@ class CSSFilterFunction;
     F(StopOpacity, stopOpacity, "stop-opacity")                                \
     F(Stroke, stroke, "stroke")                                                \
     F(StrokeWidth, strokeWidth, "stroke-width")                                \
+    F(StrokeLineCap, strokeLineCap, "stroke-linecap")                          \
+    F(StrokeLineJoin, strokeLineJoin, "stroke-linejoin")                       \
+    F(StrokeMiterLimit, strokeMiterLimit, "stroke-miterlimit")                 \
     F(X, x, "x")                                                               \
     F(Y, y, "y")                                                               \
     F(X1, x1, "x1")                                                            \
@@ -1168,6 +1174,12 @@ public:
 
         // mask
         MaskTypeValueKind,
+
+        // stroke-linecap
+        StrokeLineCapValueKind,
+
+        // stroke-linejoin
+        StrokeLineJoinValueKind,
     };
 
     enum class TransformUnit {
@@ -1840,6 +1852,18 @@ public:
         return m_value.m_maskType;
     }
 
+    ::Starfish::StrokeLineCap strokeLineCap() const
+    {
+        STARFISH_ASSERT(m_valueKind == StrokeLineCapValueKind);
+        return m_value.m_strokeLineCap;
+    }
+
+    ::Starfish::StrokeLineJoin strokeLineJoin() const
+    {
+        STARFISH_ASSERT(m_valueKind == StrokeLineJoinValueKind);
+        return m_value.m_strokeLineJoin;
+    }
+
     bool valueEquals(const CSSStyleValuePair& src);
     bool operator==(const CSSStyleValuePair& src);
     bool operator!=(const CSSStyleValuePair& src)
@@ -1930,6 +1954,8 @@ public:
         TimingFunction* m_timingFunction;
         CSSFilterFunction* m_filterFunction;
         MaskTypeValue m_maskType;
+        ::Starfish::StrokeLineCap m_strokeLineCap;
+        ::Starfish::StrokeLineJoin m_strokeLineJoin;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2533,6 +2559,18 @@ public:
     {
         m_valueKind = MaskTypeValueKind;
         m_value.m_maskType = maskType;
+    }
+
+    void setStrokeLineCapValue(::Starfish::StrokeLineCap c)
+    {
+        m_valueKind = StrokeLineCapValueKind;
+        m_value.m_strokeLineCap = c;
+    }
+
+    void setStrokeLineJoinValue(::Starfish::StrokeLineJoin c)
+    {
+        m_valueKind = StrokeLineJoinValueKind;
+        m_value.m_strokeLineJoin = c;
     }
 
     bool updateValueForAttributeBasic(Document* document,

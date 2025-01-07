@@ -729,7 +729,9 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     if (isFill) {
         boundRect = path->fillBoundingRect();
     } else {
-        boundRect = path->strokeBoundingRect(lineWidth());
+        boundRect = path->strokeBoundingRect({ lineWidth() / 2,
+                                               static_cast<float>(miterLimit()),
+                                               lineCap(), lineJoin() });
     }
     size_t width = (size_t)(ceil(boundRect.width()));
     size_t height = (size_t)(ceil(boundRect.height()));

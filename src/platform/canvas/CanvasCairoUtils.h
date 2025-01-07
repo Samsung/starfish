@@ -21,13 +21,13 @@
 #ifndef __StarfishCanvasCairoUtils__
 #define __StarfishCanvasCairoUtils__
 
-namespace Starfish {
-enum class CanvasLineCap;
-enum class CanvasLineJoin;
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 
+namespace Starfish {
 namespace CanvasCairoUtils {
     CanvasLineCap cairoLineCapToCavansLineCap(const cairo_line_cap_t& cap);
-    cairo_line_cap_t cavansLineCapToCairoLineCap(const CanvasLineCap& cap);
+    cairo_line_cap_t canvasLineCapToCairoLineCap(const CanvasLineCap& cap);
     CanvasLineJoin cairoLineJoinToCanvasLineJoin(const cairo_line_join_t& join);
     cairo_line_join_t canvasLineJoinToCairoLineJoin(const CanvasLineJoin& join);
 } // namespace CanvasCairoUtils

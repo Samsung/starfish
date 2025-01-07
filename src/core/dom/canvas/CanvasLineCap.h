@@ -20,7 +20,9 @@
 #ifndef __StarfishCanvasLineCap__
 #define __StarfishCanvasLineCap__
 
+#include "core/style/StrokeLineCap.h"
+
 namespace Starfish {
-enum class CanvasLineCap { Butt, Round, Square };
-}
+using CanvasLineCap = StrokeLineCap;
+} // namespace Starfish
 #endif

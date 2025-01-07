@@ -362,6 +362,12 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "stroke"));
     m_strokeWidth = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-width"));
+    m_strokeLineCap = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stroke-linecap"));
+    m_strokeLineJoin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stroke-linejoin"));
+    m_strokeMiterLimit = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stroke-miterlimit"));
     m_x = QualifiedName(AtomicString::createAtomicString(starfish, "x"));
     m_y = QualifiedName(AtomicString::createAtomicString(starfish, "y"));
     m_x1 = QualifiedName(AtomicString::createAtomicString(starfish, "x1"));

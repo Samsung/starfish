@@ -84,20 +84,6 @@ static inline bool stringToCanvasFillRule(String* rule, CanvasFillRule& out)
     return false;
 }
 
-static inline String* canvasLineCapToString(CanvasLineCap lineCap)
-{
-    if (lineCap == CanvasLineCap::Round) {
-        return String::createASCIIString("round");
-    } else if (lineCap == CanvasLineCap::Square) {
-        return String::createASCIIString("square");
-    } else if (lineCap == CanvasLineCap::Butt) {
-        return String::createASCIIString("butt");
-    }
-
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return String::createASCIIString("butt");
-}
-
 static inline String* canvasTextAlignToString(CanvasTextAlign textAlign)
 {
     if (textAlign == CanvasTextAlign::End) {
@@ -221,56 +207,6 @@ static inline bool stringToCanvasDirection(String* canvasDirection,
         return true;
     } else if (canvasDirection->equals("inherit", 7) == true) {
         out = CanvasDirection::Inherit;
-        return true;
-    }
-
-    return false;
-}
-
-static inline bool stringToCanvasLineCap(String* lineCap, CanvasLineCap& out)
-{
-    STARFISH_ASSERT(lineCap != nullptr);
-
-    if (lineCap->equals("round", 5) == true) {
-        out = CanvasLineCap::Round;
-        return true;
-    } else if (lineCap->equals("square", 6) == true) {
-        out = CanvasLineCap::Square;
-        return true;
-    } else if (lineCap->equals("butt", 4) == true) {
-        out = CanvasLineCap::Butt;
-        return true;
-    }
-
-    return false;
-}
-
-static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
-{
-    if (lineJoin == CanvasLineJoin::Round) {
-        return String::createASCIIString("round");
-    } else if (lineJoin == CanvasLineJoin::Bevel) {
-        return String::createASCIIString("bevel");
-    } else if (lineJoin == CanvasLineJoin::Miter) {
-        return String::createASCIIString("miter");
-    }
-
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    return String::createASCIIString("miter");
-}
-
-static inline bool stringToCanvasLineJoin(String* lineJoin, CanvasLineJoin& out)
-{
-    STARFISH_ASSERT(lineJoin != nullptr);
-
-    if (lineJoin->equals("round", 5) == true) {
-        out = CanvasLineJoin::Round;
-        return true;
-    } else if (lineJoin->equals("bevel", 5) == true) {
-        out = CanvasLineJoin::Bevel;
-        return true;
-    } else if (lineJoin->equals("miter", 5) == true) {
-        out = CanvasLineJoin::Miter;
         return true;
     }
 
@@ -447,13 +383,13 @@ void CanvasRenderingContext2DMixIn::setLineWidth(float width)
 String* CanvasRenderingContext2DMixIn::lineCap()
 {
     auto cap = m_canvas->lineCap();
-    return canvasLineCapToString(cap);
+    return strokeLineCapToString(cap);
 }
 
 void CanvasRenderingContext2DMixIn::setLineCap(String* value)
 {
     CanvasLineCap cap;
-    if (stringToCanvasLineCap(value, cap) == true) {
+    if (stringToStrokeLineCap(value, cap) == true) {
         setLineCap(cap);
     }
 }
@@ -465,14 +401,14 @@ void CanvasRenderingContext2DMixIn::setLineCap(CanvasLineCap lineCap)
 
 String* CanvasRenderingContext2DMixIn::lineJoin()
 {
-    auto join = m_canvas->lineJoine();
-    return canvasLineJoinToString(join);
+    auto join = m_canvas->lineJoin();
+    return strokeLineJoinToString(join);
 }
 
 void CanvasRenderingContext2DMixIn::setLineJoin(String* value)
 {
     CanvasLineJoin join;
-    if (stringToCanvasLineJoin(value, join) == true) {
+    if (stringToStrokeLineJoin(value, join) == true) {
         setLineJoin(join);
     }
 }
@@ -2004,8 +1940,10 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     if (!getPointsUnaffectedByCurrentTransformation(x, y, xx, yy)) {
         return false;
     }
-    path->applyPathDrawingStyles(m_canvas);
-    return (path->isPointInStroke(xx, yy) == true);
+    return path->isPointInStroke({ m_canvas->lineWidth() / 2,
+                                   static_cast<float>(m_canvas->miterLimit()),
+                                   m_canvas->lineCap(), m_canvas->lineJoin() },
+                                 xx, yy);
 }
 
 String* CanvasRenderingContext2DMixIn::font()

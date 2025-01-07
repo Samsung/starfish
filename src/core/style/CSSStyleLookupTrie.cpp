@@ -776,6 +776,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // grid-row-start
         // animation-name
         // padding-inline
+        // stroke-linecap
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -830,6 +831,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::GridRowStart;
             }
             break;
+        case 's':
+            if (memcmp(data, "stroke-linecap", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeLineCap;
+            }
+            break;
         }
         break;
     case 15:
@@ -843,6 +849,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // grid-column-end
         // grid-column-gap
         // animation-delay
+        // stroke-linejoin
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -895,6 +902,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 // grid-column-gap is legacy gap property.
                 // This is replaced by column-gap.
                 return CSSStyleValuePair::KeyKind::ColumnGap;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "stroke-linejoin", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeLineJoin;
             }
             break;
         }
@@ -958,6 +970,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // counter-increment
         // grid-column-start
         // padding-block-end
+        // stroke-miterlimit
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-left-color", 17) == 0) {
@@ -997,6 +1010,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 'p':
             if (memcmp(data, "padding-block-end", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::PaddingBlockEnd;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "stroke-miterlimit", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
@@ -2034,6 +2052,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::ColumnGap;
             }
             break;
+        case 's':
+            if (memcmp(data, "strokeLinecap", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeLineCap;
+            }
+            break;
         }
         break;
     case 14:
@@ -2096,6 +2119,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'i':
             if (memcmp(data, "imageRendering", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::ImageRendering;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "strokeLinejoin", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeLineJoin;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
@@ -2225,6 +2253,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 'm':
             if (memcmp(data, "marginBlockStart", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginBlockStart;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "strokeMiterlimit", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \

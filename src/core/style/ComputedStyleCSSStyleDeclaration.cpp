@@ -2108,6 +2108,24 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeWidth);
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::StrokeLineCap: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeLineCap);
+        p.setStrokeLineCapValue(style->strokeLineCap());
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::StrokeLineJoin: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeLineJoin);
+        p.setStrokeLineJoinValue(style->strokeLineJoin());
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::StrokeMiterLimit: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeMiterLimit);
+        p.setNumberValue(style->strokeMiterLimit());
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::X: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->x());
         p.setKeyKind(CSSStyleValuePair::KeyKind::X);
