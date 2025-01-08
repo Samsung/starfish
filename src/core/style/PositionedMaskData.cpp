@@ -172,7 +172,6 @@ ImageValue* PositionedMaskData::image(uint32_t layer) const
 Length PositionedMaskData::positionX(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return Length();
     }
     return m_layers[layer].positionX();
@@ -181,7 +180,6 @@ Length PositionedMaskData::positionX(uint32_t layer) const
 Length PositionedMaskData::positionY(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return Length();
     }
     return m_layers[layer].positionY();
@@ -190,7 +188,6 @@ Length PositionedMaskData::positionY(uint32_t layer) const
 RepeatStyleValue PositionedMaskData::repeatX(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return RepeatRepeatValue;
     }
     return m_layers[layer].repeatX();
@@ -199,7 +196,6 @@ RepeatStyleValue PositionedMaskData::repeatX(uint32_t layer) const
 RepeatStyleValue PositionedMaskData::repeatY(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return RepeatRepeatValue;
     }
     return m_layers[layer].repeatY();
@@ -292,7 +288,6 @@ LengthSize PositionedMaskData::maskSizeLengthValue(uint32_t layer) const
 BackgroundSizeValue PositionedMaskData::maskSizeTypeValue(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return BackgroundSizeValue::ContainBackgroundSizeValue;
     }
     return m_layers[layer].sizeTypeValue();
