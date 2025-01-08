@@ -659,7 +659,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             gradient = new CanvasGradient(matchingSvg->executionContext(), xx1,
                                           yy1, xx2, yy2);
 
-            const auto colorStops = gradientElement->colorStops();
+            const auto& colorStops = gradientElement->colorStops();
             size_t size = colorStops.size();
             for (size_t i = 0; i < size; ++i) {
                 gradient->addColorStop(colorStops[i]->offset().numberData(),
@@ -860,7 +860,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                     gradientDrawingInfo.getValue());
             }
 
-            const auto colorStops = gradientElement->colorStops();
+            const auto& colorStops = gradientElement->colorStops();
             size_t size = colorStops.size();
             for (size_t i = 0; i < size; ++i) {
                 gradient->addColorStop(colorStops[i]->offset().numberData(),
@@ -936,22 +936,6 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 
         if (fillHasUrl) {
             fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
-            if (!fillInfo) {
-                Optional<GradientDrawingInfo*> radialGradientInfo =
-                    makeGradientDrawingInfo(style()->fill()->url(), rect);
-                if (radialGradientInfo.hasValue()) {
-                    ctx.m_canvas->save();
-                    std::shared_ptr<NativeGradient> gradient =
-                        NativeGradient::create(radialGradientInfo.getValue());
-                    if (radialGradientInfo->type ==
-                        GradientType::RadialGradient) {
-                        ctx.m_canvas->drawRadialGradient(
-                            rect, radialGradientInfo.getValue(),
-                            gradient.get());
-                    }
-                    ctx.m_canvas->restore();
-                }
-            }
         }
 
         if (strokeHasUrl) {
@@ -961,6 +945,9 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         ctx.m_canvas->save();
+
+        ctx.m_canvas->referencePath(newPath.value());
+        // fill
         if (fillInfo.hasValue()) {
             ctx.m_canvas->setFillSource(fillInfo.value());
         } else {
@@ -970,7 +957,9 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                             fillColor.a() * style()->fillOpacity()));
             ctx.m_canvas->setFillRule(style()->fillRule());
         }
+        ctx.m_canvas->fillPreserve();
 
+        // stroke
         if (strokeInfo.hasValue()) {
             ctx.m_canvas->setStrokeSource(strokeInfo.value());
         } else {
@@ -980,13 +969,12 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                             strokeColor.a() * style()->strokeOpacity()));
         }
 
+        ctx.m_canvas->setLineWidth(strokeWidth);
         ctx.m_canvas->setLineCap(ss.strokeLineCap);
         ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
         ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
+        ctx.m_canvas->stroke();
 
-        ctx.m_canvas->fillPath(newPath.value());
-        ctx.m_canvas->setLineWidth(strokeWidth);
-        ctx.m_canvas->strokePath(newPath.value());
         ctx.m_canvas->restore();
     }
 }

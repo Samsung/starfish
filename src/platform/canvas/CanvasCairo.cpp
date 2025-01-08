@@ -1855,6 +1855,11 @@ public:
         cairo_line_to(m_canvas, x, y);
     }
 
+    virtual void referencePath(Path* path) override
+    {
+        setPathAsNewPathOnCurrentContext(path);
+    }
+
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3) override
     {

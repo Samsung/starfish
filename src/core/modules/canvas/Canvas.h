@@ -551,6 +551,10 @@ public:
     {
         STARFISH_UNSUPPORTED("CanvasPath function: lineTo");
     }
+    virtual void referencePath(Path*)
+    {
+        STARFISH_UNSUPPORTED("CanvasPath function: referencePath");
+    }
     void rect(const Unit::Rect& rt)
     {
         moveTo(rt.x(), rt.y());
