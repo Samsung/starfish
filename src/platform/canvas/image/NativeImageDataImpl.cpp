@@ -79,6 +79,7 @@ public:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         if (m_imageSurface) {
             cairo_surface_destroy(m_imageSurface);
+            m_imageSurface = nullptr;
         }
 #endif
         free(m_image);

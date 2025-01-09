@@ -96,7 +96,6 @@ protected:
             m_gradientDrawingInfo = nullptr;
         }
         if (m_gradientImageDataCached) {
-            delete m_gradientImageDataCached;
             m_gradientImageDataCached = nullptr;
         }
     }
