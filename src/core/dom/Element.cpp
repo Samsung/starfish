@@ -2371,22 +2371,6 @@ Animation* Element::animate(ExecutionContext* executionContext,
         webView()->updateActiveAnimationExecutorRegistration(
             document()->animationExecutor());
 
-        // FIXME: Start tick registration also occurs in WebView::rendering, so
-        // it is redundant. Additionally, because the timing of tick count
-        // registration differs, subtle differences occur in animation results
-        // depending on the animation method.
-        auto& animations = document()->animationExecutor()->activeAnimations();
-        uint64_t tick = tickCount();
-
-        ActiveElementAnimation* key = new ActiveElementAnimation(
-            options.id(), this, 0, 1.0f, AnimationDirectionValue::Normal,
-            AnimationPlayStateValue::Running);
-        auto iter = animations.find(key);
-        if (iter != animations.end()) {
-            for (auto task : iter->second) {
-                task->initializeStartTimeIfNeeded(tick);
-            }
-        }
         setNeedsStyleRecalcForAnimation();
     }
     return new Animation(executionContext);
