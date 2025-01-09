@@ -2329,6 +2329,10 @@ Animation* Element::animate(ExecutionContext* executionContext,
                             Optional<GCVector<ScriptValue>>& keyframes,
                             KeyframeAnimationOptions& options)
 {
+    if (needsStyleRecalc() || !style()) {
+        document()->browsingContext()->resolveStyleIfNeeds();
+    }
+
     if (!keyframes.hasValue() || !style()) {
         return new Animation(executionContext);
     }
