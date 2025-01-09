@@ -33,6 +33,7 @@
 
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
@@ -9499,13 +9500,15 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
     // Check new animation.
     if (toStyle->display() != DisplayValue::NoneDisplayValue &&
-        styleAnimationData != nullptr &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-        element->didPrepareAnimation() == false) {
-        if (styleAnimationData->totalAnimationKeyframesListSize() > 0 &&
-            applyAnimationIfNeeds(element, toStyle) == true) {
-            elementHasAnimation = true;
-            needsToCheckActiveExecutorInWebView = true;
+        !element->didPrepareAnimation()) {
+        if (styleAnimationData &&
+            styleAnimationData->totalAnimationKeyframesListSize() > 0) {
+            AnimationApplier animationApplier(element, toStyle, true);
+            if (animationApplier.apply()) {
+                elementHasAnimation = true;
+                needsToCheckActiveExecutorInWebView = true;
+            }
         }
     }
 

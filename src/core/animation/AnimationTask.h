@@ -37,9 +37,6 @@ bool applyTransitionIfNeeds(
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress); // returns true if animation registered
 
-bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
-                           bool isCSSAnimationTask = true);
-
 class ActiveAnimationTask : public gc {
 public:
     ActiveAnimationTask(Element* target,

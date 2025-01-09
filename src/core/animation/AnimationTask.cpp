@@ -1536,11 +1536,4 @@ bool applyTransitionIfNeeds(
     return transitionApplier.apply();
 }
 
-bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
-                           bool isCSSAnimationTask)
-{
-    AnimationApplier animationApplier(element, style, isCSSAnimationTask);
-    return animationApplier.apply();
-}
-
 } // namespace Starfish

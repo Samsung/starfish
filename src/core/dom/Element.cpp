@@ -69,7 +69,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/StyleRule.h"
-#include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/dom/ShadowRoot.h"
 
@@ -2364,8 +2364,9 @@ Animation* Element::animate(ExecutionContext* executionContext,
     }
 
     if (style()->display() != DisplayValue::NoneDisplayValue &&
-        style()->animation() != nullptr) {
-        if (!applyAnimationIfNeeds(this, Element::style(), false)) {
+        style()->animation()) {
+        AnimationApplier animationApplier(this, style(), false);
+        if (!animationApplier.apply()) {
             return new Animation(executionContext);
         }
         webView()->updateActiveAnimationExecutorRegistration(
