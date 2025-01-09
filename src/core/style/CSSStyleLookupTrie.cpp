@@ -1443,6 +1443,36 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
     const char* data, unsigned length)
 {
     switch (length) {
+    case 1:
+        if (memcmp(data, "x", 1) == 0) {
+            return CSSStyleValuePair::KeyKind::X;
+        } else if (memcmp(data, "y", 1) == 0) {
+            return CSSStyleValuePair::KeyKind::Y;
+        } else if (memcmp(data, "d", 1) == 0) {
+            return CSSStyleValuePair::KeyKind::D;
+        } else if (memcmp(data, "r", 1) == 0) {
+            return CSSStyleValuePair::KeyKind::R;
+        }
+        break;
+    case 2:
+        if (memcmp(data, "cx", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::CX;
+        } else if (memcmp(data, "cy", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::CY;
+        } else if (memcmp(data, "rx", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::RX;
+        } else if (memcmp(data, "ry", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::RY;
+        } else if (memcmp(data, "x1", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::X1;
+        } else if (memcmp(data, "y1", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::Y1;
+        } else if (memcmp(data, "x2", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::X2;
+        } else if (memcmp(data, "y2", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::Y2;
+        }
+        break;
     case 3:
         if (memcmp(data, "all", 3) == 0) {
             return CSSStyleValuePair::KeyKind::All;
@@ -1453,9 +1483,17 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         if (memcmp(data, "src", 3) == 0) {
             return CSSStyleValuePair::KeyKind::Src;
         }
+        if (memcmp(data, "gap", 3) == 0) {
+            return CSSStyleValuePair::KeyKind::Gap;
+        }
         break;
     case 4:
         switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "clip", 4) == 0) {
+                return CSSStyleValuePair::KeyKind::Clip;
+            }
+            break;
         case 'f':
             if (memcmp(data, "font", 4) == 0) {
                 return CSSStyleValuePair::KeyKind::Font;
@@ -1472,9 +1510,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::Left;
             }
             break;
-        case 'c':
-            if (memcmp(data, "clip", 4) == 0) {
-                return CSSStyleValuePair::KeyKind::Clip;
+        case 'm':
+            if (memcmp(data, "mask", 4) == 0) {
+                return CSSStyleValuePair::KeyKind::Mask;
             }
             break;
         }
@@ -1540,19 +1578,22 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::Margin;
             }
             break;
-        case 'z':
-            if (memcmp(data, "zIndex", 6) == 0) {
-                return CSSStyleValuePair::KeyKind::ZIndex;
-            }
-            break;
         case 'r':
             if (memcmp(data, "resize", 6) == 0) {
                 return CSSStyleValuePair::KeyKind::Resize;
+            }
+            if (memcmp(data, "rowGap", 6) == 0) {
+                return CSSStyleValuePair::KeyKind::RowGap;
             }
             break;
         case 's':
             if (memcmp(data, "stroke", 6) == 0) {
                 return CSSStyleValuePair::KeyKind::Stroke;
+            }
+            break;
+        case 'z':
+            if (memcmp(data, "zIndex", 6) == 0) {
+                return CSSStyleValuePair::KeyKind::ZIndex;
             }
             break;
         }
@@ -1603,6 +1644,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "cssFloat", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::Float;
             }
+            if (memcmp(data, "clipPath", 8) == 0) {
+                return CSSStyleValuePair::KeyKind::ClipPath;
+            }
             break;
         case 'f':
             if (memcmp(data, "fontSize", 8) == 0) {
@@ -1628,8 +1672,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "minWidth", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::MinWidth;
             }
-            if (memcmp(data, "masksize", 8) == 0) {
+            if (memcmp(data, "maskSize", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskSize;
+            }
+            if (memcmp(data, "maskType", 8) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskType;
             }
             break;
         case 'p':
