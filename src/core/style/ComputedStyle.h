@@ -3634,7 +3634,7 @@ public:
 
     void setStrokeOpacity(float v)
     {
-        if (v != fillOpacity())
+        if (v != strokeOpacity())
             ensureInheritedRareData()->m_strokeOpacity = v;
     }
 
