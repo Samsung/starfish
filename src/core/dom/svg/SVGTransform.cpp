@@ -389,15 +389,26 @@ void SVGTransform::updateMatrixByValue()
         return;
     } else if (m_value.kind() == CSSTransformFunction::Translate) {
         m_matrixObject->setMatrix(SkMatrix44::I());
-        m_matrixObject->translateSelf(
-            m_value.values()->at(0).lengthValue().fixed(),
-            m_value.values()->at(1).lengthValue().fixed());
+        if (m_value.values()->size() == 1) {
+            m_matrixObject->translateSelf(
+                m_value.values()->at(0).lengthValue().fixed(),
+                m_value.values()->at(0).lengthValue().fixed());
+        } else {
+            m_matrixObject->translateSelf(
+                m_value.values()->at(0).lengthValue().fixed(),
+                m_value.values()->at(1).lengthValue().fixed());
+        }
         m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
         return;
     } else if (m_value.kind() == CSSTransformFunction::Scale) {
         m_matrixObject->setMatrix(SkMatrix44::I());
-        m_matrixObject->scaleSelf(m_value.values()->at(0).numberValue(),
-                                  m_value.values()->at(1).numberValue());
+        if (m_value.values()->size() == 1) {
+            m_matrixObject->scaleSelf(m_value.values()->at(0).numberValue(),
+                                      m_value.values()->at(0).numberValue());
+        } else {
+            m_matrixObject->scaleSelf(m_value.values()->at(0).numberValue(),
+                                      m_value.values()->at(1).numberValue());
+        }
         m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
         return;
     } else if (m_value.kind() == CSSTransformFunction::Rotate) {
