@@ -118,9 +118,8 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 
     FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
             asFrameSVGSVGBox();
+    bool applyMaskOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 0;
     SVGMaskPaintingDetphMarker marker(viewportBox->svgMaskPaintingDepth());
-
-    bool applyMaskOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 1;
 
     std::vector<Frame*> tree;
     f = targetBox->parent();
@@ -135,7 +134,7 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
     auto transScale = viewportBox->computeTranlateScaleOnPaint();
     newCanvas->translate(-childrenRect.x() + transScale.second.getTranslateX(),
             -childrenRect.y() + transScale.second.getTranslateY());
-    newCanvas->scale(transScale.second.getScaleX(), transScale.second.getScaleX());
+    newCanvas->scale(transScale.second.getScaleX(), transScale.second.getScaleY());
 
     // painting mask content
     PaintingContext newCtx(newCanvas);
