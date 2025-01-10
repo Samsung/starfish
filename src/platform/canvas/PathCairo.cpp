@@ -444,7 +444,13 @@ Unit::Rect PathCairo::strokeBoundingRect(const StrokeStyle& style)
 
     applyStrokeStyle(style);
     m_needsComputeStrokeBoundingRect = style;
-    cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+
+    if (style.strokeWidth) {
+        cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+    } else {
+        cairo_fill_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+    }
+
     Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
     m_computedStrokeBoundingRect = result;
     return result;
