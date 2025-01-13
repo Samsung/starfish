@@ -125,6 +125,10 @@ public:
 
     static bool isPropertyForActiveColorAnimationTask(
         CSSStyleValuePair::KeyKind keyKind);
+    static bool isPropertyForActiveLengthAnimationTask(
+        CSSStyleValuePair::KeyKind keyKind);
+    static bool isPropertyForActiveLengthSizeAnimationTask(
+        CSSStyleValuePair::KeyKind keyKind);
 };
 } // namespace Starfish
 

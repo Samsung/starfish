@@ -483,4 +483,52 @@ bool AnimationUtil::isPropertyForActiveColorAnimationTask(
     return false;
 }
 
+bool AnimationUtil::isPropertyForActiveLengthAnimationTask(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::Width:
+    case CSSStyleValuePair::KeyKind::Height:
+    case CSSStyleValuePair::KeyKind::MinWidth:
+    case CSSStyleValuePair::KeyKind::MaxWidth:
+    case CSSStyleValuePair::KeyKind::MinHeight:
+    case CSSStyleValuePair::KeyKind::MaxHeight:
+    case CSSStyleValuePair::KeyKind::MarginTop:
+    case CSSStyleValuePair::KeyKind::MarginRight:
+    case CSSStyleValuePair::KeyKind::MarginBottom:
+    case CSSStyleValuePair::KeyKind::MarginLeft:
+    case CSSStyleValuePair::KeyKind::BorderTopWidth:
+    case CSSStyleValuePair::KeyKind::BorderRightWidth:
+    case CSSStyleValuePair::KeyKind::BorderBottomWidth:
+    case CSSStyleValuePair::KeyKind::BorderLeftWidth:
+    case CSSStyleValuePair::KeyKind::PaddingTop:
+    case CSSStyleValuePair::KeyKind::PaddingRight:
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
+    case CSSStyleValuePair::KeyKind::RX:
+    case CSSStyleValuePair::KeyKind::RY:
+    case CSSStyleValuePair::KeyKind::CX:
+    case CSSStyleValuePair::KeyKind::CY:
+    case CSSStyleValuePair::KeyKind::Left:
+    case CSSStyleValuePair::KeyKind::Right:
+    case CSSStyleValuePair::KeyKind::Top:
+    case CSSStyleValuePair::KeyKind::Bottom:
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+    case CSSStyleValuePair::KeyKind::FontSize:
+    case CSSStyleValuePair::KeyKind::Font: // shorthand
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
+bool AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    // Currently only BackgroundSize is supported.
+    return keyKind == CSSStyleValuePair::KeyKind::BackgroundSize;
+}
+
 } // namespace Starfish
