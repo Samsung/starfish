@@ -314,14 +314,19 @@ bool AnimationApplier::applyProperty(
     // It would be so grateful if you could do this.
     bool gotAnimation = false;
 
-    // ActiveColorAnimationTask
+    // Convert shorthand to longhand.
+    //
+    // FIXME: This originated from legacy code. In my opinion, shorthand
+    // properties should be decomposed into longhand properties to
+    // arrive here.
+    if (keyKind == CSSStyleValuePair::TextDecoration) {
+        keyKind = CSSStyleValuePair::TextDecorationColor;
+    } else if (keyKind == CSSStyleValuePair::Font) {
+        keyKind = CSSStyleValuePair::FontSize;
+    }
+
+    // Add AnimationTask for each type to executor.
     if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind)) {
-        if (keyKind == CSSStyleValuePair::TextDecoration) {
-            // FIXME: This originated from legacy code. In my opinion, shorthand
-            // properties should be decomposed into longhand properties to
-            // arrive here.
-            keyKind = CSSStyleValuePair::TextDecorationColor;
-        }
         auto task = new ActiveColorAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
@@ -329,395 +334,74 @@ bool AnimationApplier::applyProperty(
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::Width) { // length series
-
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Width, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Width);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::Height) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Height, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Height);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::MinWidth) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MinWidth, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MinWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::MaxWidth) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MaxWidth, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MaxWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::MinHeight) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MinHeight, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MinHeight);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (keyKind == CSSStyleValuePair::MaxHeight) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MaxHeight, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MaxHeight);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::MarginTop)) {
-        if (m_style->display() == DisplayValue::InlineDisplayValue) {
-            STARFISH_UNIMPLEMENTED("InlineDisplayValue");
-            return false;
-        }
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MarginTop, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MarginTop);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::MarginRight)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MarginRight, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MarginRight);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::MarginBottom)) {
-        if (m_style->display() == DisplayValue::InlineDisplayValue) {
-            STARFISH_UNIMPLEMENTED("InlineDisplayValue");
-            return false;
-        }
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MarginBottom, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MarginBottom);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::MarginLeft)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::MarginLeft, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::MarginLeft);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderTopWidth)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::BorderTopWidth, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderTopWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderRightWidth)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::BorderRightWidth, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderRightWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderBottomWidth)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::BorderBottomWidth, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderBottomWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderLeftWidth)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::BorderLeftWidth, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderLeftWidth);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::PaddingTop)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::PaddingTop, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::PaddingTop);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::PaddingRight)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::PaddingRight, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::PaddingRight);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::PaddingBottom)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::PaddingBottom, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::PaddingBottom);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::PaddingLeft)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::PaddingLeft, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::PaddingLeft);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::KeyKind::RX)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::KeyKind::RX, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::KeyKind::RX);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::KeyKind::RY)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::KeyKind::RY, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::KeyKind::RY);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::KeyKind::CX)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::KeyKind::CX, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::KeyKind::CX);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::KeyKind::CY)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::KeyKind::CY, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::KeyKind::CY);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if ((AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::Left)) == true) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Left, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Left);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if ((AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::Right)) == true) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Right, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Right);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if ((AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::Top)) == true) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Top, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Top);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if ((AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::Bottom)) == true) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::Bottom, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Bottom);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BackgroundPositionX)) {
-        if (m_style->hasBlockLikeDisplay() == false) {
-            // TODO Inline Element
-            STARFISH_UNIMPLEMENTED("Inline Element");
-            return false;
-        }
-        for (size_t l = 0; l < layeredValues.size(); l++) {
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundPositionX,
-                layeredValues[l], offsets, timingFunctions, duration, delay,
-                iterationCount, playState, fillMode, l);
-            m_executor->removeActiveAnimationTaskIfNeeds(
-                m_element, CSSStyleValuePair::BackgroundPositionX, l);
-            m_executor->registerAnimation(task, name, s, iterationCount,
-                                          direction, playState,
-                                          m_isCSSAnimationTask);
+    } else if (AnimationUtil::isPropertyForActiveLengthAnimationTask(keyKind)) {
+        if (keyKind == CSSStyleValuePair::KeyKind::MarginTop ||
+            keyKind == CSSStyleValuePair::KeyKind::MarginBottom) {
+            if (m_style->display() == DisplayValue::InlineDisplayValue) {
+                // FIXME: This originated from legacy code.
+                STARFISH_UNIMPLEMENTED("InlineDisplayValue");
+                return false;
+            }
+        } else if (keyKind == CSSStyleValuePair::BackgroundPositionX ||
+                   keyKind == CSSStyleValuePair::BackgroundPositionY) {
+            if (m_style->hasBlockLikeDisplay() == false) {
+                // FIXME: This originated from legacy code.
+                STARFISH_UNIMPLEMENTED("Inline Element");
+                return false;
+            }
         }
 
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BackgroundPositionY)) {
-        if (m_style->hasBlockLikeDisplay() == false) {
-            // TODO Inline Element
-            STARFISH_UNIMPLEMENTED("Inline Element");
-            return false;
-        }
-        for (size_t l = 0; l < layeredValues.size(); l++) {
+        for (size_t i = 0; i < layeredValues.size(); i++) {
             auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundPositionY,
-                layeredValues[l], offsets, timingFunctions, duration, delay,
-                iterationCount, playState, fillMode, l);
-            m_executor->removeActiveAnimationTaskIfNeeds(
-                m_element, CSSStyleValuePair::BackgroundPositionY, l);
+                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
+                duration, delay, iterationCount, playState, fillMode, i);
+            m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, i);
             m_executor->registerAnimation(task, name, s, iterationCount,
                                           direction, playState,
                                           m_isCSSAnimationTask);
         }
         gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BackgroundSize)) {
+    } else if (AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
+                   keyKind)) {
         if (m_style->hasBlockLikeDisplay() == false) {
             // TODO Inline Element
             STARFISH_UNIMPLEMENTED("Inline Element");
             return false;
         }
-        for (size_t l = 0; l < layeredValues.size(); l++) {
+        for (size_t i = 0; i < layeredValues.size(); i++) {
             auto task = new ActiveLengthSizeAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundSize, layeredValues[l],
-                offsets, timingFunctions, duration, delay, iterationCount,
-                playState, fillMode, l);
-            m_executor->removeActiveAnimationTaskIfNeeds(
-                m_element, CSSStyleValuePair::BackgroundSize, l);
+                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
+                duration, delay, iterationCount, playState, fillMode, i);
+            m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, i);
             m_executor->registerAnimation(task, name, s, iterationCount,
                                           direction, playState,
                                           m_isCSSAnimationTask);
         }
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::FontSize,
-                                               CSSStyleValuePair::Font)) {
-        auto task = new ActiveLengthAnimationTask(
-            m_element, CSSStyleValuePair::FontSize, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::FontSize);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
         gotAnimation = true;
     } else if (AnimationUtil::checkCSSProperty(keyKind,
                                                CSSStyleValuePair::Opacity)) {
         auto task = new ActiveOpacityAnimationTask(
-            m_element, CSSStyleValuePair::Opacity, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::Opacity);
+            m_element, keyKind, layeredValues[0], offsets, timingFunctions,
+            duration, delay, iterationCount, playState, fillMode);
+        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
     } else if (AnimationUtil::checkCSSProperty(keyKind,
                                                CSSStyleValuePair::Transform)) {
         auto task = new ActiveTransformAnimationTask(
-            m_element, CSSStyleValuePair::Transform, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::Transform);
+            m_element, keyKind, layeredValues[0], offsets, timingFunctions,
+            duration, delay, iterationCount, playState, fillMode);
+        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
     } else if (AnimationUtil::checkCSSProperty(keyKind,
                                                CSSStyleValuePair::Visibility)) {
         auto task = new ActiveVisibilityAnimationTask(
-            m_element, CSSStyleValuePair::Visibility, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::Visibility);
+            m_element, keyKind, layeredValues[0], offsets, timingFunctions,
+            duration, delay, iterationCount, playState, fillMode);
+        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
