@@ -313,108 +313,22 @@ bool AnimationApplier::applyProperty(
     // can be refactored.
     // It would be so grateful if you could do this.
     bool gotAnimation = false;
-    // color series
-    if (AnimationUtil::checkCSSProperty(keyKind,
-                                        CSSStyleValuePair::BackgroundColor)) {
+
+    // ActiveColorAnimationTask
+    if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind)) {
+        if (keyKind == CSSStyleValuePair::TextDecoration) {
+            // FIXME: This originated from legacy code. In my opinion, shorthand
+            // properties should be decomposed into longhand properties to
+            // arrive here.
+            keyKind = CSSStyleValuePair::TextDecorationColor;
+        }
         auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::BackgroundColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BackgroundColor);
+            m_element, keyKind, layeredValues[0], offsets, timingFunctions,
+            duration, delay, iterationCount, playState, fillMode);
+        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderBottomColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::BorderBottomColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderBottomColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderLeftColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::BorderLeftColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderLeftColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderRightColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::BorderRightColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderRightColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::BorderTopColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::BorderTopColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::BorderTopColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::Color)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::Color, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element,
-                                                     CSSStyleValuePair::Color);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::CaretColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::CaretColor, layeredValues[0], offsets,
-            timingFunctions, duration, delay, iterationCount, playState,
-            fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::CaretColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::OutlineColor)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::OutlineColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::OutlineColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(
-                   keyKind, CSSStyleValuePair::TextDecorationColor,
-                   CSSStyleValuePair::TextDecoration)) {
-        auto task = new ActiveColorAnimationTask(
-            m_element, CSSStyleValuePair::TextDecorationColor, layeredValues[0],
-            offsets, timingFunctions, duration, delay, iterationCount,
-            playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(
-            m_element, CSSStyleValuePair::TextDecorationColor);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
-        gotAnimation = true;
-        // <- color series
     } else if (keyKind == CSSStyleValuePair::Width) { // length series
 
         auto task = new ActiveLengthAnimationTask(

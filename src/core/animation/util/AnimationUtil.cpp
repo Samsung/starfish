@@ -461,4 +461,26 @@ bool AnimationUtil::paddingLeftToAnimatedValue(ComputedStyle* oldStyle,
     return lengthToAnimatedValue(oldStyle->padding().left(),
                                  newStyle->padding().left(), element, from, to);
 }
+
+bool AnimationUtil::isPropertyForActiveColorAnimationTask(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::BackgroundColor:
+    case CSSStyleValuePair::KeyKind::BorderBottomColor:
+    case CSSStyleValuePair::KeyKind::BorderLeftColor:
+    case CSSStyleValuePair::KeyKind::BorderRightColor:
+    case CSSStyleValuePair::KeyKind::BorderTopColor:
+    case CSSStyleValuePair::KeyKind::Color:
+    case CSSStyleValuePair::KeyKind::CaretColor:
+    case CSSStyleValuePair::KeyKind::OutlineColor:
+    case CSSStyleValuePair::KeyKind::TextDecorationColor:
+    case CSSStyleValuePair::KeyKind::TextDecoration: // shorthand
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
 } // namespace Starfish
