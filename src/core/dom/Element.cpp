@@ -2329,6 +2329,13 @@ Animation* Element::animate(ExecutionContext* executionContext,
                             Optional<GCVector<ScriptValue>>& keyframes,
                             KeyframeAnimationOptions& options)
 {
+    // FIXME: If CSS keyframes animation is already applied to this element,
+    // it is applied together with the animation by animate, and both animations
+    // start together after calling this method(This method causes CSS keyframes
+    // animation to restart).
+    // This implementation is wrong. it should be fixed so that it is not based
+    // on css animation property.
+
     if (needsStyleRecalc() || !style()) {
         document()->browsingContext()->resolveStyleIfNeeds();
     }
