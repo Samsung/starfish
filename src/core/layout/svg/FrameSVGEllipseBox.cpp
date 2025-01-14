@@ -73,6 +73,7 @@ Optional<Path*> FrameSVGEllipseBox::path()
     }
     if (rx && ry) {
         path->ellipse(cx, cy, rx, ry, 0, 0, 2 * M_PI);
+        path->closePath();
     } else {
         return nullptr;
     }
