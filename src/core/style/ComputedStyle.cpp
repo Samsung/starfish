@@ -1398,6 +1398,31 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::StrokeWidth] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->strokeLineCap() != oldStyle->strokeLineCap()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeLineCap] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->strokeLineJoin() != oldStyle->strokeLineJoin()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeLineJoin] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->strokeMiterLimit() != oldStyle->strokeMiterLimit()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeMiterLimit] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 

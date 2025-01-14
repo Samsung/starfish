@@ -824,6 +824,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 
         ctx.m_canvas->save();
 
+        float fillOpacity = style()->fillOpacity();
         FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
                     asFrameSVGSVGBox();
         bool paintingOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 0;
@@ -881,22 +882,38 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             ctx.m_canvas->save();
             ctx.m_canvas->clipPath(newPath.value());
             ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-            ctx.m_canvas->drawImage(bufferImage, Unit::Rect(pos.x(), pos.y(),
-                    m_frameRect.width(), m_frameRect.height()));
+            auto targetRect = Unit::Rect(pos.x(), pos.y(),
+                    m_frameRect.width(), m_frameRect.height());
+            if (fillOpacity != 1) {
+                // we should use sqrt(fillOpacity) here
+                // since drawImage below uses fillOpacity * fillOpacity for paint
+                ctx.m_canvas->beginOpacityLayer(std::sqrt(fillOpacity), targetRect);
+            }
+            ctx.m_canvas->drawImage(bufferImage, targetRect);
+            if (fillOpacity != 1) {
+                ctx.m_canvas->endOpacityLayer();
+            }
             ctx.m_canvas->restore();
 
+            // referencePath for paint stroke
             ctx.m_canvas->referencePath(newPath.value());
         } else if (fillInfo.hasValue()) {
+            if (fillOpacity != 1) {
+                ctx.m_canvas->beginOpacityLayer(fillOpacity, rect);
+            }
             ctx.m_canvas->referencePath(newPath.value());
             ctx.m_canvas->setFillSource(fillInfo.value());
             ctx.m_canvas->fillPreserve();
+            if (fillOpacity != 1) {
+                ctx.m_canvas->endOpacityLayer();
+            }
         } else {
             ctx.m_canvas->referencePath(newPath.value());
             ctx.m_canvas->setFillRule(style()->fillRule());
             Unit::Color fillColor = style()->fill()->color();
             ctx.m_canvas->setFillColor(
                 Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                            fillColor.a() * style()->fillOpacity()));
+                            fillColor.a() * fillOpacity));
             ctx.m_canvas->fillPreserve();
         }
 
