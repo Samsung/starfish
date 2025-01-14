@@ -300,6 +300,16 @@ bool AnimationApplier::isIntermediateDummyAnimationKeyframe(
     return false;
 }
 
+void AnimationApplier::updateActiveAnimationTaskRegistration(
+    size_t s, String* name, CSSStyleValuePair::KeyKind keyKind, size_t layer,
+    float iterationCount, AnimationDirectionValue direction,
+    AnimationPlayStateValue playState, ActiveAnimationTask* task)
+{
+    m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, layer);
+    m_executor->registerAnimation(task, name, s, iterationCount, direction,
+                                  playState, m_isCSSAnimationTask);
+}
+
 bool AnimationApplier::applyProperty(
     size_t s, String* name, CSSStyleValuePair::KeyKind keyKind,
     const GCVector<GCVector<AnimatedValue*>>& layeredValues,
@@ -330,9 +340,9 @@ bool AnimationApplier::applyProperty(
         auto task = new ActiveColorAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
+
+        updateActiveAnimationTaskRegistration(
+            s, name, keyKind, 0, iterationCount, direction, playState, task);
         gotAnimation = true;
     } else if (AnimationUtil::isPropertyForActiveLengthAnimationTask(keyKind)) {
         if (keyKind == CSSStyleValuePair::KeyKind::MarginTop ||
@@ -355,10 +365,9 @@ bool AnimationApplier::applyProperty(
             auto task = new ActiveLengthAnimationTask(
                 m_element, keyKind, layeredValues[i], offsets, timingFunctions,
                 duration, delay, iterationCount, playState, fillMode, i);
-            m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, i);
-            m_executor->registerAnimation(task, name, s, iterationCount,
-                                          direction, playState,
-                                          m_isCSSAnimationTask);
+            updateActiveAnimationTaskRegistration(s, name, keyKind, i,
+                                                  iterationCount, direction,
+                                                  playState, task);
         }
         gotAnimation = true;
     } else if (AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
@@ -372,35 +381,31 @@ bool AnimationApplier::applyProperty(
             auto task = new ActiveLengthSizeAnimationTask(
                 m_element, keyKind, layeredValues[i], offsets, timingFunctions,
                 duration, delay, iterationCount, playState, fillMode, i);
-            m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, i);
-            m_executor->registerAnimation(task, name, s, iterationCount,
-                                          direction, playState,
-                                          m_isCSSAnimationTask);
+            updateActiveAnimationTaskRegistration(s, name, keyKind, i,
+                                                  iterationCount, direction,
+                                                  playState, task);
         }
         gotAnimation = true;
     } else if (keyKind == CSSStyleValuePair::Opacity) {
         auto task = new ActiveOpacityAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
+        updateActiveAnimationTaskRegistration(
+            s, name, keyKind, 0, iterationCount, direction, playState, task);
         gotAnimation = true;
     } else if (keyKind == CSSStyleValuePair::Transform) {
         auto task = new ActiveTransformAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
+        updateActiveAnimationTaskRegistration(
+            s, name, keyKind, 0, iterationCount, direction, playState, task);
         gotAnimation = true;
     } else if (keyKind == CSSStyleValuePair::Visibility) {
         auto task = new ActiveVisibilityAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
-        m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind);
-        m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                      playState, m_isCSSAnimationTask);
+        updateActiveAnimationTaskRegistration(
+            s, name, keyKind, 0, iterationCount, direction, playState, task);
         gotAnimation = true;
     }
 
