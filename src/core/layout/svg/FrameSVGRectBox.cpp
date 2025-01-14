@@ -100,6 +100,8 @@ Optional<Path*> FrameSVGRectBox::path()
     auto stylePos = resolveStylePosition(vp);
     path->translate(stylePos.x(), stylePos.y());
 
+    path->closePath();
+
     return path;
 }
 } // namespace Starfish

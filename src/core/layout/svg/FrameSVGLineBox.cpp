@@ -47,6 +47,7 @@ Optional<Path*> FrameSVGLineBox::path()
 
     path->moveTo(m_x1, m_y1);
     path->lineTo(m_x2, m_y2);
+    path->closePath();
 
     return path;
 }
