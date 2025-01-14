@@ -378,8 +378,7 @@ bool AnimationApplier::applyProperty(
                                           m_isCSSAnimationTask);
         }
         gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::Opacity)) {
+    } else if (keyKind == CSSStyleValuePair::Opacity) {
         auto task = new ActiveOpacityAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
@@ -387,8 +386,7 @@ bool AnimationApplier::applyProperty(
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::Transform)) {
+    } else if (keyKind == CSSStyleValuePair::Transform) {
         auto task = new ActiveTransformAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
@@ -396,8 +394,7 @@ bool AnimationApplier::applyProperty(
         m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                       playState, m_isCSSAnimationTask);
         gotAnimation = true;
-    } else if (AnimationUtil::checkCSSProperty(keyKind,
-                                               CSSStyleValuePair::Visibility)) {
+    } else if (keyKind == CSSStyleValuePair::Visibility) {
         auto task = new ActiveVisibilityAnimationTask(
             m_element, keyKind, layeredValues[0], offsets, timingFunctions,
             duration, delay, iterationCount, playState, fillMode);
