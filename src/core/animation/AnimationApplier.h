@@ -31,6 +31,7 @@ class AnimatedValue;
 class AnimationExecutor;
 class AnimationKeyframe;
 class AnimationKeyframes;
+class ActiveAnimationTask;
 class SVGAnimateElement;
 
 class AnimationApplier : public gc {
@@ -70,6 +71,11 @@ private:
     bool isIntermediateDummyAnimationKeyframe(
         AnimationKeyframe* current, CSSStyleValuePair::ValueKind valueKind,
         const AnimationKeyframes* owner);
+
+    void updateActiveAnimationTaskRegistration(
+        size_t s, String* name, CSSStyleValuePair::KeyKind keyKind,
+        size_t layer, float iterationCount, AnimationDirectionValue direction,
+        AnimationPlayStateValue playState, ActiveAnimationTask* task);
 
     Element* m_element;
     ComputedStyle* m_style;
