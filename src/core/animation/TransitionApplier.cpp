@@ -33,26 +33,6 @@
 
 namespace Starfish {
 
-static Length getLengthWidth(Frame* frame, Element* element, Length length)
-{
-    if (length.isCalc()) {
-        return Length(Length::Fixed,
-                      length.calcData()->specifiedValue(
-                          containingBlock(frame)->contentWidth(), element));
-    }
-    return length;
-}
-
-static Length getLengthHeight(Frame* frame, Element* element, Length length)
-{
-    if (length.isCalc()) {
-        return Length(Length::Fixed,
-                      length.calcData()->specifiedValue(
-                          containingBlock(frame)->contentHeight(), element));
-    }
-    return length;
-}
-
 TransitionApplier::TransitionApplier(Element* element, ComputedStyle* oldStyle,
                                      Frame* oldFrame, ComputedStyle* newStyle,
                                      const bool* damagedKeys)
@@ -197,24 +177,54 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
                 return style->textDecorationColor();
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::Width)) {
-        applyWidth(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::Height)) {
-        applyHeight(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::MinWidth)) {
-        applyMinWidth(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::MinHeight)) {
-        applyMinHeight(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::MaxWidth)) {
-        applyMaxWidth(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::MaxHeight)) {
-        applyMaxHeight(duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::Width)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::Width,
+            [](ComputedStyle* style) -> Length { return style->width(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
+            duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::Height)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::Height,
+            [](ComputedStyle* style) -> Length { return style->height(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->height(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentHeight(); },
+            duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::MinWidth)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::MinWidth,
+            [](ComputedStyle* style) -> Length { return style->minWidth(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
+            duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::MinHeight)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::MinHeight,
+            [](ComputedStyle* style) -> Length { return style->minHeight(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->height(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentHeight(); },
+            duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::MaxWidth)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::MaxWidth,
+            [](ComputedStyle* style) -> Length { return style->maxWidth(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
+            duration, delay, timingFunction);
+    } else if (AnimationUtil::checkCSSProperty(
+                   property, CSSStyleValuePair::KeyKind::MaxHeight)) {
+        applyActiveLengthAnimationTaskForFrameBoxSize(
+            CSSStyleValuePair::KeyKind::MaxHeight,
+            [](ComputedStyle* style) -> Length { return style->maxHeight(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->height(); },
+            [](FrameBox* fb) -> LayoutUnit { return fb->contentHeight(); },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(property,
                                                CSSStyleValuePair::MarginTop,
                                                CSSStyleValuePair::Margin)) {
@@ -400,318 +410,70 @@ void TransitionApplier::applyActiveColorAnimationTask(
     m_gotTransition = true;
 }
 
-void TransitionApplier::applyWidth(double duration, double delay,
-                                   TimingFunction* timingFunction)
+void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
+    CSSStyleValuePair::KeyKind keyKind,
+    const std::function<Length(ComputedStyle*)>& lengthValueGetter,
+    const std::function<LayoutUnit(FrameBox*)>& frameBoxSizeValueGetter,
+    const std::function<LayoutUnit(FrameBox*)>& contentSizeValueGetter,
+    double duration, double delay, TimingFunction* timingFunction)
 {
-    if (!canRegisterTransition(CSSStyleValuePair::Width)) {
+    if (!canRegisterTransition(keyKind)) {
         return;
     }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldWidth =
-            getLengthWidth(m_oldFrame, m_element, m_oldStyle->width());
-        auto newWidth =
-            getLengthWidth(m_oldFrame, m_element, m_newStyle->width());
 
-        if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
-            (newWidth.isPercent() || newWidth.isFixed())) {
-            auto fromValue = oldWidth;
-            auto toValue = newWidth;
+    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
+        FrameBox* cb = containingBlock(m_oldFrame);
+        Length oldLength = lengthValueGetter(m_oldStyle);
+        if (oldLength.isCalc()) {
+            oldLength = Length(Length::Fixed,
+                               oldLength.calcData()->specifiedValue(
+                                   contentSizeValueGetter(cb), m_element));
+        }
+
+        Length newLength = lengthValueGetter(m_newStyle);
+        if (newLength.isCalc()) {
+            newLength = Length(Length::Fixed,
+                               newLength.calcData()->specifiedValue(
+                                   contentSizeValueGetter(cb), m_element));
+        }
+
+        if ((oldLength.isPercent() || oldLength.isFixed()) &&
+            (newLength.isPercent() || newLength.isFixed())) {
+            Length fromValue = oldLength;
+            Length toValue = newLength;
 
             if (toValue.isPercent() && !fromValue.isPercent()) {
-                FrameBox* cb = containingBlock(m_oldFrame);
                 if (cb->contentWidth() == 0) {
                     fromValue = Length(Length::Percent, 0);
                 } else if (m_oldStyle->boxSizing() ==
                            BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->width() /
-                                           cb->contentWidth());
+                    fromValue = Length(
+                        Length::Percent,
+                        frameBoxSizeValueGetter(m_oldFrame->asFrameBox()) /
+                            contentSizeValueGetter(cb));
                 } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentWidth() /
-                                   cb->contentWidth());
+                    fromValue = Length(
+                        Length::Percent,
+                        contentSizeValueGetter(m_oldFrame->asFrameBox()) /
+                            contentSizeValueGetter(cb)); //
                 }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
+            } else if (toValue.isFixed() && !fromValue.isFixed()) {
                 float value;
                 if (m_oldStyle->boxSizing() ==
                     BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->width();
+                    value =
+                        frameBoxSizeValueGetter(m_oldFrame->asFrameBox()); //
                 } else {
-                    value = m_oldFrame->asFrameBox()->contentWidth();
+                    value = contentSizeValueGetter(m_oldFrame->asFrameBox()); //
                 }
                 fromValue = Length(Length::Fixed, value);
             }
 
+            AnimatedValue from = fromValue;
+            AnimatedValue to = toValue;
             auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::Width, AnimatedValue(fromValue),
-                AnimatedValue(toValue), duration, delay, timingFunction,
-                m_newStyle->width());
-            m_executor->registerTransition(task);
-            m_gotTransition = true;
-        }
-    }
-}
-
-void TransitionApplier::applyHeight(double duration, double delay,
-                                    TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::Height)) {
-        return;
-    }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldHeight =
-            getLengthHeight(m_oldFrame, m_element, m_oldStyle->height());
-        auto newHeight =
-            getLengthHeight(m_oldFrame, m_element, m_newStyle->height());
-
-        if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
-            (newHeight.isPercent() || newHeight.isFixed())) {
-            auto fromValue = oldHeight;
-            auto toValue = newHeight;
-
-            if (toValue.isPercent() && fromValue.isPercent() == false) {
-                FrameBox* cb = containingBlock(m_oldFrame);
-                if (cb->contentWidth() == 0) {
-                    fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
-                           BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentHeight() /
-                                   cb->contentHeight());
-                }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
-                float value;
-                if (m_oldStyle->boxSizing() ==
-                    BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->height();
-                } else {
-                    value = m_oldFrame->asFrameBox()->contentHeight();
-                }
-                fromValue = Length(Length::Fixed, value);
-            }
-
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::Height, AnimatedValue(fromValue),
-                AnimatedValue(toValue), duration, delay, timingFunction,
-                m_newStyle->height());
-            m_executor->registerTransition(task);
-            m_gotTransition = true;
-        }
-    }
-}
-
-void TransitionApplier::applyMinWidth(double duration, double delay,
-                                      TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::MinWidth)) {
-        return;
-    }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldWidth =
-            getLengthWidth(m_oldFrame, m_element, m_oldStyle->minWidth());
-        auto newWidth =
-            getLengthWidth(m_oldFrame, m_element, m_newStyle->minWidth());
-
-        if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
-            (newWidth.isPercent() || newWidth.isFixed())) {
-            auto fromValue = oldWidth;
-            auto toValue = newWidth;
-
-            if (toValue.isPercent() && fromValue.isPercent() == false) {
-                FrameBox* cb = containingBlock(m_oldFrame);
-                if (cb->contentWidth() == 0) {
-                    fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
-                           BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->width() /
-                                           cb->contentWidth());
-                } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentWidth() /
-                                   cb->contentWidth());
-                }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
-                float value;
-                if (m_oldStyle->boxSizing() ==
-                    BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->width();
-                } else {
-                    value = m_oldFrame->asFrameBox()->contentWidth();
-                }
-                fromValue = Length(Length::Fixed, value);
-            }
-
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::MinWidth,
-                AnimatedValue(fromValue), AnimatedValue(toValue), duration,
-                delay, timingFunction, m_newStyle->minWidth());
-            m_executor->registerTransition(task);
-            m_gotTransition = true;
-        }
-    }
-}
-
-void TransitionApplier::applyMinHeight(double duration, double delay,
-                                       TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::MinHeight)) {
-        return;
-    }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldHeight =
-            getLengthHeight(m_oldFrame, m_element, m_oldStyle->minHeight());
-        auto newHeight =
-            getLengthHeight(m_oldFrame, m_element, m_newStyle->minHeight());
-
-        if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
-            (newHeight.isPercent() || newHeight.isFixed())) {
-            auto fromValue = oldHeight;
-            auto toValue = newHeight;
-
-            if (toValue.isPercent() && fromValue.isPercent() == false) {
-                FrameBox* cb = containingBlock(m_oldFrame);
-                if (cb->contentWidth() == 0) {
-                    fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
-                           BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentHeight() /
-                                   cb->contentHeight());
-                }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
-                float value;
-                if (m_oldStyle->boxSizing() ==
-                    BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->height();
-                } else {
-                    value = m_oldFrame->asFrameBox()->contentHeight();
-                }
-                fromValue = Length(Length::Fixed, value);
-            }
-
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::MinHeight,
-                AnimatedValue(fromValue), AnimatedValue(toValue), duration,
-                delay, timingFunction, m_newStyle->minHeight());
-            m_executor->registerTransition(task);
-            m_gotTransition = true;
-        }
-    }
-}
-
-void TransitionApplier::applyMaxWidth(double duration, double delay,
-                                      TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::MaxWidth)) {
-        return;
-    }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldWidth =
-            getLengthWidth(m_oldFrame, m_element, m_oldStyle->maxWidth());
-        auto newWidth =
-            getLengthWidth(m_oldFrame, m_element, m_newStyle->maxWidth());
-
-        if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
-            (newWidth.isPercent() || newWidth.isFixed())) {
-            auto fromValue = oldWidth;
-            auto toValue = newWidth;
-
-            if (toValue.isPercent() && fromValue.isPercent() == false) {
-                FrameBox* cb = containingBlock(m_oldFrame);
-                if (cb->contentWidth() == 0) {
-                    fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
-                           BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->width() /
-                                           cb->contentWidth());
-                } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentWidth() /
-                                   cb->contentWidth());
-                }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
-                float value;
-                if (m_oldStyle->boxSizing() ==
-                    BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->width();
-                } else {
-                    value = m_oldFrame->asFrameBox()->contentWidth();
-                }
-                fromValue = Length(Length::Fixed, value);
-            }
-
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::MaxWidth,
-                AnimatedValue(fromValue), AnimatedValue(toValue), duration,
-                delay, timingFunction, m_newStyle->maxWidth());
-            m_executor->registerTransition(task);
-            m_gotTransition = true;
-        }
-    }
-}
-
-void TransitionApplier::applyMaxHeight(double duration, double delay,
-                                       TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::MaxHeight)) {
-        return;
-    }
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        auto oldHeight =
-            getLengthHeight(m_oldFrame, m_element, m_oldStyle->maxHeight());
-        auto newHeight =
-            getLengthHeight(m_oldFrame, m_element, m_newStyle->maxHeight());
-
-        if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
-            (newHeight.isPercent() || newHeight.isFixed())) {
-            auto fromValue = oldHeight;
-            auto toValue = newHeight;
-
-            if (toValue.isPercent() && fromValue.isPercent() == false) {
-                FrameBox* cb = containingBlock(m_oldFrame);
-                if (cb->contentWidth() == 0) {
-                    fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
-                           BoxSizingValue::BorderBoxBoxSizingValue) {
-                    fromValue = Length(Length::Percent,
-                                       m_oldFrame->asFrameBox()->height() /
-                                           cb->contentHeight());
-                } else {
-                    fromValue =
-                        Length(Length::Percent,
-                               m_oldFrame->asFrameBox()->contentHeight() /
-                                   cb->contentHeight());
-                }
-            } else if (toValue.isFixed() && fromValue.isFixed() == false) {
-                float value;
-                if (m_oldStyle->boxSizing() ==
-                    BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value = m_oldFrame->asFrameBox()->height();
-                } else {
-                    value = m_oldFrame->asFrameBox()->contentHeight();
-                }
-                fromValue = Length(Length::Fixed, value);
-            }
-
-            auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::MaxHeight,
-                AnimatedValue(fromValue), AnimatedValue(toValue), duration,
-                delay, timingFunction, m_newStyle->maxHeight());
+                m_element, keyKind, from, to, duration, delay, timingFunction,
+                lengthValueGetter(m_newStyle)); //
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }

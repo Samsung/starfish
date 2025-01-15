@@ -52,24 +52,12 @@ private:
         CSSStyleValuePair::KeyKind keyKind,
         const std::function<Unit::Color(ComputedStyle*)>& colorValueGetter,
         double duration, double delay, TimingFunction* timingFunction);
-
-    void applyWidth(double duration, double delay,
-                    TimingFunction* timingFunction);
-
-    void applyHeight(double duration, double delay,
-                     TimingFunction* timingFunction);
-
-    void applyMinWidth(double duration, double delay,
-                       TimingFunction* timingFunction);
-
-    void applyMinHeight(double duration, double delay,
-                        TimingFunction* timingFunction);
-
-    void applyMaxWidth(double duration, double delay,
-                       TimingFunction* timingFunction);
-
-    void applyMaxHeight(double duration, double delay,
-                        TimingFunction* timingFunction);
+    void applyActiveLengthAnimationTaskForFrameBoxSize(
+        CSSStyleValuePair::KeyKind keyKind,
+        const std::function<Length(ComputedStyle*)>& lengthValueGetter,
+        const std::function<LayoutUnit(FrameBox*)>& frameBoxSizeValueGetter,
+        const std::function<LayoutUnit(FrameBox*)>& contentSizeValueGetter,
+        double duration, double delay, TimingFunction* timingFunction);
 
     void applyMarginTop(double duration, double delay,
                         TimingFunction* timingFunction);
