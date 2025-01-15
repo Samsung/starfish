@@ -798,8 +798,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
     Optional<CanvasFillStrokeSource*> fillInfo;
     Optional<CanvasFillStrokeSource*> strokeInfo;
 
-    auto newPath = path();
-    if (newPath) {
+    auto path = this->path();
+    if (path) {
         auto strokeWidth = style()->strokeWidth().specifiedValue(
                     normalizedDiagonalViewportLength(), this);
         Path::StrokeStyle ss({
@@ -810,7 +810,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         });
         // fill and stroke need same boundingRect for cover this case
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
-        Unit::Rect rect = newPath->strokeBoundingRect(ss);
+        Unit::Rect rect = path->strokeBoundingRect(ss);
 
         if (fillHasUrl) {
             fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
@@ -880,7 +880,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             }
 
             ctx.m_canvas->save();
-            ctx.m_canvas->clipPath(newPath.value());
+            ctx.m_canvas->clipPath(path.value());
             ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
             auto targetRect = Unit::Rect(pos.x(), pos.y(),
                     m_frameRect.width(), m_frameRect.height());
@@ -894,44 +894,52 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 ctx.m_canvas->endOpacityLayer();
             }
             ctx.m_canvas->restore();
-
-            // referencePath for paint stroke
-            ctx.m_canvas->referencePath(newPath.value());
         } else if (fillInfo.hasValue()) {
             if (fillOpacity != 1) {
                 ctx.m_canvas->beginOpacityLayer(fillOpacity, rect);
             }
-            ctx.m_canvas->referencePath(newPath.value());
+            ctx.m_canvas->referencePath(path.value());
             ctx.m_canvas->setFillSource(fillInfo.value());
-            ctx.m_canvas->fillPreserve();
+            ctx.m_canvas->fill();
             if (fillOpacity != 1) {
                 ctx.m_canvas->endOpacityLayer();
             }
         } else {
-            ctx.m_canvas->referencePath(newPath.value());
-            ctx.m_canvas->setFillRule(style()->fillRule());
             Unit::Color fillColor = style()->fill()->color();
-            ctx.m_canvas->setFillColor(
-                Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                            fillColor.a() * fillOpacity));
-            ctx.m_canvas->fillPreserve();
+            fillColor.m_a = fillColor.a() * fillOpacity;
+            if (!fillColor.isTransparent()) {
+                ctx.m_canvas->referencePath(path.value());
+                ctx.m_canvas->setFillRule(style()->fillRule());
+                ctx.m_canvas->setFillColor(fillColor);
+                ctx.m_canvas->fill();
+            }
         }
 
         // stroke
-        if (strokeInfo.hasValue()) {
-            ctx.m_canvas->setStrokeSource(strokeInfo.value());
-        } else {
-            Unit::Color strokeColor = style()->stroke()->color();
-            ctx.m_canvas->setStrokeColor(
-                Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                            strokeColor.a() * style()->strokeOpacity()));
+        if (strokeWidth) {
+            float strokeOpacity = style()->strokeOpacity();
+            bool shouldUseOpacityLayer = strokeInfo.hasValue() && strokeOpacity != 1;
+            if (shouldUseOpacityLayer) {
+                ctx.m_canvas->beginOpacityLayer(strokeOpacity, rect);
+            }
+            ctx.m_canvas->setLineWidth(strokeWidth);
+            ctx.m_canvas->setLineCap(ss.strokeLineCap);
+            ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
+            ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
+            if (strokeInfo.hasValue()) {
+                ctx.m_canvas->setStrokeSource(strokeInfo.value());
+            } else {
+                Unit::Color strokeColor = style()->stroke()->color();
+                ctx.m_canvas->setStrokeColor(
+                    Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                                strokeColor.a() * style()->strokeOpacity()));
+            }
+            ctx.m_canvas->referencePath(path.value());
+            ctx.m_canvas->stroke();
+            if (shouldUseOpacityLayer) {
+                ctx.m_canvas->endOpacityLayer();
+            }
         }
-
-        ctx.m_canvas->setLineWidth(strokeWidth);
-        ctx.m_canvas->setLineCap(ss.strokeLineCap);
-        ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
-        ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
-        ctx.m_canvas->stroke();
 
         ctx.m_canvas->restore();
     }

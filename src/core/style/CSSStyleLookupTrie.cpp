@@ -777,6 +777,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // animation-name
         // padding-inline
         // stroke-linecap
+        // stroke-opacity
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -834,6 +835,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 's':
             if (memcmp(data, "stroke-linecap", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeLineCap;
+            }
+            if (memcmp(data, "stroke-opacity", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeOpacity;
             }
             break;
         }
@@ -2102,6 +2106,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         case 's':
             if (memcmp(data, "strokeLinecap", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeLineCap;
+            }
+            if (memcmp(data, "strokeOpacity", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeOpacity;
             }
             break;
         }
