@@ -119,7 +119,7 @@ void SVGImageElement::loadImage(String* src)
     reqData->m_url = m_imageResource->url();
     reqData->m_referrer = new ReferrerURL(document()->documentURI());
     reqData->m_destination = RequestDestination::Image;
-    reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
+    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
 
     m_imageResource->request(reqData, true);
 }
