@@ -120,41 +120,83 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::BackgroundColor,
                    CSSStyleValuePair::Background)) {
-        applyBackgroundColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::BackgroundColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->backgroundColor();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::BorderBottomColor,
                    CSSStyleValuePair::BorderColor,
                    CSSStyleValuePair::BorderBottom)) {
-        applyBorderBottomColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::BorderBottomColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->border().bottom().color();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::BorderLeftColor,
                    CSSStyleValuePair::BorderColor,
                    CSSStyleValuePair::BorderLeft)) {
-        applyBorderLeftColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::BorderLeftColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->border().left().color();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::BorderRightColor,
                    CSSStyleValuePair::BorderColor,
                    CSSStyleValuePair::BorderRight)) {
-        applyBorderRightColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::BorderRightColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->border().right().color();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::BorderTopColor,
                    CSSStyleValuePair::BorderColor,
                    CSSStyleValuePair::BorderTop)) {
-        applyBorderTopColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::BorderTopColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->border().top().color();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(property,
                                                CSSStyleValuePair::Color)) {
-        applyColor(duration, delay, timingFunction);
-
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::Color,
+            [](ComputedStyle* style) -> Unit::Color { return style->color(); },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(property,
                                                CSSStyleValuePair::CaretColor)) {
-        applyCaretColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::CaretColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->caretColor();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::OutlineColor)) {
-        applyOutlineColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::OutlineColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->outlineColor();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
                    property, CSSStyleValuePair::TextDecorationColor,
                    CSSStyleValuePair::TextDecoration)) {
-        applyTextDecorationColor(duration, delay, timingFunction);
+        applyActiveColorAnimationTask(
+            CSSStyleValuePair::KeyKind::TextDecorationColor,
+            [](ComputedStyle* style) -> Unit::Color {
+                return style->textDecorationColor();
+            },
+            duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(property,
                                                CSSStyleValuePair::Width)) {
         applyWidth(duration, delay, timingFunction);
@@ -341,139 +383,19 @@ void TransitionApplier::applyTransform(double duration, double delay,
     }
 }
 
-void TransitionApplier::applyBackgroundColor(double duration, double delay,
-                                             TimingFunction* timingFunction)
+void TransitionApplier::applyActiveColorAnimationTask(
+    CSSStyleValuePair::KeyKind keyKind,
+    const std::function<Unit::Color(ComputedStyle*)>& colorValueGetter,
+    double duration, double delay, TimingFunction* timingFunction)
 {
-    if (!canRegisterTransition(CSSStyleValuePair::BackgroundColor)) {
+    if (!canRegisterTransition(keyKind)) {
         return;
     }
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::BackgroundColor,
-        AnimatedValue(m_oldStyle->backgroundColor()),
-        AnimatedValue(m_newStyle->backgroundColor()), duration, delay,
-        timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
 
-void TransitionApplier::applyBorderBottomColor(double duration, double delay,
-                                               TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::BorderBottomColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->border().bottom().color();
-    Unit::Color newColor = m_newStyle->border().bottom().color();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::BorderBottomColor,
-        AnimatedValue(oldColor), AnimatedValue(newColor), duration, delay,
-        timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyBorderLeftColor(double duration, double delay,
-                                             TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::BorderLeftColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->border().left().color();
-    Unit::Color newColor = m_newStyle->border().left().color();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::BorderLeftColor, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyBorderRightColor(double duration, double delay,
-                                              TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::BorderRightColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->border().right().color();
-    Unit::Color newColor = m_newStyle->border().right().color();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::BorderRightColor, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyBorderTopColor(double duration, double delay,
-                                            TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::BorderTopColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->border().top().color();
-    Unit::Color newColor = m_newStyle->border().top().color();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::BorderTopColor, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyColor(double duration, double delay,
-                                   TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::Color)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->color();
-    Unit::Color newColor = m_newStyle->color();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyCaretColor(double duration, double delay,
-                                        TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::CaretColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->caretColor();
-    Unit::Color newColor = m_newStyle->caretColor();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::CaretColor, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyOutlineColor(double duration, double delay,
-                                          TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::OutlineColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->outlineColor();
-    Unit::Color newColor = m_newStyle->outlineColor();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::OutlineColor, AnimatedValue(oldColor),
-        AnimatedValue(newColor), duration, delay, timingFunction);
-    m_executor->registerTransition(task);
-    m_gotTransition = true;
-}
-
-void TransitionApplier::applyTextDecorationColor(double duration, double delay,
-                                                 TimingFunction* timingFunction)
-{
-    if (!canRegisterTransition(CSSStyleValuePair::TextDecorationColor)) {
-        return;
-    }
-    Unit::Color oldColor = m_oldStyle->textDecorationColor();
-    Unit::Color newColor = m_newStyle->textDecorationColor();
-    auto task = new ActiveColorAnimationTask(
-        m_element, CSSStyleValuePair::TextDecorationColor,
-        AnimatedValue(oldColor), AnimatedValue(newColor), duration, delay,
-        timingFunction);
+    AnimatedValue from = colorValueGetter(m_oldStyle);
+    AnimatedValue to = colorValueGetter(m_newStyle);
+    auto task = new ActiveColorAnimationTask(m_element, keyKind, from, to,
+                                             duration, delay, timingFunction);
     m_executor->registerTransition(task);
     m_gotTransition = true;
 }
