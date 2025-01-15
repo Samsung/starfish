@@ -4844,6 +4844,21 @@ void StyleResolver::applyProperty(Element* element,
             style->setMaskType(newCssValue.maskTypeValue());
         }
         break;
+    case CSSStyleValuePair::KeyKind::StrokeOpacity:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeOpacity(parentStyle->strokeOpacity());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeOpacity(1);
+        } else {
+            float beforeClip = newCssValue.numberValue();
+            style->setStrokeOpacity(
+                beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
+        }
+        break;
     case CSSStyleValuePair::KeyKind::StrokeLineCap:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();

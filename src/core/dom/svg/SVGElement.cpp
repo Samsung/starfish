@@ -344,6 +344,7 @@ void SVGElement::styleForPresentationAttribute(
     if (needsStrokeAttributes()) {
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(stroke, Stroke);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeWidth, StrokeWidth);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeOpacity, StrokeOpacity);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeLineCap, StrokeLineCap);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeLineJoin, StrokeLineJoin);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeMiterLimit, StrokeMiterLimit);
