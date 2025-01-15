@@ -22,6 +22,8 @@
 
 #include "core/style/ComputedStyle.h"
 
+#include <functional>
+
 namespace Starfish {
 
 class Element;
@@ -46,32 +48,10 @@ private:
     void applyTransform(double duration, double delay,
                         TimingFunction* timingFunction);
 
-    void applyBackgroundColor(double duration, double delay,
-                              TimingFunction* timingFunction);
-
-    void applyBorderBottomColor(double duration, double delay,
-                                TimingFunction* timingFunction);
-
-    void applyBorderLeftColor(double duration, double delay,
-                              TimingFunction* timingFunction);
-
-    void applyBorderRightColor(double duration, double delay,
-                               TimingFunction* timingFunction);
-
-    void applyBorderTopColor(double duration, double delay,
-                             TimingFunction* timingFunction);
-
-    void applyColor(double duration, double delay,
-                    TimingFunction* timingFunction);
-
-    void applyCaretColor(double duration, double delay,
-                         TimingFunction* timingFunction);
-
-    void applyOutlineColor(double duration, double delay,
-                           TimingFunction* timingFunction);
-
-    void applyTextDecorationColor(double duration, double delay,
-                                  TimingFunction* timingFunction);
+    void applyActiveColorAnimationTask(
+        CSSStyleValuePair::KeyKind keyKind,
+        const std::function<Unit::Color(ComputedStyle*)>& colorValueGetter,
+        double duration, double delay, TimingFunction* timingFunction);
 
     void applyWidth(double duration, double delay,
                     TimingFunction* timingFunction);
