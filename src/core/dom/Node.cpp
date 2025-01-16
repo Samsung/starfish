@@ -620,14 +620,14 @@ bool Node::isEqualNode(Optional<Node*> otherInput)
 
     Node* child = firstChild();
     Node* otherChild = other->firstChild();
-    while (child) {
+    while (child && otherChild) {
         if (!child->isEqualNode(otherChild)) {
             return false;
         }
         child = child->nextSibling();
         otherChild = otherChild->nextSibling();
     }
-    if (otherChild) {
+    if (child || otherChild) {
         return false;
     }
 
