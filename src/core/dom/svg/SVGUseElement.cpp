@@ -72,6 +72,7 @@ Optional<SVGElement*> SVGUseElement::updateShadowTree()
 
     auto oldTarget = m_target;
     Optional<SVGElement*> newTarget;
+    Optional<Node*> oldClonedTarget = shadowRoot->firstChild();
     Optional<Node*> newClonedTarget;
 
     // In case that SVG element is loaded as an image resource through
@@ -86,6 +87,7 @@ Optional<SVGElement*> SVGUseElement::updateShadowTree()
             targetElementURL = new ResourceURL(m_href, document()->baseURI());
         }
     }
+
     if (targetElementURL) {
         String* id = targetElementURL->getFragmentIdValue();
         if (!id->isEmpty()) {
@@ -103,15 +105,15 @@ Optional<SVGElement*> SVGUseElement::updateShadowTree()
     }
 
     if (isInDocumentScopeAndDocumentParticipateInRendering()) {
-        bool shouldUpdate = true;
+        bool shouldUpdateShadowRootContents = true;
         if (oldTarget != newTarget) {
             m_target = newTarget;
-        } else if (newClonedTarget && oldTarget &&
-                   oldTarget->isSameNode(newClonedTarget.value())) {
-            shouldUpdate = false;
+        } else if (oldClonedTarget &&
+                   oldClonedTarget->isEqualNode(newClonedTarget.value())) {
+            shouldUpdateShadowRootContents = false;
         }
 
-        if (shouldUpdate) {
+        if (shouldUpdateShadowRootContents) {
             while (shadowRoot->hasChildNodes()) {
                 shadowRoot->removeChild(shadowRoot->firstChild());
             }
