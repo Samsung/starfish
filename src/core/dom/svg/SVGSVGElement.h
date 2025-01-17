@@ -69,12 +69,17 @@ public:
         return true;
     }
 
-    bool hasViewBox() const
+    virtual bool isStructuralElement() override
+    {
+        return true;
+    }
+
+    virtual bool hasViewBox() const override
     {
         return m_hasViewBox;
     }
 
-    Unit::Rect viewBox() const
+    virtual Unit::Rect viewBox() const override
     {
         STARFISH_ASSERT(m_hasViewBox);
         return m_viewBox;

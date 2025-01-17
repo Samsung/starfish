@@ -66,10 +66,11 @@ Optional<Path*> FrameSVGUseBox::path()
     return path;
 }
 
-void FrameSVGUseBox::prepareChildPainting(Canvas* canvas)
+bool FrameSVGUseBox::prepareChildPainting(Canvas* canvas)
 {
     auto stylePos = resolveStylePosition(viewport());
     canvas->translate(stylePos.x(), stylePos.y());
+    return true;
 }
 
 void FrameSVGUseBox::postLayoutSVG(SVGLayoutContext& ctx)
