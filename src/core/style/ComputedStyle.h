@@ -803,14 +803,16 @@ class ComputedStyle : public gc {
         Length m_horizontalBorderSpacing; // table
         Length m_verticalBorderSpacing;   // table
 
-        StylePaintData* m_fill;          // svg
-        float m_fillOpacity;             // svg
-        StylePaintData* m_stroke;        // svg
-        float m_strokeOpacity;           // svg
-        Length m_strokeWidth;            // svg
-        StrokeLineCap m_strokeLineCap;   // svg
-        StrokeLineJoin m_strokeLineJoin; // svg
-        float m_strokeMiterLimit;        // svg
+        StylePaintData* m_fill;                   // svg
+        float m_fillOpacity;                      // svg
+        StylePaintData* m_stroke;                 // svg
+        float m_strokeOpacity;                    // svg
+        Length m_strokeWidth;                     // svg
+        StrokeLineCap m_strokeLineCap;            // svg
+        StrokeLineJoin m_strokeLineJoin;          // svg
+        float m_strokeMiterLimit;                 // svg
+        GCAtomicVector<double> m_strokeDashArray; // svg
+        double m_strokeDashOffset;                // svg
 
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
@@ -834,6 +836,8 @@ class ComputedStyle : public gc {
             m_strokeLineCap = StrokeLineCap::Butt;
             m_strokeLineJoin = StrokeLineJoin::Miter;
             m_strokeMiterLimit = 4;
+            m_strokeDashArray.clear();
+            m_strokeDashOffset = 0;
 
             m_textTransform = NoneTextTransformValue;
             m_caretColor = Unit::Color(0, 0, 0, 255);
@@ -3702,6 +3706,32 @@ public:
             return m_inheritedStyles.m_rareData->m_strokeMiterLimit;
         }
         return 4;
+    }
+
+    void setStrokeDashArray(GCAtomicVector<double> array)
+    {
+        ensureInheritedRareData()->m_strokeDashArray = array;
+    }
+
+    GCAtomicVector<double> strokeDashArray()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeDashArray;
+        }
+        return GCAtomicVector<double>();
+    }
+
+    void setStrokeDashOffset(double offset)
+    {
+        ensureInheritedRareData()->m_strokeDashOffset = offset;
+    }
+
+    double strokeDashOffset()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeDashOffset;
+        }
+        return 0;
     }
 
     BorderCollapseValue borderCollapse()
