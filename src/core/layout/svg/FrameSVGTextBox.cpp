@@ -44,6 +44,10 @@ void* FrameSVGTextBox::operator new(size_t size)
 
 void FrameSVGTextBox::layoutSVG(SVGLayoutContext& ctx)
 {
+}
+
+void FrameSVGTextBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
+{
     LayoutContext layoutContext(node()->starfish(),
                       node()->document()->frame()->asFrameDocument());
     firstChild()->layout(layoutContext, Frame::LayoutWantToResolve::ResolveAll);

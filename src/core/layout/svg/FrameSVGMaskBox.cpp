@@ -116,8 +116,7 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
             pixelSnappedRect.width().toUnsigned(),
             pixelSnappedRect.height().toUnsigned());
 
-    FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
-            asFrameSVGSVGBox();
+    FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
     bool applyMaskOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 0;
     SVGMaskPaintingDetphMarker marker(viewportBox->svgMaskPaintingDepth());
 

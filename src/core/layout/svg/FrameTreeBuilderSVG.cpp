@@ -40,6 +40,7 @@
 #include "core/layout/svg/FrameSVGClipPathBox.h"
 #include "core/layout/svg/FrameSVGInvisibleBox.h"
 #include "core/layout/svg/FrameSVGUseBox.h"
+#include "core/layout/svg/FrameSVGViewportContextBox.h"
 #include "core/layout/svg/FrameSVGMaskBox.h"
 #include "core/layout/FrameBlockBox.h"
 
@@ -78,7 +79,20 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         }
 
         if (svgElement->isSVGSVGElement()) {
-            newFrame = new FrameSVGSVGBox(svgElement);
+            bool isInnerSVG = false;
+            auto e = svgElement->renderingParentElement();
+            while (e) {
+                if (e->isSVGSVGElement()) {
+                    isInnerSVG = true;
+                    break;
+                }
+                e = e->renderingParentElement();
+            }
+            if (isInnerSVG) {
+                newFrame = new FrameSVGViewportContextBox(svgElement);
+            } else {
+                newFrame = new FrameSVGSVGBox(svgElement);
+            }
         } else if (svgElement->isSVGRectElement()) {
             newFrame = new FrameSVGRectBox(svgElement);
         } else if (svgElement->isSVGGElement()) {
@@ -188,12 +202,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
 
     if (newFrame) {
         force = true;
-        if (!svgElement->isSVGSVGElement() || (parentFrame && parentFrame->isFrameSVGSVGBox()) ||
-                newFrame->isFrameSVGClipPathBox()) {
-            if (newFrame->isFrameSVGSVGBox()) {
-                newFrame->asFrameSVGSVGBox()->setInnerSVG(true);
-            }
-        }
         if (parentFrame) {
             Optional<Element*> prevElement = svgElement->previousElementSibling();
             while (prevElement.hasValue() && !prevElement->frame()) {

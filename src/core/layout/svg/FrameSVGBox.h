@@ -56,6 +56,7 @@ public:
         return "FrameSVGBox";
     }
 
+    FrameSVGSVGBox* outmostSVGViewportBox();
     LayoutSize viewport();
     LayoutUnit normalizedDiagonalViewportLength();
 
@@ -79,12 +80,15 @@ public:
     {
     }
 
+    virtual void layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix);
+
     virtual void postLayoutSVG(SVGLayoutContext& ctx)
     {
     }
 
-    virtual void prepareChildPainting(Canvas* canvas)
+    virtual bool prepareChildPainting(Canvas* canvas)
     {
+        return true;
     }
 
     virtual void paintContent(PaintingContext& ctx) override;

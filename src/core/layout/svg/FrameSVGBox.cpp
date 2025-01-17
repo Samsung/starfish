@@ -25,6 +25,7 @@
 #include "FrameSVGClipPathBox.h"
 #include "FrameSVGMaskBox.h"
 #include "FrameSVGSVGBox.h"
+#include "FrameSVGViewportContextBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/CanvasGradient.h"
@@ -200,21 +201,11 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         m_computedSVGTransform = nullptr;
     }
 
-    Frame* f = firstChild();
-    while (f) {
-        if (f->isFrameSVGBox()) {
-            f->asFrameSVGBox()->layout(ctx, matrix);
-        } else if (f->isFrameSVGSVGBox()) {
-            f->layout(ctx.layoutContext,
-                      Frame::LayoutWantToResolve::ResolveAll);
-        }
-
-        f = f->next();
-    }
+    layoutChildren(ctx, matrix);
 
     if (node()->asSVGElement()->isStructuralElement()) {
         m_frameRect = LayoutRect();
-        f = firstChild();
+        Frame* f = firstChild();
         while (f) {
             m_frameRect.unite(f->asFrameBox()->frameRect());
             f = f->next();
@@ -232,10 +223,35 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     postLayoutSVG(ctx);
 }
 
+void FrameSVGBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
+{
+    Frame* f = firstChild();
+    while (f) {
+        if (f->isFrameSVGBox()) {
+            f->asFrameSVGBox()->layout(ctx, matrix);
+        } else {
+            f->layout(ctx.layoutContext, Frame::LayoutWantToResolve::ResolveAll);
+
+        }
+        f = f->next();
+    }
+}
+
 void FrameSVGBox::layout(LayoutContext& ctx,
                          Frame::LayoutWantToResolve resolveWhat)
 {
     STARFISH_ASSERT_NOT_REACHED();
+}
+
+FrameSVGSVGBox* FrameSVGBox::outmostSVGViewportBox()
+{
+    Frame* f = this;
+    while (true) {
+        if (f->isFrameSVGSVGBox()) {
+            return f->asFrameSVGSVGBox();
+        }
+        f = f->layoutParent();
+    }
 }
 
 LayoutSize FrameSVGBox::viewport()
@@ -244,6 +260,8 @@ LayoutSize FrameSVGBox::viewport()
     while (true) {
         if (f->isFrameSVGSVGBox()) {
             return f->asFrameSVGSVGBox()->viewport();
+        } else if (f != this && f->isFrameSVGViewportContextBox()) {
+            return f->asFrameSVGViewportContextBox()->viewport();
         }
         f = f->layoutParent();
     }
@@ -255,6 +273,8 @@ LayoutUnit FrameSVGBox::normalizedDiagonalViewportLength()
     while (true) {
         if (f->isFrameSVGSVGBox()) {
             return f->asFrameSVGSVGBox()->normalizedDiagonalViewportLength();
+        } else if (f != this && f->isFrameSVGViewportContextBox()) {
+            return f->asFrameSVGViewportContextBox()->normalizedDiagonalViewportLength();
         }
         f = f->layoutParent();
     }
@@ -281,7 +301,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
 
     float opacity = style()->opacity();
     if (opacity != 1) {
-        auto svgFrame = node()->asSVGElement()->viewportElement()->frame()->asFrameSVGSVGBox();
+        auto svgFrame = outmostSVGViewportBox();
         LayoutRect absRect = absoluteRect(svgFrame);
         Unit::Rect rt(absRect.x(), absRect.y(), absRect.width(), absRect.height());
         auto ctm = ctx.m_canvas->currentTransformMatrix();
@@ -314,7 +334,9 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     paintSVG(ctx);
     ctx.m_canvas->restore();
 
-    prepareChildPainting(ctx.m_canvas);
+    if (!prepareChildPainting(ctx.m_canvas)) {
+        return;
+    }
 
     Frame* child = firstChild();
     while (child) {
@@ -825,8 +847,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         ctx.m_canvas->save();
 
         float fillOpacity = style()->fillOpacity();
-        FrameSVGSVGBox* viewportBox = node()->asSVGElement()->viewportElement()->frame()->
-                    asFrameSVGSVGBox();
+        FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
         bool paintingOnSVGViewport = viewportBox->svgMaskPaintingDepth() == 0;
         // fill
         if (fillInfo.hasValue() && paintingOnSVGViewport &&

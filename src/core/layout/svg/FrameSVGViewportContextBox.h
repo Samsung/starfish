@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2025-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,28 +17,48 @@
  *  USA
  */
 
-#ifndef __StarfishFrameSVGUseBox__
-#define __StarfishFrameSVGUseBox__
+#ifndef __StarfishFrameViewportContextBox__
+#define __StarfishFrameViewportContextBox__
 
 #include "core/layout/svg/FrameSVGBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 
 namespace Starfish {
 
-class FrameSVGUseBox final : public FrameSVGBox {
+class FrameSVGViewportContextBox final : public FrameSVGBox {
 public:
-    FrameSVGUseBox(Node* node)
+    FrameSVGViewportContextBox(Node* node)
         : FrameSVGBox(node)
     {
     }
 
-    virtual const char* name() override
+    virtual bool isFrameSVGViewportContextBox() override
     {
-        return "FrameSVGUseBox";
+        return true;
     }
 
-    virtual Optional<Path*> path() override;
+    virtual const char* name() override
+    {
+        return "FrameSVGViewportContextBox";
+    }
+
+    LayoutSize viewport() const
+    {
+        return m_viewport;
+    }
+
+    LayoutUnit normalizedDiagonalViewportLength()
+    {
+        float w = m_viewport.width();
+        float h = m_viewport.height();
+        return sqrt(w * w + h * h) / sqrt(2);
+    }
+
+    Unit::Rect viewBox();
+    std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
+    virtual void layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix) override;
     virtual bool prepareChildPainting(Canvas* canvas) override;
-    virtual void postLayoutSVG(SVGLayoutContext& ctx) override;
+    virtual Optional<Path*> path() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -48,6 +68,8 @@ protected:
     {
         FrameSVGBox::fillGCDescriptor(desc);
     }
+
+    LayoutSize m_viewport;
 };
 } // namespace Starfish
 

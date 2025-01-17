@@ -183,6 +183,17 @@ public:
         return m_preserveAspectRatioMeetOrSlice;
     }
 
+    virtual bool hasViewBox() const
+    {
+        return false;
+    }
+
+    virtual Unit::Rect viewBox() const
+    {
+        STARFISH_ASSERT_NOT_REACHED();
+        return Unit::Rect();
+    }
+
     bool hasClipPath()
     {
         return !style()->clipPath()->equals(String::emptyString);

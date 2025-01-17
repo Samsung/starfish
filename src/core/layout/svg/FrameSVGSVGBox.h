@@ -29,7 +29,6 @@ class FrameSVGSVGBox final : public FrameReplaced {
 public:
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
-        , m_isInnerSVG(false)
         , m_svgMaskPaintingDepth(0)
         , m_svgScale(1)
         , m_defaultWidth(300)
@@ -61,17 +60,21 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual IntrinsicSize intrinsicSize() override;
+    static IntrinsicSize intrinsicSize(SVGElement* element, LayoutSize defaultSize);
     virtual void paintReplaced(Canvas* canvas) override;
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual LayoutRect overflowRepaintRect() override;
 
-    LayoutSize viewport()
+    LayoutSize viewport() const
     {
         return m_viewport;
     }
 
+    static std::pair<bool, SkMatrix> computeTranlateScaleOnPaint(
+        SVGElement* element, const LayoutSize& svgSize, const LayoutSize& viewport,
+        const IntrinsicSize& intrinsicSize);
     std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
 
     // https://svgwg.org/svg2-draft/coords.html#Units
@@ -92,16 +95,6 @@ public:
     float svgScale()
     {
         return m_svgScale;
-    }
-
-    bool isInnerSVG()
-    {
-        return m_isInnerSVG;
-    }
-
-    void setInnerSVG(bool v)
-    {
-        m_isInnerSVG = v;
     }
 
     void setContainerViewport(Optional<Unit::Rect> containerViewport)
@@ -135,7 +128,6 @@ protected:
         FrameReplaced::fillGCDescriptor(desc);
     }
 
-    bool m_isInnerSVG;
     size_t m_svgMaskPaintingDepth;
     LayoutSize m_viewport;
     Optional<Unit::Rect> m_viewBox;

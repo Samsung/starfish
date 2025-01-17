@@ -50,6 +50,7 @@ class FrameSVGBox;
 class FrameSVGSVGBox;
 class FrameSVGClipPathBox;
 class FrameSVGMaskBox;
+class FrameSVGViewportContextBox;
 class FrameText;
 class FrameCounterText;
 class FrameQuoteText;
@@ -1334,6 +1335,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameSVGViewportContextBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameSelectBox()
     {
         return false;
@@ -1527,6 +1533,12 @@ public:
     {
         STARFISH_ASSERT(isFrameSVGMaskBox());
         return (FrameSVGMaskBox*)this;
+    }
+
+    FrameSVGViewportContextBox* asFrameSVGViewportContextBox()
+    {
+        STARFISH_ASSERT(isFrameSVGViewportContextBox());
+        return (FrameSVGViewportContextBox*)this;
     }
 
 #ifdef STARFISH_ENABLE_CANVAS
