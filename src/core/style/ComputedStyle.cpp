@@ -1426,6 +1426,24 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (!std::equal(newStyle->strokeDashArray().begin(),
+                    newStyle->strokeDashArray().end(),
+                    oldStyle->strokeDashArray().begin())) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDashArray] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->strokeDashOffset() != oldStyle->strokeDashOffset()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDashOffset] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (*newStyle->stopColor() != *oldStyle->stopColor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::StopColor] = true;
         damage = static_cast<ComputedStyleDamage>(

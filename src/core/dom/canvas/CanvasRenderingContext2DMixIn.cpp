@@ -1942,7 +1942,8 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     }
     return path->isPointInStroke({ m_canvas->lineWidth() / 2,
                                    static_cast<float>(m_canvas->miterLimit()),
-                                   m_canvas->lineCap(), m_canvas->lineJoin() },
+                                   m_canvas->lineCap(), m_canvas->lineJoin(),
+                                   m_canvas->dash(), m_canvas->dashOffset() },
                                  xx, yy);
 }
 

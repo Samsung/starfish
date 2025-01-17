@@ -463,6 +463,8 @@ public:
     QualifiedName m_strokeLineCap;
     QualifiedName m_strokeLineJoin;
     QualifiedName m_strokeMiterLimit;
+    QualifiedName m_strokeDashArray;
+    QualifiedName m_strokeDashOffset;
     QualifiedName m_x;
     QualifiedName m_y;
     QualifiedName m_x1;

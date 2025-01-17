@@ -2126,6 +2126,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setNumberValue(style->strokeMiterLimit());
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::StrokeDashArray: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDashArray);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        GCAtomicVector<double> array = style->strokeDashArray();
+        ValueList* vals = new ValueList(Separator::SpaceSeparator);
+        for (size_t i = 0; i < array.size(); i++) {
+            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                               (float)array.at(i));
+        }
+        p.setValueList(vals);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::StrokeDashOffset: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDashOffset);
+        p.setNumberValue(style->strokeDashOffset());
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::X: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->x());
         p.setKeyKind(CSSStyleValuePair::KeyKind::X);

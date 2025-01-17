@@ -4898,6 +4898,38 @@ void StyleResolver::applyProperty(Element* element,
             style->setStrokeMiterLimit(newCssValue.numberValue());
         }
         break;
+    case CSSStyleValuePair::KeyKind::StrokeDashArray:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeDashArray(parentStyle->strokeDashArray());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            GCAtomicVector<double> array;
+            for (unsigned int i = 0; i < list->size(); i++) {
+                if ((*list)[i].valueKind() == CSSStyleValuePair::Number) {
+                    array.push_back((*list)[i].numberValue());
+                }
+            }
+            style->setStrokeDashArray(array);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StrokeDashOffset:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setStrokeDashOffset(parentStyle->strokeDashOffset());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeDashOffset(0);
+        } else {
+            style->setStrokeDashOffset(newCssValue.numberValue());
+        }
+        break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:
         style->resetTransitionProperties();
         if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
@@ -15866,6 +15898,38 @@ bool CSSStyleValuePair::updateValueStrokeLineJoin(Document* document,
 }
 
 bool CSSStyleValuePair::updateValueStrokeMiterLimit(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueNumber(tokens, CSSPropertyParser::AllowNone);
+}
+
+bool CSSStyleValuePair::updateValueStrokeDashArray(Document* document,
+                                                   const CSSTokenVector& tokens)
+{
+    size_t size = tokens.size();
+    if (size < 1) {
+        return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
+
+    float result = 0.f;
+    for (unsigned int i = 0; i < size; i++) {
+        CSSTokenValue value = tokens[i];
+        if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,
+                                           &result)) {
+            values->push_back(CSSStyleValuePair(
+                CSSStyleValuePair::ValueKind::Number, (float)result));
+        } else {
+            return false;
+        }
+    }
+    m_value.m_multiValue = values;
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueStrokeDashOffset(
     Document* document, const CSSTokenVector& tokens)
 {
     return updateValueNumber(tokens, CSSPropertyParser::AllowNone);

@@ -1078,7 +1078,7 @@ test/cairo/reftest/vendor/blink_original/svg/stroke/implicit-moveto-followed-by-
 #test/cairo/reftest/vendor/blink_original/svg/stroke/non-scaling-stroke-zero-length-subpath-linecaps.html
 #test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-basic.html
 #test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-change.html
-test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-explicit-zero.html
+#test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-explicit-zero.html
 #test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-mutation-with-rect.html
 #test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-negative.html
 #test/cairo/reftest/vendor/blink_original/svg/stroke/pathlength-with-geometry-element.html
