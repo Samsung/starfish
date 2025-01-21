@@ -584,7 +584,11 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
             LayoutUnit unused;
             intrinsicHeight = a.second.specifiedValue(unused, this);
             if (s.m_hasAspectRatio) {
-                intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+                // NOTE
+                // use float pointing arithmetic for reducing error
+                // ex) <svg viewBox="0 0 4567 3"></svg>
+                intrinsicWidth = intrinsicHeight.toFloat()
+                    * (b.width().toFloat() / b.height().toFloat());
             } else {
                 intrinsicWidth = b.width();
             }
@@ -598,7 +602,11 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                 intrinsicHeight =
                     a.second.specifiedValue(parentContentHeight.fixed(), this);
                 if (s.m_hasAspectRatio) {
-                    intrinsicWidth = intrinsicHeight * (b.width() / b.height());
+                    // NOTE
+                    // use float pointing arithmetic for reducing error
+                    // ex) <svg viewBox="0 0 4567 3"></svg>
+                    intrinsicWidth = intrinsicHeight.toFloat()
+                        * (b.width().toFloat() / b.height().toFloat());
                 } else {
                     intrinsicWidth = b.width();
                 }
@@ -613,7 +621,11 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
         intrinsicWidth = a.first.specifiedValue(parentContentWidth, this);
         if (a.second.isAuto()) {
             if (s.m_hasAspectRatio) {
-                intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+                // NOTE
+                // use float pointing arithmetic for reducing error
+                // ex) <svg viewBox="0 0 4567 3"></svg>
+                intrinsicHeight = intrinsicWidth.toFloat()
+                    * (b.height().toFloat() / b.width().toFloat());
             } else {
                 intrinsicHeight = b.height();
             }
@@ -626,7 +638,11 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                     a.second.specifiedValue(parentContentHeight.fixed(), this);
             } else {
                 if (s.m_hasAspectRatio) {
-                    intrinsicHeight = intrinsicWidth * (b.height() / b.width());
+                    // NOTE
+                    // use float pointing arithmetic for reducing error
+                    // ex) <svg viewBox="0 0 4567 3"></svg>
+                    intrinsicHeight = intrinsicWidth.toFloat()
+                        * (b.height().toFloat() / b.width().toFloat());
                 } else {
                     intrinsicHeight = b.height();
                 }
