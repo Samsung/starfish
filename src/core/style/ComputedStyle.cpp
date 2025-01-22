@@ -121,6 +121,12 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData, m_stroke));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_strokeWidth));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_strokeDashArray));
         descr = GC_make_descriptor(
             obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;

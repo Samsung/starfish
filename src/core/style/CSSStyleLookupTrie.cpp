@@ -965,6 +965,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
         }
         break;
+    case 's':
+        if (memcmp(data, "stroke-dasharray", 16) == 0) {
+            return CSSStyleValuePair::KeyKind::StrokeDashArray;
+        }
+        break;
     case 17:
         // border-left-color
         // border-left-style
@@ -1019,6 +1024,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         case 's':
             if (memcmp(data, "stroke-miterlimit", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
+            }
+            if (memcmp(data, "stroke-dashoffset", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeDashOffset;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
