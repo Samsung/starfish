@@ -111,6 +111,9 @@ public:
         return m_useElementsPair;
     }
 
+    static void parseViewBox(bool& hasViewBox, Unit::Rect& viewBox,
+                             String* value);
+
 protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;

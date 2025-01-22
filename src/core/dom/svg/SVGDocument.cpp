@@ -44,6 +44,7 @@
 #include "core/dom/svg/SVGTSpanElement.h"
 #include "core/dom/svg/SVGMarkerElement.h"
 #include "core/dom/svg/SVGSwitchElement.h"
+#include "core/dom/svg/SVGSymbolElement.h"
 
 namespace Starfish {
 
@@ -102,6 +103,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGMarkerElement(document, qname);
     } else if (str->m_svgswitchTagName == localName) {
         return new SVGSwitchElement(document, qname);
+    } else if (str->m_svgsymbolTagName == localName) {
+        return new SVGSymbolElement(document, qname);
     } else if (str->m_svganimateTagName == localName) {
         return new SVGAnimateElement(document, qname);
     } else {

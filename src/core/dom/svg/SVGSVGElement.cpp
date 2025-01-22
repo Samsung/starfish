@@ -56,6 +56,30 @@ void* SVGSVGElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGSVGElement::parseViewBox(bool& hasViewBox, Unit::Rect& viewBox,
+                                 String* value)
+{
+    hasViewBox = false;
+    auto utf8Str = value->toUTF8NonGCString();
+    CSSTokenVector tokens;
+    CSSStyleDeclaration::tokenizeCSSValue(tokens, utf8Str.data(),
+                                          utf8Str.length(), ",", 1);
+    if (tokens.size() == 4) {
+        float x = 0, y = 0, w = 0, h = 0;
+        if (CSSPropertyParser::parseNumber(tokens[0].data(), tokens[0].length(),
+                                           1 << 0, &x) &&
+            CSSPropertyParser::parseNumber(tokens[1].data(), tokens[1].length(),
+                                           1 << 0, &y) &&
+            CSSPropertyParser::parseNumber(tokens[2].data(), tokens[2].length(),
+                                           0, &w) &&
+            CSSPropertyParser::parseNumber(tokens[3].data(), tokens[3].length(),
+                                           0, &h)) {
+            viewBox = Unit::Rect(x, y, w, h);
+            hasViewBox = true;
+        }
+    }
+}
+
 void SVGSVGElement::didAttributeChanged(QualifiedName name,
                                         Optional<String*> old, String* value,
                                         bool attributeCreated,
@@ -64,26 +88,7 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     if (name == starfish()->staticStrings()->m_viewBox) {
-        m_hasViewBox = false;
-        auto utf8Str = value->toUTF8NonGCString();
-        CSSTokenVector tokens;
-        CSSStyleDeclaration::tokenizeCSSValue(tokens, utf8Str.data(),
-                                              utf8Str.length(), ",", 1);
-        if (tokens.size() == 4) {
-            float x = 0, y = 0, w = 0, h = 0;
-            if (CSSPropertyParser::parseNumber(
-                    tokens[0].data(), tokens[0].length(), 1 << 0, &x) &&
-                CSSPropertyParser::parseNumber(
-                    tokens[1].data(), tokens[1].length(), 1 << 0, &y) &&
-                CSSPropertyParser::parseNumber(tokens[2].data(),
-                                               tokens[2].length(), 0, &w) &&
-                CSSPropertyParser::parseNumber(tokens[3].data(),
-                                               tokens[3].length(), 0, &h)) {
-                m_viewBox = Unit::Rect(x, y, w, h);
-                m_hasViewBox = true;
-            }
-        }
-
+        parseViewBox(m_hasViewBox, m_viewBox, value);
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsLayout();
     }
