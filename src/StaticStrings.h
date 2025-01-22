@@ -186,7 +186,8 @@ namespace Starfish {
     F(clippath)                        \
     F(mask)                            \
     F(tspan)                           \
-    F(marker)
+    F(marker)                          \
+    F(symbol)
 
 // FIXME: current parser converts linearGradient to lineargradient
 // Remove F(lineargradient) after fixing this issue

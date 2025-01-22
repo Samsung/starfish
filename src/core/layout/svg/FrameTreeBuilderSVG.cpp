@@ -55,6 +55,7 @@ static bool shouldVisitChild(SVGElement* svgElement)
             || svgElement->isSVGClipPathElement()
             || svgElement->isSVGMaskElement()
             || svgElement->isSVGSwitchElement()
+            || svgElement->isSVGSymbolElement()
             || svgElement->isSVGAnimateElement()) {
         return true;
     }
@@ -153,6 +154,8 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
             newFrame = new FrameSVGMaskBox(svgElement);
         } else if (svgElement->isSVGSwitchElement()) {
             newFrame = new FrameSVGBox(svgElement);
+        } else if (svgElement->isSVGSymbolElement()) {
+            newFrame = new FrameSVGViewportContextBox(svgElement);
         } else if (svgElement->isSVGTSpanElement()) {
             auto txt = svgElement->textContent();
             String* content = String::emptyString;
