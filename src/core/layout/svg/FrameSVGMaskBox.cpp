@@ -109,7 +109,9 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
         f = f->next();
     }
 
-    auto pixelSnappedRect = childrenRect.snapSizeToPixel();
+    auto pixelSnappedRect = childrenRect;
+    pixelSnappedRect.setWidth(pixelSnappedRect.width().ceil());
+    pixelSnappedRect.setHeight(pixelSnappedRect.height().ceil());
 
     NativeImageData* nativeImageMask = BufferedNativeImageData::create(
             node()->webView()->screenInfo().devicePixelRatio,
