@@ -2248,6 +2248,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::PaddingBlockEnd;
             }
             break;
+        case 's':
+            if (memcmp(data, "strokeDashArray", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeDashArray;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||      \
     defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX) || \
     defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
@@ -2322,6 +2327,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
             }
             break;
+            if (memcmp(data, "strokeDashOffset", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeDashOffset;
+            }
+            break;
+
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
     defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
         case 'w':
