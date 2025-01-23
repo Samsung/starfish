@@ -934,8 +934,14 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             fillColor.m_a = fillColor.a() * fillOpacity;
             if (!fillColor.isTransparent()) {
                 ctx.m_canvas->referencePath(path.value());
-                ctx.m_canvas->setFillRule(style()->fillRule());
                 ctx.m_canvas->setFillColor(fillColor);
+                auto rule = style()->fillRule();
+                if (rule == FillRuleValue::FillRuleNonZero) {
+                    ctx.m_canvas->setFillRule(true);
+                } else {
+                    STARFISH_ASSERT(rule == FillRuleValue::FillRuleEvenOdd);
+                    ctx.m_canvas->setFillRule(false);
+                }
                 ctx.m_canvas->fill();
             }
         }
