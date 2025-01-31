@@ -92,14 +92,13 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
                                       double duration, double delay,
                                       TimingFunction* timingFunction)
 {
-    if (AnimationUtil::checkCSSProperty(property, CSSStyleValuePair::Opacity)) {
+    if (property == CSSStyleValuePair::KeyKind::Opacity) {
         applyOpacity(duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::Transform)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Transform) {
         applyTransform(duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::BackgroundColor,
-                   CSSStyleValuePair::Background)) {
+                   property, CSSStyleValuePair::KeyKind::BackgroundColor,
+                   CSSStyleValuePair::KeyKind::Background)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::BackgroundColor,
             [](ComputedStyle* style) -> Unit::Color {
@@ -107,9 +106,9 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
             },
             duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::BorderBottomColor,
-                   CSSStyleValuePair::BorderColor,
-                   CSSStyleValuePair::BorderBottom)) {
+                   property, CSSStyleValuePair::KeyKind::BorderBottomColor,
+                   CSSStyleValuePair::KeyKind::BorderColor,
+                   CSSStyleValuePair::KeyKind::BorderBottom)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::BorderBottomColor,
             [](ComputedStyle* style) -> Unit::Color {
@@ -117,9 +116,9 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
             },
             duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::BorderLeftColor,
-                   CSSStyleValuePair::BorderColor,
-                   CSSStyleValuePair::BorderLeft)) {
+                   property, CSSStyleValuePair::KeyKind::BorderLeftColor,
+                   CSSStyleValuePair::KeyKind::BorderColor,
+                   CSSStyleValuePair::KeyKind::BorderLeft)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::BorderLeftColor,
             [](ComputedStyle* style) -> Unit::Color {
@@ -127,9 +126,9 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
             },
             duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::BorderRightColor,
-                   CSSStyleValuePair::BorderColor,
-                   CSSStyleValuePair::BorderRight)) {
+                   property, CSSStyleValuePair::KeyKind::BorderRightColor,
+                   CSSStyleValuePair::KeyKind::BorderColor,
+                   CSSStyleValuePair::KeyKind::BorderRight)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::BorderRightColor,
             [](ComputedStyle* style) -> Unit::Color {
@@ -137,31 +136,28 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
             },
             duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::BorderTopColor,
-                   CSSStyleValuePair::BorderColor,
-                   CSSStyleValuePair::BorderTop)) {
+                   property, CSSStyleValuePair::KeyKind::BorderTopColor,
+                   CSSStyleValuePair::KeyKind::BorderColor,
+                   CSSStyleValuePair::KeyKind::BorderTop)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::BorderTopColor,
             [](ComputedStyle* style) -> Unit::Color {
                 return style->border().top().color();
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::Color)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Color) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::Color,
             [](ComputedStyle* style) -> Unit::Color { return style->color(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::CaretColor)) {
+    } else if (property == CSSStyleValuePair::KeyKind::CaretColor) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::CaretColor,
             [](ComputedStyle* style) -> Unit::Color {
                 return style->caretColor();
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::OutlineColor)) {
+    } else if (property == CSSStyleValuePair::KeyKind::OutlineColor) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::OutlineColor,
             [](ComputedStyle* style) -> Unit::Color {
@@ -169,56 +165,50 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
             },
             duration, delay, timingFunction);
     } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::TextDecorationColor,
-                   CSSStyleValuePair::TextDecoration)) {
+                   property, CSSStyleValuePair::KeyKind::TextDecorationColor,
+                   CSSStyleValuePair::KeyKind::TextDecoration)) {
         applyActiveColorAnimationTask(
             CSSStyleValuePair::KeyKind::TextDecorationColor,
             [](ComputedStyle* style) -> Unit::Color {
                 return style->textDecorationColor();
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Width)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Width) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::Width,
             [](ComputedStyle* style) -> Length { return style->width(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Height)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Height) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::Height,
             [](ComputedStyle* style) -> Length { return style->height(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->height(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->contentHeight(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::MinWidth)) {
+    } else if (property == CSSStyleValuePair::KeyKind::MinWidth) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::MinWidth,
             [](ComputedStyle* style) -> Length { return style->minWidth(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::MinHeight)) {
+    } else if (property == CSSStyleValuePair::KeyKind::MinHeight) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::MinHeight,
             [](ComputedStyle* style) -> Length { return style->minHeight(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->height(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->contentHeight(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::MaxWidth)) {
+    } else if (property == CSSStyleValuePair::KeyKind::MaxWidth) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::MaxWidth,
             [](ComputedStyle* style) -> Length { return style->maxWidth(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->width(); },
             [](FrameBox* fb) -> LayoutUnit { return fb->contentWidth(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::MaxHeight)) {
+    } else if (property == CSSStyleValuePair::KeyKind::MaxHeight) {
         applyActiveLengthAnimationTaskForFrameBoxSize(
             CSSStyleValuePair::KeyKind::MaxHeight,
             [](ComputedStyle* style) -> Length { return style->maxHeight(); },
@@ -333,26 +323,22 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
                 return style->padding().left();
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Left)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Left) {
         applyActiveLengthAnimationTask(
             CSSStyleValuePair::KeyKind::Left,
             [](ComputedStyle* style) -> Length { return style->left(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Right)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Right) {
         applyActiveLengthAnimationTask(
             CSSStyleValuePair::KeyKind::Right,
             [](ComputedStyle* style) -> Length { return style->right(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Top)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Top) {
         applyActiveLengthAnimationTask(
             CSSStyleValuePair::KeyKind::Top,
             [](ComputedStyle* style) -> Length { return style->top(); },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(
-                   property, CSSStyleValuePair::KeyKind::Bottom)) {
+    } else if (property == CSSStyleValuePair::KeyKind::Bottom) {
         applyActiveLengthAnimationTask(
             CSSStyleValuePair::KeyKind::Bottom,
             [](ComputedStyle* style) -> Length { return style->bottom(); },
@@ -381,8 +367,7 @@ void TransitionApplier::applyProperty(CSSStyleValuePair::KeyKind property,
                 return Length(Length::Fixed, style->fixedFontSize());
             },
             duration, delay, timingFunction);
-    } else if (AnimationUtil::checkCSSProperty(property,
-                                               CSSStyleValuePair::Visibility)) {
+    } else if (property == CSSStyleValuePair::Visibility) {
         applyVisibility(duration, delay, timingFunction);
     }
 }
@@ -532,16 +517,15 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
                     fromValue = Length(
                         Length::Percent,
                         contentSizeValueGetter(m_oldFrame->asFrameBox()) /
-                            contentSizeValueGetter(cb)); //
+                            contentSizeValueGetter(cb));
                 }
             } else if (toValue.isFixed() && !fromValue.isFixed()) {
                 float value;
                 if (m_oldStyle->boxSizing() ==
                     BoxSizingValue::BorderBoxBoxSizingValue) {
-                    value =
-                        frameBoxSizeValueGetter(m_oldFrame->asFrameBox()); //
+                    value = frameBoxSizeValueGetter(m_oldFrame->asFrameBox());
                 } else {
-                    value = contentSizeValueGetter(m_oldFrame->asFrameBox()); //
+                    value = contentSizeValueGetter(m_oldFrame->asFrameBox());
                 }
                 fromValue = Length(Length::Fixed, value);
             }
@@ -550,7 +534,7 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
             AnimatedValue to = toValue;
             auto task = new ActiveLengthAnimationTask(
                 m_element, keyKind, from, to, duration, delay, timingFunction,
-                lengthValueGetter(m_newStyle)); //
+                lengthValueGetter(m_newStyle));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
