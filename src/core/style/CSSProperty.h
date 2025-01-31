@@ -23,7 +23,11 @@
 namespace Starfish {
 class CSSPropertyHelper {
 public:
-    static bool isAnimatable(CSSStyleValuePair::KeyKind property);
+    static bool isAnimatableProperty(CSSStyleValuePair::KeyKind property);
+    static bool isAnimatableShorthandProperty(
+        CSSStyleValuePair::KeyKind property);
+    static bool isAnimatableLonghandProperty(
+        CSSStyleValuePair::KeyKind property);
     static const char* toString(CSSStyleValuePair::KeyKind property);
     static String* toGCString(CSSStyleValuePair::KeyKind property);
     static const char* toCamelCaseString(CSSStyleValuePair::KeyKind property);
