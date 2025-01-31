@@ -22,26 +22,50 @@
 #include "core/style/CSSProperty.h"
 
 namespace Starfish {
-bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
+bool CSSPropertyHelper::isAnimatableProperty(
+    CSSStyleValuePair::KeyKind property)
 {
+    if (isAnimatableShorthandProperty(property)) {
+        return true;
+    } else if (isAnimatableLonghandProperty(property)) {
+        return true;
+    }
+    return false;
+}
+
+bool CSSPropertyHelper::isAnimatableShorthandProperty(
+    CSSStyleValuePair::KeyKind property)
+{
+    // Shorthand properties.
     switch (property) {
-    // Shorthand
     case CSSStyleValuePair::All:
     case CSSStyleValuePair::Background:
     case CSSStyleValuePair::BackgroundPosition:
+    case CSSStyleValuePair::Border:
     case CSSStyleValuePair::BorderBottom:
     case CSSStyleValuePair::BorderColor:
     case CSSStyleValuePair::BorderLeft:
     case CSSStyleValuePair::BorderRight:
     case CSSStyleValuePair::BorderTop:
-    case CSSStyleValuePair::Bottom:
     case CSSStyleValuePair::Flex:
     case CSSStyleValuePair::Font:
     case CSSStyleValuePair::Margin:
     case CSSStyleValuePair::Outline:
     case CSSStyleValuePair::Padding:
     case CSSStyleValuePair::TextDecoration:
-    // Normal
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool CSSPropertyHelper::isAnimatableLonghandProperty(
+    CSSStyleValuePair::KeyKind property)
+{
+    // Longhand properties.
+    switch (property) {
+    case CSSStyleValuePair::Bottom:
     case CSSStyleValuePair::BackgroundColor:
     case CSSStyleValuePair::BackgroundPositionX:
     case CSSStyleValuePair::BackgroundPositionY:
