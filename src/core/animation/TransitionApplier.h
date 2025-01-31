@@ -58,54 +58,10 @@ private:
         const std::function<LayoutUnit(FrameBox*)>& frameBoxSizeValueGetter,
         const std::function<LayoutUnit(FrameBox*)>& contentSizeValueGetter,
         double duration, double delay, TimingFunction* timingFunction);
-
-    void applyMarginTop(double duration, double delay,
-                        TimingFunction* timingFunction);
-
-    void applyMarginRight(double duration, double delay,
-                          TimingFunction* timingFunction);
-
-    void applyMarginBottom(double duration, double delay,
-                           TimingFunction* timingFunction);
-
-    void applyMarginLeft(double duration, double delay,
-                         TimingFunction* timingFunction);
-
-    void applyBorderTop(double duration, double delay,
-                        TimingFunction* timingFunction);
-
-    void applyBorderRight(double duration, double delay,
-                          TimingFunction* timingFunction);
-
-    void applyBorderBottom(double duration, double delay,
-                           TimingFunction* timingFunction);
-
-    void applyBorderLeft(double duration, double delay,
-                         TimingFunction* timingFunction);
-
-    void applyPaddingTop(double duration, double delay,
-                         TimingFunction* timingFunction);
-
-    void applyPaddingRight(double duration, double delay,
-                           TimingFunction* timingFunction);
-
-    void applyPaddingBottom(double duration, double delay,
-                            TimingFunction* timingFunction);
-
-    void applyPaddingLeft(double duration, double delay,
-                          TimingFunction* timingFunction);
-
-    void applyLeft(double duration, double delay,
-                   TimingFunction* timingFunction);
-
-    void applyRight(double duration, double delay,
-                    TimingFunction* timingFunction);
-
-    void applyTop(double duration, double delay,
-                  TimingFunction* timingFunction);
-
-    void applyBottom(double duration, double delay,
-                     TimingFunction* timingFunction);
+    void applyActiveLengthAnimationTask(
+        CSSStyleValuePair::KeyKind keyKind,
+        const std::function<Length(ComputedStyle*)>& lengthValueGetter,
+        double duration, double delay, TimingFunction* timingFunction);
 
     void applyBackgroundPositionX(double duration, double delay,
                                   TimingFunction* timingFunction);
@@ -115,9 +71,6 @@ private:
 
     void applyBackgroundSize(double duration, double delay,
                              TimingFunction* timingFunction);
-
-    void applyFontSize(double duration, double delay,
-                       TimingFunction* timingFunction);
 
     void applyVisibility(double duration, double delay,
                          TimingFunction* timingFunction);
