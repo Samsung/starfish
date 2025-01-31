@@ -64,61 +64,6 @@ public:
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         FrameBox* oldPaintingBox, Element* element, AnimatedValue& from,
         AnimatedValue& to, uint32_t layer);
-    static bool marginTopToAnimatedValue(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle,
-                                         Element* element, AnimatedValue& from,
-                                         AnimatedValue& to);
-    static bool marginRightToAnimatedValue(ComputedStyle* oldStyle,
-                                           ComputedStyle* newStyle,
-                                           Element* element,
-                                           AnimatedValue& from,
-                                           AnimatedValue& to);
-    static bool marginBottomToAnimatedValue(ComputedStyle* oldStyle,
-                                            ComputedStyle* newStyle,
-                                            Element* element,
-                                            AnimatedValue& from,
-                                            AnimatedValue& to);
-    static bool marginLeftToAnimatedValue(ComputedStyle* oldStyle,
-                                          ComputedStyle* newStyle,
-                                          Element* element, AnimatedValue& from,
-                                          AnimatedValue& to);
-    static bool paddingTopToAnimatedValue(ComputedStyle* oldStyle,
-                                          ComputedStyle* newStyle,
-                                          Element* element, AnimatedValue& from,
-                                          AnimatedValue& to);
-    static bool paddingRightToAnimatedValue(ComputedStyle* oldStyle,
-                                            ComputedStyle* newStyle,
-                                            Element* element,
-                                            AnimatedValue& from,
-                                            AnimatedValue& to);
-    static bool paddingBottomToAnimatedValue(ComputedStyle* oldStyle,
-                                             ComputedStyle* newStyle,
-                                             Element* element,
-                                             AnimatedValue& from,
-                                             AnimatedValue& to);
-    static bool paddingLeftToAnimatedValue(ComputedStyle* oldStyle,
-                                           ComputedStyle* newStyle,
-                                           Element* element,
-                                           AnimatedValue& from,
-                                           AnimatedValue& to);
-    static bool borderTopToAnimatedValue(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle,
-                                         Element* element, AnimatedValue& from,
-                                         AnimatedValue& to);
-    static bool borderRightToAnimatedValue(ComputedStyle* oldStyle,
-                                           ComputedStyle* newStyle,
-                                           Element* element,
-                                           AnimatedValue& from,
-                                           AnimatedValue& to);
-    static bool borderBottomToAnimatedValue(ComputedStyle* oldStyle,
-                                            ComputedStyle* newStyle,
-                                            Element* element,
-                                            AnimatedValue& from,
-                                            AnimatedValue& to);
-    static bool borderLeftToAnimatedValue(ComputedStyle* oldStyle,
-                                          ComputedStyle* newStyle,
-                                          Element* element, AnimatedValue& from,
-                                          AnimatedValue& to);
     static bool lengthToAnimatedValue(const Length& oldLength,
                                       const Length& newLength, Element* element,
                                       AnimatedValue& from, AnimatedValue& to);
