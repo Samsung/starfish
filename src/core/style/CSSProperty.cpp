@@ -42,8 +42,9 @@ bool CSSPropertyHelper::isAnimatableShorthandProperty(
     case CSSStyleValuePair::Background:
     case CSSStyleValuePair::BackgroundPosition:
     case CSSStyleValuePair::Border:
-    case CSSStyleValuePair::BorderBottom:
     case CSSStyleValuePair::BorderColor:
+    case CSSStyleValuePair::BorderWidth:
+    case CSSStyleValuePair::BorderBottom:
     case CSSStyleValuePair::BorderLeft:
     case CSSStyleValuePair::BorderRight:
     case CSSStyleValuePair::BorderTop:
@@ -142,6 +143,92 @@ bool CSSPropertyHelper::isAnimatableLonghandProperty(
         break;
     }
     return false;
+}
+
+std::pair<std::vector<CSSStyleValuePair::KeyKind>,
+          std::vector<CSSStyleValuePair::KeyKind>>
+CSSPropertyHelper::decomposeIntoConstituentAnimatableProperties(
+    CSSStyleValuePair::KeyKind property)
+{
+    // Note:
+    // Each case(shorthand property) is listed from the current
+    // animation(transition) implementation.
+    // The decomposition is also based on the current implementation too.
+    // Therefore, if you add a new animation for the shorthand property, this
+    // method must be updated as well.
+
+    std::vector<CSSStyleValuePair::KeyKind> shorthands;
+    std::vector<CSSStyleValuePair::KeyKind> longhands;
+
+    switch (property) {
+    case CSSStyleValuePair::KeyKind::Background:
+        shorthands.push_back(CSSStyleValuePair::KeyKind::BackgroundPosition);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BackgroundColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BackgroundSize);
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundPosition:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        break;
+    case CSSStyleValuePair::KeyKind::Border:
+        shorthands.push_back(CSSStyleValuePair::KeyKind::BorderColor);
+        shorthands.push_back(CSSStyleValuePair::KeyKind::BorderWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderColor:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderLeftColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderTopColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderRightColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderBottomColor);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderWidth:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderLeftWidth);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderTopWidth);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderRightWidth);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderBottomWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderBottom:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderBottomColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderBottomWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderLeft:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderLeftColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderLeftWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderRight:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderRightColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderRightWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::BorderTop:
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderTopColor);
+        longhands.push_back(CSSStyleValuePair::KeyKind::BorderTopWidth);
+        break;
+    case CSSStyleValuePair::KeyKind::Font:
+        longhands.push_back(CSSStyleValuePair::KeyKind::FontSize);
+        break;
+    case CSSStyleValuePair::KeyKind::Margin:
+        longhands.push_back(CSSStyleValuePair::KeyKind::MarginLeft);
+        longhands.push_back(CSSStyleValuePair::KeyKind::MarginTop);
+        longhands.push_back(CSSStyleValuePair::KeyKind::MarginRight);
+        longhands.push_back(CSSStyleValuePair::KeyKind::MarginBottom);
+        break;
+    case CSSStyleValuePair::KeyKind::Outline:
+        longhands.push_back(CSSStyleValuePair::KeyKind::OutlineColor);
+        break;
+    case CSSStyleValuePair::KeyKind::Padding:
+        longhands.push_back(CSSStyleValuePair::KeyKind::PaddingLeft);
+        longhands.push_back(CSSStyleValuePair::KeyKind::PaddingTop);
+        longhands.push_back(CSSStyleValuePair::KeyKind::PaddingRight);
+        longhands.push_back(CSSStyleValuePair::KeyKind::PaddingBottom);
+        break;
+    case CSSStyleValuePair::KeyKind::TextDecoration:
+        longhands.push_back(CSSStyleValuePair::KeyKind::TextDecorationColor);
+        break;
+    default:
+        STARFISH_UNIMPLEMENTED();
+        break;
+    }
+
+    return { std::move(shorthands), std::move(longhands) };
 }
 
 static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)

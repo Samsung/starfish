@@ -863,24 +863,28 @@ bool ActiveColorAnimationTask::isKindOfTransitionProperty(
         return key == CSSStyleValuePair::KeyKind::BackgroundColor ||
                key == CSSStyleValuePair::KeyKind::Background;
     case CSSStyleValuePair::KeyKind::BorderBottomColor:
-        return key == CSSStyleValuePair::BorderBottomColor ||
-               key == CSSStyleValuePair::BorderColor ||
-               key == CSSStyleValuePair::BorderBottom;
+        return key == CSSStyleValuePair::KeyKind::BorderBottomColor ||
+               key == CSSStyleValuePair::KeyKind::BorderColor ||
+               key == CSSStyleValuePair::KeyKind::BorderBottom ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderLeftColor:
-        return key == CSSStyleValuePair::BorderLeftColor ||
-               key == CSSStyleValuePair::BorderColor ||
-               key == CSSStyleValuePair::BorderLeft;
+        return key == CSSStyleValuePair::KeyKind::BorderLeftColor ||
+               key == CSSStyleValuePair::KeyKind::BorderColor ||
+               key == CSSStyleValuePair::KeyKind::BorderLeft ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderRightColor:
-        return key == CSSStyleValuePair::BorderRightColor ||
-               key == CSSStyleValuePair::BorderColor ||
-               key == CSSStyleValuePair::BorderRight;
+        return key == CSSStyleValuePair::KeyKind::BorderRightColor ||
+               key == CSSStyleValuePair::KeyKind::BorderColor ||
+               key == CSSStyleValuePair::KeyKind::BorderRight ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::BorderTopColor:
-        return key == CSSStyleValuePair::BorderTopColor ||
-               key == CSSStyleValuePair::BorderColor ||
-               key == CSSStyleValuePair::BorderTop;
+        return key == CSSStyleValuePair::KeyKind::BorderTopColor ||
+               key == CSSStyleValuePair::KeyKind::BorderColor ||
+               key == CSSStyleValuePair::KeyKind::BorderTop ||
+               key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::TextDecorationColor:
-        return key == CSSStyleValuePair::TextDecorationColor ||
-               key == CSSStyleValuePair::TextDecoration;
+        return key == CSSStyleValuePair::KeyKind::TextDecorationColor ||
+               key == CSSStyleValuePair::KeyKind::TextDecoration;
     default:
         return key == m_property;
     }
@@ -1268,17 +1272,21 @@ bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
     case CSSStyleValuePair::KeyKind::MarginLeft:
         return key == CSSStyleValuePair::KeyKind::MarginLeft ||
                key == CSSStyleValuePair::KeyKind::Margin;
-    case CSSStyleValuePair::KeyKind::BorderTop:
-        return key == CSSStyleValuePair::KeyKind::BorderTop ||
+    case CSSStyleValuePair::KeyKind::BorderTopWidth:
+        return key == CSSStyleValuePair::KeyKind::BorderTopWidth ||
+               key == CSSStyleValuePair::KeyKind::BorderTop ||
                key == CSSStyleValuePair::KeyKind::Border;
-    case CSSStyleValuePair::KeyKind::BorderRight:
-        return key == CSSStyleValuePair::KeyKind::BorderRight ||
+    case CSSStyleValuePair::KeyKind::BorderRightWidth:
+        return key == CSSStyleValuePair::KeyKind::BorderRightWidth ||
+               key == CSSStyleValuePair::KeyKind::BorderRight ||
                key == CSSStyleValuePair::KeyKind::Border;
-    case CSSStyleValuePair::KeyKind::BorderBottom:
-        return key == CSSStyleValuePair::KeyKind::BorderBottom ||
+    case CSSStyleValuePair::KeyKind::BorderBottomWidth:
+        return key == CSSStyleValuePair::KeyKind::BorderBottomWidth ||
+               key == CSSStyleValuePair::KeyKind::BorderBottom ||
                key == CSSStyleValuePair::KeyKind::Border;
-    case CSSStyleValuePair::KeyKind::BorderLeft:
-        return key == CSSStyleValuePair::KeyKind::BorderLeft ||
+    case CSSStyleValuePair::KeyKind::BorderLeftWidth:
+        return key == CSSStyleValuePair::KeyKind::BorderLeftWidth ||
+               key == CSSStyleValuePair::KeyKind::BorderLeft ||
                key == CSSStyleValuePair::KeyKind::Border;
     case CSSStyleValuePair::KeyKind::PaddingTop:
         return key == CSSStyleValuePair::KeyKind::PaddingTop ||
@@ -1334,13 +1342,13 @@ bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
         return m_originalToValue == newStyle->maxWidth();
     case CSSStyleValuePair::KeyKind::MaxHeight:
         return m_originalToValue == newStyle->maxHeight();
-    case CSSStyleValuePair::KeyKind::BorderTop:
+    case CSSStyleValuePair::KeyKind::BorderTopWidth:
         return m_originalToValue == newStyle->border().top().width();
-    case CSSStyleValuePair::KeyKind::BorderRight:
+    case CSSStyleValuePair::KeyKind::BorderRightWidth:
         return m_originalToValue == newStyle->border().right().width();
-    case CSSStyleValuePair::KeyKind::BorderBottom:
+    case CSSStyleValuePair::KeyKind::BorderBottomWidth:
         return m_originalToValue == newStyle->border().bottom().width();
-    case CSSStyleValuePair::KeyKind::BorderLeft:
+    case CSSStyleValuePair::KeyKind::BorderLeftWidth:
         return m_originalToValue == newStyle->border().left().width();
     case CSSStyleValuePair::KeyKind::PaddingTop:
         return m_originalToValue == newStyle->padding().top();

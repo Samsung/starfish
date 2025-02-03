@@ -77,6 +77,12 @@ private:
 
     void applyProperty(CSSStyleValuePair::KeyKind property, double duration,
                        double delay, TimingFunction* timingFunction);
+    void applyShorthandProperty(CSSStyleValuePair::KeyKind property,
+                                double duration, double delay,
+                                TimingFunction* timingFunction);
+    void applyLonghandProperty(CSSStyleValuePair::KeyKind property,
+                               double duration, double delay,
+                               TimingFunction* timingFunction);
     void applyAll(double duration, double delay,
                   TimingFunction* timingFunction);
     bool canRegisterTransition(CSSStyleValuePair::KeyKind property);
