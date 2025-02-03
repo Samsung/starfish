@@ -525,6 +525,7 @@ test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/transition/parse-transition01.html
 test/cairo/internal-test/css/transition/transition_background_shorthand.html
+test/cairo/internal-test/css/transition/transition_various_shorthand_properties_01.html
 test/cairo/internal-test/css/transition/transition00.html
 test/cairo/internal-test/css/transition/transition01.html
 test/cairo/internal-test/css/transition/transition02.html
