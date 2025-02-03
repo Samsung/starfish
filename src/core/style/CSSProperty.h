@@ -20,6 +20,9 @@
 #ifndef __StarfishCSSProperty__
 #define __StarfishCSSProperty__
 
+#include <vector>
+#include <utility>
+
 namespace Starfish {
 class CSSPropertyHelper {
 public:
@@ -28,6 +31,14 @@ public:
         CSSStyleValuePair::KeyKind property);
     static bool isAnimatableLonghandProperty(
         CSSStyleValuePair::KeyKind property);
+
+    // Returns std::pair<shorthands, longhands> that constitutes the given
+    // shorthand property.
+    static std::pair<std::vector<CSSStyleValuePair::KeyKind>,
+                     std::vector<CSSStyleValuePair::KeyKind>>
+    decomposeIntoConstituentAnimatableProperties(
+        CSSStyleValuePair::KeyKind property);
+
     static const char* toString(CSSStyleValuePair::KeyKind property);
     static String* toGCString(CSSStyleValuePair::KeyKind property);
     static const char* toCamelCaseString(CSSStyleValuePair::KeyKind property);

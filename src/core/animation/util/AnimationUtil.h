@@ -27,27 +27,6 @@ class FrameBox;
 
 class AnimationUtil {
 public:
-    static inline bool checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                        CSSStyleValuePair::KeyKind a)
-    {
-        return kind == a;
-    }
-
-    static inline bool checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                        CSSStyleValuePair::KeyKind a,
-                                        CSSStyleValuePair::KeyKind b)
-    {
-        return kind == a || kind == b;
-    }
-
-    static inline bool checkCSSProperty(CSSStyleValuePair::KeyKind kind,
-                                        CSSStyleValuePair::KeyKind a,
-                                        CSSStyleValuePair::KeyKind b,
-                                        CSSStyleValuePair::KeyKind c)
-    {
-        return kind == a || kind == b || kind == c;
-    }
-
     static bool backgroundSizeToAnimatedValue(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         FrameBox* oldPaintingBox, Element* element, AnimatedValue& from,
