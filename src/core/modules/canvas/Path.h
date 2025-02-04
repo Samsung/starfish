@@ -37,7 +37,7 @@ public:
         StrokeLineCap strokeLineCap;
         StrokeLineJoin strokeLineJoin;
         GCAtomicVector<double> strokeDasharray;
-        double strokeDashOffset;
+        double strokeDashoffset;
 
         bool operator==(const StrokeStyle& src)
         {

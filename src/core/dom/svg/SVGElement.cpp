@@ -138,7 +138,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         } else if (ss->m_strokeDasharray == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
-        } else if (ss->m_strokeDashOffset == name) {
+        } else if (ss->m_strokeDashoffset == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
@@ -355,7 +355,7 @@ void SVGElement::styleForPresentationAttribute(
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeLineJoin, StrokeLineJoin);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeMiterLimit, StrokeMiterLimit);
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeDasharray, StrokeDasharray);
-        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeDashOffset, StrokeDashOffset);
+        UPDATE_SVG_PRESENTATION_ATTRIBUTE(strokeDashoffset, StrokeDashoffset);
     }
 
     if (needsTransparentAttributes()) {

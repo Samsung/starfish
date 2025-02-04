@@ -1026,7 +1026,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
             }
             if (memcmp(data, "stroke-dashoffset", 17) == 0) {
-                return CSSStyleValuePair::KeyKind::StrokeDashOffset;
+                return CSSStyleValuePair::KeyKind::StrokeDashoffset;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
@@ -2326,9 +2326,8 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             if (memcmp(data, "strokeMiterlimit", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeMiterLimit;
             }
-            break;
-            if (memcmp(data, "strokeDashOffset", 16) == 0) {
-                return CSSStyleValuePair::KeyKind::StrokeDashOffset;
+            if (memcmp(data, "strokeDashoffset", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeDashoffset;
             }
             break;
 
