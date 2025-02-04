@@ -1358,11 +1358,9 @@ ScriptValue WebGLRenderingContext::getFramebufferAttachmentParameter(
             return webGLFramebuffer->attachedRenderBuffer()->scriptValue();
         } else if (type == GL_TEXTURE) {
             return webGLFramebuffer->attachedTexture()->scriptValue();
-        } else {
-            STARFISH_LOG_DEBUG("Unknown type %d", type);
-            return scriptNull();
         }
-        return Escargot::ValueRef::create(params);
+        STARFISH_LOG_DEBUG("Unknown type %d", type);
+        return scriptNull();
     }
     default:
         setGLError(GL_INVALID_ENUM);
