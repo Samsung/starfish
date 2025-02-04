@@ -148,8 +148,8 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                 style()->strokeMiterLimit(),
                 style()->strokeLineCap(),
                 style()->strokeLineJoin(),
-                style()->strokeDashArray(),
-                style()->strokeDashOffset()
+                style()->strokeDasharray(),
+                style()->strokeDashOffset(),
             });
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
@@ -161,7 +161,6 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         stylePos = resolveStylePosition(ctx.viewport);
         m_frameRect.setLocation(stylePos);
     }
-
 
     layoutSVG(ctx);
 
@@ -831,8 +830,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
            style()->strokeMiterLimit(),
            style()->strokeLineCap(),
            style()->strokeLineJoin(),
-           style()->strokeDashArray(),
-           style()->strokeDashOffset()
+           style()->strokeDasharray(),
+           style()->strokeDashOffset(),
         });
         // fill and stroke need same boundingRect for cover this case
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
@@ -857,7 +856,6 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         if (fillInfo.hasValue() && paintingOnSVGViewport &&
             fillInfo.value()->isCanvasStyleType() &&
             fillInfo.value()->getCanvasStyleValue().isCanvasGradientValue()) {
-
             auto pixelSnappedRect = m_frameRect.snapSizeToPixel();
 
             NativeImageData* bufferImage;
@@ -957,7 +955,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             ctx.m_canvas->setLineCap(ss.strokeLineCap);
             ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
             ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
-            ctx.m_canvas->setDash(ss.strokeDashArray);
+            ctx.m_canvas->setDash(ss.strokeDasharray);
             ctx.m_canvas->setDashOffset(ss.strokeDashOffset);
             if (strokeInfo.hasValue()) {
                 ctx.m_canvas->setStrokeSource(strokeInfo.value());

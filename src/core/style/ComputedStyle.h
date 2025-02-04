@@ -811,7 +811,7 @@ class ComputedStyle : public gc {
         StrokeLineCap m_strokeLineCap;            // svg
         StrokeLineJoin m_strokeLineJoin;          // svg
         float m_strokeMiterLimit;                 // svg
-        GCAtomicVector<double> m_strokeDashArray; // svg
+        GCAtomicVector<double> m_strokeDasharray; // svg
         double m_strokeDashOffset;                // svg
 
         ShadowDataList m_textShadowDataList;
@@ -836,7 +836,7 @@ class ComputedStyle : public gc {
             m_strokeLineCap = StrokeLineCap::Butt;
             m_strokeLineJoin = StrokeLineJoin::Miter;
             m_strokeMiterLimit = 4;
-            m_strokeDashArray.clear();
+            m_strokeDasharray.clear();
             m_strokeDashOffset = 0;
 
             m_textTransform = NoneTextTransformValue;
@@ -3710,13 +3710,13 @@ public:
 
     void setStrokeDashArray(GCAtomicVector<double> array)
     {
-        ensureInheritedRareData()->m_strokeDashArray = array;
+        ensureInheritedRareData()->m_strokeDasharray = array;
     }
 
-    GCAtomicVector<double> strokeDashArray()
+    GCAtomicVector<double> strokeDasharray()
     {
         if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_strokeDashArray;
+            return m_inheritedStyles.m_rareData->m_strokeDasharray;
         }
         return GCAtomicVector<double>();
     }

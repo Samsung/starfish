@@ -126,7 +126,7 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
                                   m_strokeWidth));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
-                                  m_strokeDashArray));
+                                  m_strokeDasharray));
         descr = GC_make_descriptor(
             obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;
@@ -1432,10 +1432,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (!std::equal(newStyle->strokeDashArray().begin(),
-                    newStyle->strokeDashArray().end(),
-                    oldStyle->strokeDashArray().begin())) {
-        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDashArray] = true;
+    if (!std::equal(newStyle->strokeDasharray().begin(),
+                    newStyle->strokeDasharray().end(),
+                    oldStyle->strokeDasharray().begin())) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDasharray] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout |
