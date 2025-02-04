@@ -36,7 +36,7 @@ public:
         float strokeMiterLimit;
         StrokeLineCap strokeLineCap;
         StrokeLineJoin strokeLineJoin;
-        GCAtomicVector<double> strokeDashArray;
+        GCAtomicVector<double> strokeDasharray;
         double strokeDashOffset;
 
         bool operator==(const StrokeStyle& src)

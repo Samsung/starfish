@@ -967,7 +967,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         break;
     case 's':
         if (memcmp(data, "stroke-dasharray", 16) == 0) {
-            return CSSStyleValuePair::KeyKind::StrokeDashArray;
+            return CSSStyleValuePair::KeyKind::StrokeDasharray;
         }
         break;
     case 17:
@@ -2249,8 +2249,8 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             break;
         case 's':
-            if (memcmp(data, "strokeDashArray", 15) == 0) {
-                return CSSStyleValuePair::KeyKind::StrokeDashArray;
+            if (memcmp(data, "strokeDasharray", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::StrokeDasharray;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||      \

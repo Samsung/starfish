@@ -2126,11 +2126,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setNumberValue(style->strokeMiterLimit());
         addValuePair(p);
     } break;
-    case CSSStyleValuePair::KeyKind::StrokeDashArray: {
+    case CSSStyleValuePair::KeyKind::StrokeDasharray: {
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDashArray);
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDasharray);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        GCAtomicVector<double> array = style->strokeDashArray();
+        GCAtomicVector<double> array = style->strokeDasharray();
         ValueList* vals = new ValueList(Separator::SpaceSeparator);
         for (size_t i = 0; i < array.size(); i++) {
             vals->emplace_back(CSSStyleValuePair::ValueKind::Number,

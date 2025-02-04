@@ -4898,10 +4898,10 @@ void StyleResolver::applyProperty(Element* element,
             style->setStrokeMiterLimit(newCssValue.numberValue());
         }
         break;
-    case CSSStyleValuePair::KeyKind::StrokeDashArray:
+    case CSSStyleValuePair::KeyKind::StrokeDasharray:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            style->setStrokeDashArray(parentStyle->strokeDashArray());
+            style->setStrokeDashArray(parentStyle->strokeDasharray());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
@@ -15903,7 +15903,7 @@ bool CSSStyleValuePair::updateValueStrokeMiterLimit(
     return updateValueNumber(tokens, CSSPropertyParser::AllowNone);
 }
 
-bool CSSStyleValuePair::updateValueStrokeDashArray(Document* document,
+bool CSSStyleValuePair::updateValueStrokeDasharray(Document* document,
                                                    const CSSTokenVector& tokens)
 {
     size_t size = tokens.size();

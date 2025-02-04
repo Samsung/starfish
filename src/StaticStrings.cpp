@@ -368,7 +368,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "stroke-linejoin"));
     m_strokeMiterLimit = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-miterlimit"));
-    m_strokeDashArray = QualifiedName(
+    m_strokeDasharray = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-dasharray"));
     m_strokeDashOffset = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-dashoffset"));
