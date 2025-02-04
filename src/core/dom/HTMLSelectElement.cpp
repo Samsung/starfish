@@ -417,9 +417,10 @@ void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
         } else if (selectedOptions.size() >= 2) {
             GCVector<HTMLOptionElement*> list;
             computeListOfOptionElements(this, list);
-
-            for (size_t i = 0; i < list.size() - 1; i++) {
-                list[i]->setSelectedness(false);
+            if (list.size() > 0) {
+                for (size_t i = 0; i < list.size() - 1; i++) {
+                    list[i]->setSelectedness(false);
+                }
             }
         }
     }

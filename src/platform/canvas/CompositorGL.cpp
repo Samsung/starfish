@@ -1356,6 +1356,7 @@ public:
         m_height = h;
         m_bufferWidth = m_width = -1;
         m_bufferHeight = m_height = -1;
+        m_bufferStride = 0;
         m_buffer = nullptr;
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
