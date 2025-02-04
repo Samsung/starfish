@@ -4917,17 +4917,17 @@ void StyleResolver::applyProperty(Element* element,
             style->setStrokeDashArray(array);
         }
         break;
-    case CSSStyleValuePair::KeyKind::StrokeDashOffset:
+    case CSSStyleValuePair::KeyKind::StrokeDashoffset:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            style->setStrokeDashOffset(parentStyle->strokeDashOffset());
+            style->setStrokeDashoffset(parentStyle->strokeDashoffset());
         } else if ((newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
-            style->setStrokeDashOffset(0);
+            style->setStrokeDashoffset(0);
         } else {
-            style->setStrokeDashOffset(newCssValue.numberValue());
+            style->setStrokeDashoffset(newCssValue.numberValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:
@@ -15929,7 +15929,7 @@ bool CSSStyleValuePair::updateValueStrokeDasharray(Document* document,
     return true;
 }
 
-bool CSSStyleValuePair::updateValueStrokeDashOffset(
+bool CSSStyleValuePair::updateValueStrokeDashoffset(
     Document* document, const CSSTokenVector& tokens)
 {
     return updateValueNumber(tokens, CSSPropertyParser::AllowNone);

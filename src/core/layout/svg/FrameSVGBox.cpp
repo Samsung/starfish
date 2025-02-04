@@ -149,7 +149,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                 style()->strokeLineCap(),
                 style()->strokeLineJoin(),
                 style()->strokeDasharray(),
-                style()->strokeDashOffset(),
+                style()->strokeDashoffset(),
             });
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
@@ -826,12 +826,12 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         auto strokeWidth = style()->strokeWidth().specifiedValue(
                     normalizedDiagonalViewportLength(), this);
         Path::StrokeStyle ss({
-           strokeWidth,
-           style()->strokeMiterLimit(),
-           style()->strokeLineCap(),
-           style()->strokeLineJoin(),
-           style()->strokeDasharray(),
-           style()->strokeDashOffset(),
+            strokeWidth,
+            style()->strokeMiterLimit(),
+            style()->strokeLineCap(),
+            style()->strokeLineJoin(),
+            style()->strokeDasharray(),
+            style()->strokeDashoffset(),
         });
         // fill and stroke need same boundingRect for cover this case
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
@@ -956,7 +956,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
             ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
             ctx.m_canvas->setDash(ss.strokeDasharray);
-            ctx.m_canvas->setDashOffset(ss.strokeDashOffset);
+            ctx.m_canvas->setDashOffset(ss.strokeDashoffset);
             if (strokeInfo.hasValue()) {
                 ctx.m_canvas->setStrokeSource(strokeInfo.value());
             } else {

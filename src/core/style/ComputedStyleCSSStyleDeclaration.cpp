@@ -2139,10 +2139,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueList(vals);
         addValuePair(p);
     } break;
-    case CSSStyleValuePair::KeyKind::StrokeDashOffset: {
+    case CSSStyleValuePair::KeyKind::StrokeDashoffset: {
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDashOffset);
-        p.setNumberValue(style->strokeDashOffset());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeDashoffset);
+        p.setNumberValue(style->strokeDashoffset());
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::X: {

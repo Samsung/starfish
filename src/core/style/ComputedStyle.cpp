@@ -1442,8 +1442,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->strokeDashOffset() != oldStyle->strokeDashOffset()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDashOffset] = true;
+    if (newStyle->strokeDashoffset() != oldStyle->strokeDashoffset()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeDashoffset] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamageLayout |

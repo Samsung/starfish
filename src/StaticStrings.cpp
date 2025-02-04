@@ -370,7 +370,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "stroke-miterlimit"));
     m_strokeDasharray = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-dasharray"));
-    m_strokeDashOffset = QualifiedName(
+    m_strokeDashoffset = QualifiedName(
         AtomicString::createAtomicString(starfish, "stroke-dashoffset"));
     m_x = QualifiedName(AtomicString::createAtomicString(starfish, "x"));
     m_y = QualifiedName(AtomicString::createAtomicString(starfish, "y"));

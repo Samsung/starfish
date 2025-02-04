@@ -739,7 +739,7 @@ class CSSFilterFunction;
     F(StrokeLineJoin, strokeLineJoin, "stroke-linejoin")                       \
     F(StrokeMiterLimit, strokeMiterLimit, "stroke-miterlimit")                 \
     F(StrokeDasharray, strokeDasharray, "stroke-dasharray")                    \
-    F(StrokeDashOffset, strokeDashOffset, "stroke-dashoffset")                 \
+    F(StrokeDashoffset, strokeDashoffset, "stroke-dashoffset")                 \
     F(X, x, "x")                                                               \
     F(Y, y, "y")                                                               \
     F(X1, x1, "x1")                                                            \

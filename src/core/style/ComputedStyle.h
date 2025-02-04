@@ -812,7 +812,7 @@ class ComputedStyle : public gc {
         StrokeLineJoin m_strokeLineJoin;          // svg
         float m_strokeMiterLimit;                 // svg
         GCAtomicVector<double> m_strokeDasharray; // svg
-        double m_strokeDashOffset;                // svg
+        double m_strokeDashoffset;                // svg
 
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
@@ -837,7 +837,7 @@ class ComputedStyle : public gc {
             m_strokeLineJoin = StrokeLineJoin::Miter;
             m_strokeMiterLimit = 4;
             m_strokeDasharray.clear();
-            m_strokeDashOffset = 0;
+            m_strokeDashoffset = 0;
 
             m_textTransform = NoneTextTransformValue;
             m_caretColor = Unit::Color(0, 0, 0, 255);
@@ -3721,15 +3721,15 @@ public:
         return GCAtomicVector<double>();
     }
 
-    void setStrokeDashOffset(double offset)
+    void setStrokeDashoffset(double offset)
     {
-        ensureInheritedRareData()->m_strokeDashOffset = offset;
+        ensureInheritedRareData()->m_strokeDashoffset = offset;
     }
 
-    double strokeDashOffset()
+    double strokeDashoffset()
     {
         if (m_inheritedStyles.m_rareData) {
-            return m_inheritedStyles.m_rareData->m_strokeDashOffset;
+            return m_inheritedStyles.m_rareData->m_strokeDashoffset;
         }
         return 0;
     }
