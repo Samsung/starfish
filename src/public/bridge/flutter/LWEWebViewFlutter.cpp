@@ -390,6 +390,9 @@ public:
         eglDestroyContext(m_display, m_context);
         eglTerminate(m_display);
         ecore_wl2_display_disconnect(m_ecoreWlDisplay);
+        m_context = nullptr;
+        m_ecoreWlDisplay = nullptr;
+        m_display = nullptr;
         delete this;
     }
 
@@ -417,7 +420,7 @@ public:
     static EGLDisplay m_display;
     EGLSurface m_surface;
     static EGLContext m_context;
-    EGLSyncKHR m_fence;
+    EGLSyncKHR m_fence = nullptr;
     static Ecore_Wl2_Display* m_ecoreWlDisplay;
 }; // namespace LWEDelegate
 
