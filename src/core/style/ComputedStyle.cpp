@@ -1432,7 +1432,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (!std::equal(newStyle->strokeDasharray().begin(),
+    if (newStyle->strokeDasharray().size() !=
+            oldStyle->strokeDasharray().size() ||
+        !std::equal(newStyle->strokeDasharray().begin(),
                     newStyle->strokeDasharray().end(),
                     oldStyle->strokeDasharray().begin())) {
         damagedKeys[CSSStyleValuePair::KeyKind::StrokeDasharray] = true;
