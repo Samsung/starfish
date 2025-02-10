@@ -385,7 +385,12 @@ public:
         Evas_Native_Surface ns;
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
+
+        // This is how to set up evasgl's viewport correctly.
+        // This guide was received from efl team.
+        evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
         evas_object_show(m_graphicsAdapter);
+        evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
 
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
