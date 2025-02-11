@@ -71,6 +71,7 @@
 #include "core/style/StyleRule.h"
 #include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationExecutor.h"
+#include "core/animation/AnimationTask.h"
 #include "core/dom/ShadowRoot.h"
 
 #include <EscargotPublic.h>
@@ -2373,7 +2374,8 @@ Animation* Element::animate(ExecutionContext* executionContext,
 
     if (style()->display() != DisplayValue::NoneDisplayValue &&
         style()->animation()) {
-        AnimationApplier animationApplier(this, style(), false);
+        AnimationApplier animationApplier(this, AnimationType::WebAnimation,
+                                          style());
         if (!animationApplier.apply()) {
             return new Animation(executionContext);
         }

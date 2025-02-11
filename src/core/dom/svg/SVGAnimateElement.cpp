@@ -129,7 +129,8 @@ void SVGAnimateElement::beginElementAt(float offset)
 
     // Apply animation for svg.
     m_animationKeyframes = animationKeyframes;
-    AnimationApplier applier(targetElement, targetElement->style(), false);
+    AnimationApplier applier(targetElement, AnimationType::SVGAnimation,
+                             targetElement->style());
     if (!applier.applySVGAnimateElement(this)) {
         m_animationKeyframes = nullptr;
         STARFISH_LOG_WARN("Failed to apply animation.");

@@ -32,15 +32,17 @@ size_t ActiveElementAnimation::hashValue() const
     if (m_hash == 0) {
         hash_combine(m_hash, m_name->hashValue());
         hash_combine(m_hash, (size_t)m_element);
+        hash_combine(m_hash, static_cast<size_t>(m_animationType));
     }
     return m_hash;
 }
 
-bool ActiveElementAnimation::equals(const ActiveElementAnimation* src) const
+bool ActiveElementAnimation::equals(const ActiveElementAnimation* other) const
 {
-    STARFISH_ASSERT(src != nullptr);
-    return (m_name->equals(src->m_name) == true) &&
-           (m_element == src->m_element);
+    STARFISH_ASSERT(other != nullptr);
+    return (m_name->equals(other->m_name) == true) &&
+           (m_element == other->m_element) &&
+           (m_animationType == other->m_animationType);
 }
 
 void AnimationExecutor::iterateAnimationTasks(void (*fn)(ActiveAnimationTask*,
@@ -93,7 +95,8 @@ void AnimationExecutor::registerTransition(ActiveAnimationTask* task)
 }
 
 void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
-    Element* element, CSSStyleValuePair::KeyKind p, size_t layer)
+    Element* element, AnimationType animationType, CSSStyleValuePair::KeyKind p,
+    size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
 
@@ -105,6 +108,7 @@ void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
             for (auto task = (*animations).second.begin();
                  task != (*animations).second.end();) {
                 if ((*task)->targetElement() == element &&
+                    (*task)->animationType() == animationType &&
                     (*task)->property() == p &&
                     (*task)->backgroundLayer() == layer) {
                     task = animations.value().erase(task);
@@ -122,15 +126,15 @@ void AnimationExecutor::registerAnimation(ActiveAnimationTask* task,
                                           float iterationCount,
                                           AnimationDirectionValue direction,
                                           AnimationPlayStateValue playState,
-                                          bool isCSSAnimationTask)
+                                          AnimationType animationType)
 {
     task->attachToElement();
     task->setIterationStart(iterationCount);
     task->setIsRunning(playState == AnimationPlayStateValue::Running);
-    task->setIsCSSAnimationTask(isCSSAnimationTask);
+
     ActiveElementAnimation* key =
-        new ActiveElementAnimation(name, task->targetElement(), index,
-                                   iterationCount, direction, playState);
+        new ActiveElementAnimation(name, task->targetElement(), animationType,
+                                   index, iterationCount, direction, playState);
     auto iter = m_activeAnimations.find(key);
     if (iter == m_activeAnimations.end()) {
         GCVector<ActiveAnimationTask*> v;

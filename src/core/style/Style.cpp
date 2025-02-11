@@ -8792,15 +8792,14 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
         canceledAnimationProgress;
     // check transition have to remove
     {
-        auto& activeAnimations = executor->activeTransitions();
-        for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element &&
-                activeAnimations[i]->animationType() ==
-                    AnimationType::Transition) {
+        auto& transitions = executor->activeTransitions();
+        for (size_t i = 0; i < transitions.size(); i++) {
+            STARFISH_ASSERT(transitions[i]->isTransition());
+            if (transitions[i]->targetElement() == element) {
                 bool shouldRemove = false;
                 bool isCancel = true;
                 // time is up
-                if (activeAnimations[i]->fraction(tick) >= 1) {
+                if (transitions[i]->fraction(tick) >= 1) {
                     shouldRemove = true;
                     isCancel = false;
                 }
@@ -8813,7 +8812,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 
                 // transition targetToValue changed
                 if (!shouldRemove &&
-                    activeAnimations[i]->taskCanContinue(style) == false) {
+                    transitions[i]->taskCanContinue(style) == false) {
                     shouldRemove = true;
                 }
 
@@ -8830,7 +8829,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                                 found = true;
                                 break;
                             }
-                            if (activeAnimations[i]->isKindOfTransitionProperty(
+                            if (transitions[i]->isKindOfTransitionProperty(
                                     data->property(j)) == true) {
                                 found = true;
                                 break;
@@ -8844,21 +8843,21 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 
                 if (shouldRemove) {
                     if (!isCancel) {
-                        damagedKeys[activeAnimations[i]->property()] = false;
-                        activeAnimations[i]->fireTransitionEndEvent();
+                        damagedKeys[transitions[i]->property()] = false;
+                        transitions[i]->fireTransitionEndEvent();
                     } else {
-                        auto key = activeAnimations[i]->property();
-                        double progress = activeAnimations[i]->fraction(tick);
+                        auto key = transitions[i]->property();
+                        double progress = transitions[i]->fraction(tick);
                         canceledAnimationProgress.push_back(
                             std::make_pair(key, progress));
-                        activeAnimations[i]->fireTransitionCancelEvent();
+                        transitions[i]->fireTransitionCancelEvent();
                     }
-                    activeAnimations[i]->detachFromElement();
-                    activeAnimations.erase(i);
+                    transitions[i]->detachFromElement();
+                    transitions.erase(i);
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveAnimationExecutorInWebView = true;
 
-                    if (!activeAnimations.size()) {
+                    if (!transitions.size()) {
                         break;
                     }
                     i--;
@@ -9395,9 +9394,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         auto iterationCount = activeElementAnimation->m_iterationCount;
         auto direction = activeElementAnimation->m_direction;
         for (size_t i = 0; i < animationTasks.size(); i++) {
-            if (animationTasks[i]->targetElement() == element &&
-                animationTasks[i]->animationType() ==
-                    AnimationType::KeyFramesAnimation) {
+            if (animationTasks[i]->targetElement() == element) {
+                STARFISH_ASSERT(!animationTasks[i]->isTransition());
                 bool shouldRemove = false;
                 bool isCancel = true;
 
@@ -9444,7 +9442,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
                 // animation property gone || other properties changed
                 if (!shouldRemove) {
-                    if (animationTasks[i]->isCSSAnimationTask()) {
+                    if (animationTasks[i]->animationType() ==
+                        AnimationType::KeyFramesAnimation) {
                         if (toStyle->animation()) {
                             for (size_t n = 0;
                                  n < styleAnimationData
@@ -9551,7 +9550,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         !element->didPrepareAnimation()) {
         if (styleAnimationData &&
             styleAnimationData->totalAnimationKeyframesListSize() > 0) {
-            AnimationApplier animationApplier(element, toStyle, true);
+            AnimationApplier animationApplier(
+                element, AnimationType::KeyFramesAnimation, toStyle);
             if (animationApplier.apply()) {
                 elementHasAnimation = true;
                 needsToCheckActiveExecutorInWebView = true;

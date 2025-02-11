@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+enum class AnimationType ENSURE_ENUM_UNSIGNED;
+
 class Element;
 class ComputedStyle;
 class TimingFunction;
@@ -38,8 +40,8 @@ class AnimationApplier : public gc {
 public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    AnimationApplier(Element* element, ComputedStyle* style,
-                     bool isCSSAnimationTask);
+    AnimationApplier(Element* element, AnimationType animatoinType,
+                     ComputedStyle* style);
 
     bool apply();
 
@@ -78,8 +80,8 @@ private:
         AnimationPlayStateValue playState, ActiveAnimationTask* task);
 
     Element* m_element;
+    AnimationType m_animatoinType;
     ComputedStyle* m_style;
-    bool m_isCSSAnimationTask;
     Font* m_font;
     Length m_currentFontSize;
     Length m_rootFontSize;
