@@ -412,7 +412,7 @@ void TransitionApplier::applyOpacity(double duration, double delay,
         return;
     }
     auto task = new ActiveOpacityAnimationTask(
-        m_element, CSSStyleValuePair::Opacity,
+        m_element, AnimationType::Transition, CSSStyleValuePair::Opacity,
         AnimatedValue(m_oldStyle->opacity()),
         AnimatedValue(m_newStyle->opacity()), duration, delay, timingFunction);
     m_executor->registerTransition(task);
@@ -429,7 +429,7 @@ void TransitionApplier::applyTransform(double duration, double delay,
         auto newTransform =
             m_newStyle->rareComputedStyleData()->ensureTransforms();
         auto task = new ActiveTransformAnimationTask(
-            m_element, CSSStyleValuePair::Transform,
+            m_element, AnimationType::Transition, CSSStyleValuePair::Transform,
             AnimatedValue(
                 m_oldStyle->rareComputedStyleData()->ensureTransforms()),
             AnimatedValue(newTransform), duration, delay, timingFunction,
@@ -450,8 +450,9 @@ void TransitionApplier::applyActiveColorAnimationTask(
 
     AnimatedValue from = colorValueGetter(m_oldStyle);
     AnimatedValue to = colorValueGetter(m_newStyle);
-    auto task = new ActiveColorAnimationTask(m_element, keyKind, from, to,
-                                             duration, delay, timingFunction);
+    auto task = new ActiveColorAnimationTask(
+        m_element, AnimationType::Transition, keyKind, from, to, duration,
+        delay, timingFunction);
     m_executor->registerTransition(task);
     m_gotTransition = true;
 }
@@ -517,8 +518,8 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
             AnimatedValue from = fromValue;
             AnimatedValue to = toValue;
             auto task = new ActiveLengthAnimationTask(
-                m_element, keyKind, from, to, duration, delay, timingFunction,
-                lengthValueGetter(m_newStyle));
+                m_element, AnimationType::Transition, keyKind, from, to,
+                duration, delay, timingFunction, lengthValueGetter(m_newStyle));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -552,9 +553,9 @@ void TransitionApplier::applyActiveLengthAnimationTask(
         return;
     }
 
-    auto task = new ActiveLengthAnimationTask(m_element, keyKind, from, to,
-                                              duration, delay, timingFunction,
-                                              lengthValueGetter(m_newStyle));
+    auto task = new ActiveLengthAnimationTask(
+        m_element, AnimationType::Transition, keyKind, from, to, duration,
+        delay, timingFunction, lengthValueGetter(m_newStyle));
     m_executor->registerTransition(task);
     m_gotTransition = true;
 }
@@ -578,9 +579,10 @@ void TransitionApplier::applyBackgroundPositionX(double duration, double delay,
                 m_oldStyle, m_newStyle, oldPaintingBox, m_element, pos1, pos2,
                 i)) {
             auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundPositionX,
-                AnimatedValue(pos1), AnimatedValue(pos2), duration, delay,
-                timingFunction, m_newStyle->backgroundPositionX(i), i);
+                m_element, AnimationType::Transition,
+                CSSStyleValuePair::BackgroundPositionX, AnimatedValue(pos1),
+                AnimatedValue(pos2), duration, delay, timingFunction,
+                m_newStyle->backgroundPositionX(i), i);
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -606,9 +608,10 @@ void TransitionApplier::applyBackgroundPositionY(double duration, double delay,
                 m_oldStyle, m_newStyle, oldPaintingBox, m_element, pos1, pos2,
                 i)) {
             auto task = new ActiveLengthAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundPositionY,
-                AnimatedValue(pos1), AnimatedValue(pos2), duration, delay,
-                timingFunction, m_newStyle->backgroundPositionY(i), i);
+                m_element, AnimationType::Transition,
+                CSSStyleValuePair::BackgroundPositionY, AnimatedValue(pos1),
+                AnimatedValue(pos2), duration, delay, timingFunction,
+                m_newStyle->backgroundPositionY(i), i);
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -634,9 +637,10 @@ void TransitionApplier::applyBackgroundSize(double duration, double delay,
                 m_oldStyle, m_newStyle, oldPaintingBox, m_element, size1, size2,
                 i)) {
             auto task = new ActiveLengthSizeAnimationTask(
-                m_element, CSSStyleValuePair::BackgroundSize,
-                AnimatedValue(size1), AnimatedValue(size2), duration, delay,
-                timingFunction, m_newStyle->backgroundSizeLengthValue(i), i);
+                m_element, AnimationType::Transition,
+                CSSStyleValuePair::BackgroundSize, AnimatedValue(size1),
+                AnimatedValue(size2), duration, delay, timingFunction,
+                m_newStyle->backgroundSizeLengthValue(i), i);
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -650,7 +654,7 @@ void TransitionApplier::applyVisibility(double duration, double delay,
         return;
     }
     auto task = new ActiveVisibilityAnimationTask(
-        m_element, CSSStyleValuePair::Visibility,
+        m_element, AnimationType::Transition, CSSStyleValuePair::Visibility,
         AnimatedValue(m_oldStyle->visibility()),
         AnimatedValue(m_newStyle->visibility()), duration, delay,
         timingFunction);

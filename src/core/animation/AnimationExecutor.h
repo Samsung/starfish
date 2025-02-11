@@ -29,6 +29,7 @@ namespace Starfish {
 
 enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED;
 enum class AnimationPlayStateValue ENSURE_ENUM_UNSIGNED;
+enum class AnimationType ENSURE_ENUM_UNSIGNED;
 
 class String;
 class Element;
@@ -37,6 +38,7 @@ class ActiveAnimationTask;
 struct ActiveElementAnimation : public gc {
     String* m_name;
     Element* m_element;
+    AnimationType m_animationType;
     size_t m_index;
     double m_duration;
     double m_delay;
@@ -44,12 +46,14 @@ struct ActiveElementAnimation : public gc {
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
 
-    ActiveElementAnimation(String* name, Element* element, size_t index,
+    ActiveElementAnimation(String* name, Element* element,
+                           AnimationType animationType, size_t index,
                            float iterationCount,
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState)
         : m_name(name)
         , m_element(element)
+        , m_animationType(animationType)
         , m_index(index)
         , m_duration(0)
         , m_delay(0)
@@ -118,6 +122,7 @@ public:
     void registerTransition(ActiveAnimationTask* task);
 
     void removeActiveAnimationTaskIfNeeds(Element* element,
+                                          AnimationType animationType,
                                           CSSStyleValuePair::KeyKind p,
                                           size_t layer = 0);
 
@@ -125,7 +130,7 @@ public:
                            size_t index, float iterationCount,
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState,
-                           bool isCSSAnimationTask);
+                           AnimationType animationType);
 
     uint64_t transformOpacityAnimationRemainTime();
 

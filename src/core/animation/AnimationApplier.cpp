@@ -51,11 +51,12 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
-AnimationApplier::AnimationApplier(Element* element, ComputedStyle* style,
-                                   bool isCSSAnimationTask)
+AnimationApplier::AnimationApplier(Element* element,
+                                   AnimationType animatoinType,
+                                   ComputedStyle* style)
     : m_element(element)
+    , m_animatoinType(animatoinType)
     , m_style(style)
-    , m_isCSSAnimationTask(isCSSAnimationTask)
     , m_font(style->font())
     , m_currentFontSize(m_style->fontSize())
     , m_windowSize(element->window()->innerWidth(),
@@ -305,9 +306,10 @@ void AnimationApplier::updateActiveAnimationTaskRegistration(
     float iterationCount, AnimationDirectionValue direction,
     AnimationPlayStateValue playState, ActiveAnimationTask* task)
 {
-    m_executor->removeActiveAnimationTaskIfNeeds(m_element, keyKind, layer);
+    m_executor->removeActiveAnimationTaskIfNeeds(m_element, m_animatoinType,
+                                                 keyKind, layer);
     m_executor->registerAnimation(task, name, s, iterationCount, direction,
-                                  playState, m_isCSSAnimationTask);
+                                  playState, m_animatoinType);
 }
 
 bool AnimationApplier::applyProperty(
@@ -341,8 +343,9 @@ bool AnimationApplier::applyProperty(
         // Create ActiveAnimationTask based on the type of property.
         if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind)) {
             task = new ActiveColorAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode);
 
         } else if (AnimationUtil::isPropertyForActiveLengthAnimationTask(
                        keyKind)) {
@@ -362,8 +365,9 @@ bool AnimationApplier::applyProperty(
                 }
             }
             task = new ActiveLengthAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode, i);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode, i);
         } else if (AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
                        keyKind)) {
             if (!m_style->hasBlockLikeDisplay()) {
@@ -372,21 +376,25 @@ bool AnimationApplier::applyProperty(
                 continue;
             }
             task = new ActiveLengthSizeAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode, i);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode, i);
         } else if (keyKind == CSSStyleValuePair::Opacity) {
             task = new ActiveOpacityAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode);
 
         } else if (keyKind == CSSStyleValuePair::Transform) {
             task = new ActiveTransformAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode);
         } else if (keyKind == CSSStyleValuePair::Visibility) {
             task = new ActiveVisibilityAnimationTask(
-                m_element, keyKind, layeredValues[i], offsets, timingFunctions,
-                duration, delay, iterationCount, playState, fillMode);
+                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
+                timingFunctions, duration, delay, iterationCount, playState,
+                fillMode);
         }
 
         // Register ActiveAnimationTask.

@@ -58,11 +58,12 @@ static float interpolate(const T from, const T to, double progress,
 }
 
 ActiveAnimationTask::ActiveAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
-    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    int64_t delayInms, TimingFunction* timingFunction)
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction)
     : m_isEveryAnimiatedValueResolved(true)
-    , m_animationType(AnimationType::Transition)
+    , m_animationType(animationType)
     , m_property(targetProperty)
     , m_targetElement(target)
     , m_startTimeMs(0)
@@ -77,7 +78,6 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
     , m_isRunning(true)
-    , m_isCSSAnimationTask(true)
     , m_isInForwardsFillMode(false)
     , m_frameIdx(0)
     , m_frameSize(2)
@@ -91,14 +91,15 @@ ActiveAnimationTask::ActiveAnimationTask(
 }
 
 ActiveAnimationTask::ActiveAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
     : m_isEveryAnimiatedValueResolved(false)
-    , m_animationType(AnimationType::KeyFramesAnimation)
+    , m_animationType(animationType)
     , m_property(targetProperty)
     , m_targetElement(target)
     , m_startTimeMs(0)
@@ -113,7 +114,6 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
     , m_isRunning(true)
-    , m_isCSSAnimationTask(true)
     , m_isInForwardsFillMode(false)
     , m_frameIdx(0)
     , m_frameSize(values.size())
@@ -152,7 +152,9 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         f = fraction(currentTickCount);
     }
 
-    if (m_animationType == AnimationType::KeyFramesAnimation) {
+    if (isTransition()) {
+        execute(computeProgress(f), style);
+    } else {
         if ((m_isInDelayedTime == true && f == 0) ||
             m_isEveryAnimiatedValueResolved == false) {
             return;
@@ -186,9 +188,6 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
             m_fillMode == AnimationFillModeValue::Forwards) {
             return;
         }
-
-    } else {
-        execute(computeProgress(f), style);
     }
 }
 
@@ -270,7 +269,7 @@ double ActiveAnimationTask::computeProgress(double& fraction)
     STARFISH_ASSERT(fraction >= 0.0);
     STARFISH_ASSERT(fraction <= 1.0);
 
-    if (m_animationType == AnimationType::KeyFramesAnimation) {
+    if (!isTransition()) {
         if (m_isForward == true) {
             fraction = (fraction - m_offsets[m_frameIdx]) /
                        (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
@@ -284,14 +283,27 @@ double ActiveAnimationTask::computeProgress(double& fraction)
 }
 
 ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
+{
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
+}
+
+ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
-    : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms,
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
 {
     m_isEveryAnimiatedValueResolved = true;
@@ -479,12 +491,12 @@ static SkMatrix recomposing2DMatrix(
 }
 
 ActiveTransformAnimationTask::ActiveTransformAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
-    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    int64_t delayInms, TimingFunction* timingFunction,
-    StyleTransformDataGroup* orgTransformValue)
-    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
-                          delayInms, timingFunction)
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction, StyleTransformDataGroup* orgTransformValue)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
     , m_shouldUseDecompositing(false)
     , m_originalTransformValue(nullptr)
     , m_fromTransformValue(nullptr)
@@ -507,14 +519,15 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
 }
 
 ActiveTransformAnimationTask::ActiveTransformAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
-    : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms,
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
     , m_shouldUseDecompositing(false)
     , m_originalTransformValue(nullptr)
@@ -779,6 +792,34 @@ void ActiveTransformAnimationTask::detachFromElement()
     m_targetElement->clearRunningTransformAnimation();
 }
 
+ActiveColorAnimationTask::ActiveColorAnimationTask(
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
+{
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
+}
+
+ActiveColorAnimationTask::ActiveColorAnimationTask(
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode)
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
+{
+    m_isEveryAnimiatedValueResolved = true;
+    STARFISH_ASSERT(target != nullptr);
+}
+
 void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
@@ -893,12 +934,13 @@ bool ActiveColorAnimationTask::isKindOfTransitionProperty(
 }
 
 ActiveLengthAnimationTask::ActiveLengthAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
-    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    int64_t delayInms, TimingFunction* timingFunction, Length originalToValue,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction, Length originalToValue,
     size_t indexForBgLayer)
-    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
-                          delayInms, timingFunction)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
     , m_originalToValue(originalToValue)
     , m_indexForBgLayer(indexForBgLayer)
 {
@@ -907,14 +949,15 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
 }
 
 ActiveLengthAnimationTask::ActiveLengthAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode, size_t indexForBgLayer)
-    : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms,
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
@@ -1384,12 +1427,13 @@ bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 }
 
 ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
-    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    int64_t delayInms, TimingFunction* timingFunction,
-    LengthSize originalToValue, size_t indexForBgLayer)
-    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
-                          delayInms, timingFunction)
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction, LengthSize originalToValue,
+    size_t indexForBgLayer)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
     , m_originalToValue(originalToValue)
     , m_indexForBgLayer(indexForBgLayer)
 {
@@ -1398,14 +1442,15 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
 }
 
 ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
-    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode, size_t indexForBgLayer)
-    : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms,
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
@@ -1498,6 +1543,34 @@ bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
         }
     }
     return false;
+}
+
+ActiveVisibilityAnimationTask::ActiveVisibilityAnimationTask(
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty, const AnimatedValue& from,
+    const AnimatedValue& to, uint64_t durationInms, int64_t delayInms,
+    TimingFunction* timingFunction)
+    : ActiveAnimationTask(target, animationType, targetProperty, from, to,
+                          durationInms, delayInms, timingFunction)
+{
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
+}
+
+ActiveVisibilityAnimationTask::ActiveVisibilityAnimationTask(
+    Element* target, AnimationType animationType,
+    CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode)
+    : ActiveAnimationTask(target, animationType, targetProperty, values,
+                          offsets, timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
+{
+    m_isEveryAnimiatedValueResolved = true;
+    STARFISH_ASSERT(target != nullptr);
 }
 
 void ActiveVisibilityAnimationTask::execute(double progress,
