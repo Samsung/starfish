@@ -62,7 +62,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
     int64_t delayInms, TimingFunction* timingFunction)
     : m_isEveryAnimiatedValueResolved(true)
-    , m_type(TRANSITION_TYPE)
+    , m_animationType(AnimationType::Transition)
     , m_property(targetProperty)
     , m_targetElement(target)
     , m_startTimeMs(0)
@@ -98,7 +98,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
     : m_isEveryAnimiatedValueResolved(false)
-    , m_type(ANIMATION_TYPE)
+    , m_animationType(AnimationType::KeyFramesAnimation)
     , m_property(targetProperty)
     , m_targetElement(target)
     , m_startTimeMs(0)
@@ -152,7 +152,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         f = fraction(currentTickCount);
     }
 
-    if (m_type == ANIMATION_TYPE) {
+    if (m_animationType == AnimationType::KeyFramesAnimation) {
         if ((m_isInDelayedTime == true && f == 0) ||
             m_isEveryAnimiatedValueResolved == false) {
             return;
@@ -270,7 +270,7 @@ double ActiveAnimationTask::computeProgress(double& fraction)
     STARFISH_ASSERT(fraction >= 0.0);
     STARFISH_ASSERT(fraction <= 1.0);
 
-    if (m_type == ANIMATION_TYPE) {
+    if (m_animationType == AnimationType::KeyFramesAnimation) {
         if (m_isForward == true) {
             fraction = (fraction - m_offsets[m_frameIdx]) /
                        (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);

@@ -8795,8 +8795,8 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
         auto& activeAnimations = executor->activeTransitions();
         for (size_t i = 0; i < activeAnimations.size(); i++) {
             if (activeAnimations[i]->targetElement() == element &&
-                activeAnimations[i]->type() ==
-                    ActiveAnimationTask::TRANSITION_TYPE) {
+                activeAnimations[i]->animationType() ==
+                    AnimationType::Transition) {
                 bool shouldRemove = false;
                 bool isCancel = true;
                 // time is up
@@ -9396,8 +9396,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         auto direction = activeElementAnimation->m_direction;
         for (size_t i = 0; i < animationTasks.size(); i++) {
             if (animationTasks[i]->targetElement() == element &&
-                animationTasks[i]->type() ==
-                    ActiveAnimationTask::ANIMATION_TYPE) {
+                animationTasks[i]->animationType() ==
+                    AnimationType::KeyFramesAnimation) {
                 bool shouldRemove = false;
                 bool isCancel = true;
 

@@ -31,6 +31,11 @@ class Node;
 class StyleTransformDataGroup;
 class TimingFunction;
 
+enum class AnimationType ENSURE_ENUM_UNSIGNED {
+    Transition,
+    KeyFramesAnimation
+};
+
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
     ComputedStyle* newStyle, const bool* damagedKeys,
@@ -245,10 +250,9 @@ public:
         m_isRunning = isRunning;
     }
 
-    enum TYPE ENSURE_ENUM_UNSIGNED { TRANSITION_TYPE, ANIMATION_TYPE };
-    TYPE type()
+    AnimationType animationType()
     {
-        return m_type;
+        return m_animationType;
     }
 
     float iterationStart()
@@ -325,7 +329,7 @@ protected:
     double computeProgress(double& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
-    TYPE m_type : 1;
+    AnimationType m_animationType;
     CSSStyleValuePair::KeyKind m_property : 8;
 
     Element* m_targetElement;
