@@ -187,7 +187,33 @@ namespace Starfish {
     F(mask)                            \
     F(tspan)                           \
     F(marker)                          \
-    F(symbol)
+    F(symbol)                          \
+    F(filter)                          \
+    F(feBlend)                         \
+    F(feFlood)                         \
+    F(feColorMatrix)                   \
+    F(feComponentTransfer)             \
+    F(feComposite)                     \
+    F(feConvolveMatrix)                \
+    F(feDiffuseLighting)               \
+    F(feDisplacementMap)               \
+    F(feDropShadow)                    \
+    F(feSpotLight)                     \
+    F(feGaussianBlur)                  \
+    F(feImage)                         \
+    F(feMerge)                         \
+    F(feMergeNode)                     \
+    F(feMorphology)                    \
+    F(feOffset)                        \
+    F(feSpecularLighting)              \
+    F(fePointLight)                    \
+    F(feDistantLight)                  \
+    F(feTile)                          \
+    F(feFuncA)                         \
+    F(feFuncR)                         \
+    F(feFuncB)                         \
+    F(feFuncG)                         \
+    F(feTurbulence)
 
 // FIXME: current parser converts linearGradient to lineargradient
 // Remove F(lineargradient) after fixing this issue
@@ -437,6 +463,9 @@ public:
     QualifiedName m_shadowRootMode;
     QualifiedName m_slot;
     QualifiedName m_hidden;
+    QualifiedName m_filterUnits;
+    QualifiedName m_primitiveUnits;
+    QualifiedName m_result;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
@@ -468,6 +497,7 @@ public:
     QualifiedName m_strokeDashoffset;
     QualifiedName m_x;
     QualifiedName m_y;
+    QualifiedName m_z;
     QualifiedName m_x1;
     QualifiedName m_y1;
     QualifiedName m_x2;
@@ -495,6 +525,45 @@ public:
     QualifiedName m_orient;
     QualifiedName m_markerUnits;
     QualifiedName m_clipPathUnits;
+    QualifiedName m_dx;
+    QualifiedName m_dy;
+    QualifiedName m_in1;
+    QualifiedName m_in2;
+    QualifiedName m_mode;
+    QualifiedName m_orderX;
+    QualifiedName m_orderY;
+    QualifiedName m_kernelMatrix;
+    QualifiedName m_divisor;
+    QualifiedName m_bias;
+    QualifiedName m_targetX;
+    QualifiedName m_targetY;
+    QualifiedName m_edgeMode;
+    QualifiedName m_kernelUnitLengthX;
+    QualifiedName m_kernelUnitLengthY;
+    QualifiedName m_preserveAlpha;
+    QualifiedName m_stdDeviationX;
+    QualifiedName m_stdDeviationY;
+    QualifiedName m_surfaceScale;
+    QualifiedName m_specularConstant;
+    QualifiedName m_specularExponent;
+    QualifiedName m_scale;
+    QualifiedName m_xChannelSelector;
+    QualifiedName m_yChannelSelector;
+    QualifiedName m_operator;
+    QualifiedName m_radiusX;
+    QualifiedName m_radiusY;
+    QualifiedName m_diffuseConstant;
+    QualifiedName m_k1;
+    QualifiedName m_k2;
+    QualifiedName m_k3;
+    QualifiedName m_k4;
+    QualifiedName m_azimuth;
+    QualifiedName m_elevation;
+    QualifiedName m_baseFrequencyX;
+    QualifiedName m_baseFrequencyY;
+    QualifiedName m_numOctaves;
+    QualifiedName m_seed;
+    QualifiedName m_stitchTiles;
 
     // SVG animate
     QualifiedName m_attributename;

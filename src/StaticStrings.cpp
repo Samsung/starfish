@@ -324,7 +324,12 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_slot = QualifiedName(AtomicString::createAtomicString(starfish, "slot"));
     m_hidden =
         QualifiedName(AtomicString::createAtomicString(starfish, "hidden"));
-
+    m_filterUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "filterUnits"));
+    m_primitiveUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "primitiveUnits"));
+    m_result =
+        QualifiedName(AtomicString::createAtomicString(starfish, "result"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =
         QualifiedName(AtomicString::createAtomicString(starfish, "default"));
@@ -374,6 +379,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "stroke-dashoffset"));
     m_x = QualifiedName(AtomicString::createAtomicString(starfish, "x"));
     m_y = QualifiedName(AtomicString::createAtomicString(starfish, "y"));
+    m_z = QualifiedName(AtomicString::createAtomicString(starfish, "z"));
     m_x1 = QualifiedName(AtomicString::createAtomicString(starfish, "x1"));
     m_y1 = QualifiedName(AtomicString::createAtomicString(starfish, "y1"));
     m_x2 = QualifiedName(AtomicString::createAtomicString(starfish, "x2"));
@@ -567,6 +573,79 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "clip-path"));
     m_clipPathUnits = QualifiedName(
         AtomicString::createAtomicString(starfish, "clipPathUnits"));
+    m_dx = QualifiedName(AtomicString::createAtomicString(starfish, "dx"));
+    m_dy = QualifiedName(AtomicString::createAtomicString(starfish, "dy"));
+    m_in1 = QualifiedName(AtomicString::createAtomicString(starfish, "in1"));
+    m_in2 = QualifiedName(AtomicString::createAtomicString(starfish, "in2"));
+    m_mode = QualifiedName(AtomicString::createAtomicString(starfish, "mode"));
+    m_orderX =
+        QualifiedName(AtomicString::createAtomicString(starfish, "orderX"));
+    m_orderY =
+        QualifiedName(AtomicString::createAtomicString(starfish, "orderY"));
+    m_kernelMatrix = QualifiedName(
+        AtomicString::createAtomicString(starfish, "kernelMatrix"));
+    m_divisor =
+        QualifiedName(AtomicString::createAtomicString(starfish, "divisor"));
+    m_bias = QualifiedName(AtomicString::createAtomicString(starfish, "bias"));
+    m_targetX =
+        QualifiedName(AtomicString::createAtomicString(starfish, "targetX"));
+    m_targetY =
+        QualifiedName(AtomicString::createAtomicString(starfish, "targetY"));
+    m_edgeMode =
+        QualifiedName(AtomicString::createAtomicString(starfish, "edgeMode"));
+    m_kernelUnitLengthX = QualifiedName(
+        AtomicString::createAtomicString(starfish, "kernelUnitLengthX"));
+    m_kernelUnitLengthY = QualifiedName(
+        AtomicString::createAtomicString(starfish, "kernelUnitLengthY"));
+    m_edgeMode =
+        QualifiedName(AtomicString::createAtomicString(starfish, "edgeMode"));
+    m_kernelUnitLengthX = QualifiedName(
+        AtomicString::createAtomicString(starfish, "kernelUnitLengthX"));
+    m_kernelUnitLengthY = QualifiedName(
+        AtomicString::createAtomicString(starfish, "kernelUnitLengthY"));
+    m_preserveAlpha = QualifiedName(
+        AtomicString::createAtomicString(starfish, "preserveAlpha"));
+    m_stdDeviationX = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stdDeviationX"));
+    m_stdDeviationY = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stdDeviationY"));
+    m_surfaceScale = QualifiedName(
+        AtomicString::createAtomicString(starfish, "surfaceScale"));
+    m_specularConstant = QualifiedName(
+        AtomicString::createAtomicString(starfish, "specularConstant"));
+    m_specularExponent = QualifiedName(
+        AtomicString::createAtomicString(starfish, "specularExponent"));
+    m_scale =
+        QualifiedName(AtomicString::createAtomicString(starfish, "scale"));
+    m_xChannelSelector = QualifiedName(
+        AtomicString::createAtomicString(starfish, "xChannelSelector"));
+    m_yChannelSelector = QualifiedName(
+        AtomicString::createAtomicString(starfish, "yChannelSelector"));
+    m_operator =
+        QualifiedName(AtomicString::createAtomicString(starfish, "operator"));
+    m_radiusX =
+        QualifiedName(AtomicString::createAtomicString(starfish, "radiusX"));
+    m_radiusY =
+        QualifiedName(AtomicString::createAtomicString(starfish, "radiusY"));
+    m_diffuseConstant = QualifiedName(
+        AtomicString::createAtomicString(starfish, "diffuseConstant"));
+    m_k1 = QualifiedName(AtomicString::createAtomicString(starfish, "k1"));
+    m_k2 = QualifiedName(AtomicString::createAtomicString(starfish, "k2"));
+    m_k3 = QualifiedName(AtomicString::createAtomicString(starfish, "k3"));
+    m_k4 = QualifiedName(AtomicString::createAtomicString(starfish, "k4"));
+    m_azimuth =
+        QualifiedName(AtomicString::createAtomicString(starfish, "azimuth"));
+    m_elevation =
+        QualifiedName(AtomicString::createAtomicString(starfish, "elevation"));
+    m_baseFrequencyX = QualifiedName(
+        AtomicString::createAtomicString(starfish, "baseFrequencyX"));
+    m_baseFrequencyY = QualifiedName(
+        AtomicString::createAtomicString(starfish, "baseFrequencyY"));
+    m_numOctaves =
+        QualifiedName(AtomicString::createAtomicString(starfish, "numOctaves"));
+    m_seed = QualifiedName(AtomicString::createAtomicString(starfish, "seed"));
+    m_stitchTiles = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stitchTiles"));
 
     // SVG animate
     m_attributename = QualifiedName(
