@@ -594,9 +594,11 @@ public:
         if (lastState()->m_maskPattern) {
             cairo_pop_group_to_source(m_canvas);
 
+            auto pattern =
+                reinterpret_cast<cairo_pattern_t*>(lastState()->m_maskPattern);
+
             cairo_matrix_t matrix;
             cairo_get_matrix(m_canvas, &matrix);
-
             {
                 cairo_matrix_t maskMatrix;
                 SkMatrix matrix = lastState()->m_maskTM;
@@ -606,15 +608,18 @@ public:
                                   matrix.getTranslateY());
                 cairo_set_matrix(m_canvas, &maskMatrix);
             }
-            cairo_mask(m_canvas, (cairo_pattern_t*)lastState()->m_maskPattern);
-            cairo_pattern_destroy((cairo_pattern_t*)lastState()->m_maskPattern);
+
+            cairo_mask(m_canvas, pattern);
+            cairo_pattern_destroy(pattern);
             cairo_set_matrix(m_canvas, &matrix);
-            cairo_surface_flush(m_surface);
 
             if (lastState()->m_shouldRemoveImmediately) {
+                cairo_surface_flush(m_surface);
                 delete ((NativeImageData*)lastState()->m_maskPatternData);
             }
+
             lastState()->m_maskPatternData = nullptr;
+            lastState()->m_maskPattern = nullptr;
         }
         Canvas::restore();
         cairo_restore(m_canvas);
@@ -653,7 +658,6 @@ public:
 
     virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
     {
-        INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
         clip(rt);
         lastState()->m_layerOpacity =
@@ -667,6 +671,59 @@ public:
         cairo_pop_group_to_source(m_canvas);
         cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity);
         restore();
+    }
+
+    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
+                                SubCanvasMode mode) override
+    {
+        save();
+        clip(subCanvasRect);
+        lastState()->m_subCanvasRect = subCanvasRect;
+        lastState()->m_subCanvasMode = mode;
+        cairo_push_group(m_canvas);
+    }
+
+    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn) override
+    {
+        checkError();
+        if (fn) {
+            auto groupTarget = cairo_get_group_target(m_canvas);
+            cairo_surface_t* mappedSurface =
+                cairo_surface_map_to_image(groupTarget, NULL);
+            fn(static_cast<uint8_t*>(
+                   cairo_image_surface_get_data(mappedSurface)),
+               static_cast<size_t>(
+                   cairo_image_surface_get_width(mappedSurface)),
+               static_cast<size_t>(
+                   cairo_image_surface_get_stride(mappedSurface)),
+               static_cast<size_t>(
+                   cairo_image_surface_get_height(mappedSurface)));
+            cairo_surface_unmap_image(groupTarget, mappedSurface);
+        }
+
+        if (lastState()->m_subCanvasMode == SubCanvasMode::Mask) {
+            auto pattern = cairo_pop_group(m_canvas);
+            auto subCanvasRect = lastState()->m_subCanvasRect;
+            restore();
+
+            cairo_matrix_t matrix;
+            cairo_get_matrix(m_canvas, &matrix);
+            SkMatrix m = SkMatrix::I();
+            m.set(0, matrix.xx);
+            m.set(1, matrix.yx);
+            m.set(2, matrix.x0);
+            m.set(3, matrix.xy);
+            m.set(4, matrix.yy);
+            m.set(5, matrix.y0);
+            lastState()->m_maskTM = m;
+            lastState()->m_maskPattern = pattern;
+
+            clip(subCanvasRect);
+            cairo_push_group(m_canvas);
+        } else {
+            cairo_pop_group_to_source(m_canvas);
+            restore();
+        }
     }
 
     virtual void clip(const Unit::Rect& rt) override

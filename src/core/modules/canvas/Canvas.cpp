@@ -325,6 +325,7 @@ CanvasState::CanvasState()
     , m_maskPatternData(nullptr)
     , m_shouldRemoveImmediately(true)
     , m_maskTM()
+    , m_subCanvasMode(SubCanvasMode::Mask)
 {
 }
 

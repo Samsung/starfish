@@ -85,6 +85,11 @@ enum class CanvasBlendMode {
     Luminosity
 };
 
+enum class SubCanvasMode {
+    Mask,
+    Filter, // TODO
+};
+
 namespace CanvasCompositing {
 
     static const char* const canvasCompositeOperatorNames[] = {
@@ -155,6 +160,9 @@ public:
     void* m_maskPatternData;
     bool m_shouldRemoveImmediately;
     SkMatrix m_maskTM;
+
+    SubCanvasMode m_subCanvasMode;
+    Unit::Rect m_subCanvasRect;
 
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
@@ -406,6 +414,18 @@ public:
     }
     virtual void beginOpacityLayer(float c, const Unit::Rect& rt) = 0;
     virtual void endOpacityLayer() = 0;
+
+    void beginSubCanvas(const LayoutRect& rt, SubCanvasMode mode)
+    {
+        beginSubCanvas(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()),
+                       mode);
+    }
+    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
+                                SubCanvasMode mode) = 0;
+    using SubCanvasPixelModifyFunction = std::function<void(
+        uint8_t* data, size_t width, size_t stride, size_t height)>;
+    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn = nullptr) = 0;
+
     virtual void setFont(Font* font) = 0;
     virtual void resetTextDecorationData() = 0;
     virtual void mergeTextDecorationData(ComputedStyle* style) = 0;
