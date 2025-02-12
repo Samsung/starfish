@@ -855,7 +855,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         // fill
         if (fillInfo.hasValue() && paintingOnSVGViewport &&
             fillInfo.value()->isCanvasStyleType() &&
-            fillInfo.value()->getCanvasStyleValue().isCanvasGradientValue()) {
+            fillInfo.value()->getCanvasStyleValue().isCanvasGradientValue() &&
+            !(ctx.m_canvas->currentTransformMatrix().getType() & SkMatrix::kAffine_Mask)) {
             auto pixelSnappedRect = m_frameRect.snapSizeToPixel();
 
             NativeImageData* bufferImage;

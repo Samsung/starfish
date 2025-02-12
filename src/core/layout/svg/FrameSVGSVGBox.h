@@ -29,7 +29,6 @@ class FrameSVGSVGBox final : public FrameReplaced {
 public:
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
-        , m_svgMaskPaintingDepth(0)
         , m_svgScale(1)
         , m_defaultWidth(300)
         , m_defaultHeight(150)
@@ -117,18 +116,34 @@ public:
         return m_svgPaintingMatrix;
     }
 
-    size_t& svgMaskPaintingDepth()
+    size_t svgMaskPaintingDepth() const
     {
-        return m_svgMaskPaintingDepth;
+        return m_svgMaskPaintingStack.size();
     }
 
+    void pushToSVGMaskPaintingStack(FrameSVGBox* b)
+    {
+        m_svgMaskPaintingStack.push_back(b);
+    }
+
+    void popSVGMaskPaintingStack()
+    {
+        m_svgMaskPaintingStack.pop_back();
+    }
+
+    const GCVector<FrameSVGBox*>& svgMaskPaintingStack() const
+    {
+        return m_svgMaskPaintingStack;
+    }
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         FrameReplaced::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameSVGSVGBox, m_svgMaskPaintingStack));
     }
 
-    size_t m_svgMaskPaintingDepth;
+    GCVector<FrameSVGBox*> m_svgMaskPaintingStack;
     LayoutSize m_viewport;
     Optional<Unit::Rect> m_viewBox;
     float m_svgScale;
