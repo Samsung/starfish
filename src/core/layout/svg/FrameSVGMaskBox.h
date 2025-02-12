@@ -54,8 +54,6 @@ protected:
     {
         FrameSVGBox::fillGCDescriptor(desc);
     }
-
-    static void makeLuminanceMask(NativeImageData* image);
 };
 } // namespace Starfish
 
