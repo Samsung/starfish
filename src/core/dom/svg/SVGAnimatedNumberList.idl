@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/SVG/types.html#InterfaceSVGAnimatedLengthList
+
+[Exposed=Window]
+interface SVGAnimatedNumberList {
+  [SameObject] readonly attribute SVGNumberList baseVal;
+  [SameObject] readonly attribute SVGNumberList animVal;
+};
