@@ -169,6 +169,15 @@ public:
     {
     }
 
+    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
+                                SubCanvasMode mode)
+    {
+    }
+
+    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn)
+    {
+    }
+
     virtual void clip(const Unit::Rect& rt)
     {
     }
