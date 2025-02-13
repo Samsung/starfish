@@ -20,7 +20,7 @@ import sys
 
 from argparse import ArgumentParser
 from difflib import unified_diff
-from os.path import join, relpath, splitext
+from os.path import join, relpath, splitext, basename, normpath
 from distutils import spawn
 
 TERM_RED = '\033[1;31m'
@@ -37,12 +37,12 @@ skip_dirs = [
     'docs',
     'packaging',
     'out',
-    'src/binding',
     'test',
     'third_party',
     'tool',
     'CMakeFiles',
-    '.git'
+    '.git',
+    'out_tizen'
 ]
 skip_files = ['Interfaces.h']
 
@@ -73,7 +73,7 @@ def check_tidy(src_dir, update, base, stats):
     print('%sprocessing directory: %s%s' % (TERM_PURPLE, src_dir, TERM_EMPTY))
 
     for dirpath, _, filenames in os.walk(src_dir):
-        if any(d in relpath(dirpath, src_dir) for d in skip_dirs):
+        if any(x in normpath(dirpath).split(os.sep) for x in skip_dirs):
             continue
 
         for file in [join(dirpath, name) for name in filenames if is_checked_by_clang(name)]:
@@ -112,7 +112,6 @@ def check_tidy(src_dir, update, base, stats):
                 report_error('format error')
                 for diffline in diff:
                     print(diffline, end='')
-
 
 
 def main():
