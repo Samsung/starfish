@@ -946,7 +946,12 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         // stroke
-        if (strokeWidth) {
+        bool shouldPaintStroke = strokeWidth &&
+            (style()->strokeOpacity() != 0) &&
+            (strokeInfo.hasValue() ||
+                (style()->hasStrokePaintData() && !style()->stroke()->color().isTransparent()));
+
+        if (shouldPaintStroke) {
             float strokeOpacity = style()->strokeOpacity();
             bool shouldUseOpacityLayer = strokeInfo.hasValue() && strokeOpacity != 1;
             if (shouldUseOpacityLayer) {
