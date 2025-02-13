@@ -41,7 +41,7 @@ namespace Starfish {
 
 // This class is used as a key to clear pending idlers in the message loop
 // when a worker terminates.
-class WorkerProxyGlobalScope : public GlobalScope {
+class WorkerProxyGlobalScope : public GlobalScope, public gc {
 public:
     WorkerProxyGlobalScope()
         : GlobalScope(nullptr)
