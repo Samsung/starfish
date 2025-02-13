@@ -33,6 +33,7 @@ public:
         , m_defaultWidth(300)
         , m_defaultHeight(150)
     {
+        computeStyleFlags();
     }
 
     virtual bool isFrameSVGSVGBox() override

@@ -3642,6 +3642,14 @@ public:
             ensureInheritedRareData()->m_strokeOpacity = v;
     }
 
+    bool hasStrokePaintData() const
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_stroke;
+        }
+        return false;
+    }
+
     StylePaintData* stroke()
     {
         if (m_inheritedStyles.m_rareData) {

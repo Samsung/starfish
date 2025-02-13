@@ -2098,9 +2098,11 @@ bool GridFormattingContext::doesParticipateInGridFormattingContext(
     return true;
 }
 
-FrameGridBox::FrameGridBox(Node* node, ComputedStyle* style1)
-    : FrameBlockBox(node, style1)
+FrameGridBox::FrameGridBox(Node* node, ComputedStyle* cs)
+    : FrameBlockBox(node, cs)
 {
+    computeStyleFlags();
+
     m_hasFixedStyleWidth = style()->width().isFixed();
     m_hasFixedStyleHeight = style()->height().isFixed();
 }
