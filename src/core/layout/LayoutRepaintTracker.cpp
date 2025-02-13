@@ -38,14 +38,13 @@ LayoutRepaintTracker::ComputeOverflow::ComputeOverflow(
         LayoutRect repaintRect = frame->asFrameBox()->overflowRepaintRect();
         repaintRect.setX(repaintRect.x() + frame->asFrameBox()->x());
         repaintRect.setY(repaintRect.y() + frame->asFrameBox()->y());
-        LayoutLocation pos = frame->asFrameBox()->absolutePointIncludingScroll(stackingContextOwner);
-        LayoutRect overflowRect(
-            LayoutLocation(pos.x() + repaintRect.x(),
-                    pos.y() + repaintRect.y()),
-            repaintRect.size());
+        LayoutLocation pos = frame->asFrameBox()->absolutePointIncludingScroll(
+            stackingContextOwner);
+        LayoutRect overflowRect(LayoutLocation(pos.x() + repaintRect.x(),
+                                               pos.y() + repaintRect.y()),
+                                repaintRect.size());
         tracker.m_boundMaxExtentDueToOverflow.push_back(
-            std::make_tuple(overflowRect,
-                            stackingContextOwner));
+            std::make_tuple(overflowRect, stackingContextOwner));
     }
 }
 
@@ -149,7 +148,8 @@ static void traceRepaintRegionJob(
     }
 
     // collect results related with box
-    if (!currentFrame->isAlwaysInvisible() && !currentFrame->isAnonymous() && currentFrame->isFrameBox()) {
+    if (!currentFrame->isAlwaysInvisible() && !currentFrame->isAnonymous() &&
+        currentFrame->isFrameBox()) {
         FrameBox* currentFrameBox = currentFrame->asFrameBox();
         Node* node = currentFrame->node();
 
@@ -217,7 +217,7 @@ static void traceRepaintRegionJob(
         } else {
             // check last result
             LayoutRepaintTracker::ComputeOverflow::reduceRect(
-                        tracker, newLayoutResultRect, lastStackingContextOwner);
+                tracker, newLayoutResultRect, lastStackingContextOwner);
 
             auto iter = oldResultMap.find(node);
             bool gotNewNode = iter == oldResultMap.end();

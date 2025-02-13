@@ -218,7 +218,8 @@ Frame* FrameTreeBuilder::findNearestBlockStartPositionOfFrameTreeBuildCandidate(
         while (f) {
             if (!f->isAnonymous() && !f->didSpiltFrameInline() &&
                 (f->isBlockLevel(true) || f->isFrameTableCellBox() ||
-                 f->isFrameInputBox() || f->isFrameSVGBox() || f->isFrameSVGSVGBox())) {
+                 f->isFrameInputBox() || f->isFrameSVGBox() ||
+                 f->isFrameSVGSVGBox())) {
                 break;
             }
             f = f->parent();
@@ -254,9 +255,10 @@ void FrameTreeBuilder::insertFlexItemChild(FrameBlockBox* blockContainer,
                                            Node* currentNode,
                                            FrameTreeBuilderContext& ctx)
 {
-    bool isFlexItem = (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) &&
-                      !currentFrame->isFrameLineBreak() &&
-                      !currentFrame->isAbsolutePositioned();
+    bool isFlexItem =
+        (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) &&
+        !currentFrame->isFrameLineBreak() &&
+        !currentFrame->isAbsolutePositioned();
     if (isFlexItem) {
         blockContainer->appendChild(currentFrame);
         currentFrame->markFlexItem();
@@ -282,7 +284,8 @@ void FrameTreeBuilder::insertGridItemChild(FrameBlockBox* blockContainer,
 {
     // FIXME
     bool isGridItem =
-            (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) && !currentFrame->isFrameLineBreak();
+        (currentFrame->isBlockLevel() || currentFrame->isFrameSVGSVGBox()) &&
+        !currentFrame->isFrameLineBreak();
 
     if (isGridItem) {
         blockContainer->appendChild(currentFrame);
@@ -455,7 +458,8 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
                                   currentFrame->isNormalFlow();
 
     if (ctx.isInFrameInlineFlow() && !isNormalFlowBlockChild) {
-        auto iter = ctx.frameInlineItem().find(currentNode->renderingParentNode());
+        auto iter =
+            ctx.frameInlineItem().find(currentNode->renderingParentNode());
         if (iter != ctx.frameInlineItem().end()) {
             iter->second->appendChild(currentFrame);
         }
@@ -962,11 +966,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (UNLIKELY(current->isSVGSVGElement())) {
-        currentFrame = FrameTreeBuilder::buildSVGFrameTree(current->asSVGElement(),
-                nullptr, force);
+        currentFrame = FrameTreeBuilder::buildSVGFrameTree(
+            current->asSVGElement(), nullptr, force);
         if (!currentFrame->parent()) {
-            FrameTreeBuilder::insertChild(ctx.currentBlockContainer(), currentFrame,
-                                          current, ctx);
+            FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                          currentFrame, current, ctx);
         }
     } else {
         if (current->needsFrameTreeBuild() || force) {
@@ -982,7 +986,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
             currentFrame = createFrame(current, ctx, force);
             if (!currentFrame) {
-                if (current->parentElement() && current->parentElement()->frame()) {
+                if (current->parentElement() &&
+                    current->parentElement()->frame()) {
                     current->parentElement()->frame()->markNeedsLayout();
                 }
                 return nullptr;
@@ -1003,7 +1008,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                     STARFISH_ASSERT(current->renderingParentNode());
                     Frame* parent = current->renderingParentNode()->frame();
                     while (parent) {
-                        if (!parent->isAnonymous() && parent->isFrameBlockBox()) {
+                        if (!parent->isAnonymous() &&
+                            parent->isFrameBlockBox()) {
                             break;
                         }
                         parent = parent->parent();
@@ -1052,7 +1058,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 FrameBlockBox* oldBlockContainer = ctx.currentBlockContainer();
                 FrameTreeBuilder::insertChild(oldBlockContainer, currentFrame,
                                               current, ctx);
-                STARFISH_ASSERT(oldBlockContainer == ctx.currentBlockContainer());
+                STARFISH_ASSERT(oldBlockContainer ==
+                                ctx.currentBlockContainer());
 
                 if (currentFrame->isFrameText() &&
                     currentFrame->style()->textTransform() !=
@@ -1137,7 +1144,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         Node* frameCreationTarget = current;
 
         if (current->isElement()) {
-            Optional<ShadowRoot*> shadowRoot = current->asElement()->internalShadowRoot();
+            Optional<ShadowRoot*> shadowRoot =
+                current->asElement()->internalShadowRoot();
             if (shadowRoot) {
                 frameCreationTarget = shadowRoot.value();
             }
@@ -1156,7 +1164,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
             }
         }
 
-        RenderingSiblingIterator iter(frameCreationTarget->firstRenderingChild());
+        RenderingSiblingIterator iter(
+            frameCreationTarget->firstRenderingChild());
         while (true) {
             Optional<Node*> child = iter.next();
             if (!child) {

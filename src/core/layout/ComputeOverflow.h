@@ -135,8 +135,13 @@ struct OverflowStatus {
 
 class JustCheckOveflow {
 public:
-    void restore() { }
-    void endOpacityLayer() { }
+    void restore()
+    {
+    }
+    void endOpacityLayer()
+    {
+    }
+
 private:
     int dummy;
 };
@@ -315,11 +320,11 @@ private:
     }
 
 public:
-    template <typename U = T, typename = typename std::enable_if<
-                                  std::is_same<JustCheckOveflow, U>::value>::type>
+    template <typename U = T, typename = typename std::enable_if<std::is_same<
+                                  JustCheckOveflow, U>::value>::type>
     ComputeOverflow(FrameBox* frame)
-    : m_canvasOrCompositor(nullptr)
-    , m_opacity(1)
+        : m_canvasOrCompositor(nullptr)
+        , m_opacity(1)
     {
         m_canApplyOverflowOrScrolls.reserve(32);
 
@@ -480,7 +485,7 @@ public:
     template <typename U = T, typename = typename std::enable_if<
                                   std::is_same<Compositor, U>::value>::type>
     ComputeOverflow(U* compositor, StackingContext* childStackingContext,
-                  FrameBox* parentFrameBox)
+                    FrameBox* parentFrameBox)
         : m_canvasOrCompositor(compositor)
         , m_opacity(1)
     {
@@ -566,7 +571,8 @@ public:
 
         m_opacity = opacity;
         if (m_opacity != 1) {
-            compositor->beginOpacityLayer(m_opacity, childStackingContext->visibleRect());
+            compositor->beginOpacityLayer(m_opacity,
+                                          childStackingContext->visibleRect());
         }
     }
 
@@ -587,7 +593,6 @@ private:
     T* m_canvasOrCompositor;
     float m_opacity;
 };
-
 
 } // namespace Starfish
 

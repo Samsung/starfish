@@ -40,13 +40,14 @@ ValueRef* urlsearchparamsConstructor(ExecutionStateRef* state,
 
     URLSearchParams* result = nullptr;
     ExecutionContext* callWith = fetchExecutionContext(state->context());
-    ScriptBindingInstance* instance = fetchScriptBindingInstance(state->context());
+    ScriptBindingInstance* instance =
+        fetchScriptBindingInstance(state->context());
 
     // Handles sequence<sequence<String>>
     try {
         if (arg0->isObject()) {
-            ValueRef* lengthObject = arg0->asObject()->get(
-                state, scriptStringLength(instance));
+            ValueRef* lengthObject =
+                arg0->asObject()->get(state, scriptStringLength(instance));
 
             if (lengthObject->isUndefined()) {
                 result = new URLSearchParams(callWith);
@@ -105,8 +106,7 @@ ValueRef* urlsearchparamsConstructor(ExecutionStateRef* state,
         if (newTarget->isFunctionObject()) {
             proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
         } else {
-            proto =
-                newTarget->get(state, scriptStringPrototype(instance));
+            proto = newTarget->get(state, scriptStringPrototype(instance));
         }
         result->scriptObject()->setPrototype(state, proto);
     }

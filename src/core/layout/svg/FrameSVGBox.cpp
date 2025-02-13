@@ -80,7 +80,8 @@ LayoutLocation FrameSVGBox::resolveStylePosition(FrameBox* box,
     }
 }
 
-Optional<LayoutUnit> FrameSVGBox::resolveStyleLength(const Length& length, const LayoutUnit& viewportLength)
+Optional<LayoutUnit> FrameSVGBox::resolveStyleLength(
+    const Length& length, const LayoutUnit& viewportLength)
 {
     Optional<LayoutUnit> result;
     if (length.isSpecified()) {
@@ -195,7 +196,8 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     if (!matrix.isIdentity() && needsComputeFrameRect) {
         m_frameRect = computeBoxExtent(m_frameRect, matrix);
         if (!m_computedSVGTransform) {
-            m_computedSVGTransform = new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();
+            m_computedSVGTransform =
+                new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();
         }
         *m_computedSVGTransform = matrix;
     } else {
@@ -231,8 +233,8 @@ void FrameSVGBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
         if (f->isFrameSVGBox()) {
             f->asFrameSVGBox()->layout(ctx, matrix);
         } else {
-            f->layout(ctx.layoutContext, Frame::LayoutWantToResolve::ResolveAll);
-
+            f->layout(ctx.layoutContext,
+                      Frame::LayoutWantToResolve::ResolveAll);
         }
         f = f->next();
     }
@@ -275,7 +277,8 @@ LayoutUnit FrameSVGBox::normalizedDiagonalViewportLength()
         if (f->isFrameSVGSVGBox()) {
             return f->asFrameSVGSVGBox()->normalizedDiagonalViewportLength();
         } else if (f != this && f->isFrameSVGViewportContextBox()) {
-            return f->asFrameSVGViewportContextBox()->normalizedDiagonalViewportLength();
+            return f->asFrameSVGViewportContextBox()
+                ->normalizedDiagonalViewportLength();
         }
         f = f->layoutParent();
     }
@@ -304,7 +307,8 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     if (opacity != 1) {
         auto svgFrame = outmostSVGViewportBox();
         LayoutRect absRect = absoluteRect(svgFrame);
-        Unit::Rect rt(absRect.x(), absRect.y(), absRect.width(), absRect.height());
+        Unit::Rect rt(absRect.x(), absRect.y(), absRect.width(),
+                      absRect.height());
         auto ctm = ctx.m_canvas->currentTransformMatrix();
         ctx.m_canvas->setMatrix(svgFrame->svgPaintingMatrix());
         ctx.m_canvas->beginOpacityLayer(opacity, rt);
@@ -374,14 +378,15 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     bool gotMinus = false;
     float x, y;
 
-#define READ_NUMBER(n)                                             \
-    if (!CSSPropertyParser::parseNumber(                           \
-            token.data(), token.length(), CSSPropertyParser::AllowNegative, &n)) { \
-        break;                                                     \
-    }                                                              \
-    if (gotMinus) {                                                \
-        n = -n;                                                    \
-    }                                                              \
+#define READ_NUMBER(n)                                                    \
+    if (!CSSPropertyParser::parseNumber(token.data(), token.length(),     \
+                                        CSSPropertyParser::AllowNegative, \
+                                        &n)) {                            \
+        break;                                                            \
+    }                                                                     \
+    if (gotMinus) {                                                       \
+        n = -n;                                                           \
+    }                                                                     \
     gotMinus = false;
 
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -538,7 +543,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             GradientData* gradientData = new LinearGradientData();
             gradientData->colorStopList() = gradientElement->colorStops();
             gradient->nativeGradient()->setGradientDrawingInfo(
-                    gradientData->makeGradientDrawingInfo(rect, this));
+                gradientData->makeGradientDrawingInfo(rect, this));
 
             const auto& colorStops = gradientElement->colorStops();
             size_t size = colorStops.size();
@@ -708,15 +713,15 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                     Length(Length::Type::Fixed, cx));
                 radialGradient->setVerticalSideOffset(
                     Length(Length::Type::Fixed, cy));
-                radialGradient->setFirstRadius(
-                    Length(Length::Type::Fixed, r));
-                radialGradient->setSecondRadius(
-                    Length(Length::Type::Fixed, r));
+                radialGradient->setFirstRadius(Length(Length::Type::Fixed, r));
+                radialGradient->setSecondRadius(Length(Length::Type::Fixed, r));
                 radialGradient->colorStopList() = gradientElement->colorStops();
 
                 Optional<GradientDrawingInfo*> gradientDrawingInfo =
-                    radialGradient->makeGradientDrawingInfo(Unit::Rect(xx1, yy1,
-                            std::abs(xx2 - xx1), std::abs(yy2 - yy1)), this);
+                    radialGradient->makeGradientDrawingInfo(
+                        Unit::Rect(xx1, yy1, std::abs(xx2 - xx1),
+                                   std::abs(yy2 - yy1)),
+                        this);
                 gradient->nativeGradient()->setGradientDrawingInfo(
                     gradientDrawingInfo.getValue());
             } else {
@@ -824,7 +829,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
     auto path = this->path();
     if (path) {
         auto strokeWidth = style()->strokeWidth().specifiedValue(
-                    normalizedDiagonalViewportLength(), this);
+            normalizedDiagonalViewportLength(), this);
         Path::StrokeStyle ss({
             strokeWidth,
             style()->strokeMiterLimit(),
@@ -856,23 +861,29 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         if (fillInfo.hasValue() && paintingOnSVGViewport &&
             fillInfo.value()->isCanvasStyleType() &&
             fillInfo.value()->getCanvasStyleValue().isCanvasGradientValue() &&
-            !(ctx.m_canvas->currentTransformMatrix().getType() & SkMatrix::kAffine_Mask)) {
+            !(ctx.m_canvas->currentTransformMatrix().getType() &
+              SkMatrix::kAffine_Mask)) {
             auto pixelSnappedRect = m_frameRect.snapSizeToPixel();
 
             NativeImageData* bufferImage;
-            auto nativeGradient = fillInfo.value()->getCanvasStyleValue().getCanvasGradientValue()->nativeGradient();
+            auto nativeGradient = fillInfo.value()
+                                      ->getCanvasStyleValue()
+                                      .getCanvasGradientValue()
+                                      ->nativeGradient();
             std::shared_ptr<NativeGradient> cachedNativeGradient =
-                node()->document()->findInNativeGradientCache(nativeGradient->gradientDrawingInfo());
+                node()->document()->findInNativeGradientCache(
+                    nativeGradient->gradientDrawingInfo());
 
             auto transScale = viewportBox->computeTranlateScaleOnPaint();
             auto pos = absolutePoint(viewportBox);
 
             if (!cachedNativeGradient) {
                 bufferImage = BufferedNativeImageData::create(
-                        node()->webView()->screenInfo().devicePixelRatio,
-                        pixelSnappedRect.width().toUnsigned(),
-                        pixelSnappedRect.height().toUnsigned());
-                Canvas* bufferCanvas = Canvas::create(node()->webView(), bufferImage);
+                    node()->webView()->screenInfo().devicePixelRatio,
+                    pixelSnappedRect.width().toUnsigned(),
+                    pixelSnappedRect.height().toUnsigned());
+                Canvas* bufferCanvas =
+                    Canvas::create(node()->webView(), bufferImage);
                 bufferCanvas->clearColor(Unit::Color(0, 0, 0, 0));
 
                 std::vector<Frame*> tree;
@@ -882,9 +893,11 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                     f = f->parent();
                 }
 
-                bufferCanvas->translate(-pos.x() + transScale.second.getTranslateX(),
-                        -pos.y() + transScale.second.getTranslateY());
-                bufferCanvas->scale(transScale.second.getScaleX(), transScale.second.getScaleY());
+                bufferCanvas->translate(
+                    -pos.x() + transScale.second.getTranslateX(),
+                    -pos.y() + transScale.second.getTranslateY());
+                bufferCanvas->scale(transScale.second.getScaleX(),
+                                    transScale.second.getScaleY());
                 for (auto iter = tree.rbegin(); iter != tree.rend(); iter++) {
                     Frame* f = *iter;
                     f->asFrameSVGBox()->applyTransformTo(bufferCanvas, vp);
@@ -897,7 +910,8 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 delete bufferCanvas;
 
                 nativeGradient->setGradientImageDataCached(bufferImage);
-                node()->document()->cacheNativeGradient(nativeGradient->gradientDrawingInfo(), nativeGradient);
+                node()->document()->cacheNativeGradient(
+                    nativeGradient->gradientDrawingInfo(), nativeGradient);
             } else {
                 bufferImage = cachedNativeGradient->gradientImageDataCached();
                 STARFISH_ASSERT(bufferImage);
@@ -906,12 +920,14 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             ctx.m_canvas->save();
             ctx.m_canvas->clipPath(path.value());
             ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-            auto targetRect = Unit::Rect(pos.x(), pos.y(),
-                    m_frameRect.width(), m_frameRect.height());
+            auto targetRect = Unit::Rect(pos.x(), pos.y(), m_frameRect.width(),
+                                         m_frameRect.height());
             if (fillOpacity != 1) {
                 // we should use sqrt(fillOpacity) here
-                // since drawImage below uses fillOpacity * fillOpacity for paint
-                ctx.m_canvas->beginOpacityLayer(std::sqrt(fillOpacity), targetRect);
+                // since drawImage below uses fillOpacity * fillOpacity for
+                // paint
+                ctx.m_canvas->beginOpacityLayer(std::sqrt(fillOpacity),
+                                                targetRect);
             }
             ctx.m_canvas->drawImage(bufferImage, targetRect);
             if (fillOpacity != 1) {
@@ -946,14 +962,16 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         // stroke
-        bool shouldPaintStroke = strokeWidth &&
-            (style()->strokeOpacity() != 0) &&
+        bool shouldPaintStroke =
+            strokeWidth && (style()->strokeOpacity() != 0) &&
             (strokeInfo.hasValue() ||
-                (style()->hasStrokePaintData() && !style()->stroke()->color().isTransparent()));
+             (style()->hasStrokePaintData() &&
+              !style()->stroke()->color().isTransparent()));
 
         if (shouldPaintStroke) {
             float strokeOpacity = style()->strokeOpacity();
-            bool shouldUseOpacityLayer = strokeInfo.hasValue() && strokeOpacity != 1;
+            bool shouldUseOpacityLayer =
+                strokeInfo.hasValue() && strokeOpacity != 1;
             if (shouldUseOpacityLayer) {
                 ctx.m_canvas->beginOpacityLayer(strokeOpacity, rect);
             }
@@ -967,9 +985,9 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
                 ctx.m_canvas->setStrokeSource(strokeInfo.value());
             } else {
                 Unit::Color strokeColor = style()->stroke()->color();
-                ctx.m_canvas->setStrokeColor(
-                    Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                                strokeColor.a() * style()->strokeOpacity()));
+                ctx.m_canvas->setStrokeColor(Unit::Color(
+                    strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                    strokeColor.a() * style()->strokeOpacity()));
             }
             ctx.m_canvas->referencePath(path.value());
             ctx.m_canvas->stroke();

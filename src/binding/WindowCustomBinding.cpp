@@ -661,7 +661,8 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
                                  size_t argc, ValueRef** argv,
                                  bool isNewExpression)
 {
-    if (g_gotFailure || (argc > 0 && argv[0]->isBoolean() && argv[0]->isFalse())) {
+    if (g_gotFailure ||
+        (argc > 0 && argv[0]->isBoolean() && argv[0]->isFalse())) {
         puts("[FAIL]");
         STARFISH_LOG_ERROR("[FAIL]");
         customExit(1);

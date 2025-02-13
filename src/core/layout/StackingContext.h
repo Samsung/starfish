@@ -169,7 +169,8 @@ public:
 
     TextDecorationData textDecorationData()
     {
-        return m_rareData ? m_rareData->m_textDecorationData : TextDecorationData();
+        return m_rareData ? m_rareData->m_textDecorationData
+                          : TextDecorationData();
     }
 
     void computeStackingContextProperties();

@@ -206,7 +206,8 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
                         std::max(col->maxPercentageWidth,
                                  (double)cell->style()->width().percent());
                 } else if (width.isCalc()) {
-                    STARFISH_UNSUPPORTED("HTMLTableSection property: width with calc");
+                    STARFISH_UNSUPPORTED(
+                        "HTMLTableSection property: width with calc");
                 }
             }
 

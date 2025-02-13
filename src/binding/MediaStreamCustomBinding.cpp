@@ -60,7 +60,9 @@ ValueRef* mediastreamConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                 // Handle 'Constructor (sequence<MediaStreamTrack> tracks)'
                 int length = static_cast<int>(
                     arg->asObject()
-                        ->get(state, scriptStringLength(fetchScriptBindingInstance(state->context())))
+                        ->get(state,
+                              scriptStringLength(
+                                  fetchScriptBindingInstance(state->context())))
                         ->toNumber(state));
                 GCVector<MediaStreamTrack*> mediaStreamTracks;
                 for (int i = 0; i < length; i++) {
@@ -100,7 +102,9 @@ ValueRef* mediastreamConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                                 state);
                     } else {
                         proto = newTarget->get(
-                            state, scriptStringPrototype(fetchScriptBindingInstance(state->context())));
+                            state,
+                            scriptStringPrototype(
+                                fetchScriptBindingInstance(state->context())));
                     }
                     result->scriptObject()->setPrototype(state, proto);
                 }

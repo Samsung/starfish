@@ -56,7 +56,8 @@ public:
 
     Unit::Rect viewBox();
     std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
-    virtual void layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix) override;
+    virtual void layoutChildren(SVGLayoutContext& ctx,
+                                SkMatrix matrix) override;
     virtual bool prepareChildPainting(Canvas* canvas) override;
     virtual Optional<Path*> path() override;
 

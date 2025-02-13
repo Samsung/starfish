@@ -587,8 +587,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                 // NOTE
                 // use float pointing arithmetic for reducing error
                 // ex) <svg viewBox="0 0 4567 3"></svg>
-                intrinsicWidth = intrinsicHeight.toFloat()
-                    * (b.width().toFloat() / b.height().toFloat());
+                intrinsicWidth = intrinsicHeight.toFloat() *
+                                 (b.width().toFloat() / b.height().toFloat());
             } else {
                 intrinsicWidth = b.width();
             }
@@ -605,8 +605,9 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                     // NOTE
                     // use float pointing arithmetic for reducing error
                     // ex) <svg viewBox="0 0 4567 3"></svg>
-                    intrinsicWidth = intrinsicHeight.toFloat()
-                        * (b.width().toFloat() / b.height().toFloat());
+                    intrinsicWidth =
+                        intrinsicHeight.toFloat() *
+                        (b.width().toFloat() / b.height().toFloat());
                 } else {
                     intrinsicWidth = b.width();
                 }
@@ -624,8 +625,8 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                 // NOTE
                 // use float pointing arithmetic for reducing error
                 // ex) <svg viewBox="0 0 4567 3"></svg>
-                intrinsicHeight = intrinsicWidth.toFloat()
-                    * (b.height().toFloat() / b.width().toFloat());
+                intrinsicHeight = intrinsicWidth.toFloat() *
+                                  (b.height().toFloat() / b.width().toFloat());
             } else {
                 intrinsicHeight = b.height();
             }
@@ -641,8 +642,9 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
                     // NOTE
                     // use float pointing arithmetic for reducing error
                     // ex) <svg viewBox="0 0 4567 3"></svg>
-                    intrinsicHeight = intrinsicWidth.toFloat()
-                        * (b.height().toFloat() / b.width().toFloat());
+                    intrinsicHeight =
+                        intrinsicWidth.toFloat() *
+                        (b.height().toFloat() / b.width().toFloat());
                 } else {
                     intrinsicHeight = b.height();
                 }

@@ -162,7 +162,8 @@ public:
     static void createPseudoElement(Node* parent, PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
 
-    static Frame* buildSVGFrameTree(SVGElement* svgElement, Optional<Frame*> parentFrame, bool force);
+    static Frame* buildSVGFrameTree(SVGElement* svgElement,
+                                    Optional<Frame*> parentFrame, bool force);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document, unsigned depth);

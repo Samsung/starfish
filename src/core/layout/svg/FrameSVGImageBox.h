@@ -57,23 +57,28 @@ public:
                     imageSize.setWidth(id->width());
                     imageSize.setHeight(id->height());
                 } else if (styleWidth.isAuto()) {
-                    imageSize.setHeight(styleHeight.specifiedValue(vp.height(), this));
+                    imageSize.setHeight(
+                        styleHeight.specifiedValue(vp.height(), this));
                     if (id->width() && id->height()) {
-                        imageSize.setWidth(imageSize.height() * id->width() / id->height());
+                        imageSize.setWidth(imageSize.height() * id->width() /
+                                           id->height());
                     } else {
                         imageSize.setWidth(0);
                     }
                 } else if (styleHeight.isAuto()) {
-                    imageSize.setWidth(styleWidth.specifiedValue(vp.width(), this));
+                    imageSize.setWidth(
+                        styleWidth.specifiedValue(vp.width(), this));
                     if (id->width() && id->height()) {
-                        imageSize.setHeight(imageSize.width() * id->height() / id->width());
+                        imageSize.setHeight(imageSize.width() * id->height() /
+                                            id->width());
                     } else {
                         imageSize.setHeight(0);
                     }
                 }
 
-                ctx.m_canvas->drawImage(e->imageData(),
-                                        Unit::Rect(0, 0, imageSize.width(), imageSize.height()));
+                ctx.m_canvas->drawImage(
+                    e->imageData(),
+                    Unit::Rect(0, 0, imageSize.width(), imageSize.height()));
             } else {
                 auto styleSize = resolveStyleSize(vp);
                 LayoutUnit containerWidth = styleSize.width();

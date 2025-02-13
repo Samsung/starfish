@@ -29,7 +29,9 @@ using namespace Escargot;
 
 namespace Starfish {
 
-ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue, size_t argc, ValueRef** argv, OptionalRef<ObjectRef> newTarget)
+ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue,
+                                 size_t argc, ValueRef** argv,
+                                 OptionalRef<ObjectRef> newTarget)
 {
     if (!newTarget) {
         COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "HTMLElement");
@@ -44,7 +46,8 @@ ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue, 
 
         auto bindingInstance = fetchScriptBindingInstance(state->context());
         FunctionObjectRef* htmlElement = bindingInstance->fnHTMLElement();
-        ObjectRef* htmlElementPrototype = htmlElement->getFunctionPrototype(state)->asObject();
+        ObjectRef* htmlElementPrototype =
+            htmlElement->getFunctionPrototype(state)->asObject();
 
         StringRef* prototypeString = scriptStringPrototype(bindingInstance);
         ValueRef* target = newTarget.value()->get(state, prototypeString);
@@ -63,12 +66,15 @@ ValueRef* htmlelementConstructor(ExecutionStateRef* state, ValueRef* thisValue, 
         }
 
         if (isDecendentOfHTMLElement) {
-            auto obj = customElement->createCustomElement(window->document(), data.value(),
-                                                          false)->scriptObject();
+            auto obj = customElement
+                           ->createCustomElement(window->document(),
+                                                 data.value(), false)
+                           ->scriptObject();
 
             ValueRef* proto = ValueRef::createUndefined();
             if (newTarget->isFunctionObject()) {
-                proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
+                proto =
+                    newTarget->asFunctionObject()->getFunctionPrototype(state);
             } else {
                 proto = newTarget->get(state, prototypeString);
             }

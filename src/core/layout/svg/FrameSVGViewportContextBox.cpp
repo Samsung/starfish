@@ -36,7 +36,8 @@ void* FrameSVGViewportContextBox::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FrameSVGViewportContextBox)] = { 0 };
         FrameSVGViewportContextBox::fillGCDescriptor(desc);
-        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameSVGViewportContextBox));
+        descr =
+            GC_make_descriptor(desc, GC_WORD_LEN(FrameSVGViewportContextBox));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -64,10 +65,12 @@ Optional<Path*> FrameSVGViewportContextBox::path()
     return path;
 }
 
-std::pair<bool, SkMatrix> FrameSVGViewportContextBox::computeTranlateScaleOnPaint()
+std::pair<bool, SkMatrix>
+FrameSVGViewportContextBox::computeTranlateScaleOnPaint()
 {
     auto nearestViewport = FrameSVGBox::viewport();
-    auto intrinsicSize = FrameSVGSVGBox::intrinsicSize(node()->asSVGElement(), nearestViewport);
+    auto intrinsicSize =
+        FrameSVGSVGBox::intrinsicSize(node()->asSVGElement(), nearestViewport);
 
     LayoutSize viewport = nearestViewport;
     LayoutSize svgSize = nearestViewport;
@@ -75,13 +78,15 @@ std::pair<bool, SkMatrix> FrameSVGViewportContextBox::computeTranlateScaleOnPain
         svgSize = intrinsicSize.m_intrinsicContentSize;
     }
 
-    auto cs = FrameSVGSVGBox::computeTranlateScaleOnPaint(node()->asSVGElement(),
-        svgSize, viewport, intrinsicSize);
+    auto cs = FrameSVGSVGBox::computeTranlateScaleOnPaint(
+        node()->asSVGElement(), svgSize, viewport, intrinsicSize);
 
     if (!intrinsicSize.m_hasViewport && node()->asSVGElement()->hasViewBox()) {
         Unit::Rect viewBox = node()->asSVGElement()->viewBox();
-        float dx = (viewport.width() - viewBox.width() * cs.second.getScaleX()) / 2;
-        float dy = (viewport.height() - viewBox.height() * cs.second.getScaleY()) / 2;
+        float dx =
+            (viewport.width() - viewBox.width() * cs.second.getScaleX()) / 2;
+        float dy =
+            (viewport.height() - viewBox.height() * cs.second.getScaleY()) / 2;
         cs.second.postTranslate(dx, dy);
     }
 
@@ -102,13 +107,11 @@ bool FrameSVGViewportContextBox::prepareChildPainting(Canvas* canvas)
     return true;
 }
 
-void FrameSVGViewportContextBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
+void FrameSVGViewportContextBox::layoutChildren(SVGLayoutContext& ctx,
+                                                SkMatrix matrix)
 {
-    SVGLayoutContext childCtx = {
-        ctx.layoutContext,
-        viewport(),
-        normalizedDiagonalViewportLength()
-    };
+    SVGLayoutContext childCtx = { ctx.layoutContext, viewport(),
+                                  normalizedDiagonalViewportLength() };
 
     m_viewport = ctx.viewport;
     if (node()->asSVGElement()->hasViewBox()) {
@@ -129,8 +132,8 @@ void FrameSVGViewportContextBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix 
         if (f->isFrameSVGBox()) {
             f->asFrameSVGBox()->layout(childCtx, matrix);
         } else {
-            f->layout(childCtx.layoutContext, Frame::LayoutWantToResolve::ResolveAll);
-
+            f->layout(childCtx.layoutContext,
+                      Frame::LayoutWantToResolve::ResolveAll);
         }
         f = f->next();
     }

@@ -60,12 +60,14 @@ public:
     LayoutSize viewport();
     LayoutUnit normalizedDiagonalViewportLength();
 
-    Optional<LayoutUnit> resolveStyleLength(const Length& length, const LayoutUnit& viewportLength);
+    Optional<LayoutUnit> resolveStyleLength(const Length& length,
+                                            const LayoutUnit& viewportLength);
     LayoutLocation resolveStylePosition(const LayoutSize& viewport);
     LayoutSize resolveStyleSize(const LayoutSize& viewport);
 
     // util function for FrameSVGBox and FrameSVGSVGBox
-    static LayoutLocation resolveStylePosition(FrameBox* box, const LayoutSize& viewport);
+    static LayoutLocation resolveStylePosition(FrameBox* box,
+                                               const LayoutSize& viewport);
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
@@ -120,7 +122,8 @@ public:
         return m_computedSVGTransform;
     }
 
-    Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(String* url, const Unit::Rect& rect);
+    Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(
+        String* url, const Unit::Rect& rect);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
@@ -153,7 +156,8 @@ protected:
         return &m_treeItemModel;
     }
 
-    Optional<GradientDrawingInfo*> makeGradientDrawingInfo(String* url, const Unit::Rect& rect);
+    Optional<GradientDrawingInfo*> makeGradientDrawingInfo(
+        String* url, const Unit::Rect& rect);
 
     bool m_hasClipPath;
     bool m_hasMask;

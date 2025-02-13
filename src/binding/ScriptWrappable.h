@@ -122,7 +122,9 @@ bool scriptValueAsBoolean(ScriptValue v);
 unsigned scriptValueAsNumber(ScriptValue v);
 ScriptObject scriptValueAsObject(ScriptValue v);
 
-Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance, ScriptValue v, bool throwsException = false);
+Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance,
+                                    ScriptValue v,
+                                    bool throwsException = false);
 
 ScriptObject scriptError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptEvalError(ScriptBindingInstance*, String* msg);
@@ -136,10 +138,10 @@ ScriptString scriptStringConstructor(ScriptBindingInstance*);
 ScriptString scriptStringLength(ScriptBindingInstance*);
 ScriptString scriptString__proto__(ScriptBindingInstance*);
 
-Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance*, ScriptValue iterable,
-                                        bool throwsException = false);
+Optional<GCVector<ScriptValue>> scriptReadIterableValue(
+    ScriptBindingInstance*, ScriptValue iterable, bool throwsException = false);
 inline GCVector<ScriptValue> scriptReadIterableValueThrowsException(
-                                         ScriptBindingInstance* instance, ScriptValue iterable)
+    ScriptBindingInstance* instance, ScriptValue iterable)
 {
     return scriptReadIterableValue(instance, iterable, true).value();
 }
@@ -217,8 +219,7 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         size_t argc, ScriptValue thisValue,
                                         bool& error);
 void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
-                     ScriptValue* argv, size_t argc,
-                     ScriptObject thisValue);
+                     ScriptValue* argv, size_t argc, ScriptObject thisValue);
 ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
                                     ScriptValue obj, ScriptValue* argv,
                                     size_t argc, ScriptValue thisValue);
@@ -229,38 +230,44 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
-Optional<ScriptModule> initModule(ScriptBindingInstance* instance, String* string,
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
+                                  String* string,
                                   String* fileName = String::emptyString);
 GCVector<String*> moduleRequests(ScriptModule module);
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
 bool isExcutedModule(ScriptModule module);
 
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key, ScriptValue value,
+                                       ScriptObject object, ScriptValue key,
+                                       ScriptValue value,
                                        bool throwsException = false);
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptString key, ScriptValue value,
+                                       ScriptObject object, ScriptString key,
+                                       ScriptValue value,
                                        bool throwsException = false);
 
 bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                            ScriptObject object, ScriptValue key,
-                                            ScriptValue value);
+                                            ScriptObject object,
+                                            ScriptValue key, ScriptValue value);
 bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                            ScriptObject object, ScriptString key,
+                                            ScriptObject object,
+                                            ScriptString key,
                                             ScriptValue value);
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key);
+                                              ScriptObject object,
+                                              ScriptValue key);
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptString key);
+                                              ScriptObject object,
+                                              ScriptString key);
 
-ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key);
-ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptString key);
+ScriptValue getScriptObjectPropertyThrowsException(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptValue key);
+ScriptValue getScriptObjectPropertyThrowsException(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptString key);
 
-Optional<ScriptValue> getScriptObjectOwnProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key);
+Optional<ScriptValue> getScriptObjectOwnProperty(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptValue key);
 
 void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
                                              String* attrName,

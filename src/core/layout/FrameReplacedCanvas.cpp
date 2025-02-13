@@ -40,10 +40,11 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
 {
     computeStyleFlags();
     // This case is just that a empty element is defined.
-    m_emptySurface =
-        CanvasSurface::create(node->webView()->renderer(), 1, 1, 1,
-                static_cast<CanvasSurface::CanvasSurfaceFlag>(
-                                                  CanvasSurface::PreferEGLImage | CanvasSurface::PreferRetainCPUBufferWhenUnmap));
+    m_emptySurface = CanvasSurface::create(
+        node->webView()->renderer(), 1, 1, 1,
+        static_cast<CanvasSurface::CanvasSurfaceFlag>(
+            CanvasSurface::PreferEGLImage |
+            CanvasSurface::PreferRetainCPUBufferWhenUnmap));
 }
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()

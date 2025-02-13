@@ -75,21 +75,22 @@ Optional<Path*> FrameSVGRectBox::path()
         path->lineTo(styleSize.width() - rx, 0);
         // perform an absolute elliptical arc operation to coordinate
         // (x+width,y+ry)
-        paintPathArcCommand(path, styleSize.width() - rx, 0, rx, ry, 0, false, true,
-                styleSize.width(), ry);
+        paintPathArcCommand(path, styleSize.width() - rx, 0, rx, ry, 0, false,
+                            true, styleSize.width(), ry);
         // perform a absolute vertical lineto to location
         // (x+width,y+height-ry)
         path->lineTo(styleSize.width(), styleSize.height() - ry);
         // perform an absolute elliptical arc operation to coordinate
         // (x+width-rx,y+height)
-        paintPathArcCommand(path, styleSize.width(), styleSize.height() - ry, rx, ry, 0, false,
-                            true, styleSize.width() - rx, styleSize.height());
+        paintPathArcCommand(path, styleSize.width(), styleSize.height() - ry,
+                            rx, ry, 0, false, true, styleSize.width() - rx,
+                            styleSize.height());
         // perform an absolute horizontal lineto to location (x+rx,y+height)
         path->lineTo(rx, styleSize.height());
         // perform an absolute elliptical arc operation to coordinate
         // (x,y+height-ry)
-        paintPathArcCommand(path, rx, styleSize.height(), rx, ry, 0, false, true, 0,
-                styleSize.height() - ry);
+        paintPathArcCommand(path, rx, styleSize.height(), rx, ry, 0, false,
+                            true, 0, styleSize.height() - ry);
         // perform an absolute absolute vertical lineto to location (x,y+ry)
         path->lineTo(0, ry);
         // perform an absolute elliptical arc operation to coordinate

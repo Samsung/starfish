@@ -92,8 +92,9 @@ ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         if (newTarget->isFunctionObject()) {
             proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
         } else {
-            proto =
-                newTarget->get(state, scriptStringPrototype(fetchScriptBindingInstance(state->context())));
+            proto = newTarget->get(
+                state, scriptStringPrototype(
+                           fetchScriptBindingInstance(state->context())));
         }
         result->scriptObject()->setPrototype(state, proto);
     }

@@ -60,7 +60,8 @@ Optional<Path*> FrameSVGCircleBox::path()
     }
     double r = 0;
     if (style()->r().isSpecified()) {
-        r = style()->r().specifiedValue(normalizedDiagonalViewportLength(), this);
+        r = style()->r().specifiedValue(normalizedDiagonalViewportLength(),
+                                        this);
     }
 
     path->arc(cx, cy, r, 0.0, 2 * M_PI);
