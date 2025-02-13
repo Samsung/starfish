@@ -60,7 +60,8 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual IntrinsicSize intrinsicSize() override;
-    static IntrinsicSize intrinsicSize(SVGElement* element, LayoutSize defaultSize);
+    static IntrinsicSize intrinsicSize(SVGElement* element,
+                                       LayoutSize defaultSize);
     virtual void paintReplaced(Canvas* canvas) override;
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -73,13 +74,17 @@ public:
     }
 
     static std::pair<bool, SkMatrix> computeTranlateScaleOnPaint(
-        SVGElement* element, const LayoutSize& svgSize, const LayoutSize& viewport,
-        const IntrinsicSize& intrinsicSize);
+        SVGElement* element, const LayoutSize& svgSize,
+        const LayoutSize& viewport, const IntrinsicSize& intrinsicSize);
     std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
 
     // https://svgwg.org/svg2-draft/coords.html#Units
-    // For any other length value expressed as a percentage of the SVG viewport, the percentage must be calculated as a percentage of the normalized diagonal of the ‘viewBox’ applied to that viewport. If no ‘viewBox’ is specified, then the normalized diagonal of the SVG viewport must be used.
-    // The normalized diagonal length must be calculated with sqrt((width)**2 + (height)**2)/sqrt(2).
+    // For any other length value expressed as a percentage of the SVG viewport,
+    // the percentage must be calculated as a percentage of the normalized
+    // diagonal of the ‘viewBox’ applied to that viewport. If no ‘viewBox’ is
+    // specified, then the normalized diagonal of the SVG viewport must be used.
+    // The normalized diagonal length must be calculated with sqrt((width)**2 +
+    // (height)**2)/sqrt(2).
     LayoutUnit normalizedDiagonalViewportLength()
     {
         float w = m_viewport.width();
@@ -136,6 +141,7 @@ public:
     {
         return m_svgMaskPaintingStack;
     }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {

@@ -41,7 +41,8 @@ void* FrameSVGSVGBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-IntrinsicSize FrameSVGSVGBox::intrinsicSize(SVGElement* element, LayoutSize defaultSize)
+IntrinsicSize FrameSVGSVGBox::intrinsicSize(SVGElement* element,
+                                            LayoutSize defaultSize)
 {
     IntrinsicSize result;
     result.m_isContentExists = true;
@@ -79,9 +80,9 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize(SVGElement* element, LayoutSize defa
         result.m_hasViewport = true;
     } else {
         String* widthString = element->getAttributeOrEmpty(
-                element->starfish()->staticStrings()->m_width);
+            element->starfish()->staticStrings()->m_width);
         String* heightString = element->getAttributeOrEmpty(
-                element->starfish()->staticStrings()->m_height);
+            element->starfish()->staticStrings()->m_height);
         if ((widthString && !widthString->isEmpty()) ||
             (heightString && !heightString->isEmpty())) {
             result.m_hasViewport = true;
@@ -101,7 +102,8 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize(SVGElement* element, LayoutSize defa
 
 IntrinsicSize FrameSVGSVGBox::intrinsicSize()
 {
-    return intrinsicSize(node()->asSVGElement(), LayoutSize(m_defaultWidth, m_defaultHeight));
+    return intrinsicSize(node()->asSVGElement(),
+                         LayoutSize(m_defaultWidth, m_defaultHeight));
 }
 
 void FrameSVGSVGBox::layout(LayoutContext& ctx,
@@ -146,7 +148,7 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
         setContentHeight(orgHeight);
 
         FrameSVGBox::SVGLayoutContext svgLayoutContext = {
-                ctx, m_viewport, normalizedDiagonalViewportLength()
+            ctx, m_viewport, normalizedDiagonalViewportLength()
         };
 
         SkMatrix matrix = SkMatrix::I();
@@ -165,7 +167,7 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 LayoutRect FrameSVGSVGBox::overflowRepaintRect()
 {
     LayoutRect rt(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                contentWidth(), contentHeight());
+                  contentWidth(), contentHeight());
     SkMatrix matrix = computeTranlateScaleOnPaint().second;
 
     rt.setX(rt.x() + matrix.getTranslateX());
@@ -254,7 +256,8 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
             } else {
                 // scale to viewport directly
                 dx = (viewport.width().toFloat() - svgWidth * sToViewport) / 2;
-                dy = (viewport.height().toFloat() - svgHeight * sToViewport) / 2;
+                dy =
+                    (viewport.height().toFloat() - svgHeight * sToViewport) / 2;
             }
         }
 
@@ -266,10 +269,12 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
         }
 
         if (svgAlign == NativeImageData::None) {
-            result.preTranslate(dx / (sx * sxToViewport), dy / (sy * syToViewport));
+            result.preTranslate(dx / (sx * sxToViewport),
+                                dy / (sy * syToViewport));
         } else {
             // TODO: Should consider preserveAspectRatio alignment.
-            result.preTranslate(dx / (sToContentSize * sToViewport), dy / (sToContentSize * sToViewport));
+            result.preTranslate(dx / (sToContentSize * sToViewport),
+                                dy / (sToContentSize * sToViewport));
         }
     }
     return std::make_pair(true, result);
@@ -289,7 +294,7 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
     if (m_containerViewport.hasValue() &&
         !m_containerViewport.value().isEmpty()) {
         viewport = LayoutSize(m_containerViewport.value().width(),
-            m_containerViewport.value().height());
+                              m_containerViewport.value().height());
         svgWidth = intrinsicSizeInfo.m_intrinsicContentSize.width();
         svgHeight = intrinsicSizeInfo.m_intrinsicContentSize.height();
     } else {
@@ -298,7 +303,8 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
     }
 
     return computeTranlateScaleOnPaint(node()->asSVGElement(),
-            LayoutSize(svgWidth, svgHeight), viewport, intrinsicSizeInfo);
+                                       LayoutSize(svgWidth, svgHeight),
+                                       viewport, intrinsicSizeInfo);
 }
 
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
@@ -318,7 +324,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     if (!m_containerViewport) {
         bool hasBiggerViewBoxThenContentArea = false;
         if (m_viewBox) {
-            hasBiggerViewBoxThenContentArea = contentWidth() < m_viewBox.value().width() || contentHeight() < m_viewBox.value().height();
+            hasBiggerViewBoxThenContentArea =
+                contentWidth() < m_viewBox.value().width() ||
+                contentHeight() < m_viewBox.value().height();
         }
         if (hasBiggerViewBoxThenContentArea) {
             canvas->clip(Unit::Rect(0, 0, contentWidth(), contentHeight()));
@@ -328,7 +336,9 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
         if (!hasBiggerViewBoxThenContentArea) {
             if (m_viewBox) {
-                canvas->clip(Unit::Rect(m_viewBox.value().x(), m_viewBox.value().y(), vp.width(), vp.height()));
+                canvas->clip(Unit::Rect(m_viewBox.value().x(),
+                                        m_viewBox.value().y(), vp.width(),
+                                        vp.height()));
             } else {
                 canvas->clip(Unit::Rect(0, 0, vp.width(), vp.height()));
             }

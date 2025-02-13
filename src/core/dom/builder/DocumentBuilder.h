@@ -53,6 +53,6 @@ public:
         return (HTMLDocumentBuilder*)this;
     }
 };
-}
+} // namespace Starfish
 
 #endif

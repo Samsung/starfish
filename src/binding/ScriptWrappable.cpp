@@ -93,23 +93,29 @@ public:
 
         String* baseURI;
         if (whereRequestFrom->src()->length()) {
-            baseURI = (new ResourceURL(toBrowserString(executionContext->document()->scriptBindingInstance(),
-                    whereRequestFrom->src())))->baseURI();
+            baseURI =
+                (new ResourceURL(toBrowserString(
+                     executionContext->document()->scriptBindingInstance(),
+                     whereRequestFrom->src())))
+                    ->baseURI();
         } else {
             baseURI = executionContext->baseURL()->baseURI();
         }
         ResourceURL* src = new ResourceURL(
-                toBrowserString(executionContext->document()->scriptBindingInstance(), moduleSrc),
-                baseURI);
+            toBrowserString(
+                executionContext->document()->scriptBindingInstance(),
+                moduleSrc),
+            baseURI);
 
-        for (size_t i = 0; i < moduleScripts.size(); i ++) {
+        for (size_t i = 0; i < moduleScripts.size(); i++) {
             Document::ScriptModuleData* data = moduleScripts[i];
-            if (data->url.hasValue() &&
-                *data->url.value() == *src) {
+            if (data->url.hasValue() && *data->url.value() == *src) {
                 if (!data->module.hasValue()) {
                     // failed to load the module
-                    return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                            Escargot::StringRef::createFromASCII("failed to load module"));
+                    return LoadModuleResult(
+                        Escargot::ErrorObjectRef::Code::None,
+                        Escargot::StringRef::createFromASCII(
+                            "failed to load module"));
                 }
                 return LoadModuleResult(data->module.value());
             }
@@ -257,14 +263,15 @@ ScriptObject scriptValueAsObject(ScriptValue v)
     return v->asObject();
 }
 
-Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance, ScriptValue v, bool throwsException)
+Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance,
+                                    ScriptValue v, bool throwsException)
 {
     auto sbresult = Evaluator::execute(
-            instance->scriptContext(),
-               [](ExecutionStateRef* state, ScriptValue v) -> ValueRef* {
-                   return ValueRef::create(v->toBoolean(state));
-               },
-               v);
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, ScriptValue v) -> ValueRef* {
+            return ValueRef::create(v->toBoolean(state));
+        },
+        v);
 
     if (sbresult.error.hasValue()) {
         if (throwsException) {
@@ -354,32 +361,39 @@ ScriptObject scriptURIError(ScriptBindingInstance* instance, String* msg)
         .result->asObject();
 }
 
-#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value) \
-ScriptString scriptString##Value(ScriptBindingInstance* instance)    \
-{                                                                    \
-    return instance->string##Value();                                \
-}
-STARFISH_COMMONLY_USED_SCRIPT_STRINGS(FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
+#define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(value, Value)  \
+    ScriptString scriptString##Value(ScriptBindingInstance* instance) \
+    {                                                                 \
+        return instance->string##Value();                             \
+    }
+STARFISH_COMMONLY_USED_SCRIPT_STRINGS(
+    FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS)
 #undef FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS
 
-Optional<GCVector<ScriptValue>> scriptReadIterableValue(ScriptBindingInstance* instance, ScriptValue iterable, bool throwsException)
+Optional<GCVector<ScriptValue>> scriptReadIterableValue(
+    ScriptBindingInstance* instance, ScriptValue iterable, bool throwsException)
 {
     GCVector<ScriptValue> result;
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
         [](ExecutionStateRef* state, ScriptValue iterable,
-            GCVector<ScriptValue>* resultVector, ScriptBindingInstance* instance) -> ValueRef* {
-            ObjectRef* iterator = iterable->toObject(state)->get(state,
-                    state->context()->vmInstance()->iteratorSymbol())->
-                    call(state, iterable, 0, nullptr)->toObject(state);
+           GCVector<ScriptValue>* resultVector,
+           ScriptBindingInstance* instance) -> ValueRef* {
+            ObjectRef* iterator =
+                iterable->toObject(state)
+                    ->get(state,
+                          state->context()->vmInstance()->iteratorSymbol())
+                    ->call(state, iterable, 0, nullptr)
+                    ->toObject(state);
 
             ValueRef* nextString = instance->stringNext();
             ValueRef* doneString = instance->stringDone();
             ValueRef* valueString = instance->stringValue();
 
             while (true) {
-                ObjectRef* result = iterator->get(state, nextString)->
-                        call(state, iterator, 0, nullptr)->toObject(state);
+                ObjectRef* result = iterator->get(state, nextString)
+                                        ->call(state, iterator, 0, nullptr)
+                                        ->toObject(state);
                 if (result->get(state, doneString)->toBoolean(state)) {
                     break;
                 }
@@ -984,8 +998,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
 }
 
 void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
-                            ScriptValue* argv, size_t argc,
-                            ScriptObject thisValue)
+                     ScriptValue* argv, size_t argc, ScriptObject thisValue)
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
                                      "call constructor function");
@@ -1025,13 +1038,13 @@ void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
 }
 
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key, ScriptValue value,
-                                       bool throwsException)
+                                       ScriptObject object, ScriptValue key,
+                                       ScriptValue value, bool throwsException)
 {
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
-        [](ExecutionStateRef* state, ScriptObject object,
-                ScriptValue key, ScriptValue value) -> ValueRef* {
+        [](ExecutionStateRef* state, ScriptObject object, ScriptValue key,
+           ScriptValue value) -> ValueRef* {
             return ValueRef::create(object->set(state, key, value));
         },
         object, key, value);
@@ -1044,35 +1057,37 @@ Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
 }
 
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptString key, ScriptValue value,
-                                       bool throwsException)
+                                       ScriptObject object, ScriptString key,
+                                       ScriptValue value, bool throwsException)
 {
-    return setScriptObjectProperty(instance, object, static_cast<ScriptValue>(key), value, throwsException);
+    return setScriptObjectProperty(instance, object,
+                                   static_cast<ScriptValue>(key), value,
+                                   throwsException);
 }
 
 bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                            ScriptObject object, ScriptValue key,
-                                            ScriptValue value)
+                                            ScriptObject object,
+                                            ScriptValue key, ScriptValue value)
 {
     return setScriptObjectProperty(instance, object, key, value, true);
 }
 
 bool setScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                            ScriptObject object, ScriptString key,
-                                            ScriptValue value)
+                                            ScriptObject object,
+                                            ScriptString key, ScriptValue value)
 {
-    return setScriptObjectPropertyThrowsException(instance, object, static_cast<ScriptValue>(key), value);
+    return setScriptObjectPropertyThrowsException(
+        instance, object, static_cast<ScriptValue>(key), value);
 }
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key)
+                                              ScriptObject object,
+                                              ScriptValue key)
 {
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
         [](ExecutionStateRef* state, ScriptObject object,
-                ScriptValue key) -> ValueRef* {
-            return object->get(state, key);
-        },
+           ScriptValue key) -> ValueRef* { return object->get(state, key); },
         object, key);
 
     if (sbresult.error.hasValue()) {
@@ -1083,20 +1098,20 @@ Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
 }
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
-                                           ScriptObject object, ScriptString key)
+                                              ScriptObject object,
+                                              ScriptString key)
 {
-    return getScriptObjectProperty(instance, object, static_cast<ScriptValue>(key));
+    return getScriptObjectProperty(instance, object,
+                                   static_cast<ScriptValue>(key));
 }
 
-ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key)
+ScriptValue getScriptObjectPropertyThrowsException(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptValue key)
 {
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
         [](ExecutionStateRef* state, ScriptObject object,
-           ScriptValue key) -> ValueRef* {
-            return object->get(state, key);
-        },
+           ScriptValue key) -> ValueRef* { return object->get(state, key); },
         object, key);
 
     if (sbresult.error.hasValue()) {
@@ -1106,21 +1121,22 @@ ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instan
     return sbresult.result;
 }
 
-ScriptValue getScriptObjectPropertyThrowsException(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptString key)
+ScriptValue getScriptObjectPropertyThrowsException(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptString key)
 {
-    return getScriptObjectPropertyThrowsException(instance, object, static_cast<ScriptValue>(key));
+    return getScriptObjectPropertyThrowsException(
+        instance, object, static_cast<ScriptValue>(key));
 }
 
 Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key, bool throwException)
+                                              ScriptObject object,
+                                              ScriptValue key,
+                                              bool throwException)
 {
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
         [](ExecutionStateRef* state, ScriptObject object,
-           ScriptValue key) -> ValueRef* {
-            return object->get(state, key);
-        },
+           ScriptValue key) -> ValueRef* { return object->get(state, key); },
         object, key);
 
     if (sbresult.error.hasValue()) {
@@ -1134,15 +1150,13 @@ Optional<ScriptValue> getScriptObjectProperty(ScriptBindingInstance* instance,
     return sbresult.result;
 }
 
-Optional<ScriptValue> getScriptObjectOwnProperty(ScriptBindingInstance* instance,
-                                       ScriptObject object, ScriptValue key)
+Optional<ScriptValue> getScriptObjectOwnProperty(
+    ScriptBindingInstance* instance, ScriptObject object, ScriptValue key)
 {
     auto sbresult = Evaluator::execute(
         instance->scriptContext(),
-        [](ExecutionStateRef* state, ScriptObject object,
-           ScriptValue key) -> ValueRef* {
-            return object->getOwnProperty(state, key);
-        },
+        [](ExecutionStateRef* state, ScriptObject object, ScriptValue key)
+            -> ValueRef* { return object->getOwnProperty(state, key); },
         object, key);
 
     if (sbresult.error.hasValue()) {
@@ -1275,14 +1289,17 @@ void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
         attrName, targetObject);
 }
 
-static StringRef* createCompressibleScriptString(Escargot::VMInstanceRef* instance, String* str)
+static StringRef* createCompressibleScriptString(
+    Escargot::VMInstanceRef* instance, String* str)
 {
     STARFISH_ASSERT(StringRef::isCompressibleStringEnabled());
     auto data = str->bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return StringRef::createFromASCIIToCompressibleString(instance, data.asciiData(), data.length);
+        return StringRef::createFromASCIIToCompressibleString(
+            instance, data.asciiData(), data.length);
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-        return StringRef::createFromUTF16ToCompressibleString(instance, data.utf16Data(), data.length);
+        return StringRef::createFromUTF16ToCompressibleString(
+            instance, data.utf16Data(), data.length);
     } else {
         size_t u16Length = 0;
         auto bad = str->bufferAccessData();
@@ -1298,7 +1315,8 @@ static StringRef* createCompressibleScriptString(Escargot::VMInstanceRef* instan
         }
 
         char16_t* buf = reinterpret_cast<char16_t*>(
-                StringRef::allocateStringDataBufferForCompressibleString(u16Length * 2));
+            StringRef::allocateStringDataBufferForCompressibleString(u16Length *
+                                                                     2));
         char16_t* bufStart = buf;
         for (size_t i = 0; i < bad.length; i++) {
             char32_t src = bad.charAt(i);
@@ -1320,7 +1338,8 @@ static StringRef* createCompressibleScriptString(Escargot::VMInstanceRef* instan
         }
 
         STARFISH_ASSERT(buf == bufStart + u16Length);
-        return StringRef::createFromAlreadyAllocatedBufferToCompressibleString(instance, bufStart, u16Length, false);
+        return StringRef::createFromAlreadyAllocatedBufferToCompressibleString(
+            instance, bufStart, u16Length, false);
     }
 }
 
@@ -1386,7 +1405,8 @@ static void initDebuggerIfNeeds(ScriptBindingInstance* instance)
 }
 
 static Escargot::ScriptParserRef::InitializeScriptResult initializeScript(
-    ScriptBindingInstance* instance, String* string, String* fileName, bool isModule)
+    ScriptBindingInstance* instance, String* string, String* fileName,
+    bool isModule)
 {
     ContextRef* ctx = instance->scriptContext();
 #if defined(STARFISH_ENABLE_DEBUGGER)
@@ -1404,16 +1424,20 @@ static Escargot::ScriptParserRef::InitializeScriptResult initializeScript(
     }
 
     return ctx->scriptParser()->initializeScript(
-        source, toJSString(String::fromUTF8(fileNameForDebugger.data(),
-                                            fileNameForDebugger.length())), isModule);
+        source,
+        toJSString(String::fromUTF8(fileNameForDebugger.data(),
+                                    fileNameForDebugger.length())),
+        isModule);
 #else
     StringRef* source;
-    if (StringRef::isCompressibleStringEnabled() && string->length() > 1024 * 512) {
+    if (StringRef::isCompressibleStringEnabled() &&
+        string->length() > 1024 * 512) {
         source = createCompressibleScriptString(ctx->vmInstance(), string);
     } else {
         source = toJSString(string);
     }
-    return ctx->scriptParser()->initializeScript(source, toJSString(fileName), isModule);
+    return ctx->scriptParser()->initializeScript(source, toJSString(fileName),
+                                                 isModule);
 #endif
 }
 
@@ -1498,7 +1522,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 }
 
-Optional<ScriptModule> initModule(ScriptBindingInstance* instance, String* string, String* fileName)
+Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
+                                  String* string, String* fileName)
 {
     INSTALL_RECORDABLE_PROFILE_TIMER(ProfileKind::kScript,
                                      "init javascript module");
@@ -1531,7 +1556,7 @@ GCVector<String*> moduleRequests(ScriptModule module)
 {
     GCVector<String*> result;
     result.reserve(module->moduleRequestsLength());
-    for (size_t i = 0 ; i < module->moduleRequestsLength(); i ++) {
+    for (size_t i = 0; i < module->moduleRequestsLength(); i++) {
         result.push_back(toBrowserString(module->moduleRequest(i)));
     }
     return result;
@@ -1792,7 +1817,8 @@ ScriptObject createScriptObject(ScriptBindingInstance* instance,
                instance->scriptContext(),
                [](ExecutionStateRef* state, ScriptObject constructor,
                   void* extraData) -> ValueRef* {
-                   ObjectRef* object = constructor->construct(state, 0, nullptr)->asObject();
+                   ObjectRef* object =
+                       constructor->construct(state, 0, nullptr)->asObject();
                    if (extraData) {
                        object->setExtraData(extraData);
                    }

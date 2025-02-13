@@ -38,7 +38,8 @@ public:
 
     virtual void layoutSVG(SVGLayoutContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
-    virtual void layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix) override;
+    virtual void layoutChildren(SVGLayoutContext& ctx,
+                                SkMatrix matrix) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

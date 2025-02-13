@@ -43,14 +43,14 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
         if (tracker.m_willCompositing) {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
                 computeBoxExtent(frame->overflowRepaintRect(),
-                    frame->computeMatrixOnGraphicsBuffer()),
+                                 frame->computeMatrixOnGraphicsBuffer()),
                 tracker.findNearestStackingContextOwner(frame)
                     ->stackingContext(),
                 frame));
         } else {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
-                computeBoxExtent(frame->overflowRepaintRect(), matrix),
-                nullptr, frame));
+                computeBoxExtent(frame->overflowRepaintRect(), matrix), nullptr,
+                frame));
         }
     }
 }
@@ -166,7 +166,8 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
     ::Starfish::ComputeOverflow<JustCheckOveflow> co(frame);
 
     for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
-        if (co.canApplyOverflow(std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
+        if (co.canApplyOverflow(
+                std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
             tmp = LayoutRect::overlappedRect(
                 tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
         }
@@ -185,12 +186,14 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                             root->visibleRect());
             } else {
                 r = computeBoxExtent(r, frame->computeMatrixOnGraphicsBuffer());
-                StackingContext* s = findNearestStackingContextOwner(frame)
-                                         ->stackingContext();
+                StackingContext* s =
+                    findNearestStackingContextOwner(frame)->stackingContext();
 
-                for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
+                for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size();
+                     i++) {
                     if ((std::get<1>(m_boundMaxExtentDueToOverflow[i]) == s) &&
-                            co.canApplyOverflow(std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
+                        co.canApplyOverflow(
+                            std::get<2>(m_boundMaxExtentDueToOverflow[i]))) {
                         r = LayoutRect::overlappedRect(
                             r, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
                     }

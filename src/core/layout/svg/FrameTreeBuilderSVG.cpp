@@ -50,20 +50,19 @@ namespace Starfish {
 
 static bool shouldVisitChild(SVGElement* svgElement)
 {
-    if (svgElement->isSVGSVGElement() || svgElement->isSVGGElement()
-            || svgElement->isSVGDefsElement() || svgElement->isSVGUseElement()
-            || svgElement->isSVGClipPathElement()
-            || svgElement->isSVGMaskElement()
-            || svgElement->isSVGSwitchElement()
-            || svgElement->isSVGSymbolElement()
-            || svgElement->isSVGAnimateElement()) {
+    if (svgElement->isSVGSVGElement() || svgElement->isSVGGElement() ||
+        svgElement->isSVGDefsElement() || svgElement->isSVGUseElement() ||
+        svgElement->isSVGClipPathElement() || svgElement->isSVGMaskElement() ||
+        svgElement->isSVGSwitchElement() || svgElement->isSVGSymbolElement() ||
+        svgElement->isSVGAnimateElement()) {
         return true;
     }
     return false;
 }
 
 Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
-                                           Optional<Frame*> parentFrame, bool force)
+                                           Optional<Frame*> parentFrame,
+                                           bool force)
 {
     ComputedStyle* style = svgElement->style();
     if (!style || style->display() == DisplayValue::NoneDisplayValue) {
@@ -126,16 +125,19 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
             String* content = String::emptyString;
             for (Node* child = svgElement->firstChild(); child != nullptr;
                  child = child->nextSibling()) {
-                if (child->isSVGTSpanElement() && (!child->style()->x().isAuto() ||
-                                                   !child->style()->y().isAuto())) {
-                    buildSVGFrameTree(child->asSVGElement(), newFrame.value(), true);
+                if (child->isSVGTSpanElement() &&
+                    (!child->style()->x().isAuto() ||
+                     !child->style()->y().isAuto())) {
+                    buildSVGFrameTree(child->asSVGElement(), newFrame.value(),
+                                      true);
                 } else if (child->isText() || child->isElement()) {
                     STARFISH_ASSERT(child->textContent().hasValue());
                     content = child->textContent().getValue();
                     Text* textNode = new Text(svgElement->document(), content);
                     ComputedStyle* textStyle = new ComputedStyle(style);
                     textStyle->loadResources(svgElement);
-                    textStyle->arrangeStyleValues(svgElement->style(), svgElement);
+                    textStyle->arrangeStyleValues(svgElement->style(),
+                                                  svgElement);
                     textStyle->setColor(style->fill()->color());
                     textNode->setStyle(textStyle);
 
@@ -206,27 +208,32 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
     if (newFrame) {
         force = true;
         if (parentFrame) {
-            Optional<Element*> prevElement = svgElement->previousElementSibling();
+            Optional<Element*> prevElement =
+                svgElement->previousElementSibling();
             while (prevElement.hasValue() && !prevElement->frame()) {
                 prevElement = prevElement->previousElementSibling();
             }
             if (prevElement) {
-                parentFrame->insertBefore(prevElement->frame()->next(), newFrame.value());
+                parentFrame->insertBefore(prevElement->frame()->next(),
+                                          newFrame.value());
             } else {
-                parentFrame->insertBefore(parentFrame->firstChild(), newFrame.value());
+                parentFrame->insertBefore(parentFrame->firstChild(),
+                                          newFrame.value());
             }
         }
         svgElement->setFrame(newFrame.value());
     }
 
-    if (shouldVisitChild(svgElement) && (svgElement->childNeedsFrameTreeBuild() || force)) {
+    if (shouldVisitChild(svgElement) &&
+        (svgElement->childNeedsFrameTreeBuild() || force)) {
         Element* e = svgElement->firstElementChild();
         if (svgElement->isSVGUseElement()) {
             e = svgElement->internalEnsureShadowRoot()->firstElementChild();
         }
         while (e) {
             if (e->isSVGElement()) {
-                buildSVGFrameTree(e->asSVGElement(), svgElement->frame(), force);
+                buildSVGFrameTree(e->asSVGElement(), svgElement->frame(),
+                                  force);
             }
             e = e->nextElementSibling();
         }

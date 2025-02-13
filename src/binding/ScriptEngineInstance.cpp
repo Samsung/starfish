@@ -21,7 +21,6 @@
 #include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingInstance.h"
 
-
 #include "core/modules/message_loop/MessageLoop.h"
 
 #ifdef STARFISH_TIZEN
@@ -36,13 +35,12 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
 {
 #ifdef STARFISH_TIZEN
     // add argument for CodeCache directory
-	auto cachePath = app_get_cache_path();
-    m_engineInstance = Escargot::VMInstanceRef::create(
-        locale, timezone, cachePath);
+    auto cachePath = app_get_cache_path();
+    m_engineInstance =
+        Escargot::VMInstanceRef::create(locale, timezone, cachePath);
     free(cachePath);
 #else
-    m_engineInstance = Escargot::VMInstanceRef::create(
-        locale, timezone);
+    m_engineInstance = Escargot::VMInstanceRef::create(locale, timezone);
 #endif
     if (m_engineInstance->isCodeCacheEnabled()) {
 #if defined(STARFISH_64)

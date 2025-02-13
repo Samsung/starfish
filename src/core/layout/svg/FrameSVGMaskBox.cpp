@@ -102,7 +102,7 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
     auto ctm = ctx.m_canvas->currentTransformMatrix();
     viewportBox->pushToSVGMaskPaintingStack(targetBox);
     LayoutRect childrenRect = (*viewportBox->svgMaskPaintingStack().begin())
-        ->absoluteRect(viewportBox);
+                                  ->absoluteRect(viewportBox);
 
     ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
     ctx.m_canvas->beginSubCanvas(childrenRect, SubCanvasMode::Mask);
