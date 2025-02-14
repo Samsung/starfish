@@ -252,7 +252,7 @@ void TransitionApplier::applyLonghandProperty(
             duration, delay, timingFunction);
     } else if (property == CSSStyleValuePair::KeyKind::BorderTopWidth) {
         applyActiveLengthAnimationTask(
-            CSSStyleValuePair::KeyKind::BorderTop,
+            CSSStyleValuePair::KeyKind::BorderTopWidth,
             [](ComputedStyle* style) -> Length {
                 return style->border().top().width();
             },
