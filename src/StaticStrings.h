@@ -201,6 +201,7 @@ namespace Starfish {
     F(feDropShadow)                    \
     F(feSpotLight)                     \
     F(feGaussianBlur)                  \
+    F(fegaussianblur)                  \
     F(feImage)                         \
     F(feMerge)                         \
     F(feMergeNode)                     \
@@ -542,6 +543,7 @@ public:
     QualifiedName m_kernelUnitLengthX;
     QualifiedName m_kernelUnitLengthY;
     QualifiedName m_preserveAlpha;
+    QualifiedName m_stdDeviation;
     QualifiedName m_stdDeviationX;
     QualifiedName m_stdDeviationY;
     QualifiedName m_surfaceScale;
@@ -746,6 +748,7 @@ public:
     QualifiedName m_mask;
     QualifiedName m_maskType;
     QualifiedName m_tspan;
+    QualifiedName m_filter;
 
 #ifdef STARFISH_ENABLE_WEBRTC
     QualifiedName m_srcObject;

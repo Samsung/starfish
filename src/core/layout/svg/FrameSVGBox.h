@@ -35,6 +35,7 @@ public:
         : FrameBox(node, nullptr)
         , m_hasClipPath(false)
         , m_hasMask(false)
+        , m_hasFilter(false)
     {
         computeStyleFlags();
     }
@@ -116,6 +117,11 @@ public:
         m_hasMask = true;
     }
 
+    void markHasFilter()
+    {
+        m_hasFilter = true;
+    }
+
     virtual bool isVisible() override
     {
         return true;
@@ -165,6 +171,7 @@ protected:
 
     bool m_hasClipPath;
     bool m_hasMask;
+    bool m_hasFilter;
     FrameTreeItemModel m_treeItemModel;
     Optional<SkMatrix*> m_computedSVGTransform;
 };

@@ -722,6 +722,7 @@ public:
             cairo_push_group(m_canvas);
         } else {
             cairo_pop_group_to_source(m_canvas);
+            cairo_paint(m_canvas);
             restore();
         }
     }

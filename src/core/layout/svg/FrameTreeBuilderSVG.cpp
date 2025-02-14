@@ -200,6 +200,12 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
                 newFrame->asFrameSVGBox()->markHasMask();
             }
         }
+
+        if (svgElement->hasFilter()) {
+            if (newFrame && newFrame->isFrameSVGBox()) {
+                newFrame->asFrameSVGBox()->markHasFilter();
+            }
+        }
     }
 
     svgElement->clearNeedsFrameTreeBuild();
