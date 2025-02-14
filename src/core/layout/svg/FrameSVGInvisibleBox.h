@@ -36,6 +36,11 @@ public:
         return "FrameSVGInvisibleBox";
     }
 
+    virtual bool isFrameSVGInvisibleBox() override
+    {
+        return true;
+    }
+
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
 
