@@ -36,6 +36,7 @@ public:
         , m_hasClipPath(false)
         , m_hasMask(false)
     {
+        computeStyleFlags();
     }
 
     virtual bool isFrameSVGBox() override
@@ -45,7 +46,9 @@ public:
 
     virtual void computeStyleFlags() override
     {
-        // DO NOTHING
+        m_flags.m_needToEstablishBlockFormattingContext = false;
+        m_flags.m_needToEstablishStackingContext = false;
+        m_flags.m_needsGraphicsBuffer = false;
     }
 
     virtual bool needsSVGGeometryAttributes() override;
