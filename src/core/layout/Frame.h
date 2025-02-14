@@ -1179,6 +1179,12 @@ public:
         return m_flags.m_shouldApplyOverflow;
     }
 
+    // NOTE
+    // when override this function,
+    // you should call function at decendent's constructor
+    // since we call computeStyle flags on Frame's constructor
+    // in constructor, virtual function not working well
+    // (this is a c++ spec)
     virtual void computeStyleFlags();
 
     virtual ~Frame()
