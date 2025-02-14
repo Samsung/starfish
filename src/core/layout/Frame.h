@@ -1341,6 +1341,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameSVGInvisibleBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameSVGViewportContextBox()
     {
         return false;

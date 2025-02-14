@@ -3881,6 +3881,10 @@ bool FrameBox::isBoxesInvisibleFromHere()
         return true;
     }
 
+    if (UNLIKELY(isFrameSVGInvisibleBox())) {
+        return true;
+    }
+
     return false;
 }
 
