@@ -45,6 +45,8 @@
 #include "core/dom/svg/SVGMarkerElement.h"
 #include "core/dom/svg/SVGSwitchElement.h"
 #include "core/dom/svg/SVGSymbolElement.h"
+#include "core/dom/svg/SVGFilterElement.h"
+#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 
 namespace Starfish {
 
@@ -108,6 +110,11 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGSymbolElement(document, qname);
     } else if (str->m_svganimateTagName == localName) {
         return new SVGAnimateElement(document, qname);
+    } else if (str->m_svgfilterTagName == localName) {
+        return new SVGFilterElement(document, qname);
+    } else if (str->m_svgfegaussianblurTagName == localName ||
+               str->m_svgfeGaussianBlurTagName == localName) {
+        return new SVGFEGaussianBlurElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

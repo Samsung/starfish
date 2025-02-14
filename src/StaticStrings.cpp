@@ -573,6 +573,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "clip-path"));
     m_clipPathUnits = QualifiedName(
         AtomicString::createAtomicString(starfish, "clipPathUnits"));
+    m_filter =
+        QualifiedName(AtomicString::createAtomicString(starfish, "filter"));
     m_dx = QualifiedName(AtomicString::createAtomicString(starfish, "dx"));
     m_dy = QualifiedName(AtomicString::createAtomicString(starfish, "dy"));
     m_in1 = QualifiedName(AtomicString::createAtomicString(starfish, "in1"));
@@ -597,14 +599,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "kernelUnitLengthX"));
     m_kernelUnitLengthY = QualifiedName(
         AtomicString::createAtomicString(starfish, "kernelUnitLengthY"));
-    m_edgeMode =
-        QualifiedName(AtomicString::createAtomicString(starfish, "edgeMode"));
-    m_kernelUnitLengthX = QualifiedName(
-        AtomicString::createAtomicString(starfish, "kernelUnitLengthX"));
-    m_kernelUnitLengthY = QualifiedName(
-        AtomicString::createAtomicString(starfish, "kernelUnitLengthY"));
     m_preserveAlpha = QualifiedName(
         AtomicString::createAtomicString(starfish, "preserveAlpha"));
+    m_stdDeviation = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stdDeviation"));
     m_stdDeviationX = QualifiedName(
         AtomicString::createAtomicString(starfish, "stdDeviationX"));
     m_stdDeviationY = QualifiedName(

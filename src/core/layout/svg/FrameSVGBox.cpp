@@ -42,6 +42,10 @@
 #include "core/dom/svg/SVGRadialGradientElement.h"
 #include "core/dom/svg/SVGAnimatedTransformList.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/modules/canvas/filter/Filter.h"
+#include "core/modules/canvas/filter/FilterGaussianBlur.h"
+#include "core/dom/svg/SVGFilterElement.h"
+#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 
 namespace Starfish {
 
@@ -190,6 +194,21 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                                          stylePos.y().toFloat());
                 }
             }
+        }
+    }
+
+    if (m_hasFilter && node()->isSVGElement() &&
+        node()->asSVGElement()->filterElement()) {
+        Optional<Filter*> fe = node()
+                                   ->asSVGElement()
+                                   ->filterElement()
+                                   ->asSVGFilterElement()
+                                   ->filter();
+        if (fe.hasValue()) {
+            m_frameRect.setX(m_frameRect.x() + fe->biasX());
+            m_frameRect.setY(m_frameRect.y() + fe->biasY());
+            m_frameRect.setWidth(m_frameRect.width() + fe->biasWidth());
+            m_frameRect.setHeight(m_frameRect.height() + fe->biasHeight());
         }
     }
 
@@ -395,6 +414,16 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
+    if (m_hasFilter && node()->isSVGElement() &&
+        node()->asSVGElement()->filterElement()) {
+        FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
+        auto ctm = ctx.m_canvas->currentTransformMatrix();
+        LayoutRect childrenRect = viewportBox->computeSubCanvasRect(this);
+        ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
+        ctx.m_canvas->beginSubCanvas(childrenRect, SubCanvasMode::Filter);
+        ctx.m_canvas->setMatrix(ctm);
+    }
+
     paintSVG(ctx);
 
     if (!prepareChildPainting(ctx.m_canvas)) {
@@ -409,6 +438,33 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
 
     if (opacity != 1) {
         ctx.m_canvas->endOpacityLayer();
+    }
+
+    if (m_hasFilter && node()->isSVGElement() &&
+        node()->asSVGElement()->filterElement()) {
+        LayoutRect childrenRect = frameRect();
+
+        Canvas::SubCanvasPixelModifyFunction fn =
+            [&ctx, this](uint8_t* ptr, size_t w, size_t s, size_t h) -> void {
+            SVGFilterElement* filterElement =
+                node()->asSVGElement()->filterElement()->asSVGFilterElement();
+            if (filterElement) {
+                GCAtomicVector<uint8_t>* sourceGraphic =
+                    new GCAtomicVector<uint8_t>();
+                sourceGraphic->resize(s * h);
+                memcpy(sourceGraphic->data(), ptr, s * h);
+                Optional<Filter*> filter = filterElement->filter();
+                if (filter.hasValue()) {
+                    filter->applyFilter(ctx, this, sourceGraphic);
+                    GCAtomicVector<uint8_t>* result = filter->getSourceBuffer(
+                        String::createASCIIString("Result"));
+                    if (result) {
+                        memcpy(ptr, result->data(), s * h);
+                    }
+                }
+            }
+        };
+        ctx.m_canvas->endSubCanvas(fn);
     }
 
     ctx.m_canvas->restore();

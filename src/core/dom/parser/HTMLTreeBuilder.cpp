@@ -713,6 +713,107 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_spreadMethod,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("orderx")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_orderX,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("ordery")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_orderY,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("targetx")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_targetX,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("targety")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_targetY,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("edgemode")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_edgeMode,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "kernelunitlengthx")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_kernelUnitLengthX,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "kernelunitlengthy")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_kernelUnitLengthY,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("preservealpha")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_preserveAlpha,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stddeviation")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stdDeviation,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stddeviationx")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stdDeviationX,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stddeviationy")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stdDeviationY,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("surfacescale")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_surfaceScale,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "specularconstant")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_specularConstant,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "specularexponent")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_specularExponent,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "xchannelselector")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_xChannelSelector,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "ychannelselector")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_yChannelSelector,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("radiusx")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_radiusX,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("radiusy")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_radiusY,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "diffuseconstant")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_diffuseConstant,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "basefrequencyx")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_baseFrequencyX,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "basefrequencyy")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_baseFrequencyY,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("numoctaves")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_numOctaves,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stitchtiles")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stitchTiles,
+                          tokenAttribute.value());
         }
     }
 }

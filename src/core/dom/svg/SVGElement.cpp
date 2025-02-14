@@ -38,6 +38,7 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
           NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)
     , m_clipPathElement(nullptr)
     , m_maskElement(nullptr)
+    , m_filterElement(nullptr)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -213,11 +214,24 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         }
     }
 
-    if (needsMaskAttributes()) {
+    {
         if (ss->m_mask == name || ss->m_maskType == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
             m_maskElement = nullptr;
+        }
+    }
+
+    {
+        if (ss->m_filter == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+            m_filterElement = nullptr;
+            if (attributeRemoved) {
+                setHasFilter(false);
+            } else {
+                setHasFilter(true);
+            }
         }
     }
 
@@ -389,7 +403,7 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     // https://www.w3.org/TR/SVG11/masking.html#MaskProperty
-    if (needsMaskAttributes()) {
+    {
         // Value:  <funciri> | none | inherit
         // <FuncIRI> : Functional notation for an IRI: "url(" <IRI> ")".
         String* maskStr = getAttributeOrVarReferencedValue(
@@ -454,7 +468,7 @@ SVGElement* SVGElement::clipPathElement()
 
 SVGElement* SVGElement::maskElement()
 {
-    if (!hasMask() || !needsMaskAttributes()) {
+    if (!hasMask()) {
         return nullptr;
     }
 
@@ -482,6 +496,33 @@ SVGElement* SVGElement::maskElement()
         }
     }
     return m_maskElement;
+}
+
+SVGElement* SVGElement::filterElement()
+{
+    if (!m_filterElement && hasFilter()) {
+        String* filterStr =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_filter);
+        if (filterStr->isEmpty()) {
+            setHasFilter(false);
+            return nullptr;
+        }
+
+        ResourceURL* filterURL;
+        if (document()->baseURL()->isDataURL()) {
+            filterURL = new ResourceURL(filterStr, document()->referrer());
+        } else {
+            filterURL = new ResourceURL(filterStr, document()->baseURI());
+        }
+        String* id = filterURL->getFragmentIdValue();
+        if (!id->isEmpty()) {
+            Element* filterElement = document()->getElementById(id);
+            if (filterElement) {
+                m_filterElement = (SVGElement*)filterElement;
+            }
+        }
+    }
+    return m_filterElement;
 }
 
 SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
