@@ -520,6 +520,8 @@ test/cairo/internal-test/animation/a34.html
 test/cairo/internal-test/animation/a35.html
 test/cairo/internal-test/animation/a36.html
 test/cairo/internal-test/animation/animation_cancel_01.html
+test/cairo/internal-test/animation/animation_event_borderWidth.html
+test/cairo/internal-test/animation/animation_event.html
 test/cairo/internal-test/animation/animation_svg_rx_ry.html
 test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/css/transition/parse-transition.html
@@ -691,6 +693,7 @@ test/cairo/internal-test/svg/svg_fill_opacity_01.html
 test/cairo/internal-test/svg/svg_stroke_opacity_01.html
 test/cairo/internal-test/svg/svg_image_crash.html
 test/cairo/internal-test/svg/svg_in_svg_01.html
+test/cairo/internal-test/transition/transition_event_broderWidth.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
