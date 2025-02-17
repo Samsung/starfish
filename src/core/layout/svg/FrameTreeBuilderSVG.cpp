@@ -190,7 +190,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
 
         // update clipPath element
         if (svgElement->hasClipPath()) {
-            svgElement->clipPathElement();
             if (newFrame && newFrame->isFrameSVGBox()) {
                 newFrame->asFrameSVGBox()->markHasClipPath();
             }

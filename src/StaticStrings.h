@@ -184,6 +184,7 @@ namespace Starfish {
     F(stop)                            \
     F(use)                             \
     F(clippath)                        \
+    F(clipPath)                        \
     F(mask)                            \
     F(tspan)                           \
     F(marker)                          \

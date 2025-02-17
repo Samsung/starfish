@@ -91,7 +91,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGRadialGradientElement(document, qname);
     } else if (str->m_svgstopTagName == localName) {
         return new SVGStopElement(document, qname);
-    } else if (str->m_svgclippathTagName == localName) {
+    } else if (str->m_svgclippathTagName == localName ||
+               str->m_svgclipPathTagName == localName) {
         return new SVGClipPathElement(document, qname);
     } else if (str->m_svgscriptTagName == localName) {
         return new SVGScriptElement(document, qname);
