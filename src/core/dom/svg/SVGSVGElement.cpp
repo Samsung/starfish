@@ -91,6 +91,7 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name,
         parseViewBox(m_hasViewBox, m_viewBox, value);
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsLayout();
+        setNeedsPainting();
     }
 }
 
