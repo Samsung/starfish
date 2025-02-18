@@ -333,9 +333,9 @@ protected:
     double computeProgress(double& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
-    AnimationType m_animationType;
     CSSStyleValuePair::KeyKind m_property : 8;
 
+    AnimationType m_animationType;
     Element* m_targetElement;
 
     uint64_t m_startTimeMs;
