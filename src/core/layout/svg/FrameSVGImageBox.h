@@ -74,6 +74,11 @@ public:
                     } else {
                         imageSize.setHeight(0);
                     }
+                } else {
+                    imageSize.setWidth(
+                        styleWidth.specifiedValue(vp.width(), this));
+                    imageSize.setHeight(
+                        styleHeight.specifiedValue(vp.height(), this));
                 }
 
                 ctx.m_canvas->drawImage(
