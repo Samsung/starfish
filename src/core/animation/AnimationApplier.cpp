@@ -337,15 +337,25 @@ bool AnimationApplier::applyProperty(
         keyKind = CSSStyleValuePair::FontSize;
     }
 
+    ActiveAnimationTaskInit init;
+    init.animationType = m_animatoinType;
+    init.target = m_element;
+    init.targetProperty = keyKind;
+    init.playState = playState;
+    init.fillMode = fillMode;
+    init.durationInMs = duration;
+    init.delayInMs = delay;
+    init.iterationCount = iterationCount;
+    init.offsets = offsets;
+    init.timingFunctions = timingFunctions;
+
     for (size_t i = 0; i < layeredValues.size(); i++) {
         ActiveAnimationTask* task = nullptr;
-
+        init.animatedValues = layeredValues[i];
+        init.layerIndex = i;
         // Create ActiveAnimationTask based on the type of property.
         if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind)) {
-            task = new ActiveColorAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode);
+            task = new ActiveColorAnimationTask(init);
 
         } else if (AnimationUtil::isPropertyForActiveLengthAnimationTask(
                        keyKind)) {
@@ -364,10 +374,7 @@ bool AnimationApplier::applyProperty(
                     continue;
                 }
             }
-            task = new ActiveLengthAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode, i);
+            task = new ActiveLengthAnimationTask(init, nullptr);
         } else if (AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
                        keyKind)) {
             if (!m_style->hasBlockLikeDisplay()) {
@@ -375,26 +382,14 @@ bool AnimationApplier::applyProperty(
                 STARFISH_UNIMPLEMENTED("Inline Element");
                 continue;
             }
-            task = new ActiveLengthSizeAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode, i);
+            task = new ActiveLengthSizeAnimationTask(init, nullptr);
         } else if (keyKind == CSSStyleValuePair::Opacity) {
-            task = new ActiveOpacityAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode);
+            task = new ActiveOpacityAnimationTask(init);
 
         } else if (keyKind == CSSStyleValuePair::Transform) {
-            task = new ActiveTransformAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode);
+            task = new ActiveTransformAnimationTask(init, nullptr);
         } else if (keyKind == CSSStyleValuePair::Visibility) {
-            task = new ActiveVisibilityAnimationTask(
-                m_element, m_animatoinType, keyKind, layeredValues[i], offsets,
-                timingFunctions, duration, delay, iterationCount, playState,
-                fillMode);
+            task = new ActiveVisibilityAnimationTask(init);
         }
 
         // Register ActiveAnimationTask.

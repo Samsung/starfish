@@ -61,21 +61,6 @@ struct ActiveAnimationTaskInit {
 
 class ActiveAnimationTask : public gc {
 public:
-    ActiveAnimationTask(Element* target, AnimationType animationType,
-                        CSSStyleValuePair::KeyKind targetProperty,
-                        const AnimatedValue& from, const AnimatedValue& to,
-                        uint64_t durationInms, int64_t delayInms,
-                        TimingFunction* timingFunction);
-
-    ActiveAnimationTask(Element* target, AnimationType animationType,
-                        CSSStyleValuePair::KeyKind targetProperty,
-                        const GCVector<AnimatedValue*>& animatedValues,
-                        const GCAtomicVector<double>& keyframeNames,
-                        const GCVector<TimingFunction*>& timingFunctions,
-                        uint64_t durationInms, int64_t delayInms,
-                        float iterationCount, AnimationPlayStateValue playState,
-                        AnimationFillModeValue fillMode);
-
     ActiveAnimationTask(const ActiveAnimationTaskInit& init);
 
     virtual ~ActiveAnimationTask()
@@ -378,23 +363,6 @@ protected:
 
 class ActiveOpacityAnimationTask : public ActiveAnimationTask {
 public:
-    ActiveOpacityAnimationTask(Element* target, AnimationType animationType,
-                               CSSStyleValuePair::KeyKind targetProperty,
-                               const AnimatedValue& from,
-                               const AnimatedValue& to, uint64_t durationInms,
-                               int64_t delayInms,
-                               TimingFunction* timingFunction);
-
-    ActiveOpacityAnimationTask(Element* target, AnimationType animationType,
-                               CSSStyleValuePair::KeyKind targetProperty,
-                               const GCVector<AnimatedValue*>& values,
-                               const GCAtomicVector<double>& offsets,
-                               const GCVector<TimingFunction*>& timingFunctions,
-                               uint64_t durationInms, int64_t delayInms,
-                               float iterationCount,
-                               AnimationPlayStateValue playState,
-                               AnimationFillModeValue fillMode);
-
     ActiveOpacityAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
@@ -430,23 +398,6 @@ public:
         {
         }
     };
-
-    ActiveTransformAnimationTask(Element* target, AnimationType animationType,
-                                 CSSStyleValuePair::KeyKind targetProperty,
-                                 const AnimatedValue& from,
-                                 const AnimatedValue& to, uint64_t durationInms,
-                                 int64_t delayInms,
-                                 TimingFunction* timingFunction,
-                                 StyleTransformDataGroup* orgTransformValue);
-
-    ActiveTransformAnimationTask(
-        Element* target, AnimationType animationType,
-        CSSStyleValuePair::KeyKind targetProperty,
-        const GCVector<AnimatedValue*>& values,
-        const GCAtomicVector<double>& offsets,
-        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        int64_t delayInms, float iterationCount,
-        AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
 
     ActiveTransformAnimationTask(
         const ActiveAnimationTaskInit& init,
@@ -505,22 +456,6 @@ protected:
 
 class ActiveColorAnimationTask : public ActiveAnimationTask {
 public:
-    ActiveColorAnimationTask(Element* target, AnimationType animationType,
-                             CSSStyleValuePair::KeyKind targetProperty,
-                             const AnimatedValue& from, const AnimatedValue& to,
-                             uint64_t durationInms, int64_t delayInms,
-                             TimingFunction* timingFunction);
-
-    ActiveColorAnimationTask(Element* target, AnimationType animationType,
-                             CSSStyleValuePair::KeyKind targetProperty,
-                             const GCVector<AnimatedValue*>& values,
-                             const GCAtomicVector<double>& offsets,
-                             const GCVector<TimingFunction*>& timingFunctions,
-                             uint64_t durationInms, int64_t delayInms,
-                             float iterationCount,
-                             AnimationPlayStateValue playState,
-                             AnimationFillModeValue fillMode);
-
     ActiveColorAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
@@ -531,25 +466,6 @@ public:
 
 class ActiveLengthAnimationTask : public ActiveAnimationTask {
 public:
-    ActiveLengthAnimationTask(Element* target, AnimationType animationType,
-                              CSSStyleValuePair::KeyKind targetProperty,
-                              const AnimatedValue& from,
-                              const AnimatedValue& to, uint64_t durationInms,
-                              int64_t delayInms, TimingFunction* timingFunction,
-                              Length originalToValue,
-                              size_t indexForBgLayer = 0);
-
-    ActiveLengthAnimationTask(Element* target, AnimationType animationType,
-                              CSSStyleValuePair::KeyKind targetProperty,
-                              const GCVector<AnimatedValue*>& values,
-                              const GCAtomicVector<double>& offsets,
-                              const GCVector<TimingFunction*>& timingFunctions,
-                              uint64_t durationInms, int64_t delayInms,
-                              float iterationCount,
-                              AnimationPlayStateValue playState,
-                              AnimationFillModeValue fillMode,
-                              size_t indexForBgLayer = 0);
-
     ActiveLengthAnimationTask(const ActiveAnimationTaskInit& init,
                               Optional<Length> originalToValue);
 
@@ -577,25 +493,6 @@ protected:
 
 class ActiveLengthSizeAnimationTask : public ActiveAnimationTask {
 public:
-    ActiveLengthSizeAnimationTask(Element* target, AnimationType animationType,
-                                  CSSStyleValuePair::KeyKind targetProperty,
-                                  const AnimatedValue& from,
-                                  const AnimatedValue& to,
-                                  uint64_t durationInms, int64_t delayInms,
-                                  TimingFunction* timingFunction,
-                                  LengthSize originalToValue,
-                                  size_t indexForBgLayer = 0);
-
-    ActiveLengthSizeAnimationTask(
-        Element* target, AnimationType animationType,
-        CSSStyleValuePair::KeyKind targetProperty,
-        const GCVector<AnimatedValue*>& values,
-        const GCAtomicVector<double>& offsets,
-        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        int64_t delayInms, float iterationCount,
-        AnimationPlayStateValue playState, AnimationFillModeValue fillMode,
-        size_t indexForBgLayer = 0);
-
     ActiveLengthSizeAnimationTask(const ActiveAnimationTaskInit& init,
                                   Optional<LengthSize> originalToValue);
 
@@ -621,22 +518,6 @@ protected:
 
 class ActiveVisibilityAnimationTask : public ActiveAnimationTask {
 public:
-    ActiveVisibilityAnimationTask(Element* target, AnimationType animationType,
-                                  CSSStyleValuePair::KeyKind targetProperty,
-                                  const AnimatedValue& from,
-                                  const AnimatedValue& to,
-                                  uint64_t durationInms, int64_t delayInms,
-                                  TimingFunction* timingFunction);
-
-    ActiveVisibilityAnimationTask(
-        Element* target, AnimationType animationType,
-        CSSStyleValuePair::KeyKind targetProperty,
-        const GCVector<AnimatedValue*>& values,
-        const GCAtomicVector<double>& offsets,
-        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        int64_t delayInms, float iterationCount,
-        AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
-
     ActiveVisibilityAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
