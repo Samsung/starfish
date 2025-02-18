@@ -44,6 +44,21 @@ bool applyTransitionIfNeeds(
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress); // returns true if animation registered
 
+struct ActiveAnimationTaskInit {
+    AnimationType animationType;
+    Element* target;
+    CSSStyleValuePair::KeyKind targetProperty;
+    AnimationPlayStateValue playState;
+    AnimationFillModeValue fillMode;
+    uint64_t durationInMs;
+    int64_t delayInMs;
+    float iterationCount;
+    GCAtomicVector<double> offsets; // keyframeNames
+    GCVector<TimingFunction*> timingFunctions;
+    GCVector<AnimatedValue*> animatedValues;
+    Optional<size_t> layerIndex;
+};
+
 class ActiveAnimationTask : public gc {
 public:
     ActiveAnimationTask(Element* target, AnimationType animationType,
@@ -60,6 +75,8 @@ public:
                         uint64_t durationInms, int64_t delayInms,
                         float iterationCount, AnimationPlayStateValue playState,
                         AnimationFillModeValue fillMode);
+
+    ActiveAnimationTask(const ActiveAnimationTaskInit& init);
 
     virtual ~ActiveAnimationTask()
     {
@@ -108,8 +125,11 @@ public:
     {
     }
 
-    virtual size_t backgroundLayer()
+    virtual size_t layerIndex()
     {
+        if (m_layerIndex.hasValue()) {
+            return m_layerIndex.getValue();
+        }
         return 0;
     }
 
@@ -323,6 +343,8 @@ protected:
                    GC_WORD_OFFSET(ActiveAnimationTask, m_timingFunctions));
     }
 
+    void initialize(const ActiveAnimationTaskInit& init);
+
     double computeProgress(double& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
@@ -351,6 +373,7 @@ protected:
     GCVector<AnimatedValue*> m_values;
     GCAtomicVector<double> m_offsets;
     GCVector<TimingFunction*> m_timingFunctions;
+    Optional<size_t> m_layerIndex;
 };
 
 class ActiveOpacityAnimationTask : public ActiveAnimationTask {
@@ -371,6 +394,8 @@ public:
                                float iterationCount,
                                AnimationPlayStateValue playState,
                                AnimationFillModeValue fillMode);
+
+    ActiveOpacityAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -423,6 +448,10 @@ public:
         int64_t delayInms, float iterationCount,
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
 
+    ActiveTransformAnimationTask(
+        const ActiveAnimationTaskInit& init,
+        Optional<StyleTransformDataGroup*> originalToValue);
+
     virtual void resolveUnresolvedAnimatedValues() override;
     virtual void didAnimationFrameChanged() override;
 
@@ -467,7 +496,7 @@ protected:
     // without a former conversion
     bool m_shouldUseDecompositing;
 
-    StyleTransformDataGroup* m_originalTransformValue;
+    Optional<StyleTransformDataGroup*> m_originalTransformValue;
     MatrixDecomposed2D m_decomposedFrom;
     MatrixDecomposed2D m_decomposedTo;
     StyleTransformDataGroup* m_fromTransformValue;
@@ -491,6 +520,8 @@ public:
                              float iterationCount,
                              AnimationPlayStateValue playState,
                              AnimationFillModeValue fillMode);
+
+    ActiveColorAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -519,6 +550,9 @@ public:
                               AnimationFillModeValue fillMode,
                               size_t indexForBgLayer = 0);
 
+    ActiveLengthAnimationTask(const ActiveAnimationTaskInit& init,
+                              Optional<Length> originalToValue);
+
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
@@ -534,17 +568,11 @@ public:
 
     virtual void resolveUnresolvedAnimatedValues() override;
 
-    virtual size_t backgroundLayer()
-    {
-        return m_indexForBgLayer;
-    }
-
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
-    Length m_originalToValue;
-    size_t m_indexForBgLayer;
+    Optional<Length> m_originalToValue;
 };
 
 class ActiveLengthSizeAnimationTask : public ActiveAnimationTask {
@@ -568,6 +596,9 @@ public:
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode,
         size_t indexForBgLayer = 0);
 
+    ActiveLengthSizeAnimationTask(const ActiveAnimationTaskInit& init,
+                                  Optional<LengthSize> originalToValue);
+
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
@@ -585,8 +616,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    LengthSize m_originalToValue;
-    size_t m_indexForBgLayer;
+    Optional<LengthSize> m_originalToValue;
 };
 
 class ActiveVisibilityAnimationTask : public ActiveAnimationTask {
@@ -606,6 +636,8 @@ public:
         const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
         int64_t delayInms, float iterationCount,
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
+
+    ActiveVisibilityAnimationTask(const ActiveAnimationTaskInit& init);
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;

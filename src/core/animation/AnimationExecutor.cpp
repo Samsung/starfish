@@ -110,7 +110,7 @@ void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
                 if ((*task)->targetElement() == element &&
                     (*task)->animationType() == animationType &&
                     (*task)->property() == p &&
-                    (*task)->backgroundLayer() == layer) {
+                    (*task)->layerIndex() == layer) {
                     task = animations.value().erase(task);
                 } else {
                     task++;

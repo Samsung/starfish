@@ -128,6 +128,11 @@ ActiveAnimationTask::ActiveAnimationTask(
     m_timingFunctions.assign(timingFunctions.begin(), timingFunctions.end());
 }
 
+ActiveAnimationTask::ActiveAnimationTask(const ActiveAnimationTaskInit& init)
+{
+    initialize(init);
+}
+
 void* ActiveAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveAnimationTask));
@@ -141,6 +146,53 @@ void* ActiveAnimationTask::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void ActiveAnimationTask::initialize(const ActiveAnimationTaskInit& init)
+{
+    m_animationType = init.animationType;
+    m_property = init.targetProperty;
+    m_targetElement = init.target;
+    m_durationMs = init.durationInMs;
+    m_startDelayMs = init.delayInMs;
+    m_delayMs = init.delayInMs;
+    m_playState = init.playState;
+    m_fillMode = init.fillMode;
+    m_iterationCount = init.iterationCount;
+    m_isInDelayedTime = init.delayInMs > 0 ? true : false;
+    m_frameSize = init.animatedValues.size();
+    m_values.assign(init.animatedValues.begin(), init.animatedValues.end());
+    m_offsets.assign(init.offsets.begin(), init.offsets.end());
+    m_timingFunctions.assign(init.timingFunctions.begin(),
+                             init.timingFunctions.end());
+    m_layerIndex = init.layerIndex;
+
+    m_startTimeMs = 0;
+    m_gapTimeMs = 0;
+    m_iterationStart = 0;
+    m_isForward = true;
+    m_isRunning = true;
+    m_isInForwardsFillMode = false;
+    m_frameIdx = 0;
+
+    if (init.animationType == AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        m_isEveryAnimiatedValueResolved = true;
+        STARFISH_ASSERT(m_playState == AnimationPlayStateValue::Running);
+        STARFISH_ASSERT(m_fillMode == AnimationFillModeValue::None);
+        STARFISH_ASSERT(m_iterationCount == 0);
+        STARFISH_ASSERT(m_iterationStart == 0);
+        STARFISH_ASSERT(m_frameSize == 2);
+        STARFISH_ASSERT(m_offsets.size() == 0);
+        STARFISH_ASSERT(init.timingFunctions.size() == 1);
+        STARFISH_ASSERT(init.animatedValues.size() == 2);
+    } else {
+        // Note that this originated from legacy code.
+        m_isEveryAnimiatedValueResolved = false;
+        STARFISH_ASSERT(init.animatedValues.size() > 1);
+        STARFISH_ASSERT(init.offsets.size() > 1);
+        STARFISH_ASSERT(init.timingFunctions.size() > 1);
+    }
 }
 
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
@@ -308,6 +360,16 @@ ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
 {
     m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
+}
+
+ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
+    const ActiveAnimationTaskInit& init)
+    : ActiveAnimationTask(init)
+{
+    if (init.animationType != AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        m_isEveryAnimiatedValueResolved = true;
+    }
 }
 
 void ActiveOpacityAnimationTask::execute(double progress, ComputedStyle* style)
@@ -536,6 +598,24 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
 {
     m_isEveryAnimiatedValueResolved = false;
     STARFISH_ASSERT(target != nullptr);
+}
+
+ActiveTransformAnimationTask::ActiveTransformAnimationTask(
+    const ActiveAnimationTaskInit& init,
+    Optional<StyleTransformDataGroup*> originalToValue)
+    : ActiveAnimationTask(init)
+{
+    if (init.animationType == AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        // But changed to use the clone method instead of direct copy.
+        if (originalToValue.hasValue()) {
+            m_originalTransformValue = originalToValue.getValue()->clone();
+        }
+        removePercentValuesFromTransform();
+        resolveTransformValues();
+    } else {
+        m_isEveryAnimiatedValueResolved = false;
+    }
 }
 
 bool ActiveTransformAnimationTask::needsDecompositing(
@@ -820,6 +900,16 @@ ActiveColorAnimationTask::ActiveColorAnimationTask(
     STARFISH_ASSERT(target != nullptr);
 }
 
+ActiveColorAnimationTask::ActiveColorAnimationTask(
+    const ActiveAnimationTaskInit& init)
+    : ActiveAnimationTask(init)
+{
+    if (init.animationType != AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        m_isEveryAnimiatedValueResolved = true;
+    }
+}
+
 void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
@@ -942,7 +1032,6 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     : ActiveAnimationTask(target, animationType, targetProperty, from, to,
                           durationInms, delayInms, timingFunction)
     , m_originalToValue(originalToValue)
-    , m_indexForBgLayer(indexForBgLayer)
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
@@ -959,9 +1048,18 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     : ActiveAnimationTask(target, animationType, targetProperty, values,
                           offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
-    , m_indexForBgLayer(indexForBgLayer)
 {
     STARFISH_ASSERT(target != nullptr);
+}
+
+ActiveLengthAnimationTask::ActiveLengthAnimationTask(
+    const ActiveAnimationTaskInit& init, Optional<Length> originalToValue)
+    : ActiveAnimationTask(init)
+{
+    if (init.animationType == AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        m_originalToValue = originalToValue;
+    }
 }
 
 void* ActiveLengthAnimationTask::operator new(size_t size)
@@ -1039,7 +1137,7 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                     Unit::Size posSize, imgSize;
                     AnimationUtil::calculateBackgroundBaseData(
                         m_targetElement->frame()->asFrameBox(),
-                        m_targetElement->style(), m_indexForBgLayer, posSize,
+                        m_targetElement->style(), layerIndex(), posSize,
                         imgSize);
                     if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
                         return;
@@ -1051,7 +1149,7 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                     Unit::Size posSize, imgSize;
                     AnimationUtil::calculateBackgroundBaseData(
                         m_targetElement->frame()->asFrameBox(),
-                        m_targetElement->style(), m_indexForBgLayer, posSize,
+                        m_targetElement->style(), layerIndex(), posSize,
                         imgSize);
                     if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
                         return;
@@ -1273,10 +1371,10 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
         style->setBottom(newLength);
         break;
     case CSSStyleValuePair::KeyKind::BackgroundPositionX:
-        style->setBackgroundPositionX(newLength, m_indexForBgLayer);
+        style->setBackgroundPositionX(newLength, layerIndex());
         break;
     case CSSStyleValuePair::KeyKind::BackgroundPositionY:
-        style->setBackgroundPositionY(newLength, m_indexForBgLayer);
+        style->setBackgroundPositionY(newLength, layerIndex());
         break;
     case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);
@@ -1364,61 +1462,71 @@ bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
 bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
+    STARFISH_ASSERT(m_originalToValue.hasValue());
+
     switch (m_property) {
     case CSSStyleValuePair::KeyKind::Width:
-        return m_originalToValue == newStyle->width();
+        return m_originalToValue.getValue() == newStyle->width();
     case CSSStyleValuePair::KeyKind::Height:
-        return m_originalToValue == newStyle->height();
+        return m_originalToValue.getValue() == newStyle->height();
     case CSSStyleValuePair::KeyKind::MarginTop:
-        return m_originalToValue == newStyle->margin().top();
+        return m_originalToValue.getValue() == newStyle->margin().top();
     case CSSStyleValuePair::KeyKind::MarginRight:
-        return m_originalToValue == newStyle->margin().right();
+        return m_originalToValue.getValue() == newStyle->margin().right();
     case CSSStyleValuePair::KeyKind::MarginBottom:
-        return m_originalToValue == newStyle->margin().bottom();
+        return m_originalToValue.getValue() == newStyle->margin().bottom();
     case CSSStyleValuePair::KeyKind::MarginLeft:
-        return m_originalToValue == newStyle->margin().left();
+        return m_originalToValue.getValue() == newStyle->margin().left();
     case CSSStyleValuePair::KeyKind::MinWidth:
-        return m_originalToValue == newStyle->minWidth();
+        return m_originalToValue.getValue() == newStyle->minWidth();
     case CSSStyleValuePair::KeyKind::MinHeight:
-        return m_originalToValue == newStyle->minHeight();
+        return m_originalToValue.getValue() == newStyle->minHeight();
     case CSSStyleValuePair::KeyKind::MaxWidth:
-        return m_originalToValue == newStyle->maxWidth();
+        return m_originalToValue.getValue() == newStyle->maxWidth();
     case CSSStyleValuePair::KeyKind::MaxHeight:
-        return m_originalToValue == newStyle->maxHeight();
+        return m_originalToValue.getValue() == newStyle->maxHeight();
     case CSSStyleValuePair::KeyKind::BorderTopWidth:
-        return m_originalToValue == newStyle->border().top().width();
+        return m_originalToValue.getValue() == newStyle->border().top().width();
     case CSSStyleValuePair::KeyKind::BorderRightWidth:
-        return m_originalToValue == newStyle->border().right().width();
+        return m_originalToValue.getValue() ==
+               newStyle->border().right().width();
     case CSSStyleValuePair::KeyKind::BorderBottomWidth:
-        return m_originalToValue == newStyle->border().bottom().width();
+        return m_originalToValue.getValue() ==
+               newStyle->border().bottom().width();
     case CSSStyleValuePair::KeyKind::BorderLeftWidth:
-        return m_originalToValue == newStyle->border().left().width();
+        return m_originalToValue.getValue() ==
+               newStyle->border().left().width();
     case CSSStyleValuePair::KeyKind::PaddingTop:
-        return m_originalToValue == newStyle->padding().top();
+        return m_originalToValue.getValue() == newStyle->padding().top();
     case CSSStyleValuePair::KeyKind::PaddingRight:
-        return m_originalToValue == newStyle->padding().right();
+        return m_originalToValue.getValue() == newStyle->padding().right();
     case CSSStyleValuePair::KeyKind::PaddingBottom:
-        return m_originalToValue == newStyle->padding().bottom();
+        return m_originalToValue.getValue() == newStyle->padding().bottom();
     case CSSStyleValuePair::KeyKind::PaddingLeft:
-        return m_originalToValue == newStyle->padding().left();
+        return m_originalToValue.getValue() == newStyle->padding().left();
     case CSSStyleValuePair::KeyKind::Left:
-        return m_originalToValue == newStyle->left();
+        return m_originalToValue.getValue() == newStyle->left();
     case CSSStyleValuePair::KeyKind::Top:
-        return m_originalToValue == newStyle->top();
+        return m_originalToValue.getValue() == newStyle->top();
     case CSSStyleValuePair::KeyKind::Right:
-        return m_originalToValue == newStyle->right();
+        return m_originalToValue.getValue() == newStyle->right();
     case CSSStyleValuePair::KeyKind::Bottom:
-        return m_originalToValue == newStyle->bottom();
-    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
-        return m_indexForBgLayer < newStyle->backgroundLayerSize() &&
-               m_originalToValue ==
-                   newStyle->backgroundPositionX(m_indexForBgLayer);
-    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
-        return m_indexForBgLayer < newStyle->backgroundLayerSize() &&
-               m_originalToValue ==
-                   newStyle->backgroundPositionY(m_indexForBgLayer);
+        return m_originalToValue.getValue() == newStyle->bottom();
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX: {
+        size_t layerIndex = this->layerIndex();
+        return layerIndex < newStyle->backgroundLayerSize() &&
+               m_originalToValue.getValue() ==
+                   newStyle->backgroundPositionX(layerIndex);
+    }
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY: {
+        size_t layerIndex = this->layerIndex();
+        return layerIndex < newStyle->backgroundLayerSize() &&
+               m_originalToValue.getValue() ==
+                   newStyle->backgroundPositionY(layerIndex);
+    }
     case CSSStyleValuePair::KeyKind::FontSize:
-        return m_originalToValue.fixed() == newStyle->fixedFontSize();
+        return m_originalToValue.getValue().fixed() ==
+               newStyle->fixedFontSize();
     default:
         return false;
     }
@@ -1435,7 +1543,6 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     : ActiveAnimationTask(target, animationType, targetProperty, from, to,
                           durationInms, delayInms, timingFunction)
     , m_originalToValue(originalToValue)
-    , m_indexForBgLayer(indexForBgLayer)
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
@@ -1452,10 +1559,21 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     : ActiveAnimationTask(target, animationType, targetProperty, values,
                           offsets, timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
-    , m_indexForBgLayer(indexForBgLayer)
 {
     m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
+}
+
+ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
+    const ActiveAnimationTaskInit& init, Optional<LengthSize> originalToValue)
+    : ActiveAnimationTask(init)
+{
+    // Note that this originated from legacy code.
+    if (init.animationType == AnimationType::Transition) {
+        m_originalToValue = originalToValue;
+    } else {
+        m_isEveryAnimiatedValueResolved = true;
+    }
 }
 
 void* ActiveLengthSizeAnimationTask::operator new(size_t size)
@@ -1515,7 +1633,7 @@ void ActiveLengthSizeAnimationTask::execute(double progress,
         style->setBackgroundSize(
             interpolateLengthSize(progress, *currentAnimatedFromValue(),
                                   *currentAnimatedToValue(), m_isForward),
-            m_indexForBgLayer);
+            layerIndex());
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -1535,10 +1653,11 @@ bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
-            newStyle->backgroundSizeIsLength(m_indexForBgLayer) &&
+        size_t layerIndex = this->layerIndex();
+        if (layerIndex < newStyle->backgroundLayerSize() &&
+            newStyle->backgroundSizeIsLength(layerIndex) &&
             m_originalToValue ==
-                newStyle->backgroundSizeLengthValue(m_indexForBgLayer)) {
+                newStyle->backgroundSizeLengthValue(layerIndex)) {
             return true;
         }
     }
@@ -1571,6 +1690,16 @@ ActiveVisibilityAnimationTask::ActiveVisibilityAnimationTask(
 {
     m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
+}
+
+ActiveVisibilityAnimationTask::ActiveVisibilityAnimationTask(
+    const ActiveAnimationTaskInit& init)
+    : ActiveAnimationTask(init)
+{
+    if (init.animationType != AnimationType::Transition) {
+        // Note that this originated from legacy code.
+        m_isEveryAnimiatedValueResolved = true;
+    }
 }
 
 void ActiveVisibilityAnimationTask::execute(double progress,
