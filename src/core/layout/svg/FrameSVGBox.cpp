@@ -193,8 +193,60 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
+    Optional<LayoutRect> clipRect;
+    if (m_hasClipPath && node()->isSVGElement() &&
+        node()->asSVGElement()->clipPathElement()) {
+        Frame* clipPathFrame =
+            node()->asSVGElement()->clipPathElement()->frame();
+        if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
+            auto clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
+            if (clipPath) {
+                auto floatClipRect = clipPath->fillBoundingRect();
+                clipRect = computeBoxExtent(
+                    LayoutRect(floatClipRect.x(), floatClipRect.y(),
+                               floatClipRect.width(), floatClipRect.height()),
+                    matrix);
+                ctx.clippedRects.push_back(clipRect.value());
+            }
+        }
+    }
+
+    Optional<LayoutRect> maskRect;
+    if (m_hasMask && node()->isSVGElement() &&
+        node()->asSVGElement()->maskElement()) {
+        auto maskElement = node()->asSVGElement()->maskElement();
+        Frame* maskFrame = maskElement->frame();
+
+        // only invisible mask content can be used by this case
+        bool isDecendentOfInvisibleFrame = false;
+        for (Frame* f = maskFrame->parent();
+             !f->isFrameSVGSVGBox() && !f->isFrameSVGViewportContextBox();
+             f = f->parent()) {
+            if (f->isFrameSVGInvisibleBox()) {
+                isDecendentOfInvisibleFrame = true;
+                break;
+            }
+        }
+
+        if (isDecendentOfInvisibleFrame) {
+            maskFrame->asFrameSVGBox()->layout(ctx, matrix);
+            LayoutRect rect;
+            Frame* f = maskFrame->firstChild();
+            while (f) {
+                rect.unite(f->asFrameBox()->frameRect());
+                f = f->next();
+            }
+            maskRect = rect;
+            ctx.clippedRects.push_back(rect);
+        }
+    }
+
     if (!matrix.isIdentity() && needsComputeFrameRect) {
         m_frameRect = computeBoxExtent(m_frameRect, matrix);
+        for (auto rt : ctx.clippedRects) {
+            m_frameRect = LayoutRect::overlappedRect(m_frameRect, rt);
+        }
+
         if (!m_computedSVGTransform) {
             m_computedSVGTransform =
                 new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();
@@ -224,6 +276,14 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     }
 
     postLayoutSVG(ctx);
+
+    if (maskRect) {
+        ctx.clippedRects.pop_back();
+    }
+
+    if (clipRect) {
+        ctx.clippedRects.pop_back();
+    }
 }
 
 void FrameSVGBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)

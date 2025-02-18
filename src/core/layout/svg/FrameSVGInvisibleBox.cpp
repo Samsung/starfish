@@ -39,6 +39,10 @@ void* FrameSVGInvisibleBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void FrameSVGInvisibleBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
+{
+}
+
 void FrameSVGInvisibleBox::paintContent(PaintingContext& ctx)
 {
 }
