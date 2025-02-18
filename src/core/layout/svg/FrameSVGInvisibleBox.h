@@ -41,6 +41,7 @@ public:
         return true;
     }
 
+    virtual void layout(SVGLayoutContext& ctx, SkMatrix matrix) override;
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx) override;
 
