@@ -2375,7 +2375,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
     if (style()->display() != DisplayValue::NoneDisplayValue &&
         style()->animation()) {
         AnimationApplier animationApplier(this, AnimationType::WebAnimation,
-                                          style());
+                                          style(), nullptr);
         if (!animationApplier.apply()) {
             return new Animation(executionContext);
         }

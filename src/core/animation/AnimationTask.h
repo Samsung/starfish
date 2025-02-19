@@ -57,6 +57,9 @@ struct ActiveAnimationTaskInit {
     GCVector<TimingFunction*> timingFunctions;
     GCVector<AnimatedValue*> animatedValues;
     Optional<size_t> layerIndex;
+
+    // A child element that adds animation effects to its parent element in SVG.
+    Optional<SVGAnimationElement*> originAnimationElement;
 };
 
 class ActiveAnimationTask : public gc {
@@ -75,6 +78,11 @@ public:
     Element* targetElement() const
     {
         return m_targetElement;
+    }
+
+    Optional<SVGAnimationElement*> originAnimationElement()
+    {
+        return m_originAnimationElement;
     }
 
     void step(uint64_t tickCount, ComputedStyle* style);
@@ -274,6 +282,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(ActiveAnimationTask, m_offsets));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(ActiveAnimationTask, m_timingFunctions));
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveAnimationTask,
+                                        m_originAnimationElement));
     }
 
     void initialize(const ActiveAnimationTaskInit& init);
@@ -307,6 +317,7 @@ protected:
     GCAtomicVector<double> m_offsets;
     GCVector<TimingFunction*> m_timingFunctions;
     Optional<size_t> m_layerIndex;
+    Optional<SVGAnimationElement*> m_originAnimationElement;
 };
 
 class ActiveOpacityAnimationTask : public ActiveAnimationTask {

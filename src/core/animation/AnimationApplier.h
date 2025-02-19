@@ -34,18 +34,19 @@ class AnimationExecutor;
 class AnimationKeyframe;
 class AnimationKeyframes;
 class ActiveAnimationTask;
-class SVGAnimateElement;
+class SVGAnimationElement;
 
 class AnimationApplier : public gc {
 public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
     AnimationApplier(Element* element, AnimationType animatoinType,
-                     ComputedStyle* style);
+                     ComputedStyle* style,
+                     Optional<SVGAnimationElement*> originAnimationElement);
 
     bool apply();
 
-    bool applySVGAnimateElement(SVGAnimateElement* animationElement);
+    bool applySVGAnimateElement();
 
 private:
     bool applyProperty(size_t s, String* name,
@@ -82,6 +83,8 @@ private:
     Element* m_element;
     AnimationType m_animatoinType;
     ComputedStyle* m_style;
+    Optional<SVGAnimationElement*> m_originAnimationElement;
+
     Font* m_font;
     Length m_currentFontSize;
     Length m_rootFontSize;

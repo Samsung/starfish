@@ -51,12 +51,13 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
-AnimationApplier::AnimationApplier(Element* element,
-                                   AnimationType animatoinType,
-                                   ComputedStyle* style)
+AnimationApplier::AnimationApplier(
+    Element* element, AnimationType animatoinType, ComputedStyle* style,
+    Optional<SVGAnimationElement*> originAnimationElement)
     : m_element(element)
     , m_animatoinType(animatoinType)
     , m_style(style)
+    , m_originAnimationElement(originAnimationElement)
     , m_font(style->font())
     , m_currentFontSize(m_style->fontSize())
     , m_windowSize(element->window()->innerWidth(),
@@ -140,11 +141,15 @@ bool AnimationApplier::apply()
     return hasAppliedAnimation;
 }
 
-bool AnimationApplier::applySVGAnimateElement(
-    SVGAnimateElement* animationElement)
+bool AnimationApplier::applySVGAnimateElement()
 {
+    STARFISH_ASSERT(m_originAnimationElement.hasValue());
+    STARFISH_ASSERT(m_originAnimationElement.getValue()->isSVGAnimateElement());
+
     Optional<AnimationKeyframes*> maybekeyFrames =
-        animationElement->animationKeyframes();
+        m_originAnimationElement.getValue()
+            ->asSVGAnimateElement()
+            ->animationKeyframes();
     if (!maybekeyFrames) {
         return false;
     }
@@ -348,6 +353,11 @@ bool AnimationApplier::applyProperty(
     init.iterationCount = iterationCount;
     init.offsets = offsets;
     init.timingFunctions = timingFunctions;
+
+    if (m_originAnimationElement.hasValue()) {
+        STARFISH_ASSERT(m_animatoinType == AnimationType::SVGAnimation);
+        init.originAnimationElement = m_originAnimationElement;
+    }
 
     for (size_t i = 0; i < layeredValues.size(); i++) {
         ActiveAnimationTask* task = nullptr;

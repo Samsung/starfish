@@ -122,6 +122,11 @@ void ActiveAnimationTask::initialize(const ActiveAnimationTaskInit& init)
         STARFISH_ASSERT(init.offsets.size() > 1);
         STARFISH_ASSERT(init.timingFunctions.size() > 1);
     }
+
+    if (init.animationType == AnimationType::SVGAnimation) {
+        STARFISH_ASSERT(init.originAnimationElement.hasValue());
+        m_originAnimationElement = init.originAnimationElement;
+    }
 }
 
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)

@@ -197,6 +197,7 @@ public:
                                   double elapsedTime);
 
     void fireSVGAnimateBeginEvent(Element* element);
+    void fireSVGAnimateEndEvent(Element* element);
 
 private:
     GCVector<ActiveAnimationTask*> m_activeTransitions;
