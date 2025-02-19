@@ -693,6 +693,7 @@ test/cairo/internal-test/svg/svg_fill_opacity_01.html
 test/cairo/internal-test/svg/svg_stroke_opacity_01.html
 test/cairo/internal-test/svg/svg_image_crash.html
 test/cairo/internal-test/svg/svg_in_svg_01.html
+test/cairo/internal-test/svg/svg_image_test_01.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
 test/cairo/internal-test/transition/transition_transform.html
 test/cairo/internal-test/canvas/basicFillRect.html
