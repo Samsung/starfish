@@ -1099,7 +1099,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                                    ->activeAnimations();
             auto iter2 = animations.begin();
             while (iter2 != animations.end()) {
-                if (iter2->first->m_element == m_owner->node()) {
+                if (iter2->first->element() == m_owner->node()) {
                     auto& v = iter2->second;
                     auto iter3 = v.begin();
                     while (iter3 != v.end()) {

@@ -35,17 +35,8 @@ class String;
 class Element;
 class ActiveAnimationTask;
 
-struct ActiveElementAnimation : public gc {
-    String* m_name;
-    Element* m_element;
-    AnimationType m_animationType;
-    size_t m_index;
-    double m_duration;
-    double m_delay;
-    float m_iterationCount;
-    AnimationDirectionValue m_direction;
-    AnimationPlayStateValue m_playState;
-
+class ActiveElementAnimation : public gc {
+public:
     ActiveElementAnimation(String* name, Element* element,
                            AnimationType animationType, size_t index,
                            float iterationCount,
@@ -66,10 +57,66 @@ struct ActiveElementAnimation : public gc {
         STARFISH_ASSERT(element != nullptr);
     }
 
+    String* name() const
+    {
+        return m_name;
+    }
+
+    Element* element() const
+    {
+        return m_element;
+    }
+
+    AnimationType animationType() const
+    {
+        return m_animationType;
+    }
+
+    size_t index() const
+    {
+        return m_index;
+    }
+
+    double duration() const
+    {
+        return m_duration;
+    }
+
+    double delay() const
+    {
+        return m_delay;
+    }
+
+    float iterationCount() const
+    {
+        return m_iterationCount;
+    }
+
+    AnimationDirectionValue direction() const
+    {
+        return m_direction;
+    }
+
+    AnimationPlayStateValue playState() const
+    {
+        return m_playState;
+    }
+
     size_t hashValue() const;
+
     bool equals(const ActiveElementAnimation* src) const;
 
 private:
+    String* m_name;
+    Element* m_element;
+    AnimationType m_animationType;
+    size_t m_index;
+    double m_duration;
+    double m_delay;
+    float m_iterationCount;
+    AnimationDirectionValue m_direction;
+    AnimationPlayStateValue m_playState;
+
     mutable size_t m_hash;
 };
 } // namespace Starfish

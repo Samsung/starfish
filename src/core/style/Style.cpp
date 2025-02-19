@@ -9384,15 +9384,15 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     while (iter != executor->activeAnimations().end()) {
         ActiveElementAnimation* activeElementAnimation = iter.key();
         GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
-        if (activeElementAnimation->m_element != element) {
+        if (activeElementAnimation->element() != element) {
             iter++;
             continue;
         }
 
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
-        auto iterationCount = activeElementAnimation->m_iterationCount;
-        auto direction = activeElementAnimation->m_direction;
+        auto iterationCount = activeElementAnimation->iterationCount();
+        auto direction = activeElementAnimation->direction();
         for (size_t i = 0; i < animationTasks.size(); i++) {
             if (animationTasks[i]->targetElement() == element) {
                 STARFISH_ASSERT(!animationTasks[i]->isTransition());
@@ -9455,7 +9455,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                                     shouldRemove = true;
                                 }
 
-                                if (!activeElementAnimation->m_name->equals(
+                                if (!activeElementAnimation->name()->equals(
                                         styleAnimationData->animationName(n))) {
                                     continue;
                                 }
@@ -9527,10 +9527,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
         if (needsToFireAnimationCancelEvent == true) {
             executor->fireAnimationCancelEvent(
-                element, activeElementAnimation->m_name, cancelTick);
+                element, activeElementAnimation->name(), cancelTick);
         } else if (needsToFireAnimationEndEvent == true) {
             executor->fireAnimationEndEvent(
-                element, activeElementAnimation->m_name, endTick);
+                element, activeElementAnimation->name(), endTick);
         }
 
         if (animationTasks.empty()) {
@@ -9563,7 +9563,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     // Proceed with the animation steps if element has available animation task.
     if (elementHasAnimation) {
         for (auto& pair : executor->activeAnimations()) {
-            if (pair.first->m_element != element) {
+            if (pair.first->element() != element) {
                 continue;
             }
             auto& activeAnimationTasks = pair.second;

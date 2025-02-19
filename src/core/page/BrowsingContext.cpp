@@ -284,12 +284,13 @@ void BrowsingContext::resolveStyleIfNeeds()
                     }
                 }
                 if (canceled == true) {
-                    Element* e = animationIter.key()->m_element;
-                    String* n = animationIter.key()->m_name;
+                    ActiveElementAnimation* activeElementAnimation =
+                        animationIter.key();
                     AnimationExecutor* animationExecutor =
                         document()->animationExecutor();
-                    animationExecutor->fireAnimationCancelEvent(e, n,
-                                                                cancelTick);
+                    animationExecutor->fireAnimationCancelEvent(
+                        activeElementAnimation->element(),
+                        activeElementAnimation->name(), cancelTick);
 
                     webView()->updateActiveAnimationExecutorRegistration(
                         animationExecutor);
@@ -374,8 +375,8 @@ bool BrowsingContext::layoutIfNeeded()
             document()->animationExecutor()->activeAnimations();
         auto iter = activeAnimations.begin();
         while (iter != activeAnimations.end()) {
-            auto direction = iter->first->m_direction;
-            auto iterationCount = iter->first->m_iterationCount;
+            auto direction = iter->first->direction();
+            auto iterationCount = iter->first->iterationCount();
             bool isOddIteration;
             auto& l = iter->second;
             for (size_t i = 0; i < l.size(); i++) {
