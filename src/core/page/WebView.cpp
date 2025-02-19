@@ -1835,14 +1835,14 @@ RenderResult WebView::rendering(bool force)
 
             auto& animations = m_activeAnimationExecutor[i]->activeAnimations();
             for (auto& animation : animations) {
-                size_t idx = animation.first->m_index;
+                size_t idx = animation.first->index();
                 for (auto task : animation.second) {
                     task->initializeStartTimeIfNeeded(tick);
                     if (task->targetElement()->isPseudoElement() == true) {
                         // we should give damage on parent element
                         // because style of pseudo element is computed by
                         // its parent element
-                        if (animation.first->m_playState ==
+                        if (animation.first->playState() ==
                             AnimationPlayStateValue::Running) {
                             task->targetElement()
                                 ->asPseudoElement()
@@ -1868,7 +1868,7 @@ RenderResult WebView::rendering(bool force)
                             }
                         }
                     } else {
-                        if (animation.first->m_playState ==
+                        if (animation.first->playState() ==
                             AnimationPlayStateValue::Running) {
                             if (!task->isInForwardsFillMode()) {
                                 task->targetElement()
