@@ -652,6 +652,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "attributename"));
     m_beginEvent =
         QualifiedName(AtomicString::createAtomicString(starfish, "beginEvent"));
+    m_endEvent =
+        QualifiedName(AtomicString::createAtomicString(starfish, "endEvent"));
     m_calcMode =
         QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
     m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));

@@ -52,6 +52,7 @@
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGUseElement.h"
+#include "core/dom/svg/SVGAnimationElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/BrowsingContext.h"
@@ -9381,6 +9382,9 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
         canceledAnimationProgress;
     auto iter = executor->activeAnimations().begin();
+
+    // std::tuple<isCancel, task, expiredTick>
+    std::vector<ActiveAnimationTask*> expiredAnimationTasks;
     while (iter != executor->activeAnimations().end()) {
         ActiveElementAnimation* activeElementAnimation = iter.key();
         GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
@@ -9498,6 +9502,13 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                         }
                         task->markInForwardsFillMode();
                     }
+
+                    if (needsToFireAnimationEndEvent &&
+                        activeElementAnimation->animationType() ==
+                            AnimationType::SVGAnimation) {
+                        expiredAnimationTasks.push_back(task);
+                    }
+
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveExecutorInWebView = true;
                 } else {
@@ -9506,12 +9517,22 @@ void computeAnimation(StyleResolver& resolver, Element* element,
             }
         }
 
-        if (needsToFireAnimationCancelEvent == true) {
-            executor->fireAnimationCancelEvent(
-                element, activeElementAnimation->name(), cancelTick);
-        } else if (needsToFireAnimationEndEvent == true) {
-            executor->fireAnimationEndEvent(
-                element, activeElementAnimation->name(), endTick);
+        if (activeElementAnimation->animationType() ==
+            AnimationType::SVGAnimation) {
+            for (auto& expired : expiredAnimationTasks) {
+                STARFISH_ASSERT(expired->originAnimationElement().hasValue());
+                SVGAnimationElement* target =
+                    expired->originAnimationElement().getValue();
+                executor->fireSVGAnimateEndEvent(target);
+            }
+        } else {
+            if (needsToFireAnimationCancelEvent) {
+                executor->fireAnimationCancelEvent(
+                    element, activeElementAnimation->name(), cancelTick);
+            } else if (needsToFireAnimationEndEvent) {
+                executor->fireAnimationEndEvent(
+                    element, activeElementAnimation->name(), endTick);
+            }
         }
 
         if (animationTasks.empty()) {
@@ -9532,7 +9553,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         if (styleAnimationData &&
             styleAnimationData->totalAnimationKeyframesListSize() > 0) {
             AnimationApplier animationApplier(
-                element, AnimationType::KeyFramesAnimation, toStyle);
+                element, AnimationType::KeyFramesAnimation, toStyle, nullptr);
             if (animationApplier.apply()) {
                 elementHasAnimation = true;
                 needsToCheckActiveExecutorInWebView = true;

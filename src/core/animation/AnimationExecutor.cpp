@@ -271,4 +271,13 @@ void AnimationExecutor::fireSVGAnimateBeginEvent(Element* element)
     element->EventTarget::dispatchEventIdleTimeByUA(e);
 }
 
+void AnimationExecutor::fireSVGAnimateEndEvent(Element* element)
+{
+    String* eventType =
+        element->starfish()->staticStrings()->m_endEvent.localName();
+    Event* e = new Event(element->executionContext(), eventType,
+                         EventInit(false, false));
+    element->EventTarget::dispatchEventIdleTimeByUA(e);
+}
+
 } // namespace Starfish
