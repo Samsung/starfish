@@ -79,9 +79,7 @@ public:
 
     void step(uint64_t tickCount, ComputedStyle* style);
 
-    virtual void execute(double progress, ComputedStyle* style)
-    {
-    }
+    virtual void execute(double progress, ComputedStyle* style) = 0;
 
     virtual bool taskCanContinue(ComputedStyle* newStyle)
     {
@@ -118,71 +116,16 @@ public:
         return 0;
     }
 
-    double fraction(uint64_t tickCount) const
-    {
-        if (m_isInForwardsFillMode) {
-            return 1.0f;
-        }
+    double fraction(uint64_t tickCount) const;
 
-        if (!m_isRunning) {
-            double result = m_gapTimeMs / static_cast<double>(m_durationMs);
-            return std::min(result, 1.0);
-        }
-
-        if (!m_startTimeMs) {
-            return 0;
-        }
-
-        if (tickCount < (m_startTimeMs + m_delayMs)) {
-            return 0;
-        }
-        uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
-        double result = timeDiff / static_cast<double>(m_durationMs);
-
-        return std::min(result, 1.0);
-    }
-
-    uint64_t remainTime(uint64_t tickCount) const
-    {
-        if (m_isInForwardsFillMode) {
-            return 0;
-        }
-
-        if (!m_isRunning) {
-            return m_durationMs - m_gapTimeMs;
-        }
-
-        if (!m_startTimeMs) {
-            return m_durationMs;
-        }
-
-        if (tickCount < (m_startTimeMs + m_delayMs)) {
-            return m_durationMs;
-        }
-
-        uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
-
-        if (timeDiff > m_durationMs) {
-            return 0;
-        }
-
-        return m_durationMs - timeDiff;
-    }
+    uint64_t remainTime(uint64_t tickCount) const;
 
     bool isForward()
     {
         return m_isForward;
     }
 
-    void setIsForward(bool isForward)
-    {
-        if (m_isForward == true && isForward == false) {
-            m_frameIdx = m_frameSize - 1;
-        } else if (m_isForward == false && isForward == true) {
-            m_frameIdx = 0;
-        }
-        m_isForward = isForward;
-    }
+    void setIsForward(bool isForward);
 
     bool isInForwardsFillMode()
     {
@@ -257,6 +200,11 @@ public:
         return m_animationType == AnimationType::Transition;
     }
 
+    float iterationCount()
+    {
+        return m_iterationCount;
+    }
+
     float iterationStart()
     {
         return m_iterationStart;
@@ -264,7 +212,7 @@ public:
 
     void setIterationStart(float f)
     {
-        if (std::isinf(f) == true) {
+        if (std::isinf(f)) {
             m_iterationStart = 1;
         } else {
             m_iterationStart = f;

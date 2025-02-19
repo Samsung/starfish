@@ -45,6 +45,32 @@ bool ActiveElementAnimation::equals(const ActiveElementAnimation* other) const
            (m_animationType == other->m_animationType);
 }
 
+bool ActiveElementAnimation::isOddIteration(
+    ActiveAnimationTask* activeAnimationTask)
+{
+    float iterationCount = this->iterationCount();
+    float iterationStart = activeAnimationTask->iterationStart();
+
+    bool ret = false;
+    if (!std::isinf(iterationCount)) {
+        ret = std::fmod(iterationCount - iterationStart + 1, 2) >= 1;
+    } else {
+        ret = std::fmod(iterationStart, 2) >= 1;
+    }
+    return ret;
+}
+
+bool ActiveElementAnimation::isForwardDirection(
+    ActiveAnimationTask* activeAnimationTask)
+{
+    bool isOdd = isOddIteration(activeAnimationTask);
+    AnimationDirectionValue dir = this->direction();
+    bool ret = (dir == AnimationDirectionValue::Normal) ||
+               (dir == AnimationDirectionValue::Alternate && isOdd) ||
+               (dir == AnimationDirectionValue::AlternateReverse && !isOdd);
+    return ret;
+}
+
 void AnimationExecutor::iterateAnimationTasks(void (*fn)(ActiveAnimationTask*,
                                                          void*),
                                               void* data)

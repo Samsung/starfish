@@ -9391,46 +9391,30 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
-        auto iterationCount = activeElementAnimation->iterationCount();
-        auto direction = activeElementAnimation->direction();
+        float iterationCount = activeElementAnimation->iterationCount();
         for (size_t i = 0; i < animationTasks.size(); i++) {
-            if (animationTasks[i]->targetElement() == element) {
-                STARFISH_ASSERT(!animationTasks[i]->isTransition());
+            ActiveAnimationTask* task = animationTasks[i];
+            if (task->targetElement() == element) {
+                STARFISH_ASSERT(!task->isTransition());
                 bool shouldRemove = false;
                 bool isCancel = true;
 
-                bool isOddIteration;
-                if (!std::isinf(iterationCount)) {
-                    isOddIteration =
-                        std::fmod(iterationCount -
-                                      animationTasks[i]->iterationStart() + 1,
-                                  2) >= 1;
-                } else {
-                    isOddIteration =
-                        std::fmod(animationTasks[i]->iterationStart(), 2) >= 1;
-                }
-                bool isForwardDirection =
-                    (direction == AnimationDirectionValue::Normal) ||
-                    (direction == AnimationDirectionValue::Alternate &&
-                     isOddIteration) ||
-                    (direction == AnimationDirectionValue::AlternateReverse &&
-                     !isOddIteration);
-                animationTasks[i]->setIsForward(isForwardDirection);
-                if (animationTasks[i]->fraction(tick) >= 1) {
-                    if (!std::isinf(iterationCount)) {
-                        float f = animationTasks[i]->iterationStart() - 1;
-                        animationTasks[i]->setIterationStart(f);
-                        if (animationTasks[i]->iterationStart() < 1) {
+                task->setIsForward(
+                    activeElementAnimation->isForwardDirection(task));
+
+                if (task->fraction(tick) >= 1) {
+                    if (std::isinf(iterationCount)) {
+                        float f = task->iterationStart() == 1 ? 0 : 1;
+                        task->setIterationStart(f);
+                    } else {
+                        float f = task->iterationStart() - 1;
+                        task->setIterationStart(f);
+                        if (task->iterationStart() < 1) {
                             // time is up
                             shouldRemove = true;
                             isCancel = false;
-                            animationTasks[i]->setIterationStart(
-                                iterationCount);
+                            task->setIterationStart(iterationCount);
                         }
-                    } else {
-                        float f =
-                            animationTasks[i]->iterationStart() == 1 ? 0 : 1;
-                        animationTasks[i]->setIterationStart(f);
                     }
                 }
 
@@ -9442,7 +9426,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
                 // animation property gone || other properties changed
                 if (!shouldRemove) {
-                    if (animationTasks[i]->animationType() ==
+                    if (task->animationType() ==
                         AnimationType::KeyFramesAnimation) {
                         if (toStyle->animation()) {
                             for (size_t n = 0;
@@ -9469,9 +9453,8 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                                         animationKeyframes.animationKeyframe(0);
                                     for (auto& keyKind :
                                          animationKeyframe->keyKinds()) {
-                                        if (animationTasks[i]
-                                                ->isKindOfTransitionProperty(
-                                                    keyKind)) {
+                                        if (task->isKindOfTransitionProperty(
+                                                keyKind)) {
                                             found = true;
                                             break;
                                         }
@@ -9489,33 +9472,31 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
                 if (shouldRemove) {
                     if (!isCancel) {
-                        endTick = animationTasks[i]->duration() / 1000.0;
+                        endTick = task->duration() / 1000.0;
                         needsToFireAnimationEndEvent = true;
                     } else {
-                        auto key = animationTasks[i]->property();
-                        double progress = animationTasks[i]->fraction(tick);
+                        auto key = task->property();
+                        double progress = task->fraction(tick);
                         canceledAnimationProgress.push_back(
                             std::make_pair(key, progress));
 
-                        cancelTick =
-                            animationTasks[i]->duration() * progress / 1000.0;
+                        cancelTick = task->duration() * progress / 1000.0;
                         needsToFireAnimationCancelEvent = true;
                     }
                     // FIXME
                     // TODO: What is FIXME for?
-                    animationTasks[i]->detachFromElement();
+                    task->detachFromElement();
 
-                    if (animationTasks[i]->fillMode() !=
-                        AnimationFillModeValue::Forwards) {
+                    if (task->fillMode() != AnimationFillModeValue::Forwards) {
                         animationTasks.erase(i);
                         i--;
                     } else {
                         elementHasAnimation = true;
                         // if already in fill-mode, we should not fire end event
-                        if (animationTasks[i]->isInForwardsFillMode()) {
+                        if (task->isInForwardsFillMode()) {
                             needsToFireAnimationEndEvent = false;
                         }
-                        animationTasks[i]->markInForwardsFillMode();
+                        task->markInForwardsFillMode();
                     }
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveExecutorInWebView = true;

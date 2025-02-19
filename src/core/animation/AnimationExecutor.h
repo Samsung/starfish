@@ -42,7 +42,8 @@ public:
                            float iterationCount,
                            AnimationDirectionValue direction,
                            AnimationPlayStateValue playState)
-        : m_name(name)
+        : m_hash(0)
+        , m_name(name)
         , m_element(element)
         , m_animationType(animationType)
         , m_index(index)
@@ -51,7 +52,6 @@ public:
         , m_iterationCount(iterationCount)
         , m_direction(direction)
         , m_playState(playState)
-        , m_hash(0)
     {
         STARFISH_ASSERT(name != nullptr);
         STARFISH_ASSERT(element != nullptr);
@@ -106,18 +106,27 @@ public:
 
     bool equals(const ActiveElementAnimation* src) const;
 
+    bool isForwardDirection(ActiveAnimationTask* activeAnimationTask);
+
 private:
+    bool isOddIteration(ActiveAnimationTask* activeAnimationTask);
+
+    mutable size_t m_hash;
+
     String* m_name;
     Element* m_element;
     AnimationType m_animationType;
+
+    // FIXME: The following members are what each member of ActiveAnimationTask
+    // has. I do not understand why this Class should have these values as
+    // members in duplicates. so they should be removed from one of the two
+    // classes, if possible.
     size_t m_index;
     double m_duration;
     double m_delay;
     float m_iterationCount;
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
-
-    mutable size_t m_hash;
 };
 } // namespace Starfish
 
