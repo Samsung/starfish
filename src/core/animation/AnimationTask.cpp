@@ -50,7 +50,7 @@ template <typename T>
 static float interpolate(const T from, const T to, double progress,
                          bool isForward = true)
 {
-    if (isForward == true) {
+    if (isForward) {
         return from + (to - from) * progress;
     } else {
         return from + (to - from) * (1 - progress);
@@ -62,7 +62,7 @@ void* ActiveAnimationTask::operator new(size_t size)
     STARFISH_ASSERT(size == sizeof(ActiveAnimationTask));
     static bool typeInited = false;
     static GC_descr descr;
-    if (typeInited == false) {
+    if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveAnimationTask)] = { 0 };
         fillGCDescriptor(obj_bitmap);
         descr =
@@ -136,15 +136,14 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     if (isTransition()) {
         execute(computeProgress(f), style);
     } else {
-        if ((m_isInDelayedTime == true && f == 0) ||
-            m_isEveryAnimiatedValueResolved == false) {
+        if ((m_isInDelayedTime && f == 0) || !m_isEveryAnimiatedValueResolved) {
             return;
         }
 
         execute(computeProgress(f), style);
 
         auto frameIdxBefore = m_frameIdx;
-        if (f >= 1.0 && m_isForward == true) {
+        if (f >= 1.0 && m_isForward) {
             m_frameIdx++;
             if (m_frameIdx == m_frameSize - 1) {
                 m_frameIdx = 0;
@@ -152,7 +151,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
                 m_delayMs = 0;
                 m_isInDelayedTime = false;
             }
-        } else if (f <= 0.0 && m_isForward == false) {
+        } else if (f <= 0.0 && !m_isForward) {
             m_frameIdx--;
             if (m_frameIdx == 0) {
                 m_frameIdx = m_frameSize - 1;
@@ -170,6 +169,67 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
             return;
         }
     }
+}
+
+double ActiveAnimationTask::fraction(uint64_t tickCount) const
+{
+    if (m_isInForwardsFillMode) {
+        return 1.0f;
+    }
+
+    if (!m_isRunning) {
+        double result = m_gapTimeMs / static_cast<double>(m_durationMs);
+        return std::min(result, 1.0);
+    }
+
+    if (!m_startTimeMs) {
+        return 0;
+    }
+
+    if (tickCount < (m_startTimeMs + m_delayMs)) {
+        return 0;
+    }
+    uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
+    double result = timeDiff / static_cast<double>(m_durationMs);
+
+    return std::min(result, 1.0);
+}
+
+uint64_t ActiveAnimationTask::remainTime(uint64_t tickCount) const
+{
+    if (m_isInForwardsFillMode) {
+        return 0;
+    }
+
+    if (!m_isRunning) {
+        return m_durationMs - m_gapTimeMs;
+    }
+
+    if (!m_startTimeMs) {
+        return m_durationMs;
+    }
+
+    if (tickCount < (m_startTimeMs + m_delayMs)) {
+        return m_durationMs;
+    }
+
+    uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
+
+    if (timeDiff > m_durationMs) {
+        return 0;
+    }
+
+    return m_durationMs - timeDiff;
+}
+
+void ActiveAnimationTask::setIsForward(bool isForward)
+{
+    if (m_isForward && !isForward) {
+        m_frameIdx = m_frameSize - 1;
+    } else if (!m_isForward && isForward) {
+        m_frameIdx = 0;
+    }
+    m_isForward = isForward;
 }
 
 void ActiveAnimationTask::fireTransitionStartEvent()
@@ -233,7 +293,7 @@ AnimatedValue* ActiveAnimationTask::currentAnimatedFromValue()
 
 AnimatedValue* ActiveAnimationTask::currentAnimatedToValue()
 {
-    if (m_isForward == true) {
+    if (m_isForward) {
         return m_values[m_frameIdx + 1];
     } else {
         return m_values[m_frameIdx - 1];
@@ -251,7 +311,7 @@ double ActiveAnimationTask::computeProgress(double& fraction)
     STARFISH_ASSERT(fraction <= 1.0);
 
     if (!isTransition()) {
-        if (m_isForward == true) {
+        if (m_isForward) {
             fraction = (fraction - m_offsets[m_frameIdx]) /
                        (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
         } else {
@@ -279,7 +339,7 @@ void ActiveOpacityAnimationTask::execute(double progress, ComputedStyle* style)
     float from = currentAnimatedFromValue()->getFloat();
     float to = currentAnimatedToValue()->getFloat();
     float value = 0;
-    if (m_isForward == true) {
+    if (m_isForward) {
         value = from * (1 - progress) + to * progress;
     } else {
         value = from * progress + to * (1 - progress);
@@ -590,7 +650,7 @@ void* ActiveTransformAnimationTask::operator new(size_t size)
     STARFISH_ASSERT(size == sizeof(ActiveTransformAnimationTask));
     static bool typeInited = false;
     static GC_descr descr;
-    if (typeInited == false) {
+    if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveTransformAnimationTask)] = {
             0
         };
@@ -743,7 +803,7 @@ void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
     Unit::Color to = currentAnimatedToValue()->getColor();
 
     unsigned char r, g, b, a;
-    if (m_isForward == true) {
+    if (m_isForward) {
         r = from.r() * (1 - progress) + to.r() * progress;
         g = from.g() * (1 - progress) + to.g() * progress;
         b = from.b() * (1 - progress) + to.b() * progress;
@@ -863,7 +923,7 @@ void* ActiveLengthAnimationTask::operator new(size_t size)
     STARFISH_ASSERT(size == sizeof(ActiveLengthAnimationTask));
     static bool typeInited = false;
     static GC_descr descr;
-    if (typeInited == false) {
+    if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthAnimationTask)] = { 0 };
         fillGCDescriptor(obj_bitmap);
         descr = GC_make_descriptor(obj_bitmap,
@@ -1050,24 +1110,24 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
     STARFISH_ASSERT(style != nullptr);
     Length newLength;
 
-    if (m_isEveryAnimiatedValueResolved == false) {
+    if (!m_isEveryAnimiatedValueResolved) {
         newLength = currentAnimatedFromValue()->getLength();
     } else {
         AnimatedValue* fromValue = currentAnimatedFromValue();
         AnimatedValue* toValue = currentAnimatedToValue();
 
-        if (fromValue->isLength() == false || toValue->isLength() == false) {
+        if (!fromValue->isLength() || !toValue->isLength()) {
             // newLength remains as auto
-        } else if (fromValue->getLength().isAuto() == true ||
-                   toValue->getLength().isAuto() == true) {
+        } else if (fromValue->getLength().isAuto() ||
+                   toValue->getLength().isAuto()) {
             if (progress < 0.5) {
-                if (fromValue->isLength() == true) {
+                if (fromValue->isLength()) {
                     newLength = fromValue->getLength();
                 } else {
                     newLength = Length();
                 }
             } else {
-                if (toValue->isLength() == true) {
+                if (toValue->isLength()) {
                     newLength = toValue->getLength();
                 } else {
                     newLength = Length();
@@ -1347,7 +1407,7 @@ void* ActiveLengthSizeAnimationTask::operator new(size_t size)
     STARFISH_ASSERT(size == sizeof(ActiveLengthSizeAnimationTask));
     static bool typeInited = false;
     static GC_descr descr;
-    if (typeInited == false) {
+    if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthSizeAnimationTask)] = {
             0
         };

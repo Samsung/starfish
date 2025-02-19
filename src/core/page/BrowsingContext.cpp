@@ -375,27 +375,13 @@ bool BrowsingContext::layoutIfNeeded()
             document()->animationExecutor()->activeAnimations();
         auto iter = activeAnimations.begin();
         while (iter != activeAnimations.end()) {
-            auto direction = iter->first->direction();
-            auto iterationCount = iter->first->iterationCount();
-            bool isOddIteration;
-            auto& l = iter->second;
-            for (size_t i = 0; i < l.size(); i++) {
-                if (std::isinf(iterationCount) == false) {
-                    isOddIteration =
-                        std::fmod(iterationCount - l[i]->iterationStart() + 1,
-                                  2) >= 1;
-                } else {
-                    isOddIteration = std::fmod(l[i]->iterationStart(), 2) >= 1;
-                }
-                bool isForwardDirection =
-                    (direction == AnimationDirectionValue::Normal) ||
-                    (direction == AnimationDirectionValue::Alternate &&
-                     isOddIteration) ||
-                    (direction == AnimationDirectionValue::AlternateReverse &&
-                     !isOddIteration);
-
-                l[i]->setIsForward(isForwardDirection);
-                l[i]->resolveUnresolvedAnimatedValues();
+            ActiveElementAnimation* activeElementAnimation = iter.key();
+            GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
+            for (size_t i = 0; i < animationTasks.size(); i++) {
+                ActiveAnimationTask* task = animationTasks[i];
+                task->setIsForward(
+                    activeElementAnimation->isForwardDirection(task));
+                task->resolveUnresolvedAnimatedValues();
             }
             iter++;
         }
