@@ -3587,6 +3587,14 @@ public:
             ensureInheritedRareData()->m_verticalBorderSpacing = v;
     }
 
+    bool hasFillPaintData() const
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_fill;
+        }
+        return false;
+    }
+
     StylePaintData* fill()
     {
         if (m_inheritedStyles.m_rareData) {

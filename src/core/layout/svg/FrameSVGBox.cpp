@@ -395,9 +395,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
-    ctx.m_canvas->save();
     paintSVG(ctx);
-    ctx.m_canvas->restore();
 
     if (!prepareChildPainting(ctx.m_canvas)) {
         return;
@@ -881,103 +879,125 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
 
     auto vp = viewport();
 
-    bool fillHasUrl = style()->fill()->hasUrl();
-    bool strokeHasUrl = style()->stroke()->hasUrl();
+    ComputedStyle* cs = style();
     Optional<CanvasFillStrokeSource*> fillInfo;
     Optional<CanvasFillStrokeSource*> strokeInfo;
 
     auto path = this->path();
     if (path) {
-        auto strokeWidth = style()->strokeWidth().specifiedValue(
+        auto strokeWidth = cs->strokeWidth().specifiedValue(
             normalizedDiagonalViewportLength(), this);
         Path::StrokeStyle ss({
             strokeWidth,
-            style()->strokeMiterLimit(),
-            style()->strokeLineCap(),
-            style()->strokeLineJoin(),
-            style()->strokeDasharray(),
-            style()->strokeDashoffset(),
+            cs->strokeMiterLimit(),
+            cs->strokeLineCap(),
+            cs->strokeLineJoin(),
+            cs->strokeDasharray(),
+            cs->strokeDashoffset(),
         });
         // fill and stroke need same boundingRect for cover this case
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
         Unit::Rect rect = path->strokeBoundingRect(ss);
 
-        if (fillHasUrl) {
-            fillInfo = makeCanvasFillStrokeSource(style()->fill()->url(), rect);
+        if (cs->hasFillPaintData() && cs->fill()->hasUrl()) {
+            fillInfo = makeCanvasFillStrokeSource(cs->fill()->url(), rect);
         }
 
-        if (strokeHasUrl) {
+        if (cs->hasStrokePaintData() && cs->stroke()->hasUrl()) {
             // TODO: Only support linear gradient
-            strokeInfo =
-                makeCanvasFillStrokeSource(style()->stroke()->url(), rect);
+            strokeInfo = makeCanvasFillStrokeSource(cs->stroke()->url(), rect);
         }
 
-        ctx.m_canvas->save();
+        float fillOpacity = cs->fillOpacity();
+        float strokeOpacity = cs->strokeOpacity();
 
-        float fillOpacity = style()->fillOpacity();
-        if (fillInfo.hasValue()) {
-            if (fillOpacity != 1) {
-                ctx.m_canvas->beginOpacityLayer(fillOpacity, rect);
-            }
-            ctx.m_canvas->referencePath(path.value());
-            ctx.m_canvas->setFillSource(fillInfo.value());
-            ctx.m_canvas->fill();
-            if (fillOpacity != 1) {
-                ctx.m_canvas->endOpacityLayer();
-            }
-        } else {
-            Unit::Color fillColor = style()->fill()->color();
-            fillColor.m_a = fillColor.a() * fillOpacity;
-            if (!fillColor.isTransparent()) {
-                ctx.m_canvas->referencePath(path.value());
-                ctx.m_canvas->setFillColor(fillColor);
-                auto rule = style()->fillRule();
+        bool shouldPaintFill =
+            (fillOpacity != 0) &&
+            (fillInfo.hasValue() ||
+             (cs->hasFillPaintData() && !cs->fill()->color().isTransparent()));
+        bool shouldPaintStroke =
+            strokeWidth && (strokeOpacity != 0) &&
+            (strokeInfo.hasValue() || (cs->hasStrokePaintData() &&
+                                       !cs->stroke()->color().isTransparent()));
+
+        if (shouldPaintFill || shouldPaintStroke) {
+            ctx.m_canvas->save();
+
+            if (shouldPaintFill) {
+                if (fillOpacity != 1 && fillInfo.hasValue()) {
+                    ctx.m_canvas->beginOpacityLayer(fillOpacity, rect);
+                }
+                if (fillInfo.hasValue()) {
+                    ctx.m_canvas->setFillSource(fillInfo.value());
+                } else {
+                    Unit::Color fillColor = cs->fill()->color();
+                    fillColor.m_a = fillColor.a() * fillOpacity;
+                    STARFISH_ASSERT(!fillColor.isTransparent());
+                    ctx.m_canvas->setFillColor(fillColor);
+                }
+
+                auto rule = cs->fillRule();
                 if (rule == FillRuleValue::FillRuleNonZero) {
                     ctx.m_canvas->setFillRule(true);
                 } else {
                     STARFISH_ASSERT(rule == FillRuleValue::FillRuleEvenOdd);
                     ctx.m_canvas->setFillRule(false);
                 }
-                ctx.m_canvas->fill();
+
+                ctx.m_canvas->referencePath(path.value());
+
+                if (shouldPaintStroke) {
+                    ctx.m_canvas->fillPreserve();
+                } else {
+                    ctx.m_canvas->fill();
+                }
+
+                if (fillOpacity != 1 && fillInfo.hasValue()) {
+                    ctx.m_canvas->endOpacityLayer();
+                }
             }
+
+            // paint stroke
+            if (shouldPaintStroke) {
+                if (!shouldPaintFill) {
+                    ctx.m_canvas->referencePath(path.value());
+                }
+
+                bool shouldUseOpacityLayer =
+                    strokeInfo.hasValue() && strokeOpacity != 1;
+                if (shouldUseOpacityLayer) {
+                    ctx.m_canvas->beginOpacityLayer(strokeOpacity, rect);
+                }
+
+                ctx.m_canvas->setLineWidth(strokeWidth);
+                ctx.m_canvas->setLineCap(ss.strokeLineCap);
+                ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
+                ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
+                ctx.m_canvas->setDash(ss.strokeDasharray);
+                ctx.m_canvas->setDashOffset(ss.strokeDashoffset);
+                if (strokeInfo.hasValue()) {
+                    if (shouldPaintFill) {
+                        // NOTE we need to referencePath again
+                        // it is limitation of cairo
+                        ctx.m_canvas->referencePath(path.value());
+                    }
+                    ctx.m_canvas->setStrokeSource(strokeInfo.value());
+                } else {
+                    Unit::Color strokeColor = cs->stroke()->color();
+                    STARFISH_ASSERT(!strokeColor.isTransparent());
+                    ctx.m_canvas->setStrokeColor(Unit::Color(
+                        strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                        strokeColor.a() * strokeOpacity));
+                }
+                ctx.m_canvas->stroke();
+
+                if (shouldUseOpacityLayer) {
+                    ctx.m_canvas->endOpacityLayer();
+                }
+            }
+
+            ctx.m_canvas->restore();
         }
-
-        // stroke
-        bool shouldPaintStroke =
-            strokeWidth && (style()->strokeOpacity() != 0) &&
-            (strokeInfo.hasValue() ||
-             (style()->hasStrokePaintData() &&
-              !style()->stroke()->color().isTransparent()));
-
-        if (shouldPaintStroke) {
-            float strokeOpacity = style()->strokeOpacity();
-            bool shouldUseOpacityLayer =
-                strokeInfo.hasValue() && strokeOpacity != 1;
-            if (shouldUseOpacityLayer) {
-                ctx.m_canvas->beginOpacityLayer(strokeOpacity, rect);
-            }
-            ctx.m_canvas->setLineWidth(strokeWidth);
-            ctx.m_canvas->setLineCap(ss.strokeLineCap);
-            ctx.m_canvas->setLineJoin(ss.strokeLineJoin);
-            ctx.m_canvas->setMiterLimit(ss.strokeMiterLimit);
-            ctx.m_canvas->setDash(ss.strokeDasharray);
-            ctx.m_canvas->setDashOffset(ss.strokeDashoffset);
-            if (strokeInfo.hasValue()) {
-                ctx.m_canvas->setStrokeSource(strokeInfo.value());
-            } else {
-                Unit::Color strokeColor = style()->stroke()->color();
-                ctx.m_canvas->setStrokeColor(Unit::Color(
-                    strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                    strokeColor.a() * style()->strokeOpacity()));
-            }
-            ctx.m_canvas->referencePath(path.value());
-            ctx.m_canvas->stroke();
-            if (shouldUseOpacityLayer) {
-                ctx.m_canvas->endOpacityLayer();
-            }
-        }
-
-        ctx.m_canvas->restore();
     }
 }
 
