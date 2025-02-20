@@ -57,10 +57,12 @@ public:
     float value();
     void setValue(float v);
     float valueInSpecifiedUnits();
-    void setValueInSpecifiedUnits(float v);
     String* valueAsString();
     void setValueAsString(String* valueAsString,
+                          bool fromElementDidAttributeChanged = false,
                           bool throwDOMExceptionOnFailure = true);
+    void setValueInSpecifiedUnits(float v,
+                                  bool fromElementDidAttributeChanged = false);
 
     void newValueSpecifiedUnits(unsigned short unitType,
                                 float valueInSpecifiedUnits);

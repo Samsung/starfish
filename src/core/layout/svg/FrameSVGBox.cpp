@@ -904,7 +904,6 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         }
 
         if (cs->hasStrokePaintData() && cs->stroke()->hasUrl()) {
-            // TODO: Only support linear gradient
             strokeInfo = makeCanvasFillStrokeSource(cs->stroke()->url(), rect);
         }
 

@@ -49,30 +49,20 @@ void SVGRadialGradientElement::didAttributeChanged(QualifiedName name,
 {
     SVGGradientElement::didAttributeChanged(name, old, value, attributeCreated,
                                             attributeRemoved);
-    StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_cx == name) {
-        if (value->equals(cx()->baseVal()->valueAsString()) == false) {
-            cx()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_cy == name) {
-        if (value->equals(cy()->baseVal()->valueAsString()) == false) {
-            cy()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_r == name) {
-        if (value->equals(r()->baseVal()->valueAsString()) == false) {
-            r()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_fx == name) {
-        if (value->equals(fx()->baseVal()->valueAsString()) == false) {
-            fx()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_fy == name) {
-        if (value->equals(fy()->baseVal()->valueAsString()) == false) {
-            fy()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_fr == name) {
-        if (value->equals(fr()->baseVal()->valueAsString()) == false) {
-            fr()->baseVal()->setValueAsString(value, false);
+    if (!old || !old->equals(value)) {
+        StaticStrings* ss = starfish()->staticStrings();
+        if (ss->m_cx == name) {
+            cx()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_cy == name) {
+            cy()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_r == name) {
+            r()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_fx == name) {
+            fx()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_fy == name) {
+            fy()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_fr == name) {
+            fr()->baseVal()->setValueAsString(value, true, false);
         }
     }
 }

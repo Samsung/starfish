@@ -34,7 +34,7 @@ public:
         : SVGGradientElement(document, qname)
     {
         x2()->baseVal()->setValueAsString(String::createASCIIString("100%"),
-                                          false);
+                                          false, false);
     }
 
     virtual void init(ScriptBindingInstance* instance,
