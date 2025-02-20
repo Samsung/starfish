@@ -193,7 +193,8 @@ float SVGLength::valueInSpecifiedUnits()
     return m_valueInSpecifiedUnits;
 }
 
-void SVGLength::setValueInSpecifiedUnits(float v)
+void SVGLength::setValueInSpecifiedUnits(float v,
+                                         bool fromElementDidAttributeChanged)
 {
     if (isReadOnly()) {
         throw new DOMException(m_sourceElement->executionContext(),
@@ -211,7 +212,9 @@ void SVGLength::setValueInSpecifiedUnits(float v)
     m_valueInSpecifiedUnits = v;
     m_hasSpecificValue = true;
 
-    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
+    if (!fromElementDidAttributeChanged) {
+        m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
+    }
 }
 
 String* SVGLength::valueAsString()
@@ -247,6 +250,7 @@ String* SVGLength::valueAsString()
 }
 
 void SVGLength::setValueAsString(String* valueAsString,
+                                 bool fromElementDidAttributeChanged,
                                  bool throwDOMExceptionOnFailure)
 {
     valueAsString = valueAsString->toLower();
@@ -257,7 +261,7 @@ void SVGLength::setValueAsString(String* valueAsString,
         float v;
         if (CSSPropertyParser::parseNumber(s.data(), s.length(), 0, &v)) {
             setUnitType(SVG_LENGTHTYPE_NUMBER);
-            setValueInSpecifiedUnits(v);
+            setValueInSpecifiedUnits(v, fromElementDidAttributeChanged);
         } else if (CSSPropertyParser::parseLength(
                        s.data(),
                        CSSPropertyParser::AllowPercent |
@@ -284,10 +288,12 @@ void SVGLength::setValueAsString(String* valueAsString,
                         (int)pair.cssLengthValue().kind());
                     setUnitType(SVG_LENGTHTYPE_PX);
                 }
-                setValueInSpecifiedUnits(pair.cssLengthValue().value());
+                setValueInSpecifiedUnits(pair.cssLengthValue().value(),
+                                         fromElementDidAttributeChanged);
             } else if (pair.valueKind() == CSSStyleValuePair::Percentage) {
                 setUnitType(SVG_LENGTHTYPE_PERCENTAGE);
-                setValueInSpecifiedUnits(pair.percentageValue() * 100);
+                setValueInSpecifiedUnits(pair.percentageValue() * 100,
+                                         fromElementDidAttributeChanged);
             } else {
                 if (throwDOMExceptionOnFailure) {
                     throw new DOMException(
@@ -323,7 +329,7 @@ void SVGLength::newValueSpecifiedUnits(unsigned short unitType,
     }
 
     convertToSpecifiedUnits(unitType);
-    setValueInSpecifiedUnits(valueInSpecifiedUnits);
+    setValueInSpecifiedUnits(valueInSpecifiedUnits, false);
 }
 
 void SVGLength::convertToSpecifiedUnits(unsigned short unitType)

@@ -50,23 +50,16 @@ void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
     SVGGradientElement::didAttributeChanged(name, old, value, attributeCreated,
                                             attributeRemoved);
 
-    StaticStrings* ss = starfish()->staticStrings();
-
-    if (ss->m_x1 == name) {
-        if (value->equals(x1()->baseVal()->valueAsString()) == false) {
-            x1()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_y1 == name) {
-        if (value->equals(y1()->baseVal()->valueAsString()) == false) {
-            y1()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_x2 == name) {
-        if (value->equals(x2()->baseVal()->valueAsString()) == false) {
-            x2()->baseVal()->setValueAsString(value, false);
-        }
-    } else if (ss->m_y2 == name) {
-        if (value->equals(y2()->baseVal()->valueAsString()) == false) {
-            y2()->baseVal()->setValueAsString(value, false);
+    if (!old || !old->equals(value)) {
+        StaticStrings* ss = starfish()->staticStrings();
+        if (ss->m_x1 == name) {
+            x1()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_y1 == name) {
+            y1()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_x2 == name) {
+            x2()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_y2 == name) {
+            y2()->baseVal()->setValueAsString(value, true, false);
         }
     }
 }
