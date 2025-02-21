@@ -15998,13 +15998,15 @@ bool CSSStyleValuePair::updateValueR(Document* document,
 bool CSSStyleValuePair::updateValueRX(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
+                                         CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueRY(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
+                                         CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueCX(Document* document,
