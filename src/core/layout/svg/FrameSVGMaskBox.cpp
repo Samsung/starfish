@@ -80,32 +80,14 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
-class SVGMaskPaintingDetphMarker {
-public:
-    SVGMaskPaintingDetphMarker(size_t& d)
-        : depth(d)
-    {
-        depth++;
-    }
-
-    ~SVGMaskPaintingDetphMarker()
-    {
-        depth--;
-    }
-
-    size_t& depth;
-};
-
 void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 {
     FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
     auto ctm = ctx.m_canvas->currentTransformMatrix();
     viewportBox->pushToSVGMaskPaintingStack(targetBox);
-    LayoutRect childrenRect = (*viewportBox->svgMaskPaintingStack().begin())
-                                  ->absoluteRect(viewportBox);
-
     ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-    ctx.m_canvas->beginSubCanvas(childrenRect, SubCanvasMode::Mask);
+    ctx.m_canvas->beginSubCanvas(viewportBox->topmostMaskPaintingRect(),
+                                 SubCanvasMode::Mask);
     ctx.m_canvas->setMatrix(ctm);
 
     Frame* f = firstChild();

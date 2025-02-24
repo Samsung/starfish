@@ -308,6 +308,23 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
                                        viewport, intrinsicSizeInfo);
 }
 
+LayoutRect FrameSVGSVGBox::topmostMaskPaintingRect()
+{
+    STARFISH_ASSERT(svgMaskPaintingDepth());
+    return (*svgMaskPaintingStack().begin())->absoluteRect(this);
+}
+
+LayoutRect FrameSVGSVGBox::computeSubCanvasRect(FrameSVGBox* box)
+{
+    // in mask painting
+    // mask rect and sub-mask or sub-content rect may not overlapped
+    if (svgMaskPaintingDepth()) {
+        return topmostMaskPaintingRect();
+    } else {
+        return box->absoluteRect(this);
+    }
+}
+
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
     auto tranlateScaleValue = computeTranlateScaleOnPaint();
