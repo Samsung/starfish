@@ -89,12 +89,12 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(fr);
 
 private:
-    SVGAnimatedLength* m_cx{ nullptr };
-    SVGAnimatedLength* m_cy{ nullptr };
-    SVGAnimatedLength* m_r{ nullptr };
-    SVGAnimatedLength* m_fx{ nullptr };
-    SVGAnimatedLength* m_fy{ nullptr };
-    SVGAnimatedLength* m_fr{ nullptr };
+    Optional<SVGAnimatedLength*> m_cx;
+    Optional<SVGAnimatedLength*> m_cy;
+    Optional<SVGAnimatedLength*> m_r;
+    Optional<SVGAnimatedLength*> m_fx;
+    Optional<SVGAnimatedLength*> m_fy;
+    Optional<SVGAnimatedLength*> m_fr;
 };
 } // namespace Starfish
 

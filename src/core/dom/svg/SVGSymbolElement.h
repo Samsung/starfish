@@ -77,8 +77,8 @@ protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
 
-    SVGAnimatedLength* m_x{ nullptr };
-    SVGAnimatedLength* m_y{ nullptr };
+    Optional<SVGAnimatedLength*> m_x;
+    Optional<SVGAnimatedLength*> m_y;
 };
 } // namespace Starfish
 

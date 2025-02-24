@@ -93,10 +93,10 @@ protected:
     NativeImageData* m_imageData{ nullptr };
     RequestErrorType m_requestErrorType;
 
-    SVGAnimatedLength* m_x{ nullptr };
-    SVGAnimatedLength* m_y{ nullptr };
-    SVGAnimatedLength* m_width{ nullptr };
-    SVGAnimatedLength* m_height{ nullptr };
+    Optional<SVGAnimatedLength*> m_x;
+    Optional<SVGAnimatedLength*> m_y;
+    Optional<SVGAnimatedLength*> m_width;
+    Optional<SVGAnimatedLength*> m_height;
 };
 } // namespace Starfish
 

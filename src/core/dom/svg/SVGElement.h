@@ -32,13 +32,13 @@
 #define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                \
     SVGAnimatedLength* attrName()                                    \
     {                                                                \
-        if (m_##attrName == nullptr) {                               \
+        if (!m_##attrName.hasValue()) {                              \
             SVGLength* baseVal =                                     \
                 new SVGLength(this, staticStrings()->m_##attrName);  \
             m_##attrName =                                           \
                 new SVGAnimatedLength(document(), baseVal, nullptr); \
         }                                                            \
-        return m_##attrName;                                         \
+        return m_##attrName.value();                                 \
     }
 
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2, customs) \
