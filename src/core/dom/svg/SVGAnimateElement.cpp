@@ -73,15 +73,18 @@ void SVGAnimateElement::beginElementAt(float offset)
 
     AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
 
-    // TODO: If a list of values is used, the animation will apply the
+    // If a list of values is used, the animation will apply the
     // values in order over the course of the animation. If a list of
     // ‘values’ is specified, any ‘from’, ‘to’ and ‘by’ attribute values are
     // ignored.
-
-    // Parse from and to value.
-    CSSStyleValuePair from;
-    CSSStyleValuePair to;
-    if (!parseFrom(keyKind, from) || !parseTo(keyKind, to)) {
+    // TODO: 'by' attribute.
+    GCVector<CSSStyleValuePair> values;
+    if (hasValues()) {
+        if (!parseValues(keyKind, values)) {
+            STARFISH_LOG_WARN("Invalid values attribute.");
+            return;
+        }
+    } else if (!parseFrom(keyKind, values) || !parseTo(keyKind, values)) {
         STARFISH_LOG_WARN("Invalid from, to attributes.");
         return;
     }
@@ -117,8 +120,8 @@ void SVGAnimateElement::beginElementAt(float offset)
     animationKeyframes->setTimingFunction(
         CubicBezier::createCubicBezier(easeType));
 
-    // Add keyframes using from and to value to animationKeyframes.
-    AddAnimationKeyframe(keyKind, animationKeyframes, from, to);
+    // Add keyframes using values to animationKeyframes.
+    AddAnimationKeyframe(keyKind, animationKeyframes, values);
 
     Optional<Element*> maybeTargetElement = targetElement();
     if (!maybeTargetElement) {
@@ -142,25 +145,24 @@ void SVGAnimateElement::beginElementAt(float offset)
     setNeedsStyleRecalcForAnimation();
 
     document()->animationExecutor()->fireSVGAnimateBeginEvent(this);
+
+    m_declarations->clear();
 }
 
 void SVGAnimateElement::AddAnimationKeyframe(
     CSSStyleValuePair::KeyKind keyKind, AnimationKeyframes* animationKeyframes,
-    const CSSStyleValuePair& from, const CSSStyleValuePair& to)
+    const GCVector<CSSStyleValuePair>& values)
 {
-    AnimationKeyframe* fromKeyframe = new AnimationKeyframe();
-    fromKeyframe->setKeyframeSelector(0.0);
-    fromKeyframe->addProperty(keyKind, from);
-    fromKeyframe->setDuration(animationKeyframes->duration());
-    fromKeyframe->setTimingFunction(animationKeyframes->timingFunction());
-    animationKeyframes->animationKeyframeList().push_back(fromKeyframe);
-
-    AnimationKeyframe* toKeyframe = new AnimationKeyframe();
-    toKeyframe->setKeyframeSelector(1.0);
-    toKeyframe->addProperty(keyKind, to);
-    toKeyframe->setDuration(animationKeyframes->duration());
-    toKeyframe->setTimingFunction(animationKeyframes->timingFunction());
-    animationKeyframes->animationKeyframeList().push_back(toKeyframe);
+    for (size_t i = 0; i < values.size(); ++i) {
+        AnimationKeyframe* keyframe = new AnimationKeyframe();
+        double offset = 100.0 / (values.size() - 1);
+        double keyframeSelector = (offset * i) / 100;
+        keyframe->setKeyframeSelector(keyframeSelector);
+        keyframe->addProperty(keyKind, values[i]);
+        keyframe->setDuration(animationKeyframes->duration());
+        keyframe->setTimingFunction(animationKeyframes->timingFunction());
+        animationKeyframes->animationKeyframeList().push_back(keyframe);
+    }
 }
 
 } // namespace Starfish

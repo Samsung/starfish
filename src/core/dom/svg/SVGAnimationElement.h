@@ -26,6 +26,7 @@
 namespace Starfish {
 
 enum class CubicBezierEaseType : uint8_t;
+class CSSStyleDeclaration;
 
 // https://svgwg.org/specs/animations/#FillAttribute
 enum class SVGAnimationFill {
@@ -53,6 +54,7 @@ public:
     {
         SVGElement::fillGCDescriptor(desc);
         // Fill GC descriptor here if needed
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_declarations));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -82,11 +84,24 @@ public:
 
 protected:
     bool parseAttributeName(CSSStyleValuePair::KeyKind& keyKind);
-    bool parseFrom(CSSStyleValuePair::KeyKind keyKind, CSSStyleValuePair& from);
-    bool parseTo(CSSStyleValuePair::KeyKind keyKind, CSSStyleValuePair& to);
+    bool parseValues(CSSStyleValuePair::KeyKind keyKind,
+                     GCVector<CSSStyleValuePair>& values);
+    bool parseValue(CSSStyleValuePair::KeyKind keyKind, const char* buffer,
+                    size_t len, CSSStyleValuePair& pair);
+
+    bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
+                   GCVector<CSSStyleValuePair>& values);
+    bool parseTo(CSSStyleValuePair::KeyKind keyKind,
+                 GCVector<CSSStyleValuePair>& values);
+    bool parseFromAndToInternal(CSSStyleValuePair::KeyKind keyKind,
+                                String* value,
+                                GCVector<CSSStyleValuePair>& values);
     bool parseDur(CSSTime& duration);
     bool parseFill(SVGAnimationFill& fill);
     bool parseCalcMode(SVGAnimationCalcMode& calcMode);
+    bool hasValues();
+
+    CSSStyleDeclaration* m_declarations;
 };
 } // namespace Starfish
 

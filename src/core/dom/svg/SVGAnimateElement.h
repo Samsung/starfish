@@ -55,8 +55,7 @@ public:
 protected:
     void AddAnimationKeyframe(CSSStyleValuePair::KeyKind keyKind,
                               AnimationKeyframes* animationKeyframes,
-                              const CSSStyleValuePair& from,
-                              const CSSStyleValuePair& to);
+                              const GCVector<CSSStyleValuePair>& values);
 
     Optional<AnimationKeyframes*> m_animationKeyframes;
 };
