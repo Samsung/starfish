@@ -15956,13 +15956,15 @@ bool CSSStyleValuePair::updateValueStrokeDashoffset(
 bool CSSStyleValuePair::updateValueX(Document* document,
                                      const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
+                                         CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueY(Document* document,
                                      const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
+                                         CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueX1(Document* document,
