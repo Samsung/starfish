@@ -71,6 +71,7 @@ CubicBezierEaseType svgAnimationCalcModeToCubicBezierEaseType(
 SVGAnimationElement::SVGAnimationElement(Document* document,
                                          const QualifiedName& qname)
     : SVGElement(document, qname)
+    , m_declarations(new CSSStyleDeclaration(this))
 {
 }
 
@@ -127,40 +128,93 @@ bool SVGAnimationElement::parseAttributeName(
     return keyKind != CSSStyleValuePair::KeyKind::Unknown;
 }
 
+bool SVGAnimationElement::parseValues(CSSStyleValuePair::KeyKind keyKind,
+                                      GCVector<CSSStyleValuePair>& values)
+{
+    Optional<String*> maybeValues =
+        getAttribute(starfish()->staticStrings()->m_values);
+
+    if (!maybeValues) {
+        return false;
+    }
+    String* valuesValue = maybeValues.getValue();
+
+    GCVector<StringView> tokens;
+    StringUtils::tokenize(valuesValue, ";", 1, tokens);
+
+    for (auto& token : tokens) {
+        StringBufferAccessData bad = token.bufferAccessData();
+        CSSStyleValuePair pair;
+        if (!parseValue(keyKind, bad.asciiData(), bad.length, pair)) {
+            return false;
+        }
+        values.push_back(pair);
+    }
+
+    return true;
+}
+
+bool SVGAnimationElement::parseValue(CSSStyleValuePair::KeyKind keyKind,
+                                     const char* buffer, size_t len,
+                                     CSSStyleValuePair& pair)
+{
+    // Parse each value in values using the rules for parsing the attribute
+    // identified by the ‘attributeName’ attributes.
+    // Note that ‘attributeName’ corresponds to an attribute name or a CSS
+    // property name.
+    bool ret = m_declarations->setPropertyInternal(keyKind, buffer, len, false);
+    if (!ret) {
+        return false;
+    }
+    pair = m_declarations->getCSSValuePair(keyKind);
+    return true;
+}
+
 bool SVGAnimationElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                                    CSSStyleValuePair& from)
+                                    GCVector<CSSStyleValuePair>& values)
 {
     Optional<String*> maybeFrom =
         getAttribute(starfish()->staticStrings()->m_from);
     if (!maybeFrom) {
         return false;
     }
-
-    uint8_t option =
-        CSSPropertyParser::AllowWithoutUnit | CSSPropertyParser::AllowPercent;
-    auto str = maybeFrom->toUTF8NonGCString();
-    if (!parseLengthValue(maybeFrom.value(), option, from)) {
-        return false;
-    }
-    from.setKeyKind(keyKind);
-    return true;
+    return parseFromAndToInternal(keyKind, maybeFrom.getValue(), values);
 }
 
 bool SVGAnimationElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
-                                  CSSStyleValuePair& to)
+                                  GCVector<CSSStyleValuePair>& values)
 {
     Optional<String*> maybeTo = getAttribute(starfish()->staticStrings()->m_to);
     if (!maybeTo) {
         return false;
     }
 
-    uint8_t option =
-        CSSPropertyParser::AllowWithoutUnit | CSSPropertyParser::AllowPercent;
-    auto str = maybeTo->toUTF8NonGCString();
-    if (!parseLengthValue(maybeTo.value(), option, to)) {
+    return parseFromAndToInternal(keyKind, maybeTo.getValue(), values);
+}
+
+bool SVGAnimationElement::parseFromAndToInternal(
+    CSSStyleValuePair::KeyKind keyKind, String* value,
+    GCVector<CSSStyleValuePair>& values)
+{
+    struct Args {
+        CSSStyleValuePair::KeyKind keyKind;
+        CSSStyleValuePair pair;
+        SVGAnimationElement* self = nullptr;
+        bool ret = false;
+    } args;
+    args.keyKind = keyKind;
+    args.self = this;
+    value->peekUTF8Buffer(
+        [](const char* buffer, size_t len, void* data) -> size_t {
+            Args* p = static_cast<Args*>(data);
+            p->ret = p->self->parseValue(p->keyKind, buffer, len, p->pair);
+            return 0;
+        },
+        &args);
+    if (!args.ret) {
         return false;
     }
-    to.setKeyKind(keyKind);
+    values.push_back(args.pair);
     return true;
 }
 
@@ -229,6 +283,11 @@ bool SVGAnimationElement::parseCalcMode(SVGAnimationCalcMode& calcMode)
                           maybeCalcMode->toUTF8NonGCString().c_str());
     }
     return false;
+}
+
+bool SVGAnimationElement::hasValues()
+{
+    return hasAttribute(starfish()->staticStrings()->m_values.localName());
 }
 
 } // namespace Starfish
