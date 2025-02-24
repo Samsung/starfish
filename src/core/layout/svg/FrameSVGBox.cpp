@@ -502,344 +502,319 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
 }
 
 Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
-    String* url, const Unit::Rect& svgRect)
+    const AtomicString& id, const Unit::Rect& svgRect)
 {
     Unit::Rect rect = svgRect;
 
-    ResourceURL* resourceUrl = new ResourceURL(url);
-    if (!resourceUrl->isValid()) {
+    auto owner = node()->asSVGElement()->ownerSVGElement();
+    if (!owner) {
+        return nullptr;
+    }
+    auto matchingSvg = owner->getSVGElementById(id);
+    if (!matchingSvg) {
         return nullptr;
     }
 
-    String* urlString = resourceUrl->string();
-    if (urlString->startsWith("#")) {
-        if (!node()) {
-            return nullptr;
+    // Use extents of the path
+    CanvasGradient* gradient = nullptr;
+    bool isUserSpaceOnUseMode = false;
+    auto vp = viewport();
+    Unit::Rect vpRect = Unit::Rect(0, 0, vp.width(), vp.height());
+
+    if (matchingSvg->isSVGLinearGradientElement()) {
+        SVGLinearGradientElement* gradientElement =
+            matchingSvg->asSVGLinearGradientElement();
+
+        if (gradientElement->gradientUnits()->baseVal() ==
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
+            rect = vpRect;
+            isUserSpaceOnUseMode = true;
         }
 
-        String* id = urlString->substring(1, urlString->length() - 1);
-        auto owner = node()->asSVGElement()->ownerSVGElement();
-        if (!owner) {
-            return nullptr;
+        double x1 = rect.x();
+        if (gradientElement->x1()->baseVal()->unitType() ==
+            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+            x1 += gradientElement->x1()->baseVal()->valueInSpecifiedUnits() *
+                  rect.width() / 100;
+        } else {
+            x1 += gradientElement->x1()->baseVal()->value();
         }
-        auto matchingSvg = owner->getSVGElementById(id);
-        if (!matchingSvg) {
-            return nullptr;
+
+        double y1 = rect.y();
+        if (gradientElement->y1()->baseVal()->unitType() ==
+            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+            y1 += gradientElement->y1()->baseVal()->valueInSpecifiedUnits() *
+                  rect.height() / 100;
+        } else {
+            y1 += gradientElement->y1()->baseVal()->value();
         }
 
-        // Use extents of the path
-        CanvasGradient* gradient = nullptr;
-        bool isUserSpaceOnUseMode = false;
-        auto vp = viewport();
-        Unit::Rect vpRect = Unit::Rect(0, 0, vp.width(), vp.height());
+        double x2 = rect.x();
+        if (gradientElement->x2()->baseVal()->unitType() ==
+            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+            x2 += gradientElement->x2()->baseVal()->valueInSpecifiedUnits() *
+                  rect.width() / 100;
+        } else {
+            x2 += gradientElement->x2()->baseVal()->value();
+        }
 
-        if (matchingSvg->isSVGLinearGradientElement()) {
-            SVGLinearGradientElement* gradientElement =
-                matchingSvg->asSVGLinearGradientElement();
+        double y2 = rect.y();
+        if (gradientElement->y2()->baseVal()->unitType() ==
+            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+            y2 += gradientElement->y2()->baseVal()->valueInSpecifiedUnits() *
+                  rect.height() / 100;
+        } else {
+            y2 += gradientElement->y2()->baseVal()->value();
+        }
 
-            if (gradientElement->gradientUnits()->baseVal() ==
-                SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-                rect = vpRect;
-                isUserSpaceOnUseMode = true;
-            }
+        SVGTransformList* gradientTransform =
+            gradientElement->gradientTransform()->baseVal();
+        SkMatrix mat = SkMatrix::I();
+        for (size_t i = 0; i < gradientTransform->length(); ++i) {
+            mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+        }
 
-            double x1 = rect.x();
-            if (gradientElement->x1()->baseVal()->unitType() ==
+        double xx1 = x1 * mat[0] + y1 * mat[1] + rect.width() * mat[2];
+        double yy1 = x1 * mat[3] + y1 * mat[4] + rect.height() * mat[5];
+        double xx2 = x2 * mat[0] + y2 * mat[1] + rect.width() * mat[2];
+        double yy2 = x2 * mat[3] + y2 * mat[4] + rect.height() * mat[5];
+
+        gradient = new CanvasGradient(matchingSvg->executionContext(), xx1, yy1,
+                                      xx2, yy2);
+
+        GradientData* gradientData = new LinearGradientData();
+        gradientData->colorStopList() = gradientElement->colorStops();
+        gradient->nativeGradient()->setGradientDrawingInfo(
+            gradientData->makeGradientDrawingInfo(rect, this));
+
+        const auto& colorStops = gradientElement->colorStops();
+        size_t size = colorStops.size();
+        for (size_t i = 0; i < size; ++i) {
+            gradient->addColorStop(colorStops[i]->offset().numberData(),
+                                   colorStops[i]->color());
+        }
+    } else if (matchingSvg->isSVGRadialGradientElement()) {
+        // TODO: RadialGradient works partially, 'fx', 'fy', 'fr' need to be
+        // implemented.
+        STARFISH_UNIMPLEMENTED();
+        SVGRadialGradientElement* gradientElement =
+            matchingSvg->asSVGRadialGradientElement();
+
+        if (gradientElement->gradientUnits()->baseVal() ==
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
+            rect = vpRect;
+            isUserSpaceOnUseMode = true;
+        }
+
+        double cx = rect.x();
+        if (gradientElement->cx()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->cx()->baseVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                x1 +=
-                    gradientElement->x1()->baseVal()->valueInSpecifiedUnits() *
+                cx +=
+                    gradientElement->cx()->baseVal()->valueInSpecifiedUnits() *
                     rect.width() / 100;
             } else {
-                x1 += gradientElement->x1()->baseVal()->value();
+                if (isUserSpaceOnUseMode) {
+                    cx += gradientElement->cx()->baseVal()->value();
+                } else {
+                    cx += gradientElement->cx()->baseVal()->value() *
+                          rect.width();
+                }
             }
+        } else {
+            // Default value: 50%
+            cx += 0.5 * rect.width();
+        }
 
-            double y1 = rect.y();
-            if (gradientElement->y1()->baseVal()->unitType() ==
+        double cy = rect.y();
+        if (gradientElement->cy()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->cy()->baseVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                y1 +=
-                    gradientElement->y1()->baseVal()->valueInSpecifiedUnits() *
+                cy +=
+                    gradientElement->cy()->baseVal()->valueInSpecifiedUnits() *
                     rect.height() / 100;
             } else {
-                y1 += gradientElement->y1()->baseVal()->value();
+                if (isUserSpaceOnUseMode) {
+                    cy += gradientElement->cy()->baseVal()->value();
+                } else {
+                    cy += gradientElement->cy()->baseVal()->value() *
+                          rect.height();
+                }
             }
+        } else {
+            // Default value: 50%
+            cy += 0.5 * rect.height();
+        }
 
-            double x2 = rect.x();
-            if (gradientElement->x2()->baseVal()->unitType() ==
+        // Default value: 50%
+        double r = 0.5;
+        if (gradientElement->r()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->r()->baseVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                x2 +=
-                    gradientElement->x2()->baseVal()->valueInSpecifiedUnits() *
+                if (isUserSpaceOnUseMode) {
+                    r = gradientElement->r()
+                            ->baseVal()
+                            ->valueInSpecifiedUnits() /
+                        100 * normalizedDiagonalViewportLength().toFloat();
+                } else {
+                    r = gradientElement->r()
+                            ->baseVal()
+                            ->valueInSpecifiedUnits() /
+                        100;
+                }
+            } else {
+                r = gradientElement->r()->baseVal()->value();
+            }
+        }
+
+        // Default value: cx
+        double fx = rect.x();
+        if (gradientElement->fx()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->fx()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                fx +=
+                    gradientElement->fx()->baseVal()->valueInSpecifiedUnits() *
                     rect.width() / 100;
             } else {
-                x2 += gradientElement->x2()->baseVal()->value();
+                if (isUserSpaceOnUseMode) {
+                    fx += gradientElement->fx()->baseVal()->value();
+                } else {
+                    fx += gradientElement->fx()->baseVal()->value() *
+                          rect.width();
+                }
             }
+        } else {
+            fx = cx;
+        }
 
-            double y2 = rect.y();
-            if (gradientElement->y2()->baseVal()->unitType() ==
+        // Default value: cy
+        double fy = rect.y();
+        if (gradientElement->fy()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->fy()->baseVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                y2 +=
-                    gradientElement->y2()->baseVal()->valueInSpecifiedUnits() *
+                fy +=
+                    gradientElement->fy()->baseVal()->valueInSpecifiedUnits() *
                     rect.height() / 100;
             } else {
-                y2 += gradientElement->y2()->baseVal()->value();
+                if (isUserSpaceOnUseMode) {
+                    fy += gradientElement->fy()->baseVal()->value();
+                } else {
+                    fy += gradientElement->fy()->baseVal()->value() *
+                          rect.height();
+                }
             }
+        } else {
+            fy = cy;
+        }
 
-            SVGTransformList* gradientTransform =
-                gradientElement->gradientTransform()->baseVal();
-            SkMatrix mat = SkMatrix::I();
-            for (size_t i = 0; i < gradientTransform->length(); ++i) {
-                mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+        // Default value: 0
+        double fr = 0;
+        if (gradientElement->fr()->baseVal()->hasSpecificValue()) {
+            if (gradientElement->fr()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                if (isUserSpaceOnUseMode) {
+                    fr = gradientElement->fr()
+                             ->baseVal()
+                             ->valueInSpecifiedUnits() /
+                         100 * normalizedDiagonalViewportLength().toFloat();
+                } else {
+                    fr = gradientElement->fr()
+                             ->baseVal()
+                             ->valueInSpecifiedUnits() /
+                         100;
+                }
+            } else {
+                fr = gradientElement->fr()->baseVal()->value();
             }
+        }
 
-            double xx1 = x1 * mat[0] + y1 * mat[1] + rect.width() * mat[2];
-            double yy1 = x1 * mat[3] + y1 * mat[4] + rect.height() * mat[5];
-            double xx2 = x2 * mat[0] + y2 * mat[1] + rect.width() * mat[2];
-            double yy2 = x2 * mat[3] + y2 * mat[4] + rect.height() * mat[5];
+        SVGTransformList* gradientTransform =
+            gradientElement->gradientTransform()->baseVal();
+        SkMatrix mat = SkMatrix::I();
+        for (size_t i = 0; i < gradientTransform->length(); ++i) {
+            mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+        }
+
+        if (isUserSpaceOnUseMode) {
+            double xx1 = fx * mat[0] + fy * mat[1] + rect.width() * mat[2];
+            double yy1 = fx * mat[3] + fy * mat[4] + rect.height() * mat[5];
+            double xx2 = cx * mat[0] + cy * mat[1] + rect.width() * mat[2];
+            double yy2 = cx * mat[3] + cy * mat[4] + rect.height() * mat[5];
 
             gradient = new CanvasGradient(matchingSvg->executionContext(), xx1,
-                                          yy1, xx2, yy2);
+                                          yy1, fr, xx2, yy2, r);
 
-            GradientData* gradientData = new LinearGradientData();
-            gradientData->colorStopList() = gradientElement->colorStops();
+            RadialGradientData* radialGradient = new RadialGradientData();
+            radialGradient->setHorizontalSide(SideValue::LeftSideValue);
+            radialGradient->setVerticalSide(SideValue::TopSideValue);
+            radialGradient->setHorizontalSideOffset(
+                Length(Length::Type::Fixed, cx));
+            radialGradient->setVerticalSideOffset(
+                Length(Length::Type::Fixed, cy));
+            radialGradient->setFirstRadius(Length(Length::Type::Fixed, r));
+            radialGradient->setSecondRadius(Length(Length::Type::Fixed, r));
+            radialGradient->colorStopList() = gradientElement->colorStops();
+
+            Optional<GradientDrawingInfo*> gradientDrawingInfo =
+                radialGradient->makeGradientDrawingInfo(
+                    Unit::Rect(xx1, yy1, std::abs(xx2 - xx1),
+                               std::abs(yy2 - yy1)),
+                    this);
             gradient->nativeGradient()->setGradientDrawingInfo(
-                gradientData->makeGradientDrawingInfo(rect, this));
-
-            const auto& colorStops = gradientElement->colorStops();
-            size_t size = colorStops.size();
-            for (size_t i = 0; i < size; ++i) {
-                gradient->addColorStop(colorStops[i]->offset().numberData(),
-                                       colorStops[i]->color());
-            }
-        } else if (matchingSvg->isSVGRadialGradientElement()) {
-            // TODO: RadialGradient works partially, 'fx', 'fy', 'fr' need to be
-            // implemented.
-            STARFISH_UNIMPLEMENTED();
-            SVGRadialGradientElement* gradientElement =
-                matchingSvg->asSVGRadialGradientElement();
-
-            if (gradientElement->gradientUnits()->baseVal() ==
-                SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-                rect = vpRect;
-                isUserSpaceOnUseMode = true;
-            }
-
-            double cx = rect.x();
-            if (gradientElement->cx()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->cx()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    cx += gradientElement->cx()
-                              ->baseVal()
-                              ->valueInSpecifiedUnits() *
-                          rect.width() / 100;
-                } else {
-                    if (isUserSpaceOnUseMode) {
-                        cx += gradientElement->cx()->baseVal()->value();
-                    } else {
-                        cx += gradientElement->cx()->baseVal()->value() *
-                              rect.width();
-                    }
-                }
-            } else {
-                // Default value: 50%
-                cx += 0.5 * rect.width();
-            }
-
-            double cy = rect.y();
-            if (gradientElement->cy()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->cy()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    cy += gradientElement->cy()
-                              ->baseVal()
-                              ->valueInSpecifiedUnits() *
-                          rect.height() / 100;
-                } else {
-                    if (isUserSpaceOnUseMode) {
-                        cy += gradientElement->cy()->baseVal()->value();
-                    } else {
-                        cy += gradientElement->cy()->baseVal()->value() *
-                              rect.height();
-                    }
-                }
-            } else {
-                // Default value: 50%
-                cy += 0.5 * rect.height();
-            }
-
-            // Default value: 50%
-            double r = 0.5;
-            if (gradientElement->r()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->r()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    if (isUserSpaceOnUseMode) {
-                        r = gradientElement->r()
-                                ->baseVal()
-                                ->valueInSpecifiedUnits() /
-                            100 * normalizedDiagonalViewportLength().toFloat();
-                    } else {
-                        r = gradientElement->r()
-                                ->baseVal()
-                                ->valueInSpecifiedUnits() /
-                            100;
-                    }
-                } else {
-                    r = gradientElement->r()->baseVal()->value();
-                }
-            }
-
-            // Default value: cx
-            double fx = rect.x();
-            if (gradientElement->fx()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->fx()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    fx += gradientElement->fx()
-                              ->baseVal()
-                              ->valueInSpecifiedUnits() *
-                          rect.width() / 100;
-                } else {
-                    if (isUserSpaceOnUseMode) {
-                        fx += gradientElement->fx()->baseVal()->value();
-                    } else {
-                        fx += gradientElement->fx()->baseVal()->value() *
-                              rect.width();
-                    }
-                }
-            } else {
-                fx = cx;
-            }
-
-            // Default value: cy
-            double fy = rect.y();
-            if (gradientElement->fy()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->fy()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    fy += gradientElement->fy()
-                              ->baseVal()
-                              ->valueInSpecifiedUnits() *
-                          rect.height() / 100;
-                } else {
-                    if (isUserSpaceOnUseMode) {
-                        fy += gradientElement->fy()->baseVal()->value();
-                    } else {
-                        fy += gradientElement->fy()->baseVal()->value() *
-                              rect.height();
-                    }
-                }
-            } else {
-                fy = cy;
-            }
-
-            // Default value: 0
-            double fr = 0;
-            if (gradientElement->fr()->baseVal()->hasSpecificValue()) {
-                if (gradientElement->fr()->baseVal()->unitType() ==
-                    SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                    if (isUserSpaceOnUseMode) {
-                        fr = gradientElement->fr()
-                                 ->baseVal()
-                                 ->valueInSpecifiedUnits() /
-                             100 * normalizedDiagonalViewportLength().toFloat();
-                    } else {
-                        fr = gradientElement->fr()
-                                 ->baseVal()
-                                 ->valueInSpecifiedUnits() /
-                             100;
-                    }
-                } else {
-                    fr = gradientElement->fr()->baseVal()->value();
-                }
-            }
-
-            SVGTransformList* gradientTransform =
-                gradientElement->gradientTransform()->baseVal();
-            SkMatrix mat = SkMatrix::I();
-            for (size_t i = 0; i < gradientTransform->length(); ++i) {
-                mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
-            }
-
-            if (isUserSpaceOnUseMode) {
-                double xx1 = fx * mat[0] + fy * mat[1] + rect.width() * mat[2];
-                double yy1 = fx * mat[3] + fy * mat[4] + rect.height() * mat[5];
-                double xx2 = cx * mat[0] + cy * mat[1] + rect.width() * mat[2];
-                double yy2 = cx * mat[3] + cy * mat[4] + rect.height() * mat[5];
-
-                gradient = new CanvasGradient(matchingSvg->executionContext(),
-                                              xx1, yy1, fr, xx2, yy2, r);
-
-                RadialGradientData* radialGradient = new RadialGradientData();
-                radialGradient->setHorizontalSide(SideValue::LeftSideValue);
-                radialGradient->setVerticalSide(SideValue::TopSideValue);
-                radialGradient->setHorizontalSideOffset(
-                    Length(Length::Type::Fixed, cx));
-                radialGradient->setVerticalSideOffset(
-                    Length(Length::Type::Fixed, cy));
-                radialGradient->setFirstRadius(Length(Length::Type::Fixed, r));
-                radialGradient->setSecondRadius(Length(Length::Type::Fixed, r));
-                radialGradient->colorStopList() = gradientElement->colorStops();
-
-                Optional<GradientDrawingInfo*> gradientDrawingInfo =
-                    radialGradient->makeGradientDrawingInfo(
-                        Unit::Rect(xx1, yy1, std::abs(xx2 - xx1),
-                                   std::abs(yy2 - yy1)),
-                        this);
-                gradient->nativeGradient()->setGradientDrawingInfo(
-                    gradientDrawingInfo.getValue());
-            } else {
-                GradientData* gradientData = new RadialGradientData();
-                gradientData->setHorizontalSide(SideValue::LeftSideValue);
-                gradientData->setVerticalSide(SideValue::TopSideValue);
-
-                RadialGradientData* radialGradient =
-                    gradientData->asRadialGradientData();
-                radialGradient->setHorizontalSideOffset(
-                    Length(Length::Type::Fixed, cx));
-                radialGradient->setVerticalSideOffset(
-                    Length(Length::Type::Fixed, cy));
-                radialGradient->setFirstRadius(
-                    Length(Length::Type::Percent, r));
-                radialGradient->setSecondRadius(
-                    Length(Length::Type::Percent, r));
-                radialGradient->colorStopList() = gradientElement->colorStops();
-
-                double xx1 = rect.x() * mat[0] + rect.y() * mat[1] +
-                             rect.width() * mat[2];
-                double yy1 = rect.x() * mat[3] + rect.y() * mat[4] +
-                             rect.height() * mat[5];
-
-                radialGradient->colorStopList() = gradientElement->colorStops();
-                Optional<GradientDrawingInfo*> gradientDrawingInfo =
-                    radialGradient->makeGradientDrawingInfo(
-                        Unit::Rect(xx1, yy1, rect.width(), rect.height()),
-                        this);
-
-                fx = gradientDrawingInfo.getValue()->x1;
-                fy = gradientDrawingInfo.getValue()->y1;
-                cx = gradientDrawingInfo.getValue()->x2;
-                cy = gradientDrawingInfo.getValue()->y2;
-                fr = gradientDrawingInfo.getValue()->r1;
-                r = gradientDrawingInfo.getValue()->r2;
-
-                gradient = new CanvasGradient(matchingSvg->executionContext(),
-                                              fx, fy, fr, cx, cy, r);
-
-                gradient->nativeGradient()->setGradientDrawingInfo(
-                    gradientDrawingInfo.getValue());
-            }
-
-            const auto& colorStops = gradientElement->colorStops();
-            size_t size = colorStops.size();
-            for (size_t i = 0; i < size; ++i) {
-                gradient->addColorStop(colorStops[i]->offset().numberData(),
-                                       colorStops[i]->color());
-            }
-
+                gradientDrawingInfo.getValue());
         } else {
-            STARFISH_UNSUPPORTED("SVG Gradient type");
-            return nullptr;
+            GradientData* gradientData = new RadialGradientData();
+            gradientData->setHorizontalSide(SideValue::LeftSideValue);
+            gradientData->setVerticalSide(SideValue::TopSideValue);
+
+            RadialGradientData* radialGradient =
+                gradientData->asRadialGradientData();
+            radialGradient->setHorizontalSideOffset(
+                Length(Length::Type::Fixed, cx));
+            radialGradient->setVerticalSideOffset(
+                Length(Length::Type::Fixed, cy));
+            radialGradient->setFirstRadius(Length(Length::Type::Percent, r));
+            radialGradient->setSecondRadius(Length(Length::Type::Percent, r));
+            radialGradient->colorStopList() = gradientElement->colorStops();
+
+            double xx1 =
+                rect.x() * mat[0] + rect.y() * mat[1] + rect.width() * mat[2];
+            double yy1 =
+                rect.x() * mat[3] + rect.y() * mat[4] + rect.height() * mat[5];
+
+            radialGradient->colorStopList() = gradientElement->colorStops();
+            Optional<GradientDrawingInfo*> gradientDrawingInfo =
+                radialGradient->makeGradientDrawingInfo(
+                    Unit::Rect(xx1, yy1, rect.width(), rect.height()), this);
+
+            fx = gradientDrawingInfo.getValue()->x1;
+            fy = gradientDrawingInfo.getValue()->y1;
+            cx = gradientDrawingInfo.getValue()->x2;
+            cy = gradientDrawingInfo.getValue()->y2;
+            fr = gradientDrawingInfo.getValue()->r1;
+            r = gradientDrawingInfo.getValue()->r2;
+
+            gradient = new CanvasGradient(matchingSvg->executionContext(), fx,
+                                          fy, fr, cx, cy, r);
+
+            gradient->nativeGradient()->setGradientDrawingInfo(
+                gradientDrawingInfo.getValue());
         }
 
-        auto canvasStyle = CanvasStyle::createCanvasGradient(gradient);
-        return new CanvasFillStrokeSource(canvasStyle);
+        const auto& colorStops = gradientElement->colorStops();
+        size_t size = colorStops.size();
+        for (size_t i = 0; i < size; ++i) {
+            gradient->addColorStop(colorStops[i]->offset().numberData(),
+                                   colorStops[i]->color());
+        }
+
+    } else {
+        STARFISH_UNSUPPORTED("SVG Gradient type");
+        return nullptr;
     }
-    return nullptr;
+
+    auto canvasStyle = CanvasStyle::createCanvasGradient(gradient);
+    return new CanvasFillStrokeSource(canvasStyle);
 }
 
 bool FrameSVGBox::applyTransformTo(Canvas* canvas, const LayoutSize& vp)
@@ -899,12 +874,12 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
         // <path stroke="url(#linear0)" fill="url(#linear0)" ... />
         Unit::Rect rect = path->strokeBoundingRect(ss);
 
-        if (cs->hasFillPaintData() && cs->fill()->hasUrl()) {
-            fillInfo = makeCanvasFillStrokeSource(cs->fill()->url(), rect);
+        if (cs->hasFillPaintData() && cs->fill()->hasId()) {
+            fillInfo = makeCanvasFillStrokeSource(cs->fill()->id(), rect);
         }
 
-        if (cs->hasStrokePaintData() && cs->stroke()->hasUrl()) {
-            strokeInfo = makeCanvasFillStrokeSource(cs->stroke()->url(), rect);
+        if (cs->hasStrokePaintData() && cs->stroke()->hasId()) {
+            strokeInfo = makeCanvasFillStrokeSource(cs->stroke()->id(), rect);
         }
 
         float fillOpacity = cs->fillOpacity();
