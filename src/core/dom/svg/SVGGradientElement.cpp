@@ -108,18 +108,18 @@ void* SVGGradientElement::operator new(size_t size)
 
 SVGAnimatedEnumeration* SVGGradientElement::gradientUnits()
 {
-    if (m_gradientUnits == nullptr) {
+    if (!m_gradientUnits.hasValue()) {
         m_gradientUnits = new SVGAnimatedEnumeration(
             this, staticStrings()->m_gradientUnits,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     }
-    return m_gradientUnits;
+    return m_gradientUnits.value();
 }
 
 SVGAnimatedTransformList* SVGGradientElement::gradientTransform()
 {
-    if (m_gradientTransform == nullptr) {
+    if (!m_gradientTransform.hasValue()) {
         SVGTransformList* baseVal =
             new SVGTransformList(this, staticStrings()->m_gradientTransform);
         SVGTransformList* animVal = new SVGTransformList(
@@ -128,16 +128,16 @@ SVGAnimatedTransformList* SVGGradientElement::gradientTransform()
         m_gradientTransform =
             new SVGAnimatedTransformList(document(), baseVal, animVal);
     }
-    return m_gradientTransform;
+    return m_gradientTransform.value();
 }
 
 SVGAnimatedEnumeration* SVGGradientElement::spreadMethod()
 {
-    if (m_spreadMethod == nullptr) {
+    if (!m_spreadMethod.hasValue()) {
         m_spreadMethod = new SVGAnimatedEnumeration(
             this, staticStrings()->m_spreadMethod, SVG_SPREADMETHOD_PAD,
             SVG_SPREADMETHOD_PAD, 3);
     }
-    return m_spreadMethod;
+    return m_spreadMethod.value();
 }
 } // namespace Starfish

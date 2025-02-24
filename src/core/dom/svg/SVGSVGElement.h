@@ -118,10 +118,10 @@ protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
 
-    SVGAnimatedLength* m_x{ nullptr };
-    SVGAnimatedLength* m_y{ nullptr };
-    SVGAnimatedLength* m_width{ nullptr };
-    SVGAnimatedLength* m_height{ nullptr };
+    Optional<SVGAnimatedLength*> m_x;
+    Optional<SVGAnimatedLength*> m_y;
+    Optional<SVGAnimatedLength*> m_width;
+    Optional<SVGAnimatedLength*> m_height;
 
     GCVector<std::pair<SVGUseElement*, SVGElement*>> m_useElementsPair;
 };

@@ -103,7 +103,7 @@ void SVGCircleElement::styleForPresentationAttribute(
 
 SVGAnimatedTransformList* SVGCircleElement::transform()
 {
-    if (m_transform == nullptr) {
+    if (!m_transform.hasValue()) {
         SVGTransformList* baseVal = new SVGTransformList(
             this, starfish()->staticStrings()->m_transform);
         SVGTransformList* animVal = new SVGTransformList(
@@ -112,6 +112,6 @@ SVGAnimatedTransformList* SVGCircleElement::transform()
             new SVGAnimatedTransformList(document(), baseVal, animVal);
     }
 
-    return m_transform;
+    return m_transform.value();
 }
 } // namespace Starfish

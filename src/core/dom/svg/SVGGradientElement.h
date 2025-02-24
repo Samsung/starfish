@@ -76,9 +76,9 @@ public:
     SVGAnimatedEnumeration* spreadMethod();
 
 protected:
-    SVGAnimatedEnumeration* m_gradientUnits{ nullptr };
-    SVGAnimatedTransformList* m_gradientTransform{ nullptr };
-    SVGAnimatedEnumeration* m_spreadMethod{ nullptr };
+    Optional<SVGAnimatedEnumeration*> m_gradientUnits;
+    Optional<SVGAnimatedTransformList*> m_gradientTransform;
+    Optional<SVGAnimatedEnumeration*> m_spreadMethod;
 };
 } // namespace Starfish
 
