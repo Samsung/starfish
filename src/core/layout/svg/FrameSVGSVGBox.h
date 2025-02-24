@@ -78,6 +78,9 @@ public:
         const LayoutSize& viewport, const IntrinsicSize& intrinsicSize);
     std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
 
+    LayoutRect topmostMaskPaintingRect();
+    LayoutRect computeSubCanvasRect(FrameSVGBox* box);
+
     // https://svgwg.org/svg2-draft/coords.html#Units
     // For any other length value expressed as a percentage of the SVG viewport,
     // the percentage must be calculated as a percentage of the normalized
