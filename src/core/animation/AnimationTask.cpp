@@ -1020,15 +1020,18 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 }
                 case CSSStyleValuePair::FontSize:
                     break;
-                case CSSStyleValuePair::CX: {
-                case CSSStyleValuePair::RX:
+                case CSSStyleValuePair::X:
+                case CSSStyleValuePair::CX:
+                case CSSStyleValuePair::RX: {
                     if (frm->isFrameSVGBox()) {
                         auto viewport = frm->asFrameSVGBox()->viewport();
                         parentLength = viewport.width();
                     }
                 } break;
-                case CSSStyleValuePair::CY: {
-                case CSSStyleValuePair::RY:
+
+                case CSSStyleValuePair::Y:
+                case CSSStyleValuePair::CY:
+                case CSSStyleValuePair::RY: {
                     if (frm->isFrameSVGBox()) {
                         auto viewport = frm->asFrameSVGBox()->viewport();
                         parentLength = viewport.height();
@@ -1240,6 +1243,12 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
     case CSSStyleValuePair::KeyKind::FontSize:
         style->setFontSize(newLength);
         style->loadFont(m_targetElement);
+        break;
+    case CSSStyleValuePair::KeyKind::X:
+        style->setX(newLength);
+        break;
+    case CSSStyleValuePair::KeyKind::Y:
+        style->setY(newLength);
         break;
     case CSSStyleValuePair::KeyKind::CX:
         style->setCX(newLength);

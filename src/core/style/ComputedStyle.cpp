@@ -2509,7 +2509,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             }
         }
     }
-
+    if (newStyle->x() != oldStyle->x()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+    if (newStyle->y() != oldStyle->y()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
     if (newStyle->cx() != oldStyle->cx()) {
         damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
         damage = static_cast<ComputedStyleDamage>(

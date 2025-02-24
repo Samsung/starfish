@@ -269,6 +269,16 @@ Optional<AnimatedValue*> AnimatedValue::create(
             return nullptr;
         }
         break;
+    case CSSStyleValuePair::KeyKind::X:
+        if (neededOriginProperty) {
+            return new AnimatedValue(style->x());
+        }
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::Y:
+        if (neededOriginProperty) {
+            return new AnimatedValue(style->y());
+        }
+        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::CX:
         if (neededOriginProperty) {
             return new AnimatedValue(style->cx());

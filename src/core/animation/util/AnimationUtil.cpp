@@ -366,6 +366,8 @@ bool AnimationUtil::isPropertyForActiveLengthAnimationTask(
     case CSSStyleValuePair::KeyKind::PaddingRight:
     case CSSStyleValuePair::KeyKind::PaddingBottom:
     case CSSStyleValuePair::KeyKind::PaddingLeft:
+    case CSSStyleValuePair::KeyKind::X:
+    case CSSStyleValuePair::KeyKind::Y:
     case CSSStyleValuePair::KeyKind::RX:
     case CSSStyleValuePair::KeyKind::RY:
     case CSSStyleValuePair::KeyKind::CX:
