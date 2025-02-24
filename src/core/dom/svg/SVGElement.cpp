@@ -484,16 +484,14 @@ SVGElement* SVGElement::maskElement()
     return m_maskElement;
 }
 
-SVGElement* SVGElement::getSVGElementById(String* id)
+SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
 {
     Node* descendant = Traverse::findDescendant(this, [this, id](Node* node) {
-        if (!node->isSVGElement()) {
+        if (UNLIKELY(!node->isSVGElement())) {
             return false;
         }
 
-        String* nodeId = node->asSVGElement()->getAttributeOrEmpty(
-            starfish()->staticStrings()->m_id);
-        if (nodeId->equals(id)) {
+        if (node->asElement()->atomicId() == id) {
             return true;
         }
         return false;

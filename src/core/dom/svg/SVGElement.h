@@ -209,7 +209,7 @@ public:
 
     SVGElement* maskElement();
 
-    SVGElement* getSVGElementById(String* id);
+    SVGElement* getSVGElementById(const AtomicString& id);
 
 protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;

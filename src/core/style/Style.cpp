@@ -6713,7 +6713,15 @@ void StyleResolver::applyProperty(Element* element,
             }
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::UrlValueKind) {
-            style->setFill(new StylePaintData(newCssValue.urlStringValue()));
+            String* urlString = newCssValue.urlStringValue();
+            if (urlString->startsWith("#")) {
+                AtomicString as = AtomicString::createAtomicString(
+                    element->starfish(),
+                    urlString->substring(1, urlString->length() - 1));
+                style->setFill(new StylePaintData(urlString, as));
+            } else {
+                style->setFill(new StylePaintData(urlString, nullptr));
+            }
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -6810,7 +6818,15 @@ void StyleResolver::applyProperty(Element* element,
             }
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::UrlValueKind) {
-            style->setStroke(new StylePaintData(newCssValue.urlStringValue()));
+            String* urlString = newCssValue.urlStringValue();
+            if (urlString->startsWith("#")) {
+                AtomicString as = AtomicString::createAtomicString(
+                    element->starfish(),
+                    urlString->substring(1, urlString->length() - 1));
+                style->setStroke(new StylePaintData(urlString, as));
+            } else {
+                style->setStroke(new StylePaintData(urlString, nullptr));
+            }
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }

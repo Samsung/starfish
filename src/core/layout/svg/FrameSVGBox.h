@@ -127,7 +127,7 @@ public:
     }
 
     Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(
-        String* url, const Unit::Rect& rect);
+        const AtomicString& id, const Unit::Rect& rect);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
