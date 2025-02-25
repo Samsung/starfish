@@ -38,6 +38,7 @@
 #include "core/page/WebView.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGLinearGradientElement.h"
 #include "core/dom/svg/SVGRadialGradientElement.h"
 #include "core/dom/svg/SVGAnimatedTransformList.h"
@@ -563,9 +564,11 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
     Unit::Rect rect = svgRect;
 
     auto owner = node()->asSVGElement()->ownerSVGElement();
-    if (!owner) {
-        return nullptr;
-    }
+    STARFISH_ASSERT(owner);
+
+    owner->asSVGSVGElement()->registerGradientClientElements(
+        id, node()->asSVGElement());
+
     auto matchingSvg = owner->getSVGElementById(id);
     if (!matchingSvg) {
         return nullptr;
