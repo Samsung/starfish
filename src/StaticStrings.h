@@ -193,6 +193,7 @@ namespace Starfish {
     F(feBlend)                         \
     F(feFlood)                         \
     F(feColorMatrix)                   \
+    F(fecolormatrix)                   \
     F(feComponentTransfer)             \
     F(feComposite)                     \
     F(feConvolveMatrix)                \

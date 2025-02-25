@@ -45,11 +45,9 @@
 #include "core/dom/svg/SVGLinearGradientElement.h"
 #include "core/dom/svg/SVGRadialGradientElement.h"
 #include "core/dom/svg/SVGAnimatedTransformList.h"
-#include "core/dom/svg/SVGFilterElement.h"
-#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/canvas/filter/Filter.h"
-#include "core/modules/canvas/filter/FilterGaussianBlur.h"
+#include "core/dom/svg/SVGFilterElement.h"
 
 namespace Starfish {
 
@@ -441,7 +439,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                 Optional<Filter*> filter =
                     filterElement->asSVGFilterElement()->filter();
                 if (filter.hasValue()) {
-                    filter->applyFilter(ctx, this, sourceGraphic);
+                    filter->applyFilter(w, s, h, sourceGraphic);
                     GCAtomicVector<uint8_t>* result = filter->getSourceBuffer(
                         String::createASCIIString("Result"));
                     if (result) {

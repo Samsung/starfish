@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
+#include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/DOMTokenList.h"
 
@@ -58,12 +59,21 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+    Optional<SVGFilterElement*> filterElement;
+    if (parentElement() && parentElement()->isSVGFilterElement()) {
+        filterElement = parentElement()->asSVGFilterElement();
+    }
+
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in1 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        if (filterElement.hasValue()) {
+            filterElement->attributeOfPaintServerLikeUpdated();
+        }
         in1()->setBaseVal(value);
     } else if (ss->m_stdDeviation == name) {
+        if (filterElement.hasValue()) {
+            filterElement->attributeOfPaintServerLikeUpdated();
+        }
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
         if (tokens.size() == 1) {
@@ -73,20 +83,20 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
             stdDeviationX()->setBaseVal(String::parseFloat(&tokens[0]));
             stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]));
         }
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
     } else if (ss->m_stdDeviationX == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        if (filterElement.hasValue()) {
+            filterElement->attributeOfPaintServerLikeUpdated();
+        }
         stdDeviationX()->setBaseVal(String::parseFloat(value));
     } else if (ss->m_stdDeviationY == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        if (filterElement.hasValue()) {
+            filterElement->attributeOfPaintServerLikeUpdated();
+        }
         stdDeviationY()->setBaseVal(String::parseFloat(value));
     } else if (ss->m_edgeMode == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-        // TODO
+        if (filterElement.hasValue()) {
+            filterElement->attributeOfPaintServerLikeUpdated();
+        }
     }
 }
 
