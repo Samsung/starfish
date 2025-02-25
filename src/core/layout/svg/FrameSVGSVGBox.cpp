@@ -337,6 +337,8 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
 
+    node()->asSVGSVGElement()->clearGradientClientElements();
+
     m_svgPaintingMatrix = canvas->currentTransformMatrix();
 
     if (!m_containerViewport) {

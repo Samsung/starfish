@@ -19,6 +19,8 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGGradientElement.h"
+#include "core/dom/svg/SVGSVGElement.h"
+
 namespace Starfish {
 
 SVGGradientElement::SVGGradientElement(Document* document,
@@ -28,6 +30,24 @@ SVGGradientElement::SVGGradientElement(Document* document,
     , m_gradientTransform(nullptr)
     , m_spreadMethod(nullptr)
 {
+}
+
+void SVGGradientElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    SVGElement::didNodeInserted(parent, newChild);
+
+    if (newChild->isSVGStopElement()) {
+        paintingAttributesUpdated();
+    }
+}
+
+void SVGGradientElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    SVGElement::didNodeRemoved(parent, oldChild);
+
+    if (oldChild->isSVGStopElement()) {
+        paintingAttributesUpdated();
+    }
 }
 
 void SVGGradientElement::didAttributeChanged(QualifiedName name,
@@ -41,9 +61,21 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_gradientUnits == name) {
+    if (ss->m_id == name) {
+        auto owner = ownerSVGElement();
+        if (owner) {
+            if (!attributeCreated) {
+                owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
+                    Element::atomicId());
+            }
+            if (!attributeRemoved) {
+                owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
+                    AtomicString::createAtomicString(starfish(), old.value()));
+            }
+        }
+    } else if (ss->m_gradientUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        paintingAttributesUpdated();
         if (gradientUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_gradientUnits->setBaseValWithoutUpdateAttribute(
@@ -55,7 +87,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_gradientTransform == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        paintingAttributesUpdated();
         if (value->equals(gradientTransform()->baseVal()->toString()) ==
             false) {
             gradientTransform()->baseVal()->updateListByAttribute();
@@ -63,7 +95,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_spreadMethod == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        paintingAttributesUpdated();
         if (spreadMethod()->isUpdated() == false) {
             if (value->equals("pad")) {
                 m_spreadMethod->setBaseValWithoutUpdateAttribute(
@@ -139,5 +171,14 @@ SVGAnimatedEnumeration* SVGGradientElement::spreadMethod()
             SVG_SPREADMETHOD_PAD, 3);
     }
     return m_spreadMethod.value();
+}
+
+void SVGGradientElement::paintingAttributesUpdated()
+{
+    auto owner = ownerSVGElement();
+    if (owner) {
+        owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
+            Element::atomicId());
+    }
 }
 } // namespace Starfish

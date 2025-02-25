@@ -95,6 +95,10 @@ FrameSVGViewportContextBox::computeTranlateScaleOnPaint()
 
 bool FrameSVGViewportContextBox::prepareChildPainting(Canvas* canvas)
 {
+    if (node()->isSVGSVGElement()) {
+        node()->asSVGSVGElement()->clearGradientClientElements();
+    }
+
     auto stylePos = resolveStylePosition(viewport());
     canvas->translate(stylePos.x(), stylePos.y());
 

@@ -21,6 +21,7 @@
 #include "Starfish.h"
 
 #include "core/dom/svg/SVGStopElement.h"
+#include "core/dom/svg/SVGGradientElement.h"
 #include "core/style/GradientData.h"
 #include "core/style/CSSParser.h"
 
@@ -37,7 +38,13 @@ void SVGStopElement::didAttributeChanged(QualifiedName name,
     if (name == ss->m_stopColor || name == ss->m_stopOpacity ||
         name == ss->m_offset) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        auto p = parentElement();
+        while (p && !p->isSVGGradientElement()) {
+            p = p->parentElement();
+        }
+        if (p) {
+            p->asSVGGradientElement()->paintingAttributesUpdated();
+        }
     }
 }
 

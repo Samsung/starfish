@@ -56,6 +56,9 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+
     virtual void updateSVGAttributeNeeded(QualifiedName name) override;
 
     void* operator new(size_t size);
@@ -74,6 +77,8 @@ public:
     SVGAnimatedEnumeration* gradientUnits();
     SVGAnimatedTransformList* gradientTransform();
     SVGAnimatedEnumeration* spreadMethod();
+
+    void paintingAttributesUpdated();
 
 protected:
     Optional<SVGAnimatedEnumeration*> m_gradientUnits;
