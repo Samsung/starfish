@@ -20,6 +20,7 @@
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterPrimitive.h"
 #include "core/modules/canvas/filter/FilterGaussianBlur.h"
+#include "core/modules/canvas/filter/FilterColorMatrix.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -39,7 +40,7 @@ Filter::Filter(SVGElement* owner)
                            ->baseVal();
 }
 
-void Filter::applyFilter(PaintingContext& ctx, FrameSVGBox* targetBox,
+void Filter::applyFilter(size_t w, size_t s, size_t h,
                          GCAtomicVector<uint8_t>* sourceGraphic)
 {
     String* defaultSourceStr = String::createASCIIString("SourceGraphic");
@@ -48,10 +49,7 @@ void Filter::applyFilter(PaintingContext& ctx, FrameSVGBox* targetBox,
     registerSourceBuffer(defaultSourceStr, sourceGraphic);
 
     for (auto primitive : m_filterPrimitives) {
-        primitive->apply(targetBox->x().toInt(), targetBox->y().toInt(),
-                         targetBox->width().toInt(),
-                         targetBox->height().toInt(),
-                         targetBox->width().toInt() * 4);
+        primitive->apply(0, 0, w, h, s);
     }
 }
 
@@ -120,6 +118,8 @@ FilterPrimitive* Filter::createFilterPrimitive(
     FilterPrimitive* primitive = nullptr;
     if (filterPrimitiveNode->isSVGFEGaussianBlurElement()) {
         primitive = new FilterGaussianBlur(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEColorMatrixElement()) {
+        primitive = new FilterColorMatrix(this, filterPrimitiveNode);
     }
     return primitive;
 }

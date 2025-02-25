@@ -47,6 +47,7 @@
 #include "core/dom/svg/SVGSymbolElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
+#include "core/dom/svg/SVGFEColorMatrixElement.h"
 
 namespace Starfish {
 
@@ -115,6 +116,9 @@ Element* SVGDocument::createSVGElement(Document* document,
     } else if (str->m_svgfegaussianblurTagName == localName ||
                str->m_svgfeGaussianBlurTagName == localName) {
         return new SVGFEGaussianBlurElement(document, qname);
+    } else if (str->m_svgfecolormatrixTagName == localName ||
+               str->m_svgfeColorMatrixTagName == localName) {
+        return new SVGFEColorMatrixElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

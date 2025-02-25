@@ -20,7 +20,7 @@
 #ifndef __StarfishSVGLengthList__
 #define __StarfishSVGLengthList__
 
-//#include "Starfish.h"
+// #include "Starfish.h"
 #include "core/dom/svg/SVGLength.h"
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"

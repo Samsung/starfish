@@ -32,7 +32,7 @@ class Filter : public gc {
 public:
     Filter(SVGElement* owner);
 
-    void applyFilter(PaintingContext& ctx, FrameSVGBox* targetBox,
+    void applyFilter(size_t w, size_t s, size_t h,
                      GCAtomicVector<uint8_t>* sourceGraphic);
 
     void* operator new(size_t size);
