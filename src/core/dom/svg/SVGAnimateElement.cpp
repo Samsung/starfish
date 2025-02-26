@@ -29,6 +29,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
+#include "core/style/CSSProperty.h"
 
 namespace Starfish {
 
@@ -68,6 +69,12 @@ void SVGAnimateElement::beginElementAt(float offset)
     CSSStyleValuePair::KeyKind keyKind;
     if (!parseAttributeName(keyKind)) {
         STARFISH_LOG_WARN("Invalid attribute name.");
+        return;
+    }
+
+    // Prevent runtime crashes when animating unsupported properties.
+    if (!CSSPropertyHelper::isAnimatableProperty(keyKind)) {
+        STARFISH_LOG_WARN("Not supported animatable property.");
         return;
     }
 
