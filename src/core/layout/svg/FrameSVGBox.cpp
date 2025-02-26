@@ -384,14 +384,16 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     }
 
     float opacity = style()->opacity();
-    if (opacity != 1) {
+    auto filterElement = node()->asSVGElement()->filterElement();
+    bool needsCanvasLayer = opacity != 1 || filterElement;
+    if (needsCanvasLayer) {
         FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
-        LayoutRect absRect = viewportBox->computeSubCanvasRect(this);
+        LayoutRect absRect = viewportBox->computeCanvasLayerRect(this);
         Unit::Rect rt(absRect.x(), absRect.y(), absRect.width(),
                       absRect.height());
         auto ctm = ctx.m_canvas->currentTransformMatrix();
         ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-        ctx.m_canvas->beginOpacityLayer(opacity, rt);
+        ctx.m_canvas->beginLayer(rt, opacity, CanvasLayerMode::SubLayer);
         ctx.m_canvas->setMatrix(ctm);
     }
 
@@ -415,16 +417,6 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
-    if (m_hasFilter && node()->isSVGElement() &&
-        node()->asSVGElement()->filterElement()) {
-        FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
-        auto ctm = ctx.m_canvas->currentTransformMatrix();
-        LayoutRect childrenRect = viewportBox->computeSubCanvasRect(this);
-        ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-        ctx.m_canvas->beginSubCanvas(childrenRect, SubCanvasMode::Filter);
-        ctx.m_canvas->setMatrix(ctm);
-    }
-
     paintSVG(ctx);
 
     if (!prepareChildPainting(ctx.m_canvas)) {
@@ -437,24 +429,19 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         child = child->next();
     }
 
-    if (opacity != 1) {
-        ctx.m_canvas->endOpacityLayer();
-    }
-
-    if (m_hasFilter && node()->isSVGElement() &&
-        node()->asSVGElement()->filterElement()) {
+    if (needsCanvasLayer) {
         LayoutRect childrenRect = frameRect();
 
-        Canvas::SubCanvasPixelModifyFunction fn =
-            [&ctx, this](uint8_t* ptr, size_t w, size_t s, size_t h) -> void {
-            SVGFilterElement* filterElement =
-                node()->asSVGElement()->filterElement()->asSVGFilterElement();
-            if (filterElement) {
+        Canvas::LayerPixelModifyFunction fn;
+        if (filterElement) {
+            fn = [this, &ctx, filterElement](uint8_t* ptr, size_t w, size_t s,
+                                             size_t h) -> void {
                 GCAtomicVector<uint8_t>* sourceGraphic =
                     new GCAtomicVector<uint8_t>();
                 sourceGraphic->resize(s * h);
                 memcpy(sourceGraphic->data(), ptr, s * h);
-                Optional<Filter*> filter = filterElement->filter();
+                Optional<Filter*> filter =
+                    filterElement->asSVGFilterElement()->filter();
                 if (filter.hasValue()) {
                     filter->applyFilter(ctx, this, sourceGraphic);
                     GCAtomicVector<uint8_t>* result = filter->getSourceBuffer(
@@ -463,9 +450,9 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                         memcpy(ptr, result->data(), s * h);
                     }
                 }
-            }
-        };
-        ctx.m_canvas->endSubCanvas(fn);
+            };
+        }
+        ctx.m_canvas->endLayer(fn);
     }
 
     ctx.m_canvas->restore();

@@ -302,7 +302,6 @@ CanvasSurface* CanvasSurfaceFactory::createCanvasTargetSimple(uint8_t* buffer,
 CanvasState::CanvasState()
     : m_fillSource(new CanvasFillStrokeSource(Unit::Color()))
     , m_strokeSource(new CanvasFillStrokeSource(Unit::Color()))
-    , m_layerOpacity(1.0f)
     , m_font(nullptr)
     , m_textDecorationData()
     , m_pathTM(SkMatrix::I())
@@ -325,7 +324,8 @@ CanvasState::CanvasState()
     , m_maskPatternData(nullptr)
     , m_shouldRemoveImmediately(true)
     , m_maskTM()
-    , m_subCanvasMode(SubCanvasMode::Mask)
+    , m_layerMode(CanvasLayerMode::Mask)
+    , m_layerOpacity(1.0f)
 {
 }
 

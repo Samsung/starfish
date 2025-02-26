@@ -79,7 +79,7 @@ public:
     std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
 
     LayoutRect topmostMaskPaintingRect();
-    LayoutRect computeSubCanvasRect(FrameSVGBox* box);
+    LayoutRect computeCanvasLayerRect(FrameSVGBox* box);
 
     // https://svgwg.org/svg2-draft/coords.html#Units
     // For any other length value expressed as a percentage of the SVG viewport,
