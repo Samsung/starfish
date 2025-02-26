@@ -314,7 +314,7 @@ LayoutRect FrameSVGSVGBox::topmostMaskPaintingRect()
     return (*svgMaskPaintingStack().begin())->absoluteRect(this);
 }
 
-LayoutRect FrameSVGSVGBox::computeSubCanvasRect(FrameSVGBox* box)
+LayoutRect FrameSVGSVGBox::computeCanvasLayerRect(FrameSVGBox* box)
 {
     // in mask painting
     // mask rect and sub-mask or sub-content rect may not overlapped

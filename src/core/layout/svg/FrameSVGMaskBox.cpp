@@ -86,8 +86,8 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
     auto ctm = ctx.m_canvas->currentTransformMatrix();
     viewportBox->pushToSVGMaskPaintingStack(targetBox);
     ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
-    ctx.m_canvas->beginSubCanvas(viewportBox->topmostMaskPaintingRect(),
-                                 SubCanvasMode::Mask);
+    ctx.m_canvas->beginLayer(viewportBox->topmostMaskPaintingRect(), 1,
+                             CanvasLayerMode::Mask);
     ctx.m_canvas->setMatrix(ctm);
 
     Frame* f = firstChild();
@@ -101,11 +101,11 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
         f = f->next();
     }
 
-    Canvas::SubCanvasPixelModifyFunction fn;
+    Canvas::LayerPixelModifyFunction fn;
     if (style()->maskType() == MaskTypeValue::LuminanceMaskTypeValue) {
         fn = makeLuminanceMask;
     }
-    ctx.m_canvas->endSubCanvas(fn);
+    ctx.m_canvas->endLayer(fn);
     ctx.m_canvas->setMatrix(ctm);
 
     viewportBox->popSVGMaskPaintingStack();

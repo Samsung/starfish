@@ -85,9 +85,9 @@ enum class CanvasBlendMode {
     Luminosity
 };
 
-enum class SubCanvasMode {
+enum class CanvasLayerMode {
+    SubLayer,
     Mask,
-    Filter, // TODO
 };
 
 namespace CanvasCompositing {
@@ -136,7 +136,6 @@ public:
 
     CanvasFillStrokeSource* m_fillSource;
     CanvasFillStrokeSource* m_strokeSource;
-    float m_layerOpacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
     SkMatrix m_pathTM;
@@ -161,8 +160,9 @@ public:
     bool m_shouldRemoveImmediately;
     SkMatrix m_maskTM;
 
-    SubCanvasMode m_subCanvasMode;
-    Unit::Rect m_subCanvasRect;
+    CanvasLayerMode m_layerMode;
+    float m_layerOpacity;
+    Unit::Rect m_layerRect;
 
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
@@ -407,24 +407,32 @@ public:
     virtual CanvasCompositeOperator compositeOperator() = 0;
     virtual CanvasBlendMode blendMode() = 0;
 
+    void beginLayer(const LayoutRect& rt, float layerOpacity,
+                    CanvasLayerMode mode)
+    {
+        beginLayer(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()),
+                   layerOpacity, mode);
+    }
+    virtual void beginLayer(const Unit::Rect& layerRect, float layerOpacity,
+                            CanvasLayerMode mode) = 0;
+
     void beginOpacityLayer(float c, const LayoutRect& rt)
     {
         beginOpacityLayer(c,
                           Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
-    virtual void beginOpacityLayer(float c, const Unit::Rect& rt) = 0;
-    virtual void endOpacityLayer() = 0;
-
-    void beginSubCanvas(const LayoutRect& rt, SubCanvasMode mode)
+    void beginOpacityLayer(float c, const Unit::Rect& rt)
     {
-        beginSubCanvas(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()),
-                       mode);
+        beginLayer(rt, c, CanvasLayerMode::SubLayer);
     }
-    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
-                                SubCanvasMode mode) = 0;
-    using SubCanvasPixelModifyFunction = std::function<void(
+    void endOpacityLayer()
+    {
+        endLayer();
+    }
+
+    using LayerPixelModifyFunction = std::function<void(
         uint8_t* data, size_t width, size_t stride, size_t height)>;
-    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn = nullptr) = 0;
+    virtual void endLayer(LayerPixelModifyFunction fn = nullptr) = 0;
 
     virtual void setFont(Font* font) = 0;
     virtual void resetTextDecorationData() = 0;

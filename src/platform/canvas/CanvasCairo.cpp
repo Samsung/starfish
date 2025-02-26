@@ -656,35 +656,22 @@ public:
         translate(x.toDouble(), y.toDouble());
     }
 
-    virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
-    {
-        save();
-        clip(rt);
-        lastState()->m_layerOpacity =
-            std::max<float>(0, std::min<float>(1.0, c));
-        cairo_push_group(m_canvas);
-    }
-
-    virtual void endOpacityLayer() override
-    {
-        INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
-        cairo_pop_group_to_source(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity);
-        restore();
-    }
-
-    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
-                                SubCanvasMode mode) override
+    virtual void beginLayer(const Unit::Rect& subCanvasRect, float layerOpacity,
+                            CanvasLayerMode mode) override
     {
         save();
         clip(subCanvasRect);
-        lastState()->m_subCanvasRect = subCanvasRect;
-        lastState()->m_subCanvasMode = mode;
+        lastState()->m_layerRect = subCanvasRect;
+        lastState()->m_layerMode = mode;
+        lastState()->m_layerOpacity =
+            std::max<float>(0, std::min<float>(1.0, layerOpacity));
         cairo_push_group(m_canvas);
     }
 
-    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn) override
+    virtual void endLayer(LayerPixelModifyFunction fn) override
     {
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::endLayer");
+
         checkError();
         if (fn) {
             auto groupTarget = cairo_get_group_target(m_canvas);
@@ -701,9 +688,11 @@ public:
             cairo_surface_unmap_image(groupTarget, mappedSurface);
         }
 
-        if (lastState()->m_subCanvasMode == SubCanvasMode::Mask) {
+        if (lastState()->m_layerMode == CanvasLayerMode::Mask) {
             auto pattern = cairo_pop_group(m_canvas);
-            auto subCanvasRect = lastState()->m_subCanvasRect;
+            // only 1.0 support here
+            STARFISH_ASSERT(lastState()->m_layerOpacity == 1);
+            auto subCanvasRect = lastState()->m_layerRect;
             restore();
 
             cairo_matrix_t matrix;
@@ -722,7 +711,7 @@ public:
             cairo_push_group(m_canvas);
         } else {
             cairo_pop_group_to_source(m_canvas);
-            cairo_paint(m_canvas);
+            cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity);
             restore();
         }
     }

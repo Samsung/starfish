@@ -161,20 +161,12 @@ public:
     {
     }
 
-    virtual void beginOpacityLayer(float c, const Unit::Rect& rt)
+    virtual void beginLayer(const Unit::Rect& layerRect, float layerOpacity,
+                            CanvasLayerMode mode)
     {
     }
 
-    virtual void endOpacityLayer()
-    {
-    }
-
-    virtual void beginSubCanvas(const Unit::Rect& subCanvasRect,
-                                SubCanvasMode mode)
-    {
-    }
-
-    virtual void endSubCanvas(SubCanvasPixelModifyFunction fn)
+    virtual void endLayer(LayerPixelModifyFunction fn)
     {
     }
 
