@@ -33,7 +33,6 @@
 
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
-#include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
@@ -52,7 +51,6 @@
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGUseElement.h"
-#include "core/dom/svg/SVGAnimationElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/BrowsingContext.h"
@@ -9270,251 +9268,54 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     // 4. Triggers an event when an animation expires or should be cancelled.
     // 4-1 Unregister from the active animation executor.
 
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(toStyle != nullptr);
-
-    bool needsToCheckActiveExecutorInWebView = false;
-    bool needsToRecomputeStylePropertyDamage = false;
-    bool elementHasAnimation = false;
     bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
     bool isRunningTransformAnimationBefore =
         element->isRunningTransformAnimation();
 
-    // get document's animation executor
-    AnimationExecutor* executor = element->document()->animationExecutor();
-    STARFISH_ASSERT(executor != nullptr);
-
     StyleAnimationData* styleAnimationData = toStyle->animation();
-
     if (styleAnimationData != nullptr) {
         // Create AnimationKeyframes from keyframes style rule.
-
-        // FIXME: As long as the animation style value does not change between
-        // old and new style, there is no need to continuously recreate the
-        // AnimationKeyframes.
         computeCSSAnimationKeyframes(resolver, element, toStyle);
     }
-    resolver.clearCssCustomValues();
 
-    uint64_t tick =
-        element->document()->browsingContext()->styleResolveStartTick();
-    double cancelTick = 0;
-    double endTick = 0;
+    AnimationExecutor::ExecutionContext context{
+        element,
+        fromStyle,
+        nullptr,
+        toStyle,
+        element->document()->browsingContext()->styleResolveStartTick(),
+        false,
+        false,
+        false,
+        damage,
+        damagedKeys,
+        {},
+    };
+
+    // get document's animation executor
+    AnimationExecutor* executor = element->document()->animationExecutor();
 
     // Check animation have to remove(End or Cancel).
-    /// NOTE: Because the style is recalculated for each Animation Frame,
-    /// element->style()->animation() registered by animate() may disappear.
-    std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
-        canceledAnimationProgress;
-    auto iter = executor->activeAnimations().begin();
-
-    // std::tuple<isCancel, task, expiredTick>
-    std::vector<ActiveAnimationTask*> expiredAnimationTasks;
-    while (iter != executor->activeAnimations().end()) {
-        ActiveElementAnimation* activeElementAnimation = iter.key();
-        GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
-        if (activeElementAnimation->element() != element) {
-            iter++;
-            continue;
-        }
-
-        bool needsToFireAnimationEndEvent = false;
-        bool needsToFireAnimationCancelEvent = false;
-        float iterationCount = activeElementAnimation->iterationCount();
-        for (size_t i = 0; i < animationTasks.size(); i++) {
-            ActiveAnimationTask* task = animationTasks[i];
-            if (task->targetElement() == element) {
-                STARFISH_ASSERT(!task->isTransition());
-                bool shouldRemove = false;
-                bool isCancel = true;
-
-                task->setIsForward(
-                    activeElementAnimation->isForwardDirection(task));
-
-                if (task->fraction(tick) >= 1) {
-                    if (std::isinf(iterationCount)) {
-                        float f = task->iterationStart() == 1 ? 0 : 1;
-                        task->setIterationStart(f);
-                    } else {
-                        float f = task->iterationStart() - 1;
-                        task->setIterationStart(f);
-                        if (task->iterationStart() < 1) {
-                            // time is up
-                            shouldRemove = true;
-                            isCancel = false;
-                            task->setIterationStart(iterationCount);
-                        }
-                    }
-                }
-
-                // element invisible
-                if (!shouldRemove &&
-                    toStyle->display() == DisplayValue::NoneDisplayValue) {
-                    shouldRemove = true;
-                }
-
-                // animation property gone || other properties changed
-                if (!shouldRemove) {
-                    if (task->animationType() ==
-                        AnimationType::KeyFramesAnimation) {
-                        if (toStyle->animation()) {
-                            for (size_t n = 0;
-                                 n < styleAnimationData
-                                         ->animationKeyframesListSize();
-                                 n++) {
-                                if (styleAnimationData->animationName(n)
-                                        ->equals("none")) {
-                                    // animation name is gone.
-                                    shouldRemove = true;
-                                }
-
-                                if (!activeElementAnimation->name()->equals(
-                                        styleAnimationData->animationName(n))) {
-                                    continue;
-                                }
-
-                                bool found = false;
-                                AnimationKeyframes& animationKeyframes =
-                                    styleAnimationData->animationKeyframes(n);
-                                if (animationKeyframes
-                                        .animationKeyframeListSize() > 0) {
-                                    AnimationKeyframe* animationKeyframe =
-                                        animationKeyframes.animationKeyframe(0);
-                                    for (auto& keyKind :
-                                         animationKeyframe->keyKinds()) {
-                                        if (task->isKindOfTransitionProperty(
-                                                keyKind)) {
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (!found) {
-                                    shouldRemove = true;
-                                }
-                            }
-                        } else {
-                            shouldRemove = true;
-                        }
-                    }
-                }
-
-                if (shouldRemove) {
-                    if (!isCancel) {
-                        endTick = task->duration() / 1000.0;
-                        needsToFireAnimationEndEvent = true;
-                    } else {
-                        auto key = task->property();
-                        double progress = task->fraction(tick);
-                        canceledAnimationProgress.push_back(
-                            std::make_pair(key, progress));
-
-                        cancelTick = task->duration() * progress / 1000.0;
-                        needsToFireAnimationCancelEvent = true;
-                    }
-                    // FIXME
-                    // TODO: What is FIXME for?
-                    task->detachFromElement();
-
-                    if (task->fillMode() != AnimationFillModeValue::Forwards) {
-                        animationTasks.erase(i);
-                        i--;
-                    } else {
-                        elementHasAnimation = true;
-                        // if already in fill-mode, we should not fire end event
-                        if (task->isInForwardsFillMode()) {
-                            needsToFireAnimationEndEvent = false;
-                        }
-                        task->markInForwardsFillMode();
-                    }
-
-                    if (needsToFireAnimationEndEvent &&
-                        activeElementAnimation->animationType() ==
-                            AnimationType::SVGAnimation) {
-                        expiredAnimationTasks.push_back(task);
-                    }
-
-                    needsToRecomputeStylePropertyDamage = true;
-                    needsToCheckActiveExecutorInWebView = true;
-                } else {
-                    elementHasAnimation = true;
-                }
-            }
-        }
-
-        if (activeElementAnimation->animationType() ==
-            AnimationType::SVGAnimation) {
-            for (auto& expired : expiredAnimationTasks) {
-                STARFISH_ASSERT(expired->originAnimationElement().hasValue());
-                SVGAnimationElement* target =
-                    expired->originAnimationElement().getValue();
-                executor->fireSVGAnimateEndEvent(target);
-            }
-        } else {
-            if (needsToFireAnimationCancelEvent) {
-                executor->fireAnimationCancelEvent(
-                    element, activeElementAnimation->name(), cancelTick);
-            } else if (needsToFireAnimationEndEvent) {
-                executor->fireAnimationEndEvent(
-                    element, activeElementAnimation->name(), endTick);
-            }
-        }
-
-        if (animationTasks.empty()) {
-            // if animationTasks is empty, remove it from activeAnimations in
-            // executor. if both activeTransitions and activeAnimations in the
-            // executor are empty, it is removed from the webview's active
-            // animation executor list.
-            iter = executor->activeAnimations().erase(iter);
-        } else {
-            iter++;
-        }
-    }
+    executor->checkActiveAnimationsState(context);
 
     // Check new animation.
-    if (toStyle->display() != DisplayValue::NoneDisplayValue &&
-        damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-        !element->didPrepareAnimation()) {
-        if (styleAnimationData &&
-            styleAnimationData->totalAnimationKeyframesListSize() > 0) {
-            AnimationApplier animationApplier(
-                element, AnimationType::KeyFramesAnimation, toStyle, nullptr);
-            if (animationApplier.apply()) {
-                elementHasAnimation = true;
-                needsToCheckActiveExecutorInWebView = true;
-            }
-        }
-    }
+    executor->addNewActiveAnimationsIfNeeds(context);
 
-    // Apply animation.
     // Proceed with the animation steps if element has available animation task.
-    if (elementHasAnimation) {
-        for (auto& pair : executor->activeAnimations()) {
-            if (pair.first->element() != element) {
-                continue;
-            }
-            auto& activeAnimationTasks = pair.second;
-            for (auto* task : activeAnimationTasks) {
-                if (task->targetElement() == element) {
-                    task->step(tick, toStyle);
-                }
-            }
-        }
-        needsToRecomputeStylePropertyDamage = true;
-    }
+    executor->executeActiveAnimationsStep(context);
 
     bool isRunningOpacityAnimationAfter = element->isRunningOpacityAnimation();
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    if (fromStyle && needsToRecomputeStylePropertyDamage == true) {
+    if (fromStyle && context.needsToRecomputeStylePropertyDamage) {
         recomputeStyleDamageInAnimation(
             element, fromStyle.value(), toStyle, damage, damagedKeys,
             isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
             isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
     }
 
-    if (needsToCheckActiveExecutorInWebView) {
+    if (context.needsToCheckActiveExecutorInWebView) {
         // Registers or unregisters an executor which has a valid animation task
         // with the active animation executor.
         element->document()
@@ -9573,6 +9374,8 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     computeAnimation(*ctx.m_styleResolver, element, oldStyle, style, damage,
                      damagedKeys);
 #endif
+
+    ctx.m_styleResolver->clearCssCustomValues();
     element->markDidPrepareAnimation();
 
     {

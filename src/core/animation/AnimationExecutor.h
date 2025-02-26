@@ -210,6 +210,10 @@ public:
     void addNewActiveTransitionIfNeeds(ExecutionContext& context);
     void executeActiveTransitionsStep(ExecutionContext& context);
 
+    void checkActiveAnimationsState(ExecutionContext& context);
+    void addNewActiveAnimationsIfNeeds(ExecutionContext& context);
+    void executeActiveAnimationsStep(ExecutionContext& context);
+
     void fireAnimationStartEvent(Element* element, String* name, double delay);
     void fireAnimationEndEvent(Element* element, String* name,
                                double elapsedTime);

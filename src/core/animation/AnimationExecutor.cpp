@@ -18,12 +18,14 @@
  */
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationApplier.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/Element.h"
-#include "Starfish.h"
+#include "core/dom/svg/SVGAnimationElement.h"
 
 namespace Starfish {
 
@@ -312,6 +314,225 @@ void AnimationExecutor::executeActiveTransitionsStep(ExecutionContext& context)
     for (size_t i = 0; i < m_activeTransitions.size(); i++) {
         if (m_activeTransitions[i]->targetElement() == context.element) {
             m_activeTransitions[i]->step(context.tick, context.toStyle);
+        }
+    }
+    context.needsToRecomputeStylePropertyDamage = true;
+}
+
+void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
+{
+    double cancelTick = 0.0;
+    double endTick = 0.0;
+    std::vector<ActiveAnimationTask*> expiredAnimationTasks;
+
+    auto iter = m_activeAnimations.begin();
+    while (iter != m_activeAnimations.end()) {
+        ActiveElementAnimation* activeElementAnimation = iter.key();
+        GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
+        if (activeElementAnimation->element() != context.element) {
+            iter++;
+            continue;
+        }
+
+        bool needsToFireAnimationEndEvent = false;
+        bool needsToFireAnimationCancelEvent = false;
+        float iterationCount = activeElementAnimation->iterationCount();
+        for (size_t i = 0; i < animationTasks.size(); i++) {
+            ActiveAnimationTask* task = animationTasks[i];
+            STARFISH_ASSERT(!task->isTransition());
+
+            if (task->targetElement() != context.element) {
+                continue;
+            }
+
+            bool shouldRemove = false;
+            bool isCancel = true;
+
+            task->setIsForward(
+                activeElementAnimation->isForwardDirection(task));
+
+            if (task->fraction(context.tick) >= 1) {
+                if (std::isinf(iterationCount)) {
+                    float f = task->iterationStart() == 1 ? 0 : 1;
+                    task->setIterationStart(f);
+                } else {
+                    float f = task->iterationStart() - 1;
+                    task->setIterationStart(f);
+                    if (task->iterationStart() < 1) {
+                        // time is up
+                        shouldRemove = true;
+                        isCancel = false;
+                        task->setIterationStart(iterationCount);
+                    }
+                }
+            }
+
+            // element invisible
+            if (!shouldRemove &&
+                context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+                shouldRemove = true;
+            }
+
+            // animation property gone || other properties changed
+            if (!shouldRemove &&
+                task->animationType() == AnimationType::KeyFramesAnimation) {
+                if (context.toStyle->animation()) {
+                    StyleAnimationData* styleAnimationData =
+                        context.toStyle->animation();
+                    for (size_t n = 0;
+                         n < styleAnimationData->animationKeyframesListSize();
+                         n++) {
+                        if (styleAnimationData->animationName(n)->equals(
+                                "none")) {
+                            // animation name is gone.
+                            shouldRemove = true;
+                        }
+
+                        if (!activeElementAnimation->name()->equals(
+                                styleAnimationData->animationName(n))) {
+                            continue;
+                        }
+
+                        bool found = false;
+                        AnimationKeyframes& animationKeyframes =
+                            styleAnimationData->animationKeyframes(n);
+                        if (animationKeyframes.animationKeyframeListSize() >
+                            0) {
+                            AnimationKeyframe* animationKeyframe =
+                                animationKeyframes.animationKeyframe(0);
+                            for (auto& keyKind :
+                                 animationKeyframe->keyKinds()) {
+                                if (task->isKindOfTransitionProperty(keyKind)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!found) {
+                            shouldRemove = true;
+                        }
+                    }
+                } else {
+                    shouldRemove = true;
+                }
+            }
+
+            if (shouldRemove) {
+                if (!isCancel) {
+                    endTick = task->duration() / 1000.0;
+                    needsToFireAnimationEndEvent = true;
+                } else {
+                    auto key = task->property();
+                    double progress = task->fraction(context.tick);
+                    context.canceledAnimationProgress.push_back(
+                        std::make_pair(key, progress));
+
+                    cancelTick = task->duration() * progress / 1000.0;
+                    needsToFireAnimationCancelEvent = true;
+                }
+                // FIXME
+                // TODO: What is FIXME for?
+                task->detachFromElement();
+
+                if (task->fillMode() != AnimationFillModeValue::Forwards) {
+                    animationTasks.erase(i);
+                    i--;
+                } else {
+                    context.hasActiveTask = true;
+                    // if already in fill-mode, we should not fire end event
+                    if (task->isInForwardsFillMode()) {
+                        needsToFireAnimationEndEvent = false;
+                    }
+                    task->markInForwardsFillMode();
+                }
+
+                if (needsToFireAnimationEndEvent &&
+                    activeElementAnimation->animationType() ==
+                        AnimationType::SVGAnimation) {
+                    expiredAnimationTasks.push_back(task);
+                }
+                context.needsToRecomputeStylePropertyDamage = true;
+                context.needsToCheckActiveExecutorInWebView = true;
+            } else {
+                context.hasActiveTask = true;
+            }
+        }
+
+        if (activeElementAnimation->animationType() ==
+            AnimationType::SVGAnimation) {
+            for (auto& expired : expiredAnimationTasks) {
+                STARFISH_ASSERT(expired->originAnimationElement().hasValue());
+                SVGAnimationElement* target =
+                    expired->originAnimationElement().getValue();
+                fireSVGAnimateEndEvent(target);
+            }
+        } else {
+            if (needsToFireAnimationCancelEvent) {
+                fireAnimationCancelEvent(context.element,
+                                         activeElementAnimation->name(),
+                                         cancelTick);
+            } else if (needsToFireAnimationEndEvent) {
+                fireAnimationEndEvent(context.element,
+                                      activeElementAnimation->name(), endTick);
+            }
+        }
+
+        if (animationTasks.empty()) {
+            // if animationTasks is empty, remove it from activeAnimations in
+            // executor. if both activeTransitions and activeAnimations in the
+            // executor are empty, it is removed from the webview's active
+            // animation executor list.
+            iter = m_activeAnimations.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+}
+
+void AnimationExecutor::addNewActiveAnimationsIfNeeds(ExecutionContext& context)
+{
+    if (context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+        return;
+    }
+
+    if (context.damage == ComputedStyleDamage::ComputedStyleDamageNone) {
+        return;
+    }
+
+    if (context.element->didPrepareAnimation()) {
+        return;
+    }
+
+    StyleAnimationData* styleAnimationData = context.toStyle->animation();
+    if (!styleAnimationData ||
+        !styleAnimationData->totalAnimationKeyframesListSize()) {
+        return;
+    }
+
+    AnimationApplier animationApplier(context.element,
+                                      AnimationType::KeyFramesAnimation,
+                                      context.toStyle, nullptr);
+    if (animationApplier.apply()) {
+        context.hasActiveTask = true;
+        context.needsToCheckActiveExecutorInWebView = true;
+    }
+}
+
+void AnimationExecutor::executeActiveAnimationsStep(ExecutionContext& context)
+{
+    if (!context.hasActiveTask) {
+        return;
+    }
+
+    for (auto& pair : m_activeAnimations) {
+        if (pair.first->element() != context.element) {
+            continue;
+        }
+        auto& activeAnimationTasks = pair.second;
+        for (auto* task : activeAnimationTasks) {
+            if (task->targetElement() == context.element) {
+                task->step(context.tick, context.toStyle);
+            }
         }
     }
     context.needsToRecomputeStylePropertyDamage = true;
