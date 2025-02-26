@@ -39,8 +39,8 @@ enum class AnimationType ENSURE_ENUM_UNSIGNED {
 };
 
 bool applyTransitionIfNeeds(
-    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
-    ComputedStyle* newStyle, const bool* damagedKeys,
+    Element* element, ComputedStyle* fromStyle, Optional<Frame*> oldFrame,
+    ComputedStyle* toStyle, const bool* damagedKeys,
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress); // returns true if animation registered
 
