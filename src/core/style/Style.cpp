@@ -8786,13 +8786,13 @@ static void recomputeStyleDamageInAnimation(
     }
 }
 
-void computeTransition(Element* element, ComputedStyle* oldStyle,
-                       Frame* oldFrame, ComputedStyle* style,
+void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
+                       Optional<Frame*> oldFrame, ComputedStyle* toStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
     STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(toStyle != nullptr);
 
     bool needsToCheckActiveAnimationExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
@@ -8823,19 +8823,19 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 
                 // element invisible
                 if (!shouldRemove &&
-                    style->display() == DisplayValue::NoneDisplayValue) {
+                    toStyle->display() == DisplayValue::NoneDisplayValue) {
                     shouldRemove = true;
                 }
 
                 // transition targetToValue changed
                 if (!shouldRemove &&
-                    transitions[i]->taskCanContinue(style) == false) {
+                    !transitions[i]->taskCanContinue(toStyle)) {
                     shouldRemove = true;
                 }
 
                 // transition property gone || other properties changed
                 if (!shouldRemove) {
-                    StyleTransitionData* data = style->transition();
+                    StyleTransitionData* data = toStyle->transition();
                     if (data == nullptr) {
                         shouldRemove = true;
                     } else {
@@ -8847,7 +8847,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                                 break;
                             }
                             if (transitions[i]->isKindOfTransitionProperty(
-                                    data->property(j)) == true) {
+                                    data->property(j))) {
                                 found = true;
                                 break;
                             }
@@ -8886,24 +8886,24 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     }
 
     // check new transition
-    if (oldStyle && oldStyle->display() != DisplayValue::NoneDisplayValue &&
-        style->display() != DisplayValue::NoneDisplayValue &&
-        style->transitionLayerSize() > 0 &&
+    if (fromStyle && fromStyle->display() != DisplayValue::NoneDisplayValue &&
+        toStyle->display() != DisplayValue::NoneDisplayValue &&
+        toStyle->transitionLayerSize() > 0 &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone) {
-        if (applyTransitionIfNeeds(element, oldStyle, oldFrame, style,
-                                   damagedKeys,
-                                   canceledAnimationProgress) == true) {
+        if (applyTransitionIfNeeds(element, fromStyle.getValue(), oldFrame,
+                                   toStyle, damagedKeys,
+                                   canceledAnimationProgress)) {
             elementHasTransition = true;
             needsToCheckActiveAnimationExecutorInWebView = true;
         }
     }
 
     // apply transition
-    if (elementHasTransition == true) {
+    if (elementHasTransition) {
         auto& activeTransitions = executor->activeTransitions();
         for (size_t i = 0; i < activeTransitions.size(); i++) {
             if (activeTransitions[i]->targetElement() == element) {
-                activeTransitions[i]->step(tick, style);
+                activeTransitions[i]->step(tick, toStyle);
             }
         }
 
@@ -8914,14 +8914,14 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    if (oldStyle && needsToRecomputeStylePropertyDamage) {
+    if (fromStyle.hasValue() && needsToRecomputeStylePropertyDamage) {
         recomputeStyleDamageInAnimation(
-            element, oldStyle, style, damage, damagedKeys,
+            element, fromStyle.getValue(), toStyle, damage, damagedKeys,
             isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
             isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
     }
 
-    if (needsToCheckActiveAnimationExecutorInWebView == true) {
+    if (needsToCheckActiveAnimationExecutorInWebView) {
         element->webView()->updateActiveAnimationExecutorRegistration(executor);
     }
 }

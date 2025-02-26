@@ -5050,8 +5050,8 @@ struct KeyframeAnimationOptions;
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys);
 
-void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
-                       NULLABLE Frame* oldFrame, ComputedStyle* style,
+void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
+                       Optional<Frame*> oldFrame, ComputedStyle* toStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 

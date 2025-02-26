@@ -49,13 +49,14 @@ static void fillActiveAnimationTaskInitForTransition(
     init.timingFunctions.push_back(timingFunction);
 }
 
-TransitionApplier::TransitionApplier(Element* element, ComputedStyle* oldStyle,
-                                     Frame* oldFrame, ComputedStyle* newStyle,
+TransitionApplier::TransitionApplier(Element* element, ComputedStyle* fromStyle,
+                                     Optional<Frame*> oldFrame,
+                                     ComputedStyle* toStyle,
                                      const bool* damagedKeys)
     : m_element(element)
-    , m_oldStyle(oldStyle)
+    , m_fromStyle(fromStyle)
     , m_oldFrame(oldFrame)
-    , m_newStyle(newStyle)
+    , m_toStyle(toStyle)
     , m_damagedKeys(damagedKeys)
     , m_executor(element->document()->animationExecutor())
     , m_gotTransition(false)
@@ -65,7 +66,7 @@ TransitionApplier::TransitionApplier(Element* element, ComputedStyle* oldStyle,
 bool TransitionApplier::apply()
 {
     bool ret = false;
-    StyleTransitionData* data = m_newStyle->transition();
+    StyleTransitionData* data = m_toStyle->transition();
 
     if (!data) {
         return false;
@@ -431,8 +432,8 @@ void TransitionApplier::applyOpacity(double duration, double delay,
     fillActiveAnimationTaskInitForTransition(
         m_element, CSSStyleValuePair::KeyKind::Opacity, duration, delay,
         timingFunction, init);
-    init.animatedValues.push_back(new AnimatedValue(m_oldStyle->opacity()));
-    init.animatedValues.push_back(new AnimatedValue(m_newStyle->opacity()));
+    init.animatedValues.push_back(new AnimatedValue(m_fromStyle->opacity()));
+    init.animatedValues.push_back(new AnimatedValue(m_toStyle->opacity()));
 
     auto task = new ActiveOpacityAnimationTask(init);
     m_executor->registerTransition(task);
@@ -447,13 +448,13 @@ void TransitionApplier::applyTransform(double duration, double delay,
     }
     if (m_oldFrame && m_oldFrame->isTransformable()) {
         auto newTransform =
-            m_newStyle->rareComputedStyleData()->ensureTransforms();
+            m_toStyle->rareComputedStyleData()->ensureTransforms();
         ActiveAnimationTaskInit init;
         fillActiveAnimationTaskInitForTransition(
             m_element, CSSStyleValuePair::KeyKind::Transform, duration, delay,
             timingFunction, init);
         init.animatedValues.push_back(new AnimatedValue(
-            m_oldStyle->rareComputedStyleData()->ensureTransforms()));
+            m_fromStyle->rareComputedStyleData()->ensureTransforms()));
         init.animatedValues.push_back(new AnimatedValue(newTransform));
 
         auto task = new ActiveTransformAnimationTask(init, newTransform);
@@ -475,9 +476,9 @@ void TransitionApplier::applyActiveColorAnimationTask(
     fillActiveAnimationTaskInitForTransition(m_element, keyKind, duration,
                                              delay, timingFunction, init);
     init.animatedValues.push_back(
-        new AnimatedValue(colorValueGetter(m_oldStyle)));
+        new AnimatedValue(colorValueGetter(m_fromStyle)));
     init.animatedValues.push_back(
-        new AnimatedValue(colorValueGetter(m_newStyle)));
+        new AnimatedValue(colorValueGetter(m_toStyle)));
 
     auto task = new ActiveColorAnimationTask(init);
     m_executor->registerTransition(task);
@@ -495,16 +496,16 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
         return;
     }
 
-    if (m_oldFrame != nullptr && m_oldFrame->isFrameBox()) {
-        FrameBox* cb = containingBlock(m_oldFrame);
-        Length oldLength = lengthValueGetter(m_oldStyle);
+    if (m_oldFrame.hasValue() && m_oldFrame->isFrameBox()) {
+        FrameBox* cb = containingBlock(m_oldFrame.getValue());
+        Length oldLength = lengthValueGetter(m_fromStyle);
         if (oldLength.isCalc()) {
             oldLength = Length(Length::Fixed,
                                oldLength.calcData()->specifiedValue(
                                    contentSizeValueGetter(cb), m_element));
         }
 
-        Length newLength = lengthValueGetter(m_newStyle);
+        Length newLength = lengthValueGetter(m_toStyle);
         if (newLength.isCalc()) {
             newLength = Length(Length::Fixed,
                                newLength.calcData()->specifiedValue(
@@ -519,7 +520,7 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
             if (toValue.isPercent() && !fromValue.isPercent()) {
                 if (cb->contentWidth() == 0) {
                     fromValue = Length(Length::Percent, 0);
-                } else if (m_oldStyle->boxSizing() ==
+                } else if (m_fromStyle->boxSizing() ==
                            BoxSizingValue::BorderBoxBoxSizingValue) {
                     fromValue = Length(
                         Length::Percent,
@@ -533,7 +534,7 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
                 }
             } else if (toValue.isFixed() && !fromValue.isFixed()) {
                 float value;
-                if (m_oldStyle->boxSizing() ==
+                if (m_fromStyle->boxSizing() ==
                     BoxSizingValue::BorderBoxBoxSizingValue) {
                     value = frameBoxSizeValueGetter(m_oldFrame->asFrameBox());
                 } else {
@@ -549,7 +550,7 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
             init.animatedValues.push_back(new AnimatedValue(toValue));
 
             auto task = new ActiveLengthAnimationTask(
-                init, lengthValueGetter(m_newStyle));
+                init, lengthValueGetter(m_toStyle));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -570,15 +571,15 @@ void TransitionApplier::applyActiveLengthAnimationTask(
         // NOTE: This originated from legacy code.
         // Vertical margins will not have any effect on non-replaced inline
         // elements.
-        if (m_oldStyle->display() == DisplayValue::InlineDisplayValue ||
-            m_newStyle->display() == DisplayValue::InlineDisplayValue) {
+        if (m_fromStyle->display() == DisplayValue::InlineDisplayValue ||
+            m_toStyle->display() == DisplayValue::InlineDisplayValue) {
             return;
         }
     }
 
     AnimatedValue from, to;
-    if (!AnimationUtil::lengthToAnimatedValue(lengthValueGetter(m_oldStyle),
-                                              lengthValueGetter(m_newStyle),
+    if (!AnimationUtil::lengthToAnimatedValue(lengthValueGetter(m_fromStyle),
+                                              lengthValueGetter(m_toStyle),
                                               m_element, from, to)) {
         return;
     }
@@ -590,7 +591,7 @@ void TransitionApplier::applyActiveLengthAnimationTask(
     init.animatedValues.push_back(new AnimatedValue(to));
 
     auto task =
-        new ActiveLengthAnimationTask(init, lengthValueGetter(m_newStyle));
+        new ActiveLengthAnimationTask(init, lengthValueGetter(m_toStyle));
     m_executor->registerTransition(task);
     m_gotTransition = true;
 }
@@ -602,17 +603,17 @@ void TransitionApplier::applyBackgroundPositionX(double duration, double delay,
             CSSStyleValuePair::KeyKind::BackgroundPositionX)) {
         return;
     }
-    if (m_oldStyle->hasBlockLikeDisplay() == false ||
-        m_newStyle->hasBlockLikeDisplay() == false) {
+    if (m_fromStyle->hasBlockLikeDisplay() == false ||
+        m_toStyle->hasBlockLikeDisplay() == false) {
         // TODO Inline Element
         return;
     }
     FrameBox* oldPaintingBox = m_oldFrame->asFrameBox();
-    size_t layerSize = m_newStyle->backgroundLayerSize();
+    size_t layerSize = m_toStyle->backgroundLayerSize();
     for (size_t i = 0; i < layerSize; i++) {
         AnimatedValue pos1, pos2;
         if (AnimationUtil::backgroundPosXToAnimatedValue(
-                m_oldStyle, m_newStyle, oldPaintingBox, m_element, pos1, pos2,
+                m_fromStyle, m_toStyle, oldPaintingBox, m_element, pos1, pos2,
                 i)) {
             ActiveAnimationTaskInit init;
             fillActiveAnimationTaskInitForTransition(
@@ -623,7 +624,7 @@ void TransitionApplier::applyBackgroundPositionX(double duration, double delay,
             init.layerIndex = i;
 
             auto task = new ActiveLengthAnimationTask(
-                init, m_newStyle->backgroundPositionX(i));
+                init, m_toStyle->backgroundPositionX(i));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -637,17 +638,17 @@ void TransitionApplier::applyBackgroundPositionY(double duration, double delay,
             CSSStyleValuePair::KeyKind::BackgroundPositionY)) {
         return;
     }
-    if (m_oldStyle->hasBlockLikeDisplay() == false ||
-        m_newStyle->hasBlockLikeDisplay() == false) {
+    if (m_fromStyle->hasBlockLikeDisplay() == false ||
+        m_toStyle->hasBlockLikeDisplay() == false) {
         // TODO Inline Element
         return;
     }
     FrameBox* oldPaintingBox = m_oldFrame->asFrameBox();
-    size_t layerSize = m_newStyle->backgroundLayerSize();
+    size_t layerSize = m_toStyle->backgroundLayerSize();
     for (size_t i = 0; i < layerSize; i++) {
         AnimatedValue pos1, pos2;
         if (AnimationUtil::backgroundPosYToAnimatedValue(
-                m_oldStyle, m_newStyle, oldPaintingBox, m_element, pos1, pos2,
+                m_fromStyle, m_toStyle, oldPaintingBox, m_element, pos1, pos2,
                 i)) {
             ActiveAnimationTaskInit init;
             fillActiveAnimationTaskInitForTransition(
@@ -658,7 +659,7 @@ void TransitionApplier::applyBackgroundPositionY(double duration, double delay,
             init.layerIndex = i;
 
             auto task = new ActiveLengthAnimationTask(
-                init, m_newStyle->backgroundPositionY(i));
+                init, m_toStyle->backgroundPositionY(i));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -671,17 +672,17 @@ void TransitionApplier::applyBackgroundSize(double duration, double delay,
     if (!canRegisterTransition(CSSStyleValuePair::KeyKind::BackgroundSize)) {
         return;
     }
-    if (m_oldStyle->hasBlockLikeDisplay() == false ||
-        m_newStyle->hasBlockLikeDisplay() == false) {
+    if (m_fromStyle->hasBlockLikeDisplay() == false ||
+        m_toStyle->hasBlockLikeDisplay() == false) {
         // TODO Inline Element
         return;
     }
     FrameBox* oldPaintingBox = m_oldFrame->asFrameBox();
-    size_t layerSize = m_newStyle->backgroundLayerSize();
+    size_t layerSize = m_toStyle->backgroundLayerSize();
     for (size_t i = 0; i < layerSize; i++) {
         AnimatedValue size1, size2;
         if (AnimationUtil::backgroundSizeToAnimatedValue(
-                m_oldStyle, m_newStyle, oldPaintingBox, m_element, size1, size2,
+                m_fromStyle, m_toStyle, oldPaintingBox, m_element, size1, size2,
                 i)) {
             ActiveAnimationTaskInit init;
             fillActiveAnimationTaskInitForTransition(
@@ -692,7 +693,7 @@ void TransitionApplier::applyBackgroundSize(double duration, double delay,
             init.layerIndex = i;
 
             auto task = new ActiveLengthSizeAnimationTask(
-                init, m_newStyle->backgroundSizeLengthValue(i));
+                init, m_toStyle->backgroundSizeLengthValue(i));
             m_executor->registerTransition(task);
             m_gotTransition = true;
         }
@@ -709,8 +710,8 @@ void TransitionApplier::applyVisibility(double duration, double delay,
     fillActiveAnimationTaskInitForTransition(
         m_element, CSSStyleValuePair::KeyKind::Visibility, duration, delay,
         timingFunction, init);
-    init.animatedValues.push_back(new AnimatedValue(m_oldStyle->visibility()));
-    init.animatedValues.push_back(new AnimatedValue(m_newStyle->visibility()));
+    init.animatedValues.push_back(new AnimatedValue(m_fromStyle->visibility()));
+    init.animatedValues.push_back(new AnimatedValue(m_toStyle->visibility()));
 
     auto task = new ActiveVisibilityAnimationTask(init);
     m_executor->registerTransition(task);

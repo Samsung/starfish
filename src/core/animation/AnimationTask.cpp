@@ -1548,12 +1548,12 @@ bool ActiveVisibilityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 }
 
 bool applyTransitionIfNeeds(
-    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
-    ComputedStyle* newStyle, const bool* damagedKeys,
+    Element* element, ComputedStyle* fromStyle, Optional<Frame*> oldFrame,
+    ComputedStyle* toStyle, const bool* damagedKeys,
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>&
         canceledAnimationProgress)
 {
-    TransitionApplier transitionApplier(element, oldStyle, oldFrame, newStyle,
+    TransitionApplier transitionApplier(element, fromStyle, oldFrame, toStyle,
                                         damagedKeys);
     return transitionApplier.apply();
 }

@@ -35,8 +35,8 @@ class TransitionApplier : public gc {
 public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    TransitionApplier(Element* element, ComputedStyle* oldStyle,
-                      Frame* oldFrame, ComputedStyle* newStyle,
+    TransitionApplier(Element* element, ComputedStyle* fromStyle,
+                      Optional<Frame*> oldFrame, ComputedStyle* toStyle,
                       const bool* damagedKeys);
 
     bool apply();
@@ -88,9 +88,9 @@ private:
     bool canRegisterTransition(CSSStyleValuePair::KeyKind property);
 
     Element* m_element;
-    ComputedStyle* m_oldStyle;
-    Frame* m_oldFrame;
-    ComputedStyle* m_newStyle;
+    ComputedStyle* m_fromStyle;
+    Optional<Frame*> m_oldFrame;
+    ComputedStyle* m_toStyle;
     const bool* m_damagedKeys;
     AnimationExecutor* m_executor;
     bool m_gotTransition;
