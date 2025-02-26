@@ -24,6 +24,7 @@
 #include <functional>
 
 #include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 
 namespace Starfish {
 
@@ -154,6 +155,21 @@ namespace Starfish {
 
 class AnimationExecutor : public gc {
 public:
+    struct ExecutionContext {
+        Element* element;
+        Optional<ComputedStyle*> fromStyle;
+        Optional<Frame*> oldFrame;
+        ComputedStyle* toStyle;
+        uint64_t tick;
+        bool hasActiveTask;
+        bool needsToCheckActiveExecutorInWebView;
+        bool needsToRecomputeStylePropertyDamage;
+        ComputedStyleDamage& damage;
+        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize];
+        std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
+            canceledAnimationProgress;
+    };
+
     AnimationExecutor()
     {
     }
@@ -189,6 +205,10 @@ public:
                            AnimationType animationType);
 
     uint64_t transformOpacityAnimationRemainTime();
+
+    void checkActiveTransitionsState(ExecutionContext& context);
+    void addNewActiveTransitionIfNeeds(ExecutionContext& context);
+    void executeActiveTransitionsStep(ExecutionContext& context);
 
     void fireAnimationStartEvent(Element* element, String* name, double delay);
     void fireAnimationEndEvent(Element* element, String* name,
