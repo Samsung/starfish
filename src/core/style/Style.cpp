@@ -8791,137 +8791,46 @@ void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(toStyle != nullptr);
-
-    bool needsToCheckActiveAnimationExecutorInWebView = false;
-    bool needsToRecomputeStylePropertyDamage = false;
-    bool elementHasTransition = false;
     bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
     bool isRunningTransformAnimationBefore =
         element->isRunningTransformAnimation();
 
+    AnimationExecutor::ExecutionContext context{
+        element,
+        fromStyle,
+        oldFrame,
+        toStyle,
+        element->document()->browsingContext()->styleResolveStartTick(),
+        false,
+        false,
+        false,
+        damage,
+        damagedKeys,
+        {},
+    };
+
     AnimationExecutor* executor = element->document()->animationExecutor();
-    STARFISH_ASSERT(executor != nullptr);
-
-    auto tick = element->document()->browsingContext()->styleResolveStartTick();
-    std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
-        canceledAnimationProgress;
-    // check transition have to remove
-    {
-        auto& transitions = executor->activeTransitions();
-        for (size_t i = 0; i < transitions.size(); i++) {
-            STARFISH_ASSERT(transitions[i]->isTransition());
-            if (transitions[i]->targetElement() == element) {
-                bool shouldRemove = false;
-                bool isCancel = true;
-                // time is up
-                if (transitions[i]->fraction(tick) >= 1) {
-                    shouldRemove = true;
-                    isCancel = false;
-                }
-
-                // element invisible
-                if (!shouldRemove &&
-                    toStyle->display() == DisplayValue::NoneDisplayValue) {
-                    shouldRemove = true;
-                }
-
-                // transition targetToValue changed
-                if (!shouldRemove &&
-                    !transitions[i]->taskCanContinue(toStyle)) {
-                    shouldRemove = true;
-                }
-
-                // transition property gone || other properties changed
-                if (!shouldRemove) {
-                    StyleTransitionData* data = toStyle->transition();
-                    if (data == nullptr) {
-                        shouldRemove = true;
-                    } else {
-                        bool found = false;
-                        for (size_t j = 0; j < data->size(); j++) {
-                            if (data->property(j) ==
-                                CSSStyleValuePair::KeyKind::All) {
-                                found = true;
-                                break;
-                            }
-                            if (transitions[i]->isKindOfTransitionProperty(
-                                    data->property(j))) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            shouldRemove = true;
-                        }
-                    }
-                }
-
-                if (shouldRemove) {
-                    if (!isCancel) {
-                        damagedKeys[transitions[i]->property()] = false;
-                        transitions[i]->fireTransitionEndEvent();
-                    } else {
-                        auto key = transitions[i]->property();
-                        double progress = transitions[i]->fraction(tick);
-                        canceledAnimationProgress.push_back(
-                            std::make_pair(key, progress));
-                        transitions[i]->fireTransitionCancelEvent();
-                    }
-                    transitions[i]->detachFromElement();
-                    transitions.erase(i);
-                    needsToRecomputeStylePropertyDamage = true;
-                    needsToCheckActiveAnimationExecutorInWebView = true;
-
-                    if (!transitions.size()) {
-                        break;
-                    }
-                    i--;
-                } else {
-                    elementHasTransition = true;
-                }
-            }
-        }
-    }
+    // check transition have to remove and fire events
+    executor->checkActiveTransitionsState(context);
 
     // check new transition
-    if (fromStyle && fromStyle->display() != DisplayValue::NoneDisplayValue &&
-        toStyle->display() != DisplayValue::NoneDisplayValue &&
-        toStyle->transitionLayerSize() > 0 &&
-        damage != ComputedStyleDamage::ComputedStyleDamageNone) {
-        if (applyTransitionIfNeeds(element, fromStyle.getValue(), oldFrame,
-                                   toStyle, damagedKeys,
-                                   canceledAnimationProgress)) {
-            elementHasTransition = true;
-            needsToCheckActiveAnimationExecutorInWebView = true;
-        }
-    }
+    executor->addNewActiveTransitionIfNeeds(context);
 
     // apply transition
-    if (elementHasTransition) {
-        auto& activeTransitions = executor->activeTransitions();
-        for (size_t i = 0; i < activeTransitions.size(); i++) {
-            if (activeTransitions[i]->targetElement() == element) {
-                activeTransitions[i]->step(tick, toStyle);
-            }
-        }
-
-        needsToRecomputeStylePropertyDamage = true;
-    }
+    executor->executeActiveTransitionsStep(context);
 
     bool isRunningOpacityAnimationAfter = element->isRunningOpacityAnimation();
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    if (fromStyle.hasValue() && needsToRecomputeStylePropertyDamage) {
+    if (fromStyle.hasValue() && context.needsToRecomputeStylePropertyDamage) {
         recomputeStyleDamageInAnimation(
             element, fromStyle.getValue(), toStyle, damage, damagedKeys,
             isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
             isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
     }
 
-    if (needsToCheckActiveAnimationExecutorInWebView) {
+    if (context.needsToCheckActiveExecutorInWebView) {
         element->webView()->updateActiveAnimationExecutorRegistration(executor);
     }
 }

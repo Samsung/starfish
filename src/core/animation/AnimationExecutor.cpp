@@ -199,6 +199,124 @@ uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
     return result;
 }
 
+void AnimationExecutor::checkActiveTransitionsState(ExecutionContext& context)
+{
+    for (size_t i = 0; i < m_activeTransitions.size(); i++) {
+        STARFISH_ASSERT(m_activeTransitions[i]->isTransition());
+        if (m_activeTransitions[i]->targetElement() != context.element) {
+            continue;
+        }
+
+        bool shouldRemove = false;
+        bool isCancel = true;
+        // time is up
+        if (m_activeTransitions[i]->fraction(context.tick) >= 1) {
+            shouldRemove = true;
+            isCancel = false;
+        }
+
+        // element invisible
+        if (!shouldRemove &&
+            context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+            shouldRemove = true;
+        }
+
+        // transition targetToValue changed
+        if (!shouldRemove &&
+            !m_activeTransitions[i]->taskCanContinue(context.toStyle)) {
+            shouldRemove = true;
+        }
+
+        // transition property gone || other properties changed
+        if (!shouldRemove) {
+            StyleTransitionData* data = context.toStyle->transition();
+            if (data == nullptr) {
+                shouldRemove = true;
+            } else {
+                bool found = false;
+                for (size_t j = 0; j < data->size(); j++) {
+                    if (data->property(j) == CSSStyleValuePair::KeyKind::All) {
+                        found = true;
+                        break;
+                    }
+                    if (m_activeTransitions[i]->isKindOfTransitionProperty(
+                            data->property(j))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    shouldRemove = true;
+                }
+            }
+        }
+
+        if (shouldRemove) {
+            if (!isCancel) {
+                context.damagedKeys[m_activeTransitions[i]->property()] = false;
+                m_activeTransitions[i]->fireTransitionEndEvent();
+            } else {
+                auto key = m_activeTransitions[i]->property();
+                double progress =
+                    m_activeTransitions[i]->fraction(context.tick);
+                context.canceledAnimationProgress.push_back(
+                    std::make_pair(key, progress));
+                m_activeTransitions[i]->fireTransitionCancelEvent();
+            }
+            m_activeTransitions[i]->detachFromElement();
+            m_activeTransitions.erase(i);
+            context.needsToRecomputeStylePropertyDamage = true;
+            context.needsToCheckActiveExecutorInWebView = true;
+
+            if (!m_activeTransitions.size()) {
+                break;
+            }
+            i--;
+        } else {
+            context.hasActiveTask = true;
+        }
+    }
+}
+
+void AnimationExecutor::addNewActiveTransitionIfNeeds(ExecutionContext& context)
+{
+    if (!context.fromStyle.hasValue() ||
+        context.fromStyle->display() == DisplayValue::NoneDisplayValue) {
+        return;
+    }
+
+    if (context.toStyle->display() == DisplayValue::NoneDisplayValue ||
+        context.toStyle->transitionLayerSize() == 0) {
+        return;
+    }
+
+    if (context.damage == ComputedStyleDamage::ComputedStyleDamageNone) {
+        return;
+    }
+
+    if (applyTransitionIfNeeds(context.element, context.fromStyle.getValue(),
+                               context.oldFrame, context.toStyle,
+                               context.damagedKeys,
+                               context.canceledAnimationProgress)) {
+        context.hasActiveTask = true;
+        context.needsToCheckActiveExecutorInWebView = true;
+    }
+}
+
+void AnimationExecutor::executeActiveTransitionsStep(ExecutionContext& context)
+{
+    if (!context.hasActiveTask) {
+        return;
+    }
+
+    for (size_t i = 0; i < m_activeTransitions.size(); i++) {
+        if (m_activeTransitions[i]->targetElement() == context.element) {
+            m_activeTransitions[i]->step(context.tick, context.toStyle);
+        }
+    }
+    context.needsToRecomputeStylePropertyDamage = true;
+}
+
 void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
                                                 double delay)
 {
