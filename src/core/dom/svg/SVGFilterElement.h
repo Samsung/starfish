@@ -62,6 +62,11 @@ public:
         return true;
     }
 
+    virtual bool isPaintServerLikeElement() override
+    {
+        return true;
+    }
+
     Optional<Filter*> filter();
 
     SVGAnimatedEnumeration* filterUnits();

@@ -9424,7 +9424,7 @@ static void resolveSVGUseElementStyle(SVGSVGElement* svgElement)
             ShadowRoot* sr = e.first->internalShadowRoot().value();
             StyleResolveContext ctx(e.second);
             ComputedStyle* style = e.second->styleResolver().resolveStyle(
-                ctx, e.second, e.second->parentElement()->style());
+                ctx, e.second, e.first->style());
             sr->setStyle(
                 new ComputedStyle(style)); // just set style here for inherit
             applyStyleToElement(sr->firstElementChild(), style, ctx);

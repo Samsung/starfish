@@ -39,14 +39,17 @@
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/dom/svg/SVGClipPathElement.h"
+#include "core/dom/svg/SVGFilterElement.h"
+#include "core/dom/svg/SVGMaskElement.h"
 #include "core/dom/svg/SVGLinearGradientElement.h"
 #include "core/dom/svg/SVGRadialGradientElement.h"
 #include "core/dom/svg/SVGAnimatedTransformList.h"
+#include "core/dom/svg/SVGFilterElement.h"
+#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterGaussianBlur.h"
-#include "core/dom/svg/SVGFilterElement.h"
-#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 
 namespace Starfish {
 
@@ -198,13 +201,9 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
-    if (m_hasFilter && node()->isSVGElement() &&
-        node()->asSVGElement()->filterElement()) {
-        Optional<Filter*> fe = node()
-                                   ->asSVGElement()
-                                   ->filterElement()
-                                   ->asSVGFilterElement()
-                                   ->filter();
+    auto filterElement = node()->asSVGElement()->filterElement();
+    if (filterElement) {
+        Optional<Filter*> fe = filterElement->filter();
         if (fe.hasValue()) {
             m_frameRect.setX(m_frameRect.x() + fe->biasX());
             m_frameRect.setY(m_frameRect.y() + fe->biasY());
@@ -213,12 +212,11 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
+    auto clipPathElement = node()->asSVGElement()->clipPathElement();
     Optional<LayoutRect> clipRect;
-    if (m_hasClipPath && node()->isSVGElement() &&
-        node()->asSVGElement()->clipPathElement()) {
-        Frame* clipPathFrame =
-            node()->asSVGElement()->clipPathElement()->frame();
-        if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
+    if (clipPathElement) {
+        Frame* clipPathFrame = clipPathElement->frame();
+        if (clipPathFrame) {
             auto clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
             if (clipPath) {
                 auto floatClipRect = clipPath->fillBoundingRect();
@@ -231,10 +229,9 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
+    auto maskElement = node()->asSVGElement()->maskElement();
     Optional<LayoutRect> maskRect;
-    if (m_hasMask && node()->isSVGElement() &&
-        node()->asSVGElement()->maskElement()) {
-        auto maskElement = node()->asSVGElement()->maskElement();
+    if (maskElement) {
         Frame* maskFrame = maskElement->frame();
 
         // only invisible mask content can be used by this case
@@ -374,6 +371,8 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
+    node()->document()->removeSVGPaintClientElement(node()->asSVGElement());
+
     auto vp = viewport();
     bool needsGeometryAttributes = needsSVGGeometryAttributes();
 
@@ -397,11 +396,10 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setMatrix(ctm);
     }
 
-    if (m_hasClipPath && node()->isSVGElement() &&
-        node()->asSVGElement()->clipPathElement()) {
-        Frame* clipPathFrame =
-            node()->asSVGElement()->clipPathElement()->frame();
-        if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
+    auto clipPathElement = node()->asSVGElement()->clipPathElement();
+    if (clipPathElement) {
+        Frame* clipPathFrame = clipPathElement->frame();
+        if (clipPathFrame) {
             auto clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
             if (clipPath) {
                 ctx.m_canvas->clipPath(clipPath.value());
@@ -409,10 +407,10 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
-    if (m_hasMask && node()->isSVGElement() &&
-        node()->asSVGElement()->maskElement()) {
-        Frame* maskFrame = node()->asSVGElement()->maskElement()->frame();
-        if (maskFrame && maskFrame->isFrameSVGMaskBox()) {
+    auto maskElement = node()->asSVGElement()->maskElement();
+    if (maskElement) {
+        Frame* maskFrame = maskElement->frame();
+        if (maskFrame) {
             maskFrame->asFrameSVGMaskBox()->applyMask(ctx, this);
         }
     }
@@ -553,8 +551,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
     auto owner = node()->asSVGElement()->ownerSVGElement();
     STARFISH_ASSERT(owner);
 
-    owner->asSVGSVGElement()->registerGradientClientElements(
-        id, node()->asSVGElement());
+    document()->registerSVGPaintClientElements(id, node()->asSVGElement());
 
     auto matchingSvg = owner->getSVGElementById(id);
     if (!matchingSvg) {

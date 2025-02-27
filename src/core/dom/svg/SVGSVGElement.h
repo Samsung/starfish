@@ -40,10 +40,6 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void didNodeInserted(Node* parent, Node* newChild) override;
-    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
-    virtual void didNodeRemovedFromDocumentTree() override;
-
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
@@ -118,21 +114,6 @@ public:
     static void parseViewBox(bool& hasViewBox, Unit::Rect& viewBox,
                              String* value);
 
-    const GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>&
-    gradientClientElements()
-    {
-        return m_gradientClientElements;
-    }
-
-    void clearGradientClientElements()
-    {
-        m_gradientClientElements.clear();
-    }
-
-    void registerGradientClientElements(const AtomicString& id,
-                                        SVGElement* client);
-    void notifyRepaintToGradientClientElements(const AtomicString& id);
-
 protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
@@ -143,8 +124,6 @@ protected:
     Optional<SVGAnimatedLength*> m_height;
 
     GCVector<std::pair<SVGUseElement*, SVGElement*>> m_useElementsPair;
-    GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>
-        m_gradientClientElements;
 };
 } // namespace Starfish
 

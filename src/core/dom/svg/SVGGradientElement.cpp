@@ -36,8 +36,8 @@ void SVGGradientElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGElement::didNodeInserted(parent, newChild);
 
-    if (newChild->isSVGStopElement()) {
-        paintingAttributesUpdated();
+    if (parent == this && newChild->isSVGStopElement()) {
+        attributeOfPaintServerLikeUpdated();
     }
 }
 
@@ -45,8 +45,8 @@ void SVGGradientElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
 
-    if (oldChild->isSVGStopElement()) {
-        paintingAttributesUpdated();
+    if (parent == this && oldChild->isSVGStopElement()) {
+        attributeOfPaintServerLikeUpdated();
     }
 }
 
@@ -61,21 +61,9 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_id == name) {
-        auto owner = ownerSVGElement();
-        if (owner) {
-            if (!attributeCreated) {
-                owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
-                    Element::atomicId());
-            }
-            if (!attributeRemoved) {
-                owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
-                    AtomicString::createAtomicString(starfish(), old.value()));
-            }
-        }
-    } else if (ss->m_gradientUnits == name) {
+    if (ss->m_gradientUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        paintingAttributesUpdated();
+        attributeOfPaintServerLikeUpdated();
         if (gradientUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_gradientUnits->setBaseValWithoutUpdateAttribute(
@@ -87,7 +75,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_gradientTransform == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        paintingAttributesUpdated();
+        attributeOfPaintServerLikeUpdated();
         if (value->equals(gradientTransform()->baseVal()->toString()) ==
             false) {
             gradientTransform()->baseVal()->updateListByAttribute();
@@ -95,7 +83,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_spreadMethod == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        paintingAttributesUpdated();
+        attributeOfPaintServerLikeUpdated();
         if (spreadMethod()->isUpdated() == false) {
             if (value->equals("pad")) {
                 m_spreadMethod->setBaseValWithoutUpdateAttribute(
@@ -173,12 +161,4 @@ SVGAnimatedEnumeration* SVGGradientElement::spreadMethod()
     return m_spreadMethod.value();
 }
 
-void SVGGradientElement::paintingAttributesUpdated()
-{
-    auto owner = ownerSVGElement();
-    if (owner) {
-        owner->asSVGSVGElement()->notifyRepaintToGradientClientElements(
-            Element::atomicId());
-    }
-}
 } // namespace Starfish

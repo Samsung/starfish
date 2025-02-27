@@ -1160,6 +1160,27 @@ String* ResourceURL::hash()
     }
 }
 
+StringView ResourceURL::lookupFragmentId()
+{
+    if (m_searchEnd == m_hashEnd) {
+        return StringView();
+    }
+
+    size_t start = m_searchEnd;
+    size_t len = m_hashEnd - m_searchEnd;
+
+    if (m_urlString->charAt(start) == '#') {
+        start++;
+        len--;
+    }
+
+    if (len && m_urlString->charAt(start + len - 1) == ')') {
+        len--;
+    }
+
+    return StringView(m_urlString, start, len + start);
+}
+
 String* ResourceURL::getFragmentIdValue()
 {
     size_t start = 0, end = 0;

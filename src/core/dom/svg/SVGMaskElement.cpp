@@ -54,6 +54,18 @@ void SVGMaskElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x1 == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_y1 == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_x2 == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_y2 == name) {
+        attributeOfPaintServerLikeUpdated();
+    }
 }
 
 void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
@@ -77,4 +89,17 @@ void SVGMaskElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
+
+void SVGMaskElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    SVGElement::didNodeInserted(parent, newChild);
+    attributeOfPaintServerLikeUpdated();
+}
+
+void SVGMaskElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    SVGElement::didNodeRemoved(parent, oldChild);
+    attributeOfPaintServerLikeUpdated();
+}
+
 } // namespace Starfish

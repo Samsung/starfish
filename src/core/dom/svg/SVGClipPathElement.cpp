@@ -52,11 +52,16 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
         SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
 }
 
-void SVGClipPathElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
-    Optional<const MutablePropertyValueList*> cssCustomValues)
+void SVGClipPathElement::didNodeInserted(Node* parent, Node* newChild)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::didNodeInserted(parent, newChild);
+    attributeOfPaintServerLikeUpdated();
+}
+
+void SVGClipPathElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    SVGElement::didNodeRemoved(parent, oldChild);
+    attributeOfPaintServerLikeUpdated();
 }
 
 SVGAnimatedEnumeration* SVGClipPathElement::clipPathUnits()

@@ -187,25 +187,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         } else if (svgElement->isSVGAnimateElement()) {
             newFrame = new FrameSVGInvisibleBox(svgElement);
         }
-
-        // update clipPath element
-        if (svgElement->hasClipPath()) {
-            if (newFrame && newFrame->isFrameSVGBox()) {
-                newFrame->asFrameSVGBox()->markHasClipPath();
-            }
-        }
-
-        if (svgElement->hasMask()) {
-            if (newFrame && newFrame->isFrameSVGBox()) {
-                newFrame->asFrameSVGBox()->markHasMask();
-            }
-        }
-
-        if (svgElement->hasFilter()) {
-            if (newFrame && newFrame->isFrameSVGBox()) {
-                newFrame->asFrameSVGBox()->markHasFilter();
-            }
-        }
     }
 
     svgElement->clearNeedsFrameTreeBuild();
