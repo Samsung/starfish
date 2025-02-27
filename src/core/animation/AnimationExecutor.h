@@ -160,6 +160,12 @@ enum class SVGAnimationEventType {
     EndEvent,
 };
 
+enum class KeyFramesAnimationEventType {
+    AnimationStart,
+    AnimationCancel,
+    AnimationEnd,
+};
+
 class AnimationExecutor : public gc {
 public:
     class ExecutionContext {
@@ -244,11 +250,9 @@ public:
     void addNewActiveAnimationsIfNeeds(ExecutionContext& context);
     void executeActiveAnimationsStep(ExecutionContext& context);
 
-    void fireAnimationStartEvent(Element* element, String* name, double delay);
-    void fireAnimationEndEvent(Element* element, String* name,
-                               double elapsedTime);
-    void fireAnimationCancelEvent(Element* element, String* name,
-                                  double elapsedTime);
+    void fireKeyFramesAnimationEvent(KeyFramesAnimationEventType type,
+                                     Element* element, String* animationName,
+                                     double elapsedTime);
 
     void fireSVGAnimationEvents(
         const std::vector<ActiveAnimationTask*>& repeatedAnimationTasks,

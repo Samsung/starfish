@@ -283,12 +283,13 @@ void BrowsingContext::resolveStyleIfNeeds()
                         task++;
                     }
                 }
-                if (canceled == true) {
+                if (canceled) {
                     ActiveElementAnimation* activeElementAnimation =
                         animationIter.key();
                     AnimationExecutor* animationExecutor =
                         document()->animationExecutor();
-                    animationExecutor->fireAnimationCancelEvent(
+                    animationExecutor->fireKeyFramesAnimationEvent(
+                        KeyFramesAnimationEventType::AnimationCancel,
                         activeElementAnimation->element(),
                         activeElementAnimation->name(), cancelTick);
 

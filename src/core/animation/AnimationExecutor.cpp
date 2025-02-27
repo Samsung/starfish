@@ -559,12 +559,14 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                                    SVGAnimationEventType::EndEvent);
         } else {
             if (needsToFireAnimationCancelEvent) {
-                fireAnimationCancelEvent(context.m_element,
-                                         activeElementAnimation->name(),
-                                         cancelTick);
+                fireKeyFramesAnimationEvent(
+                    KeyFramesAnimationEventType::AnimationCancel,
+                    context.m_element, activeElementAnimation->name(),
+                    cancelTick);
             } else if (needsToFireAnimationEndEvent) {
-                fireAnimationEndEvent(context.m_element,
-                                      activeElementAnimation->name(), endTick);
+                fireKeyFramesAnimationEvent(
+                    KeyFramesAnimationEventType::AnimationEnd,
+                    context.m_element, activeElementAnimation->name(), endTick);
             }
         }
 
@@ -629,66 +631,36 @@ void AnimationExecutor::executeActiveAnimationsStep(ExecutionContext& context)
     context.m_needsToRecomputeStylePropertyDamage = true;
 }
 
-void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
-                                                double delay)
+void AnimationExecutor::fireKeyFramesAnimationEvent(
+    KeyFramesAnimationEventType type, Element* element, String* animationName,
+    double elapsedTime)
 {
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationStart: animationName [%s]",
-    // element, name->toUTF8NonGCString().data());
     AnimationEventInit init;
-    init.setAnimationName(name);
-    if (delay < 0) {
-        init.setElapsedTime(-(delay / 1000));
-    } else {
-        init.setElapsedTime(0);
+    init.setAnimationName(animationName);
+    init.setElapsedTime(elapsedTime);
+    init.setBubbles(true);
+    init.setCancelable(false);
+    String* eventType;
+    switch (type) {
+    case KeyFramesAnimationEventType::AnimationStart:
+        eventType =
+            element->starfish()->staticStrings()->m_animationstart.localName();
+        break;
+    case KeyFramesAnimationEventType::AnimationCancel:
+        eventType =
+            element->starfish()->staticStrings()->m_animationcancel.localName();
+        break;
+    case KeyFramesAnimationEventType::AnimationEnd:
+        eventType =
+            element->starfish()->staticStrings()->m_animationend.localName();
+        break;
     }
-    init.setBubbles(true);
-    init.setCancelable(false);
-    // TODO add more information to init
-    AnimationEvent* event = new AnimationEvent(
-        element->executionContext(),
-        element->starfish()->staticStrings()->m_animationstart.localName(),
-        init);
-    element->dispatchEventIdleTimeByUA(event);
-}
 
-void AnimationExecutor::fireAnimationEndEvent(Element* element, String* name,
-                                              double elapsedTime)
-{
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationEnd: animationName [%s]",
-    // element, name->toUTF8NonGCString().data());
-    AnimationEventInit init;
-    init.setAnimationName(name);
-    init.setElapsedTime(elapsedTime);
-    init.setBubbles(true);
-    init.setCancelable(false);
-    // TODO add more information to init
-    AnimationEvent* event = new AnimationEvent(
-        element->executionContext(),
-        element->starfish()->staticStrings()->m_animationend.localName(), init);
-    element->dispatchEventIdleTimeByUA(event);
-}
+    // This comment originated from legacy.
+    /// TODO add more information to init.
 
-void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
-                                                 double elapsedTime)
-{
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationCancel: animationName [%s]",
-    // element, name->toUTF8NonGCString().data());
-    AnimationEventInit init;
-    init.setAnimationName(name);
-    init.setElapsedTime(elapsedTime);
-    init.setBubbles(true);
-    init.setCancelable(false);
-    // TODO add more information to init
-    AnimationEvent* event = new AnimationEvent(
-        element->executionContext(),
-        element->starfish()->staticStrings()->m_animationcancel.localName(),
-        init);
+    AnimationEvent* event =
+        new AnimationEvent(element->executionContext(), eventType, init);
     element->dispatchEventIdleTimeByUA(event);
 }
 

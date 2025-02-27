@@ -132,9 +132,17 @@ bool AnimationApplier::apply()
         }
 
         if (hasAnyAnimatedProperty) {
-            m_executor->fireAnimationStartEvent(
-                m_element, currentKeyFrames.name(),
-                currentKeyFrames.delay().toTimeValue());
+            // Note that this originated from legacy code.
+            double delay = currentKeyFrames.delay().toTimeValue();
+            if (delay < 0) {
+                delay = -(delay / 1000);
+            } else {
+                delay = 0;
+            }
+
+            m_executor->fireKeyFramesAnimationEvent(
+                KeyFramesAnimationEventType::AnimationStart, m_element,
+                currentKeyFrames.name(), delay);
             hasAppliedAnimation = true;
         }
     }
