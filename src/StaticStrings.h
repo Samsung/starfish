@@ -573,6 +573,7 @@ public:
     QualifiedName m_beginEvent;
     QualifiedName m_endEvent;
     QualifiedName m_repeatEvent;
+    QualifiedName m_repeatCount;
     QualifiedName m_calcMode;
     QualifiedName m_dur;
     QualifiedName m_from;

@@ -654,6 +654,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "endEvent"));
     m_repeatEvent = QualifiedName(
         AtomicString::createAtomicString(starfish, "repeatEvent"));
+    m_repeatCount = QualifiedName(
+        AtomicString::createAtomicString(starfish, "repeatcount"));
     m_calcMode =
         QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
     m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));

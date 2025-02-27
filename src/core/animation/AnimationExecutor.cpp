@@ -409,6 +409,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
     double cancelTick = 0.0;
     double endTick = 0.0;
     std::vector<ActiveAnimationTask*> expiredAnimationTasks;
+    std::vector<ActiveAnimationTask*> repeatedAnimationTasks;
 
     auto iter = m_activeAnimations.begin();
     while (iter != m_activeAnimations.end()) {
@@ -432,7 +433,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
 
             bool shouldRemove = false;
             bool isCancel = true;
-
+            bool isRepeat = false;
             task->setIsForward(
                 activeElementAnimation->isForwardDirection(task));
 
@@ -440,13 +441,16 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                 if (std::isinf(iterationCount)) {
                     float f = task->iterationStart() == 1 ? 0 : 1;
                     task->setIterationStart(f);
+                    isRepeat = true;
                 } else {
                     float f = task->iterationStart() - 1;
                     task->setIterationStart(f);
+                    isRepeat = true;
                     if (task->iterationStart() < 1) {
                         // time is up
                         shouldRemove = true;
                         isCancel = false;
+                        isRepeat = false;
                         task->setIterationStart(iterationCount);
                     }
                 }
@@ -540,17 +544,19 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                 context.m_needsToCheckActiveExecutorInWebView = true;
             } else {
                 context.m_hasActiveTask = true;
+                if (isRepeat) {
+                    repeatedAnimationTasks.push_back(task);
+                }
             }
         }
 
+        // Fire events
         if (activeElementAnimation->animationType() ==
             AnimationType::SVGAnimation) {
-            for (auto& expired : expiredAnimationTasks) {
-                STARFISH_ASSERT(expired->originAnimationElement().hasValue());
-                SVGAnimationElement* target =
-                    expired->originAnimationElement().getValue();
-                fireSVGAnimateEndEvent(target);
-            }
+            fireSVGAnimationEvents(repeatedAnimationTasks,
+                                   SVGAnimationEventType::RepeatEvent);
+            fireSVGAnimationEvents(expiredAnimationTasks,
+                                   SVGAnimationEventType::EndEvent);
         } else {
             if (needsToFireAnimationCancelEvent) {
                 fireAnimationCancelEvent(context.m_element,
@@ -686,19 +692,35 @@ void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
     element->dispatchEventIdleTimeByUA(event);
 }
 
-void AnimationExecutor::fireSVGAnimateBeginEvent(Element* element)
+void AnimationExecutor::fireSVGAnimationEvents(
+    const std::vector<ActiveAnimationTask*>& animationTasks,
+    SVGAnimationEventType type)
 {
-    String* eventType =
-        element->starfish()->staticStrings()->m_beginEvent.localName();
-    Event* e = new Event(element->executionContext(), eventType,
-                         EventInit(false, false));
-    element->EventTarget::dispatchEventIdleTimeByUA(e);
+    for (auto& task : animationTasks) {
+        STARFISH_ASSERT(task->originAnimationElement().hasValue());
+        fireSVGAnimationEvent(task->originAnimationElement().getValue(), type);
+    }
 }
 
-void AnimationExecutor::fireSVGAnimateEndEvent(Element* element)
+void AnimationExecutor::fireSVGAnimationEvent(Element* element,
+                                              SVGAnimationEventType type)
 {
-    String* eventType =
-        element->starfish()->staticStrings()->m_endEvent.localName();
+    String* eventType;
+    switch (type) {
+    case SVGAnimationEventType::BeginEvent:
+        eventType =
+            element->starfish()->staticStrings()->m_beginEvent.localName();
+        break;
+    case SVGAnimationEventType::RepeatEvent:
+        eventType =
+            element->starfish()->staticStrings()->m_repeatEvent.localName();
+        break;
+    case SVGAnimationEventType::EndEvent:
+        eventType =
+            element->starfish()->staticStrings()->m_endEvent.localName();
+        break;
+    }
+
     Event* e = new Event(element->executionContext(), eventType,
                          EventInit(false, false));
     element->EventTarget::dispatchEventIdleTimeByUA(e);

@@ -100,6 +100,7 @@ protected:
     bool parseFill(SVGAnimationFill& fill);
     bool parseCalcMode(SVGAnimationCalcMode& calcMode);
     bool hasValues();
+    bool parseRepeatCount(float& repeatCount);
 
     CSSStyleDeclaration* m_declarations;
 };

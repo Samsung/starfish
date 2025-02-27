@@ -154,6 +154,12 @@ struct equal_to<Starfish::ActiveElementAnimation*> {
 
 namespace Starfish {
 
+enum class SVGAnimationEventType {
+    BeginEvent,
+    RepeatEvent,
+    EndEvent,
+};
+
 class AnimationExecutor : public gc {
 public:
     class ExecutionContext {
@@ -244,8 +250,10 @@ public:
     void fireAnimationCancelEvent(Element* element, String* name,
                                   double elapsedTime);
 
-    void fireSVGAnimateBeginEvent(Element* element);
-    void fireSVGAnimateEndEvent(Element* element);
+    void fireSVGAnimationEvents(
+        const std::vector<ActiveAnimationTask*>& repeatedAnimationTasks,
+        SVGAnimationEventType type);
+    void fireSVGAnimationEvent(Element* element, SVGAnimationEventType type);
 
 private:
     GCVector<ActiveAnimationTask*> m_activeTransitions;

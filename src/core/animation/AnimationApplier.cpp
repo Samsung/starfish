@@ -184,6 +184,11 @@ bool AnimationApplier::applySVGAnimateElement()
             currentKeyFrames->playState(), currentKeyFrames->fillMode());
     }
 
+    if (hasAppliedAnimation) {
+        m_executor->fireSVGAnimationEvent(m_originAnimationElement.getValue(),
+                                          SVGAnimationEventType::BeginEvent);
+    }
+
     return hasAppliedAnimation;
 }
 
