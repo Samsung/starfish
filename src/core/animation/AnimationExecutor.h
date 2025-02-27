@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <utility>
 
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
@@ -155,19 +156,42 @@ namespace Starfish {
 
 class AnimationExecutor : public gc {
 public:
-    struct ExecutionContext {
-        Element* element;
-        Optional<ComputedStyle*> fromStyle;
-        Optional<Frame*> oldFrame;
-        ComputedStyle* toStyle;
-        uint64_t tick;
-        bool hasActiveTask;
-        bool needsToCheckActiveExecutorInWebView;
-        bool needsToRecomputeStylePropertyDamage;
-        ComputedStyleDamage& damage;
-        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize];
+    class ExecutionContext {
+        friend class AnimationExecutor;
+        STARFISH_MAKE_STACK_ALLOCATED();
+
+    public:
+        ExecutionContext(AnimationExecutor* executor, Element* element,
+                         Optional<ComputedStyle*> fromStyle,
+                         Optional<Frame*> oldFrame, ComputedStyle* toStyle,
+                         uint64_t tick, ComputedStyleDamage& damage,
+                         bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
+
+        ~ExecutionContext();
+
+        void begin();
+        void end();
+
+    private:
+        void recomputeStyleDamageInAnimation();
+
+        AnimationExecutor* m_executor;
+        Element* m_element;
+        Optional<ComputedStyle*> m_fromStyle;
+        Optional<Frame*> m_oldFrame;
+        ComputedStyle* m_toStyle;
+        uint64_t m_tick;
+        bool m_hasActiveTask;
+        bool m_needsToCheckActiveExecutorInWebView;
+        bool m_needsToRecomputeStylePropertyDamage;
+        ComputedStyleDamage& m_damage;
+        bool (&m_damagedKeys)[CSSStyleValuePair::KeyKindSize];
         std::vector<std::pair<CSSStyleValuePair::KeyKind, double>>
-            canceledAnimationProgress;
+            m_canceledAnimationProgress;
+
+        // std::pair<opacity, transform>
+        std::pair<bool, bool> m_beforeRunningStates{ false, false };
+        std::pair<bool, bool> m_afterRunningStates{ false, false };
     };
 
     AnimationExecutor()

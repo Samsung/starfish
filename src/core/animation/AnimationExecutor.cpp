@@ -24,8 +24,10 @@
 #include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationApplier.h"
 #include "core/dom/AnimationEvent.h"
-#include "core/dom/Element.h"
 #include "core/dom/svg/SVGAnimationElement.h"
+#include "core/dom/Document.h"
+#include "core/dom/Element.h"
+#include "core/page/WebView.h"
 
 namespace Starfish {
 
@@ -71,6 +73,88 @@ bool ActiveElementAnimation::isForwardDirection(
                (dir == AnimationDirectionValue::Alternate && isOdd) ||
                (dir == AnimationDirectionValue::AlternateReverse && !isOdd);
     return ret;
+}
+
+AnimationExecutor::ExecutionContext::ExecutionContext(
+    AnimationExecutor* executor, Element* element,
+    Optional<ComputedStyle*> fromStyle, Optional<Frame*> oldFrame,
+    ComputedStyle* toStyle, uint64_t tick, ComputedStyleDamage& damage,
+    bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
+    : m_executor(executor)
+    , m_element(element)
+    , m_fromStyle(fromStyle)
+    , m_oldFrame(oldFrame)
+    , m_toStyle(toStyle)
+    , m_tick(tick)
+    , m_hasActiveTask(false)
+    , m_needsToCheckActiveExecutorInWebView(false)
+    , m_needsToRecomputeStylePropertyDamage(false)
+    , m_damage(damage)
+    , m_damagedKeys(damagedKeys)
+    , m_canceledAnimationProgress()
+    , m_beforeRunningStates(std::make_pair(false, false))
+    , m_afterRunningStates(std::make_pair(false, false))
+{
+}
+
+AnimationExecutor::ExecutionContext::~ExecutionContext()
+{
+    if (m_needsToRecomputeStylePropertyDamage) {
+        recomputeStyleDamageInAnimation();
+    }
+
+    if (m_needsToCheckActiveExecutorInWebView) {
+        // Registers or unregisters an executor which has a valid animation task
+        // with the active animation executor.
+        m_element->document()
+            ->webView()
+            ->updateActiveAnimationExecutorRegistration(m_executor);
+    }
+}
+
+void AnimationExecutor::ExecutionContext::begin()
+{
+    m_beforeRunningStates =
+        std::make_pair(m_element->isRunningOpacityAnimation(),
+                       m_element->isRunningTransformAnimation());
+}
+
+void AnimationExecutor::ExecutionContext::end()
+{
+    m_afterRunningStates =
+        std::make_pair(m_element->isRunningOpacityAnimation(),
+                       m_element->isRunningTransformAnimation());
+}
+
+void AnimationExecutor::ExecutionContext::recomputeStyleDamageInAnimation()
+{
+    // NOTE: This originated from legacy code.
+    if (!m_fromStyle.hasValue()) {
+        return;
+    }
+
+    m_damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    memset(m_damagedKeys, 0, sizeof(m_damagedKeys));
+
+    if (!m_element->frame()) {
+        m_damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+    }
+
+    m_damage = (ComputedStyleDamage)(
+        m_damage |
+        compareStyle(m_fromStyle.getValue(), m_toStyle, m_damagedKeys));
+
+    if (m_afterRunningStates.first != m_beforeRunningStates.first &&
+        m_toStyle->opacity() == 1) {
+        m_damage = (ComputedStyleDamage)(
+            m_damage | ComputedStyleDamageEstablishesStackingContext);
+    }
+    if (m_afterRunningStates.second != m_beforeRunningStates.second &&
+        (!m_toStyle->transforms() || !m_toStyle->transforms()->size())) {
+        m_damage = (ComputedStyleDamage)(
+            m_damage | ComputedStyleDamageEstablishesStackingContext);
+    }
 }
 
 void AnimationExecutor::iterateAnimationTasks(void (*fn)(ActiveAnimationTask*,
@@ -205,33 +289,33 @@ void AnimationExecutor::checkActiveTransitionsState(ExecutionContext& context)
 {
     for (size_t i = 0; i < m_activeTransitions.size(); i++) {
         STARFISH_ASSERT(m_activeTransitions[i]->isTransition());
-        if (m_activeTransitions[i]->targetElement() != context.element) {
+        if (m_activeTransitions[i]->targetElement() != context.m_element) {
             continue;
         }
 
         bool shouldRemove = false;
         bool isCancel = true;
         // time is up
-        if (m_activeTransitions[i]->fraction(context.tick) >= 1) {
+        if (m_activeTransitions[i]->fraction(context.m_tick) >= 1) {
             shouldRemove = true;
             isCancel = false;
         }
 
         // element invisible
         if (!shouldRemove &&
-            context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+            context.m_toStyle->display() == DisplayValue::NoneDisplayValue) {
             shouldRemove = true;
         }
 
         // transition targetToValue changed
         if (!shouldRemove &&
-            !m_activeTransitions[i]->taskCanContinue(context.toStyle)) {
+            !m_activeTransitions[i]->taskCanContinue(context.m_toStyle)) {
             shouldRemove = true;
         }
 
         // transition property gone || other properties changed
         if (!shouldRemove) {
-            StyleTransitionData* data = context.toStyle->transition();
+            StyleTransitionData* data = context.m_toStyle->transition();
             if (data == nullptr) {
                 shouldRemove = true;
             } else {
@@ -255,68 +339,69 @@ void AnimationExecutor::checkActiveTransitionsState(ExecutionContext& context)
 
         if (shouldRemove) {
             if (!isCancel) {
-                context.damagedKeys[m_activeTransitions[i]->property()] = false;
+                context.m_damagedKeys[m_activeTransitions[i]->property()] =
+                    false;
                 m_activeTransitions[i]->fireTransitionEndEvent();
             } else {
                 auto key = m_activeTransitions[i]->property();
                 double progress =
-                    m_activeTransitions[i]->fraction(context.tick);
-                context.canceledAnimationProgress.push_back(
+                    m_activeTransitions[i]->fraction(context.m_tick);
+                context.m_canceledAnimationProgress.push_back(
                     std::make_pair(key, progress));
                 m_activeTransitions[i]->fireTransitionCancelEvent();
             }
             m_activeTransitions[i]->detachFromElement();
             m_activeTransitions.erase(i);
-            context.needsToRecomputeStylePropertyDamage = true;
-            context.needsToCheckActiveExecutorInWebView = true;
+            context.m_needsToRecomputeStylePropertyDamage = true;
+            context.m_needsToCheckActiveExecutorInWebView = true;
 
             if (!m_activeTransitions.size()) {
                 break;
             }
             i--;
         } else {
-            context.hasActiveTask = true;
+            context.m_hasActiveTask = true;
         }
     }
 }
 
 void AnimationExecutor::addNewActiveTransitionIfNeeds(ExecutionContext& context)
 {
-    if (!context.fromStyle.hasValue() ||
-        context.fromStyle->display() == DisplayValue::NoneDisplayValue) {
+    if (!context.m_fromStyle.hasValue() ||
+        context.m_fromStyle->display() == DisplayValue::NoneDisplayValue) {
         return;
     }
 
-    if (context.toStyle->display() == DisplayValue::NoneDisplayValue ||
-        context.toStyle->transitionLayerSize() == 0) {
+    if (context.m_toStyle->display() == DisplayValue::NoneDisplayValue ||
+        context.m_toStyle->transitionLayerSize() == 0) {
         return;
     }
 
-    if (context.damage == ComputedStyleDamage::ComputedStyleDamageNone) {
+    if (context.m_damage == ComputedStyleDamage::ComputedStyleDamageNone) {
         return;
     }
 
-    if (applyTransitionIfNeeds(context.element, context.fromStyle.getValue(),
-                               context.oldFrame, context.toStyle,
-                               context.damagedKeys,
-                               context.canceledAnimationProgress)) {
-        context.hasActiveTask = true;
-        context.needsToCheckActiveExecutorInWebView = true;
+    if (applyTransitionIfNeeds(
+            context.m_element, context.m_fromStyle.getValue(),
+            context.m_oldFrame, context.m_toStyle, context.m_damagedKeys,
+            context.m_canceledAnimationProgress)) {
+        context.m_hasActiveTask = true;
+        context.m_needsToCheckActiveExecutorInWebView = true;
     }
 }
 
 void AnimationExecutor::executeActiveTransitionsStep(ExecutionContext& context)
 {
-    if (!context.hasActiveTask) {
+    if (!context.m_hasActiveTask) {
         return;
     }
 
     for (size_t i = 0; i < m_activeTransitions.size(); i++) {
-        if (m_activeTransitions[i]->targetElement() == context.element) {
-            m_activeTransitions[i]->step(context.tick, context.toStyle);
+        if (m_activeTransitions[i]->targetElement() == context.m_element) {
+            m_activeTransitions[i]->step(context.m_tick, context.m_toStyle);
         }
     }
-    context.needsToRecomputeStylePropertyDamage = true;
+    context.m_needsToRecomputeStylePropertyDamage = true;
 }
 
 void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
@@ -329,7 +414,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
     while (iter != m_activeAnimations.end()) {
         ActiveElementAnimation* activeElementAnimation = iter.key();
         GCVector<ActiveAnimationTask*>& animationTasks = iter.value();
-        if (activeElementAnimation->element() != context.element) {
+        if (activeElementAnimation->element() != context.m_element) {
             iter++;
             continue;
         }
@@ -341,7 +426,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             ActiveAnimationTask* task = animationTasks[i];
             STARFISH_ASSERT(!task->isTransition());
 
-            if (task->targetElement() != context.element) {
+            if (task->targetElement() != context.m_element) {
                 continue;
             }
 
@@ -351,7 +436,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             task->setIsForward(
                 activeElementAnimation->isForwardDirection(task));
 
-            if (task->fraction(context.tick) >= 1) {
+            if (task->fraction(context.m_tick) >= 1) {
                 if (std::isinf(iterationCount)) {
                     float f = task->iterationStart() == 1 ? 0 : 1;
                     task->setIterationStart(f);
@@ -368,17 +453,17 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             }
 
             // element invisible
-            if (!shouldRemove &&
-                context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+            if (!shouldRemove && context.m_toStyle->display() ==
+                                     DisplayValue::NoneDisplayValue) {
                 shouldRemove = true;
             }
 
             // animation property gone || other properties changed
             if (!shouldRemove &&
                 task->animationType() == AnimationType::KeyFramesAnimation) {
-                if (context.toStyle->animation()) {
+                if (context.m_toStyle->animation()) {
                     StyleAnimationData* styleAnimationData =
-                        context.toStyle->animation();
+                        context.m_toStyle->animation();
                     for (size_t n = 0;
                          n < styleAnimationData->animationKeyframesListSize();
                          n++) {
@@ -423,8 +508,8 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     needsToFireAnimationEndEvent = true;
                 } else {
                     auto key = task->property();
-                    double progress = task->fraction(context.tick);
-                    context.canceledAnimationProgress.push_back(
+                    double progress = task->fraction(context.m_tick);
+                    context.m_canceledAnimationProgress.push_back(
                         std::make_pair(key, progress));
 
                     cancelTick = task->duration() * progress / 1000.0;
@@ -438,7 +523,7 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     animationTasks.erase(i);
                     i--;
                 } else {
-                    context.hasActiveTask = true;
+                    context.m_hasActiveTask = true;
                     // if already in fill-mode, we should not fire end event
                     if (task->isInForwardsFillMode()) {
                         needsToFireAnimationEndEvent = false;
@@ -451,10 +536,10 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                         AnimationType::SVGAnimation) {
                     expiredAnimationTasks.push_back(task);
                 }
-                context.needsToRecomputeStylePropertyDamage = true;
-                context.needsToCheckActiveExecutorInWebView = true;
+                context.m_needsToRecomputeStylePropertyDamage = true;
+                context.m_needsToCheckActiveExecutorInWebView = true;
             } else {
-                context.hasActiveTask = true;
+                context.m_hasActiveTask = true;
             }
         }
 
@@ -468,11 +553,11 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             }
         } else {
             if (needsToFireAnimationCancelEvent) {
-                fireAnimationCancelEvent(context.element,
+                fireAnimationCancelEvent(context.m_element,
                                          activeElementAnimation->name(),
                                          cancelTick);
             } else if (needsToFireAnimationEndEvent) {
-                fireAnimationEndEvent(context.element,
+                fireAnimationEndEvent(context.m_element,
                                       activeElementAnimation->name(), endTick);
             }
         }
@@ -491,51 +576,51 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
 
 void AnimationExecutor::addNewActiveAnimationsIfNeeds(ExecutionContext& context)
 {
-    if (context.toStyle->display() == DisplayValue::NoneDisplayValue) {
+    if (context.m_toStyle->display() == DisplayValue::NoneDisplayValue) {
         return;
     }
 
-    if (context.damage == ComputedStyleDamage::ComputedStyleDamageNone) {
+    if (context.m_damage == ComputedStyleDamage::ComputedStyleDamageNone) {
         return;
     }
 
-    if (context.element->didPrepareAnimation()) {
+    if (context.m_element->didPrepareAnimation()) {
         return;
     }
 
-    StyleAnimationData* styleAnimationData = context.toStyle->animation();
+    StyleAnimationData* styleAnimationData = context.m_toStyle->animation();
     if (!styleAnimationData ||
         !styleAnimationData->totalAnimationKeyframesListSize()) {
         return;
     }
 
-    AnimationApplier animationApplier(context.element,
+    AnimationApplier animationApplier(context.m_element,
                                       AnimationType::KeyFramesAnimation,
-                                      context.toStyle, nullptr);
+                                      context.m_toStyle, nullptr);
     if (animationApplier.apply()) {
-        context.hasActiveTask = true;
-        context.needsToCheckActiveExecutorInWebView = true;
+        context.m_hasActiveTask = true;
+        context.m_needsToCheckActiveExecutorInWebView = true;
     }
 }
 
 void AnimationExecutor::executeActiveAnimationsStep(ExecutionContext& context)
 {
-    if (!context.hasActiveTask) {
+    if (!context.m_hasActiveTask) {
         return;
     }
 
     for (auto& pair : m_activeAnimations) {
-        if (pair.first->element() != context.element) {
+        if (pair.first->element() != context.m_element) {
             continue;
         }
         auto& activeAnimationTasks = pair.second;
         for (auto* task : activeAnimationTasks) {
-            if (task->targetElement() == context.element) {
-                task->step(context.tick, context.toStyle);
+            if (task->targetElement() == context.m_element) {
+                task->step(context.m_tick, context.m_toStyle);
             }
         }
     }
-    context.needsToRecomputeStylePropertyDamage = true;
+    context.m_needsToRecomputeStylePropertyDamage = true;
 }
 
 void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
