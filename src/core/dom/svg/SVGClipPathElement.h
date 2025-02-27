@@ -38,11 +38,15 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGClipPathElement() const override;
 
-    virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues,
-        Optional<const MutablePropertyValueList*> cssCustomValues) override;
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     virtual bool isRenderableElement() override
+    {
+        return true;
+    }
+
+    virtual bool isPaintServerLikeElement() override
     {
         return true;
     }

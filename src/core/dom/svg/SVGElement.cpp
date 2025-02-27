@@ -36,9 +36,6 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
           NativeImageData::PreserveAspectRatioAlign::None)
     , m_preserveAspectRatioMeetOrSlice(
           NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)
-    , m_clipPathElement(nullptr)
-    , m_maskElement(nullptr)
-    , m_filterElement(nullptr)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -70,6 +67,22 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onerror) {
         setAttributeEventListener(ss->m_error, value, this);
+    }
+
+    if (isPaintServerLikeElement()) {
+        if (ss->m_id == name) {
+            if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+                if (!attributeRemoved) {
+                    document()->notifyRepaintToSVGPaintClientElements(
+                        Element::atomicId());
+                }
+                if (!attributeCreated) {
+                    document()->notifyRepaintToSVGPaintClientElements(
+                        AtomicString::createAtomicString(starfish(),
+                                                         old.value()));
+                }
+            }
+        }
     }
 
     if (needsGeometryAttributes()) {
@@ -218,7 +231,6 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         if (ss->m_mask == name || ss->m_maskType == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
-            m_maskElement = nullptr;
         }
     }
 
@@ -226,12 +238,6 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         if (ss->m_filter == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
-            m_filterElement = nullptr;
-            if (attributeRemoved) {
-                setHasFilter(false);
-            } else {
-                setHasFilter(true);
-            }
         }
     }
 
@@ -241,6 +247,20 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             setNeedsLayout();
             Traverse::traverseIncludingShadowDOM(
                 this, [](Node* nd) { nd->setNeedsPainting(); });
+        }
+    }
+
+    // if this element decendent of mask or clip-path element
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+        auto p = parentElement();
+        while (p) {
+            if (p->isSVGSVGElement()) {
+                break;
+            }
+            if (p->isSVGMaskElement() || p->isSVGClipPathElement()) {
+                p->asSVGElement()->attributeOfPaintServerLikeUpdated();
+            }
+            p = p->parentElement();
         }
     }
 }
@@ -438,91 +458,70 @@ int SVGElement::tabIndex()
     return -1;
 }
 
-SVGElement* SVGElement::clipPathElement()
+static Optional<Element*> getElementByURLAndRegisterUsageToDocument(
+    SVGElement* e, String* str)
 {
-    if (!hasClipPath() || !needsClipPathAttributes()) {
+    // In case that SVG element is loaded as an image resource through
+    // MockHTMLIFrameElement. At this case, we can find baseURI at its
+    // referrerURL.
+    ResourceURL url(str, e->document()->baseURL()->isDataURL()
+                             ? e->document()->referrer()
+                             : e->document()->baseURI());
+    auto id = url.lookupFragmentId();
+    if (id.length()) {
+        auto as = AtomicString::createAtomicString(e->starfish(), id);
+        e->document()->registerSVGPaintClientElements(as, e);
+        return e->document()->getElementById(as);
+    }
+    return nullptr;
+}
+
+Optional<SVGClipPathElement*> SVGElement::clipPathElement()
+{
+    String* str = style()->clipPath();
+    if (!needsClipPathAttributes() || !str->length()) {
         return nullptr;
     }
 
-    if (!m_clipPathElement) {
-        String* clipPathStr = style()->clipPath();
-        ResourceURL* clipPathURL;
-        // In case that SVG element is loaded as an image resource through
-        // MockHTMLIFrameElement. At this case, we can find baseURI at its
-        // referrerURL.
-        if (document()->baseURL()->isDataURL()) {
-            clipPathURL = new ResourceURL(clipPathStr, document()->referrer());
-        } else {
-            clipPathURL = new ResourceURL(clipPathStr, document()->baseURI());
-        }
-        String* id = clipPathURL->getFragmentIdValue();
-        if (!id->isEmpty()) {
-            Element* clipPathElement = document()->getElementById(id);
-            if (clipPathElement) {
-                m_clipPathElement = (SVGElement*)clipPathElement;
-            }
-        }
+    auto e = getElementByURLAndRegisterUsageToDocument(this, str);
+    if (e && e->isSVGClipPathElement()) {
+        return e->asSVGClipPathElement();
     }
-    return m_clipPathElement;
+
+    return nullptr;
 }
 
-SVGElement* SVGElement::maskElement()
+Optional<SVGMaskElement*> SVGElement::maskElement()
 {
     if (!hasMask()) {
         return nullptr;
     }
 
-    if (!m_maskElement) {
-        ImageValue* image = style()->maskImage(0);
-        STARFISH_RELEASE_ASSERT(image->type() ==
-                                ImageValueType::ValueType::URL);
+    ImageValue* image = style()->maskImage(0);
+    STARFISH_ASSERT(image->type() == ImageValueType::ValueType::URL);
 
-        ResourceURL* maskURL;
-        // In case that SVG element is loaded as an image resource through
-        // MockHTMLIFrameElement. At this case, we can find baseURI at its
-        // referrerURL.
-        if (document()->baseURL()->isDataURL()) {
-            maskURL =
-                new ResourceURL(image->urlValue(), document()->referrer());
-        } else {
-            maskURL = new ResourceURL(image->urlValue(), document()->baseURI());
-        }
-        String* id = maskURL->getFragmentIdValue();
-        if (!id->isEmpty()) {
-            Element* maskElement = document()->getElementById(id);
-            if (maskElement) {
-                m_maskElement = (SVGElement*)maskElement;
-            }
-        }
+    auto e = getElementByURLAndRegisterUsageToDocument(this, image->urlValue());
+    if (e && e->isSVGMaskElement()) {
+        return e->asSVGMaskElement();
     }
-    return m_maskElement;
+
+    return nullptr;
 }
 
-SVGElement* SVGElement::filterElement()
+Optional<SVGFilterElement*> SVGElement::filterElement()
 {
-    if (!m_filterElement && hasFilter()) {
-        String* filterStr =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_filter);
-        if (filterStr->isEmpty()) {
-            setHasFilter(false);
-            return nullptr;
-        }
-
-        ResourceURL* filterURL;
-        if (document()->baseURL()->isDataURL()) {
-            filterURL = new ResourceURL(filterStr, document()->referrer());
-        } else {
-            filterURL = new ResourceURL(filterStr, document()->baseURI());
-        }
-        String* id = filterURL->getFragmentIdValue();
-        if (!id->isEmpty()) {
-            Element* filterElement = document()->getElementById(id);
-            if (filterElement) {
-                m_filterElement = (SVGElement*)filterElement;
-            }
-        }
+    String* filterStr =
+        getAttributeOrEmpty(starfish()->staticStrings()->m_filter);
+    if (filterStr->isEmpty()) {
+        return nullptr;
     }
-    return m_filterElement;
+
+    auto e = getElementByURLAndRegisterUsageToDocument(this, filterStr);
+    if (e && e->isSVGFilterElement()) {
+        return e->asSVGFilterElement();
+    }
+
+    return nullptr;
 }
 
 SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
@@ -543,6 +542,14 @@ SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
     }
 
     return descendant->asSVGElement();
+}
+
+void SVGElement::attributeOfPaintServerLikeUpdated()
+{
+    STARFISH_ASSERT(isPaintServerLikeElement());
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+        document()->notifyRepaintToSVGPaintClientElements(Element::atomicId());
+    }
 }
 
 } // namespace Starfish

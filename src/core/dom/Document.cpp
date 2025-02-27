@@ -882,9 +882,13 @@ Element* Document::getElementById(String* id)
         return nullptr;
     }
 
-    AtomicString aid = AtomicString::createAtomicString(starfish(), id);
+    return getElementById(AtomicString::createAtomicString(starfish(), id));
+}
+
+Element* Document::getElementById(AtomicString id)
+{
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isElement() && child->asElement()->atomicId() == aid) {
+        if (child->isElement() && child->asElement()->atomicId() == id) {
             return true;
         } else {
             return false;
@@ -1582,11 +1586,18 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
 {
     Node::didNodeInserted(parent, newChild);
 
-    if (newChild->isHTMLBaseElement()) {
+    if (UNLIKELY(newChild->isHTMLBaseElement())) {
         processBaseElement();
-    } else if (newChild->isHTMLUnknownElement()) {
+    } else if (UNLIKELY(newChild->isHTMLUnknownElement())) {
         if (window()->hasCustomElements()) {
             window()->customElements()->upgrade(newChild, true);
+        }
+    } else if (UNLIKELY(newChild->isSVGElement())) {
+        if (newChild->asSVGElement()->isPaintServerLikeElement()) {
+            if (newChild->asElement()->atomicId().string()->length()) {
+                notifyRepaintToSVGPaintClientElements(
+                    newChild->asElement()->atomicId());
+            }
         }
     }
 
@@ -1597,8 +1608,16 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
 {
     Node::didNodeRemoved(parent, oldChild);
 
-    if (oldChild->isHTMLBaseElement()) {
+    if (UNLIKELY(oldChild->isHTMLBaseElement())) {
         processBaseElement();
+    } else if (UNLIKELY(oldChild->isSVGElement())) {
+        if (oldChild->asSVGElement()->isPaintServerLikeElement()) {
+            if (oldChild->asElement()->atomicId().string()->length()) {
+                notifyRepaintToSVGPaintClientElements(
+                    oldChild->asElement()->atomicId());
+            }
+        }
+        removeSVGPaintClientElement(oldChild->asSVGElement());
     }
 
     updateDOMVersion();
@@ -2676,6 +2695,52 @@ bool Document::isFullyActive()
     }
 
     return false;
+}
+
+void Document::registerSVGPaintClientElements(const AtomicString& id,
+                                              SVGElement* client)
+{
+    for (auto& pair : m_svgPaintClientElements) {
+        if (pair.first == id) {
+            for (auto* e : pair.second) {
+                if (e == client) {
+                    return;
+                }
+            }
+            pair.second.push_back(client);
+            return;
+        }
+    }
+
+    GCVector<SVGElement*> v;
+    v.push_back(client);
+    m_svgPaintClientElements.push_back(std::make_pair(id, std::move(v)));
+}
+
+void Document::notifyRepaintToSVGPaintClientElements(const AtomicString& id)
+{
+    for (auto& pair : m_svgPaintClientElements) {
+        if (pair.first == id) {
+            for (auto* e : pair.second) {
+                e->setNeedsPainting();
+            }
+            return;
+        }
+    }
+}
+
+void Document::removeSVGPaintClientElement(SVGElement* client)
+{
+    for (auto& pair : m_svgPaintClientElements) {
+        auto iter = pair.second.begin();
+        while (iter != pair.second.end()) {
+            if (*iter == client) {
+                pair.second.erase(iter);
+                break;
+            }
+            iter++;
+        }
+    }
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);

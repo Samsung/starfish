@@ -50,8 +50,6 @@ void* SVGSVGElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_width));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_height));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGSVGElement, m_useElementsPair));
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(SVGSVGElement, m_gradientClientElements));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGSVGElement));
         typeInited = true;
     }
@@ -95,32 +93,6 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name,
         setNeedsLayout();
         setNeedsPainting();
     }
-}
-
-void SVGSVGElement::didNodeInserted(Node* parent, Node* newChild)
-{
-    SVGElement::didNodeInserted(parent, newChild);
-    if (newChild->isSVGGradientElement() &&
-        newChild->asElement()->atomicId().string()->length()) {
-        notifyRepaintToGradientClientElements(
-            newChild->asElement()->atomicId());
-    }
-}
-
-void SVGSVGElement::didNodeRemoved(Node* parent, Node* oldChild)
-{
-    SVGElement::didNodeRemoved(parent, oldChild);
-    if (oldChild->isSVGGradientElement() &&
-        oldChild->asElement()->atomicId().string()->length()) {
-        notifyRepaintToGradientClientElements(
-            oldChild->asElement()->atomicId());
-    }
-}
-
-void SVGSVGElement::didNodeRemovedFromDocumentTree()
-{
-    SVGElement::didNodeRemovedFromDocumentTree();
-    clearGradientClientElements();
 }
 
 void SVGSVGElement::updateSVGAttributeNeeded(QualifiedName name)
@@ -228,39 +200,6 @@ void SVGSVGElement::connectUseElements()
             }
         }
     });
-}
-
-void SVGSVGElement::registerGradientClientElements(const AtomicString& id,
-                                                   SVGElement* client)
-{
-    for (auto& pair : m_gradientClientElements) {
-        if (pair.first == id) {
-            for (auto* e : pair.second) {
-                if (e == client) {
-                    return;
-                }
-            }
-            pair.second.push_back(client);
-            return;
-        }
-    }
-
-    GCVector<SVGElement*> v;
-    v.push_back(client);
-    m_gradientClientElements.push_back(std::make_pair(id, std::move(v)));
-}
-
-void SVGSVGElement::notifyRepaintToGradientClientElements(
-    const AtomicString& id)
-{
-    for (auto& pair : m_gradientClientElements) {
-        if (pair.first == id) {
-            for (auto* e : pair.second) {
-                e->setNeedsPainting();
-            }
-            return;
-        }
-    }
 }
 
 } // namespace Starfish

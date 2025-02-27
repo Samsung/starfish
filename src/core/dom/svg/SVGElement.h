@@ -63,7 +63,10 @@
 
 namespace Starfish {
 
+class SVGClipPathElement;
+class SVGFilterElement;
 class SVGSVGElement;
+class SVGMaskElement;
 
 class SVGElement : public Element {
 public:
@@ -93,9 +96,6 @@ public:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Element::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_clipPathElement));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_maskElement));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_filterElement));
     }
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
@@ -166,6 +166,12 @@ public:
         return false;
     }
 
+    // clip-path, mask, filter, gradient
+    virtual bool isPaintServerLikeElement()
+    {
+        return false;
+    }
+
     int tabIndex() override;
 
     virtual NativeImageData::PreserveAspectRatioAlign preserveAspectRatioAlign()
@@ -197,36 +203,21 @@ public:
 
     bool hasMask()
     {
-        // Note : mask property in SVG doesn't allow multi layer
+        // Note : mask property in SVG doemasn't allow multi layer
         return style()->maskImage(0) != nullptr;
     }
 
-    bool hasFilter()
-    {
-        return m_hasFilter;
-    }
-
-    void setHasFilter(bool value)
-    {
-        m_hasFilter = value;
-    }
-
-    SVGElement* clipPathElement();
-
-    SVGElement* maskElement();
-
-    SVGElement* filterElement();
-
+    Optional<SVGClipPathElement*> clipPathElement();
+    Optional<SVGMaskElement*> maskElement();
+    Optional<SVGFilterElement*> filterElement();
     SVGElement* getSVGElementById(const AtomicString& id);
+
+    void attributeOfPaintServerLikeUpdated();
 
 protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
-    SVGElement* m_clipPathElement;
-    SVGElement* m_maskElement;
-    SVGElement* m_filterElement;
-    bool m_hasFilter;
 };
 } // namespace Starfish
 

@@ -74,11 +74,14 @@ public:
         return false;
     }
 
+    virtual bool isPaintServerLikeElement() override
+    {
+        return true;
+    }
+
     SVGAnimatedEnumeration* gradientUnits();
     SVGAnimatedTransformList* gradientTransform();
     SVGAnimatedEnumeration* spreadMethod();
-
-    void paintingAttributesUpdated();
 
 protected:
     Optional<SVGAnimatedEnumeration*> m_gradientUnits;

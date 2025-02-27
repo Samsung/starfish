@@ -46,6 +46,7 @@ class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLMapElement;
+class SVGElement;
 class MediaQueryListMatcher;
 class NativeGradient;
 class NativeImageData;
@@ -168,6 +169,7 @@ public:
 
     /* 4.2.2. Interface NonElementParentNode */
     Element* getElementById(String* id);
+    Element* getElementById(AtomicString id);
 
     /* 4.5. Interface Document */
     DocumentType* doctype()
@@ -631,6 +633,11 @@ public:
     void updateResizeObservation();
 
     bool isFullyActive();
+
+    void registerSVGPaintClientElements(const AtomicString& id,
+                                        SVGElement* client);
+    void notifyRepaintToSVGPaintClientElements(const AtomicString& id);
+    void removeSVGPaintClientElement(SVGElement* client);
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -768,6 +775,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
         markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_svgPaintClientElements));
     }
 
     bool m_inParsing : 1;
@@ -839,6 +848,9 @@ protected:
     MutationObserverOptionType m_mutationTypes;
     GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
     bool m_isMutationObserverMicroTaskQueued;
+
+    GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>
+        m_svgPaintClientElements;
 };
 } // namespace Starfish
 

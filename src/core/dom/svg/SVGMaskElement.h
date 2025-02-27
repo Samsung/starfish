@@ -45,6 +45,9 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+
     virtual bool needsGeometryAttributes() override
     {
         return true;
@@ -56,6 +59,11 @@ public:
     }
 
     virtual bool isRenderableElement() override
+    {
+        return true;
+    }
+
+    virtual bool isPaintServerLikeElement() override
     {
         return true;
     }

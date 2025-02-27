@@ -33,9 +33,6 @@ class FrameSVGBox : public FrameBox {
 public:
     FrameSVGBox(Node* node)
         : FrameBox(node, nullptr)
-        , m_hasClipPath(false)
-        , m_hasMask(false)
-        , m_hasFilter(false)
     {
         computeStyleFlags();
     }
@@ -107,21 +104,6 @@ public:
         return nullptr;
     }
 
-    void markHasClipPath()
-    {
-        m_hasClipPath = true;
-    }
-
-    void markHasMask()
-    {
-        m_hasMask = true;
-    }
-
-    void markHasFilter()
-    {
-        m_hasFilter = true;
-    }
-
     virtual bool isVisible() override
     {
         return true;
@@ -169,9 +151,6 @@ protected:
     Optional<GradientDrawingInfo*> makeGradientDrawingInfo(
         String* url, const Unit::Rect& rect);
 
-    bool m_hasClipPath;
-    bool m_hasMask;
-    bool m_hasFilter;
     FrameTreeItemModel m_treeItemModel;
     Optional<SkMatrix*> m_computedSVGTransform;
 };

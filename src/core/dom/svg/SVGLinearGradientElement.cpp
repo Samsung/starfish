@@ -53,16 +53,16 @@ void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
     if (!old || !old->equals(value)) {
         StaticStrings* ss = starfish()->staticStrings();
         if (ss->m_x1 == name) {
-            paintingAttributesUpdated();
+            attributeOfPaintServerLikeUpdated();
             x1()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y1 == name) {
-            paintingAttributesUpdated();
+            attributeOfPaintServerLikeUpdated();
             y1()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_x2 == name) {
-            paintingAttributesUpdated();
+            attributeOfPaintServerLikeUpdated();
             x2()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y2 == name) {
-            paintingAttributesUpdated();
+            attributeOfPaintServerLikeUpdated();
             y2()->baseVal()->setValueAsString(value, true, false);
         }
     }

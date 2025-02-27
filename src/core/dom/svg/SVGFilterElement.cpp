@@ -57,7 +57,7 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_filterUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        attributeOfPaintServerLikeUpdated();
         if (filterUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_filterUnits->setBaseValWithoutUpdateAttribute(
@@ -69,7 +69,7 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_primitiveUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        attributeOfPaintServerLikeUpdated();
         if (primitiveUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_primitiveUnits->setBaseValWithoutUpdateAttribute(
@@ -79,6 +79,14 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
                     SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
             }
         }
+    } else if (ss->m_x == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_y == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_width == name) {
+        attributeOfPaintServerLikeUpdated();
+    } else if (ss->m_height == name) {
+        attributeOfPaintServerLikeUpdated();
     }
 }
 
@@ -103,19 +111,19 @@ void SVGFilterElement::updateSVGAttributeNeeded(QualifiedName name)
 
 void SVGFilterElement::didNodeInserted(Node* parent, Node* newChild)
 {
-    if (parent->isSVGFilterElement()) {
-        if (newChild->isSVGFEGaussianBlurElement()) {
-            Optional<Filter*> f = filter();
-            if (f.hasValue()) {
-                f->setNeedsUpdate();
-                f->updateIfNeeds();
-            }
-        }
+    SVGElement::didNodeInserted(parent, newChild);
+
+    Optional<Filter*> f = filter();
+    if (f.hasValue()) {
+        f->setNeedsUpdate();
+        f->updateIfNeeds();
     }
 }
 
 void SVGFilterElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
+    SVGElement::didNodeRemoved(parent, oldChild);
+
     Optional<Filter*> f = filter();
     if (f.hasValue()) {
         f->setNeedsUpdate();
