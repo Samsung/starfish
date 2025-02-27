@@ -8749,90 +8749,6 @@ bool StyleResolver::checkPseudoElement(Element* element,
     }
 }
 
-static void recomputeStyleDamageInAnimation(
-    Element* element, ComputedStyle* oldStyle, ComputedStyle* style,
-    ComputedStyleDamage& damage,
-    bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize],
-    bool isRunningOpacityAnimationBefore,
-    bool isRunningTransformAnimationBefore, bool isRunningOpacityAnimationAfter,
-    bool isRunningTransformAnimationAfter)
-{
-    STARFISH_ASSERT(element != nullptr);
-    STARFISH_ASSERT(oldStyle != nullptr);
-    STARFISH_ASSERT(style != nullptr);
-
-    damage = ComputedStyleDamage::ComputedStyleDamageNone;
-    memset(damagedKeys, 0, sizeof(damagedKeys));
-
-    if (element->frame() == nullptr) {
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
-    }
-
-    damage = (ComputedStyleDamage)(damage |
-                                   compareStyle(oldStyle, style, damagedKeys));
-
-    if (isRunningOpacityAnimationAfter != isRunningOpacityAnimationBefore &&
-        style->opacity() == 1) {
-        damage = (ComputedStyleDamage)(
-            damage | ComputedStyleDamageEstablishesStackingContext);
-    }
-    if (isRunningTransformAnimationAfter != isRunningTransformAnimationBefore &&
-        (style->transforms() == nullptr || style->transforms()->size() == 0)) {
-        damage = (ComputedStyleDamage)(
-            damage | ComputedStyleDamageEstablishesStackingContext);
-    }
-}
-
-void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
-                       Optional<Frame*> oldFrame, ComputedStyle* toStyle,
-                       ComputedStyleDamage& damage,
-                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
-{
-    bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
-    bool isRunningTransformAnimationBefore =
-        element->isRunningTransformAnimation();
-
-    AnimationExecutor::ExecutionContext context{
-        element,
-        fromStyle,
-        oldFrame,
-        toStyle,
-        element->document()->browsingContext()->styleResolveStartTick(),
-        false,
-        false,
-        false,
-        damage,
-        damagedKeys,
-        {},
-    };
-
-    AnimationExecutor* executor = element->document()->animationExecutor();
-    // check transition have to remove and fire events
-    executor->checkActiveTransitionsState(context);
-
-    // check new transition
-    executor->addNewActiveTransitionIfNeeds(context);
-
-    // apply transition
-    executor->executeActiveTransitionsStep(context);
-
-    bool isRunningOpacityAnimationAfter = element->isRunningOpacityAnimation();
-    bool isRunningTransformAnimationAfter =
-        element->isRunningTransformAnimation();
-
-    if (fromStyle.hasValue() && context.needsToRecomputeStylePropertyDamage) {
-        recomputeStyleDamageInAnimation(
-            element, fromStyle.getValue(), toStyle, damage, damagedKeys,
-            isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
-            isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
-    }
-
-    if (context.needsToCheckActiveExecutorInWebView) {
-        element->webView()->updateActiveAnimationExecutorRegistration(executor);
-    }
-}
-
 // Find keyframes that are matched with name in rule set.
 static StyleRuleKeyframes* findStyleRuleKeyframes(const StyleResolver& resolver,
                                                   String* animationName)
@@ -9255,73 +9171,60 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
     }
 }
 
+void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
+                       Optional<Frame*> oldFrame, ComputedStyle* toStyle,
+                       ComputedStyleDamage& damage,
+                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
+{
+    AnimationExecutor* executor = element->document()->animationExecutor();
+    AnimationExecutor::ExecutionContext context(
+        executor, element, fromStyle, oldFrame, toStyle,
+        element->document()->browsingContext()->styleResolveStartTick(), damage,
+        damagedKeys);
+
+    context.begin();
+
+    // Check transition have to remove and fire events.
+    executor->checkActiveTransitionsState(context);
+
+    // Check new transition task.
+    executor->addNewActiveTransitionIfNeeds(context);
+
+    // Execute transition step.
+    executor->executeActiveTransitionsStep(context);
+
+    context.end();
+}
+
 void computeAnimation(StyleResolver& resolver, Element* element,
                       Optional<ComputedStyle*> fromStyle,
                       ComputedStyle* toStyle, ComputedStyleDamage& damage,
                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
-    // Note: Below is a summary of the overall algorithm of computeAnimation
-    // 1. Register a new animation task.
-    // 1-1 Register in the active animation executor.
-    // 2. Create AnimationKeyframes from keyframes style rule.
-    // 3. If the element has a valid animation task, proceed with the step.
-    // 4. Triggers an event when an animation expires or should be cancelled.
-    // 4-1 Unregister from the active animation executor.
-
-    bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
-    bool isRunningTransformAnimationBefore =
-        element->isRunningTransformAnimation();
-
     StyleAnimationData* styleAnimationData = toStyle->animation();
     if (styleAnimationData != nullptr) {
         // Create AnimationKeyframes from keyframes style rule.
         computeCSSAnimationKeyframes(resolver, element, toStyle);
     }
 
-    AnimationExecutor::ExecutionContext context{
-        element,
-        fromStyle,
-        nullptr,
-        toStyle,
-        element->document()->browsingContext()->styleResolveStartTick(),
-        false,
-        false,
-        false,
-        damage,
-        damagedKeys,
-        {},
-    };
-
-    // get document's animation executor
     AnimationExecutor* executor = element->document()->animationExecutor();
+    AnimationExecutor::ExecutionContext context(
+        executor, element, fromStyle, nullptr, toStyle,
+        element->document()->browsingContext()->styleResolveStartTick(), damage,
+        damagedKeys);
 
-    // Check animation have to remove(End or Cancel).
+    context.begin();
+
+    // Check animation have to remove and fire events.
     executor->checkActiveAnimationsState(context);
 
-    // Check new animation.
+    // Check new animation task.
     executor->addNewActiveAnimationsIfNeeds(context);
 
-    // Proceed with the animation steps if element has available animation task.
+    // Execute transition step.
     executor->executeActiveAnimationsStep(context);
 
-    bool isRunningOpacityAnimationAfter = element->isRunningOpacityAnimation();
-    bool isRunningTransformAnimationAfter =
-        element->isRunningTransformAnimation();
-
-    if (fromStyle && context.needsToRecomputeStylePropertyDamage) {
-        recomputeStyleDamageInAnimation(
-            element, fromStyle.value(), toStyle, damage, damagedKeys,
-            isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
-            isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
-    }
-
-    if (context.needsToCheckActiveExecutorInWebView) {
-        // Registers or unregisters an executor which has a valid animation task
-        // with the active animation executor.
-        element->document()
-            ->webView()
-            ->updateActiveAnimationExecutorRegistration(executor);
-    }
+    context.end();
 }
 
 static ComputedStyleDamage applyStyleToElement(Element* element,
