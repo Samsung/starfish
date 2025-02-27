@@ -290,4 +290,37 @@ bool SVGAnimationElement::hasValues()
     return hasAttribute(starfish()->staticStrings()->m_values.localName());
 }
 
+bool SVGAnimationElement::parseRepeatCount(float& repeatCount)
+{
+    Optional<String*> maybeRepeatCount =
+        getAttribute(starfish()->staticStrings()->m_repeatCount);
+    if (!maybeRepeatCount) {
+        return false;
+    }
+
+    String* repeatCountValue = maybeRepeatCount.value();
+    if (repeatCountValue->equals("indefinite")) {
+        repeatCount = std::numeric_limits<float>::infinity();
+        return true;
+    } else {
+        struct Args {
+            float value;
+            bool result;
+        } args;
+        repeatCountValue->peekUTF8Buffer(
+            [](const char* buffer, size_t len, void* data) -> size_t {
+                Args* args = static_cast<Args*>(data);
+                args->result = CSSPropertyParser::parseNumber(buffer, len, 0,
+                                                              &args->value);
+                return 0;
+            },
+            &args);
+        if (args.result) {
+            repeatCount = args.value;
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace Starfish

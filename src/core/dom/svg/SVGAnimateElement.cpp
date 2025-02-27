@@ -115,6 +115,15 @@ void SVGAnimateElement::beginElementAt(float offset)
         svgAnimationFillToAnimationFillModeValue(fill);
     animationKeyframes->setFillMode(fillMode);
 
+    // Parse repeatCount.
+    float repeatCount;
+    if (!parseRepeatCount(repeatCount)) {
+        // Default values is 1.
+        // can proceed using the default value.
+        repeatCount = 1.0f;
+    }
+    animationKeyframes->setIterationCount(repeatCount);
+
     // Parse calcMode.
     SVGAnimationCalcMode calcMode;
     if (!parseCalcMode(calcMode)) {
@@ -150,8 +159,6 @@ void SVGAnimateElement::beginElementAt(float offset)
     webView()->updateActiveAnimationExecutorRegistration(
         document()->animationExecutor());
     setNeedsStyleRecalcForAnimation();
-
-    document()->animationExecutor()->fireSVGAnimateBeginEvent(this);
 
     m_declarations->clear();
 }
