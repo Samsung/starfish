@@ -576,6 +576,7 @@ public:
     QualifiedName m_repeatEvent;
     QualifiedName m_repeatCount;
     QualifiedName m_calcMode;
+    QualifiedName m_keySplines;
     QualifiedName m_dur;
     QualifiedName m_from;
     QualifiedName m_to;
