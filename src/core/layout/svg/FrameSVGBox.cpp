@@ -426,24 +426,21 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     }
 
     if (needsCanvasLayer) {
-        LayoutRect childrenRect = frameRect();
-
         Canvas::LayerPixelModifyFunction fn;
         if (filterElement) {
             fn = [this, &ctx, filterElement](uint8_t* ptr, size_t w, size_t s,
                                              size_t h) -> void {
-                GCAtomicVector<uint8_t>* sourceGraphic =
-                    new GCAtomicVector<uint8_t>();
-                sourceGraphic->resize(s * h);
-                memcpy(sourceGraphic->data(), ptr, s * h);
                 Optional<Filter*> filter =
                     filterElement->asSVGFilterElement()->filter();
                 if (filter.hasValue()) {
-                    filter->applyFilter(w, s, h, sourceGraphic);
-                    GCAtomicVector<uint8_t>* result = filter->getSourceBuffer(
-                        String::createASCIIString("Result"));
-                    if (result) {
-                        memcpy(ptr, result->data(), s * h);
+                    Filter::FilterApplyContext ctx(w, s, h, ptr);
+                    filter->applyFilter(ctx);
+
+                    // some filter(eg) blur) needs extra buffer for work
+                    // if there was a the filter we need to copy
+                    if (ptr != ctx.sourceGraphic()->data()) {
+                        STARFISH_ASSERT(ctx.sourceGraphic()->size() == s * h);
+                        memcpy(ptr, ctx.sourceGraphic()->data(), s * h);
                     }
                 }
             };

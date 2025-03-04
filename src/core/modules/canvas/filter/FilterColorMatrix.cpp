@@ -34,11 +34,9 @@
 
 namespace Starfish {
 
-#define M_PI 3.14159265358979323846
-float piFloat = static_cast<float>(M_PI);
-float radiansPerDegreeFloat = piFloat / 180.0f;
 inline float deg2rad(float d)
 {
+    float radiansPerDegreeFloat = static_cast<float>(M_PI) / 180.0f;
     return d * radiansPerDegreeFloat;
 }
 
@@ -53,13 +51,11 @@ inline uint8_t adjustValueForPixel(float value)
     return value;
 }
 
-inline void applyMatrix(uint8_t* fromBuffer, uint8_t* toBuffer,
-                        std::array<float, 20> matrix, size_t stride,
-                        size_t imageWidth, size_t imageHeight)
+inline void applyMatrix(uint8_t* buffer, std::array<float, 20> matrix,
+                        size_t stride, size_t imageWidth, size_t imageHeight)
 {
     for (size_t y = 0; y < imageHeight; y++) {
-        uint8_t* p = fromBuffer;
-        uint8_t* p_ = toBuffer;
+        uint8_t* p = buffer;
         for (size_t x = 0; x < imageWidth; x++) {
             uint8_t b = p[0];
             uint8_t g = p[1];
@@ -75,20 +71,18 @@ inline void applyMatrix(uint8_t* fromBuffer, uint8_t* toBuffer,
             float a_ = matrix[15] * r + matrix[16] * g + matrix[17] * b +
                        matrix[18] * a + matrix[19] * 255;
 
-            p_[0] = adjustValueForPixel(b_);
-            p_[1] = adjustValueForPixel(g_);
-            p_[2] = adjustValueForPixel(r_);
-            p_[3] = adjustValueForPixel(a_);
+            p[0] = adjustValueForPixel(b_);
+            p[1] = adjustValueForPixel(g_);
+            p[2] = adjustValueForPixel(r_);
+            p[3] = adjustValueForPixel(a_);
 
             p += 4;
-            p_ += 4;
         }
-        fromBuffer += stride;
-        toBuffer += stride;
+        buffer += stride;
     }
 }
 
-inline void applySaturateAndHueRotate(uint8_t* fromBuffer, uint8_t* toBuffer,
+inline void applySaturateAndHueRotate(uint8_t* buffer,
                                       std::array<float, 9> matrix,
                                       size_t stride, size_t imageWidth,
                                       size_t imageHeight)
@@ -97,20 +91,17 @@ inline void applySaturateAndHueRotate(uint8_t* fromBuffer, uint8_t* toBuffer,
                                         matrix[3], matrix[4], matrix[5], 0, 0,
                                         matrix[6], matrix[7], matrix[8], 0, 0,
                                         0,         0,         0,         1, 0 };
-    applyMatrix(fromBuffer, toBuffer, newMatrix, stride, imageWidth,
-                imageHeight);
+    applyMatrix(buffer, newMatrix, stride, imageWidth, imageHeight);
 }
 
-inline void applyLuminanceAlpha(uint8_t* fromBuffer, uint8_t* toBuffer,
-                                size_t stride, size_t imageWidth,
-                                size_t imageHeight)
+inline void applyLuminanceAlpha(uint8_t* buffer, size_t stride,
+                                size_t imageWidth, size_t imageHeight)
 {
     std::array<float, 20> newMatrix = {
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    0.0,    0.0,    0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.2125, 0.7154, 0.0721, 0.0, 0.0,
     };
-    applyMatrix(fromBuffer, toBuffer, newMatrix, stride, imageWidth,
-                imageHeight);
+    applyMatrix(buffer, newMatrix, stride, imageWidth, imageHeight);
 }
 
 inline std::array<float, 9> saturationMatrix(float value)
@@ -165,19 +156,17 @@ void* FilterColorMatrix::operator new(size_t size)
 }
 
 void FilterColorMatrix::apply(size_t x, size_t y, size_t width, size_t height,
-                              size_t stride)
+                              Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEColorMatrixElement());
     SVGFEColorMatrixElement* ele = element()->asSVGFEColorMatrixElement();
     String* sourceNameStr = ele->in1()->baseVal();
-    auto inputSource = filter()->getSourceBuffer(sourceNameStr);
+    auto inputSource = ctx.sourceGraphic();
 
     if (inputSource->size() == 0) {
         return;
     }
 
-    GCAtomicVector<uint8_t>* outputBuffer = new GCAtomicVector<uint8_t>();
-    outputBuffer->resize(inputSource->size());
     SVGNumberList* values = ele->values()->baseVal();
 
     if (values && ele->type()->baseVal() ==
@@ -189,38 +178,36 @@ void FilterColorMatrix::apply(size_t x, size_t y, size_t width, size_t height,
             for (size_t i = 0; i < values->length(); i++) {
                 matrix[i] = values->getItem(i)->value();
             }
-            applyMatrix(inputSource->data(), outputBuffer->data(), matrix,
-                        stride, width, height);
+            applyMatrix(inputSource->data(), matrix, ctx.stride, ctx.width,
+                        ctx.height);
         }
     } else if (values && ele->type()->baseVal() ==
                              SVGFEColorMatrixElement::MatrixTypes::
                                  SVG_FECOLORMATRIX_TYPE_SATURATE) {
         if (values->length() == 1) {
             applySaturateAndHueRotate(
-                inputSource->data(), outputBuffer->data(),
-                saturationMatrix(values->getItem(0)->value()), stride, width,
-                height);
+                inputSource->data(),
+                saturationMatrix(values->getItem(0)->value()), ctx.stride,
+                ctx.width, ctx.height);
         }
     } else if (values && ele->type()->baseVal() ==
                              SVGFEColorMatrixElement::MatrixTypes::
                                  SVG_FECOLORMATRIX_TYPE_HUEROTATE) {
         if (values->length() == 1) {
             applySaturateAndHueRotate(
-                inputSource->data(), outputBuffer->data(),
-                hueRotateMatrix(values->getItem(0)->value()), stride, width,
-                height);
+                inputSource->data(),
+                hueRotateMatrix(values->getItem(0)->value()), ctx.stride,
+                ctx.width, ctx.height);
         }
 
     } else if (ele->type()->baseVal() ==
                SVGFEColorMatrixElement::MatrixTypes::
                    SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA) {
-        applyLuminanceAlpha(inputSource->data(), outputBuffer->data(), stride,
-                            width, height);
+        applyLuminanceAlpha(inputSource->data(), ctx.stride, ctx.width,
+                            ctx.height);
     } else {
         return;
     }
-    filter()->registerSourceBuffer(String::createASCIIString("Result"),
-                                   outputBuffer);
 }
 
 } // namespace Starfish

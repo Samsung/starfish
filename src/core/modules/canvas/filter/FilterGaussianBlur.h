@@ -31,7 +31,7 @@ public:
     void* operator new[](size_t size) = delete;
 
     virtual void apply(size_t x, size_t y, size_t width, size_t height,
-                       size_t stride) override;
+                       Filter::FilterApplyContext& ctx) override;
 
     static std::pair<float, float> computeKernelSize(float stdDeviationX,
                                                      float stdDeviationY);

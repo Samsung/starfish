@@ -32,16 +32,82 @@ class Filter : public gc {
 public:
     Filter(SVGElement* owner);
 
-    void applyFilter(size_t w, size_t s, size_t h,
-                     GCAtomicVector<uint8_t>* sourceGraphic);
+    struct FilterApplyContext {
+        uint8_t* src;
+        size_t width, stride, height;
+        enum FixedSourcePlace {
+            SourceGraphic,
+        };
+
+        class FilterSourceBuffer {
+        public:
+            FilterSourceBuffer(uint8_t* src, size_t size,
+                               bool needsAllocateNewBuffer)
+            {
+                m_size = size;
+                if (needsAllocateNewBuffer) {
+                    m_externalBuffer.resize(size);
+                } else {
+                    m_buffer = src;
+                }
+            }
+
+            uint8_t* data()
+            {
+                if (m_buffer) {
+                    return m_buffer.value();
+                }
+                return m_externalBuffer.data();
+            }
+
+            size_t size()
+            {
+                return m_size;
+            }
+
+        private:
+            Optional<uint8_t*> m_buffer;
+            size_t m_size;
+            std::vector<uint8_t> m_externalBuffer;
+        };
+        std::vector<std::pair<std::string, std::shared_ptr<FilterSourceBuffer>>>
+            sources;
+
+        FilterApplyContext(size_t w, size_t s, size_t h, uint8_t* srcData)
+        {
+            src = srcData;
+            width = w;
+            stride = s;
+            height = h;
+
+            // first slot is always SourceGraphic
+            sources.push_back(std::make_pair(
+                "SourceGraphic",
+                std::shared_ptr<FilterSourceBuffer>(
+                    new FilterSourceBuffer(src, stride * height, false))));
+            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
+        }
+
+        std::shared_ptr<FilterSourceBuffer> sourceGraphic()
+        {
+            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
+            return sources[FixedSourcePlace::SourceGraphic].second;
+        }
+
+        void updateSourceGraphic(const std::shared_ptr<FilterSourceBuffer>& s)
+        {
+            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
+            if (s) {
+                STARFISH_ASSERT(s->size() == stride * height);
+            }
+            sources[FixedSourcePlace::SourceGraphic].second = s;
+        }
+    };
+
+    void applyFilter(FilterApplyContext& ctx);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-
-    void registerSourceBuffer(String* sourceName,
-                              GCAtomicVector<uint8_t>* sourceBuffer);
-    GCAtomicVector<uint8_t>* getSourceBuffer(String* sourceName);
-    void clearSourceBuffer();
 
     void updateIfNeeds();
     void setNeedsUpdate()
@@ -73,7 +139,7 @@ public:
 
 private:
     void rebuildFiter();
-    FilterPrimitive* createFilterPrimitive(
+    Optional<FilterPrimitive*> createFilterPrimitive(
         SVGFilterPrimitiveStandardAttributes* filterPrimitiveNode);
 
     bool m_needsUpdate = false;
@@ -87,7 +153,6 @@ private:
     SVGUnitTypes::UnitTypes m_primitiveUnits;
 
     GCVector<FilterPrimitive*> m_filterPrimitives;
-    GCUnorderedMap<String*, GCAtomicVector<uint8_t>*> m_sources;
 };
 } // namespace Starfish
 #endif
