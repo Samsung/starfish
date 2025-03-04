@@ -20,8 +20,9 @@
 #ifndef __StarfishFilterPrimitive__
 #define __StarfishFilterPrimitive__
 
+#include "core/modules/canvas/filter/Filter.h"
+
 namespace Starfish {
-class Filter;
 class SVGFilterPrimitiveStandardAttributes;
 class FilterPrimitive : public gc {
 public:
@@ -31,7 +32,7 @@ public:
     void* operator new[](size_t size) = delete;
 
     virtual void apply(size_t x, size_t y, size_t width, size_t height,
-                       size_t stride);
+                       Filter::FilterApplyContext& ctx);
     SVGFilterPrimitiveStandardAttributes* element()
     {
         return m_domElement;

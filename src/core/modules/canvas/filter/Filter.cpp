@@ -40,22 +40,14 @@ Filter::Filter(SVGElement* owner)
                            ->baseVal();
 }
 
-void Filter::applyFilter(size_t w, size_t s, size_t h,
-                         GCAtomicVector<uint8_t>* sourceGraphic)
+void Filter::applyFilter(FilterApplyContext& ctx)
 {
-    String* defaultSourceStr = String::createASCIIString("SourceGraphic");
     updateIfNeeds();
-    clearSourceBuffer();
-    registerSourceBuffer(defaultSourceStr, sourceGraphic);
-
-    for (auto primitive : m_filterPrimitives) {
-        primitive->apply(0, 0, w, h, s);
+    for (auto* primitive : m_filterPrimitives) {
+        // TODO
+        // specify x, y, width, height and use it
+        primitive->apply(0, 0, 0, 0, ctx);
     }
-}
-
-void Filter::clearSourceBuffer()
-{
-    m_sources.clear();
 }
 
 void Filter::setBias(float x, float y, float width, float height)
@@ -64,26 +56,6 @@ void Filter::setBias(float x, float y, float width, float height)
     m_filterBiasY = std::min(m_filterBiasY, y);
     m_filterBiasWidth = std::max(m_filterBiasWidth, width);
     m_filterBiasHeight = std::max(m_filterBiasHeight, height);
-}
-
-void Filter::registerSourceBuffer(String* sourceName,
-                                  GCAtomicVector<uint8_t>* sourceBuffer)
-{
-    auto iter = m_sources.find(sourceName);
-    if (iter != m_sources.end()) {
-        iter.value() = sourceBuffer;
-        return;
-    }
-    m_sources.insert(std::make_pair(sourceName, sourceBuffer));
-}
-
-GCAtomicVector<uint8_t>* Filter::getSourceBuffer(String* sourceName)
-{
-    auto iter = m_sources.find(sourceName);
-    if (iter != m_sources.end()) {
-        return iter->second;
-    }
-    return nullptr;
 }
 
 void Filter::updateIfNeeds()
@@ -101,10 +73,11 @@ void Filter::rebuildFiter()
         Node* current = m_owner->firstChild();
         while (current) {
             if (current->isSVGFilterPrimitiveStandardAttributes()) {
-                FilterPrimitive* filterPrimitive = createFilterPrimitive(
-                    current->asSVGFilterPrimitiveStandardAttributes());
+                Optional<FilterPrimitive*> filterPrimitive =
+                    createFilterPrimitive(
+                        current->asSVGFilterPrimitiveStandardAttributes());
                 if (filterPrimitive) {
-                    m_filterPrimitives.push_back(filterPrimitive);
+                    m_filterPrimitives.push_back(filterPrimitive.value());
                 }
             }
             current = current->nextSibling();
@@ -112,10 +85,10 @@ void Filter::rebuildFiter()
     }
 }
 
-FilterPrimitive* Filter::createFilterPrimitive(
+Optional<FilterPrimitive*> Filter::createFilterPrimitive(
     SVGFilterPrimitiveStandardAttributes* filterPrimitiveNode)
 {
-    FilterPrimitive* primitive = nullptr;
+    Optional<FilterPrimitive*> primitive;
     if (filterPrimitiveNode->isSVGFEGaussianBlurElement()) {
         primitive = new FilterGaussianBlur(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEColorMatrixElement()) {
@@ -133,10 +106,7 @@ void* Filter::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(Filter)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Filter, m_owner));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Filter, m_filterUnits));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Filter, m_primitiveUnits));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Filter, m_filterPrimitives));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Filter, m_sources));
 
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Filter));
         typeInited = true;

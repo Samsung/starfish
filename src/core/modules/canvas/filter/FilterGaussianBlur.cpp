@@ -232,12 +232,10 @@ void* FilterGaussianBlur::operator new(size_t size)
 }
 
 void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
-                               size_t stride)
+                               Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEGaussianBlurElement());
     SVGFEGaussianBlurElement* ele = element()->asSVGFEGaussianBlurElement();
-    String* sourceNameStr = ele->in1()->baseVal();
-    auto inputSource = filter()->getSourceBuffer(sourceNameStr);
 
     float stdDeviationX = ele->stdDeviationX()->baseVal();
     if (stdDeviationX <= 0) {
@@ -249,12 +247,18 @@ void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
     }
     auto kernelSize = computeKernelSize(stdDeviationX, stdDeviationY);
 
-    GCAtomicVector<uint8_t>* outputBuffer = new GCAtomicVector<uint8_t>();
-    outputBuffer->resize(inputSource->size());
+    String* sourceNameStr = ele->in1()->baseVal();
+    auto inputSource = ctx.sourceGraphic();
+
+    std::shared_ptr<Filter::FilterApplyContext::FilterSourceBuffer>
+        outputBuffer(new Filter::FilterApplyContext::FilterSourceBuffer(
+            ctx.src, ctx.stride * ctx.height, true));
+
     standardBoxBlur(inputSource->data(), outputBuffer->data(), kernelSize.first,
-                    kernelSize.second, stride, width, height);
-    filter()->registerSourceBuffer(String::createASCIIString("Result"),
-                                   outputBuffer);
+                    kernelSize.second, ctx.stride, ctx.width, ctx.height);
+
+    // update source graphic for next filter
+    ctx.updateSourceGraphic(outputBuffer);
 }
 
 } // namespace Starfish

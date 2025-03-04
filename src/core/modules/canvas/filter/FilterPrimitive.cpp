@@ -29,7 +29,7 @@ FilterPrimitive::FilterPrimitive(Filter* filter,
 }
 
 void FilterPrimitive::apply(size_t x, size_t y, size_t width, size_t height,
-                            size_t stride)
+                            Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT_NOT_REACHED();
 }
