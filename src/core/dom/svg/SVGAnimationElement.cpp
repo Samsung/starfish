@@ -172,6 +172,30 @@ bool SVGAnimationElement::parseValue(CSSStyleValuePair::KeyKind keyKind,
     return true;
 }
 
+bool SVGAnimationElement::convertFallbackValues(
+    CSSStyleValuePair::KeyKind keyKind, GCVector<CSSStyleValuePair>& values)
+{
+    Optional<Element*> maybeTargetElement = targetElement();
+    if (!maybeTargetElement) {
+        return false;
+    }
+
+    CSSStyleDeclaration* cssStyleDeclaration =
+        maybeTargetElement.value()->getComputedStyle();
+    cssStyleDeclaration->updateValue(keyKind);
+    CSSStyleValuePair originValue =
+        cssStyleDeclaration->getCSSValuePair(keyKind);
+    if (originValue.keyKind() == CSSStyleValuePair::KeyKind::Unknown) {
+        return false;
+    }
+
+    // Fill values as an original computed style value.
+    for (size_t i = 0; i < values.size(); i++) {
+        values[i] = originValue;
+    }
+    return true;
+}
+
 bool SVGAnimationElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
                                     GCVector<CSSStyleValuePair>& values)
 {

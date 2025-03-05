@@ -132,6 +132,8 @@ void SVGAnimateElement::beginElementAt(float offset)
         // can proceed using the default value.
     }
 
+    // TODO: Apply keyTimes.
+
     // Parse KeySplines. ignore it if calcMode is not spline.
     Optional<GCVector<TimingFunction*>> maybeKeySplines;
     if (calcMode == SVGAnimationCalcMode::Spline) {
@@ -141,9 +143,15 @@ void SVGAnimateElement::beginElementAt(float offset)
             return;
         }
         if (keySplines.size() != values.size() - 1) {
-            // TODO: An animation is to occur, but it should not cause any
-            // changes.
-            return;
+            // Fallback guarantee: An animation is to occur, but it should not
+            // cause any changes.
+            // FIXME: If you think of a better way, please replace it.
+            // FIXME: In this case, improve it so that only minimal rendering
+            // occurs.
+            if (!convertFallbackValues(keyKind, values)) {
+                return;
+            }
+            calcMode = SVGAnimationCalcMode::Linear; // fallback to linear.
         } else {
             maybeKeySplines = keySplines;
         }
