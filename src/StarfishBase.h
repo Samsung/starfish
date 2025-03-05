@@ -1066,4 +1066,16 @@ private:
     Function m_function;
 };
 
+#if defined(PORT_PIXEL_ORDER_RGBA)
+#define STARFISH_PIXEL_R_INDEX 0
+#define STARFISH_PIXEL_G_INDEX 1
+#define STARFISH_PIXEL_B_INDEX 2
+#define STARFISH_PIXEL_A_INDEX 3
+#elif defined(PORT_PIXEL_ORDER_BGRA)
+#define STARFISH_PIXEL_R_INDEX 2
+#define STARFISH_PIXEL_G_INDEX 1
+#define STARFISH_PIXEL_B_INDEX 0
+#define STARFISH_PIXEL_A_INDEX 3
+#endif
+
 #endif

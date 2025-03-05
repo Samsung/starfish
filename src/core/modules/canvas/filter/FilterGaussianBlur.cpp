@@ -61,11 +61,58 @@ inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
     }
 }
 
+inline void boxBlurAlphaOnly(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                             int& dxLeft, int& dxRight, int& stride,
+                             int& strideLine, int& effectWidth,
+                             int& effectHeight, const int& maxKernelSize)
+{
+    // Memory alignment is: RGBA, zero-index based.
+    const int channel = 3;
+
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        int sum = 0;
+
+        // Fill the kernel.
+        for (int i = 0; i < maxKernelSize; ++i) {
+            unsigned offset = line + i * stride;
+            const uint8_t* srcPtr = srcData + offset;
+            sum += srcPtr[channel];
+        }
+
+        // Blurring.
+        for (int x = 0; x < effectWidth; ++x) {
+            unsigned pixelByteOffset = line + x * stride + channel;
+            uint8_t* dstPtr = dstData + pixelByteOffset;
+            *dstPtr = static_cast<uint8_t>(sum / dx);
+
+            // Shift kernel.
+            if (x >= dxLeft) {
+                unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                const uint8_t* srcPtr = srcData + leftOffset;
+                sum -= *srcPtr;
+            }
+
+            if (x + dxRight < effectWidth) {
+                unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                const uint8_t* srcPtr = srcData + rightOffset;
+                sum += *srcPtr;
+            }
+        }
+    }
+}
+
 inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
                     int dxRight, int stride, int strideLine, int effectWidth,
-                    int effectHeight)
+                    int effectHeight, bool alphaImage,
+                    SVGFEGaussianBlurElement::EdgeMode edgeMode)
 {
     const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    if (alphaImage)
+        return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
+                                strideLine, effectWidth, effectHeight,
+                                maxKernelSize);
 
     // Concerning the array width/length: it is Element size + Margin + Border.
     // The number of pixels will be
@@ -74,71 +121,143 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
         int line = y * strideLine;
         int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
 
-        const uint8_t* edgeValueLeft = srcData + line;
-        const uint8_t* edgeValueRight =
-            srcData + (line + (effectWidth - 1) * stride);
-
-        // Fill the kernel.
-        for (int i = dxLeft * -1; i < dxRight; ++i) {
-            // Is this right for negative values of 'i'?
-            unsigned offset = line + i * stride;
-            const uint8_t* srcPtr = srcData + offset;
-
-            if (i < 0) {
-                sumR += edgeValueLeft[0];
-                sumG += edgeValueLeft[1];
-                sumB += edgeValueLeft[2];
-                sumA += edgeValueLeft[3];
-            } else if (i >= effectWidth) {
-                sumR += edgeValueRight[0];
-                sumG += edgeValueRight[1];
-                sumB += edgeValueRight[2];
-                sumA += edgeValueRight[3];
-            } else {
+        if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            // Fill the kernel.
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+#if defined(PORT_PIXEL_ORDER_RGBA)
                 sumR += *srcPtr++;
                 sumG += *srcPtr++;
                 sumB += *srcPtr++;
                 sumA += *srcPtr;
-            }
-        }
-
-        // Blurring.
-        for (int x = 0; x < effectWidth; ++x) {
-            unsigned pixelByteOffset = line + x * stride;
-            uint8_t* dstPtr = dstData + pixelByteOffset;
-
-            *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-            *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-            *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-            *dstPtr = static_cast<uint8_t>(sumA / dx);
-
-            // Shift kernel.
-            if (x < dxLeft) {
-                sumR -= edgeValueLeft[0];
-                sumG -= edgeValueLeft[1];
-                sumB -= edgeValueLeft[2];
-                sumA -= edgeValueLeft[3];
-            } else {
-                unsigned leftOffset = pixelByteOffset - dxLeft * stride;
-                const uint8_t* srcPtr = srcData + leftOffset;
-                sumR -= srcPtr[0];
-                sumG -= srcPtr[1];
-                sumB -= srcPtr[2];
-                sumA -= srcPtr[3];
+#else
+                sumB += *srcPtr++;
+                sumG += *srcPtr++;
+                sumR += *srcPtr++;
+                sumA += *srcPtr;
+#endif
             }
 
-            if (x + dxRight >= effectWidth) {
-                sumR += edgeValueRight[0];
-                sumG += edgeValueRight[1];
-                sumB += edgeValueRight[2];
-                sumA += edgeValueRight[3];
-            } else {
-                unsigned rightOffset = pixelByteOffset + dxRight * stride;
-                const uint8_t* srcPtr = srcData + rightOffset;
-                sumR += srcPtr[0];
-                sumG += srcPtr[1];
-                sumB += srcPtr[2];
-                sumA += srcPtr[3];
+            // Blurring.
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+#if defined(PORT_PIXEL_ORDER_RGBA)
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+#else
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+#endif
+
+                // Shift kernel.
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    sumR -= srcPtr[STARFISH_PIXEL_R_INDEX];
+                    sumG -= srcPtr[STARFISH_PIXEL_G_INDEX];
+                    sumB -= srcPtr[STARFISH_PIXEL_B_INDEX];
+                    sumA -= srcPtr[STARFISH_PIXEL_A_INDEX];
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    sumR += srcPtr[STARFISH_PIXEL_R_INDEX];
+                    sumG += srcPtr[STARFISH_PIXEL_G_INDEX];
+                    sumB += srcPtr[STARFISH_PIXEL_B_INDEX];
+                    sumA += srcPtr[STARFISH_PIXEL_A_INDEX];
+                }
+            }
+
+        } else {
+            // FIXME: Add support for 'wrap' here.
+            // Get edge values for edgeMode 'duplicate'.
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            // Fill the kernel.
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                // Is this right for negative values of 'i'?
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+
+                if (i < 0) {
+                    sumR += edgeValueLeft[STARFISH_PIXEL_R_INDEX];
+                    sumG += edgeValueLeft[STARFISH_PIXEL_G_INDEX];
+                    sumB += edgeValueLeft[STARFISH_PIXEL_B_INDEX];
+                    sumA += edgeValueLeft[STARFISH_PIXEL_A_INDEX];
+                } else if (i >= effectWidth) {
+                    sumR += edgeValueRight[STARFISH_PIXEL_R_INDEX];
+                    sumG += edgeValueRight[STARFISH_PIXEL_G_INDEX];
+                    sumB += edgeValueRight[STARFISH_PIXEL_B_INDEX];
+                    sumA += edgeValueRight[STARFISH_PIXEL_A_INDEX];
+                } else {
+#if defined(PORT_PIXEL_ORDER_RGBA)
+                    sumR += *srcPtr++;
+                    sumG += *srcPtr++;
+                    sumB += *srcPtr++;
+                    sumA += *srcPtr;
+#else
+                    sumB += *srcPtr++;
+                    sumG += *srcPtr++;
+                    sumR += *srcPtr++;
+                    sumA += *srcPtr;
+#endif
+                }
+            }
+
+            // Blurring.
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+#if defined(PORT_PIXEL_ORDER_RGBA)
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+#else
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+#endif
+                // Shift kernel.
+                if (x < dxLeft) {
+                    sumR -= edgeValueLeft[STARFISH_PIXEL_R_INDEX];
+                    sumG -= edgeValueLeft[STARFISH_PIXEL_G_INDEX];
+                    sumB -= edgeValueLeft[STARFISH_PIXEL_B_INDEX];
+                    sumA -= edgeValueLeft[STARFISH_PIXEL_A_INDEX];
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    sumR -= srcPtr[STARFISH_PIXEL_R_INDEX];
+                    sumG -= srcPtr[STARFISH_PIXEL_G_INDEX];
+                    sumB -= srcPtr[STARFISH_PIXEL_B_INDEX];
+                    sumA -= srcPtr[STARFISH_PIXEL_A_INDEX];
+                }
+
+                if (x + dxRight >= effectWidth) {
+                    sumR += edgeValueRight[STARFISH_PIXEL_R_INDEX];
+                    sumG += edgeValueRight[STARFISH_PIXEL_G_INDEX];
+                    sumB += edgeValueRight[STARFISH_PIXEL_B_INDEX];
+                    sumA += edgeValueRight[STARFISH_PIXEL_A_INDEX];
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    sumR += srcPtr[STARFISH_PIXEL_R_INDEX];
+                    sumG += srcPtr[STARFISH_PIXEL_G_INDEX];
+                    sumB += srcPtr[STARFISH_PIXEL_B_INDEX];
+                    sumA += srcPtr[STARFISH_PIXEL_A_INDEX];
+                }
             }
         }
     }
@@ -146,7 +265,9 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
 
 inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
                             unsigned kernelSizeX, unsigned kernelSizeY,
-                            int stride, int imageWidth, int imageHeight)
+                            int stride, int imageWidth, int imageHeight,
+                            bool alphaImage,
+                            SVGFEGaussianBlurElement::EdgeMode edgeMode)
 {
     int dxLeft = 0;
     int dxRight = 0;
@@ -157,14 +278,14 @@ inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
         if (kernelSizeX) {
             kernelPosition(i, kernelSizeX, dxLeft, dxRight);
             boxBlur(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight, 4,
-                    stride, imageWidth, imageHeight);
+                    stride, imageWidth, imageHeight, alphaImage, edgeMode);
             std::swap(fromBuffer, toBuffer);
         }
 
         if (kernelSizeY) {
             kernelPosition(i, kernelSizeY, dyLeft, dyRight);
             boxBlur(fromBuffer, toBuffer, kernelSizeY, dyLeft, dyRight, stride,
-                    4, imageHeight, imageWidth);
+                    4, imageHeight, imageWidth, alphaImage, edgeMode);
             std::swap(fromBuffer, toBuffer);
         }
     }
@@ -214,7 +335,12 @@ FilterGaussianBlur::FilterGaussianBlur(
         element->asSVGFEGaussianBlurElement()->stdDeviationY()->baseVal());
     float kernelX = kernel.first;
     float kernelY = kernel.second;
-    filter->setBias(-kernelX, -kernelY, kernelX * 2, kernelY * 2);
+
+    SVGFEGaussianBlurElement* ele = element->asSVGFEGaussianBlurElement();
+    if ((SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal() ==
+        SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+        filter->setBias(-kernelX, -kernelY, kernelX * 3, kernelY * 3);
+    }
 }
 
 void* FilterGaussianBlur::operator new(size_t size)
@@ -255,8 +381,10 @@ void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
         outputBuffer(new Filter::FilterApplyContext::FilterSourceBuffer(
             ctx.src, ctx.stride * ctx.height, true));
 
-    standardBoxBlur(inputSource->data(), outputBuffer->data(), kernelSize.first,
-                    kernelSize.second, ctx.stride, ctx.width, ctx.height);
+    standardBoxBlur(
+        inputSource->data(), outputBuffer->data(), kernelSize.first,
+        kernelSize.second, ctx.stride, ctx.width, ctx.height, ctx.isAlphaImage,
+        (SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal());
 
     // update source graphic for next filter
     ctx.updateSourceGraphic(outputBuffer);

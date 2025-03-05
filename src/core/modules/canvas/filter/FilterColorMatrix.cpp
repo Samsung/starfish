@@ -57,10 +57,10 @@ inline void applyMatrix(uint8_t* buffer, std::array<float, 20> matrix,
     for (size_t y = 0; y < imageHeight; y++) {
         uint8_t* p = buffer;
         for (size_t x = 0; x < imageWidth; x++) {
-            uint8_t b = p[0];
-            uint8_t g = p[1];
-            uint8_t r = p[2];
-            uint8_t a = p[3];
+            uint8_t r = p[STARFISH_PIXEL_R_INDEX];
+            uint8_t g = p[STARFISH_PIXEL_G_INDEX];
+            uint8_t b = p[STARFISH_PIXEL_B_INDEX];
+            uint8_t a = p[STARFISH_PIXEL_A_INDEX];
 
             float r_ = matrix[0] * r + matrix[1] * g + matrix[2] * b +
                        matrix[3] * a + matrix[4] * 255;
@@ -70,11 +70,10 @@ inline void applyMatrix(uint8_t* buffer, std::array<float, 20> matrix,
                        matrix[13] * a + matrix[14] * 255;
             float a_ = matrix[15] * r + matrix[16] * g + matrix[17] * b +
                        matrix[18] * a + matrix[19] * 255;
-
-            p[0] = adjustValueForPixel(b_);
-            p[1] = adjustValueForPixel(g_);
-            p[2] = adjustValueForPixel(r_);
-            p[3] = adjustValueForPixel(a_);
+            p[STARFISH_PIXEL_R_INDEX] = adjustValueForPixel(r_);
+            p[STARFISH_PIXEL_G_INDEX] = adjustValueForPixel(g_);
+            p[STARFISH_PIXEL_B_INDEX] = adjustValueForPixel(b_);
+            p[STARFISH_PIXEL_A_INDEX] = adjustValueForPixel(a_);
 
             p += 4;
         }

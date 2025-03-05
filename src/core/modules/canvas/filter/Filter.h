@@ -37,6 +37,7 @@ public:
         size_t width, stride, height;
         float viewportScaleX;
         float viewportScaleY;
+        bool isAlphaImage;
 
         enum FixedSourcePlace {
             SourceGraphic,
@@ -85,6 +86,7 @@ public:
             height = h;
             viewportScaleX = scaleX;
             viewportScaleY = scaleY;
+            isAlphaImage = false;
 
             // first slot is always SourceGraphic
             sources.push_back(std::make_pair(
@@ -123,21 +125,25 @@ public:
 
     float biasX()
     {
+        updateIfNeeds();
         return m_filterBiasX;
     }
 
     float biasY()
     {
+        updateIfNeeds();
         return m_filterBiasY;
     }
 
     float biasWidth()
     {
+        updateIfNeeds();
         return m_filterBiasWidth;
     }
 
     float biasHeight()
     {
+        updateIfNeeds();
         return m_filterBiasHeight;
     }
 
