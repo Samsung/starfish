@@ -645,6 +645,8 @@ test/cairo/internal-test/css/flex/overflow-hidden-flexitem-height-shrink.html
 test/cairo/internal-test/css/flex/flex-item-minheight.html
 test/cairo/internal-test/svg/animation/animate_begin_endEvent.html
 test/cairo/internal-test/svg/animation/animate_beginElement_01.html
+test/cairo/internal-test/svg/animation/animate_keySplines_computedStyle.html
+test/cairo/internal-test/svg/animation/animate_keySplines_event.html
 test/cairo/internal-test/svg/animation/animate_repeatCount_event.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
