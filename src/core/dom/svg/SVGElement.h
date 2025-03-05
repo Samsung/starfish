@@ -212,7 +212,7 @@ public:
     Optional<SVGFilterElement*> filterElement();
     SVGElement* getSVGElementById(const AtomicString& id);
 
-    void attributeOfPaintServerLikeUpdated();
+    virtual void attributeOfPaintServerLikeUpdated();
 
 protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;

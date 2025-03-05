@@ -146,13 +146,10 @@ SVGAnimatedEnumeration* SVGFEColorMatrixElement::type()
 SVGAnimatedNumberList* SVGFEColorMatrixElement::values()
 {
     if (!m_values.hasValue()) {
-        m_values =
-            // new SVGAnimatedNumberList(document(), new
-            // SVGNumberList(this,staticStrings()->m_values), nullptr);
-            new SVGAnimatedNumberList(
-                document(),
-                new SVGNumberList(this, AtomicString::emptyAtomicString()),
-                nullptr);
+        m_values = new SVGAnimatedNumberList(
+            document(),
+            new SVGNumberList(this, AtomicString::emptyAtomicString()),
+            nullptr);
     }
     return m_values.getValue();
 }

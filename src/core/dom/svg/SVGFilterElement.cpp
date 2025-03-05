@@ -112,22 +112,22 @@ void SVGFilterElement::updateSVGAttributeNeeded(QualifiedName name)
 void SVGFilterElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGElement::didNodeInserted(parent, newChild);
-
-    Optional<Filter*> f = filter();
-    if (f.hasValue()) {
-        f->setNeedsUpdate();
-        f->updateIfNeeds();
-    }
+    attributeOfPaintServerLikeUpdated();
 }
 
 void SVGFilterElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
+    attributeOfPaintServerLikeUpdated();
+}
+
+void SVGFilterElement::attributeOfPaintServerLikeUpdated()
+{
+    SVGElement::attributeOfPaintServerLikeUpdated();
 
     Optional<Filter*> f = filter();
     if (f.hasValue()) {
         f->setNeedsUpdate();
-        f->updateIfNeeds();
     }
 }
 

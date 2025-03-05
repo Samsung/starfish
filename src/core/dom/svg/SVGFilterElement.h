@@ -67,6 +67,8 @@ public:
         return true;
     }
 
+    virtual void attributeOfPaintServerLikeUpdated() override;
+
     Optional<Filter*> filter();
 
     SVGAnimatedEnumeration* filterUnits();
