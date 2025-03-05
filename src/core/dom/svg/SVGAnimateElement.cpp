@@ -26,6 +26,7 @@
 #include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/CubicBezier.h"
+#include "core/animation/Steps.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
@@ -125,19 +126,38 @@ void SVGAnimateElement::beginElementAt(float offset)
     animationKeyframes->setIterationCount(repeatCount);
 
     // Parse calcMode.
-    SVGAnimationCalcMode calcMode;
+    SVGAnimationCalcMode calcMode = SVGAnimationCalcMode::Linear;
     if (!parseCalcMode(calcMode)) {
         // Default values is Linear.
         // can proceed using the default value.
-        calcMode = SVGAnimationCalcMode::Linear;
     }
+
+    // Parse KeySplines. ignore it if calcMode is not spline.
+    Optional<GCVector<TimingFunction*>> maybeKeySplines;
+    if (calcMode == SVGAnimationCalcMode::Spline) {
+        GCVector<TimingFunction*> keySplines;
+        if (!parseKeySplines(keySplines)) {
+            STARFISH_LOG_WARN("Invalid KeySplines.");
+            return;
+        }
+        if (keySplines.size() != values.size() - 1) {
+            // TODO: An animation is to occur, but it should not cause any
+            // changes.
+            return;
+        } else {
+            maybeKeySplines = keySplines;
+        }
+    }
+
     CubicBezierEaseType easeType =
         svgAnimationCalcModeToCubicBezierEaseType(calcMode);
-    animationKeyframes->setTimingFunction(
-        CubicBezier::createCubicBezier(easeType));
+    if (easeType != CubicBezierEaseType::Custom) {
+        animationKeyframes->setTimingFunction(
+            CubicBezier::createCubicBezier(easeType));
+    }
 
     // Add keyframes using values to animationKeyframes.
-    AddAnimationKeyframe(keyKind, animationKeyframes, values);
+    AddAnimationKeyframe(keyKind, animationKeyframes, values, maybeKeySplines);
 
     Optional<Element*> maybeTargetElement = targetElement();
     if (!maybeTargetElement) {
@@ -165,7 +185,8 @@ void SVGAnimateElement::beginElementAt(float offset)
 
 void SVGAnimateElement::AddAnimationKeyframe(
     CSSStyleValuePair::KeyKind keyKind, AnimationKeyframes* animationKeyframes,
-    const GCVector<CSSStyleValuePair>& values)
+    const GCVector<CSSStyleValuePair>& values,
+    Optional<GCVector<TimingFunction*>> maybeKeySplines)
 {
     for (size_t i = 0; i < values.size(); ++i) {
         AnimationKeyframe* keyframe = new AnimationKeyframe();
@@ -174,7 +195,11 @@ void SVGAnimateElement::AddAnimationKeyframe(
         keyframe->setKeyframeSelector(keyframeSelector);
         keyframe->addProperty(keyKind, values[i]);
         keyframe->setDuration(animationKeyframes->duration());
-        keyframe->setTimingFunction(animationKeyframes->timingFunction());
+        if (maybeKeySplines.hasValue() && i < values.size() - 1) {
+            keyframe->setTimingFunction(maybeKeySplines.getValue()[i]);
+        } else {
+            keyframe->setTimingFunction(animationKeyframes->timingFunction());
+        }
         animationKeyframes->animationKeyframeList().push_back(keyframe);
     }
 }

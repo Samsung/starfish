@@ -61,6 +61,8 @@ CubicBezierEaseType svgAnimationCalcModeToCubicBezierEaseType(
     switch (calcMode) {
     case SVGAnimationCalcMode::Linear:
         return CubicBezierEaseType::Linear;
+    case SVGAnimationCalcMode::Spline:
+        return CubicBezierEaseType::Custom;
     default:
         STARFISH_UNIMPLEMENTED("Unimplemented calcMode value");
         break;
@@ -283,6 +285,49 @@ bool SVGAnimationElement::parseCalcMode(SVGAnimationCalcMode& calcMode)
                           maybeCalcMode->toUTF8NonGCString().c_str());
     }
     return false;
+}
+
+bool SVGAnimationElement::parseKeySplines(GCVector<TimingFunction*>& keySplines)
+{
+    Optional<String*> maybeKeySplines =
+        getAttribute(starfish()->staticStrings()->m_keySplines);
+
+    if (!maybeKeySplines) {
+        return false;
+    }
+    String* keySplinesValue = maybeKeySplines.getValue();
+
+    GCVector<StringView> tokensForKeySplinesValue;
+    StringUtils::tokenize(keySplinesValue, ";", 1, tokensForKeySplinesValue);
+
+    for (auto& token : tokensForKeySplinesValue) {
+        StringBufferAccessData bad = token.bufferAccessData();
+        if (bad.bufferDataKind !=
+            StringBufferAccessData::BufferDataKind::ASCIIData) {
+            return false;
+        }
+
+        CSSTokenVector tokensForKeySpline;
+        CSSStyleDeclaration::tokenizeCSSValue(tokensForKeySpline,
+                                              bad.asciiData(), bad.length);
+        if (tokensForKeySpline.size() != 4) {
+            return keySplines.size() != 0;
+        }
+
+        float splines[4];
+        for (size_t i = 0; i < tokensForKeySpline.size(); i++) {
+            CSSTokenValue cssToken = tokensForKeySpline[i].trim();
+            if (!CSSPropertyParser::parseNumber(
+                    cssToken.data(), cssToken.length(), 0, &splines[i])) {
+                return false;
+            }
+        }
+
+        keySplines.push_back(
+            new CubicBezier(splines[0], splines[1], splines[2], splines[3]));
+    }
+
+    return true;
 }
 
 bool SVGAnimationElement::hasValues()

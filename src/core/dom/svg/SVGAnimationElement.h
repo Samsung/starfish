@@ -27,6 +27,7 @@ namespace Starfish {
 
 enum class CubicBezierEaseType : uint8_t;
 class CSSStyleDeclaration;
+class TimingFunction;
 
 // https://svgwg.org/specs/animations/#FillAttribute
 enum class SVGAnimationFill {
@@ -99,6 +100,7 @@ protected:
     bool parseDur(CSSTime& duration);
     bool parseFill(SVGAnimationFill& fill);
     bool parseCalcMode(SVGAnimationCalcMode& calcMode);
+    bool parseKeySplines(GCVector<TimingFunction*>& keySplines);
     bool hasValues();
     bool parseRepeatCount(float& repeatCount);
 

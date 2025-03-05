@@ -53,9 +53,11 @@ public:
     }
 
 protected:
-    void AddAnimationKeyframe(CSSStyleValuePair::KeyKind keyKind,
-                              AnimationKeyframes* animationKeyframes,
-                              const GCVector<CSSStyleValuePair>& values);
+    void AddAnimationKeyframe(
+        CSSStyleValuePair::KeyKind keyKind,
+        AnimationKeyframes* animationKeyframes,
+        const GCVector<CSSStyleValuePair>& values,
+        Optional<GCVector<TimingFunction*>> maybeKeySplines);
 
     Optional<AnimationKeyframes*> m_animationKeyframes;
 };
