@@ -20,7 +20,6 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
-#include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGAnimatedNumberList.h"
 #include "core/dom/DOMTokenList.h"
@@ -57,21 +56,13 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    Optional<SVGFilterElement*> filterElement;
-    if (parentElement() && parentElement()->isSVGFilterElement()) {
-        filterElement = parentElement()->asSVGFilterElement();
-    }
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in1 == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         in1()->setBaseVal(value);
     } else if (ss->m_type == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         if (type()->isUpdated() == false) {
             if (value->equals("matrix")) {
                 m_type->setBaseValWithoutUpdateAttribute(
@@ -85,12 +76,13 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
             } else if (value->equals("luminanceToAlpha")) {
                 m_type->setBaseValWithoutUpdateAttribute(
                     MatrixTypes::SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA);
+            } else {
+                m_type->setBaseValWithoutUpdateAttribute(
+                    MatrixTypes::SVG_FECOLORMATRIX_TYPE_UNKNOWN);
             }
         }
     } else if (ss->m_values == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         SVGNumberList* valueList = values()->baseVal();
         GCVector<StringView> v;
         StringUtils::wordTokenizer(value, v);
@@ -108,9 +100,27 @@ void SVGFEColorMatrixElement::updateSVGAttributeNeeded(QualifiedName name)
     if (ss->m_in1 == name) {
         setAttribute(ss->m_in1, in1()->baseVal());
     } else if (ss->m_type == name) {
-        // TODO
+        switch (type()->baseVal()) {
+        case MatrixTypes::SVG_FECOLORMATRIX_TYPE_UNKNOWN:
+            setAttribute(ss->m_type, String::emptyString);
+            break;
+        case MatrixTypes::SVG_FECOLORMATRIX_TYPE_MATRIX:
+            setAttribute(ss->m_type, String::fromUTF8("matrix"));
+            break;
+        case MatrixTypes::SVG_FECOLORMATRIX_TYPE_SATURATE:
+            setAttribute(ss->m_type, String::fromUTF8("saturate"));
+            break;
+        case MatrixTypes::SVG_FECOLORMATRIX_TYPE_HUEROTATE:
+            setAttribute(ss->m_type, String::fromUTF8("hueRotate"));
+            break;
+        case MatrixTypes::SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA:
+            setAttribute(ss->m_type, String::fromUTF8("luminanceToAlpha"));
+            break;
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+        }
     } else if (ss->m_values == name) {
-        // TODO
+        setAttribute(ss->m_values, values()->baseVal()->toString());
     }
 }
 
@@ -149,7 +159,7 @@ SVGAnimatedNumberList* SVGFEColorMatrixElement::values()
         m_values = new SVGAnimatedNumberList(
             document(),
             new SVGNumberList(this, AtomicString::emptyAtomicString()),
-            nullptr);
+            new SVGNumberList(this, AtomicString::emptyAtomicString()));
     }
     return m_values.getValue();
 }

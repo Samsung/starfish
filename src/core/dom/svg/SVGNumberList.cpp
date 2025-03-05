@@ -219,6 +219,18 @@ bool SVGNumberList::defaultIndexedSetter(unsigned long index,
     return true;
 }
 
+String* SVGNumberList::toString()
+{
+    StringBuilder sb;
+    for (auto* item : m_v) {
+        if (sb.length()) {
+            sb.appendChar(' ');
+        }
+        sb.appendString(String::fromFloat(item->value()));
+    }
+    return sb.finalize();
+}
+
 void* SVGNumberList::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(SVGNumberList));

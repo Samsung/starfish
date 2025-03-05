@@ -48,6 +48,7 @@
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
+#include "core/dom/svg/SVGFEComponentTransferElement.h"
 
 namespace Starfish {
 
@@ -88,15 +89,17 @@ Element* SVGDocument::createSVGElement(Document* document,
     } else if (str->m_svglinearGradientTagName == localName ||
                str->m_svglineargradientTagName == localName) {
         // FIXME: SVG tagnames should be case-sensitive
-        return new SVGLinearGradientElement(document, qname);
+        return new SVGLinearGradientElement(document,
+                                            str->m_svglinearGradientTagName);
     } else if (str->m_svgradialGradientTagName == localName ||
                str->m_svgradialgradientTagName == localName) {
-        return new SVGRadialGradientElement(document, qname);
+        return new SVGRadialGradientElement(document,
+                                            str->m_svgradialGradientTagName);
     } else if (str->m_svgstopTagName == localName) {
         return new SVGStopElement(document, qname);
     } else if (str->m_svgclippathTagName == localName ||
                str->m_svgclipPathTagName == localName) {
-        return new SVGClipPathElement(document, qname);
+        return new SVGClipPathElement(document, str->m_svgclipPathTagName);
     } else if (str->m_svgscriptTagName == localName) {
         return new SVGScriptElement(document, qname);
     } else if (str->m_svgmaskTagName == localName) {
@@ -115,10 +118,16 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGFilterElement(document, qname);
     } else if (str->m_svgfegaussianblurTagName == localName ||
                str->m_svgfeGaussianBlurTagName == localName) {
-        return new SVGFEGaussianBlurElement(document, qname);
+        return new SVGFEGaussianBlurElement(document,
+                                            str->m_svgfeGaussianBlurTagName);
     } else if (str->m_svgfecolormatrixTagName == localName ||
                str->m_svgfeColorMatrixTagName == localName) {
-        return new SVGFEColorMatrixElement(document, qname);
+        return new SVGFEColorMatrixElement(document,
+                                           str->m_svgfeColorMatrixTagName);
+    } else if (str->m_svgfecomponenttransferTagName == localName ||
+               str->m_svgfeComponentTransferTagName == localName) {
+        return new SVGFEComponentTransferElement(
+            document, str->m_svgfeComponentTransferTagName);
     } else {
         return new SVGElement(document, qname);
     }

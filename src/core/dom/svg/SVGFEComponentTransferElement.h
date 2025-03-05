@@ -17,27 +17,25 @@
  *  USA
  */
 
-#ifndef __StarfishSVGFilterElement__
-#define __StarfishSVGFilterElement__
+#ifndef __StarfishSVGFEComponentTransferElement__
+#define __StarfishSVGFEComponentTransferElement__
 
-#include "core/dom/svg/SVGElement.h"
-#include "core/dom/svg/SVGAnimatedEnumeration.h"
+#include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
 
 namespace Starfish {
-class Filter;
-class SVGFilterElement : public SVGElement {
+
+class SVGFEComponentTransferElement
+    : public SVGFilterPrimitiveStandardAttributes {
 public:
-    SVGFilterElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
+    SVGFEComponentTransferElement(Document* document,
+                                  const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGFilterElement() const override;
+    virtual bool isSVGFEComponentTransferElement() const override;
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
@@ -52,41 +50,10 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
-    virtual bool needsGeometryAttributes() override
-    {
-        return true;
-    }
-
-    virtual bool needsSizingAttributes() override
-    {
-        return true;
-    }
-
-    virtual bool isPaintServerLikeElement() override
-    {
-        return true;
-    }
-
-    virtual void attributeOfPaintServerLikeUpdated() override;
-
-    Optional<Filter*> filter();
-
-    SVGAnimatedEnumeration* filterUnits();
-    SVGAnimatedEnumeration* primitiveUnits();
-
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
+    SVGAnimatedString* in1();
 
 private:
-    Optional<Filter*> m_filter;
-    Optional<SVGAnimatedEnumeration*> m_filterUnits;
-    Optional<SVGAnimatedEnumeration*> m_primitiveUnits;
-    Optional<SVGAnimatedLength*> m_x;
-    Optional<SVGAnimatedLength*> m_y;
-    Optional<SVGAnimatedLength*> m_width;
-    Optional<SVGAnimatedLength*> m_height;
+    Optional<SVGAnimatedString*> m_in1;
 };
 } // namespace Starfish
 

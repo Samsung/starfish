@@ -195,6 +195,7 @@ namespace Starfish {
     F(feColorMatrix)                   \
     F(fecolormatrix)                   \
     F(feComponentTransfer)             \
+    F(fecomponenttransfer)             \
     F(feComposite)                     \
     F(feConvolveMatrix)                \
     F(feDiffuseLighting)               \
@@ -568,6 +569,11 @@ public:
     QualifiedName m_numOctaves;
     QualifiedName m_seed;
     QualifiedName m_stitchTiles;
+    QualifiedName m_slope;
+    QualifiedName m_intercept;
+    QualifiedName m_amplitude;
+    QualifiedName m_exponent;
+    QualifiedName m_tableValues;
 
     // SVG animate
     QualifiedName m_attributename;
