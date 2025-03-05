@@ -133,6 +133,19 @@ LayoutSize FrameSVGBox::resolveStyleSize(const LayoutSize& viewport)
     return result;
 }
 
+static void expandFrameRectByFilter(FrameSVGBox* self,
+                                    SVGFilterElement* filterElement,
+                                    const SkMatrix& matrix)
+{
+    Optional<Filter*> fe = filterElement->filter();
+    if (fe.hasValue()) {
+        self->setX(self->x() + fe->biasX() * matrix.getScaleX());
+        self->setY(self->y() + fe->biasY() * matrix.getScaleY());
+        self->setWidth(self->width() + fe->biasWidth() * matrix.getScaleX());
+        self->setHeight(self->height() + fe->biasHeight() * matrix.getScaleY());
+    }
+}
+
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 {
     if (node()->asSVGElement()->needsSizingAttributes()) {
@@ -143,6 +156,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     LayoutLocation stylePos;
     bool needsComputeFrameRect =
         needsGeometryAttributes || node()->asSVGElement()->isShapeElement();
+    bool isStructuralElement = node()->asSVGElement()->isStructuralElement();
 
     float strokeWidth(style()->strokeWidth().specifiedValue(
         ctx.normalizedDiagonalViewportLength, this));
@@ -199,17 +213,6 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
     }
 
-    auto filterElement = node()->asSVGElement()->filterElement();
-    if (filterElement) {
-        Optional<Filter*> fe = filterElement->filter();
-        if (fe.hasValue()) {
-            m_frameRect.setX(m_frameRect.x() + fe->biasX());
-            m_frameRect.setY(m_frameRect.y() + fe->biasY());
-            m_frameRect.setWidth(m_frameRect.width() + fe->biasWidth());
-            m_frameRect.setHeight(m_frameRect.height() + fe->biasHeight());
-        }
-    }
-
     auto clipPathElement = node()->asSVGElement()->clipPathElement();
     Optional<LayoutRect> clipRect;
     if (clipPathElement) {
@@ -258,10 +261,6 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 
     if (!matrix.isIdentity() && needsComputeFrameRect) {
         m_frameRect = computeBoxExtent(m_frameRect, matrix);
-        for (auto rt : ctx.clippedRects) {
-            m_frameRect = LayoutRect::overlappedRect(m_frameRect, rt);
-        }
-
         if (!m_computedSVGTransform) {
             m_computedSVGTransform =
                 new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();
@@ -271,14 +270,28 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         m_computedSVGTransform = nullptr;
     }
 
+    auto filterElement = node()->asSVGElement()->filterElement();
+    if (needsComputeFrameRect && !isStructuralElement) {
+        if (filterElement) {
+            expandFrameRectByFilter(this, filterElement.value(), matrix);
+        }
+        for (auto rt : ctx.clippedRects) {
+            m_frameRect = LayoutRect::overlappedRect(m_frameRect, rt);
+        }
+    }
+
     layoutChildren(ctx, matrix);
 
-    if (node()->asSVGElement()->isStructuralElement()) {
+    if (isStructuralElement) {
         m_frameRect = LayoutRect();
         Frame* f = firstChild();
         while (f) {
             m_frameRect.unite(f->asFrameBox()->frameRect());
             f = f->next();
+        }
+
+        if (filterElement) {
+            expandFrameRectByFilter(this, filterElement.value(), matrix);
         }
 
         f = firstChild();
@@ -433,7 +446,13 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                 Optional<Filter*> filter =
                     filterElement->asSVGFilterElement()->filter();
                 if (filter.hasValue()) {
-                    Filter::FilterApplyContext ctx(w, s, h, ptr);
+                    FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
+                    auto transScale =
+                        viewportBox->computeTranlateScaleOnPaint();
+                    Filter::FilterApplyContext ctx(
+                        w, s, h, ptr, transScale.second.getScaleX(),
+                        transScale.second.getScaleY());
+
                     filter->applyFilter(ctx);
 
                     // some filter(eg) blur) needs extra buffer for work

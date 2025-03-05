@@ -675,6 +675,7 @@ public:
         checkError();
         if (fn) {
             auto groupTarget = cairo_get_group_target(m_canvas);
+            cairo_surface_flush(groupTarget);
             cairo_surface_t* mappedSurface =
                 cairo_surface_map_to_image(groupTarget, NULL);
             fn(static_cast<uint8_t*>(
