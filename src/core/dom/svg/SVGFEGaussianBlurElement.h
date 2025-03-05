@@ -27,6 +27,13 @@ namespace Starfish {
 
 class SVGFEGaussianBlurElement : public SVGFilterPrimitiveStandardAttributes {
 public:
+    enum EdgeMode {
+        SVG_EDGEMODE_UNKNOWN = 0,
+        SVG_EDGEMODE_DUPLICATE,
+        SVG_EDGEMODE_WRAP,
+        SVG_EDGEMODE_NONE,
+        SVG_EDGEMODE_MIRROR
+    };
     SVGFEGaussianBlurElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);

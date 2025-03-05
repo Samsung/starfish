@@ -83,6 +83,24 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
         stdDeviationY()->setBaseVal(String::parseFloat(value));
     } else if (ss->m_edgeMode == name) {
         notifyAttributeOfPaintServerLikeUpdated();
+        if (edgeMode()->isUpdated() == false) {
+            if (value->equals("duplicate")) {
+                m_edgeMode->setBaseValWithoutUpdateAttribute(
+                    EdgeMode::SVG_EDGEMODE_DUPLICATE);
+            } else if (value->equals("wrap")) {
+                m_edgeMode->setBaseValWithoutUpdateAttribute(
+                    EdgeMode::SVG_EDGEMODE_WRAP);
+            } else if (value->equals("mirror")) {
+                m_edgeMode->setBaseValWithoutUpdateAttribute(
+                    EdgeMode::SVG_EDGEMODE_MIRROR);
+            } else if (value->equals("none")) {
+                m_edgeMode->setBaseValWithoutUpdateAttribute(
+                    EdgeMode::SVG_EDGEMODE_NONE);
+            } else {
+                m_edgeMode->setBaseValWithoutUpdateAttribute(
+                    EdgeMode::SVG_EDGEMODE_UNKNOWN);
+            }
+        }
     }
 }
 
@@ -144,8 +162,9 @@ SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationY()
 SVGAnimatedEnumeration* SVGFEGaussianBlurElement::edgeMode()
 {
     if (!m_edgeMode.hasValue()) {
-        m_edgeMode =
-            new SVGAnimatedEnumeration(this, staticStrings()->m_edgeMode, 0, 0);
+        m_edgeMode = new SVGAnimatedEnumeration(
+            this, staticStrings()->m_edgeMode, EdgeMode::SVG_EDGEMODE_NONE,
+            EdgeMode::SVG_EDGEMODE_NONE);
     }
     return m_edgeMode.getValue();
 }

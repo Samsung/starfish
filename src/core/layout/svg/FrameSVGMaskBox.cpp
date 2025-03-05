@@ -41,15 +41,9 @@ static void makeLuminanceMask(uint8_t* ptr, size_t w, size_t s, size_t h)
         uint8_t* p = ptr;
         for (size_t x = 0; x < w; x++) {
             uint8_t a = p[3];
-#ifdef PORT_PIXEL_ORDER_RGBA
-            uint32_t r = p[0];
-            uint32_t g = p[1];
-            uint32_t b = p[2];
-#else
-            uint32_t r = p[2];
-            uint32_t g = p[1];
-            uint32_t b = p[0];
-#endif
+            uint32_t r = p[STARFISH_PIXEL_R_INDEX];
+            uint32_t g = p[STARFISH_PIXEL_G_INDEX];
+            uint32_t b = p[STARFISH_PIXEL_B_INDEX];
             *reinterpret_cast<uint32_t*>(p) =
                 ((r * 109 + g * 366 + b * 37 + 256) << 15) & 0xff000000;
             p += 4;
