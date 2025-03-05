@@ -11,7 +11,7 @@ on:
 
 jobs:
   build_x64:
-    runs-on: [ legacy-rat6 ]
+    runs-on: [ runner-type2 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -72,7 +72,7 @@ jobs:
     timeout-minutes: 60
     # After the firewall registraion is done, a code runner should also be added to test work.
     # runs-on: [ code-linux ]
-    runs-on: [ legacy-rat6 ]
+    runs-on: [ runner-type2 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
