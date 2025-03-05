@@ -9000,8 +9000,13 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
             continue;
         }
 
-        // Convert StyleRuleKeyframes to AnimationKeyframes.
+        // animation's timing function
+        /// ex) animation: custom-animation 3s linear;
+        /// tmingFunction linear is used for each keyframe if which hasn't own
+        /// timing function.
         TimingFunction* timing = styleAnimationData->timingFunction(i);
+
+        // Convert StyleRuleKeyframes to AnimationKeyframes.
         GCVector<AnimationKeyframe*> animationKeyframeList;
         for (StyleRuleKeyframe* styleRuleKeyframe :
              styleKeyframes->keyframeList()) {
@@ -9057,8 +9062,6 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
                 }
             }
 
-            // TODO: This is probably redundant to what is done in the special
-            // copy constructor of AnimationKeyframe.
             animationKeyframe->setTimingFunction(keyframeTiming);
 
             // Copy AnimationKeyframe to hanlde mulitple keyframe-selector.
