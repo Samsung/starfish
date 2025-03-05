@@ -214,7 +214,7 @@ FilterGaussianBlur::FilterGaussianBlur(
         element->asSVGFEGaussianBlurElement()->stdDeviationY()->baseVal());
     float kernelX = kernel.first;
     float kernelY = kernel.second;
-    filter->setBias(-kernelX / 2, -kernelY / 2, kernelX, kernelY);
+    filter->setBias(-kernelX, -kernelY, kernelX * 2, kernelY * 2);
 }
 
 void* FilterGaussianBlur::operator new(size_t size)
@@ -245,7 +245,8 @@ void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
     if (stdDeviationY < 0) {
         return;
     }
-    auto kernelSize = computeKernelSize(stdDeviationX, stdDeviationY);
+    auto kernelSize = computeKernelSize(stdDeviationX * ctx.viewportScaleX,
+                                        stdDeviationY * ctx.viewportScaleY);
 
     String* sourceNameStr = ele->in1()->baseVal();
     auto inputSource = ctx.sourceGraphic();

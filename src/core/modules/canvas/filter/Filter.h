@@ -35,6 +35,9 @@ public:
     struct FilterApplyContext {
         uint8_t* src;
         size_t width, stride, height;
+        float viewportScaleX;
+        float viewportScaleY;
+
         enum FixedSourcePlace {
             SourceGraphic,
         };
@@ -73,12 +76,15 @@ public:
         std::vector<std::pair<std::string, std::shared_ptr<FilterSourceBuffer>>>
             sources;
 
-        FilterApplyContext(size_t w, size_t s, size_t h, uint8_t* srcData)
+        FilterApplyContext(size_t w, size_t s, size_t h, uint8_t* srcData,
+                           float scaleX, float scaleY)
         {
             src = srcData;
             width = w;
             stride = s;
             height = h;
+            viewportScaleX = scaleX;
+            viewportScaleY = scaleY;
 
             // first slot is always SourceGraphic
             sources.push_back(std::make_pair(
