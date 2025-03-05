@@ -658,8 +658,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "repeatcount"));
     m_calcMode =
         QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
-    m_keySplines = QualifiedName(
-        AtomicString::createAtomicString(starfish, "keysplines"));
+    m_keySplines =
+        QualifiedName(AtomicString::createAtomicString(starfish, "keysplines"));
     m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));
     m_from = QualifiedName(AtomicString::createAtomicString(starfish, "from"));
     m_to = QualifiedName(AtomicString::createAtomicString(starfish, "to"));
