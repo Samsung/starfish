@@ -45,8 +45,8 @@ public:
 
     virtual void updateSVGAttributeNeeded(QualifiedName name) override;
 
-    virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didNodeRemoved(Node* parent, Node* oldChild);
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,

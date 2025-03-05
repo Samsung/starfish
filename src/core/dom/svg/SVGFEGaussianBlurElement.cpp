@@ -20,7 +20,6 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
-#include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/DOMTokenList.h"
 
@@ -59,21 +58,14 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    Optional<SVGFilterElement*> filterElement;
-    if (parentElement() && parentElement()->isSVGFilterElement()) {
-        filterElement = parentElement()->asSVGFilterElement();
-    }
 
     StaticStrings* ss = starfish()->staticStrings();
+
     if (ss->m_in1 == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         in1()->setBaseVal(value);
     } else if (ss->m_stdDeviation == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
         if (tokens.size() == 1) {
@@ -84,19 +76,13 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
             stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]));
         }
     } else if (ss->m_stdDeviationX == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         stdDeviationX()->setBaseVal(String::parseFloat(value));
     } else if (ss->m_stdDeviationY == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
         stdDeviationY()->setBaseVal(String::parseFloat(value));
     } else if (ss->m_edgeMode == name) {
-        if (filterElement.hasValue()) {
-            filterElement->attributeOfPaintServerLikeUpdated();
-        }
+        notifyAttributeOfPaintServerLikeUpdated();
     }
 }
 

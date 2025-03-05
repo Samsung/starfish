@@ -1,0 +1,9 @@
+// https://drafts.fxtf.org/filter-effects/#ref-for-svgfecomponenttransferelement
+
+[Exposed=Window]
+interface SVGFEComponentTransferElement : SVGElement {
+  readonly attribute SVGAnimatedString in1;
+};
+
+// includes -> implements
+SVGFEComponentTransferElement implements SVGFilterPrimitiveStandardAttributes;

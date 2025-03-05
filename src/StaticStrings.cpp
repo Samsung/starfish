@@ -644,6 +644,16 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_seed = QualifiedName(AtomicString::createAtomicString(starfish, "seed"));
     m_stitchTiles = QualifiedName(
         AtomicString::createAtomicString(starfish, "stitchTiles"));
+    m_slope =
+        QualifiedName(AtomicString::createAtomicString(starfish, "slope"));
+    m_intercept =
+        QualifiedName(AtomicString::createAtomicString(starfish, "intercept"));
+    m_amplitude =
+        QualifiedName(AtomicString::createAtomicString(starfish, "amplitude"));
+    m_exponent =
+        QualifiedName(AtomicString::createAtomicString(starfish, "exponent"));
+    m_tableValues = QualifiedName(
+        AtomicString::createAtomicString(starfish, "tableValues"));
 
     // SVG animate
     m_attributename = QualifiedName(

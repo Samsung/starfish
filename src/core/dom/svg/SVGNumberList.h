@@ -48,6 +48,7 @@ public:
     SVGNumber* removeItem(unsigned long index);
     SVGNumber* appendItem(SVGNumber* newItem);
     bool defaultIndexedSetter(unsigned long index, SVGNumber* newItem);
+    String* toString();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

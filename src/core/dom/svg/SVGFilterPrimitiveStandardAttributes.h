@@ -28,6 +28,8 @@
 
 namespace Starfish {
 
+class SVGFilterElement;
+
 class SVGFilterPrimitiveStandardAttributes : public SVGElement {
 public:
     SVGFilterPrimitiveStandardAttributes(Document* document,
@@ -59,6 +61,10 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
     SVGAnimatedString* result();
+
+protected:
+    Optional<SVGFilterElement*> filterElement();
+    void notifyAttributeOfPaintServerLikeUpdated();
 
 private:
     Optional<SVGAnimatedLength*> m_x;

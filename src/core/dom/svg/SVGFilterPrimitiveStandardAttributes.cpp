@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
+#include "core/dom/svg/SVGFilterElement.h"
 
 namespace Starfish {
 
@@ -87,5 +88,23 @@ void SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
 SVGAnimatedString* SVGFilterPrimitiveStandardAttributes::result()
 {
     return m_result.getValue();
+}
+
+Optional<SVGFilterElement*>
+SVGFilterPrimitiveStandardAttributes::filterElement()
+{
+    if (parentElement() && parentElement()->isSVGFilterElement()) {
+        return parentElement()->asSVGFilterElement();
+    }
+    return nullptr;
+}
+
+void SVGFilterPrimitiveStandardAttributes::
+    notifyAttributeOfPaintServerLikeUpdated()
+{
+    Optional<SVGFilterElement*> filterElement = this->filterElement();
+    if (filterElement.hasValue()) {
+        filterElement->attributeOfPaintServerLikeUpdated();
+    }
 }
 } // namespace Starfish
