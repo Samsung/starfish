@@ -89,6 +89,8 @@ protected:
                      GCVector<CSSStyleValuePair>& values);
     bool parseValue(CSSStyleValuePair::KeyKind keyKind, const char* buffer,
                     size_t len, CSSStyleValuePair& pair);
+    bool convertFallbackValues(CSSStyleValuePair::KeyKind keyKind,
+                               GCVector<CSSStyleValuePair>& values);
 
     bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
                    GCVector<CSSStyleValuePair>& values);
