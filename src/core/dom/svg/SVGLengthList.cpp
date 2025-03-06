@@ -365,7 +365,7 @@ void SVGLengthList::updateListByAttribute()
         for (size_t i = 0; i < tokens.size(); ++i) {
             SVGLength* newItem = new SVGLength(
                 m_sourceElement, AtomicString::emptyAtomicString());
-            newItem->setValueAsString(tokens[i].substring(), false);
+            newItem->setValueAsString(tokens[i].substring(), false, false);
 
             appendItemWithoutUpdateAttribute(newItem);
         }

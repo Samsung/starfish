@@ -21,6 +21,7 @@
 #include "core/modules/canvas/filter/FilterPrimitive.h"
 #include "core/modules/canvas/filter/FilterGaussianBlur.h"
 #include "core/modules/canvas/filter/FilterColorMatrix.h"
+#include "core/modules/canvas/filter/FilterComponentTransfer.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -93,6 +94,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterGaussianBlur(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEColorMatrixElement()) {
         primitive = new FilterColorMatrix(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEComponentTransferElement()) {
+        primitive = new FilterComponentTransfer(this, filterPrimitiveNode);
     }
     return primitive;
 }
