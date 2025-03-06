@@ -35,12 +35,6 @@ public:
         SVG_FECOMPONENTTRANSFER_TYPE_GAMMA
     };
 
-    SVGComponentTransferFunctionElement(Document* document,
-                                        const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGComponentTransferFunctionElement() const override;
@@ -82,6 +76,12 @@ public:
     SVGAnimatedNumber* offset();
 
 protected:
+    SVGComponentTransferFunctionElement(Document* document,
+                                        const QualifiedName& qname)
+        : SVGElement(document, qname)
+    {
+    }
+
     void notifyAttributeOfPaintServerLikeUpdated();
 
     Optional<SVGAnimatedEnumeration*> m_type;
@@ -92,6 +92,29 @@ protected:
     Optional<SVGAnimatedNumber*> m_exponent;
     Optional<SVGAnimatedNumber*> m_offset;
 };
+
+#define DEFINE_FUNC_ELEMENT(Channel)                                   \
+    class SVGFEFunc##Channel##Element                                  \
+        : public SVGComponentTransferFunctionElement {                 \
+    public:                                                            \
+        SVGFEFunc##Channel##Element(Document* document,                \
+                                    const QualifiedName& qname)        \
+            : SVGComponentTransferFunctionElement::                    \
+                  SVGComponentTransferFunctionElement(document, qname) \
+        {                                                              \
+        }                                                              \
+        virtual void init(ScriptBindingInstance* instance,             \
+                          void* domObjectPointer) override;            \
+        virtual bool isSVGFEFunc##Channel##Element() const override;   \
+    };
+
+DEFINE_FUNC_ELEMENT(R)
+DEFINE_FUNC_ELEMENT(G)
+DEFINE_FUNC_ELEMENT(B)
+DEFINE_FUNC_ELEMENT(A)
+
+#undef DEFINE_FUNC_ELEMENT
+
 } // namespace Starfish
 
 #endif

@@ -49,6 +49,7 @@
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGFEComponentTransferElement.h"
+#include "core/dom/svg/SVGComponentTransferFunctionElement.h"
 
 namespace Starfish {
 
@@ -128,6 +129,21 @@ Element* SVGDocument::createSVGElement(Document* document,
                str->m_svgfeComponentTransferTagName == localName) {
         return new SVGFEComponentTransferElement(
             document, str->m_svgfeComponentTransferTagName);
+    } else if (str->m_svgfeFuncATagName == localName ||
+               str->m_svgfefuncaTagName == localName) {
+        return new SVGFEFuncAElement(document, str->m_svgfeFuncATagName);
+    } else if (str->m_svgfeFuncATagName == localName ||
+               str->m_svgfefuncaTagName == localName) {
+        return new SVGFEFuncAElement(document, str->m_svgfeFuncATagName);
+    } else if (str->m_svgfeFuncRTagName == localName ||
+               str->m_svgfefuncrTagName == localName) {
+        return new SVGFEFuncRElement(document, str->m_svgfeFuncRTagName);
+    } else if (str->m_svgfeFuncGTagName == localName ||
+               str->m_svgfefuncgTagName == localName) {
+        return new SVGFEFuncGElement(document, str->m_svgfeFuncGTagName);
+    } else if (str->m_svgfeFuncBTagName == localName ||
+               str->m_svgfefuncbTagName == localName) {
+        return new SVGFEFuncBElement(document, str->m_svgfeFuncBTagName);
     } else {
         return new SVGElement(document, qname);
     }

@@ -217,6 +217,10 @@ namespace Starfish {
     F(feFuncR)                         \
     F(feFuncB)                         \
     F(feFuncG)                         \
+    F(fefunca)                         \
+    F(fefuncr)                         \
+    F(fefuncb)                         \
+    F(fefuncg)                         \
     F(feTurbulence)
 
 // FIXME: current parser converts linearGradient to lineargradient

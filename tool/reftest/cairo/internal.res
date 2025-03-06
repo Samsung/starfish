@@ -699,6 +699,7 @@ test/cairo/internal-test/svg/svg_image_crash.html
 test/cairo/internal-test/svg/svg_in_svg_01.html
 test/cairo/internal-test/svg/svg_image_test_01.html
 test/cairo/internal-test/svg/svg_gradient_change.html
+test/cairo/internal-test/svg/svg_fe_component_transfer.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
 test/cairo/internal-test/transition/transition_transform.html
 test/cairo/internal-test/canvas/basicFillRect.html

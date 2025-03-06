@@ -814,6 +814,10 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_stitchTiles,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("tablevalues")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_tableValues,
+                          tokenAttribute.value());
         }
     }
 }

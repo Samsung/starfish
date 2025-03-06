@@ -19,3 +19,19 @@ interface SVGComponentTransferFunctionElement : SVGElement {
   readonly attribute SVGAnimatedNumber exponent;
   readonly attribute SVGAnimatedNumber offset;
 };
+
+[Exposed=Window]
+interface SVGFEFuncRElement : SVGComponentTransferFunctionElement {
+};
+
+[Exposed=Window]
+interface SVGFEFuncGElement : SVGComponentTransferFunctionElement {
+};
+
+[Exposed=Window]
+interface SVGFEFuncBElement : SVGComponentTransferFunctionElement {
+};
+
+[Exposed=Window]
+interface SVGFEFuncAElement : SVGComponentTransferFunctionElement {
+};
