@@ -196,9 +196,9 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                     to->getXAxis().specifiedValue(ctx.viewport.width(), this);
                 auto oy =
                     to->getYAxis().specifiedValue(ctx.viewport.height(), this);
-                matrix.postTranslate(ox, oy);
+                matrix.preTranslate(ox, oy);
                 matrix.preConcat(styleMatrix);
-                matrix.postTranslate(-ox, -oy);
+                matrix.preTranslate(-ox, -oy);
             } else {
                 if (needsGeometryAttributes) {
                     matrix.postTranslate(-stylePos.x().toFloat(),
