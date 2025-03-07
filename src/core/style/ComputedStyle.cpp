@@ -2557,13 +2557,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
     if (newStyle->x() != oldStyle->x()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::X] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageLayout |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
     if (newStyle->y() != oldStyle->y()) {
-        damagedKeys[CSSStyleValuePair::KeyKind::CX] = true;
+        damagedKeys[CSSStyleValuePair::KeyKind::Y] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamageLayout |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
