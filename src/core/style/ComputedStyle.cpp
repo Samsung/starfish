@@ -1169,7 +1169,8 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 }
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
-                                 ComputedStyle* newStyle, bool* damagedKeys)
+                                 ComputedStyle* newStyle, bool* damagedKeys,
+                                 bool isSVGDescendant)
 {
     STARFISH_ASSERT(oldStyle != nullptr);
     STARFISH_ASSERT(newStyle != nullptr);
@@ -2004,31 +2005,44 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newOpacity != oldOpacity) {
         damagedKeys[CSSStyleValuePair::KeyKind::Opacity] = true;
-        if ((newOpacity == 0 && oldOpacity != 0) ||
-            (newOpacity != 0 && oldOpacity == 0)) {
+        if (UNLIKELY(isSVGDescendant)) {
             damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout |
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-        }
-        if (newOpacity < 1 && oldOpacity < 1) {
-            damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::
-                    ComputedStyleDamageComputeStackingContextProperties |
-                damage);
         } else {
-            damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::
-                    ComputedStyleDamageEstablishesStackingContext |
-                damage);
+            if ((newOpacity == 0 && oldOpacity != 0) ||
+                (newOpacity != 0 && oldOpacity == 0)) {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+            if (newOpacity < 1 && oldOpacity < 1) {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageComputeStackingContextProperties |
+                    damage);
+            } else {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageEstablishesStackingContext |
+                    damage);
+            }
         }
     }
 
     if (newStyle->zIndex() != oldStyle->zIndex()) {
         damagedKeys[CSSStyleValuePair::KeyKind::ZIndex] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
-            damage);
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        if (UNLIKELY(isSVGDescendant)) {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        } else {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::
+                    ComputedStyleDamageEstablishesStackingContext |
+                damage);
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
     }
 
     {
@@ -2103,25 +2117,44 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
     if (oldComplex != newComplex) {
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::
-                ComputedStyleDamageComputeStackingContextProperties |
-            damage);
+        if (UNLIKELY(isSVGDescendant)) {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        } else {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
+        }
     }
 
     if (newTransforms == nullptr && oldTransforms == nullptr) {
     } else if (newTransforms == nullptr || oldTransforms == nullptr) {
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
-        damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
-            damage);
+        if (UNLIKELY(isSVGDescendant)) {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        } else {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::
+                    ComputedStyleDamageEstablishesStackingContext |
+                damage);
+        }
     } else {
         if (*newTransforms != *oldTransforms) {
             damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
-            damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::
-                    ComputedStyleDamageComputeStackingContextProperties |
-                damage);
+            if (UNLIKELY(isSVGDescendant)) {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout |
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            } else {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageComputeStackingContextProperties |
+                    damage);
+            }
         }
     }
 
@@ -2447,17 +2480,23 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newFilter != oldFilter) {
         if ((!newFilter || !oldFilter) || !oldFilter->compare(newFilter)) {
             damagedKeys[CSSStyleValuePair::KeyKind::Filter] = true;
-            damage = static_cast<ComputedStyleDamage>(
-                ComputedStyleDamage::ComputedStyleDamagePainting |
-                ComputedStyleDamage::
-                    ComputedStyleDamageComputeStackingContextProperties |
-                damage);
-            if (newStyle->hasAvailableFilter() !=
-                oldStyle->hasAvailableFilter()) {
+            if (UNLIKELY(isSVGDescendant)) {
                 damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamageLayout |
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            } else {
+                damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::ComputedStyleDamagePainting |
                     ComputedStyleDamage::
-                        ComputedStyleDamageEstablishesStackingContext |
+                        ComputedStyleDamageComputeStackingContextProperties |
                     damage);
+                if (newStyle->hasAvailableFilter() !=
+                    oldStyle->hasAvailableFilter()) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::
+                            ComputedStyleDamageEstablishesStackingContext |
+                        damage);
+                }
             }
         }
     }
@@ -2500,12 +2539,20 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         if (oldPositionedMask || newPositionedMask) {
             if (PositionedMaskData::damaged(oldPositionedMask,
                                             newPositionedMask, damagedKeys)) {
-                damage = static_cast<ComputedStyleDamage>(
-                    ComputedStyleDamage::
-                        ComputedStyleDamageEstablishesStackingContext |
-                    damage);
-                damage = static_cast<ComputedStyleDamage>(
-                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+                if (UNLIKELY(isSVGDescendant)) {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamageLayout |
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                } else {
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::
+                            ComputedStyleDamageEstablishesStackingContext |
+                        damage);
+                    damage = static_cast<ComputedStyleDamage>(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
             }
         }
     }

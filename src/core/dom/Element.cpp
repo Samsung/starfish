@@ -855,7 +855,8 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                     };
 
                     ComputedStyleDamage damage = (ComputedStyleDamage)(
-                        compareStyle(ocs, ncs, damagedKeys) |
+                        compareStyle(ocs, ncs, damagedKeys,
+                                     isSVGDescendantElement()) |
                         comparePseudoElementStyle(ocs, ncs, damagedKeys));
 
                     if (damage !=
@@ -928,7 +929,8 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
                             false,
                         };
-                        if (compareStyle(ocs, ncs, damagedKeys) !=
+                        if (compareStyle(ocs, ncs, damagedKeys,
+                                         isSVGDescendantElement()) !=
                             ComputedStyleDamageNone) {
                             setNeedsFrameTreeBuild();
                         }
@@ -2620,6 +2622,11 @@ bool Element::hasPointerCapture(int32_t param)
 {
     STARFISH_UNIMPLEMENTED();
     return false;
+}
+
+bool Element::isSVGDescendantElement()
+{
+    return isSVGElement() && asSVGElement()->ownerSVGElement().hasValue();
 }
 
 } // namespace Starfish
