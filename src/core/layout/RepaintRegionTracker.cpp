@@ -31,7 +31,7 @@
 #include "core/layout/ComputeOverflow.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
-
+#include "core/layout/svg/FrameSVGBox.h"
 namespace Starfish {
 
 RepaintRegionTracker::ComputeOverflow::ComputeOverflow(

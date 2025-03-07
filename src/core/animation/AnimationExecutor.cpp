@@ -143,7 +143,8 @@ void AnimationExecutor::ExecutionContext::recomputeStyleDamageInAnimation()
 
     m_damage = (ComputedStyleDamage)(
         m_damage |
-        compareStyle(m_fromStyle.getValue(), m_toStyle, m_damagedKeys));
+        compareStyle(m_fromStyle.getValue(), m_toStyle, m_damagedKeys,
+                     m_element->isSVGDescendantElement()));
 
     if (m_afterRunningStates.first != m_beforeRunningStates.first &&
         m_toStyle->opacity() == 1) {

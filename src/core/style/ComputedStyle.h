@@ -785,7 +785,8 @@ class ComputedStyle : public gc {
                                      ComputedStyle* parentStyle, bool force);
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                             ComputedStyle* newStyle,
-                                            bool* damagedKeys);
+                                            bool* damagedKeys,
+                                            bool isSVGDescendant);
 
     struct InheritedStylesRareData {
         FillRuleValue m_fillRule : 1; // svg
@@ -5048,7 +5049,8 @@ protected:
 struct KeyframeAnimationOptions;
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
-                                 ComputedStyle* newStyle, bool* damagedKeys);
+                                 ComputedStyle* newStyle, bool* damagedKeys,
+                                 bool isSVGDescendant);
 
 void computeTransition(Element* element, Optional<ComputedStyle*> fromStyle,
                        Optional<Frame*> oldFrame, ComputedStyle* toStyle,

@@ -9264,7 +9264,8 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         }
         damage = (ComputedStyleDamage)(
-            damage | compareStyle(element->style(), style, damagedKeys));
+            damage | compareStyle(element->style(), style, damagedKeys,
+                                  element->isSVGDescendantElement()));
 
         if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
             damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
@@ -9570,7 +9571,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
                             [CSSStyleValuePair::KeyKindSize]; // don't
                                                               // care
                         childTextNodeComputedStyleDamage = compareStyle(
-                            childTextNodeStyle, oldStyle, damagedKeys);
+                            childTextNodeStyle, oldStyle, damagedKeys,
+                            child->isElement() &&
+                                child->asElement()->isSVGDescendantElement());
                     }
                 }
 

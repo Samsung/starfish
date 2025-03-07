@@ -212,6 +212,8 @@ public:
     void releasePointerCapture(int32_t param);
     bool hasPointerCapture(int32_t param);
 
+    bool isSVGDescendantElement();
+
 protected:
     size_t hasAttribute(const AttributeName& name) const;
     size_t hasAttributeNode(const AttributeName& name);
