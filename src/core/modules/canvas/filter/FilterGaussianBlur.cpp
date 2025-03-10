@@ -61,10 +61,11 @@ inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
     }
 }
 
-inline void boxBlurAlphaOnly(uint8_t* srcData, uint8_t* dstData, unsigned dx,
-                             int& dxLeft, int& dxRight, int& stride,
-                             int& strideLine, int& effectWidth,
-                             int& effectHeight, const int& maxKernelSize)
+inline void boxBlurAlphaOnly(uint8_t* srcData, uint8_t* dstData,
+                             const unsigned dx, const int dxLeft,
+                             const int dxRight, const int stride,
+                             const int strideLine, const int effectWidth,
+                             const int effectHeight, const int maxKernelSize)
 {
     // Memory alignment is: RGBA, zero-index based.
     const int channel = 3;
@@ -109,10 +110,11 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
 {
     const int maxKernelSize = std::min(dxRight, effectWidth);
 
-    if (alphaImage)
+    if (alphaImage) {
         return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
                                 strideLine, effectWidth, effectHeight,
                                 maxKernelSize);
+    }
 
     // Concerning the array width/length: it is Element size + Margin + Border.
     // The number of pixels will be
