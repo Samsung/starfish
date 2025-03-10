@@ -120,8 +120,9 @@ void SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
 SVGAnimatedString* SVGFilterPrimitiveStandardAttributes::output()
 {
     if (!m_output.hasValue()) {
-        m_output = new SVGAnimatedString(document(), String::emptyString,
-                                         String::emptyString);
+        m_output =
+            new SVGAnimatedString(this, starfish()->staticStrings()->m_output,
+                                  String::emptyString, String::emptyString);
     }
     return m_output.getValue();
 }

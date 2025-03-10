@@ -24,9 +24,12 @@
 
 namespace Starfish {
 
+class SVGElement;
 class SVGAnimatedString : public ScriptWrappable {
 public:
-    SVGAnimatedString(Document* document, String* baseVal, String* animVal);
+    SVGAnimatedString(SVGElement* targetElement,
+                      const QualifiedName& targetAttribute, String* baseVal,
+                      String* animVal);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedString)
 
@@ -42,7 +45,8 @@ public:
     }
 
 protected:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    SVGElement* m_targetElement;
+    QualifiedName m_targetAttribute;
     String* m_baseVal;
     String* m_animVal;
 };
