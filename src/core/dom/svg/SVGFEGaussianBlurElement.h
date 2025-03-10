@@ -53,14 +53,18 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
-    SVGAnimatedString* in1();
+    SVGAnimatedString* in();
+    SVGAnimatedString* in1()
+    {
+        return in();
+    }
     SVGAnimatedNumber* stdDeviationX();
     SVGAnimatedNumber* stdDeviationY();
     SVGAnimatedEnumeration* edgeMode();
     void setStdDeviation(float stdDeviationX, float stdDeviationY);
 
 private:
-    Optional<SVGAnimatedString*> m_in1;
+    Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedNumber*> m_stdDeviationX;
     Optional<SVGAnimatedNumber*> m_stdDeviationY;
     Optional<SVGAnimatedEnumeration*> m_edgeMode;

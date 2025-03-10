@@ -452,15 +452,14 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                         viewportBox->computeTranlateScaleOnPaint();
                     Filter::FilterApplyContext ctx(
                         w, s, h, ptr, transScale.second.getScaleX(),
-                        transScale.second.getScaleY());
+                        transScale.second.getScaleY(), false);
 
                     filter->applyFilter(ctx);
 
-                    // some filter(eg) blur) needs extra buffer for work
-                    // if there was a the filter we need to copy
-                    if (ptr != ctx.sourceGraphic()->data()) {
-                        STARFISH_ASSERT(ctx.sourceGraphic()->size() == s * h);
-                        memcpy(ptr, ctx.sourceGraphic()->data(), s * h);
+                    // copy if needs
+                    if (ctx.output->data() != ptr) {
+                        STARFISH_ASSERT(ctx.output->size() == s * h);
+                        memcpy(ptr, ctx.output->data(), s * h);
                     }
                 }
             };

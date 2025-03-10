@@ -1645,11 +1645,10 @@ UTF8String String::toUTF8String()
     return result;
 }
 
-UTF32String String::toUTF32String()
+template <typename T>
+T accessDataToUTF32(const StringBufferAccessData& data)
 {
-    UTF32String result;
-
-    auto data = bufferAccessData();
+    T result;
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         result.reserve(data.length);
         for (size_t i = 0; i < data.length; i++) {
@@ -1663,6 +1662,16 @@ UTF32String String::toUTF32String()
     }
 
     return result;
+}
+
+UTF32String String::toUTF32String()
+{
+    return accessDataToUTF32<UTF32String>(bufferAccessData());
+}
+
+UTF32StringDataNonGCStd String::toUTF32NonGCString()
+{
+    return accessDataToUTF32<UTF32StringDataNonGCStd>(bufferAccessData());
 }
 
 UTF16String String::toUTF16String() const

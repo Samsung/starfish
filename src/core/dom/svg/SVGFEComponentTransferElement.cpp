@@ -37,7 +37,7 @@ void* SVGFEComponentTransferElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEComponentTransferElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGFEComponentTransferElement, m_in1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGFEComponentTransferElement, m_in));
         descr = GC_make_descriptor(desc,
                                    GC_WORD_LEN(SVGFEComponentTransferElement));
         typeInited = true;
@@ -55,17 +55,17 @@ void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
                                     attributeRemoved);
 
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_in1 == name) {
+    if (ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        in1()->setBaseVal(value);
+        in()->setBaseVal(value);
     }
 }
 
 void SVGFEComponentTransferElement::updateSVGAttributeNeeded(QualifiedName name)
 {
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_in1 == name) {
-        setAttribute(ss->m_in1, in1()->baseVal());
+    if (ss->m_in == name) {
+        setAttribute(ss->m_in, in()->baseVal());
     }
 }
 
@@ -89,14 +89,14 @@ void SVGFEComponentTransferElement::didNodeRemoved(Node* parent, Node* oldChild)
     notifyAttributeOfPaintServerLikeUpdated();
 }
 
-SVGAnimatedString* SVGFEComponentTransferElement::in1()
+SVGAnimatedString* SVGFEComponentTransferElement::in()
 {
-    if (!m_in1.hasValue()) {
-        m_in1 = new SVGAnimatedString(
+    if (!m_in.hasValue()) {
+        m_in = new SVGAnimatedString(
             document(), String::createASCIIString("SourceGraphic"),
             String::emptyString);
     }
-    return m_in1.getValue();
+    return m_in.getValue();
 }
 
 } // namespace Starfish

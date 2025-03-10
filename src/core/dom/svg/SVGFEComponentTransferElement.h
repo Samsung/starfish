@@ -50,10 +50,14 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
-    SVGAnimatedString* in1();
+    SVGAnimatedString* in();
+    SVGAnimatedString* in1()
+    {
+        return in();
+    }
 
 private:
-    Optional<SVGAnimatedString*> m_in1;
+    Optional<SVGAnimatedString*> m_in;
 };
 } // namespace Starfish
 

@@ -961,6 +961,7 @@ public:
     String* concat(String* str);
     String* trim();
     UTF32String toUTF32String();
+    UTF32StringDataNonGCStd toUTF32NonGCString();
     UTF8String toUTF8String();
 
     template <size_t N>

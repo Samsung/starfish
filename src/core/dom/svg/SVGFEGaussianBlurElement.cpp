@@ -38,7 +38,7 @@ void* SVGFEGaussianBlurElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEGaussianBlurElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGFEGaussianBlurElement, m_in1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGFEGaussianBlurElement, m_in));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(SVGFEGaussianBlurElement, m_stdDeviationX));
         GC_set_bit(desc,
@@ -56,14 +56,14 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
                                                    bool attributeCreated,
                                                    bool attributeRemoved)
 {
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
 
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_in1 == name) {
+    if (ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        in1()->setBaseVal(value);
+        in()->setBaseVal(value);
     } else if (ss->m_stdDeviation == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         GCVector<StringView> tokens;
@@ -107,8 +107,8 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
 void SVGFEGaussianBlurElement::updateSVGAttributeNeeded(QualifiedName name)
 {
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_in1 == name) {
-        setAttribute(ss->m_in1, in1()->baseVal());
+    if (ss->m_in == name) {
+        setAttribute(ss->m_in, in1()->baseVal());
     } else if (ss->m_stdDeviation == name) {
         setAttribute(ss->m_stdDeviationX,
                      String::fromFloat(stdDeviationX()->baseVal()));
@@ -129,18 +129,17 @@ void SVGFEGaussianBlurElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
+        cssValues, cssCustomValues);
 }
 
-SVGAnimatedString* SVGFEGaussianBlurElement::in1()
+SVGAnimatedString* SVGFEGaussianBlurElement::in()
 {
-    if (!m_in1.hasValue()) {
-        // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/in
-        m_in1 = new SVGAnimatedString(
-            document(), String::createASCIIString("SourceGraphic"),
-            String::emptyString);
+    if (!m_in.hasValue()) {
+        m_in = new SVGAnimatedString(document(), String::emptyString,
+                                      String::emptyString);
     }
-    return m_in1.getValue();
+    return m_in.getValue();
 }
 
 SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationX()

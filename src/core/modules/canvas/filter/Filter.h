@@ -32,87 +32,92 @@ class Filter : public gc {
 public:
     Filter(SVGElement* owner);
 
+    class FilterSourceBuffer {
+    public:
+        FilterSourceBuffer(uint8_t* src, size_t size,
+                           bool needsAllocateNewBuffer)
+        {
+            m_size = size;
+            if (needsAllocateNewBuffer) {
+                m_externalBuffer.resize(size);
+            } else {
+                m_buffer = src;
+            }
+        }
+
+        uint8_t* data()
+        {
+            if (m_buffer) {
+                return m_buffer.value();
+            }
+            return m_externalBuffer.data();
+        }
+
+        size_t size()
+        {
+            return m_size;
+        }
+
+    private:
+        Optional<uint8_t*> m_buffer;
+        size_t m_size;
+        std::vector<uint8_t> m_externalBuffer;
+    };
+
     struct FilterApplyContext {
-        uint8_t* src;
-        size_t width, stride, height;
-        float viewportScaleX;
-        float viewportScaleY;
-        bool isAlphaImage;
+        uint8_t* const src;
+        const size_t width, stride, height;
+        const float viewportScaleX;
+        const float viewportScaleY;
+        const bool isAlphaImage;
+        std::vector<std::pair<UTF32StringDataNonGCStd,
+                              std::shared_ptr<FilterSourceBuffer>>>
+            sources;
+        std::shared_ptr<FilterSourceBuffer> output;
 
         enum FixedSourcePlace {
             SourceGraphic,
         };
 
-        class FilterSourceBuffer {
-        public:
-            FilterSourceBuffer(uint8_t* src, size_t size,
-                               bool needsAllocateNewBuffer)
-            {
-                m_size = size;
-                if (needsAllocateNewBuffer) {
-                    m_externalBuffer.resize(size);
-                } else {
-                    m_buffer = src;
-                }
-            }
-
-            uint8_t* data()
-            {
-                if (m_buffer) {
-                    return m_buffer.value();
-                }
-                return m_externalBuffer.data();
-            }
-
-            size_t size()
-            {
-                return m_size;
-            }
-
-        private:
-            Optional<uint8_t*> m_buffer;
-            size_t m_size;
-            std::vector<uint8_t> m_externalBuffer;
-        };
-        std::vector<std::pair<std::string, std::shared_ptr<FilterSourceBuffer>>>
-            sources;
-
         FilterApplyContext(size_t w, size_t s, size_t h, uint8_t* srcData,
-                           float scaleX, float scaleY)
+                           float scaleX, float scaleY, bool isAlphaImage)
+            : src(srcData)
+            , width(w)
+            , stride(s)
+            , height(h)
+            , viewportScaleX(scaleX)
+            , viewportScaleY(scaleY)
+            , isAlphaImage(isAlphaImage) 
         {
-            src = srcData;
-            width = w;
-            stride = s;
-            height = h;
-            viewportScaleX = scaleX;
-            viewportScaleY = scaleY;
-            isAlphaImage = false;
-
             // first slot is always SourceGraphic
             sources.push_back(std::make_pair(
-                "SourceGraphic",
+                U"SourceGraphic",
                 std::shared_ptr<FilterSourceBuffer>(
                     new FilterSourceBuffer(src, stride * height, false))));
-            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
+            STARFISH_ASSERT(sources[0].first == U"SourceGraphic");
+
+            output = sources[0].second;
         }
 
         std::shared_ptr<FilterSourceBuffer> sourceGraphic()
         {
-            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
+            STARFISH_ASSERT(sources[0].first == U"SourceGraphic");
             return sources[FixedSourcePlace::SourceGraphic].second;
         }
 
-        void updateSourceGraphic(const std::shared_ptr<FilterSourceBuffer>& s)
-        {
-            STARFISH_ASSERT(sources[0].first == "SourceGraphic");
-            if (s) {
-                STARFISH_ASSERT(s->size() == stride * height);
-            }
-            sources[FixedSourcePlace::SourceGraphic].second = s;
-        }
+        std::shared_ptr<FilterSourceBuffer> findSource(String* s);
+        void registerSource(String* s,
+                            std::shared_ptr<FilterSourceBuffer> source);
     };
 
     void applyFilter(FilterApplyContext& ctx);
+    std::shared_ptr<FilterSourceBuffer> fetchInputSource(
+        FilterApplyContext& ctx, FilterPrimitive* f);
+    std::shared_ptr<FilterSourceBuffer> fetchOutputSource(
+        FilterApplyContext& ctx, FilterPrimitive* f,
+        const std::shared_ptr<FilterSourceBuffer>& s);
+    void registerOutput(FilterApplyContext& ctx, FilterPrimitive* f,
+                        const std::shared_ptr<FilterSourceBuffer>& s);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -153,8 +158,11 @@ private:
     void rebuildFiter();
     Optional<FilterPrimitive*> createFilterPrimitive(
         SVGFilterPrimitiveStandardAttributes* filterPrimitiveNode);
+    bool isFirstFilter(FilterPrimitive* f);
+    bool isLastFilter(FilterPrimitive* f);
 
     bool m_needsUpdate = false;
+    bool m_shouldMaintainSourceBuffer = false;
     float m_filterBiasX = 0;
     float m_filterBiasY = 0;
     float m_filterBiasWidth = 0;

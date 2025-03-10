@@ -27,15 +27,26 @@ class SVGFilterPrimitiveStandardAttributes;
 class FilterPrimitive : public gc {
 public:
     FilterPrimitive(Filter* filter,
-                    SVGFilterPrimitiveStandardAttributes* element);
+                    SVGFilterPrimitiveStandardAttributes* element,
+                    String* input, String* result);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual void apply(size_t x, size_t y, size_t width, size_t height,
-                       Filter::FilterApplyContext& ctx);
+                       Filter::FilterApplyContext& ctx) = 0;
     SVGFilterPrimitiveStandardAttributes* element()
     {
         return m_domElement;
+    }
+
+    String* input() const
+    {
+        return m_input;
+    }
+
+    String* output() const
+    {
+        return m_output;
     }
 
 protected:
@@ -46,6 +57,8 @@ protected:
 
 private:
     Filter* m_filter;
+    String* m_input;
+    String* m_output;
     SVGFilterPrimitiveStandardAttributes* m_domElement;
 };
 } // namespace Starfish
