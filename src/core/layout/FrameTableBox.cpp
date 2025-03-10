@@ -1042,7 +1042,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     for (auto& c : columnsMayNeedToAdjustWidths) {
                         ColSizeStruct& col = *c;
 
-                        if (col.hasPercentageWidth() &&
+                        if (col.hasPercentageWidth() && (sumOfPercentage > 0) &&
                             (col.cellWidth > col.minCellWidth)) {
                             LayoutUnit newCellWidth =
                                 remainingWidthForPercentageWidth.toDouble() *

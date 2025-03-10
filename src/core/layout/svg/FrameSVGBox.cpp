@@ -234,28 +234,29 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     Optional<LayoutRect> maskRect;
     if (maskElement) {
         Frame* maskFrame = maskElement->frame();
-
-        // only invisible mask content can be used by this case
-        bool isDecendentOfInvisibleFrame = false;
-        for (Frame* f = maskFrame->parent();
-             !f->isFrameSVGSVGBox() && !f->isFrameSVGViewportContextBox();
-             f = f->parent()) {
-            if (f->isFrameSVGInvisibleBox()) {
-                isDecendentOfInvisibleFrame = true;
-                break;
+        if (maskFrame) {
+            // only invisible mask content can be used by this case
+            bool isDecendentOfInvisibleFrame = false;
+            for (Frame* f = maskFrame->parent();
+                 !f->isFrameSVGSVGBox() && !f->isFrameSVGViewportContextBox();
+                 f = f->parent()) {
+                if (f->isFrameSVGInvisibleBox()) {
+                    isDecendentOfInvisibleFrame = true;
+                    break;
+                }
             }
-        }
 
-        if (isDecendentOfInvisibleFrame) {
-            maskFrame->asFrameSVGBox()->layout(ctx, matrix);
-            LayoutRect rect;
-            Frame* f = maskFrame->firstChild();
-            while (f) {
-                rect.unite(f->asFrameBox()->frameRect());
-                f = f->next();
+            if (isDecendentOfInvisibleFrame) {
+                maskFrame->asFrameSVGBox()->layout(ctx, matrix);
+                LayoutRect rect;
+                Frame* f = maskFrame->firstChild();
+                while (f) {
+                    rect.unite(f->asFrameBox()->frameRect());
+                    f = f->next();
+                }
+                maskRect = rect;
+                ctx.clippedRects.push_back(rect);
             }
-            maskRect = rect;
-            ctx.clippedRects.push_back(rect);
         }
     }
 

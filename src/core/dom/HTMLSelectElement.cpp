@@ -312,9 +312,9 @@ bool HTMLSelectElement::defaultIndexedSetter(
     }
 
     HTMLOptionElement* oldOption = item(index);
+    STARFISH_ASSERT(oldOption);
     Node* parent = oldOption->parentNode();
-
-    STARFISH_ASSERT(oldOption && parent);
+    STARFISH_ASSERT(parent);
 
     parent->replaceChild(option.value(), oldOption);
     return true;
