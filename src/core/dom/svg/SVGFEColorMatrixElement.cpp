@@ -135,8 +135,8 @@ void SVGFEColorMatrixElement::styleForPresentationAttribute(
 SVGAnimatedString* SVGFEColorMatrixElement::in()
 {
     if (!m_in.hasValue()) {
-        m_in = new SVGAnimatedString(document(), String::emptyString,
-                                      String::emptyString);
+        m_in = new SVGAnimatedString(this, starfish()->staticStrings()->m_in,
+                                     String::emptyString, String::emptyString);
     }
     return m_in.getValue();
 }

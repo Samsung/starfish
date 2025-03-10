@@ -108,7 +108,7 @@ void SVGFEGaussianBlurElement::updateSVGAttributeNeeded(QualifiedName name)
 {
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
-        setAttribute(ss->m_in, in1()->baseVal());
+        setAttribute(ss->m_in, in()->baseVal());
     } else if (ss->m_stdDeviation == name) {
         setAttribute(ss->m_stdDeviationX,
                      String::fromFloat(stdDeviationX()->baseVal()));
@@ -136,8 +136,8 @@ void SVGFEGaussianBlurElement::styleForPresentationAttribute(
 SVGAnimatedString* SVGFEGaussianBlurElement::in()
 {
     if (!m_in.hasValue()) {
-        m_in = new SVGAnimatedString(document(), String::emptyString,
-                                      String::emptyString);
+        m_in = new SVGAnimatedString(this, starfish()->staticStrings()->m_in,
+                                     String::emptyString, String::emptyString);
     }
     return m_in.getValue();
 }

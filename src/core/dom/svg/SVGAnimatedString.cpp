@@ -19,14 +19,16 @@
 
 #include "StarfishConfig.h"
 #include "SVGAnimatedString.h"
-#include "core/dom/Document.h"
+#include "core/dom/svg/SVGElement.h"
 
 namespace Starfish {
 
-SVGAnimatedString::SVGAnimatedString(Document* document, String* baseVal,
-                                     String* animVal)
+SVGAnimatedString::SVGAnimatedString(SVGElement* targetElement,
+                                     const QualifiedName& targetAttribute,
+                                     String* baseVal, String* animVal)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_targetElement(targetElement)
+    , m_targetAttribute(targetAttribute)
     , m_baseVal(baseVal)
     , m_animVal(animVal)
 {
@@ -35,10 +37,11 @@ SVGAnimatedString::SVGAnimatedString(Document* document, String* baseVal,
 void SVGAnimatedString::setBaseVal(String* baseVal)
 {
     m_baseVal = baseVal;
+    m_targetElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 ScriptBindingInstance* SVGAnimatedString::scriptBindingInstance()
 {
-    return m_scriptBindingInstance;
+    return m_targetElement->scriptBindingInstance();
 }
 } // namespace Starfish

@@ -92,9 +92,8 @@ void SVGFEComponentTransferElement::didNodeRemoved(Node* parent, Node* oldChild)
 SVGAnimatedString* SVGFEComponentTransferElement::in()
 {
     if (!m_in.hasValue()) {
-        m_in = new SVGAnimatedString(
-            document(), String::createASCIIString("SourceGraphic"),
-            String::emptyString);
+        m_in = new SVGAnimatedString(this, starfish()->staticStrings()->m_in,
+                                     String::emptyString, String::emptyString);
     }
     return m_in.getValue();
 }
