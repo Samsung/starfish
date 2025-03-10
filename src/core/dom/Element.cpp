@@ -860,8 +860,11 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
 
                     if (damage !=
                         ComputedStyleDamage::ComputedStyleDamageNone) {
-                        computeTransition(pseudoNode, ocs, pseudoNode->frame(),
-                                          ncs, damage, damagedKeys);
+                        if (pseudoNode) {
+                            computeTransition(pseudoNode, ocs,
+                                              pseudoNode->frame(), ncs, damage,
+                                              damagedKeys);
+                        }
 
                         // TODO
                         // implement CSS animtion for pseudo element

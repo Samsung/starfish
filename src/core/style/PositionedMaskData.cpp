@@ -158,6 +158,7 @@ PositionedMaskData::PositionedMaskData()
     , m_maxLayerPositionY(0)
     , m_maxLayerRepeatX(0)
     , m_maxLayerRepeatY(0)
+    , m_maskType(MaskTypeValue::LuminanceMaskTypeValue)
 {
 }
 
