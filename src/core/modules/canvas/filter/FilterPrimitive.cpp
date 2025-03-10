@@ -22,16 +22,13 @@
 namespace Starfish {
 
 FilterPrimitive::FilterPrimitive(Filter* filter,
-                                 SVGFilterPrimitiveStandardAttributes* element)
+                                 SVGFilterPrimitiveStandardAttributes* element,
+                                 String* input, String* result)
     : m_filter(filter)
+    , m_input(input)
+    , m_output(result)
     , m_domElement(element)
 {
-}
-
-void FilterPrimitive::apply(size_t x, size_t y, size_t width, size_t height,
-                            Filter::FilterApplyContext& ctx)
-{
-    STARFISH_ASSERT_NOT_REACHED();
 }
 
 void* FilterPrimitive::operator new(size_t size)
@@ -42,6 +39,8 @@ void* FilterPrimitive::operator new(size_t size)
     if (typeInited == false) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FilterPrimitive)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_input));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_output));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_filter));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_domElement));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FilterPrimitive));
@@ -49,4 +48,5 @@ void* FilterPrimitive::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
+
 } // namespace Starfish

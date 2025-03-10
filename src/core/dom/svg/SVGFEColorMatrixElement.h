@@ -54,12 +54,16 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
-    SVGAnimatedString* in1();
+    SVGAnimatedString* in();
+    SVGAnimatedString* in1()
+    {
+        return in();
+    }
     SVGAnimatedEnumeration* type();
     SVGAnimatedNumberList* values();
 
 private:
-    Optional<SVGAnimatedString*> m_in1;
+    Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedEnumeration*> m_type;
     Optional<SVGAnimatedNumberList*> m_values;
 };

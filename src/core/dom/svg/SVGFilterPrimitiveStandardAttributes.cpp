@@ -44,12 +44,24 @@ void* SVGFilterPrimitiveStandardAttributes::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes,
                                         m_height));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes,
-                                        m_result));
+                                        m_output));
         descr = GC_make_descriptor(
             desc, GC_WORD_LEN(SVGFilterPrimitiveStandardAttributes));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+SVGFilterPrimitiveStandardAttributes::SVGFilterPrimitiveStandardAttributes(
+    Document* document, const QualifiedName& qname)
+    : SVGElement(document, qname)
+{
+    // set fromElementDidAttributeChanged true for avoid calling
+    // `SVGFilterPrimitiveStandardAttributes::didAttributeChanged`
+    width()->baseVal()->setValueAsString(String::createASCIIString("100%"),
+                                         true, false);
+    height()->baseVal()->setValueAsString(String::createASCIIString("100%"),
+                                          true, false);
 }
 
 void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
@@ -58,6 +70,26 @@ void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+
+    if (!old || !old->equals(value)) {
+        StaticStrings* ss = starfish()->staticStrings();
+        if (ss->m_x == name) {
+            notifyAttributeOfPaintServerLikeUpdated();
+            x()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_y == name) {
+            notifyAttributeOfPaintServerLikeUpdated();
+            y()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_width == name) {
+            notifyAttributeOfPaintServerLikeUpdated();
+            width()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_height == name) {
+            notifyAttributeOfPaintServerLikeUpdated();
+            height()->baseVal()->setValueAsString(value, true, false);
+        } else if (ss->m_output == name) {
+            notifyAttributeOfPaintServerLikeUpdated();
+            output()->setBaseVal(value);
+        }
+    }
 }
 
 void SVGFilterPrimitiveStandardAttributes::updateSVGAttributeNeeded(
@@ -73,8 +105,8 @@ void SVGFilterPrimitiveStandardAttributes::updateSVGAttributeNeeded(
         setAttribute(ss->m_width, width()->baseVal()->valueAsString());
     } else if (ss->m_height == name) {
         setAttribute(ss->m_height, height()->baseVal()->valueAsString());
-    } else if (ss->m_result == name) {
-        setAttribute(ss->m_result, result()->baseVal());
+    } else if (ss->m_output == name) {
+        setAttribute(ss->m_output, output()->baseVal());
     }
 }
 
@@ -85,9 +117,13 @@ void SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
     SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
 
-SVGAnimatedString* SVGFilterPrimitiveStandardAttributes::result()
+SVGAnimatedString* SVGFilterPrimitiveStandardAttributes::output()
 {
-    return m_result.getValue();
+    if (!m_output.hasValue()) {
+        m_output = new SVGAnimatedString(document(), String::emptyString,
+                                         String::emptyString);
+    }
+    return m_output.getValue();
 }
 
 Optional<SVGFilterElement*>

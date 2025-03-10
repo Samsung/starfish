@@ -41,6 +41,71 @@ Filter::Filter(SVGElement* owner)
                            ->baseVal();
 }
 
+std::shared_ptr<Filter::FilterSourceBuffer>
+Filter::FilterApplyContext::findSource(String* s)
+{
+    for (auto& pair : sources) {
+        if (s->equals(pair.first.data(), pair.first.length())) {
+            return pair.second;
+        }
+    }
+    return nullptr;
+}
+
+void Filter::FilterApplyContext::registerSource(
+    String* s, std::shared_ptr<FilterSourceBuffer> source)
+{
+    if (s->equals("SourceGraphic")) {
+        return;
+    }
+
+    for (auto& pair : sources) {
+        if (s->equals(pair.first.data(), pair.first.length())) {
+            pair.second = source;
+            return;
+        }
+    }
+    sources.push_back(std::make_pair(s->toUTF32NonGCString(), source));
+}
+
+std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource(
+    FilterApplyContext& ctx, FilterPrimitive* f)
+{
+    if (isFirstFilter(f)) {
+        return ctx.sourceGraphic();
+    }
+    if (f->input()->isEmpty()) {
+        return ctx.output;
+    }
+    auto s = ctx.findSource(f->input());
+    if (!s) {
+        STARFISH_ASSERT(ctx.output);
+        return ctx.output;
+    }
+    return s;
+}
+
+std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchOutputSource(
+    FilterApplyContext& ctx, FilterPrimitive* f,
+    const std::shared_ptr<FilterSourceBuffer>& input)
+{
+    if (m_shouldMaintainSourceBuffer && input->data() == ctx.src) {
+        return std::shared_ptr<Filter::FilterSourceBuffer>(
+            new FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
+    }
+    return input;
+}
+
+void Filter::registerOutput(FilterApplyContext& ctx, FilterPrimitive* f,
+                            const std::shared_ptr<FilterSourceBuffer>& s)
+{
+    ctx.output = s;
+    if (isLastFilter(f) || f->output()->isEmpty()) {
+        return;
+    }
+    ctx.registerSource(f->output(), s);
+}
+
 void Filter::applyFilter(FilterApplyContext& ctx)
 {
     updateIfNeeds();
@@ -49,6 +114,16 @@ void Filter::applyFilter(FilterApplyContext& ctx)
         // specify x, y, width, height and use it
         primitive->apply(0, 0, 0, 0, ctx);
     }
+}
+
+bool Filter::isFirstFilter(FilterPrimitive* f)
+{
+    return f == m_filterPrimitives.front();
+}
+
+bool Filter::isLastFilter(FilterPrimitive* f)
+{
+    return f == m_filterPrimitives.back();
 }
 
 void Filter::setBias(float x, float y, float width, float height)
@@ -69,6 +144,7 @@ void Filter::updateIfNeeds()
 
 void Filter::rebuildFiter()
 {
+    m_shouldMaintainSourceBuffer = false;
     m_filterPrimitives.clear();
     if (m_owner && m_owner->hasChildNodes()) {
         Node* current = m_owner->firstChild();
@@ -78,6 +154,10 @@ void Filter::rebuildFiter()
                     createFilterPrimitive(
                         current->asSVGFilterPrimitiveStandardAttributes());
                 if (filterPrimitive) {
+                    if (m_filterPrimitives.size() &&
+                        filterPrimitive->input()->equals("SourceGraphic")) {
+                        m_shouldMaintainSourceBuffer = true;
+                    }
                     m_filterPrimitives.push_back(filterPrimitive.value());
                 }
             }

@@ -327,7 +327,9 @@ std::pair<float, float> FilterGaussianBlur::computeKernelSize(
 
 FilterGaussianBlur::FilterGaussianBlur(
     Filter* filter, SVGFilterPrimitiveStandardAttributes* element)
-    : FilterPrimitive(filter, element)
+    : FilterPrimitive(filter, element,
+                      element->asSVGFEGaussianBlurElement()->in1()->baseVal(),
+                      element->output()->baseVal())
 {
     STARFISH_ASSERT(filter);
     STARFISH_ASSERT(element->isSVGFEGaussianBlurElement());
@@ -376,20 +378,17 @@ void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
     auto kernelSize = computeKernelSize(stdDeviationX * ctx.viewportScaleX,
                                         stdDeviationY * ctx.viewportScaleY);
 
-    String* sourceNameStr = ele->in1()->baseVal();
-    auto inputSource = ctx.sourceGraphic();
+    auto inputSource = filter()->fetchInputSource(ctx, this);
 
-    std::shared_ptr<Filter::FilterApplyContext::FilterSourceBuffer>
-        outputBuffer(new Filter::FilterApplyContext::FilterSourceBuffer(
-            ctx.src, ctx.stride * ctx.height, true));
+    std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
+        new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
     standardBoxBlur(
         inputSource->data(), outputBuffer->data(), kernelSize.first,
         kernelSize.second, ctx.stride, ctx.width, ctx.height, ctx.isAlphaImage,
         (SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal());
 
-    // update source graphic for next filter
-    ctx.updateSourceGraphic(outputBuffer);
+    filter()->registerOutput(ctx, this, outputBuffer);
 }
 
 } // namespace Starfish

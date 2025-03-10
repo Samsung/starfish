@@ -119,7 +119,10 @@ static void computeTableFromData(std::array<uint8_t, 256>& table,
 
 FilterComponentTransfer::FilterComponentTransfer(
     Filter* filter, SVGFilterPrimitiveStandardAttributes* element)
-    : FilterPrimitive(filter, element)
+    : FilterPrimitive(
+          filter, element,
+          element->asSVGFEComponentTransferElement()->in1()->baseVal(),
+          element->output()->baseVal())
 {
     STARFISH_ASSERT(filter);
     STARFISH_ASSERT(element->isSVGFEComponentTransferElement());
@@ -174,30 +177,34 @@ void FilterComponentTransfer::apply(size_t x, size_t y, size_t width,
     SVGFEComponentTransferElement* ele =
         element()->asSVGFEComponentTransferElement();
     String* sourceNameStr = ele->in1()->baseVal();
-    auto inputSource = ctx.sourceGraphic();
 
-    if (inputSource->size() == 0) {
-        return;
-    }
+    auto inputSource = filter()->fetchInputSource(ctx, this);
+    auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource);
 
-    uint8_t* buffer = inputSource->data();
+    uint8_t* inputBuffer = inputSource->data();
+    uint8_t* outputBuffer = outputSource->data();
     for (size_t bY = 0; bY < ctx.height; bY++) {
-        uint8_t* p = buffer;
+        uint8_t* p = inputBuffer;
+        uint8_t* p2 = outputBuffer;
         for (size_t bX = 0; bX < ctx.width; bX++) {
 #if defined(PORT_PIXEL_ORDER_BGRA)
-            p[0] = m_bTable[p[0]];
-            p[1] = m_gTable[p[1]];
-            p[2] = m_rTable[p[2]];
+            p2[0] = m_bTable[p[0]];
+            p2[1] = m_gTable[p[1]];
+            p2[2] = m_rTable[p[2]];
 #else
-            p[0] = m_rTable[p[0]];
-            p[1] = m_gTable[p[1]];
-            p[2] = m_bTable[p[2]];
+            p2[0] = m_rTable[p[0]];
+            p2[1] = m_gTable[p[1]];
+            p2[2] = m_bTable[p[2]];
 #endif
-            p[3] = m_aTable[p[3]];
+            p2[3] = m_aTable[p[3]];
             p += 4;
+            p2 += 4;
         }
-        buffer += ctx.stride;
+        inputBuffer += ctx.stride;
+        outputBuffer += ctx.stride;
     }
+
+    filter()->registerOutput(ctx, this, outputSource);
 }
 
 } // namespace Starfish

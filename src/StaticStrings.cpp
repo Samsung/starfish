@@ -577,8 +577,11 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "filter"));
     m_dx = QualifiedName(AtomicString::createAtomicString(starfish, "dx"));
     m_dy = QualifiedName(AtomicString::createAtomicString(starfish, "dy"));
+    m_in = QualifiedName(AtomicString::createAtomicString(starfish, "in"));
     m_in1 = QualifiedName(AtomicString::createAtomicString(starfish, "in1"));
     m_in2 = QualifiedName(AtomicString::createAtomicString(starfish, "in2"));
+    m_output =
+        QualifiedName(AtomicString::createAtomicString(starfish, "output"));
     m_mode = QualifiedName(AtomicString::createAtomicString(starfish, "mode"));
     m_orderX =
         QualifiedName(AtomicString::createAtomicString(starfish, "orderX"));

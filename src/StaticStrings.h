@@ -535,8 +535,10 @@ public:
     QualifiedName m_clipPathUnits;
     QualifiedName m_dx;
     QualifiedName m_dy;
+    QualifiedName m_in;
     QualifiedName m_in1;
     QualifiedName m_in2;
+    QualifiedName m_output;
     QualifiedName m_mode;
     QualifiedName m_orderX;
     QualifiedName m_orderY;

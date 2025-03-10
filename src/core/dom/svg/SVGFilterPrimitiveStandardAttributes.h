@@ -33,11 +33,7 @@ class SVGFilterElement;
 class SVGFilterPrimitiveStandardAttributes : public SVGElement {
 public:
     SVGFilterPrimitiveStandardAttributes(Document* document,
-                                         const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
-
+                                         const QualifiedName& qname);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -60,7 +56,11 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
-    SVGAnimatedString* result();
+    SVGAnimatedString* output();
+    SVGAnimatedString* result()
+    {
+        return output();
+    }
 
 protected:
     Optional<SVGFilterElement*> filterElement();
@@ -71,7 +71,7 @@ private:
     Optional<SVGAnimatedLength*> m_y;
     Optional<SVGAnimatedLength*> m_width;
     Optional<SVGAnimatedLength*> m_height;
-    Optional<SVGAnimatedString*> m_result;
+    Optional<SVGAnimatedString*> m_output;
 };
 } // namespace Starfish
 
