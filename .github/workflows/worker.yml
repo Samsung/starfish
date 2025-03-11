@@ -12,8 +12,7 @@ on:
 jobs:
   build_x64_workers:
     # After the firewall registraion is done, a code runner should also be added to test work.
-    # runs-on:  [ code-linux, code-2xlarge ]
-    runs-on:  [ runner-type2 ]
+    runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -64,8 +63,7 @@ jobs:
     needs: build_x64_workers
     timeout-minutes: 60
     # After the firewall registraion is done, a code runner should also be added to test work.
-    # runs-on: [ code-linux ]
-    runs-on: [ runner-type2 ]
+    runs-on:  [ runner-type3 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
