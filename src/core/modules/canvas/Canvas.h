@@ -757,6 +757,68 @@ protected:
     GCVector<CanvasState*> m_stateMemoryPool{};
     bool m_shouldApplyCanvasFillStrokeSource{ false };
 };
+
+ALWAYS_INLINE uint32_t convertPixelAsPremultiplyAlpha(uint32_t* pixel)
+{
+    STARFISH_ASSERT(STARFISH_PIXEL_A_INDEX == 3);
+    uint8_t* u8 = reinterpret_cast<uint8_t*>(pixel);
+    uint8_t a = u8[STARFISH_PIXEL_A_INDEX];
+    return (uint32_t)(((uint32_t)((uint8_t)(u8[0]) * (a + 1)) >> 8) |
+                      ((uint32_t)((uint8_t)(u8[1]) * (a + 1) >> 8) << 8) |
+                      ((uint32_t)((uint8_t)(u8[2]) * (a + 1) >> 8) << 16) |
+                      ((uint32_t)(a) << 24));
+}
+
+inline void convertImageBufferAsPremultipliedAlphaIfNeeds(uint8_t* ptr,
+                                                          size_t width,
+                                                          size_t stride,
+                                                          size_t height)
+{
+#if defined(PORT_CANVAS_NEEDS_PREMULTIPLIED_ALPHA)
+    for (size_t h = 0; h < height; h++) {
+        uint32_t* u32ptr = reinterpret_cast<uint32_t*>(ptr);
+        for (size_t w = 0; w < width; w++) {
+            *u32ptr = convertPixelAsPremultiplyAlpha(u32ptr);
+            u32ptr++;
+        }
+        ptr += stride;
+    }
+#endif
+}
+
+ALWAYS_INLINE uint16_t unpremultipliedComponentByte(uint8_t c, uint8_t a)
+{
+    uint16_t u16Color = c;
+    return (((u16Color << 8) - u16Color) + a - 1) / a;
+}
+
+inline void convertImageBufferAsUnmultipliedAlphaIfNeeds(uint8_t* ptr,
+                                                         size_t width,
+                                                         size_t stride,
+                                                         size_t height)
+{
+#if defined(PORT_CANVAS_NEEDS_PREMULTIPLIED_ALPHA)
+    for (size_t h = 0; h < height; h++) {
+        uint32_t* u32ptr = reinterpret_cast<uint32_t*>(ptr);
+        for (size_t w = 0; w < width; w++) {
+            uint8_t* u8 = reinterpret_cast<uint8_t*>(u32ptr);
+            STARFISH_ASSERT(STARFISH_PIXEL_A_INDEX == 3);
+            uint8_t a = u8[STARFISH_PIXEL_A_INDEX];
+            if (a && a != 255) {
+                *u32ptr = (uint32_t)(
+                    ((uint32_t)unpremultipliedComponentByte(u8[0], a)) |
+                    ((uint32_t)unpremultipliedComponentByte(u8[1], a) << 8) |
+                    ((uint32_t)unpremultipliedComponentByte(u8[2], a) << 16) |
+                    ((uint32_t)(a) << 24));
+            }
+
+            u32ptr++;
+        }
+        ptr += stride;
+    }
+#endif
+}
+
 } // namespace Starfish
 
 #endif

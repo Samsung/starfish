@@ -678,14 +678,15 @@ public:
             cairo_surface_flush(groupTarget);
             cairo_surface_t* mappedSurface =
                 cairo_surface_map_to_image(groupTarget, NULL);
-            fn(static_cast<uint8_t*>(
-                   cairo_image_surface_get_data(mappedSurface)),
-               static_cast<size_t>(
-                   cairo_image_surface_get_width(mappedSurface)),
-               static_cast<size_t>(
-                   cairo_image_surface_get_stride(mappedSurface)),
-               static_cast<size_t>(
-                   cairo_image_surface_get_height(mappedSurface)));
+            uint8_t* ptr = static_cast<uint8_t*>(
+                cairo_image_surface_get_data(mappedSurface));
+            size_t width = static_cast<size_t>(
+                cairo_image_surface_get_width(mappedSurface));
+            size_t stride = static_cast<size_t>(
+                cairo_image_surface_get_stride(mappedSurface));
+            size_t height = static_cast<size_t>(
+                cairo_image_surface_get_height(mappedSurface));
+            fn(ptr, width, stride, height);
             cairo_surface_unmap_image(groupTarget, mappedSurface);
         }
 

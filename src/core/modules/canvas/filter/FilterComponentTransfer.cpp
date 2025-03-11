@@ -31,6 +31,7 @@
 #include "core/dom/svg/SVGAnimatedNumber.h"
 #include "core/dom/svg/SVGAnimatedNumberList.h"
 #include "core/dom/svg/SVGAnimatedEnumeration.h"
+#include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/filter/FilterComponentTransfer.h"
 
 namespace Starfish {
@@ -180,29 +181,29 @@ void FilterComponentTransfer::apply(size_t x, size_t y, size_t width,
 
     auto inputSource = filter()->fetchInputSource(ctx, this);
     auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource);
-
     uint8_t* inputBuffer = inputSource->data();
     uint8_t* outputBuffer = outputSource->data();
+
+    convertImageBufferAsPremultipliedAlphaIfNeeds(inputBuffer, ctx.width,
+                                                  ctx.stride, ctx.height);
+
     for (size_t bY = 0; bY < ctx.height; bY++) {
         uint8_t* p = inputBuffer;
         uint8_t* p2 = outputBuffer;
         for (size_t bX = 0; bX < ctx.width; bX++) {
-#if defined(PORT_PIXEL_ORDER_BGRA)
-            p2[0] = m_bTable[p[0]];
-            p2[1] = m_gTable[p[1]];
-            p2[2] = m_rTable[p[2]];
-#else
-            p2[0] = m_rTable[p[0]];
-            p2[1] = m_gTable[p[1]];
-            p2[2] = m_bTable[p[2]];
-#endif
-            p2[3] = m_aTable[p[3]];
+            p2[STARFISH_PIXEL_R_INDEX] = m_rTable[p[STARFISH_PIXEL_R_INDEX]];
+            p2[STARFISH_PIXEL_G_INDEX] = m_gTable[p[STARFISH_PIXEL_G_INDEX]];
+            p2[STARFISH_PIXEL_B_INDEX] = m_bTable[p[STARFISH_PIXEL_B_INDEX]];
+            p2[STARFISH_PIXEL_A_INDEX] = m_aTable[p[STARFISH_PIXEL_A_INDEX]];
             p += 4;
             p2 += 4;
         }
         inputBuffer += ctx.stride;
         outputBuffer += ctx.stride;
     }
+
+    convertImageBufferAsPremultipliedAlphaIfNeeds(
+        outputSource->data(), ctx.width, ctx.stride, ctx.height);
 
     filter()->registerOutput(ctx, this, outputSource);
 }

@@ -203,34 +203,16 @@ static ImageDecoder::DecodeResult decodePNG(
 
         png_read_image(png, rowPointers);
         png_read_end(png, nullptr);
-#ifdef NEEDS_PREMULTIPLIED_ALPHA
-#define ARGB_TO_PREMULTIPLY_ALPHA(sr, sg, sb, sa)                              \
-    (unsigned)(((unsigned)((unsigned char)(sr) * ((unsigned char)(sa) + 1)) >> \
-                8) |                                                           \
-               ((unsigned)((unsigned char)(sg) * ((unsigned char)(sa) + 1) >>  \
-                           8)                                                  \
-                << 8) |                                                        \
-               ((unsigned)((unsigned char)(sb) * ((unsigned char)(sa) + 1) >>  \
-                           8)                                                  \
-                << 16) |                                                       \
-               ((unsigned)(unsigned char)(sa) << 24))
-
+#if defined(PORT_CANVAS_NEEDS_PREMULTIPLIED_ALPHA)
         uint8_t* data = (uint8_t*)result.m_buffer;
         for (png_uint_32 y = 0; y < result.m_height; ++y) {
             for (png_uint_32 x = 0; x < rowbytes; x += 4) {
                 png_uint_32 idx = y * rowbytes + x;
                 uint32_t* tmp = (uint32_t*)(&(data[idx]));
-#ifdef PORT_PIXEL_ORDER_RGBA
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx + 2], data[idx + 1],
-                                                 data[idx], data[idx + 3]);
-#else
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx], data[idx + 1],
-                                                 data[idx + 2], data[idx + 3]);
-#endif
+                *tmp = convertPixelAsPremultiplyAlpha(tmp);
             }
         }
 
-#undef ARGB_TO_PREMULTIPLY_ALPHA
 #endif
         free(rowPointers);
     }

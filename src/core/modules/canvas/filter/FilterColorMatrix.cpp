@@ -29,6 +29,7 @@
 #include <math.h>
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGAnimatedNumberList.h"
+#include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterColorMatrix.h"
 
@@ -171,6 +172,10 @@ void FilterColorMatrix::apply(size_t x, size_t y, size_t width, size_t height,
     SVGFEColorMatrixElement* ele = element()->asSVGFEColorMatrixElement();
     String* sourceNameStr = ele->in1()->baseVal();
     auto inputSource = filter()->fetchInputSource(ctx, this);
+
+    convertImageBufferAsUnmultipliedAlphaIfNeeds(inputSource->data(), ctx.width,
+                                                 ctx.stride, ctx.height);
+
     auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource);
 
     SVGNumberList* values = ele->values()->baseVal();
@@ -214,6 +219,9 @@ void FilterColorMatrix::apply(size_t x, size_t y, size_t width, size_t height,
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
+
+    convertImageBufferAsPremultipliedAlphaIfNeeds(
+        outputSource->data(), ctx.width, ctx.stride, ctx.height);
 
     filter()->registerOutput(ctx, this, outputSource);
 }
