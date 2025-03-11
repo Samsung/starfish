@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGAnimateElement.h"
+#include "core/dom/svg/SVGAnimateTransformElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGRectElement.h"
 #include "core/dom/svg/SVGPathElement.h"
@@ -115,6 +116,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGSymbolElement(document, qname);
     } else if (str->m_svganimateTagName == localName) {
         return new SVGAnimateElement(document, qname);
+    } else if (str->m_svganimateTransformTagName == localName) {
+        return new SVGAnimateTransformElement(document, qname);
     } else if (str->m_svgfilterTagName == localName) {
         return new SVGFilterElement(document, qname);
     } else if (str->m_svgfegaussianblurTagName == localName ||
