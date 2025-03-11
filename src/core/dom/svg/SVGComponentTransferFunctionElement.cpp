@@ -143,7 +143,8 @@ SVGAnimatedEnumeration* SVGComponentTransferFunctionElement::type()
         m_type = new SVGAnimatedEnumeration(
             this, staticStrings()->m_type,
             ComponentTransferType::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY,
-            ComponentTransferType::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
+            ComponentTransferType::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY,
+            ComponentTransferType::SVG_FECOMPONENTTRANSFER_TYPE_GAMMA);
     }
     return m_type.value();
 }

@@ -33,7 +33,7 @@ public:
     SVGAnimatedEnumeration(SVGElement* sourceElement,
                            QualifiedName targetAttribute,
                            unsigned short baseVal, unsigned short animVal,
-                           unsigned short maxEnumValue = 2);
+                           unsigned short maxEnumValue);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedEnumeration)
 

@@ -28,13 +28,13 @@ SVGMarkerElement::SVGMarkerElement(Document* document,
 {
     m_markerUnits = new SVGAnimatedEnumeration(
         this, staticStrings()->m_markerUnits, SVG_MARKERUNITS_STROKEWIDTH,
-        SVG_MARKERUNITS_STROKEWIDTH);
+        SVG_MARKERUNITS_STROKEWIDTH, SVG_MARKERUNITS_STROKEWIDTH);
 
     SVGAngle* baseVal = new SVGAngle(this, staticStrings()->m_orient);
     m_orientAngle = new SVGAnimatedAngle(document, baseVal, nullptr);
-    m_orientType = new SVGAnimatedEnumeration(this, staticStrings()->m_orient,
-                                              SVG_MARKER_ORIENT_ANGLE,
-                                              SVG_MARKER_ORIENT_ANGLE);
+    m_orientType = new SVGAnimatedEnumeration(
+        this, staticStrings()->m_orient, SVG_MARKER_ORIENT_ANGLE,
+        SVG_MARKER_ORIENT_ANGLE, SVG_MARKER_ORIENT_ANGLE);
 }
 
 void SVGMarkerElement::didAttributeChanged(QualifiedName name,

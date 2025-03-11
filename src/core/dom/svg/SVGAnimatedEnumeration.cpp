@@ -22,14 +22,18 @@
 #include "core/dom/svg/SVGAnimatedEnumeration.h"
 #include "core/dom/svg/SVGMarkerElement.h"
 #include "core/dom/svg/SVGGradientElement.h"
+#include "core/dom/svg/SVGComponentTransferFunctionElement.h"
+#include "core/dom/svg/SVGFEColorMatrixElement.h"
+#include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
 
-SVGAnimatedEnumeration::SVGAnimatedEnumeration(
-    SVGElement* sourceElement, QualifiedName targetAttribute,
-    unsigned short baseVal, unsigned short animVal,
-    unsigned short maxEnumValue /* = 2*/)
+SVGAnimatedEnumeration::SVGAnimatedEnumeration(SVGElement* sourceElement,
+                                               QualifiedName targetAttribute,
+                                               unsigned short baseVal,
+                                               unsigned short animVal,
+                                               unsigned short maxEnumValue)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
@@ -91,23 +95,45 @@ void SVGAnimatedEnumeration::updateAttribute()
 {
     m_updated = true;
 
-    if (m_targetAttribute.localName()->equals("orient")) {
+    if (m_targetAttribute ==
+            m_sourceElement->starfish()->staticStrings()->m_clipPathUnits ||
+        m_targetAttribute ==
+            m_sourceElement->starfish()->staticStrings()->m_filterUnits ||
+        m_targetAttribute ==
+            m_sourceElement->starfish()->staticStrings()->m_primitiveUnits) {
+        if (m_baseVal ==
+            SVGUnitTypes::UnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("userSpaceOnUse"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 2);
+            m_sourceElement->setAttribute(
+                m_targetAttribute, String::fromUTF8("objectBoundingBox"));
+        }
+    } else if (m_targetAttribute ==
+               m_sourceElement->starfish()->staticStrings()->m_orient) {
         if (m_baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("0"));
         } else if (m_baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_AUTO) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("auto"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
         }
-    } else if (m_targetAttribute.localName()->equals("markerUnits")) {
+    } else if (m_targetAttribute ==
+               m_sourceElement->starfish()->staticStrings()->m_markerUnits) {
         if (m_baseVal == SVGMarkerElement::SVG_MARKERUNITS_USERSPACEONUSE) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("userSpaceOnUse"));
         } else if (m_baseVal == SVGMarkerElement::SVG_MARKERUNITS_STROKEWIDTH) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("strokeWidth"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
         }
-    } else if (m_targetAttribute.localName()->equals("spreadMethod")) {
+    } else if (m_targetAttribute ==
+               m_sourceElement->starfish()->staticStrings()->m_spreadMethod) {
         if (m_baseVal == SVGGradientElement::SVG_SPREADMETHOD_PAD) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("pad"));
@@ -117,19 +143,85 @@ void SVGAnimatedEnumeration::updateAttribute()
         } else if (m_baseVal == SVGGradientElement::SVG_SPREADMETHOD_REPEAT) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("repeat"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_targetAttribute ==
+               m_sourceElement->starfish()->staticStrings()->m_edgeMode) {
+        if (m_baseVal ==
+            SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_DUPLICATE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("duplicate"));
+        } else if (m_baseVal ==
+                   SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_WRAP) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("wrap"));
+        } else if (m_baseVal ==
+                   SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("none"));
+        } else if (m_baseVal ==
+                   SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_MIRROR) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("mirror"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGComponentTransferFunctionElement() &&
+               m_targetAttribute ==
+                   m_sourceElement->starfish()->staticStrings()->m_type) {
+        if (m_baseVal ==
+            SVGComponentTransferFunctionElement::ComponentTransferType::
+                SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("identity"));
+        } else if (m_baseVal ==
+                   SVGComponentTransferFunctionElement::ComponentTransferType::
+                       SVG_FECOMPONENTTRANSFER_TYPE_TABLE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("table"));
+        } else if (m_baseVal ==
+                   SVGComponentTransferFunctionElement::ComponentTransferType::
+                       SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("discrete"));
+        } else if (m_baseVal ==
+                   SVGComponentTransferFunctionElement::ComponentTransferType::
+                       SVG_FECOMPONENTTRANSFER_TYPE_LINEAR) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("linear"));
+        } else if (m_baseVal ==
+                   SVGComponentTransferFunctionElement::ComponentTransferType::
+                       SVG_FECOMPONENTTRANSFER_TYPE_GAMMA) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("gamma"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGFEColorMatrixElement() &&
+               m_targetAttribute ==
+                   m_sourceElement->starfish()->staticStrings()->m_type) {
+        if (m_baseVal == SVGFEColorMatrixElement::MatrixTypes::
+                             SVG_FECOLORMATRIX_TYPE_MATRIX) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("matrix"));
+        } else if (m_baseVal == SVGFEColorMatrixElement::MatrixTypes::
+                                    SVG_FECOLORMATRIX_TYPE_SATURATE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("saturate"));
+        } else if (m_baseVal == SVGFEColorMatrixElement::MatrixTypes::
+                                    SVG_FECOLORMATRIX_TYPE_HUEROTATE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("hueRotate"));
+        } else if (m_baseVal == SVGFEColorMatrixElement::MatrixTypes::
+                                    SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("luminanceToAlpha"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
         }
     } else {
-        if (m_targetAttribute.localName()->equals(String::emptyString) ==
-            false) {
-            if (m_baseVal ==
-                SVGUnitTypes::UnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-                m_sourceElement->setAttribute(
-                    m_targetAttribute, String::fromUTF8("userSpaceOnUse"));
-            } else {
-                m_sourceElement->setAttribute(
-                    m_targetAttribute, String::fromUTF8("objectBoundingBox"));
-            }
-        }
+        STARFISH_ASSERT_NOT_REACHED();
     }
 }
 

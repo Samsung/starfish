@@ -150,7 +150,8 @@ SVGAnimatedEnumeration* SVGFilterElement::filterUnits()
 {
     if (!m_filterUnits.hasValue()) {
         m_filterUnits = new SVGAnimatedEnumeration(
-            this, staticStrings()->m_gradientUnits,
+            this, staticStrings()->m_filterUnits,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     }
@@ -162,7 +163,8 @@ SVGAnimatedEnumeration* SVGFilterElement::primitiveUnits()
         m_primitiveUnits = new SVGAnimatedEnumeration(
             this, staticStrings()->m_gradientUnits,
             SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
-            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     }
     return m_primitiveUnits.getValue();
 }
