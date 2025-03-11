@@ -33,7 +33,7 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedString)
 
-    void setBaseVal(String* baseVal);
+    void setBaseVal(String* baseVal, bool fromSetAttribute = false);
     String* baseVal() const
     {
         return m_baseVal;

@@ -63,7 +63,7 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        in()->setBaseVal(value);
+        in()->setBaseVal(value, true);
     } else if (ss->m_stdDeviation == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         GCVector<StringView> tokens;
@@ -163,7 +163,7 @@ SVGAnimatedEnumeration* SVGFEGaussianBlurElement::edgeMode()
     if (!m_edgeMode.hasValue()) {
         m_edgeMode = new SVGAnimatedEnumeration(
             this, staticStrings()->m_edgeMode, EdgeMode::SVG_EDGEMODE_NONE,
-            EdgeMode::SVG_EDGEMODE_NONE);
+            EdgeMode::SVG_EDGEMODE_NONE, EdgeMode::SVG_EDGEMODE_MIRROR);
     }
     return m_edgeMode.getValue();
 }

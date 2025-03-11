@@ -60,7 +60,7 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        in()->setBaseVal(value);
+        in()->setBaseVal(value, true);
     } else if (ss->m_type == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         if (type()->isUpdated() == false) {
@@ -147,7 +147,8 @@ SVGAnimatedEnumeration* SVGFEColorMatrixElement::type()
         m_type = new SVGAnimatedEnumeration(
             this, staticStrings()->m_type,
             MatrixTypes::SVG_FECOLORMATRIX_TYPE_MATRIX,
-            MatrixTypes::SVG_FECOLORMATRIX_TYPE_MATRIX);
+            MatrixTypes::SVG_FECOLORMATRIX_TYPE_MATRIX,
+            MatrixTypes::SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA);
     }
     return m_type.getValue();
 }

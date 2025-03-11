@@ -87,7 +87,7 @@ public:
             , height(h)
             , viewportScaleX(scaleX)
             , viewportScaleY(scaleY)
-            , isAlphaImage(isAlphaImage) 
+            , isAlphaImage(isAlphaImage)
         {
             // first slot is always SourceGraphic
             sources.push_back(std::make_pair(

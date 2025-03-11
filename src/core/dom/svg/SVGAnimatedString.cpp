@@ -34,10 +34,12 @@ SVGAnimatedString::SVGAnimatedString(SVGElement* targetElement,
 {
 }
 
-void SVGAnimatedString::setBaseVal(String* baseVal)
+void SVGAnimatedString::setBaseVal(String* baseVal, bool fromSetAttribute)
 {
     m_baseVal = baseVal;
-    m_targetElement->updateSVGAttributeNeeded(m_targetAttribute);
+    if (!fromSetAttribute) {
+        m_targetElement->updateSVGAttributeNeeded(m_targetAttribute);
+    }
 }
 
 ScriptBindingInstance* SVGAnimatedString::scriptBindingInstance()

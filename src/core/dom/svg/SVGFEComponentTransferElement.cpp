@@ -57,7 +57,7 @@ void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        in()->setBaseVal(value);
+        in()->setBaseVal(value, true);
     }
 }
 

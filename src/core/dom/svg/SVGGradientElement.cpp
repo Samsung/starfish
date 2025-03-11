@@ -132,6 +132,7 @@ SVGAnimatedEnumeration* SVGGradientElement::gradientUnits()
         m_gradientUnits = new SVGAnimatedEnumeration(
             this, staticStrings()->m_gradientUnits,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     }
     return m_gradientUnits.value();
@@ -156,7 +157,7 @@ SVGAnimatedEnumeration* SVGGradientElement::spreadMethod()
     if (!m_spreadMethod.hasValue()) {
         m_spreadMethod = new SVGAnimatedEnumeration(
             this, staticStrings()->m_spreadMethod, SVG_SPREADMETHOD_PAD,
-            SVG_SPREADMETHOD_PAD, 3);
+            SVG_SPREADMETHOD_PAD, SVG_SPREADMETHOD_REPEAT);
     }
     return m_spreadMethod.value();
 }

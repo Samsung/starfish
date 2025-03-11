@@ -87,7 +87,7 @@ void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
             height()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_output == name) {
             notifyAttributeOfPaintServerLikeUpdated();
-            output()->setBaseVal(value);
+            output()->setBaseVal(value, true);
         }
     }
 }

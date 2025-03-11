@@ -49,6 +49,7 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
     m_clipPathUnits = new SVGAnimatedEnumeration(
         this, QualifiedName(staticStrings()->m_clipPathUnits),
         SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
+        SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
         SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
 }
 
