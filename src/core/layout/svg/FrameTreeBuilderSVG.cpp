@@ -186,6 +186,8 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
             box->appendChild(ft);
         } else if (svgElement->isSVGAnimateElement()) {
             newFrame = new FrameSVGInvisibleBox(svgElement);
+        } else if (svgElement->isSVGAnimateTransformElement()) {
+            newFrame = new FrameSVGInvisibleBox(svgElement);
         }
     }
 

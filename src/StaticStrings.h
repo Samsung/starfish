@@ -162,6 +162,7 @@ namespace Starfish {
 
 #define STARFISH_ENUM_SVG_TAG_NAMES(F) \
     F(animate)                         \
+    F(animateTransform)                \
     F(svg)                             \
     F(switch)                          \
     F(rect)                            \
