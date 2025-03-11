@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_latest_commit:
-    runs-on: [ runner-type2 ]
+    runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
