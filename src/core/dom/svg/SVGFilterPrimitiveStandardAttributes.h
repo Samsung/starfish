@@ -63,6 +63,21 @@ public:
     }
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes, m_x));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes, m_y));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes,
+                                        m_width));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes,
+                                        m_height));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGFilterPrimitiveStandardAttributes,
+                                        m_output));
+    }
+
     Optional<SVGFilterElement*> filterElement();
     void notifyAttributeOfPaintServerLikeUpdated();
 

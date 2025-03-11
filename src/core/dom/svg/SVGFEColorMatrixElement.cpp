@@ -38,7 +38,7 @@ void* SVGFEColorMatrixElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFEColorMatrixElement)] = { 0 };
-        SVGElement::fillGCDescriptor(desc);
+        SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFEColorMatrixElement, m_in));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFEColorMatrixElement, m_type));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFEColorMatrixElement, m_values));
