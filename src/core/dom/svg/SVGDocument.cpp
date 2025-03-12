@@ -53,6 +53,7 @@
 #include "core/dom/svg/SVGFEMergeElement.h"
 #include "core/dom/svg/SVGFEMergeNodeElement.h"
 #include "core/dom/svg/SVGComponentTransferFunctionElement.h"
+#include "core/dom/svg/SVGFECompositeElement.h"
 
 namespace Starfish {
 
@@ -169,6 +170,10 @@ Element* SVGDocument::createSVGElement(Document* document,
                str->m_svgfemergenodeTagName == localName) {
         return new SVGFEMergeNodeElement(document,
                                          str->m_svgfeMergeNodeTagName);
+    } else if (str->m_svgfecompositeTagName == localName ||
+               str->m_svgfeCompositeTagName == localName) {
+        return new SVGFECompositeElement(document,
+                                         str->m_svgfeCompositeTagName);
     } else {
         return new SVGElement(document, qname);
     }

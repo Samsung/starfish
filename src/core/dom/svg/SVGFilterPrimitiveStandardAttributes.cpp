@@ -85,7 +85,7 @@ void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
         } else if (ss->m_height == name) {
             notifyAttributeOfPaintServerLikeUpdated();
             height()->baseVal()->setValueAsString(value, true, false);
-        } else if (ss->m_output == name) {
+        } else if (ss->m_output == name || ss->m_result == name) {
             notifyAttributeOfPaintServerLikeUpdated();
             output()->setBaseVal(value, true);
         }
@@ -105,7 +105,7 @@ void SVGFilterPrimitiveStandardAttributes::updateSVGAttributeNeeded(
         setAttribute(ss->m_width, width()->baseVal()->valueAsString());
     } else if (ss->m_height == name) {
         setAttribute(ss->m_height, height()->baseVal()->valueAsString());
-    } else if (ss->m_output == name) {
+    } else if (ss->m_output == name || ss->m_result == name) {
         setAttribute(ss->m_output, output()->baseVal());
     }
 }

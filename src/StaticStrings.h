@@ -199,6 +199,7 @@ namespace Starfish {
     F(feComponentTransfer)             \
     F(fecomponenttransfer)             \
     F(feComposite)                     \
+    F(fecomposite)                     \
     F(feConvolveMatrix)                \
     F(feDiffuseLighting)               \
     F(feDisplacementMap)               \
