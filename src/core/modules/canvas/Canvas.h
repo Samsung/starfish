@@ -490,6 +490,12 @@ public:
                                 LayoutUnit stringWidth, const StringView& text,
                                 bool shouldSkipUnresolvedWebFont = true) = 0;
 
+    virtual void drawImage(
+        uint8_t* image, size_t imageWidth, size_t imageStride,
+        size_t imageHeight, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+
     void drawImage(NativeImageData* data, const Unit::Rect& dst,
                    ImageRenderingValue imageRenderingMode =
                        ImageRenderingValue::ImageRenderingAutoValue)

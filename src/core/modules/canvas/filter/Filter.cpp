@@ -22,6 +22,7 @@
 #include "core/modules/canvas/filter/FilterGaussianBlur.h"
 #include "core/modules/canvas/filter/FilterColorMatrix.h"
 #include "core/modules/canvas/filter/FilterComponentTransfer.h"
+#include "core/modules/canvas/filter/FilterMerge.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -154,10 +155,9 @@ void Filter::rebuildFiter()
                     createFilterPrimitive(
                         current->asSVGFilterPrimitiveStandardAttributes());
                 if (filterPrimitive) {
-                    if (m_filterPrimitives.size() &&
-                        filterPrimitive->input()->equals("SourceGraphic")) {
-                        m_shouldMaintainSourceBuffer = true;
-                    }
+                    m_shouldMaintainSourceBuffer |=
+                        filterPrimitive->shouldMaintainSourceBuffer(
+                            !m_filterPrimitives.size());
                     m_filterPrimitives.push_back(filterPrimitive.value());
                 }
             }
@@ -176,6 +176,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterColorMatrix(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEComponentTransferElement()) {
         primitive = new FilterComponentTransfer(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEMergeElement()) {
+        primitive = new FilterMerge(this, filterPrimitiveNode);
     }
     return primitive;
 }

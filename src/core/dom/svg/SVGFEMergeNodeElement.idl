@@ -1,0 +1,6 @@
+// https://drafts.fxtf.org/filter-effects/#ref-for-svgfemergeelement
+
+[Exposed=Window]
+interface SVGFEMergeNodeElement : SVGElement {
+  readonly attribute SVGAnimatedString in1;
+};

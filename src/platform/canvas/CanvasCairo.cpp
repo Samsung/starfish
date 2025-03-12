@@ -678,7 +678,7 @@ public:
             cairo_surface_flush(groupTarget);
             cairo_surface_t* mappedSurface =
                 cairo_surface_map_to_image(groupTarget, NULL);
-            uint8_t* ptr = static_cast<uint8_t*>(
+            Optional<uint8_t*> ptr = static_cast<uint8_t*>(
                 cairo_image_surface_get_data(mappedSurface));
             size_t width = static_cast<size_t>(
                 cairo_image_surface_get_width(mappedSurface));
@@ -686,7 +686,10 @@ public:
                 cairo_image_surface_get_stride(mappedSurface));
             size_t height = static_cast<size_t>(
                 cairo_image_surface_get_height(mappedSurface));
-            fn(ptr, width, stride, height);
+            // the ptr can be null when width or height are zero
+            if (ptr) {
+                fn(ptr.value(), width, stride, height);
+            }
             cairo_surface_unmap_image(groupTarget, mappedSurface);
         }
 
@@ -1327,6 +1330,21 @@ public:
             // original only
             cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_GAUSSIAN);
         }
+    }
+
+    virtual void drawImage(uint8_t* image, size_t imageWidth,
+                           size_t imageStride, size_t imageHeight,
+                           const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode) override
+    {
+        cairo_surface_t* imageSurface = cairo_image_surface_create_for_data(
+            (unsigned char*)image, CAIRO_FORMAT, imageWidth, imageHeight,
+            imageStride);
+
+        drawImageCairo(imageSurface, dst, imageWidth, imageHeight,
+                       imageRenderingMode);
+
+        cairo_surface_destroy(imageSurface);
     }
 
     void drawImageCairo(cairo_surface_t* localSurface, const Unit::Rect& dst,

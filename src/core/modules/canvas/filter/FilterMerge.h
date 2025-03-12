@@ -17,55 +17,26 @@
  *  USA
  */
 
-#ifndef __StarfishFilterPrimitive__
-#define __StarfishFilterPrimitive__
+#ifndef __StarfishFilterMerge__
+#define __StarfishFilterMerge__
 
-#include "core/modules/canvas/filter/Filter.h"
+#include "core/modules/canvas/filter/FilterPrimitive.h"
 
 namespace Starfish {
-class SVGFilterPrimitiveStandardAttributes;
-class FilterPrimitive : public gc {
+
+class FilterMerge : public FilterPrimitive {
 public:
-    FilterPrimitive(Filter* filter,
-                    SVGFilterPrimitiveStandardAttributes* element,
-                    String* input, String* result);
+    FilterMerge(Filter* filter, SVGFilterPrimitiveStandardAttributes* element);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
     virtual void apply(size_t x, size_t y, size_t width, size_t height,
-                       Filter::FilterApplyContext& ctx) = 0;
+                       Filter::FilterApplyContext& ctx) override;
 
-    virtual bool shouldMaintainSourceBuffer(bool isFirstFilter)
-    {
-        return !isFirstFilter && m_input->equals("SourceGraphic");
-    }
-
-    SVGFilterPrimitiveStandardAttributes* element()
-    {
-        return m_domElement;
-    }
-
-    String* input() const
-    {
-        return m_input;
-    }
-
-    String* output() const
-    {
-        return m_output;
-    }
-
-protected:
-    Filter* filter()
-    {
-        return m_filter;
-    }
+    virtual bool shouldMaintainSourceBuffer(bool isFirstFilter) override;
 
 private:
-    Filter* m_filter;
-    String* m_input;
-    String* m_output;
-    SVGFilterPrimitiveStandardAttributes* m_domElement;
+    GCVector<String*> m_inputs;
 };
 } // namespace Starfish
 #endif

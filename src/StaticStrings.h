@@ -208,7 +208,9 @@ namespace Starfish {
     F(fegaussianblur)                  \
     F(feImage)                         \
     F(feMerge)                         \
+    F(femerge)                         \
     F(feMergeNode)                     \
+    F(femergenode)                     \
     F(feMorphology)                    \
     F(feOffset)                        \
     F(feSpecularLighting)              \
