@@ -57,6 +57,19 @@ namespace Starfish {
 Element* SVGDocument::createSVGElement(Document* document,
                                        const QualifiedName& qname)
 {
+    // FIXME: qname is always in lowercase when passed through HTMLTokenizer
+    // during document build.
+    // However, if qname is passed directly through the js interface, it must be
+    // strict on case sensitivity.
+
+    // For example, with the <animateTransform> tag
+    /* clang-format off
+        const animateTransform1 = svgElement.createElementNS('http://www.w3.org/2000/svg', 'animatetransform')
+        console.log(animateTransform1.__proto__); // print SVGElement
+        const animateTransform2 = svgElement.createElementNS('http://www.w3.org/2000/svg', 'animateTransform')
+        console.log(animateTransform2.__proto__); // print SVGAnimateTransformElement
+    clang-format on */
+
     StaticStrings* str = document->starfish()->staticStrings();
     AtomicString localName = qname.localNameAtomic();
 
@@ -90,7 +103,6 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGDefsElement(document, qname);
     } else if (str->m_svglinearGradientTagName == localName ||
                str->m_svglineargradientTagName == localName) {
-        // FIXME: SVG tagnames should be case-sensitive
         return new SVGLinearGradientElement(document,
                                             str->m_svglinearGradientTagName);
     } else if (str->m_svgradialGradientTagName == localName ||
@@ -116,7 +128,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGSymbolElement(document, qname);
     } else if (str->m_svganimateTagName == localName) {
         return new SVGAnimateElement(document, qname);
-    } else if (str->m_svganimateTransformTagName == localName) {
+    } else if (str->m_svganimateTransformTagName == localName ||
+               str->m_svganimatetransformTagName == localName) {
         return new SVGAnimateTransformElement(document, qname);
     } else if (str->m_svgfilterTagName == localName) {
         return new SVGFilterElement(document, qname);
