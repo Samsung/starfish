@@ -30,15 +30,6 @@
 
 namespace Starfish {
 
-static bool parseLengthValue(String* lengthValue, uint8_t option,
-                             CSSStyleValuePair& cssStyleValuePair)
-{
-    auto str = lengthValue->toUTF8NonGCString();
-    CSSTokenVector tokens;
-    CSSStyleDeclaration::tokenizeCSSValue(tokens, str.c_str(), str.length());
-    return cssStyleValuePair.updateValueLength(tokens, option);
-}
-
 AnimationFillModeValue svgAnimationFillToAnimationFillModeValue(
     SVGAnimationFill fill)
 {
