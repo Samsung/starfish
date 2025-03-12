@@ -23,6 +23,7 @@
 #include "core/modules/canvas/filter/FilterColorMatrix.h"
 #include "core/modules/canvas/filter/FilterComponentTransfer.h"
 #include "core/modules/canvas/filter/FilterMerge.h"
+#include "core/modules/canvas/filter/FilterComposite.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -86,11 +87,30 @@ std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource(
     return s;
 }
 
+std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource2(
+    FilterApplyContext& ctx, FilterPrimitive* f)
+{
+    // TODO??
+    if (isFirstFilter(f)) {
+        return ctx.sourceGraphic();
+    }
+    if (f->input2()->isEmpty()) {
+        return ctx.output;
+    }
+    auto s = ctx.findSource(f->input2());
+    if (!s) {
+        STARFISH_ASSERT(ctx.output);
+        return ctx.output;
+    }
+    return s;
+}
+
 std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchOutputSource(
     FilterApplyContext& ctx, FilterPrimitive* f,
-    const std::shared_ptr<FilterSourceBuffer>& input)
+    const std::shared_ptr<FilterSourceBuffer>& input, bool forceAllocate)
 {
-    if (m_shouldMaintainSourceBuffer && input->data() == ctx.src) {
+    if ((m_shouldMaintainSourceBuffer && input->data() == ctx.src) ||
+        forceAllocate) {
         return std::shared_ptr<Filter::FilterSourceBuffer>(
             new FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
     }
@@ -178,6 +198,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterComponentTransfer(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEMergeElement()) {
         primitive = new FilterMerge(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFECompositeElement()) {
+        primitive = new FilterComposite(this, filterPrimitiveNode);
     }
     return primitive;
 }

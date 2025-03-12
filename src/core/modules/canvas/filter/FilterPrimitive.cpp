@@ -24,8 +24,16 @@ namespace Starfish {
 FilterPrimitive::FilterPrimitive(Filter* filter,
                                  SVGFilterPrimitiveStandardAttributes* element,
                                  String* input, String* result)
+    : FilterPrimitive(filter, element, input, String::emptyString, result)
+{
+}
+
+FilterPrimitive::FilterPrimitive(Filter* filter,
+                                 SVGFilterPrimitiveStandardAttributes* element,
+                                 String* input, String* input2, String* result)
     : m_filter(filter)
     , m_input(input)
+    , m_input2(input2)
     , m_output(result)
     , m_domElement(element)
 {
@@ -40,6 +48,7 @@ void* FilterPrimitive::operator new(size_t size)
         GC_word obj_bitmap[GC_BITMAP_SIZE(FilterPrimitive)] = { 0 };
         STARFISH_ASSERT(obj_bitmap != nullptr);
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_input));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_input2));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_output));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_filter));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_domElement));

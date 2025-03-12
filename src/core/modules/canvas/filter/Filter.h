@@ -113,9 +113,12 @@ public:
     void applyFilter(FilterApplyContext& ctx);
     std::shared_ptr<FilterSourceBuffer> fetchInputSource(
         FilterApplyContext& ctx, FilterPrimitive* f);
+    std::shared_ptr<FilterSourceBuffer> fetchInputSource2(
+        FilterApplyContext& ctx, FilterPrimitive* f);
     std::shared_ptr<FilterSourceBuffer> fetchOutputSource(
         FilterApplyContext& ctx, FilterPrimitive* f,
-        const std::shared_ptr<FilterSourceBuffer>& s);
+        const std::shared_ptr<FilterSourceBuffer>& s,
+        bool forceAllocate = false);
     void registerOutput(FilterApplyContext& ctx, FilterPrimitive* f,
                         const std::shared_ptr<FilterSourceBuffer>& s);
 

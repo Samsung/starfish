@@ -29,6 +29,9 @@ public:
     FilterPrimitive(Filter* filter,
                     SVGFilterPrimitiveStandardAttributes* element,
                     String* input, String* result);
+    FilterPrimitive(Filter* filter,
+                    SVGFilterPrimitiveStandardAttributes* element,
+                    String* input, String* input2, String* result);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -50,6 +53,11 @@ public:
         return m_input;
     }
 
+    String* input2() const
+    {
+        return m_input2;
+    }
+
     String* output() const
     {
         return m_output;
@@ -64,6 +72,7 @@ protected:
 private:
     Filter* m_filter;
     String* m_input;
+    String* m_input2;
     String* m_output;
     SVGFilterPrimitiveStandardAttributes* m_domElement;
 };
