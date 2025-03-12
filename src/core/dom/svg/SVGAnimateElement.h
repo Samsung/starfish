@@ -43,8 +43,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGAnimateElement() const override;
 
-    virtual void beginElement() override;
-
     virtual void beginElementAt(float offset) override;
 
     Optional<AnimationKeyframes*> animationKeyframes()
