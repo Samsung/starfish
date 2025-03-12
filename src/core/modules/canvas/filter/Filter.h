@@ -152,6 +152,12 @@ public:
         return m_filterBiasHeight;
     }
 
+    bool shouldMaintainSourceBuffer()
+    {
+        updateIfNeeds();
+        return m_shouldMaintainSourceBuffer;
+    }
+
     void setBias(float x, float y, float width, float height);
 
 private:

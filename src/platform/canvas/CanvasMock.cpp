@@ -294,6 +294,13 @@ public:
     {
     }
 
+    virtual void drawImage(uint8_t* image, size_t imageWidth,
+                           size_t imageStride, size_t imageHeight,
+                           const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
+    {
+    }
+
     virtual void drawImageInner(NativeImageData* data, const Unit::Rect& dst,
                                 ImageRenderingValue imageRenderingMode)
     {

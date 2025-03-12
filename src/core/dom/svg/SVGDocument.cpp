@@ -50,6 +50,8 @@
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGFEComponentTransferElement.h"
+#include "core/dom/svg/SVGFEMergeElement.h"
+#include "core/dom/svg/SVGFEMergeNodeElement.h"
 #include "core/dom/svg/SVGComponentTransferFunctionElement.h"
 
 namespace Starfish {
@@ -160,6 +162,13 @@ Element* SVGDocument::createSVGElement(Document* document,
     } else if (str->m_svgfeFuncBTagName == localName ||
                str->m_svgfefuncbTagName == localName) {
         return new SVGFEFuncBElement(document, str->m_svgfeFuncBTagName);
+    } else if (str->m_svgfeMergeTagName == localName ||
+               str->m_svgfemergeTagName == localName) {
+        return new SVGFEMergeElement(document, str->m_svgfeMergeTagName);
+    } else if (str->m_svgfeMergeNodeTagName == localName ||
+               str->m_svgfemergenodeTagName == localName) {
+        return new SVGFEMergeNodeElement(document,
+                                         str->m_svgfeMergeNodeTagName);
     } else {
         return new SVGElement(document, qname);
     }

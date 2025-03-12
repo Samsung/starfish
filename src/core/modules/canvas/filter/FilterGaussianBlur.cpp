@@ -378,7 +378,17 @@ void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
     auto kernelSize = computeKernelSize(stdDeviationX * ctx.viewportScaleX,
                                         stdDeviationY * ctx.viewportScaleY);
 
-    auto inputSource = filter()->fetchInputSource(ctx, this);
+    std::shared_ptr<Filter::FilterSourceBuffer> inputSource =
+        filter()->fetchInputSource(ctx, this);
+
+    // we should copy source buffer since blur function overwrite input buffer
+    if (filter()->shouldMaintainSourceBuffer() &&
+        inputSource->data() == ctx.src) {
+        inputSource = std::shared_ptr<Filter::FilterSourceBuffer>(
+            new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height,
+                                           true));
+        memcpy(inputSource->data(), ctx.src, inputSource->size());
+    }
 
     std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
         new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));

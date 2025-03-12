@@ -34,6 +34,12 @@ public:
 
     virtual void apply(size_t x, size_t y, size_t width, size_t height,
                        Filter::FilterApplyContext& ctx) = 0;
+
+    virtual bool shouldMaintainSourceBuffer(bool isFirstFilter)
+    {
+        return !isFirstFilter && m_input->equals("SourceGraphic");
+    }
+
     SVGFilterPrimitiveStandardAttributes* element()
     {
         return m_domElement;
