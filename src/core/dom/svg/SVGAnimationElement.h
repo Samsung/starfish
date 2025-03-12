@@ -56,6 +56,8 @@ public:
         SVGElement::fillGCDescriptor(desc);
         // Fill GC descriptor here if needed
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_declarations));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGAnimationElement, m_animationKeyframes));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -78,6 +80,11 @@ public:
     }
 
     Optional<Element*> targetElement();
+
+    Optional<AnimationKeyframes*> animationKeyframes()
+    {
+        return m_animationKeyframes;
+    }
 
     void beginElement();
 
@@ -107,6 +114,7 @@ protected:
     bool parseRepeatCount(float& repeatCount);
 
     CSSStyleDeclaration* m_declarations;
+    Optional<AnimationKeyframes*> m_animationKeyframes;
 };
 } // namespace Starfish
 

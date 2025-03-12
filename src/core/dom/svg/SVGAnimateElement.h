@@ -30,8 +30,6 @@ public:
     {
         SVGAnimationElement::fillGCDescriptor(desc);
         // Fill GC descriptor here if needed
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(SVGAnimateElement, m_animationKeyframes));
     }
 
     SVGAnimateElement(Document* document, const QualifiedName& qname);
@@ -45,19 +43,12 @@ public:
 
     virtual void beginElementAt(float offset) override;
 
-    Optional<AnimationKeyframes*> animationKeyframes()
-    {
-        return m_animationKeyframes;
-    }
-
 protected:
     void AddAnimationKeyframe(
         CSSStyleValuePair::KeyKind keyKind,
         AnimationKeyframes* animationKeyframes,
         const GCVector<CSSStyleValuePair>& values,
         Optional<GCVector<TimingFunction*>> maybeKeySplines);
-
-    Optional<AnimationKeyframes*> m_animationKeyframes;
 };
 } // namespace Starfish
 

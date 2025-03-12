@@ -44,4 +44,9 @@ void* SVGAnimateTransformElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGAnimateTransformElement::beginElementAt(float offset)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
 } // namespace Starfish
