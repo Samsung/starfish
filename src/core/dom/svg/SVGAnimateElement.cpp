@@ -55,11 +55,6 @@ void* SVGAnimateElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void SVGAnimateElement::beginElement()
-{
-    beginElementAt(0);
-}
-
 void SVGAnimateElement::beginElementAt(float offset)
 {
     // TODO: Apply offset to animation.

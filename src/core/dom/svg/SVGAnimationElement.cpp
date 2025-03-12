@@ -104,7 +104,7 @@ Optional<Element*> SVGAnimationElement::targetElement()
 
 void SVGAnimationElement::beginElement()
 {
-    STARFISH_UNIMPLEMENTED();
+    beginElementAt(0);
 }
 
 void SVGAnimationElement::beginElementAt(float offset)

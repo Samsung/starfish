@@ -79,7 +79,7 @@ public:
 
     Optional<Element*> targetElement();
 
-    virtual void beginElement();
+    void beginElement();
 
     virtual void beginElementAt(float offset);
 
