@@ -28,6 +28,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/DOMTokenList.h"
 
 namespace Starfish {
 
@@ -217,6 +218,18 @@ bool SVGNumberList::defaultIndexedSetter(unsigned long index,
 
     replaceItem(newItem, index);
     return true;
+}
+
+void SVGNumberList::setValueByString(String* value)
+{
+    GCVector<StringView> v;
+    StringUtils::wordTokenizer(value, v);
+    clear();
+    for (size_t i = 0; i < v.size(); i++) {
+        appendItem(new SVGNumber(m_sourceElement,
+                                 AtomicString::emptyAtomicString(),
+                                 String::parseFloat(v[i].substring())));
+    }
 }
 
 String* SVGNumberList::toString()

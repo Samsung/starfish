@@ -22,7 +22,6 @@
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGAnimatedNumberList.h"
-#include "core/dom/DOMTokenList.h"
 
 namespace Starfish {
 SVGFEColorMatrixElement::SVGFEColorMatrixElement(Document* document,
@@ -84,13 +83,7 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
     } else if (ss->m_values == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         SVGNumberList* valueList = values()->baseVal();
-        GCVector<StringView> v;
-        StringUtils::wordTokenizer(value, v);
-        for (size_t i = 0; i < v.size(); i++) {
-            valueList->appendItem(
-                new SVGNumber(this, AtomicString::emptyAtomicString(),
-                              String::parseFloat(v[i].substring())));
-        }
+        valueList->setValueByString(value);
     }
 }
 
