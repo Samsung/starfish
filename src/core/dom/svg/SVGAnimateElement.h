@@ -41,14 +41,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGAnimateElement() const override;
 
-    virtual void beginElementAt(float offset) override;
+    // virtual void beginElementAt(float offset) override;
 
 protected:
-    void AddAnimationKeyframe(
-        CSSStyleValuePair::KeyKind keyKind,
-        AnimationKeyframes* animationKeyframes,
-        const GCVector<CSSStyleValuePair>& values,
-        Optional<GCVector<TimingFunction*>> maybeKeySplines);
 };
 } // namespace Starfish
 

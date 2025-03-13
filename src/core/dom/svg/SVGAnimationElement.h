@@ -58,6 +58,8 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_declarations));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(SVGAnimationElement, m_animationKeyframes));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -79,6 +81,10 @@ public:
         return false;
     }
 
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
     Optional<Element*> targetElement();
 
     Optional<AnimationKeyframes*> animationKeyframes()
@@ -91,30 +97,50 @@ public:
     virtual void beginElementAt(float offset);
 
 protected:
-    bool parseAttributeName(CSSStyleValuePair::KeyKind& keyKind);
+    bool hasValidAttributes();
+
+    bool parseAttributeName(const String* attributeNameValue,
+                            CSSStyleValuePair::KeyKind& keyKind);
     bool parseValues(CSSStyleValuePair::KeyKind keyKind,
+                     const String* valuesValue,
                      GCVector<CSSStyleValuePair>& values);
     bool parseValue(CSSStyleValuePair::KeyKind keyKind, const char* buffer,
                     size_t len, CSSStyleValuePair& pair);
     bool convertFallbackValues(CSSStyleValuePair::KeyKind keyKind,
                                GCVector<CSSStyleValuePair>& values);
 
-    bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                   GCVector<CSSStyleValuePair>& values);
-    bool parseTo(CSSStyleValuePair::KeyKind keyKind,
-                 GCVector<CSSStyleValuePair>& values);
+    bool parseFrom(CSSStyleValuePair::KeyKind keyKind, const String* fromValue,
+                   CSSStyleValuePair& values);
+    bool parseTo(CSSStyleValuePair::KeyKind keyKind, const String* toValue,
+                 CSSStyleValuePair& to);
     bool parseFromAndToInternal(CSSStyleValuePair::KeyKind keyKind,
-                                String* value,
-                                GCVector<CSSStyleValuePair>& values);
-    bool parseDur(CSSTime& duration);
-    bool parseFill(SVGAnimationFill& fill);
-    bool parseCalcMode(SVGAnimationCalcMode& calcMode);
-    bool parseKeySplines(GCVector<TimingFunction*>& keySplines);
-    bool hasValues();
-    bool parseRepeatCount(float& repeatCount);
+                                const String* value, CSSStyleValuePair& values);
+    bool parseDur(const String* durValue, CSSTime& duration);
+    bool parseFill(const String* fillValue, SVGAnimationFill& fill);
+    bool parseRepeatCount(const String* repeatCountValue, float& repeatCount);
+    bool parseCalcMode(const String* caclModeValue,
+                       SVGAnimationCalcMode& calcMode);
+    bool parseKeySplines(const String* keySplinesValue,
+                         GCVector<TimingFunction*>& keySplines);
+
+    void AddAnimationKeyframe(
+        CSSStyleValuePair::KeyKind keyKind,
+        AnimationKeyframes* animationKeyframes,
+        const GCVector<CSSStyleValuePair>& values, CubicBezierEaseType easeType,
+        Optional<GCVector<TimingFunction*>> maybeKeySplines);
 
     CSSStyleDeclaration* m_declarations;
+
     Optional<AnimationKeyframes*> m_animationKeyframes;
+    Optional<CSSStyleValuePair::KeyKind> m_animationName;
+    Optional<CSSStyleValuePair> m_from;
+    Optional<CSSStyleValuePair> m_to;
+    Optional<GCVector<CSSStyleValuePair>> m_values;
+    Optional<CSSTime> m_dur;
+    Optional<SVGAnimationFill> m_fill;
+    Optional<float> m_repeatCount;
+    Optional<SVGAnimationCalcMode> m_calcMode;
+    Optional<GCVector<TimingFunction*>> m_keySplines;
 };
 } // namespace Starfish
 

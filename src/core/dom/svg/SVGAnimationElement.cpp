@@ -23,10 +23,15 @@
 
 #include "StaticStrings.h"
 #include "Starfish.h"
+#include "core/animation/AnimationApplier.h"
+#include "core/animation/AnimationTask.h"
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/animation/CubicBezier.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -82,6 +87,102 @@ void* SVGAnimationElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGAnimationElement::didAttributeChanged(QualifiedName name,
+                                              Optional<String*> old,
+                                              String* value,
+                                              bool attributeCreated,
+                                              bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
+    StaticStrings* ss = starfish()->staticStrings();
+
+    // TODO: Apply changed valued to active animations.
+
+    if (ss->m_attributename == name) {
+        CSSStyleValuePair::KeyKind keyKind;
+        if (parseAttributeName(value, keyKind)) {
+            if (!m_animationName.hasValue() ||
+                m_animationName.value() != keyKind) {
+                m_animationName = keyKind;
+            }
+        }
+    }
+
+    if (m_animationName.hasValue()) {
+        if (ss->m_from == name) {
+            CSSStyleValuePair from;
+            if (parseFrom(m_animationName.value(), value, from)) {
+                if (!m_from.hasValue() || m_from.value() != from) {
+                    m_from = from;
+                }
+            }
+        } else if (ss->m_to == name) {
+            CSSStyleValuePair to;
+            if (parseTo(m_animationName.value(), value, to)) {
+                if (!m_to.hasValue() || m_to.value() != to) {
+                    m_to = to;
+                }
+            }
+        } else if (ss->m_values == name) {
+            GCVector<CSSStyleValuePair> values;
+            if (parseValues(m_animationName.value(), value, values)) {
+                if (!m_values.hasValue() ||
+                    m_values.value().size() != values.size() ||
+                    !std::equal(m_values.value().begin(),
+                                m_values.value().end(), values.begin())) {
+                    m_values = std::move(values);
+                }
+            }
+        }
+    }
+
+    if (ss->m_dur == name) {
+        CSSTime dur;
+        if (parseDur(value, dur)) {
+            if (!m_dur.hasValue() || m_dur.value() != dur) {
+                m_dur = dur;
+            }
+        }
+    } else if (ss->m_fill == name) {
+        SVGAnimationFill fill;
+        if (parseFill(value, fill)) {
+            if (!m_fill.hasValue() || m_fill.value() != fill) {
+                m_fill = fill;
+            }
+        }
+    } else if (ss->m_repeatCount == name) {
+        float repeatCount;
+        if (parseRepeatCount(value, repeatCount)) {
+            if (!m_repeatCount.hasValue() ||
+                m_repeatCount.value() != repeatCount) {
+                m_repeatCount = repeatCount;
+            }
+        }
+    } else if (ss->m_calcMode == name) {
+        SVGAnimationCalcMode calcMode;
+        if (parseCalcMode(value, calcMode)) {
+            if (!m_calcMode.hasValue() || m_calcMode.value() != calcMode) {
+                m_calcMode = calcMode;
+            }
+        }
+    } else if (ss->m_keySplines == name) {
+        GCVector<TimingFunction*> keySplines;
+        if (parseKeySplines(value, keySplines)) {
+            if (!m_keySplines.hasValue() ||
+                m_keySplines.value().size() != keySplines.size() ||
+                !std::equal(
+                    m_keySplines.value().begin(), m_keySplines.value().end(),
+                    keySplines.begin(),
+                    [](const TimingFunction* lhd, const TimingFunction* rhd) {
+                        return *lhd == *rhd;
+                    })) {
+                m_keySplines = std::move(keySplines);
+            }
+        }
+    }
+}
+
 Optional<Element*> SVGAnimationElement::targetElement()
 {
     // TODO: Use href if present.
@@ -100,21 +201,126 @@ void SVGAnimationElement::beginElement()
 
 void SVGAnimationElement::beginElementAt(float offset)
 {
-    STARFISH_UNIMPLEMENTED();
+    window()->webView()->layoutIfNeeded(false);
+
+    AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
+
+    // set duration
+    if (m_dur.hasValue()) {
+        animationKeyframes->setDuration(m_dur.value());
+    } else {
+        // TODO: handle empty duration.
+        // Fire beginEvent but never fire endEvent.
+        STARFISH_UNIMPLEMENTED("Handle invalid duration");
+        return;
+    }
+
+    // set iteration count. The default value is 1.0.
+    float repeatCount = 1.0f;
+    if (m_repeatCount.hasValue()) {
+        repeatCount = m_repeatCount.value();
+    }
+    animationKeyframes->setIterationCount(repeatCount);
+
+    // set fill mode. The default value is "None".
+    AnimationFillModeValue fillMode = AnimationFillModeValue::None;
+    if (m_fill.hasValue()) {
+        fillMode = svgAnimationFillToAnimationFillModeValue(m_fill.value());
+    }
+    animationKeyframes->setFillMode(fillMode);
+
+    GCVector<CSSStyleValuePair> values;
+    if (m_values.hasValue()) {
+        values = m_values.value();
+    } else if (m_from.hasValue() && m_to.hasValue()) {
+        values.push_back(m_from.value());
+        values.push_back(m_to.value());
+    }
+
+    // check values. At least two values are required.
+    if (values.size() < 2) {
+        STARFISH_UNIMPLEMENTED("Handle wrong size values");
+        return;
+    }
+
+    // set calc mode. The default value is "linear".
+    SVGAnimationCalcMode calcMode = SVGAnimationCalcMode::Linear;
+    if (m_calcMode.hasValue()) {
+        calcMode = m_calcMode.value();
+    }
+
+    // Check key splines. It size must match the number of values - 1.
+    if (calcMode == SVGAnimationCalcMode::Spline) {
+        if (!m_keySplines.hasValue() ||
+            m_keySplines.value().size() != values.size() - 1) {
+            // Fallback guarantee: An animation is to occur, but it should not
+            // cause any changes.
+            // FIXME: If you think of a better way, please replace it.
+            // FIXME: In this case, improve it so that only minimal rendering
+            // occurs.
+            if (!convertFallbackValues(m_animationName.value(), values)) {
+                STARFISH_LOG_ERROR("Failed to convert fallback values.");
+                return;
+            }
+            calcMode = SVGAnimationCalcMode::Linear; // fallback to linear.
+        }
+    }
+
+    // Set timing function based on calc mode.
+    CubicBezierEaseType easeType =
+        svgAnimationCalcModeToCubicBezierEaseType(calcMode);
+    if (easeType != CubicBezierEaseType::Custom) {
+        animationKeyframes->setTimingFunction(
+            CubicBezier::createCubicBezier(easeType));
+    }
+
+    // Add keyframes using values to animationKeyframes.
+    AddAnimationKeyframe(m_animationName.value(), animationKeyframes, values,
+                         easeType, m_keySplines);
+
+    // get target element, if is not exist, return.
+    Optional<Element*> maybeTargetElement = targetElement();
+    if (!maybeTargetElement) {
+        STARFISH_UNIMPLEMENTED("Handle invalid animation target element.");
+        return;
+    }
+    Element* targetElement = maybeTargetElement.value();
+
+    // Apply animation for svg.
+    m_animationKeyframes = animationKeyframes;
+    AnimationApplier applier(targetElement, AnimationType::SVGAnimation,
+                             targetElement->style(), this);
+    if (!applier.applySVGAnimateElement()) {
+        m_animationKeyframes = nullptr;
+        STARFISH_LOG_ERROR("Failed to apply animation.");
+        return;
+    }
+
+    webView()->updateActiveAnimationExecutorRegistration(
+        document()->animationExecutor());
+    setNeedsStyleRecalcForAnimation();
+
+    m_declarations->clear();
+}
+
+bool SVGAnimationElement::hasValidAttributes()
+{
+    Optional<Element*> maybeTargetElement = targetElement();
+    return maybeTargetElement.hasValue() && m_animationName.hasValue() &&
+           (m_values.hasValue() || (m_from.hasValue() && m_to.hasValue()));
 }
 
 bool SVGAnimationElement::parseAttributeName(
-    CSSStyleValuePair::KeyKind& keyKind)
+    const String* attributeNameValue, CSSStyleValuePair::KeyKind& keyKind)
 {
-    Optional<String*> maybeAttributeName =
-        getAttribute(starfish()->staticStrings()->m_attributename);
-    if (!maybeAttributeName) {
-        return false;
-    }
-
-    String* targetAttrName = maybeAttributeName.value();
-    keyKind = CSSStyleLookupTrie::lookupCSSStyle(
-        targetAttrName->toUTF8NonGCString().data(), targetAttrName->length());
+    attributeNameValue->peekUTF8Buffer(
+        [](const char* buffer, size_t len, void* data) -> size_t {
+            CSSStyleValuePair::KeyKind* keyKind =
+                static_cast<CSSStyleValuePair::KeyKind*>(data);
+            *keyKind = CSSStyleLookupTrie::lookupCSSStyle(buffer, len);
+            return 0;
+        },
+        &keyKind);
 
     // TODO: Probably need to differentiate between the allowable keyKinds
     // depending on the target element.
@@ -122,18 +328,11 @@ bool SVGAnimationElement::parseAttributeName(
 }
 
 bool SVGAnimationElement::parseValues(CSSStyleValuePair::KeyKind keyKind,
+                                      const String* valuesValue,
                                       GCVector<CSSStyleValuePair>& values)
 {
-    Optional<String*> maybeValues =
-        getAttribute(starfish()->staticStrings()->m_values);
-
-    if (!maybeValues) {
-        return false;
-    }
-    String* valuesValue = maybeValues.getValue();
-
     GCVector<StringView> tokens;
-    StringUtils::tokenize(valuesValue, ";", 1, tokens);
+    StringUtils::tokenize(const_cast<String*>(valuesValue), ";", 1, tokens);
 
     for (auto& token : tokens) {
         StringBufferAccessData bad = token.bufferAccessData();
@@ -188,30 +387,21 @@ bool SVGAnimationElement::convertFallbackValues(
 }
 
 bool SVGAnimationElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                                    GCVector<CSSStyleValuePair>& values)
+                                    const String* fromValue,
+                                    CSSStyleValuePair& from)
 {
-    Optional<String*> maybeFrom =
-        getAttribute(starfish()->staticStrings()->m_from);
-    if (!maybeFrom) {
-        return false;
-    }
-    return parseFromAndToInternal(keyKind, maybeFrom.getValue(), values);
+    return parseFromAndToInternal(keyKind, fromValue, from);
 }
 
 bool SVGAnimationElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
-                                  GCVector<CSSStyleValuePair>& values)
+                                  const String* toValue, CSSStyleValuePair& to)
 {
-    Optional<String*> maybeTo = getAttribute(starfish()->staticStrings()->m_to);
-    if (!maybeTo) {
-        return false;
-    }
-
-    return parseFromAndToInternal(keyKind, maybeTo.getValue(), values);
+    return parseFromAndToInternal(keyKind, toValue, to);
 }
 
 bool SVGAnimationElement::parseFromAndToInternal(
-    CSSStyleValuePair::KeyKind keyKind, String* value,
-    GCVector<CSSStyleValuePair>& values)
+    CSSStyleValuePair::KeyKind keyKind, const String* value,
+    CSSStyleValuePair& output)
 {
     struct Args {
         CSSStyleValuePair::KeyKind keyKind;
@@ -231,20 +421,14 @@ bool SVGAnimationElement::parseFromAndToInternal(
     if (!args.ret) {
         return false;
     }
-    values.push_back(args.pair);
+    output = args.pair;
     return true;
 }
 
-bool SVGAnimationElement::parseDur(CSSTime& duration)
+bool SVGAnimationElement::parseDur(const String* durValue, CSSTime& duration)
 {
-    Optional<String*> maybeDur =
-        getAttribute(starfish()->staticStrings()->m_dur);
-    if (!maybeDur) {
-        return false;
-    }
-
     CSSStyleValuePair temp;
-    auto str = maybeDur.value()->toUTF8NonGCString();
+    auto str = durValue->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, str.c_str(), str.length());
     if (!temp.updateValueTime(tokens, 0)) {
@@ -254,14 +438,9 @@ bool SVGAnimationElement::parseDur(CSSTime& duration)
     return true;
 }
 
-bool SVGAnimationElement::parseFill(SVGAnimationFill& fill)
+bool SVGAnimationElement::parseFill(const String* fillValue,
+                                    SVGAnimationFill& fill)
 {
-    Optional<String*> maybeFill =
-        getAttribute(starfish()->staticStrings()->m_fill);
-    if (!maybeFill) {
-        return false;
-    }
-    String* fillValue = maybeFill.value();
     if (fillValue->equals("remove")) {
         fill = SVGAnimationFill::Remove;
         return true;
@@ -275,45 +454,61 @@ bool SVGAnimationElement::parseFill(SVGAnimationFill& fill)
     return false;
 }
 
-bool SVGAnimationElement::parseCalcMode(SVGAnimationCalcMode& calcMode)
+bool SVGAnimationElement::parseRepeatCount(const String* repeatCountValue,
+                                           float& repeatCount)
 {
-    Optional<String*> maybeCalcMode =
-        getAttribute(starfish()->staticStrings()->m_calcMode);
-    if (!maybeCalcMode) {
-        return false;
-    }
-
-    if (maybeCalcMode->equals("discrete")) {
-        calcMode = SVGAnimationCalcMode::Discrete;
-        return true;
-    } else if (maybeCalcMode->equals("linear")) {
-        calcMode = SVGAnimationCalcMode::Linear;
-        return true;
-    } else if (maybeCalcMode->equals("paced")) {
-        calcMode = SVGAnimationCalcMode::Paced;
-        return true;
-    } else if (maybeCalcMode->equals("spline")) {
-        calcMode = SVGAnimationCalcMode::Spline;
+    if (repeatCountValue->equals("indefinite")) {
+        repeatCount = std::numeric_limits<float>::infinity();
         return true;
     } else {
-        STARFISH_LOG_WARN("Unknown calcMode value: %s",
-                          maybeCalcMode->toUTF8NonGCString().c_str());
+        struct Args {
+            float value;
+            bool result;
+        } args;
+        repeatCountValue->peekUTF8Buffer(
+            [](const char* buffer, size_t len, void* data) -> size_t {
+                Args* args = static_cast<Args*>(data);
+                args->result = CSSPropertyParser::parseNumber(buffer, len, 0,
+                                                              &args->value);
+                return 0;
+            },
+            &args);
+        if (args.result) {
+            repeatCount = args.value;
+            return true;
+        }
     }
     return false;
 }
 
-bool SVGAnimationElement::parseKeySplines(GCVector<TimingFunction*>& keySplines)
+bool SVGAnimationElement::parseCalcMode(const String* caclModeValue,
+                                        SVGAnimationCalcMode& calcMode)
 {
-    Optional<String*> maybeKeySplines =
-        getAttribute(starfish()->staticStrings()->m_keySplines);
-
-    if (!maybeKeySplines) {
-        return false;
+    if (caclModeValue->equals("discrete")) {
+        calcMode = SVGAnimationCalcMode::Discrete;
+        return true;
+    } else if (caclModeValue->equals("linear")) {
+        calcMode = SVGAnimationCalcMode::Linear;
+        return true;
+    } else if (caclModeValue->equals("paced")) {
+        calcMode = SVGAnimationCalcMode::Paced;
+        return true;
+    } else if (caclModeValue->equals("spline")) {
+        calcMode = SVGAnimationCalcMode::Spline;
+        return true;
+    } else {
+        STARFISH_LOG_WARN("Unknown calcMode value: %s",
+                          caclModeValue->toUTF8NonGCString().c_str());
     }
-    String* keySplinesValue = maybeKeySplines.getValue();
+    return false;
+}
 
+bool SVGAnimationElement::parseKeySplines(const String* keySplinesValue,
+                                          GCVector<TimingFunction*>& keySplines)
+{
     GCVector<StringView> tokensForKeySplinesValue;
-    StringUtils::tokenize(keySplinesValue, ";", 1, tokensForKeySplinesValue);
+    StringUtils::tokenize(const_cast<String*>(keySplinesValue), ";", 1,
+                          tokensForKeySplinesValue);
 
     for (auto& token : tokensForKeySplinesValue) {
         StringBufferAccessData bad = token.bufferAccessData();
@@ -345,42 +540,25 @@ bool SVGAnimationElement::parseKeySplines(GCVector<TimingFunction*>& keySplines)
     return true;
 }
 
-bool SVGAnimationElement::hasValues()
+void SVGAnimationElement::AddAnimationKeyframe(
+    CSSStyleValuePair::KeyKind keyKind, AnimationKeyframes* animationKeyframes,
+    const GCVector<CSSStyleValuePair>& values, CubicBezierEaseType easeType,
+    Optional<GCVector<TimingFunction*>> maybeKeySplines)
 {
-    return hasAttribute(starfish()->staticStrings()->m_values.localName());
-}
-
-bool SVGAnimationElement::parseRepeatCount(float& repeatCount)
-{
-    Optional<String*> maybeRepeatCount =
-        getAttribute(starfish()->staticStrings()->m_repeatCount);
-    if (!maybeRepeatCount) {
-        return false;
-    }
-
-    String* repeatCountValue = maybeRepeatCount.value();
-    if (repeatCountValue->equals("indefinite")) {
-        repeatCount = std::numeric_limits<float>::infinity();
-        return true;
-    } else {
-        struct Args {
-            float value;
-            bool result;
-        } args;
-        repeatCountValue->peekUTF8Buffer(
-            [](const char* buffer, size_t len, void* data) -> size_t {
-                Args* args = static_cast<Args*>(data);
-                args->result = CSSPropertyParser::parseNumber(buffer, len, 0,
-                                                              &args->value);
-                return 0;
-            },
-            &args);
-        if (args.result) {
-            repeatCount = args.value;
-            return true;
+    for (size_t i = 0; i < values.size(); ++i) {
+        AnimationKeyframe* keyframe = new AnimationKeyframe();
+        double offset = 100.0 / (values.size() - 1);
+        double keyframeSelector = (offset * i) / 100;
+        keyframe->setKeyframeSelector(keyframeSelector);
+        keyframe->addProperty(keyKind, values[i]);
+        keyframe->setDuration(animationKeyframes->duration());
+        if (easeType == CubicBezierEaseType::Custom && i < values.size() - 1) {
+            keyframe->setTimingFunction(maybeKeySplines.getValue()[i]);
+        } else {
+            keyframe->setTimingFunction(animationKeyframes->timingFunction());
         }
+        animationKeyframes->animationKeyframeList().push_back(keyframe);
     }
-    return false;
 }
 
 } // namespace Starfish
