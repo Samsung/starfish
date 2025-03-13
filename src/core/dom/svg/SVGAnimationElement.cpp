@@ -201,6 +201,23 @@ void SVGAnimationElement::beginElement()
 
 void SVGAnimationElement::beginElementAt(float offset)
 {
+    if (!m_animationName.hasValue()) {
+        STARFISH_UNIMPLEMENTED("Handle invalid animation name.");
+        return;
+    }
+
+    beginElementAtInternal(offset, m_animationName.value(), m_from, m_to,
+                           m_values);
+}
+
+void SVGAnimationElement::beginElementAtInternal(
+    float offset, CSSStyleValuePair::KeyKind keyKind,
+    const Optional<CSSStyleValuePair>& from,
+    const Optional<CSSStyleValuePair>& to,
+    const Optional<GCVector<CSSStyleValuePair>>& values)
+{
+    // TODO: Apply offset.
+
     window()->webView()->layoutIfNeeded(false);
 
     AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
@@ -229,16 +246,16 @@ void SVGAnimationElement::beginElementAt(float offset)
     }
     animationKeyframes->setFillMode(fillMode);
 
-    GCVector<CSSStyleValuePair> values;
-    if (m_values.hasValue()) {
-        values = m_values.value();
-    } else if (m_from.hasValue() && m_to.hasValue()) {
-        values.push_back(m_from.value());
-        values.push_back(m_to.value());
+    GCVector<CSSStyleValuePair> valueList;
+    if (values.hasValue()) {
+        valueList = values.value();
+    } else if (from.hasValue() && to.hasValue()) {
+        valueList.push_back(from.value());
+        valueList.push_back(to.value());
     }
 
     // check values. At least two values are required.
-    if (values.size() < 2) {
+    if (valueList.size() < 2) {
         STARFISH_UNIMPLEMENTED("Handle wrong size values");
         return;
     }
@@ -252,13 +269,13 @@ void SVGAnimationElement::beginElementAt(float offset)
     // Check key splines. It size must match the number of values - 1.
     if (calcMode == SVGAnimationCalcMode::Spline) {
         if (!m_keySplines.hasValue() ||
-            m_keySplines.value().size() != values.size() - 1) {
+            m_keySplines.value().size() != valueList.size() - 1) {
             // Fallback guarantee: An animation is to occur, but it should not
             // cause any changes.
             // FIXME: If you think of a better way, please replace it.
             // FIXME: In this case, improve it so that only minimal rendering
             // occurs.
-            if (!convertFallbackValues(m_animationName.value(), values)) {
+            if (!convertFallbackValues(keyKind, valueList)) {
                 STARFISH_LOG_ERROR("Failed to convert fallback values.");
                 return;
             }
@@ -275,8 +292,8 @@ void SVGAnimationElement::beginElementAt(float offset)
     }
 
     // Add keyframes using values to animationKeyframes.
-    AddAnimationKeyframe(m_animationName.value(), animationKeyframes, values,
-                         easeType, m_keySplines);
+    AddAnimationKeyframe(keyKind, animationKeyframes, valueList, easeType,
+                         m_keySplines);
 
     // get target element, if is not exist, return.
     Optional<Element*> maybeTargetElement = targetElement();
