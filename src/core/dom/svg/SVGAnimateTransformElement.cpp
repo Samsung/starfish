@@ -21,6 +21,13 @@
 
 #include "SVGAnimateTransformElement.h"
 
+#include "Starfish.h"
+#include "StaticStrings.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/dom/Document.h"
+#include "core/style/CSSProperty.h"
+
 namespace Starfish {
 
 SVGAnimateTransformElement::SVGAnimateTransformElement(
@@ -44,9 +51,131 @@ void* SVGAnimateTransformElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGAnimateTransformElement::didAttributeChanged(QualifiedName name,
+                                                     Optional<String*> old,
+                                                     String* value,
+                                                     bool attributeCreated,
+                                                     bool attributeRemoved)
+{
+    SVGAnimationElement::didAttributeChanged(name, old, value, attributeCreated,
+                                             attributeRemoved);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_type == name) {
+        TransformType type;
+        if (parseType(type)) {
+            if (!m_type.hasValue() || m_type.value() != type) {
+                m_type = type;
+            }
+        }
+    }
+}
+
 void SVGAnimateTransformElement::beginElementAt(float offset)
 {
-    STARFISH_UNIMPLEMENTED();
+    SVGAnimationElement::beginElementAt(offset);
+}
+
+bool SVGAnimateTransformElement::parseType(TransformType& type)
+{
+    Optional<String*> mabyType =
+        getAttribute(starfish()->staticStrings()->m_type);
+    if (!mabyType) {
+        return false;
+    }
+    String* typeStr = mabyType.value();
+
+    if (typeStr->equals("translate")) {
+        type = TransformType::Translate;
+        return true;
+    } else if (typeStr->equals("scale")) {
+        type = TransformType::Scale;
+        return true;
+    } else if (typeStr->equals("rotate")) {
+        type = TransformType::Rotate;
+        return true;
+    } else if (typeStr->equals("skewX")) {
+        type = TransformType::SkewX;
+        return true;
+    } else if (typeStr->equals("skewY")) {
+        type = TransformType::SkewY;
+        return true;
+    }
+    return false;
+}
+
+bool SVGAnimateTransformElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
+                                           const String* fromValue,
+                                           CSSStyleValuePair& from)
+{
+    if (!m_type.hasValue()) {
+        return false;
+    }
+    String* transformValue = nullptr;
+    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(fromValue),
+                             &transformValue)) {
+        return false;
+    }
+    return parseFromAndToInternal(CSSStyleValuePair::KeyKind::Transform,
+                                  transformValue, from);
+}
+bool SVGAnimateTransformElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
+                                         const String* toValue,
+                                         CSSStyleValuePair& to)
+{
+    if (!m_type.hasValue()) {
+        return false;
+    }
+
+    String* transformValue = nullptr;
+    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(toValue),
+                             &transformValue)) {
+        return false;
+    }
+    return parseFromAndToInternal(CSSStyleValuePair::KeyKind::Transform,
+                                  transformValue, to);
+}
+
+bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
+                                                     String* nubmer,
+                                                     String** transformValue)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+    StringBuilder builder;
+    switch (type) {
+    case TransformType::Translate:
+        builder.appendString("translate(");
+        builder.appendString(nubmer);
+        builder.appendChar(')');
+        *transformValue = builder.finalize();
+        return true;
+    case TransformType::Scale:
+        builder.appendString("scale(");
+        builder.appendString(nubmer);
+        builder.appendChar(')');
+        *transformValue = builder.finalize();
+        return true;
+    case TransformType::Rotate:
+        builder.appendString("rotate(");
+        builder.appendString(nubmer);
+        builder.appendString("deg)");
+        *transformValue = builder.finalize();
+        return true;
+    case TransformType::SkewX:
+        builder.appendString("skewX(");
+        builder.appendString(nubmer);
+        builder.appendString("deg)");
+        *transformValue = builder.finalize();
+        return true;
+    case TransformType::SkewY:
+        builder.appendString("skewX(");
+        builder.appendString(nubmer);
+        builder.appendString("deg)");
+        *transformValue = builder.finalize();
+        return true;
+    }
+    return false;
 }
 
 } // namespace Starfish

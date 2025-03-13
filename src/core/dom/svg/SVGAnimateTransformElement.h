@@ -24,6 +24,14 @@
 
 namespace Starfish {
 
+enum class TransformType {
+    Translate,
+    Scale,
+    Rotate,
+    SkewX,
+    SkewY,
+};
+
 class SVGAnimateTransformElement : public SVGAnimationElement {
 public:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -41,9 +49,21 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGAnimateTransformElement() const override;
 
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
     virtual void beginElementAt(float offset) override;
 
-protected:
+private:
+    bool parseType(TransformType& type);
+    virtual bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
+                           const String* fromValue, CSSStyleValuePair& values);
+    virtual bool parseTo(CSSStyleValuePair::KeyKind keyKind,
+                         const String* toValue, CSSStyleValuePair& to);
+    bool toCSSTransfromValue(const TransformType type, String* value,
+                             String** transformValue);
+
+    Optional<TransformType> m_type;
 };
 } // namespace Starfish
 

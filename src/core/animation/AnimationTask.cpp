@@ -178,6 +178,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
 double ActiveAnimationTask::fraction(uint64_t tickCount) const
 {
+    STARFISH_ASSERT(m_durationMs != 0);
     if (m_isInForwardsFillMode) {
         return 1.0f;
     }
