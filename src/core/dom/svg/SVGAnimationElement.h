@@ -109,10 +109,10 @@ protected:
     bool convertFallbackValues(CSSStyleValuePair::KeyKind keyKind,
                                GCVector<CSSStyleValuePair>& values);
 
-    bool parseFrom(CSSStyleValuePair::KeyKind keyKind, const String* fromValue,
-                   CSSStyleValuePair& values);
-    bool parseTo(CSSStyleValuePair::KeyKind keyKind, const String* toValue,
-                 CSSStyleValuePair& to);
+    virtual bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
+                           const String* fromValue, CSSStyleValuePair& values);
+    virtual bool parseTo(CSSStyleValuePair::KeyKind keyKind,
+                         const String* toValue, CSSStyleValuePair& to);
     bool parseFromAndToInternal(CSSStyleValuePair::KeyKind keyKind,
                                 const String* value, CSSStyleValuePair& values);
     bool parseDur(const String* durValue, CSSTime& duration);

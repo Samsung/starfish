@@ -31,7 +31,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/dom/HTMLHtmlElement.h"
-#include "core/dom/svg/SVGAnimateElement.h"
+#include "core/dom/svg/SVGAnimationElement.h"
 
 namespace Starfish {
 
@@ -152,11 +152,12 @@ bool AnimationApplier::apply()
 bool AnimationApplier::applySVGAnimateElement()
 {
     STARFISH_ASSERT(m_originAnimationElement.hasValue());
-    STARFISH_ASSERT(m_originAnimationElement.getValue()->isSVGAnimateElement());
+    STARFISH_ASSERT(
+        m_originAnimationElement.getValue()->isSVGAnimationElement());
 
     Optional<AnimationKeyframes*> maybekeyFrames =
         m_originAnimationElement.getValue()
-            ->asSVGAnimateElement()
+            ->asSVGAnimationElement()
             ->animationKeyframes();
     if (!maybekeyFrames) {
         return false;
