@@ -97,6 +97,12 @@ public:
     virtual void beginElementAt(float offset);
 
 protected:
+    void beginElementAtInternal(
+        float offset, CSSStyleValuePair::KeyKind keyKind,
+        const Optional<CSSStyleValuePair>& from,
+        const Optional<CSSStyleValuePair>& to,
+        const Optional<GCVector<CSSStyleValuePair>>& values);
+
     bool hasValidAttributes();
 
     bool parseAttributeName(const String* attributeNameValue,
