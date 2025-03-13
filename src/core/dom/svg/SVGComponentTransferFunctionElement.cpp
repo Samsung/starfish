@@ -66,13 +66,7 @@ void SVGComponentTransferFunctionElement::didAttributeChanged(
     } else if (ss->m_tableValues == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         SVGNumberList* valueList = tableValues()->baseVal();
-        GCVector<StringView> v;
-        StringUtils::wordTokenizer(value, v);
-        for (size_t i = 0; i < v.size(); i++) {
-            valueList->appendItem(
-                new SVGNumber(this, AtomicString::emptyAtomicString(),
-                              String::parseFloat(v[i].substring())));
-        }
+        valueList->setValueByString(value);
     } else if (ss->m_slope == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         slope()->setBaseVal(String::parseFloat(value));
