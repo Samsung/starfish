@@ -26,6 +26,7 @@
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/svg/SVGFECompositeElement.h"
+#include "core/dom/svg/SVGFEMorphologyElement.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -252,6 +253,20 @@ void SVGAnimatedEnumeration::updateAttribute()
                                     SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("arithmetic"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGFEMorphologyElement() &&
+               m_targetAttribute ==
+                   m_sourceElement->starfish()->staticStrings()->m_operator) {
+        if (m_baseVal == SVGFEMorphologyElement::MorphologyOperator::
+                             SVG_MORPHOLOGY_OPERATOR_ERODE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("erode"));
+        } else if (m_baseVal == SVGFEMorphologyElement::MorphologyOperator::
+                                    SVG_MORPHOLOGY_OPERATOR_DILATE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("dilate"));
         } else {
             STARFISH_ASSERT(m_baseVal == 0);
         }
