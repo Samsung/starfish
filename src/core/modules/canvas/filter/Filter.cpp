@@ -90,7 +90,6 @@ std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource(
 std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource2(
     FilterApplyContext& ctx, FilterPrimitive* f)
 {
-    // TODO??
     if (isFirstFilter(f)) {
         return ctx.sourceGraphic();
     }
@@ -107,10 +106,9 @@ std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource2(
 
 std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchOutputSource(
     FilterApplyContext& ctx, FilterPrimitive* f,
-    const std::shared_ptr<FilterSourceBuffer>& input, bool forceAllocate)
+    const std::shared_ptr<FilterSourceBuffer>& input)
 {
-    if ((m_shouldMaintainSourceBuffer && input->data() == ctx.src) ||
-        forceAllocate) {
+    if (m_shouldMaintainSourceBuffer && input->data() == ctx.src) {
         return std::shared_ptr<Filter::FilterSourceBuffer>(
             new FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
     }

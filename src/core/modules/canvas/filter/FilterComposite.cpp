@@ -1,11 +1,4 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2007 Nikolas Zimmermann <zimmermann@kde.org>
- * Copyright (C) 2004, 2005 Rob Buis <buis@kde.org>
- * Copyright (C) 2005 Eric Seidel <eric@webkit.org>
- * Copyright (C) 2009 Dirk Schulze <krit@webkit.org>
- * Copyright (C) 2010 Igalia, S.L.
- * Copyright (C) Research In Motion Limited 2010. All rights reserved.
- * Copyright (C) 2015-2016 Apple, Inc. All rights reserved.
  * Copyright (c) 2025-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
@@ -43,6 +36,9 @@ void compositeSource(Filter::FilterApplyContext& ctx,
 {
     Canvas* c =
         Canvas::create(output->data(), ctx.width, ctx.height, ctx.stride, 1);
+
+    c->setCompositeOperator(CanvasCompositeOperator::Copy,
+                            CanvasBlendMode::Normal);
 
     switch (oper) {
     case SVGFECompositeElement::CompositeOperator::
@@ -150,12 +146,12 @@ void FilterComposite::apply(size_t x, size_t y, size_t width, size_t height,
     SVGFECompositeElement::CompositeOperator oper =
         (SVGFECompositeElement::CompositeOperator)ele->domOperator()->baseVal();
 
-    auto outputSource =
-        filter()->fetchOutputSource(ctx, this, inputSource, true);
+    std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
+        new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
-    compositeSource(ctx, inputSource, inputSource2, outputSource, oper);
+    compositeSource(ctx, inputSource, inputSource2, outputBuffer, oper);
 
-    filter()->registerOutput(ctx, this, outputSource);
+    filter()->registerOutput(ctx, this, outputBuffer);
 }
 
 } // namespace Starfish
