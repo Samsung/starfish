@@ -53,6 +53,7 @@ void* FilterMerge::operator new(size_t size)
     static GC_descr descr;
     if (typeInited == false) {
         GC_word desc[GC_BITMAP_SIZE(FilterMerge)] = { 0 };
+        FilterPrimitive::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(FilterMerge, m_inputs));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(FilterMerge));
         typeInited = true;

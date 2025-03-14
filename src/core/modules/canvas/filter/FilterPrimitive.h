@@ -64,6 +64,15 @@ public:
     }
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(FilterPrimitive, m_input));
+        GC_set_bit(desc, GC_WORD_OFFSET(FilterPrimitive, m_input2));
+        GC_set_bit(desc, GC_WORD_OFFSET(FilterPrimitive, m_output));
+        GC_set_bit(desc, GC_WORD_OFFSET(FilterPrimitive, m_filter));
+        GC_set_bit(desc, GC_WORD_OFFSET(FilterPrimitive, m_domElement));
+    }
+
     Filter* filter()
     {
         return m_filter;
