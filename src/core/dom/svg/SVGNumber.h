@@ -26,10 +26,13 @@
 namespace Starfish {
 
 class SVGElement;
+class SVGNumberList;
 
 class SVGNumber : public ScriptWrappable {
 public:
     SVGNumber(SVGElement* sourceElement, QualifiedName targetAttribute,
+              float value = 0);
+    SVGNumber(SVGElement* sourceElement, SVGNumberList* targetList,
               float value = 0);
 
     virtual void init(ScriptBindingInstance* instance,
@@ -46,6 +49,7 @@ public:
 private:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
+    Optional<SVGNumberList*> m_targetList;
 
     float m_value;
 

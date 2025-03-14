@@ -24,15 +24,21 @@
 
 namespace Starfish {
 
+class SVGAnimatedNumberList;
 class SVGAnimatedNumber : public ScriptWrappable {
 public:
-    SVGAnimatedNumber(Document* document, float baseVal, float animVal);
+    SVGAnimatedNumber(SVGElement* targetElement,
+                      const QualifiedName& targetAttribute, float baseVal,
+                      float animVal);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedNumber)
 
-    void setBaseVal(float baseVal)
+    void setBaseVal(float baseVal, bool fromSetAttribute = false)
     {
         m_baseVal = baseVal;
+        if (!fromSetAttribute) {
+            updateTargetElementAttribute();
+        }
     }
 
     float baseVal() const
@@ -46,7 +52,9 @@ public:
     }
 
 protected:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    void updateTargetElementAttribute();
+    SVGElement* m_targetElement;
+    QualifiedName m_targetAttribute;
     float m_baseVal;
     float m_animVal;
 };

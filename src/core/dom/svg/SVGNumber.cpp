@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "SVGNumber.h"
 #include "SVGElement.h"
+#include "core/dom/svg/SVGNumberList.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -29,6 +30,16 @@ SVGNumber::SVGNumber(SVGElement* sourceElement, QualifiedName targetAttribute,
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
+    , m_value(value)
+    , m_readOnly(false)
+{
+}
+
+SVGNumber::SVGNumber(SVGElement* sourceElement, SVGNumberList* targetList,
+                     float value)
+    : ScriptWrappable(this)
+    , m_sourceElement(sourceElement)
+    , m_targetList(targetList)
     , m_value(value)
     , m_readOnly(false)
 {
@@ -61,7 +72,9 @@ void SVGNumber::setValue(float value)
 
     m_value = value;
 
-    if (m_targetAttribute.localName()->equals(String::emptyString) == false) {
+    if (m_targetList) {
+        m_targetList->updateAttributeByList();
+    } else if (!m_targetAttribute.localName()->isEmpty()) {
         m_sourceElement->setAttribute(m_targetAttribute,
                                       String::fromFloat(m_value));
     }
