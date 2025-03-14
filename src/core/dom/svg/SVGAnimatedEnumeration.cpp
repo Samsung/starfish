@@ -25,6 +25,7 @@
 #include "core/dom/svg/SVGComponentTransferFunctionElement.h"
 #include "core/dom/svg/SVGFEColorMatrixElement.h"
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
+#include "core/dom/svg/SVGFECompositeElement.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -217,6 +218,40 @@ void SVGAnimatedEnumeration::updateAttribute()
                                     SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA) {
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("luminanceToAlpha"));
+        } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGFECompositeElement() &&
+               m_targetAttribute ==
+                   m_sourceElement->starfish()->staticStrings()->m_operator) {
+        if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                             SVG_FECOMPOSITE_OPERATOR_OVER) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("over"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_IN) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("in"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_OUT) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("out"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_ATOP) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("atop"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_XOR) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("xor"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_LIGHTER) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("over"));
+        } else if (m_baseVal == SVGFECompositeElement::CompositeOperator::
+                                    SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("arithmetic"));
         } else {
             STARFISH_ASSERT(m_baseVal == 0);
         }

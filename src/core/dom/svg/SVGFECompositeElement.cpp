@@ -30,7 +30,7 @@ void* SVGFECompositeElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGFECompositeElement)] = { 0 };
-        SVGElement::fillGCDescriptor(desc);
+        SVGFilterPrimitiveStandardAttributes::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFECompositeElement, m_in1));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFECompositeElement, m_in2));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGFECompositeElement, m_operator));
