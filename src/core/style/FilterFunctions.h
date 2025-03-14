@@ -46,7 +46,6 @@ public:
     {
     }
 
-    virtual bool isInitialValue() const = 0;
     virtual String* toString() const = 0;
     virtual CSSFilterFunction* toCSSFilterFunction() const = 0;
 
@@ -67,11 +66,6 @@ public:
     UnsupportedFilterFunction(FilterFunctionType type)
         : FilterFunction(type)
     {
-    }
-
-    bool isInitialValue() const override
-    {
-        return true;
     }
 
     String* toString() const override;
@@ -96,11 +90,6 @@ public:
         m_stdDeviation.changeToFixedIfNeeded(currentFS, rootFS, font,
                                              windowSize.width(),
                                              windowSize.height(), cs);
-    }
-
-    bool isInitialValue() const override
-    {
-        return m_stdDeviation.isFixed() && m_stdDeviation.fixed() == 1.0;
     }
 
     Length standardDeviation()
@@ -134,6 +123,29 @@ public:
 
 private:
     Length m_stdDeviation;
+};
+
+class SVGUrlFilterFunction : public FilterFunction {
+public:
+    SVGUrlFilterFunction(String* url)
+        : FilterFunction(FilterFunctionType::SVGUrlFilterFunctionType)
+        , m_url(url)
+    {
+    }
+
+    String* url() const
+    {
+        return m_url;
+    }
+    SVGUrlFilterFunction(const CSSFilterFunction& from);
+    String* toString() const override;
+    CSSFilterFunction* toCSSFilterFunction() const override;
+
+    void apply(WebView* webView, uint8_t* buffer, size_t width, size_t height,
+               size_t stride) const override;
+
+private:
+    String* m_url;
 };
 
 class FilterFunctions : public GCVector<FilterFunction*> {

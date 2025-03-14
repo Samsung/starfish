@@ -1037,7 +1037,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                   this);
         }
 
-        FilterFunctions* filter = m_rareComputedStyleData.filter();
+        Optional<FilterFunctions*> filter = m_rareComputedStyleData.filter();
         if (filter) {
             filter->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
@@ -2475,10 +2475,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    FilterFunctions* newFilter = newStyle->filter();
-    FilterFunctions* oldFilter = oldStyle->filter();
+    Optional<FilterFunctions*> newFilter = newStyle->filter();
+    Optional<FilterFunctions*> oldFilter = oldStyle->filter();
     if (newFilter != oldFilter) {
-        if ((!newFilter || !oldFilter) || !oldFilter->compare(newFilter)) {
+        if ((!newFilter || !oldFilter) ||
+            !oldFilter->compare(newFilter.value())) {
             damagedKeys[CSSStyleValuePair::KeyKind::Filter] = true;
             if (UNLIKELY(isSVGDescendant)) {
                 damage = static_cast<ComputedStyleDamage>(
@@ -2556,6 +2557,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             }
         }
     }
+
+    if (UNLIKELY(isSVGDescendant)) {
+        auto oldClipPath = oldStyle->clipPath();
+        auto newClipPath = newStyle->clipPath();
+
+        if (oldClipPath->equals(newClipPath)) {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+    }
+
     if (newStyle->x() != oldStyle->x()) {
         damagedKeys[CSSStyleValuePair::KeyKind::X] = true;
         damage = static_cast<ComputedStyleDamage>(

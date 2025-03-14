@@ -2688,7 +2688,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::Filter: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Filter);
-        FilterFunctions* filter = style->filter();
+        Optional<FilterFunctions*> filter = style->filter();
         if (!filter) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {

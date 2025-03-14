@@ -5502,7 +5502,10 @@ void CSSStyleDeclaration::removeAnimation()
 String* CSSStyleDeclaration::Mask()
 {
     // Mask is only supported as SVG attribute.
-    STARFISH_UNSUPPORTED("css property: mask");
+    if (hasCSSValuePair(CSSStyleValuePair::MaskImage)) {
+        CSSStyleValuePair v = getCSSValuePair(CSSStyleValuePair::MaskImage);
+        return v.toString();
+    }
     return String::emptyString;
 }
 
@@ -5511,11 +5514,34 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
 {
     // Mask is only supported as SVG attribute.
     STARFISH_ASSERT(value != nullptr);
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length);
+
+    CSSStyleValuePair mask;
+    if (mask.updateValueVarReferences(tokens)) {
+        mask.setValue(String::fromUTF8(value, length));
+        mask.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::MaskImage, mask);
+    } else {
+        mask.setFlagImportant(isImportant);
+        if (mask.updateValueMaskImage(tokens, false)) {
+            STARFISH_ASSERT(mask.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            STARFISH_ASSERT(mask.multiValue()->size() == 1);
+
+            if (mask.multiValue()->at(0).valueKind() ==
+                CSSStyleValuePair::ValueKind::UrlValueKind) {
+                addCSSValuePair(CSSStyleValuePair::MaskImage, mask);
+            }
+        }
+    }
 }
 
 void CSSStyleDeclaration::removeMask()
 {
     // Mask is only supported as SVG attribute.
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MaskImage);
 }
 
 String* CSSStyleDeclaration::MaskPosition()

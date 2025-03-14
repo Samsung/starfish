@@ -36,6 +36,8 @@ FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
     switch (type) {
     case FilterFunctionType::BlurFilterFunctionType:
         return new BlurFilterFunction(from);
+    case FilterFunctionType::SVGUrlFilterFunctionType:
+        return new SVGUrlFilterFunction(from);
     case FilterFunctionType::DropShadowFilterFunctionType:
     case FilterFunctionType::HueRotateFilterFunctionType:
     case FilterFunctionType::BrightnessFilterFunctionType:
@@ -45,7 +47,6 @@ FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
     case FilterFunctionType::OpacityFilterFunctionType:
     case FilterFunctionType::SaturateFilterFunctionType:
     case FilterFunctionType::SepiaFilterFunctionType:
-    case FilterFunctionType::SVGUrlFilterFunctionType:
         return new UnsupportedFilterFunction(type);
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -205,6 +206,32 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
     }
 #endif
     return;
+}
+
+SVGUrlFilterFunction::SVGUrlFilterFunction(const CSSFilterFunction& from)
+    : SVGUrlFilterFunction(from.data().urlStringValue())
+{
+}
+
+String* SVGUrlFilterFunction::toString() const
+{
+    char container[100];
+    auto valueString = m_url->toUTF8NonGCString();
+    snprintf(container, sizeof(container), "SVGUrl(%s) ", valueString.data());
+    return String::fromUTF8(container, strnlen(container, sizeof(container)));
+}
+
+CSSFilterFunction* SVGUrlFilterFunction::toCSSFilterFunction() const
+{
+    return new CSSFilterFunction(
+        FilterFunctionType::SVGUrlFilterFunctionType,
+        CSSStyleValuePair(CSSStyleValuePair::ValueKind::UrlValueKind, m_url));
+}
+
+void SVGUrlFilterFunction::apply(WebView* webView, uint8_t* buffer,
+                                 size_t width, size_t height,
+                                 size_t stride) const
+{
 }
 
 FilterFunctions* FilterFunctions::create(const CSSStyleValuePair& from)
