@@ -69,19 +69,19 @@ void SVGComponentTransferFunctionElement::didAttributeChanged(
         valueList->setValueByString(value);
     } else if (ss->m_slope == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        slope()->setBaseVal(String::parseFloat(value));
+        slope()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_intercept == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        intercept()->setBaseVal(String::parseFloat(value));
+        intercept()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_amplitude == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        amplitude()->setBaseVal(String::parseFloat(value));
+        amplitude()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_exponent == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        exponent()->setBaseVal(String::parseFloat(value));
+        exponent()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_offset == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        offset()->setBaseVal(String::parseFloat(value));
+        offset()->setBaseVal(String::parseFloat(value), true);
     }
 }
 
@@ -157,7 +157,8 @@ SVGAnimatedNumberList* SVGComponentTransferFunctionElement::tableValues()
 SVGAnimatedNumber* SVGComponentTransferFunctionElement::slope()
 {
     if (!m_slope.hasValue()) {
-        m_slope = new SVGAnimatedNumber(document(), 1, 1);
+        m_slope = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_slope, 1, 1);
     }
     return m_slope.value();
 }
@@ -165,7 +166,8 @@ SVGAnimatedNumber* SVGComponentTransferFunctionElement::slope()
 SVGAnimatedNumber* SVGComponentTransferFunctionElement::intercept()
 {
     if (!m_intercept.hasValue()) {
-        m_intercept = new SVGAnimatedNumber(document(), 0, 0);
+        m_intercept = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_intercept, 0, 0);
     }
     return m_intercept.value();
 }
@@ -173,7 +175,8 @@ SVGAnimatedNumber* SVGComponentTransferFunctionElement::intercept()
 SVGAnimatedNumber* SVGComponentTransferFunctionElement::amplitude()
 {
     if (!m_amplitude.hasValue()) {
-        m_amplitude = new SVGAnimatedNumber(document(), 1, 1);
+        m_amplitude = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_amplitude, 1, 1);
     }
     return m_amplitude.value();
 }
@@ -181,7 +184,8 @@ SVGAnimatedNumber* SVGComponentTransferFunctionElement::amplitude()
 SVGAnimatedNumber* SVGComponentTransferFunctionElement::exponent()
 {
     if (!m_exponent.hasValue()) {
-        m_exponent = new SVGAnimatedNumber(document(), 1, 1);
+        m_exponent = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_exponent, 1, 1);
     }
     return m_exponent.value();
 }
@@ -189,7 +193,8 @@ SVGAnimatedNumber* SVGComponentTransferFunctionElement::exponent()
 SVGAnimatedNumber* SVGComponentTransferFunctionElement::offset()
 {
     if (!m_offset.hasValue()) {
-        m_offset = new SVGAnimatedNumber(document(), 0, 0);
+        m_offset = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_offset, 0, 0);
     }
     return m_offset.value();
 }

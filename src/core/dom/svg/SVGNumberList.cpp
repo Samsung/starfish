@@ -84,8 +84,7 @@ SVGNumber* SVGNumberList::initialize(SVGNumber* newItem)
 
     clearWithoutUpdateAttribute();
 
-    SVGNumber* item =
-        new SVGNumber(m_sourceElement, m_targetAttribute, newItem->value());
+    SVGNumber* item = new SVGNumber(m_sourceElement, this, newItem->value());
 
     appendItemWithoutUpdateAttribute(item);
 
@@ -116,8 +115,7 @@ SVGNumber* SVGNumberList::insertItemBefore(SVGNumber* newItem,
         return nullptr;
     }
 
-    SVGNumber* item =
-        new SVGNumber(m_sourceElement, m_targetAttribute, newItem->value());
+    SVGNumber* item = new SVGNumber(m_sourceElement, this, newItem->value());
 
     if (length() > index) {
         insertItemWithoutUpdateAttribute(item, index);
@@ -147,8 +145,7 @@ SVGNumber* SVGNumberList::replaceItem(SVGNumber* newItem, unsigned long index)
         return nullptr;
     }
 
-    SVGNumber* item =
-        new SVGNumber(m_sourceElement, m_targetAttribute, newItem->value());
+    SVGNumber* item = new SVGNumber(m_sourceElement, this, newItem->value());
 
     m_v.at(index)->setValue(item->value());
 
@@ -226,8 +223,7 @@ void SVGNumberList::setValueByString(String* value)
     StringUtils::wordTokenizer(value, v);
     clear();
     for (size_t i = 0; i < v.size(); i++) {
-        appendItem(new SVGNumber(m_sourceElement,
-                                 AtomicString::emptyAtomicString(),
+        appendItem(new SVGNumber(m_sourceElement, this,
                                  String::parseFloat(v[i].substring())));
     }
 }
@@ -284,8 +280,7 @@ void SVGNumberList::updateListByAttribute()
         StringUtils::wordTokenizer(attrValue, tokens);
 
         for (size_t i = 0; i < tokens.size(); ++i) {
-            SVGNumber* newItem = new SVGNumber(
-                m_sourceElement, AtomicString::emptyAtomicString());
+            SVGNumber* newItem = new SVGNumber(m_sourceElement, this);
             newItem->setValue(String::parseFloat(tokens[i].substring()));
             appendItemWithoutUpdateAttribute(newItem);
         }

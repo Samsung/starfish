@@ -61,16 +61,16 @@ void SVGFECompositeElement::didAttributeChanged(QualifiedName name,
         in2()->setBaseVal(value, true);
     } else if (ss->m_k1 == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        k1()->setBaseVal(String::parseFloat(value));
+        k1()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k2 == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        k2()->setBaseVal(String::parseFloat(value));
+        k2()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k3 == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        k3()->setBaseVal(String::parseFloat(value));
+        k3()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k4 == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        k4()->setBaseVal(String::parseFloat(value));
+        k4()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_operator == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         if (domOperator()->isUpdated() == false) {
@@ -148,7 +148,8 @@ SVGAnimatedEnumeration* SVGFECompositeElement::domOperator()
 SVGAnimatedNumber* SVGFECompositeElement::k1()
 {
     if (!m_k1.hasValue()) {
-        m_k1 = new SVGAnimatedNumber(document(), 0, 0);
+        m_k1 = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_k1, 0,
+                                     0);
     }
     return m_k1.getValue();
 }
@@ -156,7 +157,8 @@ SVGAnimatedNumber* SVGFECompositeElement::k1()
 SVGAnimatedNumber* SVGFECompositeElement::k2()
 {
     if (!m_k2.hasValue()) {
-        m_k2 = new SVGAnimatedNumber(document(), 0, 0);
+        m_k2 = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_k2, 0,
+                                     0);
     }
     return m_k2.getValue();
 }
@@ -164,7 +166,8 @@ SVGAnimatedNumber* SVGFECompositeElement::k2()
 SVGAnimatedNumber* SVGFECompositeElement::k3()
 {
     if (!m_k3.hasValue()) {
-        m_k3 = new SVGAnimatedNumber(document(), 0, 0);
+        m_k3 = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_k3, 0,
+                                     0);
     }
     return m_k3.getValue();
 }
@@ -172,7 +175,8 @@ SVGAnimatedNumber* SVGFECompositeElement::k3()
 SVGAnimatedNumber* SVGFECompositeElement::k4()
 {
     if (!m_k4.hasValue()) {
-        m_k4 = new SVGAnimatedNumber(document(), 0, 0);
+        m_k4 = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_k4, 0,
+                                     0);
     }
     return m_k4.getValue();
 }

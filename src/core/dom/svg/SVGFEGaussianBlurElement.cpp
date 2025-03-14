@@ -69,18 +69,18 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
         if (tokens.size() == 1) {
-            stdDeviationX()->setBaseVal(String::parseFloat(&tokens[0]));
-            stdDeviationY()->setBaseVal(String::parseFloat(&tokens[0]));
+            stdDeviationX()->setBaseVal(String::parseFloat(&tokens[0]), true);
+            stdDeviationY()->setBaseVal(String::parseFloat(&tokens[0]), true);
         } else if (tokens.size() > 1) {
-            stdDeviationX()->setBaseVal(String::parseFloat(&tokens[0]));
-            stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]));
+            stdDeviationX()->setBaseVal(String::parseFloat(&tokens[0]), true);
+            stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]), true);
         }
     } else if (ss->m_stdDeviationX == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        stdDeviationX()->setBaseVal(String::parseFloat(value));
+        stdDeviationX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_stdDeviationY == name) {
         notifyAttributeOfPaintServerLikeUpdated();
-        stdDeviationY()->setBaseVal(String::parseFloat(value));
+        stdDeviationY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_edgeMode == name) {
         notifyAttributeOfPaintServerLikeUpdated();
         if (edgeMode()->isUpdated() == false) {
@@ -145,7 +145,8 @@ SVGAnimatedString* SVGFEGaussianBlurElement::in()
 SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationX()
 {
     if (!m_stdDeviationX.hasValue()) {
-        m_stdDeviationX = new SVGAnimatedNumber(document(), 0, 0);
+        m_stdDeviationX = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_stdDeviationX, 0, 0);
     }
     return m_stdDeviationX.getValue();
 }
@@ -153,7 +154,8 @@ SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationX()
 SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationY()
 {
     if (!m_stdDeviationY.hasValue()) {
-        m_stdDeviationY = new SVGAnimatedNumber(document(), 0, 0);
+        m_stdDeviationY = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_stdDeviationY, 0, 0);
     }
     return m_stdDeviationY.getValue();
 }
@@ -172,12 +174,14 @@ void SVGFEGaussianBlurElement::setStdDeviation(float stdDeviationX,
                                                float stdDeviationY)
 {
     if (!m_stdDeviationX.hasValue()) {
-        m_stdDeviationX = new SVGAnimatedNumber(document(), 0, 0);
+        m_stdDeviationX = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_stdDeviationX, 0, 0);
     }
     m_stdDeviationX->setBaseVal(stdDeviationX);
 
     if (!m_stdDeviationY.hasValue()) {
-        m_stdDeviationY = new SVGAnimatedNumber(document(), 0, 0);
+        m_stdDeviationY = new SVGAnimatedNumber(
+            this, starfish()->staticStrings()->m_stdDeviationY, 0, 0);
     }
     m_stdDeviationY->setBaseVal(stdDeviationY);
 }

@@ -19,21 +19,28 @@
 
 #include "StarfishConfig.h"
 #include "SVGAnimatedNumber.h"
-#include "core/dom/Document.h"
+#include "core/dom/svg/SVGElement.h"
 
 namespace Starfish {
 
-SVGAnimatedNumber::SVGAnimatedNumber(Document* document, float baseVal,
-                                     float animVal)
+SVGAnimatedNumber::SVGAnimatedNumber(SVGElement* targetElement,
+                                     const QualifiedName& targetAttribute,
+                                     float baseVal, float animVal)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_targetElement(targetElement)
+    , m_targetAttribute(targetAttribute)
     , m_baseVal(baseVal)
     , m_animVal(animVal)
 {
 }
 
+void SVGAnimatedNumber::updateTargetElementAttribute()
+{
+    m_targetElement->updateSVGAttributeNeeded(m_targetAttribute);
+}
+
 ScriptBindingInstance* SVGAnimatedNumber::scriptBindingInstance()
 {
-    return m_scriptBindingInstance;
+    return m_targetElement->scriptBindingInstance();
 }
 } // namespace Starfish
