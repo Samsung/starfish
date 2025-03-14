@@ -39,23 +39,4 @@ FilterPrimitive::FilterPrimitive(Filter* filter,
 {
 }
 
-void* FilterPrimitive::operator new(size_t size)
-{
-    STARFISH_ASSERT(size == sizeof(FilterPrimitive));
-    static bool typeInited = false;
-    static GC_descr descr;
-    if (typeInited == false) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(FilterPrimitive)] = { 0 };
-        STARFISH_ASSERT(obj_bitmap != nullptr);
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_input));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_input2));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_output));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_filter));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FilterPrimitive, m_domElement));
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FilterPrimitive));
-        typeInited = true;
-    }
-    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
 } // namespace Starfish

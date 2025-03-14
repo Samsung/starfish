@@ -163,9 +163,9 @@ void* FilterComponentTransfer::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (typeInited == false) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(FilterComponentTransfer)] = { 0 };
-        descr = GC_make_descriptor(obj_bitmap,
-                                   GC_WORD_LEN(FilterComponentTransfer));
+        GC_word desc[GC_BITMAP_SIZE(FilterComponentTransfer)] = { 0 };
+        FilterPrimitive::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FilterComponentTransfer));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);

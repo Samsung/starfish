@@ -157,9 +157,9 @@ void* FilterColorMatrix::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (typeInited == false) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(FilterColorMatrix)] = { 0 };
-        STARFISH_ASSERT(obj_bitmap != nullptr);
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FilterColorMatrix));
+        GC_word desc[GC_BITMAP_SIZE(FilterColorMatrix)] = { 0 };
+        FilterPrimitive::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FilterColorMatrix));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
