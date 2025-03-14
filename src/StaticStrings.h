@@ -213,6 +213,7 @@ namespace Starfish {
     F(feMergeNode)                     \
     F(femergenode)                     \
     F(feMorphology)                    \
+    F(femorphology)                    \
     F(feOffset)                        \
     F(feSpecularLighting)              \
     F(fePointLight)                    \
@@ -566,6 +567,7 @@ public:
     QualifiedName m_xChannelSelector;
     QualifiedName m_yChannelSelector;
     QualifiedName m_operator;
+    QualifiedName m_radius;
     QualifiedName m_radiusX;
     QualifiedName m_radiusY;
     QualifiedName m_diffuseConstant;

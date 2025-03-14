@@ -624,6 +624,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "yChannelSelector"));
     m_operator =
         QualifiedName(AtomicString::createAtomicString(starfish, "operator"));
+    m_radius =
+        QualifiedName(AtomicString::createAtomicString(starfish, "radius"));
     m_radiusX =
         QualifiedName(AtomicString::createAtomicString(starfish, "radiusX"));
     m_radiusY =

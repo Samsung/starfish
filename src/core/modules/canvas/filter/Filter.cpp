@@ -24,6 +24,7 @@
 #include "core/modules/canvas/filter/FilterComponentTransfer.h"
 #include "core/modules/canvas/filter/FilterMerge.h"
 #include "core/modules/canvas/filter/FilterComposite.h"
+#include "core/modules/canvas/filter/FilterMorphology.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -198,6 +199,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterMerge(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFECompositeElement()) {
         primitive = new FilterComposite(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEMorphologyElement()) {
+        primitive = new FilterMorphology(this, filterPrimitiveNode);
     }
     return primitive;
 }
