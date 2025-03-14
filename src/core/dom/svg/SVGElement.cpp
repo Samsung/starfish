@@ -27,6 +27,7 @@
 #include "core/dom/Traverse.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/style/FilterFunctions.h"
 
 namespace Starfish {
 
@@ -448,6 +449,8 @@ void SVGElement::styleForPresentationAttribute(
         }
         UPDATE_SVG_PRESENTATION_ATTRIBUTE(maskType, MaskType);
     }
+
+    UPDATE_SVG_PRESENTATION_ATTRIBUTE(filter, Filter);
 }
 
 int SVGElement::tabIndex()
@@ -498,11 +501,12 @@ Optional<SVGMaskElement*> SVGElement::maskElement()
     }
 
     ImageValue* image = style()->maskImage(0);
-    STARFISH_ASSERT(image->type() == ImageValueType::ValueType::URL);
-
-    auto e = getElementByURLAndRegisterUsageToDocument(this, image->urlValue());
-    if (e && e->isSVGMaskElement()) {
-        return e->asSVGMaskElement();
+    if (image->type() == ImageValueType::ValueType::URL) {
+        auto e =
+            getElementByURLAndRegisterUsageToDocument(this, image->urlValue());
+        if (e && e->isSVGMaskElement()) {
+            return e->asSVGMaskElement();
+        }
     }
 
     return nullptr;
@@ -510,17 +514,20 @@ Optional<SVGMaskElement*> SVGElement::maskElement()
 
 Optional<SVGFilterElement*> SVGElement::filterElement()
 {
-    String* filterStr =
-        getAttributeOrEmpty(starfish()->staticStrings()->m_filter);
-    if (filterStr->isEmpty()) {
-        return nullptr;
-    }
+    auto f = style()->filter();
+    if (f && f->size() == 1 &&
+        f->at(0)->type() == FilterFunctionType::SVGUrlFilterFunctionType) {
+        String* filterStr =
+            reinterpret_cast<SVGUrlFilterFunction*>(f->at(0))->url();
+        if (filterStr->isEmpty()) {
+            return nullptr;
+        }
 
-    auto e = getElementByURLAndRegisterUsageToDocument(this, filterStr);
-    if (e && e->isSVGFilterElement()) {
-        return e->asSVGFilterElement();
+        auto e = getElementByURLAndRegisterUsageToDocument(this, filterStr);
+        if (e && e->isSVGFilterElement()) {
+            return e->asSVGFilterElement();
+        }
     }
-
     return nullptr;
 }
 

@@ -730,7 +730,7 @@ public:
         }
     }
 
-    FilterFunctions* filter()
+    Optional<FilterFunctions*> filter()
     {
         FIND_VALUE(Filter);
         if (it == m_styles.end()) {
@@ -739,11 +739,11 @@ public:
         return (*it).m_value.m_filter;
     }
 
-    void setFilter(FilterFunctions* v)
+    void setFilter(Optional<FilterFunctions*> v)
     {
         clearFilter();
         if (v) {
-            m_styles.emplace_back(KeyKind::Filter, v);
+            m_styles.emplace_back(KeyKind::Filter, v.value());
         }
     }
 
@@ -4901,12 +4901,12 @@ public:
         *m_rareComputedStyleData.ensureAppearance() = v;
     }
 
-    FilterFunctions* filter()
+    Optional<FilterFunctions*> filter()
     {
         return m_rareComputedStyleData.filter();
     }
 
-    void setFilter(FilterFunctions* v)
+    void setFilter(Optional<FilterFunctions*> v)
     {
         if (!v && !m_rareComputedStyleData.m_styles.size()) {
             return;
