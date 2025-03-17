@@ -41,8 +41,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGAnimateElement() const override;
 
-    // virtual void beginElementAt(float offset) override;
-
 protected:
 };
 } // namespace Starfish

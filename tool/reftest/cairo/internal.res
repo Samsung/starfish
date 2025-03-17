@@ -650,6 +650,7 @@ test/cairo/internal-test/svg/animation/animate_keySplines_event.html
 test/cairo/internal-test/svg/animation/animate_repeatCount_event.html
 test/cairo/internal-test/svg/animation/animate_values.html
 test/cairo/internal-test/svg/animation/animate_xy.html
+test/cairo/internal-test/svg/animation/animateTransform_rotate_without_transformOrigin.html
 test/cairo/internal-test/svg/animation/animation_svg_transform_rotate_screenshot.html
 test/cairo/internal-test/svg/animation/animation_svg_transform_rotate.html
 test/cairo/internal-test/svg/svg_01.html
