@@ -146,31 +146,31 @@ bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
     switch (type) {
     case TransformType::Translate:
         builder.appendString("translate(");
-        builder.appendString(nubmer);
+        builder.appendString(nubmer->trim());
         builder.appendChar(')');
         *transformValue = builder.finalize();
         return true;
     case TransformType::Scale:
         builder.appendString("scale(");
-        builder.appendString(nubmer);
+        builder.appendString(nubmer->trim());
         builder.appendChar(')');
         *transformValue = builder.finalize();
         return true;
     case TransformType::Rotate:
         builder.appendString("rotate(");
-        builder.appendString(nubmer);
+        builder.appendString(nubmer->trim());
         builder.appendString("deg)");
         *transformValue = builder.finalize();
         return true;
     case TransformType::SkewX:
         builder.appendString("skewX(");
-        builder.appendString(nubmer);
+        builder.appendString(nubmer->trim());
         builder.appendString("deg)");
         *transformValue = builder.finalize();
         return true;
     case TransformType::SkewY:
         builder.appendString("skewX(");
-        builder.appendString(nubmer);
+        builder.appendString(nubmer->trim());
         builder.appendString("deg)");
         *transformValue = builder.finalize();
         return true;
