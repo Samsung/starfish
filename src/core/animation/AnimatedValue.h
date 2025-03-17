@@ -31,17 +31,17 @@ class StyleTransformDataGroup;
 class TimingFunction;
 
 class AnimatedValue : public gc {
-    enum ValueType ENSURE_ENUM_UNSIGNED {
-        UNDEFINED,
-        COLOR,
-        LAYOUT_UNIT,
-        LENGTH,
-        LENGTH_SIZE,
-        FLOAT,
-        INT,
-        MATRIX,
-        TRANSFORM_DATA,
-        VISIBILITY
+    enum class ValueType ENSURE_ENUM_UNSIGNED {
+        Undefined,
+        Color,
+        LayoutUnit,
+        Length,
+        LengthSize,
+        Float,
+        Int,
+        Matrix,
+        TransformData,
+        Visibility
     };
 
 public:
@@ -65,49 +65,49 @@ public:
 
     AnimatedValue()
     {
-        m_type = UNDEFINED;
+        m_type = ValueType::Undefined;
     }
 
     AnimatedValue(Unit::Color colorValue)
     {
         m_data.m_color = colorValue;
-        m_type = COLOR;
+        m_type = ValueType::Color;
     }
 
     AnimatedValue(Length lengthValue)
     {
         m_data.m_length = lengthValue;
-        m_type = LENGTH;
+        m_type = ValueType::Length;
     }
 
     AnimatedValue(const LengthSize& size)
     {
         m_data.m_lengthSize = new LengthSize(size);
-        m_type = LENGTH_SIZE;
+        m_type = ValueType::LengthSize;
     }
 
     AnimatedValue(LayoutUnit v)
     {
         m_data.m_layoutUnit = v;
-        m_type = LAYOUT_UNIT;
+        m_type = ValueType::LayoutUnit;
     }
 
     AnimatedValue(float floatValue)
     {
         m_data.m_float = floatValue;
-        m_type = FLOAT;
+        m_type = ValueType::Float;
     }
 
     AnimatedValue(int intValue)
     {
         m_data.m_int = intValue;
-        m_type = INT;
+        m_type = ValueType::Int;
     }
 
     AnimatedValue(const SkMatrix& matrix)
     {
         m_data.m_matrix = matrix;
-        m_type = MATRIX;
+        m_type = ValueType::Matrix;
     }
 
     AnimatedValue(StyleTransformDataGroup* transform)
@@ -115,112 +115,112 @@ public:
         STARFISH_ASSERT(transform != nullptr);
 
         m_data.m_transformData = transform;
-        m_type = TRANSFORM_DATA;
+        m_type = ValueType::TransformData;
     }
 
     AnimatedValue(VisibilityValue v)
     {
         m_data.m_visibilityValue = v;
-        m_type = VISIBILITY;
+        m_type = ValueType::Visibility;
     }
 
     bool isColor() const
     {
-        return m_type == COLOR;
+        return m_type == ValueType::Color;
     }
 
     bool isLength() const
     {
-        return m_type == LENGTH;
+        return m_type == ValueType::Length;
     }
 
     bool isLengthSize() const
     {
-        return m_type == LENGTH_SIZE;
+        return m_type == ValueType::LengthSize;
     }
 
     bool isFloat() const
     {
-        return m_type == FLOAT;
+        return m_type == ValueType::Float;
     }
 
     bool isInt() const
     {
-        return m_type == INT;
+        return m_type == ValueType::Int;
     }
 
     bool isMatrix() const
     {
-        return m_type == MATRIX;
+        return m_type == ValueType::Matrix;
     }
 
     bool isLayoutUnit() const
     {
-        return m_type == LAYOUT_UNIT;
+        return m_type == ValueType::LayoutUnit;
     }
 
     bool isTransformData() const
     {
-        return m_type == TRANSFORM_DATA;
+        return m_type == ValueType::TransformData;
     }
 
     Unit::Color getColor() const
     {
-        STARFISH_ASSERT(m_type == COLOR);
+        STARFISH_ASSERT(m_type == ValueType::Color);
         return m_data.m_color;
     }
 
     Length getLength() const
     {
-        STARFISH_ASSERT(m_type == LENGTH);
+        STARFISH_ASSERT(m_type == ValueType::Length);
         return m_data.m_length;
     }
 
     void setLength(const Length& l)
     {
-        STARFISH_ASSERT(m_type == LENGTH);
+        STARFISH_ASSERT(m_type == ValueType::Length);
         m_data.m_length = l;
     }
 
     LengthSize* getLengthSize() const
     {
-        STARFISH_ASSERT(m_type == LENGTH_SIZE);
+        STARFISH_ASSERT(m_type == ValueType::LengthSize);
         return m_data.m_lengthSize;
     }
 
     LayoutUnit getLayoutUnit() const
     {
-        STARFISH_ASSERT(m_type == LAYOUT_UNIT);
+        STARFISH_ASSERT(m_type == ValueType::LayoutUnit);
         return m_data.m_layoutUnit;
     }
 
     float getFloat() const
     {
-        STARFISH_ASSERT(m_type == FLOAT);
+        STARFISH_ASSERT(m_type == ValueType::Float);
         return m_data.m_float;
     }
 
     int getInt() const
     {
-        STARFISH_ASSERT(m_type == INT);
+        STARFISH_ASSERT(m_type == ValueType::Int);
         return m_data.m_int;
     }
 
     SkMatrix getMatrix() const
     {
-        STARFISH_ASSERT(m_type == MATRIX);
+        STARFISH_ASSERT(m_type == ValueType::Matrix);
         return m_data.m_matrix;
     }
 
     StyleTransformDataGroup* getTransformData() const
     {
-        STARFISH_ASSERT(m_type == TRANSFORM_DATA);
+        STARFISH_ASSERT(m_type == ValueType::TransformData);
         return m_data.m_transformData;
     }
 
     VisibilityValue getVisibilityValue() const
     {
-        STARFISH_ASSERT(m_type == VISIBILITY);
+        STARFISH_ASSERT(m_type == ValueType::Visibility);
         return m_data.m_visibilityValue;
     }
 
