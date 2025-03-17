@@ -151,9 +151,6 @@ Element* SVGDocument::createSVGElement(Document* document,
     } else if (str->m_svgfeFuncATagName == localName ||
                str->m_svgfefuncaTagName == localName) {
         return new SVGFEFuncAElement(document, str->m_svgfeFuncATagName);
-    } else if (str->m_svgfeFuncATagName == localName ||
-               str->m_svgfefuncaTagName == localName) {
-        return new SVGFEFuncAElement(document, str->m_svgfeFuncATagName);
     } else if (str->m_svgfeFuncRTagName == localName ||
                str->m_svgfefuncrTagName == localName) {
         return new SVGFEFuncRElement(document, str->m_svgfeFuncRTagName);
