@@ -1866,9 +1866,9 @@ public:
         return m_value.m_strokeLineJoin;
     }
 
-    bool valueEquals(const CSSStyleValuePair& src);
-    bool operator==(const CSSStyleValuePair& src);
-    bool operator!=(const CSSStyleValuePair& src)
+    bool valueEquals(const CSSStyleValuePair& src) const;
+    bool operator==(const CSSStyleValuePair& src) const;
+    bool operator!=(const CSSStyleValuePair& src) const
     {
         return !operator==(src);
     }
