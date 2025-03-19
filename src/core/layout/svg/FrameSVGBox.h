@@ -114,6 +114,11 @@ public:
         return m_computedSVGTransform;
     }
 
+    LayoutRect* unadjustedFrameRectByFilter()
+    {
+        return m_unadjustedFrameRectByFilter.value();
+    }
+
     Optional<CanvasFillStrokeSource*> makeCanvasFillStrokeSource(
         const AtomicString& id, const Unit::Rect& rect);
 
@@ -136,6 +141,8 @@ protected:
         GC_set_bit(desc,
                    GC_WORD_OFFSET(FrameSVGBox, m_treeItemModel.m_lastChild));
         GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGBox, m_computedSVGTransform));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameSVGBox, m_unadjustedFrameRectByFilter));
     }
 
     virtual bool hasFrameTreeItemModel() override
@@ -153,6 +160,7 @@ protected:
 
     FrameTreeItemModel m_treeItemModel;
     Optional<SkMatrix*> m_computedSVGTransform;
+    Optional<LayoutRect*> m_unadjustedFrameRectByFilter;
 };
 } // namespace Starfish
 

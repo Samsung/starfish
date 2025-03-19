@@ -37,7 +37,7 @@ void SVGGradientElement::didNodeInserted(Node* parent, Node* newChild)
     SVGElement::didNodeInserted(parent, newChild);
 
     if (parent == this && newChild->isSVGStopElement()) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(false);
     }
 }
 
@@ -46,7 +46,7 @@ void SVGGradientElement::didNodeRemoved(Node* parent, Node* oldChild)
     SVGElement::didNodeRemoved(parent, oldChild);
 
     if (parent == this && oldChild->isSVGStopElement()) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(false);
     }
 }
 
@@ -63,7 +63,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_gradientUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(false);
         if (gradientUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_gradientUnits->setBaseValWithoutUpdateAttribute(
@@ -75,7 +75,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_gradientTransform == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(false);
         if (value->equals(gradientTransform()->baseVal()->toString()) ==
             false) {
             gradientTransform()->baseVal()->updateListByAttribute();
@@ -83,7 +83,7 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_spreadMethod == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(false);
         if (spreadMethod()->isUpdated() == false) {
             if (value->equals("pad")) {
                 m_spreadMethod->setBaseValWithoutUpdateAttribute(

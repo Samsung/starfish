@@ -155,20 +155,25 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
 {
     Filter* fe = filterElement->filter();
 
-    LayoutRect viasRect = self->frameRect();
-    viasRect.setX(self->x() + fe->biasX() * matrix.getScaleX());
-    viasRect.setY(self->y() + fe->biasY() * matrix.getScaleY());
-    viasRect.setWidth(self->width() + fe->biasWidth() * matrix.getScaleX());
-    viasRect.setHeight(self->height() + fe->biasHeight() * matrix.getScaleY());
+    *self->unadjustedFrameRectByFilter() = self->frameRect();
+
+    auto vp = self->viewport();
+    FrameSVGSVGBox* viewportBox = self->outmostSVGViewportBox();
+    auto transScale = viewportBox->computeTranlateScaleOnPaint();
+    auto bias =
+        fe->computeBias(self, std::make_pair(transScale.second.getScaleX(),
+                                             transScale.second.getScaleY()));
+    LayoutRect biasRect = self->frameRect();
+    biasRect.setX(self->x() - bias.first * matrix.getScaleX());
+    biasRect.setY(self->y() - bias.second * matrix.getScaleY());
+    biasRect.setWidth(self->width() + bias.first * 2 * matrix.getScaleX());
+    biasRect.setHeight(self->height() + bias.second * 2 * matrix.getScaleY());
 
     auto eX = filterElement->x();
     auto eY = filterElement->y();
     auto eWidth = filterElement->width();
     auto eHeight = filterElement->height();
 
-    auto vp = self->viewport();
-    FrameSVGSVGBox* viewportBox = self->outmostSVGViewportBox();
-    auto transScale = viewportBox->computeTranlateScaleOnPaint();
     bool isObjectBoundingBoxMode =
         filterElement->filterUnits()->baseVal() ==
         SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX;
@@ -203,7 +208,7 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
         newFrameRect = computeBoxExtent(newFrameRect, matrix);
     }
 
-    self->setFrameRect(LayoutRect::overlappedRect(viasRect, newFrameRect));
+    self->setFrameRect(LayoutRect::overlappedRect(biasRect, newFrameRect));
 }
 
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
@@ -332,6 +337,15 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     }
 
     auto filterElement = node()->asSVGElement()->filterElement();
+    if (!filterElement) {
+        m_unadjustedFrameRectByFilter = nullptr;
+    } else {
+        if (!m_unadjustedFrameRectByFilter) {
+            m_unadjustedFrameRectByFilter =
+                new (GC_MALLOC_ATOMIC(sizeof(LayoutRect))) LayoutRect();
+        }
+    }
+
     if (needsComputeFrameRect && !isStructuralElement) {
         if (filterElement) {
             adjustFrameRectByFilter(this, filterElement.value(), matrix);
@@ -508,7 +522,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
                 FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
                 auto transScale = viewportBox->computeTranlateScaleOnPaint();
                 Filter::FilterApplyContext ctx(
-                    w, s, h, ptr, transScale.second.getScaleX(),
+                    this, w, s, h, ptr, transScale.second.getScaleX(),
                     transScale.second.getScaleY(), false);
 
                 filter->applyFilter(ctx);

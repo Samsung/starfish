@@ -1595,8 +1595,8 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
     } else if (UNLIKELY(newChild->isSVGElement())) {
         if (newChild->asSVGElement()->isPaintServerLikeElement()) {
             if (newChild->asElement()->atomicId().string()->length()) {
-                notifyRepaintToSVGPaintClientElements(
-                    newChild->asElement()->atomicId());
+                notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                    newChild->asElement()->atomicId(), true);
             }
         }
     }
@@ -1613,8 +1613,8 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
     } else if (UNLIKELY(oldChild->isSVGElement())) {
         if (oldChild->asSVGElement()->isPaintServerLikeElement()) {
             if (oldChild->asElement()->atomicId().string()->length()) {
-                notifyRepaintToSVGPaintClientElements(
-                    oldChild->asElement()->atomicId());
+                notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                    oldChild->asElement()->atomicId(), true);
             }
         }
         removeSVGPaintClientElement(oldChild->asSVGElement());
@@ -2717,11 +2717,15 @@ void Document::registerSVGPaintClientElements(const AtomicString& id,
     m_svgPaintClientElements.push_back(std::make_pair(id, std::move(v)));
 }
 
-void Document::notifyRepaintToSVGPaintClientElements(const AtomicString& id)
+void Document::notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+    const AtomicString& id, bool needsLayoutAlso)
 {
     for (auto& pair : m_svgPaintClientElements) {
         if (pair.first == id) {
             for (auto* e : pair.second) {
+                if (needsLayoutAlso) {
+                    e->setNeedsLayout();
+                }
                 e->setNeedsPainting();
             }
             return;

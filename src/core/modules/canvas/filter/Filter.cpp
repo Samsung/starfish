@@ -31,7 +31,7 @@
 #include "core/layout/svg/FrameSVGBox.h"
 
 namespace Starfish {
-Filter::Filter(SVGElement* owner)
+Filter::Filter(SVGFilterElement* owner)
     : m_owner(owner)
 {
     STARFISH_ASSERT(m_owner);
@@ -42,6 +42,17 @@ Filter::Filter(SVGElement* owner)
     m_primitiveUnits = (SVGUnitTypes::UnitTypes)m_owner->asSVGFilterElement()
                            ->primitiveUnits()
                            ->baseVal();
+}
+
+float Filter::resolveFilterPrimitiveValue(float value, float boxSize,
+                                          float viewportScale)
+{
+    auto type = m_owner->primitiveUnits()->baseVal();
+    if (type == SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+        return boxSize * value;
+    } else {
+        return viewportScale * value;
+    }
 }
 
 std::shared_ptr<Filter::FilterSourceBuffer>
@@ -146,20 +157,28 @@ bool Filter::isLastFilter(FilterPrimitive* f)
     return f == m_filterPrimitives.back();
 }
 
-void Filter::setBias(float x, float y, float width, float height)
-{
-    m_filterBiasX = std::min(m_filterBiasX, x);
-    m_filterBiasY = std::min(m_filterBiasY, y);
-    m_filterBiasWidth = std::max(m_filterBiasWidth, width);
-    m_filterBiasHeight = std::max(m_filterBiasHeight, height);
-}
-
 void Filter::updateIfNeeds()
 {
     if (m_needsUpdate) {
         rebuildFiter();
         m_needsUpdate = false;
     }
+}
+
+std::pair<float, float> Filter::computeBias(
+    FrameSVGBox* target, const std::pair<float, float>& viewportScale)
+{
+    updateIfNeeds();
+
+    std::pair<float, float> ret(std::make_pair(0, 0));
+    auto siz = target->frameRect().size();
+    for (auto* f : m_filterPrimitives) {
+        auto subResult = f->computeBias(siz, viewportScale);
+        ret.first = std::max(ret.first, subResult.first);
+        ret.second = std::max(ret.second, subResult.second);
+    }
+
+    return ret;
 }
 
 void Filter::rebuildFiter()

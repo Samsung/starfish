@@ -35,6 +35,13 @@ public:
 
     static std::pair<float, float> computeKernelSize(float stdDeviationX,
                                                      float stdDeviationY);
+
+    std::pair<float, float> computeStdXY(
+        const LayoutSize& targetSize,
+        const std::pair<float, float>& viewportScale);
+    virtual std::pair<float, float> computeBias(
+        const LayoutSize& targetSize,
+        const std::pair<float, float>& viewportScale) override;
 };
 } // namespace Starfish
 #endif

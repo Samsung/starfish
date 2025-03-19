@@ -636,7 +636,8 @@ public:
 
     void registerSVGPaintClientElements(const AtomicString& id,
                                         SVGElement* client);
-    void notifyRepaintToSVGPaintClientElements(const AtomicString& id);
+    void notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+        const AtomicString& id, bool alsoNeedsLayout);
     void removeSVGPaintClientElement(SVGElement* client);
 #define VIRTUAL
 #define OVERRIDE

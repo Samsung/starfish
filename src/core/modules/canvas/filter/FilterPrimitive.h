@@ -63,6 +63,13 @@ public:
         return m_output;
     }
 
+    virtual std::pair<float, float> computeBias(
+        const LayoutSize& targetSize,
+        const std::pair<float, float>& viewportScale)
+    {
+        return std::pair<float, float>(0, 0);
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {

@@ -29,6 +29,10 @@
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterGaussianBlur.h"
+#include "core/page/WebView.h"
+#include "core/layout/svg/FrameSVGBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
+
 namespace Starfish {
 
 inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
@@ -333,18 +337,6 @@ FilterGaussianBlur::FilterGaussianBlur(
 {
     STARFISH_ASSERT(filter);
     STARFISH_ASSERT(element->isSVGFEGaussianBlurElement());
-
-    auto kernel = FilterGaussianBlur::computeKernelSize(
-        element->asSVGFEGaussianBlurElement()->stdDeviationX()->baseVal(),
-        element->asSVGFEGaussianBlurElement()->stdDeviationY()->baseVal());
-    float kernelX = kernel.first;
-    float kernelY = kernel.second;
-
-    SVGFEGaussianBlurElement* ele = element->asSVGFEGaussianBlurElement();
-    if ((SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal() ==
-        SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
-        filter->setBias(-kernelX, -kernelY, kernelX * 3, kernelY * 3);
-    }
 }
 
 void* FilterGaussianBlur::operator new(size_t size)
@@ -361,22 +353,55 @@ void* FilterGaussianBlur::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+std::pair<float, float> FilterGaussianBlur::computeStdXY(
+    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+{
+    auto e = element()->asSVGFEGaussianBlurElement();
+    float stdX = filter()->resolveFilterPrimitiveValue(
+        e->stdDeviationX()->baseVal(), targetSize.width(), viewportScale.first);
+    float stdY = filter()->resolveFilterPrimitiveValue(
+        e->stdDeviationY()->baseVal(), targetSize.height(),
+        viewportScale.second);
+
+    return std::make_pair(stdX, stdY);
+}
+
+std::pair<float, float> FilterGaussianBlur::computeBias(
+    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+{
+    auto e = element()->asSVGFEGaussianBlurElement();
+
+    if ((SVGFEGaussianBlurElement::EdgeMode)e->edgeMode()->baseVal() ==
+        SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+        auto stdXY = computeStdXY(targetSize, viewportScale);
+        auto kernel =
+            FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
+        return std::make_pair(kernel.first, kernel.second);
+    }
+    return std::make_pair(0, 0);
+}
+
 void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
                                Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEGaussianBlurElement());
     SVGFEGaussianBlurElement* ele = element()->asSVGFEGaussianBlurElement();
 
-    float stdDeviationX = ele->stdDeviationX()->baseVal();
-    if (stdDeviationX <= 0) {
+    auto vm = ctx.target->outmostSVGViewportBox()
+                  ->computeTranlateScaleOnPaint()
+                  .second;
+    auto stdXY = computeStdXY(ctx.target->unadjustedFrameRectByFilter()->size(),
+                              std::make_pair(vm.getScaleX(), vm.getScaleY()));
+    if (stdXY.first <= 0 || stdXY.second <= 0) {
         return;
     }
-    float stdDeviationY = ele->stdDeviationY()->baseVal();
-    if (stdDeviationY < 0) {
-        return;
-    }
-    auto kernelSize = computeKernelSize(stdDeviationX * ctx.viewportScaleX,
-                                        stdDeviationY * ctx.viewportScaleY);
+
+    auto kernelSize = computeKernelSize(stdXY.first * ctx.viewportScaleX,
+                                        stdXY.second * ctx.viewportScaleY);
+
+    float dpr = element()->webView()->screenInfo().devicePixelRatio;
+    kernelSize.first *= dpr;
+    kernelSize.second *= dpr;
 
     std::shared_ptr<Filter::FilterSourceBuffer> inputSource =
         filter()->fetchInputSource(ctx, this);

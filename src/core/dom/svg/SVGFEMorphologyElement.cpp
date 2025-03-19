@@ -61,20 +61,20 @@ void SVGFEMorphologyElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_in == name || ss->m_in1 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_radius == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusX()->setBaseVal(String::parseFloat(value), true);
         radiusY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_radiusX == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_radiusY == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_operator == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         if (domOperator()->isUpdated() == false) {
             if (value->equals("erode")) {
                 m_operator->setBaseValWithoutUpdateAttribute(

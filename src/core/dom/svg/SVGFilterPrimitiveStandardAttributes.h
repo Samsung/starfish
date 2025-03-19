@@ -79,7 +79,7 @@ protected:
     }
 
     Optional<SVGFilterElement*> filterElement();
-    void notifyAttributeOfPaintServerLikeUpdated();
+    void notifyAttributeOfPaintServerLikeUpdated(bool needsLayoutAlso);
 
 private:
     Optional<SVGAnimatedLength*> m_x;

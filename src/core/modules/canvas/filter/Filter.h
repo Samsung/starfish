@@ -26,11 +26,19 @@
 namespace Starfish {
 
 class FilterPrimitive;
-class SVGElement;
+class SVGFilterElement;
 
 class Filter : public gc {
 public:
-    Filter(SVGElement* owner);
+    Filter(SVGFilterElement* owner);
+
+    SVGFilterElement* owner() const
+    {
+        return m_owner;
+    }
+
+    float resolveFilterPrimitiveValue(float value, float boxSize,
+                                      float viewportSize);
 
     class FilterSourceBuffer {
     public:
@@ -65,6 +73,7 @@ public:
     };
 
     struct FilterApplyContext {
+        FrameSVGBox* const target;
         uint8_t* const src;
         const size_t width, stride, height;
         const float viewportScaleX;
@@ -79,9 +88,11 @@ public:
             SourceGraphic,
         };
 
-        FilterApplyContext(size_t w, size_t s, size_t h, uint8_t* srcData,
-                           float scaleX, float scaleY, bool isAlphaImage)
-            : src(srcData)
+        FilterApplyContext(FrameSVGBox* target, size_t w, size_t s, size_t h,
+                           uint8_t* srcData, float scaleX, float scaleY,
+                           bool isAlphaImage)
+            : target(target)
+            , src(srcData)
             , width(w)
             , stride(s)
             , height(h)
@@ -130,37 +141,14 @@ public:
         m_needsUpdate = true;
     }
 
-    float biasX()
-    {
-        updateIfNeeds();
-        return m_filterBiasX;
-    }
-
-    float biasY()
-    {
-        updateIfNeeds();
-        return m_filterBiasY;
-    }
-
-    float biasWidth()
-    {
-        updateIfNeeds();
-        return m_filterBiasWidth;
-    }
-
-    float biasHeight()
-    {
-        updateIfNeeds();
-        return m_filterBiasHeight;
-    }
-
     bool shouldMaintainSourceBuffer()
     {
         updateIfNeeds();
         return m_shouldMaintainSourceBuffer;
     }
 
-    void setBias(float x, float y, float width, float height);
+    std::pair<float, float> computeBias(
+        FrameSVGBox* target, const std::pair<float, float>& viewportScale);
 
 private:
     void rebuildFiter();
@@ -171,12 +159,8 @@ private:
 
     bool m_needsUpdate = false;
     bool m_shouldMaintainSourceBuffer = false;
-    float m_filterBiasX = 0;
-    float m_filterBiasY = 0;
-    float m_filterBiasWidth = 0;
-    float m_filterBiasHeight = 0;
 
-    SVGElement* m_owner{ nullptr };
+    SVGFilterElement* m_owner{ nullptr };
     SVGUnitTypes::UnitTypes m_filterUnits;
     SVGUnitTypes::UnitTypes m_primitiveUnits;
 
