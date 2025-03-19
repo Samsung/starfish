@@ -1093,7 +1093,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     }
 }
 
-bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src)
+bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
 {
     if (m_valueKind != src.m_valueKind) {
         return false;
@@ -1366,7 +1366,7 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src)
     return true;
 }
 
-bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src)
+bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src) const
 {
     if (m_flagImportant != src.m_flagImportant) {
         return false;
