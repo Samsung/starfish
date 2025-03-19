@@ -144,6 +144,11 @@ public:
         return m_frameRect;
     }
 
+    void setFrameRect(const LayoutRect& r)
+    {
+        m_frameRect = r;
+    }
+
     // FrameRect including outline, box-shadow
     LayoutRect frameVisibleRect();
     LayoutRect frameVisibleOutlineRect(OutlineData* outline);

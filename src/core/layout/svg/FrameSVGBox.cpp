@@ -133,17 +133,77 @@ LayoutSize FrameSVGBox::resolveStyleSize(const LayoutSize& viewport)
     return result;
 }
 
-static void expandFrameRectByFilter(FrameSVGBox* self,
+static float computeSVGLength(SVGLength* length, float fullValue,
+                              bool isObjectBoundingBoxMode)
+{
+    if (length->unitType() == SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+        return length->valueInSpecifiedUnits(false) / 100 * fullValue;
+    } else if (length->unitType() == SVGLength::SVG_LENGTHTYPE_NUMBER) {
+        if (isObjectBoundingBoxMode) {
+            return length->valueInSpecifiedUnits(false) * fullValue;
+        } else {
+            return length->valueInSpecifiedUnits(false);
+        }
+    } else {
+        return length->valueInSpecifiedUnits(false);
+    }
+}
+
+static void adjustFrameRectByFilter(FrameSVGBox* self,
                                     SVGFilterElement* filterElement,
                                     const SkMatrix& matrix)
 {
-    Optional<Filter*> fe = filterElement->filter();
-    if (fe.hasValue()) {
-        self->setX(self->x() + fe->biasX() * matrix.getScaleX());
-        self->setY(self->y() + fe->biasY() * matrix.getScaleY());
-        self->setWidth(self->width() + fe->biasWidth() * matrix.getScaleX());
-        self->setHeight(self->height() + fe->biasHeight() * matrix.getScaleY());
+    Filter* fe = filterElement->filter();
+
+    LayoutRect viasRect = self->frameRect();
+    viasRect.setX(self->x() + fe->biasX() * matrix.getScaleX());
+    viasRect.setY(self->y() + fe->biasY() * matrix.getScaleY());
+    viasRect.setWidth(self->width() + fe->biasWidth() * matrix.getScaleX());
+    viasRect.setHeight(self->height() + fe->biasHeight() * matrix.getScaleY());
+
+    auto eX = filterElement->x();
+    auto eY = filterElement->y();
+    auto eWidth = filterElement->width();
+    auto eHeight = filterElement->height();
+
+    auto vp = self->viewport();
+    FrameSVGSVGBox* viewportBox = self->outmostSVGViewportBox();
+    auto transScale = viewportBox->computeTranlateScaleOnPaint();
+    bool isObjectBoundingBoxMode =
+        filterElement->filterUnits()->baseVal() ==
+        SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX;
+
+    float fullWidth = self->width();
+    float fullHeight = self->height();
+    if (!isObjectBoundingBoxMode) {
+        fullWidth = vp.width();
+        fullHeight = vp.height();
     }
+
+    float x =
+        computeSVGLength(eX->baseVal(), fullWidth, isObjectBoundingBoxMode);
+    float y =
+        computeSVGLength(eY->baseVal(), fullHeight, isObjectBoundingBoxMode);
+    float width =
+        computeSVGLength(eWidth->baseVal(), fullWidth, isObjectBoundingBoxMode);
+    float height = computeSVGLength(eHeight->baseVal(), fullHeight,
+                                    isObjectBoundingBoxMode);
+
+    LayoutRect newFrameRect = self->frameRect();
+    if (isObjectBoundingBoxMode) {
+        newFrameRect.setX(self->x() + x);
+        newFrameRect.setY(self->y() + y);
+        newFrameRect.setWidth(width);
+        newFrameRect.setHeight(height);
+    } else {
+        newFrameRect.setX(x);
+        newFrameRect.setY(y);
+        newFrameRect.setWidth(width);
+        newFrameRect.setHeight(height);
+        newFrameRect = computeBoxExtent(newFrameRect, matrix);
+    }
+
+    self->setFrameRect(LayoutRect::overlappedRect(viasRect, newFrameRect));
 }
 
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
@@ -274,7 +334,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     auto filterElement = node()->asSVGElement()->filterElement();
     if (needsComputeFrameRect && !isStructuralElement) {
         if (filterElement) {
-            expandFrameRectByFilter(this, filterElement.value(), matrix);
+            adjustFrameRectByFilter(this, filterElement.value(), matrix);
         }
         for (auto rt : ctx.clippedRects) {
             m_frameRect = LayoutRect::overlappedRect(m_frameRect, rt);
@@ -292,7 +352,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         }
 
         if (filterElement) {
-            expandFrameRectByFilter(this, filterElement.value(), matrix);
+            adjustFrameRectByFilter(this, filterElement.value(), matrix);
         }
 
         f = firstChild();
@@ -444,23 +504,19 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         if (filterElement) {
             fn = [this, &ctx, filterElement](uint8_t* ptr, size_t w, size_t s,
                                              size_t h) -> void {
-                Optional<Filter*> filter =
-                    filterElement->asSVGFilterElement()->filter();
-                if (filter.hasValue()) {
-                    FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
-                    auto transScale =
-                        viewportBox->computeTranlateScaleOnPaint();
-                    Filter::FilterApplyContext ctx(
-                        w, s, h, ptr, transScale.second.getScaleX(),
-                        transScale.second.getScaleY(), false);
+                Filter* filter = filterElement->asSVGFilterElement()->filter();
+                FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
+                auto transScale = viewportBox->computeTranlateScaleOnPaint();
+                Filter::FilterApplyContext ctx(
+                    w, s, h, ptr, transScale.second.getScaleX(),
+                    transScale.second.getScaleY(), false);
 
-                    filter->applyFilter(ctx);
+                filter->applyFilter(ctx);
 
-                    // copy if needs
-                    if (ctx.output->data() != ptr) {
-                        STARFISH_ASSERT(ctx.output->size() == s * h);
-                        memcpy(ptr, ctx.output->data(), s * h);
-                    }
+                // copy if needs
+                if (ctx.output->data() != ptr) {
+                    STARFISH_ASSERT(ctx.output->size() == s * h);
+                    memcpy(ptr, ctx.output->data(), s * h);
                 }
             };
         }

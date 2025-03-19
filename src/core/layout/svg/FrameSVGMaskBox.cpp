@@ -78,7 +78,7 @@ void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
 
 void FrameSVGMaskBox::applyMask(PaintingContext& ctx, FrameSVGBox* targetBox)
 {
-    FrameSVGSVGBox* viewportBox = outmostSVGViewportBox();
+    FrameSVGSVGBox* viewportBox = targetBox->outmostSVGViewportBox();
     auto ctm = ctx.m_canvas->currentTransformMatrix();
     viewportBox->pushToSVGMaskPaintingStack(targetBox);
     ctx.m_canvas->setMatrix(viewportBox->svgPaintingMatrix());
