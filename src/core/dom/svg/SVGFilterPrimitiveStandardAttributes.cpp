@@ -74,19 +74,19 @@ void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
     if (!old || !old->equals(value)) {
         StaticStrings* ss = starfish()->staticStrings();
         if (ss->m_x == name) {
-            notifyAttributeOfPaintServerLikeUpdated();
+            notifyAttributeOfPaintServerLikeUpdated(true);
             x()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y == name) {
-            notifyAttributeOfPaintServerLikeUpdated();
+            notifyAttributeOfPaintServerLikeUpdated(true);
             y()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_width == name) {
-            notifyAttributeOfPaintServerLikeUpdated();
+            notifyAttributeOfPaintServerLikeUpdated(true);
             width()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_height == name) {
-            notifyAttributeOfPaintServerLikeUpdated();
+            notifyAttributeOfPaintServerLikeUpdated(true);
             height()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_output == name || ss->m_result == name) {
-            notifyAttributeOfPaintServerLikeUpdated();
+            notifyAttributeOfPaintServerLikeUpdated(false);
             output()->setBaseVal(value, true);
         }
     }
@@ -137,11 +137,11 @@ SVGFilterPrimitiveStandardAttributes::filterElement()
 }
 
 void SVGFilterPrimitiveStandardAttributes::
-    notifyAttributeOfPaintServerLikeUpdated()
+    notifyAttributeOfPaintServerLikeUpdated(bool needsLayoutAlso)
 {
     Optional<SVGFilterElement*> filterElement = this->filterElement();
     if (filterElement.hasValue()) {
-        filterElement->attributeOfPaintServerLikeUpdated();
+        filterElement->attributeOfPaintServerLikeUpdated(needsLayoutAlso);
     }
 }
 } // namespace Starfish

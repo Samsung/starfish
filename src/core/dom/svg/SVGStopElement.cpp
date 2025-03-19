@@ -43,7 +43,7 @@ void SVGStopElement::didAttributeChanged(QualifiedName name,
             p = p->parentElement();
         }
         if (p) {
-            p->asSVGGradientElement()->attributeOfPaintServerLikeUpdated();
+            p->asSVGGradientElement()->attributeOfPaintServerLikeUpdated(false);
         }
     }
 }

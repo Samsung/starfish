@@ -63,7 +63,7 @@ void SVGFEMergeNodeElement::notifyAttributeOfPaintServerLikeUpdated()
         parentElement()
             ->parentElement()
             ->asSVGFilterElement()
-            ->attributeOfPaintServerLikeUpdated();
+            ->attributeOfPaintServerLikeUpdated(false);
     }
 }
 

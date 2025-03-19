@@ -58,13 +58,13 @@ void SVGMaskElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_x1 == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
     } else if (ss->m_y1 == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
     } else if (ss->m_x2 == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
     } else if (ss->m_y2 == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
     }
 }
 
@@ -93,13 +93,13 @@ void SVGMaskElement::styleForPresentationAttribute(
 void SVGMaskElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGElement::didNodeInserted(parent, newChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
 void SVGMaskElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
 } // namespace Starfish

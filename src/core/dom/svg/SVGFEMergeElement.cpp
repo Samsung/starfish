@@ -46,13 +46,13 @@ void* SVGFEMergeElement::operator new(size_t size)
 void SVGFEMergeElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGFilterPrimitiveStandardAttributes::didNodeInserted(parent, newChild);
-    notifyAttributeOfPaintServerLikeUpdated();
+    notifyAttributeOfPaintServerLikeUpdated(false);
 }
 
 void SVGFEMergeElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGFilterPrimitiveStandardAttributes::didNodeRemoved(parent, oldChild);
-    notifyAttributeOfPaintServerLikeUpdated();
+    notifyAttributeOfPaintServerLikeUpdated(false);
 }
 
 } // namespace Starfish

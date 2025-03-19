@@ -54,25 +54,25 @@ void SVGFECompositeElement::didAttributeChanged(QualifiedName name,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in1 == name || ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in1()->setBaseVal(value, true);
     } else if (ss->m_in2 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in2()->setBaseVal(value, true);
     } else if (ss->m_k1 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         k1()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k2 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         k2()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k3 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         k3()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_k4 == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         k4()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_operator == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         if (domOperator()->isUpdated() == false) {
             if (value->equals("over")) {
                 m_operator->setBaseValWithoutUpdateAttribute(

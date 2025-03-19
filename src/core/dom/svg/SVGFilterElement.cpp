@@ -57,7 +57,7 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_filterUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         if (filterUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_filterUnits->setBaseValWithoutUpdateAttribute(
@@ -69,7 +69,7 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_primitiveUnits == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         if (primitiveUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_primitiveUnits->setBaseValWithoutUpdateAttribute(
@@ -80,16 +80,16 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_x == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         x()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_y == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         y()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_width == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         width()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_height == name) {
-        attributeOfPaintServerLikeUpdated();
+        attributeOfPaintServerLikeUpdated(true);
         height()->baseVal()->setValueAsString(value, true);
     }
 }
@@ -116,18 +116,18 @@ void SVGFilterElement::updateSVGAttributeNeeded(QualifiedName name)
 void SVGFilterElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGElement::didNodeInserted(parent, newChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
 void SVGFilterElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
-void SVGFilterElement::attributeOfPaintServerLikeUpdated()
+void SVGFilterElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
 {
-    SVGElement::attributeOfPaintServerLikeUpdated();
+    SVGElement::attributeOfPaintServerLikeUpdated(alsoNeedsLayout);
 
     filter()->setNeedsUpdate();
 }

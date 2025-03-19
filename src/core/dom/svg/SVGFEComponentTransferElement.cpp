@@ -56,7 +56,7 @@ void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     }
 }
@@ -80,13 +80,13 @@ void SVGFEComponentTransferElement::didNodeInserted(Node* parent,
                                                     Node* newChild)
 {
     SVGFilterPrimitiveStandardAttributes::didNodeInserted(parent, newChild);
-    notifyAttributeOfPaintServerLikeUpdated();
+    notifyAttributeOfPaintServerLikeUpdated(false);
 }
 
 void SVGFEComponentTransferElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGFilterPrimitiveStandardAttributes::didNodeRemoved(parent, oldChild);
-    notifyAttributeOfPaintServerLikeUpdated();
+    notifyAttributeOfPaintServerLikeUpdated(false);
 }
 
 SVGAnimatedString* SVGFEComponentTransferElement::in()

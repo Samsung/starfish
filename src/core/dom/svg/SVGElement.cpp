@@ -74,13 +74,16 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         if (ss->m_id == name) {
             if (isInDocumentScopeAndDocumentParticipateInRendering()) {
                 if (!attributeRemoved) {
-                    document()->notifyRepaintToSVGPaintClientElements(
-                        Element::atomicId());
+                    document()
+                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                            Element::atomicId(), true);
                 }
                 if (!attributeCreated) {
-                    document()->notifyRepaintToSVGPaintClientElements(
-                        AtomicString::createAtomicString(starfish(),
-                                                         old.value()));
+                    document()
+                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                            AtomicString::createAtomicString(starfish(),
+                                                             old.value()),
+                            true);
                 }
             }
         }
@@ -259,7 +262,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
                 break;
             }
             if (p->isSVGMaskElement() || p->isSVGClipPathElement()) {
-                p->asSVGElement()->attributeOfPaintServerLikeUpdated();
+                p->asSVGElement()->attributeOfPaintServerLikeUpdated(true);
             }
             p = p->parentElement();
         }
@@ -551,11 +554,12 @@ SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
     return descendant->asSVGElement();
 }
 
-void SVGElement::attributeOfPaintServerLikeUpdated()
+void SVGElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
 {
     STARFISH_ASSERT(isPaintServerLikeElement());
     if (isInDocumentScopeAndDocumentParticipateInRendering()) {
-        document()->notifyRepaintToSVGPaintClientElements(Element::atomicId());
+        document()->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+            Element::atomicId(), alsoNeedsLayout);
     }
 }
 

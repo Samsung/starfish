@@ -67,7 +67,8 @@ public:
         return true;
     }
 
-    virtual void attributeOfPaintServerLikeUpdated() override;
+    virtual void attributeOfPaintServerLikeUpdated(
+        bool alsoNeedsLayout) override;
 
     Filter* filter();
 

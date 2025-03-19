@@ -208,7 +208,7 @@ void SVGComponentTransferFunctionElement::
         parentElement()
             ->parentElement()
             ->asSVGFilterElement()
-            ->attributeOfPaintServerLikeUpdated();
+            ->attributeOfPaintServerLikeUpdated(false);
     }
 }
 

@@ -56,13 +56,13 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
 void SVGClipPathElement::didNodeInserted(Node* parent, Node* newChild)
 {
     SVGElement::didNodeInserted(parent, newChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
 void SVGClipPathElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
-    attributeOfPaintServerLikeUpdated();
+    attributeOfPaintServerLikeUpdated(true);
 }
 
 SVGAnimatedEnumeration* SVGClipPathElement::clipPathUnits()

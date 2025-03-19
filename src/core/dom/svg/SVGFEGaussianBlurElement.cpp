@@ -62,10 +62,10 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_stdDeviation == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
         if (tokens.size() == 1) {
@@ -76,13 +76,13 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
             stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]), true);
         }
     } else if (ss->m_stdDeviationX == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         stdDeviationX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_stdDeviationY == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         stdDeviationY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_edgeMode == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(true);
         if (edgeMode()->isUpdated() == false) {
             if (value->equals("duplicate")) {
                 m_edgeMode->setBaseValWithoutUpdateAttribute(

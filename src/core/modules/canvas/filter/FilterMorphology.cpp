@@ -29,6 +29,10 @@
 #include "core/dom/svg/SVGFEMorphologyElement.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterMorphology.h"
+#include "core/page/WebView.h"
+#include "core/layout/svg/FrameSVGBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
+
 namespace Starfish {
 
 static inline std::array<uint8_t, 4> perComponentMax(
@@ -163,16 +167,31 @@ FilterMorphology::FilterMorphology(
 {
     STARFISH_ASSERT(filter);
     STARFISH_ASSERT(element->isSVGFEMorphologyElement());
+}
 
-    SVGFEMorphologyElement* ele = element->asSVGFEMorphologyElement();
-    float radiusX = ele->radiusX()->baseVal();
-    float radiusY = ele->radiusY()->baseVal();
+std::pair<float, float> FilterMorphology::computeRadiusXY(
+    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+{
+    auto e = element()->asSVGFEMorphologyElement();
+    float radiusX = filter()->resolveFilterPrimitiveValue(
+        e->radiusX()->baseVal(), targetSize.width(), viewportScale.first);
+    float radiusY = filter()->resolveFilterPrimitiveValue(
+        e->radiusY()->baseVal(), targetSize.height(), viewportScale.second);
 
-    if ((SVGFEMorphologyElement::MorphologyOperator)ele->domOperator()
+    return std::make_pair(radiusX, radiusY);
+}
+
+std::pair<float, float> FilterMorphology::computeBias(
+    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+{
+    auto e = element()->asSVGFEMorphologyElement();
+    if ((SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
             ->baseVal() == SVGFEMorphologyElement::MorphologyOperator::
                                SVG_MORPHOLOGY_OPERATOR_DILATE) {
-        filter->setBias(-radiusX, -radiusY, radiusX * 3, radiusY * 3);
+        return computeRadiusXY(targetSize, viewportScale);
     }
+
+    return std::make_pair(0, 0);
 }
 
 void* FilterMorphology::operator new(size_t size)
@@ -193,16 +212,21 @@ void FilterMorphology::apply(size_t x, size_t y, size_t width, size_t height,
                              Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEMorphologyElement());
-    SVGFEMorphologyElement* ele = element()->asSVGFEMorphologyElement();
+    auto e = element()->asSVGFEMorphologyElement();
 
-    float radiusX = ele->radiusX()->baseVal();
-    if (radiusX <= 0) {
+    auto vm = ctx.target->outmostSVGViewportBox()
+                  ->computeTranlateScaleOnPaint()
+                  .second;
+    auto radiusXY =
+        computeRadiusXY(ctx.target->unadjustedFrameRectByFilter()->size(),
+                        std::make_pair(vm.getScaleX(), vm.getScaleY()));
+    if (radiusXY.first <= 0 || radiusXY.second <= 0) {
         return;
     }
-    float radiusY = ele->radiusY()->baseVal();
-    if (radiusY < 0) {
-        return;
-    }
+
+    float dpr = element()->webView()->screenInfo().devicePixelRatio;
+    radiusXY.first *= dpr;
+    radiusXY.second *= dpr;
 
     std::shared_ptr<Filter::FilterSourceBuffer> inputSource =
         filter()->fetchInputSource(ctx, this);
@@ -218,11 +242,11 @@ void FilterMorphology::apply(size_t x, size_t y, size_t width, size_t height,
     std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
         new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
-    applyMorphology(
-        inputSource->data(), outputBuffer->data(), 0, ctx.height, radiusX,
-        radiusY, ctx.width, ctx.height, ctx.stride,
-        (SVGFEMorphologyElement::MorphologyOperator)ele->domOperator()
-            ->baseVal());
+    applyMorphology(inputSource->data(), outputBuffer->data(), 0, ctx.height,
+                    radiusXY.first, radiusXY.second, ctx.width, ctx.height,
+                    ctx.stride,
+                    (SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
+                        ->baseVal());
     filter()->registerOutput(ctx, this, outputBuffer);
 }
 

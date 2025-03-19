@@ -58,10 +58,10 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_type == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         if (type()->isUpdated() == false) {
             if (value->equals("matrix")) {
                 m_type->setBaseValWithoutUpdateAttribute(
@@ -81,7 +81,7 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_values == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
+        notifyAttributeOfPaintServerLikeUpdated(false);
         SVGNumberList* valueList = values()->baseVal();
         valueList->setValueByString(value);
     }
