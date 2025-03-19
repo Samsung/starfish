@@ -81,12 +81,16 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
         }
     } else if (ss->m_x == name) {
         attributeOfPaintServerLikeUpdated();
+        x()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_y == name) {
         attributeOfPaintServerLikeUpdated();
+        y()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_width == name) {
         attributeOfPaintServerLikeUpdated();
+        width()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_height == name) {
         attributeOfPaintServerLikeUpdated();
+        height()->baseVal()->setValueAsString(value, true);
     }
 }
 
@@ -125,18 +129,15 @@ void SVGFilterElement::attributeOfPaintServerLikeUpdated()
 {
     SVGElement::attributeOfPaintServerLikeUpdated();
 
-    Optional<Filter*> f = filter();
-    if (f.hasValue()) {
-        f->setNeedsUpdate();
-    }
+    filter()->setNeedsUpdate();
 }
 
-Optional<Filter*> SVGFilterElement::filter()
+Filter* SVGFilterElement::filter()
 {
     if (!m_filter.hasValue()) {
         m_filter = new Filter(this);
     }
-    return m_filter;
+    return m_filter.value();
 }
 
 void SVGFilterElement::styleForPresentationAttribute(
@@ -161,12 +162,56 @@ SVGAnimatedEnumeration* SVGFilterElement::primitiveUnits()
 {
     if (!m_primitiveUnits.hasValue()) {
         m_primitiveUnits = new SVGAnimatedEnumeration(
-            this, staticStrings()->m_gradientUnits,
+            this, staticStrings()->m_primitiveUnits,
             SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
             SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
             SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
     }
     return m_primitiveUnits.getValue();
+}
+
+SVGAnimatedLength* SVGFilterElement::x()
+{
+    if (!m_x.hasValue()) {
+        SVGLength* baseVal =
+            new SVGLength(this, staticStrings()->m_x,
+                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, -10);
+        m_x = new SVGAnimatedLength(document(), baseVal, nullptr);
+    }
+    return m_x.value();
+}
+
+SVGAnimatedLength* SVGFilterElement::y()
+{
+    if (!m_y.hasValue()) {
+        SVGLength* baseVal =
+            new SVGLength(this, staticStrings()->m_y,
+                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, -10);
+        m_y = new SVGAnimatedLength(document(), baseVal, nullptr);
+    }
+    return m_y.value();
+}
+
+SVGAnimatedLength* SVGFilterElement::width()
+{
+    if (!m_width.hasValue()) {
+        SVGLength* baseVal =
+            new SVGLength(this, staticStrings()->m_width,
+                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, 120);
+        m_width = new SVGAnimatedLength(document(), baseVal, nullptr);
+    }
+    return m_width.value();
+}
+
+SVGAnimatedLength* SVGFilterElement::height()
+{
+    if (!m_height.hasValue()) {
+        SVGLength* baseVal =
+            new SVGLength(this, staticStrings()->m_height,
+                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, 120);
+        m_height = new SVGAnimatedLength(document(), baseVal, nullptr);
+    }
+    return m_height.value();
 }
 
 } // namespace Starfish

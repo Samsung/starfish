@@ -69,15 +69,15 @@ public:
 
     virtual void attributeOfPaintServerLikeUpdated() override;
 
-    Optional<Filter*> filter();
+    Filter* filter();
 
     SVGAnimatedEnumeration* filterUnits();
     SVGAnimatedEnumeration* primitiveUnits();
 
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
+    SVGAnimatedLength* x();
+    SVGAnimatedLength* y();
+    SVGAnimatedLength* width();
+    SVGAnimatedLength* height();
 
 private:
     Optional<Filter*> m_filter;

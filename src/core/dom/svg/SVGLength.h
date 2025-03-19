@@ -56,7 +56,7 @@ public:
     void setUnitType(unsigned short unitType);
     float value();
     void setValue(float v);
-    float valueInSpecifiedUnits();
+    float valueInSpecifiedUnits(bool layoutIfNeeded = true);
     String* valueAsString();
     void setValueAsString(String* valueAsString,
                           bool fromElementDidAttributeChanged = false,

@@ -709,6 +709,7 @@ test/cairo/internal-test/svg/svg_fe_gaussianblur1.html
 test/cairo/internal-test/svg/svg_fe_merge_01.html
 test/cairo/internal-test/svg/svg_fe_composite.html
 test/cairo/internal-test/svg/svg_filter_in_output_01.html
+test/cairo/internal-test/svg/svg_filter_geometry_01.html
 test/cairo/internal-test/svg/svg_inline_style_01.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
 test/cairo/internal-test/transition/transition_transform.html

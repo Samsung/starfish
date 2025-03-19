@@ -86,30 +86,6 @@ void SVGLength::setUnitType(unsigned short unitType)
     m_unitType = unitType;
 }
 
-static Optional<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
-                                      CSSStyleValuePair::ValueData data)
-{
-    if (kind == CSSStyleValuePair::ValueKind::Auto) {
-        return Length();
-    } else if (kind == CSSStyleValuePair::ValueKind::Length) {
-        return data.m_length.toLength();
-    } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
-        return Length(Length::Percent, data.m_floatValue);
-    } else if (kind == CSSStyleValuePair::ValueKind::Number) {
-        return Length(Length::Fixed, data.m_floatValue);
-    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-        CalcValueType type = data.m_calc->calcValueType();
-        if (type.isLength() || type.isPercentage()) {
-            return Length(data.m_calc);
-        } else {
-            return Optional<Length>();
-        }
-    } else {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return Optional<Length>();
-    }
-}
-
 float SVGLength::value()
 {
     if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
@@ -187,9 +163,11 @@ void SVGLength::setValue(float v)
     }
 }
 
-float SVGLength::valueInSpecifiedUnits()
+float SVGLength::valueInSpecifiedUnits(bool layoutIfNeeded)
 {
-    m_sourceElement->document()->browsingContext()->layoutIfNeeded();
+    if (layoutIfNeeded) {
+        m_sourceElement->document()->browsingContext()->layoutIfNeeded();
+    }
     return m_valueInSpecifiedUnits;
 }
 

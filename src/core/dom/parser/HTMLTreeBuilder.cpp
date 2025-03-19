@@ -818,6 +818,15 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_tableValues,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "primitiveunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_primitiveUnits,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("filterunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_filterUnits,
+                          tokenAttribute.value());
         }
     }
 }
