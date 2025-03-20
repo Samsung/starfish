@@ -194,6 +194,7 @@ namespace Starfish {
     F(filter)                          \
     F(feBlend)                         \
     F(feFlood)                         \
+    F(feflood)                         \
     F(feColorMatrix)                   \
     F(fecolormatrix)                   \
     F(feComponentTransfer)             \
@@ -588,6 +589,8 @@ public:
     QualifiedName m_amplitude;
     QualifiedName m_exponent;
     QualifiedName m_tableValues;
+    QualifiedName m_floodColor;
+    QualifiedName m_floodOpacity;
 
     // SVG animate
     QualifiedName m_attributename;

@@ -56,6 +56,7 @@
 #include "core/dom/svg/SVGFECompositeElement.h"
 #include "core/dom/svg/SVGFEMorphologyElement.h"
 #include "core/dom/svg/SVGFEOffsetElement.h"
+#include "core/dom/svg/SVGFEFloodElement.h"
 
 namespace Starfish {
 
@@ -180,6 +181,9 @@ Element* SVGDocument::createSVGElement(Document* document,
     } else if (str->m_svgfeoffsetTagName == localName ||
                str->m_svgfeOffsetTagName == localName) {
         return new SVGFEOffsetElement(document, str->m_svgfeOffsetTagName);
+    } else if (str->m_svgfefloodTagName == localName ||
+               str->m_svgfeFloodTagName == localName) {
+        return new SVGFEFloodElement(document, str->m_svgfeOffsetTagName);
     } else {
         return new SVGElement(document, qname);
     }

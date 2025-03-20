@@ -26,6 +26,7 @@
 #include "core/modules/canvas/filter/FilterComposite.h"
 #include "core/modules/canvas/filter/FilterMorphology.h"
 #include "core/modules/canvas/filter/FilterOffset.h"
+#include "core/modules/canvas/filter/FilterFlood.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -229,6 +230,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterMorphology(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEOffsetElement()) {
         primitive = new FilterOffset(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEFloodElement()) {
+        primitive = new FilterFlood(this, filterPrimitiveNode);
     }
     return primitive;
 }
