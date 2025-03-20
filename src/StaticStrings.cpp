@@ -659,6 +659,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "exponent"));
     m_tableValues = QualifiedName(
         AtomicString::createAtomicString(starfish, "tableValues"));
+    m_floodColor = QualifiedName(
+        AtomicString::createAtomicString(starfish, "flood-color"));
+    m_floodOpacity = QualifiedName(
+        AtomicString::createAtomicString(starfish, "flood-opacity"));
 
     // SVG animate
     m_attributename = QualifiedName(

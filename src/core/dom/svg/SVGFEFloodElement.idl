@@ -1,0 +1,6 @@
+[Exposed=Window]
+interface SVGFEFloodElement : SVGElement {
+};
+
+// includes -> implements
+SVGFEFloodElement implements SVGFilterPrimitiveStandardAttributes;
