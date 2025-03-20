@@ -39,9 +39,9 @@ public:
     std::pair<float, float> computeStdXY(
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale);
-    virtual std::pair<float, float> computeBias(
+    virtual Filter::FilterBias computeBias(
         const LayoutSize& targetSize,
-        const std::pair<float, float>& viewportScale) override;
+        const std::pair<float, float>& viewportScale);
 };
 } // namespace Starfish
 #endif

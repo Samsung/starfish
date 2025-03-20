@@ -25,6 +25,7 @@
 #include "core/modules/canvas/filter/FilterMerge.h"
 #include "core/modules/canvas/filter/FilterComposite.h"
 #include "core/modules/canvas/filter/FilterMorphology.h"
+#include "core/modules/canvas/filter/FilterOffset.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -165,17 +166,23 @@ void Filter::updateIfNeeds()
     }
 }
 
-std::pair<float, float> Filter::computeBias(
+Filter::FilterBias Filter::computeBias(
     FrameSVGBox* target, const std::pair<float, float>& viewportScale)
 {
     updateIfNeeds();
 
-    std::pair<float, float> ret(std::make_pair(0, 0));
+    FilterBias ret;
     auto siz = target->frameRect().size();
     for (auto* f : m_filterPrimitives) {
         auto subResult = f->computeBias(siz, viewportScale);
-        ret.first = std::max(ret.first, subResult.first);
-        ret.second = std::max(ret.second, subResult.second);
+        ret.maximumBias.first =
+            std::max(ret.maximumBias.first, subResult.maximumBias.first);
+        ret.maximumBias.second =
+            std::max(ret.maximumBias.second, subResult.maximumBias.second);
+        ret.minimumBias.first =
+            std::max(ret.minimumBias.first, subResult.minimumBias.first);
+        ret.minimumBias.second =
+            std::max(ret.minimumBias.second, subResult.minimumBias.second);
     }
 
     return ret;
@@ -220,6 +227,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterComposite(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFEMorphologyElement()) {
         primitive = new FilterMorphology(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEOffsetElement()) {
+        primitive = new FilterOffset(this, filterPrimitiveNode);
     }
     return primitive;
 }

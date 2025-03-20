@@ -147,8 +147,21 @@ public:
         return m_shouldMaintainSourceBuffer;
     }
 
-    std::pair<float, float> computeBias(
-        FrameSVGBox* target, const std::pair<float, float>& viewportScale);
+    struct FilterBias {
+        std::pair<float, float> maximumBias; // for blur, morphology
+        std::pair<float, float> minimumBias; // for offset
+
+        FilterBias(
+            const std::pair<float, float>& maximumBias = std::make_pair(0, 0),
+            const std::pair<float, float>& minimumBias = std::make_pair(0, 0))
+            : maximumBias(maximumBias)
+            , minimumBias(minimumBias)
+        {
+        }
+    };
+
+    FilterBias computeBias(FrameSVGBox* target,
+                           const std::pair<float, float>& viewportScale);
 
 private:
     void rebuildFiter();

@@ -366,7 +366,7 @@ std::pair<float, float> FilterGaussianBlur::computeStdXY(
     return std::make_pair(stdX, stdY);
 }
 
-std::pair<float, float> FilterGaussianBlur::computeBias(
+Filter::FilterBias FilterGaussianBlur::computeBias(
     const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
 {
     auto e = element()->asSVGFEGaussianBlurElement();
@@ -376,9 +376,9 @@ std::pair<float, float> FilterGaussianBlur::computeBias(
         auto stdXY = computeStdXY(targetSize, viewportScale);
         auto kernel =
             FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
-        return std::make_pair(kernel.first, kernel.second);
+        return Filter::FilterBias(std::make_pair(kernel.first, kernel.second));
     }
-    return std::make_pair(0, 0);
+    return Filter::FilterBias();
 }
 
 void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
