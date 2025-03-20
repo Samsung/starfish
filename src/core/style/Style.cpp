@@ -8836,7 +8836,7 @@ static void setPropertyIfNeeds(
 
 void computeWebAnimationKeyframes(const StyleResolver& resolver,
                                   Element* element, ComputedStyle* style,
-                                  std::vector<StyleRuleBase*>& keyframes)
+                                  GCVector<StyleRuleBase*>& keyframes)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
