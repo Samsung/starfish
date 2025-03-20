@@ -972,7 +972,7 @@ test/cairo/reftest/vendor/blink_original/svg/filters/feColorMatrix-setAttribute-
 #test/cairo/reftest/vendor/blink_original/svg/filters/feConvolveMatrix-error-handling.html
 #test/cairo/reftest/vendor/blink_original/svg/filters/feConvolveMatrix-order-error-reporting.html
 #test/cairo/reftest/vendor/blink_original/svg/filters/feDiffuseLighting-no-light.html
-test/cairo/reftest/vendor/blink_original/svg/filters/feDisplacementMap-negative-scale.html
+#test/cairo/reftest/vendor/blink_original/svg/filters/feDisplacementMap-negative-scale.html
 #test/cairo/reftest/vendor/blink_original/svg/filters/feflood-currentcolor.html
 #test/cairo/reftest/vendor/blink_original/svg/filters/feImage-failed-load-crash.html
 #test/cairo/reftest/vendor/blink_original/svg/filters/feImage-remove-duplicate-id-no-crash.html
