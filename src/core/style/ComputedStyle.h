@@ -5065,7 +5065,7 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
                                   Element* element, ComputedStyle* style);
 void computeWebAnimationKeyframes(const StyleResolver& resolver,
                                   Element* element, ComputedStyle* style,
-                                  std::vector<StyleRuleBase*>& keyframes);
+                                  GCVector<StyleRuleBase*>& keyframes);
 } // namespace Starfish
 
 #endif

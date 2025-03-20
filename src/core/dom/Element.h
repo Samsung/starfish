@@ -459,7 +459,7 @@ public:
                                        GlobalPointingEventKind kind) override;
 
     void makeKeyframesFromObject(ScriptObject object,
-                                 std::vector<StyleRuleBase*>& keyframeRules);
+                                 GCVector<StyleRuleBase*>& keyframeRules);
     Animation* animate(ExecutionContext* executionContext,
                        Optional<GCVector<ScriptValue>>& keyframes,
                        KeyframeAnimationOptions& options);

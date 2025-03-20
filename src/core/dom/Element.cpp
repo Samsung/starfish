@@ -2292,8 +2292,8 @@ void Element::blur()
     window()->browsingContext()->releaseFocusedNode(this);
 }
 
-void Element::makeKeyframesFromObject(
-    ScriptObject object, std::vector<StyleRuleBase*>& keyframeRules)
+void Element::makeKeyframesFromObject(ScriptObject object,
+                                      GCVector<StyleRuleBase*>& keyframeRules)
 {
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
@@ -2356,7 +2356,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
         return new Animation(executionContext);
     }
 
-    std::vector<StyleRuleBase*> keyframeRules;
+    GCVector<StyleRuleBase*> keyframeRules;
     for (size_t i = 0; i < values.size(); i++) {
         if (values[i]->isObject()) {
             auto object = values[i]->asObject();
