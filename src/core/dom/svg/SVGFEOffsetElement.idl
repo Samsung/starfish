@@ -1,0 +1,11 @@
+// https://drafts.fxtf.org/filter-effects/#svgfeoffsetelement
+
+[Exposed=Window]
+interface SVGFEOffsetElement : SVGElement {
+  readonly attribute SVGAnimatedString in1;
+  readonly attribute SVGAnimatedNumber dx;
+  readonly attribute SVGAnimatedNumber dy;
+};
+
+// includes -> implements
+SVGFEColorMatrixElement implements SVGFilterPrimitiveStandardAttributes;

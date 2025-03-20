@@ -163,11 +163,15 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     auto bias =
         fe->computeBias(self, std::make_pair(transScale.second.getScaleX(),
                                              transScale.second.getScaleY()));
-    LayoutRect biasRect = self->frameRect();
-    biasRect.setX(self->x() - bias.first * matrix.getScaleX());
-    biasRect.setY(self->y() - bias.second * matrix.getScaleY());
-    biasRect.setWidth(self->width() + bias.first * 2 * matrix.getScaleX());
-    biasRect.setHeight(self->height() + bias.second * 2 * matrix.getScaleY());
+    LayoutRect maximumBiasRect = self->frameRect();
+    maximumBiasRect.setX(self->x() -
+                         bias.maximumBias.first * matrix.getScaleX());
+    maximumBiasRect.setY(self->y() -
+                         bias.maximumBias.second * matrix.getScaleY());
+    maximumBiasRect.setWidth(self->width() +
+                             bias.maximumBias.first * 2 * matrix.getScaleX());
+    maximumBiasRect.setHeight(self->height() +
+                              bias.maximumBias.second * 2 * matrix.getScaleY());
 
     auto eX = filterElement->x();
     auto eY = filterElement->y();
@@ -208,7 +212,21 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
         newFrameRect = computeBoxExtent(newFrameRect, matrix);
     }
 
-    self->setFrameRect(LayoutRect::overlappedRect(biasRect, newFrameRect));
+    LayoutRect result =
+        LayoutRect::overlappedRect(maximumBiasRect, newFrameRect);
+    if (bias.minimumBias.first || bias.minimumBias.second) {
+        LayoutRect minimumBiasRect = self->frameRect();
+        minimumBiasRect.setX(self->x() -
+                             bias.minimumBias.first * matrix.getScaleX());
+        minimumBiasRect.setY(self->y() -
+                             bias.minimumBias.second * matrix.getScaleY());
+        minimumBiasRect.setWidth(self->width() + bias.minimumBias.first * 2 *
+                                                     matrix.getScaleX());
+        minimumBiasRect.setHeight(self->height() + bias.minimumBias.second * 2 *
+                                                       matrix.getScaleY());
+        result.unite(minimumBiasRect);
+    }
+    self->setFrameRect(result);
 }
 
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)

@@ -708,6 +708,7 @@ test/cairo/internal-test/svg/svg_fe_component_transfer.html
 test/cairo/internal-test/svg/svg_fe_gaussianblur1.html
 test/cairo/internal-test/svg/svg_fe_merge_01.html
 test/cairo/internal-test/svg/svg_fe_composite.html
+test/cairo/internal-test/svg/svg_fe_offset_01.html
 test/cairo/internal-test/svg/svg_filter_in_output_01.html
 test/cairo/internal-test/svg/svg_filter_geometry_01.html
 test/cairo/internal-test/svg/svg_fe_morphology1.html

@@ -63,11 +63,11 @@ public:
         return m_output;
     }
 
-    virtual std::pair<float, float> computeBias(
+    virtual Filter::FilterBias computeBias(
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale)
     {
-        return std::pair<float, float>(0, 0);
+        return Filter::FilterBias();
     }
 
 protected:

@@ -215,6 +215,7 @@ namespace Starfish {
     F(feMorphology)                    \
     F(femorphology)                    \
     F(feOffset)                        \
+    F(feoffset)                        \
     F(feSpecularLighting)              \
     F(fePointLight)                    \
     F(feDistantLight)                  \

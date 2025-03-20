@@ -37,7 +37,7 @@ public:
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale);
 
-    virtual std::pair<float, float> computeBias(
+    virtual Filter::FilterBias computeBias(
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale) override;
 };

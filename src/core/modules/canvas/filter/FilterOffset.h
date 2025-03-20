@@ -17,31 +17,24 @@
  *  USA
  */
 
-#ifndef __StarfishFilterGaussianBlur__
-#define __StarfishFilterGaussianBlur__
+#ifndef __StarfishFilterOffset__
+#define __StarfishFilterOffset__
 
 #include "core/modules/canvas/filter/FilterPrimitive.h"
 
 namespace Starfish {
-class FilterGaussianBlur : public FilterPrimitive {
+class FilterOffset : public FilterPrimitive {
 public:
-    FilterGaussianBlur(Filter* filter,
-                       SVGFilterPrimitiveStandardAttributes* element);
+    FilterOffset(Filter* filter, SVGFilterPrimitiveStandardAttributes* element);
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual void apply(size_t x, size_t y, size_t width, size_t height,
-                       Filter::FilterApplyContext& ctx) override;
-
-    static std::pair<float, float> computeKernelSize(float stdDeviationX,
-                                                     float stdDeviationY);
-
-    std::pair<float, float> computeStdXY(
-        const LayoutSize& targetSize,
-        const std::pair<float, float>& viewportScale);
     virtual Filter::FilterBias computeBias(
         const LayoutSize& targetSize,
-        const std::pair<float, float>& viewportScale);
+        const std::pair<float, float>& viewportScale) override;
+
+    virtual void apply(size_t x, size_t y, size_t width, size_t height,
+                       Filter::FilterApplyContext& ctx) override;
 };
 } // namespace Starfish
 #endif

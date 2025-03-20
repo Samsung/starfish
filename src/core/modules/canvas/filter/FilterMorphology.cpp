@@ -181,17 +181,17 @@ std::pair<float, float> FilterMorphology::computeRadiusXY(
     return std::make_pair(radiusX, radiusY);
 }
 
-std::pair<float, float> FilterMorphology::computeBias(
+Filter::FilterBias FilterMorphology::computeBias(
     const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
 {
     auto e = element()->asSVGFEMorphologyElement();
     if ((SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
             ->baseVal() == SVGFEMorphologyElement::MorphologyOperator::
                                SVG_MORPHOLOGY_OPERATOR_DILATE) {
-        return computeRadiusXY(targetSize, viewportScale);
+        return Filter::FilterBias(computeRadiusXY(targetSize, viewportScale));
     }
 
-    return std::make_pair(0, 0);
+    return Filter::FilterBias();
 }
 
 void* FilterMorphology::operator new(size_t size)

@@ -89,11 +89,20 @@ void FilterMerge::apply(size_t x, size_t y, size_t width, size_t height,
     } else {
         Canvas* c = Canvas::create(outputSource->data(), ctx.width, ctx.height,
                                    ctx.stride, 1);
+        bool first = true;
         for (auto* input : m_inputs) {
             auto inputSource = ctx.findSource(input);
             if (!inputSource) {
                 STARFISH_ASSERT(ctx.output);
                 inputSource = ctx.output;
+            }
+            if (first) {
+                c->setCompositeOperator(CanvasCompositeOperator::Copy,
+                                        CanvasBlendMode::Normal);
+                first = false;
+            } else {
+                c->setCompositeOperator(CanvasCompositeOperator::SourceOver,
+                                        CanvasBlendMode::Normal);
             }
             c->drawImage(inputSource->data(), ctx.width, ctx.stride, ctx.height,
                          Unit::Rect(0, 0, ctx.width, ctx.height));
