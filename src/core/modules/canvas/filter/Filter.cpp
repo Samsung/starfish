@@ -31,6 +31,7 @@
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
 #include "core/layout/svg/FrameSVGBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 
 namespace Starfish {
 Filter::Filter(SVGFilterElement* owner)
@@ -120,11 +121,19 @@ std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchInputSource2(
 
 std::shared_ptr<Filter::FilterSourceBuffer> Filter::fetchOutputSource(
     FilterApplyContext& ctx, FilterPrimitive* f,
-    const std::shared_ptr<FilterSourceBuffer>& input)
+    const std::shared_ptr<FilterSourceBuffer>& input,
+    const Unit::Rect& subRegionInFloat)
 {
-    if (m_shouldMaintainSourceBuffer && input->data() == ctx.src) {
-        return std::shared_ptr<Filter::FilterSourceBuffer>(
+    bool isSubRegionCoversAll =
+        FilterPrimitive::subRegionCoversAll(subRegionInFloat);
+    if ((!isSubRegionCoversAll || m_shouldMaintainSourceBuffer) &&
+        input->data() == ctx.src) {
+        auto o = std::shared_ptr<Filter::FilterSourceBuffer>(
             new FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
+        if (!isSubRegionCoversAll) {
+            memset(o->data(), 0, o->size());
+        }
+        return o;
     }
     return input;
 }
@@ -139,13 +148,100 @@ void Filter::registerOutput(FilterApplyContext& ctx, FilterPrimitive* f,
     ctx.registerSource(f->output(), s);
 }
 
+static float resolveBoundingBoxUnitSVGLength(SVGLength* l, float parentLength)
+{
+    if (l->unitType() == SVGLength::UnitType::SVG_LENGTHTYPE_NUMBER) {
+        return l->valueInSpecifiedUnits(false);
+    } else if (l->unitType() ==
+               SVGLength::UnitType::SVG_LENGTHTYPE_PERCENTAGE) {
+        return l->valueInSpecifiedUnits(false) / 100;
+    } else {
+        return l->value() / parentLength;
+    }
+}
+
+static float resolveUserspaceUnitSVGLength(SVGLength* l, float viewportScale,
+                                           const LayoutUnit& viewportLength)
+{
+    if (l->unitType() == SVGLength::UnitType::SVG_LENGTHTYPE_NUMBER) {
+        return l->valueInSpecifiedUnits(false) * viewportScale;
+    } else if (l->unitType() ==
+               SVGLength::UnitType::SVG_LENGTHTYPE_PERCENTAGE) {
+        float p = l->valueInSpecifiedUnits(false) / 100;
+        p *= viewportLength;
+        return p;
+    } else {
+        return l->value(false);
+    }
+}
+
+Unit::Rect Filter::computeSubRegion(
+    FilterPrimitive* primitive, SVGFilterElement* filterElement,
+    FrameSVGBox* targetBox, const std::pair<float, float>& viewportScale)
+{
+    auto x = primitive->element()->x()->baseVal();
+    auto y = primitive->element()->y()->baseVal();
+    auto width = primitive->element()->width()->baseVal();
+    auto height = primitive->element()->height()->baseVal();
+
+    bool isObjectBoundingBox = filterElement->primitiveUnits()->baseVal() ==
+                               SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX;
+    auto unAdjustedFrameRect = targetBox->unadjustedFrameRectByFilter();
+    auto vp = targetBox->viewport();
+    Unit::Rect subRegionInFloat(0, 0, 1, 1);
+    if (isObjectBoundingBox) {
+        subRegionInFloat.setX(resolveBoundingBoxUnitSVGLength(
+            x, unAdjustedFrameRect->width().toFloat()));
+        subRegionInFloat.setY(resolveBoundingBoxUnitSVGLength(
+            y, unAdjustedFrameRect->height().toFloat()));
+        subRegionInFloat.setWidth(resolveBoundingBoxUnitSVGLength(
+            width, unAdjustedFrameRect->width().toFloat()));
+        subRegionInFloat.setHeight(resolveBoundingBoxUnitSVGLength(
+            height, unAdjustedFrameRect->height().toFloat()));
+    } else {
+        auto vp = targetBox->viewport();
+        LayoutRect viewportRect(0, 0, viewportScale.first * vp.width(),
+                                viewportScale.second * vp.height());
+        LayoutRect absoluteRect(
+            resolveUserspaceUnitSVGLength(x, viewportScale.first, vp.width()),
+            resolveUserspaceUnitSVGLength(y, viewportScale.second, vp.height()),
+            resolveUserspaceUnitSVGLength(width, viewportScale.first,
+                                          vp.width()),
+            resolveUserspaceUnitSVGLength(height, viewportScale.second,
+                                          vp.height()));
+
+        if (absoluteRect.containsInVisual(viewportRect)) {
+            subRegionInFloat = Unit::Rect(0, 0, 1, 1);
+        } else {
+            LayoutRect rt = targetBox->parent()->asFrameBox()->absoluteRect(
+                targetBox->outmostSVGViewportBox());
+            rt.setX(rt.x() + unAdjustedFrameRect->x());
+            rt.setY(rt.y() + unAdjustedFrameRect->y());
+            rt.setWidth(unAdjustedFrameRect->width());
+            rt.setHeight(unAdjustedFrameRect->height());
+            LayoutRect ort = LayoutRect::overlappedRect(absoluteRect, rt);
+            subRegionInFloat = Unit::Rect((ort.x() - rt.x()) / rt.width(),
+                                          (ort.y() - rt.y()) / rt.height(),
+                                          ort.width() / rt.width(),
+                                          ort.height() / rt.height());
+        }
+    }
+
+    return subRegionInFloat;
+}
+
 void Filter::applyFilter(FilterApplyContext& ctx)
 {
     updateIfNeeds();
+
+    FrameSVGSVGBox* viewportBox = ctx.target->outmostSVGViewportBox();
+    auto transScale = viewportBox->computeTranlateScaleOnPaint();
     for (auto* primitive : m_filterPrimitives) {
-        // TODO
-        // specify x, y, width, height and use it
-        primitive->apply(0, 0, 0, 0, ctx);
+        primitive->apply(
+            computeSubRegion(primitive, owner(), ctx.target,
+                             std::make_pair(transScale.second.getScaleX(),
+                                            transScale.second.getScaleY())),
+            ctx);
     }
 }
 

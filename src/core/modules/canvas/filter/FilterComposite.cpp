@@ -136,7 +136,7 @@ void* FilterComposite::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FilterComposite::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterComposite::apply(const Unit::Rect& subRegionInFloat,
                             Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFECompositeElement());

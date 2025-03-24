@@ -54,7 +54,7 @@ public:
 
     unsigned short unitType();
     void setUnitType(unsigned short unitType);
-    float value();
+    float value(bool layoutIfNeeded = true);
     void setValue(float v);
     float valueInSpecifiedUnits(bool layoutIfNeeded = true);
     String* valueAsString();

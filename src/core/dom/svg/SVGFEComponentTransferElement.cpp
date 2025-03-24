@@ -51,8 +51,8 @@ void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
                                                         bool attributeCreated,
                                                         bool attributeRemoved)
 {
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
@@ -73,7 +73,8 @@ void SVGFEComponentTransferElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
+        cssValues, cssCustomValues);
 }
 
 void SVGFEComponentTransferElement::didNodeInserted(Node* parent,

@@ -71,7 +71,7 @@ bool FilterMerge::shouldMaintainSourceBuffer(bool isFirstFilter)
     return false;
 }
 
-void FilterMerge::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterMerge::apply(const Unit::Rect& subRegionInFloat,
                         Filter::FilterApplyContext& ctx)
 {
     std::shared_ptr<Filter::FilterSourceBuffer> outputSource;

@@ -39,4 +39,38 @@ FilterPrimitive::FilterPrimitive(Filter* filter,
 {
 }
 
+Unit::Rect FilterPrimitive::normalizeSubRegion(const Unit::Rect& subRegion)
+{
+    Unit::Rect ret = subRegion;
+    float w = ret.x();
+    if (w < 0) {
+        ret.setX(0);
+        ret.setWidth(w + ret.width());
+    }
+
+    if (ret.maxX() > 1) {
+        ret.setWidth(ret.width() - ret.maxX() + 1);
+    }
+
+    if (ret.width() < 0) {
+        ret.setWidth(0);
+    }
+
+    float h = ret.y();
+    if (h < 0) {
+        ret.setY(0);
+        ret.setHeight(h + ret.height());
+    }
+
+    if (ret.maxY() > 1) {
+        ret.setHeight(ret.height() - ret.maxY() + 1);
+    }
+
+    if (ret.height() < 0) {
+        ret.setHeight(0);
+    }
+
+    return ret;
+}
+
 } // namespace Starfish

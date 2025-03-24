@@ -208,7 +208,7 @@ void* FilterMorphology::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FilterMorphology::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterMorphology::apply(const Unit::Rect& subRegionInFloat,
                              Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEMorphologyElement());

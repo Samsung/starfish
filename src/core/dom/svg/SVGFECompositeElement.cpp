@@ -50,8 +50,8 @@ void SVGFECompositeElement::didAttributeChanged(QualifiedName name,
                                                 bool attributeCreated,
                                                 bool attributeRemoved)
 {
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
+        name, old, value, attributeCreated, attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in1 == name || ss->m_in == name) {
         notifyAttributeOfPaintServerLikeUpdated(false);

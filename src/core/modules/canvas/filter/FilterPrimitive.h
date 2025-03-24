@@ -35,12 +35,13 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual void apply(size_t x, size_t y, size_t width, size_t height,
+    virtual void apply(const Unit::Rect& subRegionInFloat,
                        Filter::FilterApplyContext& ctx) = 0;
 
     virtual bool shouldMaintainSourceBuffer(bool isFirstFilter)
     {
-        return !isFirstFilter && m_input->equals("SourceGraphic");
+        return !isFirstFilter && (m_input->equals("SourceGraphic") ||
+                                  m_input2->equals("SourceGraphic"));
     }
 
     SVGFilterPrimitiveStandardAttributes* element()
@@ -68,6 +69,19 @@ public:
         const std::pair<float, float>& viewportScale)
     {
         return Filter::FilterBias();
+    }
+
+    static bool subRegionCoversAll(const Unit::Rect& subRegionInFloat)
+    {
+        return subRegionInFloat.x() <= 0 && subRegionInFloat.y() <= 0 &&
+               (subRegionInFloat.maxX()) >= 1 && (subRegionInFloat.maxY()) >= 1;
+    }
+
+    static Unit::Rect normalizeSubRegion(const Unit::Rect& subRegion);
+
+    virtual bool canSubRegionExpandFrameRect()
+    {
+        return false;
     }
 
 protected:

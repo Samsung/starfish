@@ -128,7 +128,8 @@ public:
         FilterApplyContext& ctx, FilterPrimitive* f);
     std::shared_ptr<FilterSourceBuffer> fetchOutputSource(
         FilterApplyContext& ctx, FilterPrimitive* f,
-        const std::shared_ptr<FilterSourceBuffer>& s);
+        const std::shared_ptr<FilterSourceBuffer>& s,
+        const Unit::Rect& subRegionInFloat);
     void registerOutput(FilterApplyContext& ctx, FilterPrimitive* f,
                         const std::shared_ptr<FilterSourceBuffer>& s);
 
@@ -162,6 +163,16 @@ public:
 
     FilterBias computeBias(FrameSVGBox* target,
                            const std::pair<float, float>& viewportScale);
+
+    const GCVector<FilterPrimitive*>& filterPrimitives()
+    {
+        updateIfNeeds();
+        return m_filterPrimitives;
+    }
+
+    static Unit::Rect computeSubRegion(
+        FilterPrimitive* primitive, SVGFilterElement* filterElement,
+        FrameSVGBox* targetBox, const std::pair<float, float>& viewportScale);
 
 private:
     void rebuildFiter();
