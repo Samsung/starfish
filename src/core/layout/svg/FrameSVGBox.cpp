@@ -47,6 +47,7 @@
 #include "core/dom/svg/SVGAnimatedTransformList.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/canvas/filter/Filter.h"
+#include "core/modules/canvas/filter/FilterPrimitive.h"
 #include "core/dom/svg/SVGFilterElement.h"
 
 namespace Starfish {
@@ -155,7 +156,8 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
 {
     Filter* fe = filterElement->filter();
 
-    *self->unadjustedFrameRectByFilter() = self->frameRect();
+    auto unadjustedFrameRectByFilter = *self->unadjustedFrameRectByFilter() =
+        self->frameRect();
 
     auto vp = self->viewport();
     FrameSVGSVGBox* viewportBox = self->outmostSVGViewportBox();
@@ -163,7 +165,7 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     auto bias =
         fe->computeBias(self, std::make_pair(transScale.second.getScaleX(),
                                              transScale.second.getScaleY()));
-    LayoutRect maximumBiasRect = self->frameRect();
+    LayoutRect maximumBiasRect = unadjustedFrameRectByFilter;
     maximumBiasRect.setX(self->x() -
                          bias.maximumBias.first * matrix.getScaleX());
     maximumBiasRect.setY(self->y() -
@@ -198,7 +200,7 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     float height = computeSVGLength(eHeight->baseVal(), fullHeight,
                                     isObjectBoundingBoxMode);
 
-    LayoutRect newFrameRect = self->frameRect();
+    LayoutRect newFrameRect = unadjustedFrameRectByFilter;
     if (isObjectBoundingBoxMode) {
         newFrameRect.setX(self->x() + x);
         newFrameRect.setY(self->y() + y);
@@ -226,6 +228,27 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
                                                        matrix.getScaleY());
         result.unite(minimumBiasRect);
     }
+
+    const auto& primitives = fe->filterPrimitives();
+    for (auto* primitive : primitives) {
+        if (primitive->canSubRegionExpandFrameRect()) {
+            auto subRegion = Filter::computeSubRegion(
+                primitive, filterElement, self,
+                std::make_pair(transScale.second.getScaleX(),
+                               transScale.second.getScaleY()));
+            LayoutRect subRegionRect(
+                unadjustedFrameRectByFilter.x() +
+                    (unadjustedFrameRectByFilter.width()) * subRegion.x(),
+                unadjustedFrameRectByFilter.y() +
+                    (unadjustedFrameRectByFilter.height()) * subRegion.y(),
+                (unadjustedFrameRectByFilter.width()) * subRegion.width(),
+                (unadjustedFrameRectByFilter.height()) * subRegion.height());
+            subRegionRect =
+                LayoutRect::overlappedRect(subRegionRect, newFrameRect);
+            result.unite(subRegionRect);
+        }
+    }
+
     self->setFrameRect(result);
 }
 

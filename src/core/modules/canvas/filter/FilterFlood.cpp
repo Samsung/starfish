@@ -77,7 +77,7 @@ void* FilterFlood::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FilterFlood::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterFlood::apply(const Unit::Rect& subRegionInFloat,
                         Filter::FilterApplyContext& ctx)
 {
     std::shared_ptr<Filter::FilterSourceBuffer> outputSource =

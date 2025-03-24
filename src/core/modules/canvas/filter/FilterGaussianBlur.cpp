@@ -381,7 +381,7 @@ Filter::FilterBias FilterGaussianBlur::computeBias(
     return Filter::FilterBias();
 }
 
-void FilterGaussianBlur::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
                                Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEGaussianBlurElement());

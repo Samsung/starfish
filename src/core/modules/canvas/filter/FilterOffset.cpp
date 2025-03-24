@@ -65,7 +65,7 @@ Filter::FilterBias FilterOffset::computeBias(
                               std::make_pair(std::abs(dx), std::abs(dy)));
 }
 
-void FilterOffset::apply(size_t x, size_t y, size_t width, size_t height,
+void FilterOffset::apply(const Unit::Rect& subRegionInFloat,
                          Filter::FilterApplyContext& ctx)
 {
     STARFISH_ASSERT(element()->isSVGFEOffsetElement());

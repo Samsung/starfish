@@ -86,7 +86,7 @@ void SVGLength::setUnitType(unsigned short unitType)
     m_unitType = unitType;
 }
 
-float SVGLength::value()
+float SVGLength::value(bool layoutIfNeeded)
 {
     if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
         Length len = Length(Length::Percent, m_valueInSpecifiedUnits / 100.0);
@@ -119,19 +119,24 @@ float SVGLength::value()
     } else {
         // unimplemented EMS, EXS
         if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
-            return valueInSpecifiedUnits();
+            return valueInSpecifiedUnits(layoutIfNeeded);
         } else if (m_unitType == SVG_LENGTHTYPE_PX) {
-            return valueInSpecifiedUnits();
+            return valueInSpecifiedUnits(layoutIfNeeded);
         } else if (m_unitType == SVG_LENGTHTYPE_CM) {
-            return UnitHelper::convertFromCmToPx(valueInSpecifiedUnits());
+            return UnitHelper::convertFromCmToPx(
+                valueInSpecifiedUnits(layoutIfNeeded));
         } else if (m_unitType == SVG_LENGTHTYPE_MM) {
-            return UnitHelper::convertFromMmToPx(valueInSpecifiedUnits());
+            return UnitHelper::convertFromMmToPx(
+                valueInSpecifiedUnits(layoutIfNeeded));
         } else if (m_unitType == SVG_LENGTHTYPE_IN) {
-            return UnitHelper::convertFromInToPx(valueInSpecifiedUnits());
+            return UnitHelper::convertFromInToPx(
+                valueInSpecifiedUnits(layoutIfNeeded));
         } else if (m_unitType == SVG_LENGTHTYPE_PT) {
-            return UnitHelper::convertFromPtToPx(valueInSpecifiedUnits());
+            return UnitHelper::convertFromPtToPx(
+                valueInSpecifiedUnits(layoutIfNeeded));
         } else if (m_unitType == SVG_LENGTHTYPE_PC) {
-            return UnitHelper::convertFromPcToPx(valueInSpecifiedUnits());
+            return UnitHelper::convertFromPcToPx(
+                valueInSpecifiedUnits(layoutIfNeeded));
         } else {
             STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
                                  (int)m_unitType);

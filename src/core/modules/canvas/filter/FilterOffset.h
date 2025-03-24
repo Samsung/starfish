@@ -33,7 +33,7 @@ public:
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale) override;
 
-    virtual void apply(size_t x, size_t y, size_t width, size_t height,
+    virtual void apply(const Unit::Rect& subRegionInFloat,
                        Filter::FilterApplyContext& ctx) override;
 };
 } // namespace Starfish
