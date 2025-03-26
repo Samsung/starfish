@@ -44,20 +44,26 @@ MediaQueryList* MediaQueryListMatcher::matchMedia(String* query)
 
 void MediaQueryListMatcher::mediaFeaturesChanged()
 {
-    for (auto& list : m_mediaQueryLists) {
-        // TODO: Check that this MediaQueryList has listener or not
+    auto copiedLists = m_mediaQueryLists;
+    for (auto& list : copiedLists) {
         if (list.first->matches() != list.second) {
-            // Fire the change event
-            const MediaQueryListEventInit mediaQueryListEventInit =
-                MediaQueryListEventInit(list.first->media(),
-                                        list.first->matches());
-            auto mediaQueryListEvent = new MediaQueryListEvent(
-                document()->executionContext(),
-                document()->starfish()->staticStrings()->m_change.localName(),
-                mediaQueryListEventInit);
-            document()->dispatchEventByUA(list.first, mediaQueryListEvent,
-                                          true);
-
+            auto l = list.first->getEventListeners(
+                document()->starfish()->staticStrings()->m_change.localName());
+            if (l && l->size()) {
+                // Fire the change event
+                const MediaQueryListEventInit mediaQueryListEventInit =
+                    MediaQueryListEventInit(list.first->media(),
+                                            list.first->matches());
+                auto mediaQueryListEvent =
+                    new MediaQueryListEvent(document()->executionContext(),
+                                            document()
+                                                ->starfish()
+                                                ->staticStrings()
+                                                ->m_change.localName(),
+                                            mediaQueryListEventInit);
+                document()->dispatchEventByUA(list.first, mediaQueryListEvent,
+                                              true);
+            }
             // Update dirty flag
             list.second = !list.second;
         }
