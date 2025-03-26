@@ -102,31 +102,31 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
     if (ss->m_attributename == name) {
         CSSStyleValuePair::KeyKind keyKind;
         if (parseAttributeName(value, keyKind)) {
-            if (!m_animationName.hasValue() ||
-                m_animationName.value() != keyKind) {
-                m_animationName = keyKind;
+            if (!m_attributeName.hasValue() ||
+                m_attributeName.value() != keyKind) {
+                m_attributeName = keyKind;
             }
         }
     }
 
-    if (m_animationName.hasValue()) {
+    if (m_attributeName.hasValue()) {
         if (ss->m_from == name) {
             CSSStyleValuePair from;
-            if (parseFrom(m_animationName.value(), value, from)) {
+            if (parseFrom(m_attributeName.value(), value, from)) {
                 if (!m_from.hasValue() || m_from.value() != from) {
                     m_from = from;
                 }
             }
         } else if (ss->m_to == name) {
             CSSStyleValuePair to;
-            if (parseTo(m_animationName.value(), value, to)) {
+            if (parseTo(m_attributeName.value(), value, to)) {
                 if (!m_to.hasValue() || m_to.value() != to) {
                     m_to = to;
                 }
             }
         } else if (ss->m_values == name) {
             GCVector<CSSStyleValuePair> values;
-            if (parseValues(m_animationName.value(), value, values)) {
+            if (parseValues(m_attributeName.value(), value, values)) {
                 if (!m_values.hasValue() ||
                     m_values.value().size() != values.size() ||
                     !std::equal(m_values.value().begin(),
@@ -201,12 +201,12 @@ void SVGAnimationElement::beginElement()
 
 void SVGAnimationElement::beginElementAt(float offset)
 {
-    if (!m_animationName.hasValue()) {
+    if (!m_attributeName.hasValue()) {
         STARFISH_UNIMPLEMENTED("Handle invalid animation name.");
         return;
     }
 
-    beginElementAtInternal(offset, m_animationName.value(), m_from, m_to,
+    beginElementAtInternal(offset, m_attributeName.value(), m_from, m_to,
                            m_values);
 }
 
@@ -323,7 +323,7 @@ void SVGAnimationElement::beginElementAtInternal(
 bool SVGAnimationElement::hasValidAttributes()
 {
     Optional<Element*> maybeTargetElement = targetElement();
-    return maybeTargetElement.hasValue() && m_animationName.hasValue() &&
+    return maybeTargetElement.hasValue() && m_attributeName.hasValue() &&
            (m_values.hasValue() || (m_from.hasValue() && m_to.hasValue()));
 }
 
