@@ -133,7 +133,8 @@ public:
 
     virtual ExecutionContext* executionContext() const = 0;
 
-    GCVector<EventListener*>* getEventListeners(const String* eventType);
+    Optional<GCVector<EventListener*>*> getEventListeners(
+        const String* eventType);
 
     bool addEventListener(const String* eventType, EventListener* listener,
                           bool useCapture = false);
@@ -145,6 +146,8 @@ public:
     bool dispatchEventByUA(EventTarget* origin, Event* event,
                            bool onlyTarget = false);
     void dispatchEventIdleTimeByUA(Event* event);
+    void dispatchEventIdleTimeByUA(EventTarget* origin, Event* event,
+                                   bool onlyTarget = false);
 
     virtual bool handleDefaultEvent(Event* event)
     {

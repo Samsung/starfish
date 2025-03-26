@@ -116,7 +116,7 @@ ScriptBindingInstance* EventTarget::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
-GCVector<EventListener*>* EventTarget::getEventListeners(
+Optional<GCVector<EventListener*>*> EventTarget::getEventListeners(
     const String* eventType)
 {
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end();
@@ -261,12 +261,20 @@ bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
 
 void EventTarget::dispatchEventIdleTimeByUA(Event* event)
 {
+    dispatchEventIdleTimeByUA(this, event);
+}
+
+void EventTarget::dispatchEventIdleTimeByUA(EventTarget* origin, Event* event,
+                                            bool onlyTarget)
+{
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
-        [](size_t handle, void* data0, void* data1) {
-            ((EventTarget*)data0)->dispatchEventByUA((Event*)data1);
+        [](size_t handle, void* data0, void* data1, void* data2) {
+            reinterpret_cast<EventTarget*>(data0)->dispatchEventByUA(
+                reinterpret_cast<EventTarget*>(data0),
+                reinterpret_cast<Event*>(data1), data2 ? true : false);
         },
-        this, event);
+        origin, event, onlyTarget ? reinterpret_cast<void*>(0x8) : nullptr);
 }
 
 // This method should only be called by JS binding
@@ -357,8 +365,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             break;
         }
         EventTarget* eventTarget = eventPath[i - 1];
-        GCVector<EventListener*>* originals =
-            eventTarget->getEventListeners(event->type());
+        auto originals = eventTarget->getEventListeners(event->type());
         if (originals) {
             // Iterate Copied Vector : listeners can be removed during iteration
             GCVector<EventListener*> copies =
@@ -385,8 +392,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 
     // 8. Invoke the event listeners of event's target attribute value with
     // event, if event's stop propagation flag is unset.
-    GCVector<EventListener*>* originals =
-        origin->getEventListeners(event->type());
+    auto originals = origin->getEventListeners(event->type());
     if (originals) {
         if (!event->stopPropagationValue()) {
             // Iterate Copied Vector : listeners can be removed during iteration
@@ -420,8 +426,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 break;
             }
             EventTarget* eventTarget = eventPath[i];
-            GCVector<EventListener*>* originals =
-                eventTarget->getEventListeners(event->type());
+            auto originals = eventTarget->getEventListeners(event->type());
             if (originals) {
                 // Iterate Copied Vector : listeners can be removed during
                 // iteration
@@ -506,7 +511,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
     event->setTarget(origin);
     event->setEventPhase(Event::AT_TARGET);
     // Invoke event listeners
-    GCVector<EventListener*>* originals = getEventListeners(event->type());
+    auto originals = getEventListeners(event->type());
     if (originals) {
         if (!event->stopPropagationValue()) {
             // Iterate Copied Vector : listeners can be removed during iteration
