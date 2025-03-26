@@ -413,6 +413,13 @@ protected:
     StyleTransformDataGroup* m_toTransformValue;
 };
 
+class ActiveTransformOriginAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveTransformOriginAnimationTask(const ActiveAnimationTaskInit& init);
+
+    void execute(double progress, ComputedStyle* style) override;
+};
+
 class ActiveColorAnimationTask : public ActiveAnimationTask {
 public:
     ActiveColorAnimationTask(const ActiveAnimationTaskInit& init);

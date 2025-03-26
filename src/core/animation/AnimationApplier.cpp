@@ -390,8 +390,10 @@ bool AnimationApplier::applyProperty(
                     STARFISH_UNIMPLEMENTED("InlineDisplayValue");
                     continue;
                 }
-            } else if (keyKind == CSSStyleValuePair::BackgroundPositionX ||
-                       keyKind == CSSStyleValuePair::BackgroundPositionY) {
+            } else if (keyKind ==
+                           CSSStyleValuePair::KeyKind::BackgroundPositionX ||
+                       keyKind ==
+                           CSSStyleValuePair::KeyKind::BackgroundPositionY) {
                 if (m_style->hasBlockLikeDisplay() == false) {
                     // FIXME: This originated from legacy code.
                     STARFISH_UNIMPLEMENTED("Inline Element");
@@ -407,12 +409,13 @@ bool AnimationApplier::applyProperty(
                 continue;
             }
             task = new ActiveLengthSizeAnimationTask(init, nullptr);
-        } else if (keyKind == CSSStyleValuePair::Opacity) {
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Opacity) {
             task = new ActiveOpacityAnimationTask(init);
-
-        } else if (keyKind == CSSStyleValuePair::Transform) {
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Transform) {
             task = new ActiveTransformAnimationTask(init, nullptr);
-        } else if (keyKind == CSSStyleValuePair::Visibility) {
+        } else if (keyKind == CSSStyleValuePair::KeyKind::TransformOrigin) {
+            task = new ActiveTransformOriginAnimationTask(init);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Visibility) {
             task = new ActiveVisibilityAnimationTask(init);
         }
 

@@ -2370,6 +2370,11 @@ public:
         return new StyleTransformOrigin();
     }
 
+    StyleTransformOrigin* ensureTransformOrigin()
+    {
+        return m_rareComputedStyleData.ensureTransformOrigin();
+    }
+
     bool hasTransformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
