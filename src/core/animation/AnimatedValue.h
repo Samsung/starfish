@@ -29,6 +29,7 @@ namespace Starfish {
 class Node;
 class StyleTransformDataGroup;
 class TimingFunction;
+class StyleTransformOrigin;
 
 class AnimatedValue : public gc {
     enum class ValueType ENSURE_ENUM_UNSIGNED {
@@ -41,6 +42,7 @@ class AnimatedValue : public gc {
         Int,
         Matrix,
         TransformData,
+        TransformOriginData,
         Visibility
     };
 
@@ -118,6 +120,13 @@ public:
         m_type = ValueType::TransformData;
     }
 
+    AnimatedValue(StyleTransformOrigin* transformOrigin)
+    {
+        STARFISH_ASSERT(transformOrigin);
+        m_data.m_transformOriginData = transformOrigin;
+        m_type = ValueType::TransformOriginData;
+    }
+
     AnimatedValue(VisibilityValue v)
     {
         m_data.m_visibilityValue = v;
@@ -162,6 +171,11 @@ public:
     bool isTransformData() const
     {
         return m_type == ValueType::TransformData;
+    }
+
+    bool isTransformOriginData() const
+    {
+        return m_type == ValueType::TransformOriginData;
     }
 
     Unit::Color getColor() const
@@ -218,6 +232,12 @@ public:
         return m_data.m_transformData;
     }
 
+    StyleTransformOrigin* getTrasnformOriginData() const
+    {
+        STARFISH_ASSERT(m_type == ValueType::TransformOriginData);
+        return m_data.m_transformOriginData;
+    }
+
     VisibilityValue getVisibilityValue() const
     {
         STARFISH_ASSERT(m_type == ValueType::Visibility);
@@ -265,6 +285,7 @@ protected:
         int m_int;
         SkMatrix m_matrix;
         StyleTransformDataGroup* m_transformData;
+        StyleTransformOrigin* m_transformOriginData;
         VisibilityValue m_visibilityValue;
         ValueData()
             : m_int(0)

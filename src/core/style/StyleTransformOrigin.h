@@ -135,6 +135,8 @@ public:
         return m_originValue;
     }
 
+    void initializeOriginValue(const CSSStyleValuePair& cssValuePair);
+
     String* dumpString()
     {
         StringBuilder builder;

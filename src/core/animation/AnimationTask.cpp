@@ -791,6 +791,74 @@ void ActiveTransformAnimationTask::detachFromElement()
     m_targetElement->clearRunningTransformAnimation();
 }
 
+ActiveTransformOriginAnimationTask::ActiveTransformOriginAnimationTask(
+    const ActiveAnimationTaskInit& init)
+    : ActiveAnimationTask(init)
+{
+}
+
+void ActiveTransformOriginAnimationTask::execute(double progress,
+                                                 ComputedStyle* style)
+{
+    StyleTransformOrigin* from =
+        currentAnimatedFromValue()->getTrasnformOriginData();
+    StyleTransformOrigin* to =
+        currentAnimatedToValue()->getTrasnformOriginData();
+    TransformOriginData* fromOrigin = from->originValue();
+    TransformOriginData* toOrigin = to->originValue();
+
+    Length fromValues[3];
+    fromValues[0] = fromOrigin->getXAxis();
+    fromValues[1] = fromOrigin->getYAxis();
+    fromValues[2] = fromOrigin->getZAxis();
+
+    Length toValues[3];
+    toValues[0] = toOrigin->getXAxis();
+    toValues[1] = toOrigin->getYAxis();
+    toValues[2] = toOrigin->getZAxis();
+
+    Length newValues[3];
+    for (size_t i = 0; i < 3; i++) {
+        if ((toValues[i].isPercent() || toValues[i].isZero()) &&
+            (fromValues[i].isPercent() || fromValues[i].isZero())) {
+            float fromPercent = 0;
+            if (!fromValues[i].isZero()) {
+                fromPercent = fromValues[i].percent();
+            }
+            float toPercent = 0;
+            if (!toValues[i].isZero()) {
+                toPercent = toValues[i].percent();
+            }
+            newValues[i] =
+                Length(Length::Percent, interpolate(fromPercent, toPercent,
+                                                    progress, m_isForward));
+        } else if (fromValues[i].isAuto() || toValues[i].isAuto()) {
+            if (progress < 0.5) {
+                if (!fromValues[i].isAuto()) {
+                    newValues[i] = fromValues[i];
+                } else {
+                    newValues[i] = Length();
+                }
+            } else {
+                if (!toValues[i].isAuto()) {
+                    newValues[i] = toValues[i];
+                } else {
+                    newValues[i] = Length();
+                }
+            }
+        } else {
+            float fromFixed = fromValues[i].fixed();
+            float toFixed = toValues[i].fixed();
+            newValues[i] =
+                Length(Length::Fixed,
+                       interpolate(fromFixed, toFixed, progress, m_isForward));
+        }
+    }
+
+    style->ensureTransformOrigin()->originValue()->setData(
+        newValues[0], newValues[1], newValues[2]);
+}
+
 ActiveColorAnimationTask::ActiveColorAnimationTask(
     const ActiveAnimationTaskInit& init)
     : ActiveAnimationTask(init)

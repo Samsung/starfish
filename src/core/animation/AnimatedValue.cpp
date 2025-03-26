@@ -269,6 +269,15 @@ Optional<AnimatedValue*> AnimatedValue::create(
             return nullptr;
         }
         break;
+    case CSSStyleValuePair::KeyKind::TransformOrigin: {
+        if (neededOriginProperty) {
+            return new AnimatedValue(style->transformOrigin());
+        }
+        auto* transformOrigin = style->transformOrigin();
+        ComputedStyle receiver(style);
+        receiver.ensureTransformOrigin()->initializeOriginValue(property);
+        return new AnimatedValue(receiver.transformOrigin());
+    }
     case CSSStyleValuePair::KeyKind::X:
         if (neededOriginProperty) {
             return new AnimatedValue(style->x());
@@ -300,7 +309,8 @@ Optional<AnimatedValue*> AnimatedValue::create(
         }
         return AnimatedValue::createAnimatedValueFromLength(property);
     default:
-        break;
+        STARFISH_UNIMPLEMENTED();
+        return Optional<AnimatedValue*>();
     }
 
     return Optional<AnimatedValue*>();
@@ -410,6 +420,22 @@ void AnimatedValue::changeToFixedIfNeeded(Length curFontSize,
             length.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                          viewportWidth, viewportHeight, cs);
             setLength(length);
+        }
+    }
+
+    if (isTransformOriginData()) {
+        if (m_data.m_transformOriginData->originValue()) {
+            TransformOriginData* originValue =
+                m_data.m_transformOriginData->originValue();
+            originValue->getXAxis().changeToFixedIfNeeded(
+                curFontSize, rootFontSize, font, viewportWidth, viewportHeight,
+                cs);
+            originValue->getYAxis().changeToFixedIfNeeded(
+                curFontSize, rootFontSize, font, viewportWidth, viewportHeight,
+                cs);
+            originValue->getZAxis().changeToFixedIfNeeded(
+                curFontSize, rootFontSize, font, viewportWidth, viewportHeight,
+                cs);
         }
     }
 }
