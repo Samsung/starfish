@@ -120,8 +120,8 @@ bool SVGAnimateTransformElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                              &transformValue)) {
         return false;
     }
-    return parseFromAndToInternal(CSSStyleValuePair::KeyKind::Transform,
-                                  transformValue, output);
+    return parseValue(CSSStyleValuePair::KeyKind::Transform, transformValue,
+                      output);
 }
 
 bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
