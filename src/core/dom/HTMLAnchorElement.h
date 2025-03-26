@@ -31,7 +31,6 @@ public:
         , m_relList(nullptr)
     {
         m_tabIndexWasSetExplicitly = true;
-        m_tabIndex = 0;
     }
 
     void* operator new(size_t size);
@@ -45,6 +44,7 @@ public:
                                      String* val, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    int tabIndex() final;
     DOMTokenList* relList();
 
     String* referrerPolicy();

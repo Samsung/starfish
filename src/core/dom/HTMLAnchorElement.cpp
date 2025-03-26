@@ -50,6 +50,16 @@ void* HTMLAnchorElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+int HTMLAnchorElement::tabIndex()
+{
+    Optional<String*> result =
+        getAttribute(starfish()->staticStrings()->m_tabindex);
+    if (result.hasValue()) {
+        return String::parseInt(result.getValue());
+    }
+    return 0;
+}
+
 void HTMLAnchorElement::didAttributeChanged(QualifiedName name,
                                             Optional<String*> old, String* val,
                                             bool attributeCreated,
@@ -61,8 +71,6 @@ void HTMLAnchorElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
-        if (m_tabIndex == -1)
-            m_tabIndex = 0;
     } else if (name == ss->m_href) {
         if (attributeCreated) {
             setState(NodeStateLink, true);

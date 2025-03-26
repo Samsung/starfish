@@ -126,7 +126,6 @@ public:
     Element(Document* document, const QualifiedName& qname)
         : Node(document)
         , m_inlineStyle(nullptr)
-        , m_tabIndex(0)
         , m_name(qname)
 #if !defined(NDEBUG)
         , m_didAttributeChangedCorrectlyInvoked(true)
@@ -427,11 +426,7 @@ public:
     }
 
     virtual int tabIndex();
-    void setTabIndex(int32_t t)
-    {
-        m_tabIndexWasSetExplicitly = true;
-        m_tabIndex = t;
-    }
+    void setTabIndex(int32_t t);
     bool tabIndexSetExplicitly() const;
 
     /* Element-level focus APIs */
@@ -504,7 +499,6 @@ protected:
     }
 
     InlineCSSStyleDeclaration* m_inlineStyle;
-    int m_tabIndex;
     QualifiedName m_name;
 
 private:

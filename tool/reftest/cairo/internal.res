@@ -496,6 +496,7 @@ test/cairo/internal-test/dom/ignore_focus.html
 test/cairo/internal-test/dom/text-decoder.html
 test/cairo/internal-test/dom/text-encoder.html
 test/cairo/internal-test/dom/crypto01.html
+test/cairo/internal-test/dom/tabIndex.html
 test/cairo/internal-test/css/background/background_lineargradient1.html
 test/cairo/internal-test/css/background/background_lineargradient2.html
 test/cairo/internal-test/css/background/background_lineargradient3.html
