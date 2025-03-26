@@ -1457,7 +1457,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals = new ValueList();
+            ValueList* vals = new ValueList(Separator::SpaceSeparator);
 
             CSSStyleValuePair x = lengthToCSSStyleValue(
                 style->transformOrigin()->originValue()->getXAxis());
