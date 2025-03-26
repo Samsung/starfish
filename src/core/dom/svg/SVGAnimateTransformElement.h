@@ -56,10 +56,11 @@ public:
 
 private:
     bool parseType(TransformType& type);
-    virtual bool parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                           const String* fromValue, CSSStyleValuePair& values);
-    virtual bool parseTo(CSSStyleValuePair::KeyKind keyKind,
-                         const String* toValue, CSSStyleValuePair& to);
+
+    virtual bool parseFromTo(CSSStyleValuePair::KeyKind keyKind,
+                             const String* value,
+                             CSSStyleValuePair& output) override;
+
     bool toCSSTransfromValue(const TransformType type, String* value,
                              String** transformValue);
 

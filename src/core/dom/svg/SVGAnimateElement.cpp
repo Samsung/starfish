@@ -27,7 +27,6 @@ SVGAnimateElement::SVGAnimateElement(Document* document,
                                      const QualifiedName& qname)
     : SVGAnimationElement(document, qname)
 {
-    STARFISH_UNIMPLEMENTED();
 }
 
 void* SVGAnimateElement::operator new(size_t size)

@@ -112,14 +112,14 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
     if (m_attributeName.hasValue()) {
         if (ss->m_from == name) {
             CSSStyleValuePair from;
-            if (parseFrom(m_attributeName.value(), value, from)) {
+            if (parseFromTo(m_attributeName.value(), value, from)) {
                 if (!m_from.hasValue() || m_from.value() != from) {
                     m_from = from;
                 }
             }
         } else if (ss->m_to == name) {
             CSSStyleValuePair to;
-            if (parseTo(m_attributeName.value(), value, to)) {
+            if (parseFromTo(m_attributeName.value(), value, to)) {
                 if (!m_to.hasValue() || m_to.value() != to) {
                     m_to = to;
                 }
@@ -403,17 +403,11 @@ bool SVGAnimationElement::convertFallbackValues(
     return true;
 }
 
-bool SVGAnimationElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                                    const String* fromValue,
-                                    CSSStyleValuePair& from)
+bool SVGAnimationElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
+                                      const String* value,
+                                      CSSStyleValuePair& output)
 {
-    return parseFromAndToInternal(keyKind, fromValue, from);
-}
-
-bool SVGAnimationElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
-                                  const String* toValue, CSSStyleValuePair& to)
-{
-    return parseFromAndToInternal(keyKind, toValue, to);
+    return parseFromAndToInternal(keyKind, value, output);
 }
 
 bool SVGAnimationElement::parseFromAndToInternal(
