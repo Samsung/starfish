@@ -68,6 +68,9 @@ void SVGAnimateTransformElement::didAttributeChanged(QualifiedName name,
             if (!m_type.hasValue() || m_type.value() != type) {
                 m_type = type;
             }
+        } else {
+            // TODO: Use default value 'translate' when type is not specified.
+            STARFISH_UNIMPLEMENTED();
         }
     }
 }
@@ -105,36 +108,20 @@ bool SVGAnimateTransformElement::parseType(TransformType& type)
     return false;
 }
 
-bool SVGAnimateTransformElement::parseFrom(CSSStyleValuePair::KeyKind keyKind,
-                                           const String* fromValue,
-                                           CSSStyleValuePair& from)
+bool SVGAnimateTransformElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
+                                             const String* value,
+                                             CSSStyleValuePair& output)
 {
     if (!m_type.hasValue()) {
         return false;
     }
     String* transformValue = nullptr;
-    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(fromValue),
+    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(value),
                              &transformValue)) {
         return false;
     }
     return parseFromAndToInternal(CSSStyleValuePair::KeyKind::Transform,
-                                  transformValue, from);
-}
-bool SVGAnimateTransformElement::parseTo(CSSStyleValuePair::KeyKind keyKind,
-                                         const String* toValue,
-                                         CSSStyleValuePair& to)
-{
-    if (!m_type.hasValue()) {
-        return false;
-    }
-
-    String* transformValue = nullptr;
-    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(toValue),
-                             &transformValue)) {
-        return false;
-    }
-    return parseFromAndToInternal(CSSStyleValuePair::KeyKind::Transform,
-                                  transformValue, to);
+                                  transformValue, output);
 }
 
 bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
