@@ -138,7 +138,7 @@ protected:
     CSSStyleDeclaration* m_declarations;
 
     Optional<AnimationKeyframes*> m_animationKeyframes;
-    Optional<CSSStyleValuePair::KeyKind> m_animationName;
+    Optional<CSSStyleValuePair::KeyKind> m_attributeName;
     Optional<CSSStyleValuePair> m_from;
     Optional<CSSStyleValuePair> m_to;
     Optional<GCVector<CSSStyleValuePair>> m_values;
