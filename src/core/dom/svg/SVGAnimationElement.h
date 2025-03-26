@@ -110,15 +110,13 @@ protected:
     bool parseValues(CSSStyleValuePair::KeyKind keyKind,
                      const String* valuesValue,
                      GCVector<CSSStyleValuePair>& values);
-    bool parseValue(CSSStyleValuePair::KeyKind keyKind, const char* buffer,
-                    size_t len, CSSStyleValuePair& pair);
+    bool parseValue(CSSStyleValuePair::KeyKind keyKind, const String* value,
+                    CSSStyleValuePair& pair);
     bool convertFallbackValues(CSSStyleValuePair::KeyKind keyKind,
                                GCVector<CSSStyleValuePair>& values);
 
     virtual bool parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                              const String* value, CSSStyleValuePair& output);
-    bool parseFromAndToInternal(CSSStyleValuePair::KeyKind keyKind,
-                                const String* value, CSSStyleValuePair& output);
     bool parseDur(const String* durValue, CSSTime& duration);
     bool parseFill(const String* fillValue, SVGAnimationFill& fill);
     bool parseRepeatCount(const String* repeatCountValue, float& repeatCount);

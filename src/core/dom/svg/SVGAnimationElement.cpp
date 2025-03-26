@@ -352,9 +352,8 @@ bool SVGAnimationElement::parseValues(CSSStyleValuePair::KeyKind keyKind,
     StringUtils::tokenize(const_cast<String*>(valuesValue), ";", 1, tokens);
 
     for (auto& token : tokens) {
-        StringBufferAccessData bad = token.bufferAccessData();
         CSSStyleValuePair pair;
-        if (!parseValue(keyKind, bad.asciiData(), bad.length, pair)) {
+        if (!parseValue(keyKind, &token, pair)) {
             return false;
         }
         values.push_back(pair);
@@ -364,19 +363,41 @@ bool SVGAnimationElement::parseValues(CSSStyleValuePair::KeyKind keyKind,
 }
 
 bool SVGAnimationElement::parseValue(CSSStyleValuePair::KeyKind keyKind,
-                                     const char* buffer, size_t len,
+                                     const String* value,
                                      CSSStyleValuePair& pair)
 {
     // Parse each value in values using the rules for parsing the attribute
     // identified by the ‘attributeName’ attributes.
     // Note that ‘attributeName’ corresponds to an attribute name or a CSS
     // property name.
-    bool ret = m_declarations->setPropertyInternal(keyKind, buffer, len, false);
-    if (!ret) {
-        return false;
-    }
-    pair = m_declarations->getCSSValuePair(keyKind);
-    return true;
+
+    struct Args {
+        CSSStyleValuePair::KeyKind keyKind;
+        CSSStyleValuePair* pair = nullptr;
+        CSSStyleDeclaration* declarations = nullptr;
+        bool ret = false;
+    } args;
+
+    args.keyKind = keyKind;
+    args.pair = &pair;
+    args.declarations = m_declarations;
+
+    value->peekUTF8Buffer(
+        [](const char* buffer, size_t len, void* data) -> size_t {
+            Args* p = static_cast<Args*>(data);
+            CSSStyleValuePair::KeyKind keyKind = p->keyKind;
+            CSSStyleDeclaration* declarations = p->declarations;
+            p->ret =
+                declarations->setPropertyInternal(keyKind, buffer, len, false);
+            if (p->ret) {
+                *p->pair = declarations->getCSSValuePair(keyKind);
+            }
+
+            return 0;
+        },
+        &args);
+
+    return args.ret;
 }
 
 bool SVGAnimationElement::convertFallbackValues(
@@ -407,33 +428,7 @@ bool SVGAnimationElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                                       const String* value,
                                       CSSStyleValuePair& output)
 {
-    return parseFromAndToInternal(keyKind, value, output);
-}
-
-bool SVGAnimationElement::parseFromAndToInternal(
-    CSSStyleValuePair::KeyKind keyKind, const String* value,
-    CSSStyleValuePair& output)
-{
-    struct Args {
-        CSSStyleValuePair::KeyKind keyKind;
-        CSSStyleValuePair pair;
-        SVGAnimationElement* self = nullptr;
-        bool ret = false;
-    } args;
-    args.keyKind = keyKind;
-    args.self = this;
-    value->peekUTF8Buffer(
-        [](const char* buffer, size_t len, void* data) -> size_t {
-            Args* p = static_cast<Args*>(data);
-            p->ret = p->self->parseValue(p->keyKind, buffer, len, p->pair);
-            return 0;
-        },
-        &args);
-    if (!args.ret) {
-        return false;
-    }
-    output = args.pair;
-    return true;
+    return parseValue(keyKind, value, output);
 }
 
 bool SVGAnimationElement::parseDur(const String* durValue, CSSTime& duration)
