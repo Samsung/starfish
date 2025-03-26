@@ -119,14 +119,19 @@ static inline void makePixelValueFromColorComponents(
 
 static inline void applyMorphology(
     const uint8_t* srcPixelBuffer, const uint8_t* dstPixelBuffer, int startY,
-    int endY, const int radiusX, const int radiusY, const int width,
+    int endY, int startX, int endX, int radiusX, int radiusY, const int width,
     const int height, const int stride,
     SVGFEMorphologyElement::MorphologyOperator type)
 {
     STARFISH_ASSERT(endY > startY);
-
-    STARFISH_ASSERT(radiusX <= width || radiusY <= height);
     STARFISH_ASSERT(startY >= 0 && endY <= height && startY < endY);
+
+    if (radiusX > width) {
+        radiusX = width;
+    }
+    if (radiusY > height) {
+        radiusY = height;
+    }
 
     std::vector<std::array<uint8_t, 4>> extrema;
 
@@ -143,7 +148,7 @@ static inline void applyMorphology(
                                              yRadiusEnd, stride, type));
 
         // Kernel is filled, get extrema of next column
-        for (int x = 0; x < width; ++x) {
+        for (int x = startX; x < endX; ++x) {
             if (x < width - radiusX) {
                 extrema.push_back(columnExtremum(srcPixelBuffer, x + radiusX,
                                                  yRadiusStart, yRadiusEnd,
@@ -184,14 +189,7 @@ std::pair<float, float> FilterMorphology::computeRadiusXY(
 Filter::FilterBias FilterMorphology::computeBias(
     const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
 {
-    auto e = element()->asSVGFEMorphologyElement();
-    if ((SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
-            ->baseVal() == SVGFEMorphologyElement::MorphologyOperator::
-                               SVG_MORPHOLOGY_OPERATOR_DILATE) {
-        return Filter::FilterBias(computeRadiusXY(targetSize, viewportScale));
-    }
-
-    return Filter::FilterBias();
+    return Filter::FilterBias(computeRadiusXY(targetSize, viewportScale));
 }
 
 void* FilterMorphology::operator new(size_t size)
@@ -228,25 +226,32 @@ void FilterMorphology::apply(const Unit::Rect& subRegionInFloat,
     radiusXY.first *= dpr;
     radiusXY.second *= dpr;
 
-    std::shared_ptr<Filter::FilterSourceBuffer> inputSource =
-        filter()->fetchInputSource(ctx, this);
+    auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
+    bool isSubRegionCoversAll = subRegionCoversAll(normalizedSubRegion);
 
-    if (filter()->shouldMaintainSourceBuffer() &&
-        inputSource->data() == ctx.src) {
-        inputSource = std::shared_ptr<Filter::FilterSourceBuffer>(
-            new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height,
-                                           true));
-        memcpy(inputSource->data(), ctx.src, inputSource->size());
-    }
+    auto inputSource = filter()->fetchInputSource(ctx, this);
+    memcpy(inputSource->data(), ctx.src, inputSource->size());
 
     std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
         new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
-    applyMorphology(inputSource->data(), outputBuffer->data(), 0, ctx.height,
-                    radiusXY.first, radiusXY.second, ctx.width, ctx.height,
-                    ctx.stride,
-                    (SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
-                        ->baseVal());
+    if (!isSubRegionCoversAll) {
+        memset(outputBuffer->data(), 0, outputBuffer->size());
+    }
+
+    size_t sx = ctx.width * normalizedSubRegion.x();
+    size_t ex = sx + ctx.width * normalizedSubRegion.width();
+    size_t sy = ctx.height * normalizedSubRegion.y();
+    size_t ey = sy + ctx.height * normalizedSubRegion.height();
+
+    if (normalizedSubRegion.width() && normalizedSubRegion.height()) {
+        applyMorphology(
+            inputSource->data(), outputBuffer->data(), sy, ey, sx, ex,
+            radiusXY.first, radiusXY.second, ctx.width, ctx.height, ctx.stride,
+            (SVGFEMorphologyElement::MorphologyOperator)e->domOperator()
+                ->baseVal());
+    }
+
     filter()->registerOutput(ctx, this, outputBuffer);
 }
 

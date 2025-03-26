@@ -29,6 +29,7 @@
 namespace Starfish {
 
 void compositeSource(Filter::FilterApplyContext& ctx,
+                     const Unit::Rect& subRegionInFloat,
                      std::shared_ptr<Filter::FilterSourceBuffer> input1,
                      std::shared_ptr<Filter::FilterSourceBuffer> input2,
                      std::shared_ptr<Filter::FilterSourceBuffer> output,
@@ -36,6 +37,14 @@ void compositeSource(Filter::FilterApplyContext& ctx,
 {
     Canvas* c =
         Canvas::create(output->data(), ctx.width, ctx.height, ctx.stride, 1);
+
+    if (!FilterPrimitive::subRegionCoversAll(subRegionInFloat)) {
+        c->clearColor(Unit::Color(0, 0, 0, 0));
+        c->clip(Unit::Rect(ctx.width * subRegionInFloat.x(),
+                           ctx.height * subRegionInFloat.y(),
+                           ctx.width * subRegionInFloat.width(),
+                           ctx.height * subRegionInFloat.height()));
+    }
 
     c->setCompositeOperator(CanvasCompositeOperator::Copy,
                             CanvasBlendMode::Normal);
@@ -146,12 +155,13 @@ void FilterComposite::apply(const Unit::Rect& subRegionInFloat,
     SVGFECompositeElement::CompositeOperator oper =
         (SVGFECompositeElement::CompositeOperator)ele->domOperator()->baseVal();
 
-    std::shared_ptr<Filter::FilterSourceBuffer> outputBuffer(
+    std::shared_ptr<Filter::FilterSourceBuffer> outputSource(
         new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height, true));
 
-    compositeSource(ctx, inputSource, inputSource2, outputBuffer, oper);
+    compositeSource(ctx, subRegionInFloat, inputSource, inputSource2,
+                    outputSource, oper);
 
-    filter()->registerOutput(ctx, this, outputBuffer);
+    filter()->registerOutput(ctx, this, outputSource);
 }
 
 } // namespace Starfish

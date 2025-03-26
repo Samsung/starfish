@@ -370,15 +370,10 @@ Filter::FilterBias FilterGaussianBlur::computeBias(
     const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
 {
     auto e = element()->asSVGFEGaussianBlurElement();
-
-    if ((SVGFEGaussianBlurElement::EdgeMode)e->edgeMode()->baseVal() ==
-        SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
-        auto stdXY = computeStdXY(targetSize, viewportScale);
-        auto kernel =
-            FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
-        return Filter::FilterBias(std::make_pair(kernel.first, kernel.second));
-    }
-    return Filter::FilterBias();
+    auto stdXY = computeStdXY(targetSize, viewportScale);
+    auto kernel =
+        FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
+    return Filter::FilterBias(std::make_pair(kernel.first, kernel.second));
 }
 
 void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
@@ -422,6 +417,25 @@ void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
         inputSource->data(), outputBuffer->data(), kernelSize.first,
         kernelSize.second, ctx.stride, ctx.width, ctx.height, ctx.isAlphaImage,
         (SVGFEGaussianBlurElement::EdgeMode)ele->edgeMode()->baseVal());
+
+    auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
+
+    if (!subRegionCoversAll(normalizedSubRegion)) {
+        Canvas* c = Canvas::create(outputBuffer->data(), ctx.width, ctx.height,
+                                   ctx.stride, 1);
+        c->setCompositeOperator(CanvasCompositeOperator::Copy,
+                                CanvasBlendMode::Normal);
+        c->rect(Unit::Rect(ctx.width * normalizedSubRegion.x(),
+                           ctx.height * normalizedSubRegion.y(),
+                           ctx.width * normalizedSubRegion.width(),
+                           ctx.height * normalizedSubRegion.height()));
+        c->rect(Unit::Rect(0, 0, ctx.width, ctx.height));
+        c->closePath();
+        c->setFillColor(Unit::Color(0, 0, 0, 0));
+        c->setFillRule(false);
+        c->fill();
+        delete c;
+    }
 
     filter()->registerOutput(ctx, this, outputBuffer);
 }

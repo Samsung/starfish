@@ -74,14 +74,9 @@ bool FilterMerge::shouldMaintainSourceBuffer(bool isFirstFilter)
 void FilterMerge::apply(const Unit::Rect& subRegionInFloat,
                         Filter::FilterApplyContext& ctx)
 {
-    std::shared_ptr<Filter::FilterSourceBuffer> outputSource;
-    if (filter()->shouldMaintainSourceBuffer()) {
-        outputSource = std::shared_ptr<Filter::FilterSourceBuffer>(
-            new Filter::FilterSourceBuffer(ctx.src, ctx.stride * ctx.height,
-                                           true));
-    } else {
-        outputSource = ctx.sourceGraphic();
-    }
+    bool isSubRegionInFloat = subRegionCoversAll(subRegionInFloat);
+    auto outputSource = filter()->fetchOutputSource(
+        ctx, this, ctx.sourceGraphic(), subRegionInFloat);
 
     if (m_inputs.size() == 0) {
         // we should clear buffer there is no input
@@ -89,6 +84,14 @@ void FilterMerge::apply(const Unit::Rect& subRegionInFloat,
     } else {
         Canvas* c = Canvas::create(outputSource->data(), ctx.width, ctx.height,
                                    ctx.stride, 1);
+
+        if (!subRegionCoversAll(subRegionInFloat)) {
+            c->clip(Unit::Rect(ctx.width * subRegionInFloat.x(),
+                               ctx.height * subRegionInFloat.y(),
+                               ctx.width * subRegionInFloat.width(),
+                               ctx.height * subRegionInFloat.height()));
+        }
+
         bool first = true;
         for (auto* input : m_inputs) {
             auto inputSource = ctx.findSource(input);

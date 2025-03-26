@@ -80,11 +80,18 @@ void* FilterFlood::operator new(size_t size)
 void FilterFlood::apply(const Unit::Rect& subRegionInFloat,
                         Filter::FilterApplyContext& ctx)
 {
-    std::shared_ptr<Filter::FilterSourceBuffer> outputSource =
-        filter()->fetchOutputSource(ctx, this, ctx.sourceGraphic());
-
+    auto outputSource = filter()->fetchOutputSource(
+        ctx, this, ctx.sourceGraphic(), subRegionInFloat);
     Canvas* c = Canvas::create(outputSource->data(), ctx.width, ctx.height,
                                ctx.stride, 1);
+
+    if (!subRegionCoversAll(subRegionInFloat)) {
+        c->clip(Unit::Rect(ctx.width * subRegionInFloat.x(),
+                           ctx.height * subRegionInFloat.y(),
+                           ctx.width * subRegionInFloat.width(),
+                           ctx.height * subRegionInFloat.height()));
+    }
+
     c->clearColor(m_floodColor);
     delete c;
 

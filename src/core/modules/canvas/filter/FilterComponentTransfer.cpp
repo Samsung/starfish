@@ -178,27 +178,69 @@ void FilterComponentTransfer::apply(const Unit::Rect& subRegionInFloat,
         element()->asSVGFEComponentTransferElement();
     String* sourceNameStr = ele->in1()->baseVal();
 
+    auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
+    bool isSubRegionCoversAll = subRegionCoversAll(normalizedSubRegion);
     auto inputSource = filter()->fetchInputSource(ctx, this);
-    auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource);
+    auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource,
+                                                    normalizedSubRegion);
+
     uint8_t* inputBuffer = inputSource->data();
     uint8_t* outputBuffer = outputSource->data();
 
     convertImageBufferAsPremultipliedAlphaIfNeeds(inputBuffer, ctx.width,
                                                   ctx.stride, ctx.height);
 
-    for (size_t bY = 0; bY < ctx.height; bY++) {
-        uint8_t* p = inputBuffer;
-        uint8_t* p2 = outputBuffer;
-        for (size_t bX = 0; bX < ctx.width; bX++) {
-            p2[STARFISH_PIXEL_R_INDEX] = m_rTable[p[STARFISH_PIXEL_R_INDEX]];
-            p2[STARFISH_PIXEL_G_INDEX] = m_gTable[p[STARFISH_PIXEL_G_INDEX]];
-            p2[STARFISH_PIXEL_B_INDEX] = m_bTable[p[STARFISH_PIXEL_B_INDEX]];
-            p2[STARFISH_PIXEL_A_INDEX] = m_aTable[p[STARFISH_PIXEL_A_INDEX]];
-            p += 4;
-            p2 += 4;
+    if (isSubRegionCoversAll) {
+        for (size_t bY = 0; bY < ctx.height; bY++) {
+            uint8_t* p = inputBuffer;
+            uint8_t* p2 = outputBuffer;
+            for (size_t bX = 0; bX < ctx.width; bX++) {
+                p2[STARFISH_PIXEL_R_INDEX] =
+                    m_rTable[p[STARFISH_PIXEL_R_INDEX]];
+                p2[STARFISH_PIXEL_G_INDEX] =
+                    m_gTable[p[STARFISH_PIXEL_G_INDEX]];
+                p2[STARFISH_PIXEL_B_INDEX] =
+                    m_bTable[p[STARFISH_PIXEL_B_INDEX]];
+                p2[STARFISH_PIXEL_A_INDEX] =
+                    m_aTable[p[STARFISH_PIXEL_A_INDEX]];
+                p += 4;
+                p2 += 4;
+            }
+            inputBuffer += ctx.stride;
+            outputBuffer += ctx.stride;
         }
-        inputBuffer += ctx.stride;
-        outputBuffer += ctx.stride;
+    } else {
+        size_t sx = ctx.width * normalizedSubRegion.x();
+        size_t ex = sx + ctx.width * normalizedSubRegion.width();
+        size_t sy = ctx.height * normalizedSubRegion.y();
+        size_t ey = sy + ctx.height * normalizedSubRegion.height();
+
+        size_t t = ctx.stride * sy;
+        inputBuffer += t;
+        outputBuffer += t;
+        for (size_t bY = sy; bY < ey; bY++) {
+            uint8_t* p = inputBuffer;
+            uint8_t* p2 = outputBuffer;
+
+            size_t t = 4 * sx;
+            p += t;
+            p2 += t;
+            for (size_t bX = sx; bX < ex; bX++) {
+                p2[STARFISH_PIXEL_R_INDEX] =
+                    m_rTable[p[STARFISH_PIXEL_R_INDEX]];
+                p2[STARFISH_PIXEL_G_INDEX] =
+                    m_gTable[p[STARFISH_PIXEL_G_INDEX]];
+                p2[STARFISH_PIXEL_B_INDEX] =
+                    m_bTable[p[STARFISH_PIXEL_B_INDEX]];
+                p2[STARFISH_PIXEL_A_INDEX] =
+                    m_aTable[p[STARFISH_PIXEL_A_INDEX]];
+                p += 4;
+                p2 += 4;
+            }
+
+            inputBuffer += ctx.stride;
+            outputBuffer += ctx.stride;
+        }
     }
 
     convertImageBufferAsPremultipliedAlphaIfNeeds(

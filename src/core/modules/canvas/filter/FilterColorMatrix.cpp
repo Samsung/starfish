@@ -52,7 +52,57 @@ inline uint8_t adjustValueForPixel(float value)
     return value;
 }
 
-inline void applyMatrix(uint8_t* inputBuffer, uint8_t* outputBuffer,
+static void applyMatrix(uint8_t* inputBuffer, uint8_t* outputBuffer,
+                        std::array<float, 20> matrix, size_t stride,
+                        size_t imageWidth, size_t imageHeight,
+                        const Unit::Rect& subRegionInFloat)
+{
+    size_t sx = imageWidth * subRegionInFloat.x();
+    size_t ex = sx + imageWidth * subRegionInFloat.width();
+    size_t sy = imageHeight * subRegionInFloat.y();
+    size_t ey = sy + imageHeight * subRegionInFloat.height();
+
+    size_t t = stride * sy;
+    inputBuffer += t;
+    outputBuffer += t;
+
+    for (size_t y = sy; y < ey; y++) {
+        uint8_t* p = inputBuffer;
+        uint8_t* dst = outputBuffer;
+
+        size_t t = 4 * sx;
+        p += t;
+        dst += t;
+        for (size_t x = sx; x < ex; x++) {
+            uint8_t r = p[STARFISH_PIXEL_R_INDEX];
+            uint8_t g = p[STARFISH_PIXEL_G_INDEX];
+            uint8_t b = p[STARFISH_PIXEL_B_INDEX];
+            uint8_t a = p[STARFISH_PIXEL_A_INDEX];
+
+            float r_ = matrix[0] * r + matrix[1] * g + matrix[2] * b +
+                       matrix[3] * a + matrix[4] * 255;
+            float g_ = matrix[5] * r + matrix[6] * g + matrix[7] * b +
+                       matrix[8] * a + matrix[9] * 255;
+            float b_ = matrix[10] * r + matrix[11] * g + matrix[12] * b +
+                       matrix[13] * a + matrix[14] * 255;
+            float a_ = matrix[15] * r + matrix[16] * g + matrix[17] * b +
+                       matrix[18] * a + matrix[19] * 255;
+
+            dst[STARFISH_PIXEL_R_INDEX] = adjustValueForPixel(r_);
+            dst[STARFISH_PIXEL_G_INDEX] = adjustValueForPixel(g_);
+            dst[STARFISH_PIXEL_B_INDEX] = adjustValueForPixel(b_);
+            dst[STARFISH_PIXEL_A_INDEX] = adjustValueForPixel(a_);
+
+            p += 4;
+            dst += 4;
+        }
+
+        inputBuffer += stride;
+        outputBuffer += stride;
+    }
+}
+
+static void applyMatrix(uint8_t* inputBuffer, uint8_t* outputBuffer,
                         std::array<float, 20> matrix, size_t stride,
                         size_t imageWidth, size_t imageHeight)
 {
@@ -90,26 +140,41 @@ inline void applyMatrix(uint8_t* inputBuffer, uint8_t* outputBuffer,
 inline void applySaturateAndHueRotate(uint8_t* buffer, uint8_t* outputBuffer,
                                       std::array<float, 9> matrix,
                                       size_t stride, size_t imageWidth,
-                                      size_t imageHeight)
+                                      size_t imageHeight,
+                                      bool isSubRegionCoversAll,
+                                      const Unit::Rect& subRegionInFloat)
 {
     std::array<float, 20> newMatrix = { matrix[0], matrix[1], matrix[2], 0, 0,
                                         matrix[3], matrix[4], matrix[5], 0, 0,
                                         matrix[6], matrix[7], matrix[8], 0, 0,
                                         0,         0,         0,         1, 0 };
-    applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
-                imageHeight);
+
+    if (isSubRegionCoversAll) {
+        applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
+                    imageHeight);
+    } else {
+        applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
+                    imageHeight, subRegionInFloat);
+    }
 }
 
 inline void applyLuminanceAlpha(uint8_t* buffer, uint8_t* outputBuffer,
                                 size_t stride, size_t imageWidth,
-                                size_t imageHeight)
+                                size_t imageHeight, bool isSubRegionCoversAll,
+                                const Unit::Rect& subRegionInFloat)
 {
     std::array<float, 20> newMatrix = {
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0,    0.0,    0.0,    0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.2125, 0.7154, 0.0721, 0.0, 0.0,
     };
-    applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
-                imageHeight);
+
+    if (isSubRegionCoversAll) {
+        applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
+                    imageHeight);
+    } else {
+        applyMatrix(buffer, outputBuffer, newMatrix, stride, imageWidth,
+                    imageHeight, subRegionInFloat);
+    }
 }
 
 inline std::array<float, 9> saturationMatrix(float value)
@@ -176,10 +241,14 @@ void FilterColorMatrix::apply(const Unit::Rect& subRegionInFloat,
     convertImageBufferAsUnmultipliedAlphaIfNeeds(inputSource->data(), ctx.width,
                                                  ctx.stride, ctx.height);
 
-    auto outputSource = filter()->fetchOutputSource(ctx, this, inputSource);
+    auto normalizedSubRegion = normalizeSubRegion(subRegionInFloat);
+
+    bool isSubRegionCoversAll = subRegionCoversAll(normalizedSubRegion);
+    std::shared_ptr<Filter::FilterSourceBuffer> outputSource =
+        filter()->fetchOutputSource(ctx, this, inputSource,
+                                    normalizedSubRegion);
 
     SVGNumberList* values = ele->values()->baseVal();
-
     if (values && ele->type()->baseVal() ==
                       SVGFEColorMatrixElement::MatrixTypes::
                           SVG_FECOLORMATRIX_TYPE_MATRIX) {
@@ -189,8 +258,14 @@ void FilterColorMatrix::apply(const Unit::Rect& subRegionInFloat,
             for (size_t i = 0; i < values->length(); i++) {
                 matrix[i] = values->getItem(i)->value();
             }
-            applyMatrix(inputSource->data(), outputSource->data(), matrix,
-                        ctx.stride, ctx.width, ctx.height);
+            if (isSubRegionCoversAll) {
+                applyMatrix(inputSource->data(), outputSource->data(), matrix,
+                            ctx.stride, ctx.width, ctx.height);
+            } else {
+                applyMatrix(inputSource->data(), outputSource->data(), matrix,
+                            ctx.stride, ctx.width, ctx.height,
+                            normalizedSubRegion);
+            }
         }
     } else if (values && ele->type()->baseVal() ==
                              SVGFEColorMatrixElement::MatrixTypes::
@@ -199,7 +274,8 @@ void FilterColorMatrix::apply(const Unit::Rect& subRegionInFloat,
             applySaturateAndHueRotate(
                 inputSource->data(), outputSource->data(),
                 saturationMatrix(values->getItem(0)->value()), ctx.stride,
-                ctx.width, ctx.height);
+                ctx.width, ctx.height, isSubRegionCoversAll,
+                normalizedSubRegion);
         }
     } else if (values && ele->type()->baseVal() ==
                              SVGFEColorMatrixElement::MatrixTypes::
@@ -208,16 +284,23 @@ void FilterColorMatrix::apply(const Unit::Rect& subRegionInFloat,
             applySaturateAndHueRotate(
                 inputSource->data(), outputSource->data(),
                 hueRotateMatrix(values->getItem(0)->value()), ctx.stride,
-                ctx.width, ctx.height);
+                ctx.width, ctx.height, isSubRegionCoversAll,
+                normalizedSubRegion);
         }
 
     } else if (ele->type()->baseVal() ==
                SVGFEColorMatrixElement::MatrixTypes::
                    SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA) {
         applyLuminanceAlpha(inputSource->data(), outputSource->data(),
-                            ctx.stride, ctx.width, ctx.height);
+                            ctx.stride, ctx.width, ctx.height,
+                            isSubRegionCoversAll, normalizedSubRegion);
     } else {
         STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    if (inputSource->data() != outputSource->data()) {
+        convertImageBufferAsPremultipliedAlphaIfNeeds(
+            outputSource->data(), ctx.width, ctx.stride, ctx.height);
     }
 
     convertImageBufferAsPremultipliedAlphaIfNeeds(
