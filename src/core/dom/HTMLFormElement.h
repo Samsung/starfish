@@ -143,6 +143,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLFormElement() const override;
 
+    int tabIndex() final;
     // 4.10 Interface Form
     String* action();
     void setAction(String* name);

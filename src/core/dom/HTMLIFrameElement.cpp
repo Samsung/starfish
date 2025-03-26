@@ -53,7 +53,6 @@ HTMLIFrameElement::HTMLIFrameElement(Document* document,
     , m_isContentDocumentDisabled(false)
 {
     m_tabIndexWasSetExplicitly = true;
-    m_tabIndex = 0;
 }
 
 void HTMLIFrameElement::setSrc(String* src)
@@ -146,8 +145,6 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name,
         }
     } else if (name == starfish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
-        if (m_tabIndex == -1)
-            m_tabIndex = 0;
     } else if (name == starfish()->staticStrings()->m_frameborder) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == starfish()->staticStrings()->m_name) {
@@ -245,6 +242,16 @@ void HTMLIFrameElement::loadSrcDoc()
                  HistoryManagerAction::Intact,
                  new ReferrerURL(document()->documentURI(), policy));
     }
+}
+
+int HTMLIFrameElement::tabIndex()
+{
+    Optional<String*> result =
+        getAttribute(starfish()->staticStrings()->m_tabindex);
+    if (result.hasValue()) {
+        return String::parseInt(result.getValue());
+    }
+    return 0;
 }
 
 Document* HTMLIFrameElement::contentDocument()

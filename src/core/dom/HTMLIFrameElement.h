@@ -82,6 +82,8 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
+    int tabIndex() final;
+
     uint32_t frameWidth();
     uint32_t frameHeight();
 

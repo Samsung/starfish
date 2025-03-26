@@ -69,10 +69,7 @@ HTMLFormControl::HTMLFormControl(Document* document, const QualifiedName& qname,
     , m_supportTabIndex(supportTabIndex)
     , m_labels(nullptr)
 {
-    if (m_supportTabIndex) {
-        m_tabIndexWasSetExplicitly = true;
-        m_tabIndex = 0;
-    }
+    m_tabIndexWasSetExplicitly = true;
 }
 
 String* HTMLFormControl::domName()
@@ -279,8 +276,6 @@ void HTMLFormControl::didAttributeChanged(QualifiedName name,
     } else if (m_supportTabIndex &&
                name == starfish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
-        if (m_tabIndex == -1)
-            m_tabIndex = 0;
     }
 }
 
@@ -971,4 +966,15 @@ bool HTMLFormElement::isSubmittableElement(Node* node)
     }
     return false;
 }
+
+int HTMLFormElement::tabIndex()
+{
+    Optional<String*> result =
+        getAttribute(starfish()->staticStrings()->m_tabindex);
+    if (result.hasValue()) {
+        return String::parseInt(result.getValue());
+    }
+    return 0;
+}
+
 } // namespace Starfish

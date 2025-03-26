@@ -717,7 +717,6 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
     } else if (name == ss->m_tabindex) {
         int tabIndex = 0;
         if (!value->isEmpty() && parseHTMLInteger(value, tabIndex)) {
-            m_tabIndex = tabIndex;
             m_tabIndexWasSetExplicitly = true;
         } else {
             m_tabIndexWasSetExplicitly = false;
@@ -2273,7 +2272,18 @@ bool Element::hasFocusableStyle()
 
 int Element::tabIndex()
 {
-    return m_tabIndex;
+    Optional<String*> result =
+        getAttribute(starfish()->staticStrings()->m_tabindex);
+    if (result.hasValue()) {
+        return String::parseInt(result.getValue());
+    }
+    return -1;
+}
+
+void Element::setTabIndex(int32_t t)
+{
+    setAttribute(starfish()->staticStrings()->m_tabindex, String::fromInt(t));
+    m_tabIndexWasSetExplicitly = true;
 }
 
 bool Element::tabIndexSetExplicitly() const
