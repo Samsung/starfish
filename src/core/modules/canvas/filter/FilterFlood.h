@@ -31,6 +31,11 @@ public:
     virtual void apply(const Unit::Rect& subRegionInFloat,
                        Filter::FilterApplyContext& ctx) override;
 
+    virtual bool canSubRegionExpandFrameRect() override
+    {
+        return true;
+    }
+
 private:
     Unit::Color m_floodColor;
 };
