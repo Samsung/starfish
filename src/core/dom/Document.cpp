@@ -658,7 +658,9 @@ static void executeModule(Document* document,
                           GCVector<Document::ScriptModuleData*>& moduleScripts,
                           size_t startSize, bool fromParser)
 {
-    for (size_t i = 0; i < startSize; i++) {
+    // we should check moduleScripts.size() here
+    // since we fire load, error events here
+    for (size_t i = 0; i < startSize && i < moduleScripts.size(); i++) {
         Document::ScriptModuleData* data = moduleScripts[i];
         if (data->fromParser == fromParser) {
             // execute module
