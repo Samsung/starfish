@@ -55,7 +55,7 @@ public:
     virtual void beginElementAt(float offset) override;
 
 private:
-    bool parseType(TransformType& type);
+    bool parseType(const String* typeValue, TransformType& type);
 
     virtual bool parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                              const String* value,

@@ -64,7 +64,7 @@ void SVGAnimateTransformElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_type == name) {
         TransformType type;
-        if (parseType(type)) {
+        if (parseType(value, type)) {
             if (!m_type.hasValue() || m_type.value() != type) {
                 m_type = type;
             }
@@ -80,28 +80,22 @@ void SVGAnimateTransformElement::beginElementAt(float offset)
     SVGAnimationElement::beginElementAt(offset);
 }
 
-bool SVGAnimateTransformElement::parseType(TransformType& type)
+bool SVGAnimateTransformElement::parseType(const String* typeValue,
+                                           TransformType& type)
 {
-    Optional<String*> mabyType =
-        getAttribute(starfish()->staticStrings()->m_type);
-    if (!mabyType) {
-        return false;
-    }
-    String* typeStr = mabyType.value();
-
-    if (typeStr->equals("translate")) {
+    if (typeValue->equals("translate")) {
         type = TransformType::Translate;
         return true;
-    } else if (typeStr->equals("scale")) {
+    } else if (typeValue->equals("scale")) {
         type = TransformType::Scale;
         return true;
-    } else if (typeStr->equals("rotate")) {
+    } else if (typeValue->equals("rotate")) {
         type = TransformType::Rotate;
         return true;
-    } else if (typeStr->equals("skewX")) {
+    } else if (typeValue->equals("skewX")) {
         type = TransformType::SkewX;
         return true;
-    } else if (typeStr->equals("skewY")) {
+    } else if (typeValue->equals("skewY")) {
         type = TransformType::SkewY;
         return true;
     }
