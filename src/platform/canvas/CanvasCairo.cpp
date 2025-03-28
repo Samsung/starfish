@@ -878,7 +878,7 @@ public:
     }
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,
-                                      CanvasBlendMode mode) override
+                                      BlendMode mode) override
     {
         lastState()->m_compositeOperator = oper;
         lastState()->m_blendMode = mode;
@@ -888,51 +888,51 @@ public:
         // Source from webkit project:
         // Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp :
         // toCairoOperator,toCairoCompositeOperator
-        if (lastState()->m_blendMode != CanvasBlendMode::Normal) {
+        if (lastState()->m_blendMode != BlendMode::Normal) {
             switch (lastState()->m_blendMode) {
-            case CanvasBlendMode::Multiply:
+            case BlendMode::Multiply:
                 newOperator = CAIRO_OPERATOR_MULTIPLY;
                 break;
-            case CanvasBlendMode::Screen:
+            case BlendMode::Screen:
                 newOperator = CAIRO_OPERATOR_SCREEN;
                 break;
-            case CanvasBlendMode::Overlay:
+            case BlendMode::Overlay:
                 newOperator = CAIRO_OPERATOR_OVERLAY;
                 break;
-            case CanvasBlendMode::Darken:
+            case BlendMode::Darken:
                 newOperator = CAIRO_OPERATOR_DARKEN;
                 break;
-            case CanvasBlendMode::Lighten:
+            case BlendMode::Lighten:
                 newOperator = CAIRO_OPERATOR_LIGHTEN;
                 break;
-            case CanvasBlendMode::ColorDodge:
+            case BlendMode::ColorDodge:
                 newOperator = CAIRO_OPERATOR_COLOR_DODGE;
                 break;
-            case CanvasBlendMode::ColorBurn:
+            case BlendMode::ColorBurn:
                 newOperator = CAIRO_OPERATOR_COLOR_BURN;
                 break;
-            case CanvasBlendMode::HardLight:
+            case BlendMode::HardLight:
                 newOperator = CAIRO_OPERATOR_HARD_LIGHT;
                 break;
-            case CanvasBlendMode::SoftLight:
+            case BlendMode::SoftLight:
                 newOperator = CAIRO_OPERATOR_SOFT_LIGHT;
                 break;
-            case CanvasBlendMode::Difference:
+            case BlendMode::Difference:
                 newOperator = CAIRO_OPERATOR_DIFFERENCE;
                 break;
-            case CanvasBlendMode::Exclusion:
+            case BlendMode::Exclusion:
                 newOperator = CAIRO_OPERATOR_EXCLUSION;
                 break;
-            case CanvasBlendMode::Hue:
+            case BlendMode::Hue:
                 newOperator = CAIRO_OPERATOR_HSL_HUE;
                 break;
-            case CanvasBlendMode::Saturation:
+            case BlendMode::Saturation:
                 newOperator = CAIRO_OPERATOR_HSL_SATURATION;
                 break;
-            case CanvasBlendMode::Color:
+            case BlendMode::Color:
                 newOperator = CAIRO_OPERATOR_HSL_COLOR;
                 break;
-            case CanvasBlendMode::Luminosity:
+            case BlendMode::Luminosity:
                 newOperator = CAIRO_OPERATOR_HSL_LUMINOSITY;
                 break;
             default:
@@ -997,7 +997,7 @@ public:
         return lastState()->m_compositeOperator;
     }
 
-    virtual CanvasBlendMode blendMode() override
+    virtual BlendMode blendMode() override
     {
         return lastState()->m_blendMode;
     }

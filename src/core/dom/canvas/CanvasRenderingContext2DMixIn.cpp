@@ -609,10 +609,9 @@ String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
 {
     STARFISH_ASSERT(m_canvas != nullptr);
 
-    if (m_canvas->blendMode() != CanvasBlendMode::Normal) {
-        const char* p =
-            CanvasCompositing::canvasBlendModeNames[static_cast<unsigned>(
-                m_canvas->blendMode())];
+    if (m_canvas->blendMode() != BlendMode::Normal) {
+        const char* p = CanvasBlend::blendModeNames[static_cast<unsigned>(
+            m_canvas->blendMode())];
         STARFISH_ASSERT(p != nullptr);
         return String::fromUTF8(p, strlen(p));
     }
@@ -626,7 +625,7 @@ String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
 void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 {
     CanvasCompositeOperator cco = CanvasCompositeOperator::SourceOver;
-    CanvasBlendMode cbm = CanvasBlendMode::Normal;
+    BlendMode cbm = BlendMode::Normal;
 
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasCompositeOperatorNames;
          ++i) {
@@ -639,11 +638,10 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
             return;
         }
     }
-    for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; ++i) {
-        if (value->equals(CanvasCompositing::canvasBlendModeNames[i],
-                          strlen(CanvasCompositing::canvasBlendModeNames[i])) ==
-            true) {
-            cbm = static_cast<CanvasBlendMode>(i);
+    for (int i = 0; i < CanvasBlend::sizeOfBlendModeNames; ++i) {
+        if (value->equals(CanvasBlend::blendModeNames[i],
+                          strlen(CanvasBlend::blendModeNames[i]))) {
+            cbm = static_cast<BlendMode>(i);
             cco = CanvasCompositeOperator::SourceOver;
             m_canvas->setCompositeOperator(cco, cbm);
             return;

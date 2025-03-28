@@ -27,6 +27,7 @@
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/modules/canvas/CanvasFillStrokeSource.h"
 #include "core/modules/canvas/CanvasShadowData.h"
+#include "core/modules/canvas/BlendMode.h"
 #include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
@@ -65,26 +66,6 @@ enum class CanvasCompositeOperator {
     PlusLighter
 };
 
-// https://drafts.fxtf.org/compositing/#ltblendmodegt
-enum class CanvasBlendMode {
-    Normal,
-    Multiply,
-    Screen,
-    Overlay,
-    Darken,
-    Lighten,
-    ColorDodge,
-    ColorBurn,
-    HardLight,
-    SoftLight,
-    Difference,
-    Exclusion,
-    Hue,
-    Saturation,
-    Color,
-    Luminosity
-};
-
 enum class CanvasLayerMode {
     SubLayer,
     Mask,
@@ -102,18 +83,10 @@ namespace CanvasCompositing {
         "plus-darker", "plus-lighter"
     };
 
-    static const char* const canvasBlendModeNames[] = {
-        "normal",     "multiply",   "screen",      "overlay",
-        "darken",     "lighten",    "color-dodge", "color-burn",
-        "hard-light", "soft-light", "difference",  "exclusion",
-        "hue",        "saturation", "color",       "luminosity"
-    };
-
     const int sizeOfCanvasCompositeOperatorNames =
         sizeof(canvasCompositeOperatorNames) /
         sizeof(*canvasCompositeOperatorNames);
-    const int sizeOfCanvasBlendModeNames =
-        sizeof(canvasBlendModeNames) / sizeof(*canvasBlendModeNames);
+
 } // namespace CanvasCompositing
 
 class CanvasState : public gc {
@@ -141,7 +114,7 @@ public:
     SkMatrix m_pathTM;
     float m_globalAlpha;
     CanvasCompositeOperator m_compositeOperator;
-    CanvasBlendMode m_blendMode;
+    BlendMode m_blendMode;
     double m_dashOffset;
     GCAtomicVector<double> m_dashes;
     CanvasTextAlign m_canvasTextAlign;
@@ -403,9 +376,9 @@ public:
     virtual float globalAlpha() = 0;
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,
-                                      CanvasBlendMode mode) = 0;
+                                      BlendMode mode) = 0;
     virtual CanvasCompositeOperator compositeOperator() = 0;
-    virtual CanvasBlendMode blendMode() = 0;
+    virtual BlendMode blendMode() = 0;
 
     void beginLayer(const LayoutRect& rt, float layerOpacity,
                     CanvasLayerMode mode)
