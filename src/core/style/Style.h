@@ -24,12 +24,12 @@
 #define __StarfishStyle__
 
 #include "StaticStrings.h"
+#include "binding/DocumentHoldable.h"
 #include "core/style/CSSTokenValue.h"
 #include "core/style/CSSAngle.h"
 #include "core/style/CSSLength.h"
 #include "core/style/ImageValue.h"
 #include "core/style/CSSTime.h"
-#include "binding/DocumentHoldable.h"
 #include "core/style/NamedColors.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/Length.h"
@@ -39,6 +39,7 @@
 #include "core/style/TextOverflowData.h"
 #include "core/style/MutablePropertyValue.h"
 #include "core/style/MutablePropertyValueList.h"
+#include "core/modules/canvas/BlendMode.h"
 #include "core/util/VectorWithInlineStorage.h"
 #include "core/util/BloomFilter.h"
 
@@ -815,7 +816,8 @@ class CSSFilterFunction;
     F(PointerEvents, pointerEvents, "pointer-events")                          \
     F(Resize, resize, "resize")                                                \
     F(WillChange, willChange, "will-change")                                   \
-    F(LineClamp, lineClamp, "line-clamp")
+    F(LineClamp, lineClamp, "line-clamp")                                      \
+    F(MixBlendMode, mixBlendMode, "mix-blend-mode")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1182,6 +1184,9 @@ public:
 
         // stroke-linejoin
         StrokeLineJoinValueKind,
+
+        // mix-blend-mode
+        BlendModeValueKind,
     };
 
     enum class TransformUnit {
@@ -1824,6 +1829,12 @@ public:
         return m_value.m_pointerEventsValue;
     }
 
+    BlendMode blendModeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BlendModeValueKind);
+        return m_value.m_blendMode;
+    }
+
     BoxDecorationBreakValue boxDecorationBreakValue() const
     {
         STARFISH_ASSERT(m_valueKind == BoxDecorationBreakValueKind);
@@ -1952,6 +1963,7 @@ public:
         CSSGradientValue* m_gradientValue;
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
+        BlendMode m_blendMode;
         BoxDecorationBreakValue m_boxDecorationBreakValue;
         TimingFunction* m_timingFunction;
         CSSFilterFunction* m_filterFunction;
@@ -2283,6 +2295,11 @@ public:
 
         ValueData(PointerEventsValue v)
             : m_pointerEventsValue(v)
+        {
+        }
+
+        ValueData(BlendMode v)
+            : m_blendMode(v)
         {
         }
 

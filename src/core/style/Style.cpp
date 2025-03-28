@@ -1358,6 +1358,9 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case PointerEventsValueKind:
         return m_value.m_pointerEventsValue == src.m_value.m_pointerEventsValue;
 
+    case BlendModeValueKind:
+        return m_value.m_blendMode == src.m_value.m_blendMode;
+
     default:
         STARFISH_ASSERT_NOT_REACHED();
         break;
@@ -1764,6 +1767,11 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::ValueKind::BlendModeValueKind: {
+        auto p = CanvasBlend::blendModeNames[static_cast<unsigned>(
+            blendModeValue())];
+        return String::fromUTF8(p, strlen(p));
+    }
     case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
         switch (objectFitValue()) {
         case FillObjectFitValue:
@@ -4203,6 +4211,18 @@ void StyleResolver::applyProperty(Element* element,
             style->setPointerEvents(PointerEventsAutoValue);
         } else {
             style->setPointerEvents(newCssValue.pointerEventsValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MixBlendMode:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMixBlendMode(parentStyle->mixBlendMode());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setMixBlendMode(BlendMode::Normal);
+        } else {
+            style->setMixBlendMode(newCssValue.blendModeValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::Direction:
@@ -10951,6 +10971,25 @@ bool CSSStyleValuePair::updateValuePointerEvents(Document* document,
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueMixBlendMode(Document* document,
+                                                const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BlendModeValueKind;
+    for (int i = 0; i < CanvasBlend::sizeOfBlendModeNames; ++i) {
+        if (value.equals(CanvasBlend::blendModeNames[i])) {
+            auto bm = static_cast<BlendMode>(i);
+            m_value.m_blendMode = bm;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueFloat(Document* document,

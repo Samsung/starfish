@@ -2563,8 +2563,23 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         auto newClipPath = newStyle->clipPath();
 
         if (oldClipPath->equals(newClipPath)) {
+            damagedKeys[CSSStyleValuePair::KeyKind::ClipPath] = true;
             damage = static_cast<ComputedStyleDamage>(
                 ComputedStyleDamage::ComputedStyleDamageLayout |
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+
+        if (newStyle->mixBlendMode() != oldStyle->mixBlendMode()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::MixBlendMode] = true;
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+    } else {
+        if (newStyle->mixBlendMode() != oldStyle->mixBlendMode()) {
+            damagedKeys[CSSStyleValuePair::KeyKind::MixBlendMode] = true;
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::
+                    ComputedStyleDamageEstablishesStackingContext |
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
     }

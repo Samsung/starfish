@@ -23,7 +23,7 @@
 namespace Starfish {
 
 // https://drafts.fxtf.org/compositing/#ltblendmodegt
-enum class BlendMode {
+enum class BlendMode ENSURE_ENUM_UNSIGNED {
     Normal,
     Multiply,
     Screen,
