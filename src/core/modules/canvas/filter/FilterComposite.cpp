@@ -46,8 +46,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
                            ctx.height * subRegionInFloat.height()));
     }
 
-    c->setCompositeOperator(CanvasCompositeOperator::Copy,
-                            CanvasBlendMode::Normal);
+    c->setCompositeOperator(CanvasCompositeOperator::Copy, BlendMode::Normal);
 
     switch (oper) {
     case SVGFECompositeElement::CompositeOperator::
@@ -55,7 +54,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::SourceOver,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;
@@ -66,7 +65,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::SourceIn,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;
@@ -75,7 +74,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::DestinationOut,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;
@@ -85,7 +84,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::SourceAtop,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;
@@ -94,7 +93,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::XOR,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;
@@ -109,7 +108,7 @@ void compositeSource(Filter::FilterApplyContext& ctx,
         c->drawImage(input2->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         c->setCompositeOperator(CanvasCompositeOperator::PlusLighter,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->drawImage(input1->data(), ctx.width, ctx.stride, ctx.height,
                      Unit::Rect(0, 0, ctx.width, ctx.height));
         break;

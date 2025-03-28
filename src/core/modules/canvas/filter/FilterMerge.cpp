@@ -101,11 +101,11 @@ void FilterMerge::apply(const Unit::Rect& subRegionInFloat,
             }
             if (first) {
                 c->setCompositeOperator(CanvasCompositeOperator::Copy,
-                                        CanvasBlendMode::Normal);
+                                        BlendMode::Normal);
                 first = false;
             } else {
                 c->setCompositeOperator(CanvasCompositeOperator::SourceOver,
-                                        CanvasBlendMode::Normal);
+                                        BlendMode::Normal);
             }
             c->drawImage(inputSource->data(), ctx.width, ctx.stride, ctx.height,
                          Unit::Rect(0, 0, ctx.width, ctx.height));

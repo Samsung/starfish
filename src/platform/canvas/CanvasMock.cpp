@@ -514,7 +514,7 @@ public:
     }
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,
-                                      CanvasBlendMode mode)
+                                      BlendMode mode)
     {
     }
 
@@ -523,9 +523,9 @@ public:
         return CanvasCompositeOperator::Clear;
     }
 
-    virtual CanvasBlendMode blendMode()
+    virtual BlendMode blendMode()
     {
-        return CanvasBlendMode::Normal;
+        return BlendMode::Normal;
     }
 
     virtual void setOriginalFontStr(String* fontStr)

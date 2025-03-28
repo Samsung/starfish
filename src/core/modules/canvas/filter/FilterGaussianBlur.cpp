@@ -424,7 +424,7 @@ void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,
         Canvas* c = Canvas::create(outputBuffer->data(), ctx.width, ctx.height,
                                    ctx.stride, 1);
         c->setCompositeOperator(CanvasCompositeOperator::Copy,
-                                CanvasBlendMode::Normal);
+                                BlendMode::Normal);
         c->rect(Unit::Rect(ctx.width * normalizedSubRegion.x(),
                            ctx.height * normalizedSubRegion.y(),
                            ctx.width * normalizedSubRegion.width(),
