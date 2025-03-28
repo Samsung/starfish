@@ -175,7 +175,9 @@ public:
         GridColumnEnd,
         GridTemplateAreas,
 
-        WillChange
+        WillChange,
+
+        MixBlendMode
     };
 
     union RareComputedStyleValue {
@@ -223,6 +225,7 @@ public:
         AppearanceValue m_appearance;
         StylePaintData* m_stopColor; // svg
         MutablePropertyValueList* m_mutablePropertyValueList;
+        BlendMode m_blendMode;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -454,6 +457,11 @@ public:
             : m_mutablePropertyValueList(v)
         {
         }
+
+        RareComputedStyleValue(BlendMode v)
+            : m_blendMode(v)
+        {
+        }
     };
 
     struct RareComputedStyleValuePair {
@@ -603,6 +611,8 @@ public:
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
     GETTER_VALUE(Length, length, columnGap, ColumnGap, 0);
     GETTER_VALUE(Length, length, rowGap, RowGap, 0);
+    GETTER_VALUE(BlendMode, blendMode, mixBlendMode, MixBlendMode,
+                 BlendMode::Normal);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -4904,6 +4914,25 @@ public:
     void setAppearance(AppearanceValue v)
     {
         *m_rareComputedStyleData.ensureAppearance() = v;
+    }
+
+    BlendMode mixBlendMode()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return BlendMode::Normal;
+        }
+
+        auto v = rareComputedStyleData()->mixBlendMode();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return BlendMode::Normal;
+    }
+
+    void setMixBlendMode(BlendMode v)
+    {
+        *m_rareComputedStyleData.ensureMixBlendMode() = v;
     }
 
     Optional<FilterFunctions*> filter()

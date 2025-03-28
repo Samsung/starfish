@@ -778,6 +778,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // padding-inline
         // stroke-linecap
         // stroke-opacity
+        // mix-blend-mode
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -838,6 +839,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
             }
             if (memcmp(data, "stroke-opacity", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeOpacity;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "mix-blend-mode", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::MixBlendMode;
             }
             break;
         }
@@ -2009,6 +2015,9 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
             }
             if (memcmp(data, "maskPosition", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskPosition;
+            }
+            if (memcmp(data, "mixBlendMode", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::MixBlendMode;
             }
             break;
         case 'b':
