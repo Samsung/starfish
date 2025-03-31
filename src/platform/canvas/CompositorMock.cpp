@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #ifdef STARFISH_EFL_HEADLESS
 
+#include "core/modules/canvas/BlendMode.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/CompositorFactory.h"
 
@@ -138,6 +139,10 @@ public:
     virtual SkMatrix currentTransformMatrix()
     {
         return SkMatrix::I();
+    }
+
+    virtual void setBlendMode(BlendMode blendMode)
+    {
     }
 };
 

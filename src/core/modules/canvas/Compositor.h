@@ -106,6 +106,8 @@ public:
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
 
+    virtual void setBlendMode(BlendMode blendMode) = 0;
+
     // those four methods are needed for border-radius clipping
     virtual void moveTo(float x, float y) = 0;
     virtual void lineTo(float x, float y) = 0;

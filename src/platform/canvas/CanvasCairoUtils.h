@@ -23,6 +23,7 @@
 
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
+#include "core/modules/canvas/BlendMode.h"
 
 namespace Starfish {
 namespace CanvasCairoUtils {
@@ -30,6 +31,7 @@ namespace CanvasCairoUtils {
     cairo_line_cap_t canvasLineCapToCairoLineCap(const CanvasLineCap& cap);
     CanvasLineJoin cairoLineJoinToCanvasLineJoin(const cairo_line_join_t& join);
     cairo_line_join_t canvasLineJoinToCairoLineJoin(const CanvasLineJoin& join);
+    cairo_operator_t blendModeToCairoOperator(BlendMode bm);
 } // namespace CanvasCairoUtils
 } // namespace Starfish
 

@@ -889,55 +889,8 @@ public:
         // Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp :
         // toCairoOperator,toCairoCompositeOperator
         if (lastState()->m_blendMode != BlendMode::Normal) {
-            switch (lastState()->m_blendMode) {
-            case BlendMode::Multiply:
-                newOperator = CAIRO_OPERATOR_MULTIPLY;
-                break;
-            case BlendMode::Screen:
-                newOperator = CAIRO_OPERATOR_SCREEN;
-                break;
-            case BlendMode::Overlay:
-                newOperator = CAIRO_OPERATOR_OVERLAY;
-                break;
-            case BlendMode::Darken:
-                newOperator = CAIRO_OPERATOR_DARKEN;
-                break;
-            case BlendMode::Lighten:
-                newOperator = CAIRO_OPERATOR_LIGHTEN;
-                break;
-            case BlendMode::ColorDodge:
-                newOperator = CAIRO_OPERATOR_COLOR_DODGE;
-                break;
-            case BlendMode::ColorBurn:
-                newOperator = CAIRO_OPERATOR_COLOR_BURN;
-                break;
-            case BlendMode::HardLight:
-                newOperator = CAIRO_OPERATOR_HARD_LIGHT;
-                break;
-            case BlendMode::SoftLight:
-                newOperator = CAIRO_OPERATOR_SOFT_LIGHT;
-                break;
-            case BlendMode::Difference:
-                newOperator = CAIRO_OPERATOR_DIFFERENCE;
-                break;
-            case BlendMode::Exclusion:
-                newOperator = CAIRO_OPERATOR_EXCLUSION;
-                break;
-            case BlendMode::Hue:
-                newOperator = CAIRO_OPERATOR_HSL_HUE;
-                break;
-            case BlendMode::Saturation:
-                newOperator = CAIRO_OPERATOR_HSL_SATURATION;
-                break;
-            case BlendMode::Color:
-                newOperator = CAIRO_OPERATOR_HSL_COLOR;
-                break;
-            case BlendMode::Luminosity:
-                newOperator = CAIRO_OPERATOR_HSL_LUMINOSITY;
-                break;
-            default:
-                newOperator = CAIRO_OPERATOR_OVER;
-            }
+            newOperator = CanvasCairoUtils::blendModeToCairoOperator(
+                lastState()->m_blendMode);
         } else {
             switch (lastState()->m_compositeOperator) {
             case CanvasCompositeOperator::Clear:

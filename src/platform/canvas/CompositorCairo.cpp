@@ -20,21 +20,20 @@
 #include "StarfishConfig.h"
 #if !defined(STARFISH_EFL_HEADLESS)
 
-#include "core/modules/canvas/Compositor.h"
-
 #include "Starfish.h"
+
+#include <vector>
+#include <cairo.h>
+
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
 #include "core/modules/canvas/CompositorFactory.h"
-
-#include <vector>
-
-#include <cairo.h>
-
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/profiling/Profiling.h"
+#include "platform/canvas/CanvasCairoUtils.h"
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
 
@@ -393,6 +392,12 @@ public:
     virtual void clipPath()
     {
         cairo_clip(m_canvas);
+    }
+
+    virtual void setBlendMode(BlendMode blendMode)
+    {
+        cairo_set_operator(
+            m_canvas, CanvasCairoUtils::blendModeToCairoOperator(blendMode));
     }
 
 protected:

@@ -543,6 +543,10 @@ public:
                         compositor->postMatrix(SkMatrix::InvalidMatrix());
                         return;
                     }
+
+                    if (style->mixBlendMode() != BlendMode::Normal) {
+                        compositor->setBlendMode(style->mixBlendMode());
+                    }
                 }
 
                 if (overflowOrScroll.first && childFrameBox != frameBox) {

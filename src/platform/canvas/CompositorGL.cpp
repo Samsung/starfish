@@ -2134,6 +2134,7 @@ struct CompositorImplGLState {
     float blurRadius;
     Unit::Color color;
     std::shared_ptr<ClipperLib::Paths> clipPaths;
+    BlendMode blendMode;
 };
 
 class CompositorImplGL : public Compositor {
@@ -2246,6 +2247,7 @@ public:
         lastState.opacity = 1;
         lastState.blurRadius = 0;
         lastState.clipPaths.reset(new ClipperLib::Paths());
+        lastState.blendMode = BlendMode::Normal;
 
         clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
 
@@ -2286,6 +2288,62 @@ public:
     virtual void restore() override
     {
         m_state.pop_back();
+    }
+
+    void updateBlendMode()
+    {
+        BlendMode blendMode = m_state.back().blendMode;
+
+        GLenum srcFactor = GL_ONE, dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+        GLenum equation = GL_FUNC_ADD;
+
+        switch (blendMode) {
+        case BlendMode::Multiply:
+            srcFactor = GL_DST_COLOR;
+            dstFactor = GL_ZERO;
+            equation = GL_FUNC_ADD;
+            break;
+        case BlendMode::Darken:
+            srcFactor = GL_ONE;
+            dstFactor = GL_ONE;
+            equation = GL_MIN;
+            break;
+        case BlendMode::Lighten:
+            srcFactor = GL_ONE;
+            dstFactor = GL_ONE;
+            equation = GL_MAX;
+            break;
+        case BlendMode::Difference:
+            srcFactor = GL_ONE;
+            dstFactor = GL_ONE;
+            equation = GL_FUNC_SUBTRACT;
+            break;
+        case BlendMode::Screen:
+            srcFactor = GL_ONE;
+            dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+            equation = GL_FUNC_ADD;
+            break;
+        case BlendMode::ColorDodge:
+        case BlendMode::Overlay:
+        case BlendMode::ColorBurn:
+        case BlendMode::HardLight:
+        case BlendMode::SoftLight:
+        case BlendMode::Exclusion:
+        case BlendMode::Hue:
+        case BlendMode::Color:
+        case BlendMode::Luminosity:
+        default:
+            STARFISH_UNSUPPORTED("Unsupported BlendMode %d", (int)blendMode);
+        }
+
+        gl()->blendFunc(srcFactor, dstFactor);
+        gl()->blendEquation(equation);
+    }
+
+    virtual void setBlendMode(BlendMode blendMode) override
+    {
+        m_state.back().blendMode = blendMode;
+        updateBlendMode();
     }
 
     // transformations (default transform is the identity matrix)
@@ -2370,7 +2428,7 @@ public:
         setFillColor(Unit::Color(0, 0, 0, 0));
         gl()->blendFunc(GL_ONE, GL_ZERO);
         drawRect(rt);
-        gl()->blendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        updateBlendMode();
         restore();
     }
 
