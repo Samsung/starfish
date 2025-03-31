@@ -1582,6 +1582,8 @@ void Frame::computeStyleFlags()
         m_flags.m_needToEstablishStackingContext |= true;
     }
     m_flags.m_needToEstablishStackingContext |= (style->maskLayerSize() > 0);
+    m_flags.m_needToEstablishStackingContext |=
+        style->mixBlendMode() != BlendMode::Normal;
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));

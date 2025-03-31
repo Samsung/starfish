@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2010 Igalia S.L.
+ * Copyright (C) 2011 ProFUSION embedded systems
  * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
@@ -99,6 +101,63 @@ namespace CanvasCairoUtils {
             return CAIRO_LINE_JOIN_MITER;
             break;
         }
+    }
+
+    // Source from webkit project:
+    // Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp
+    cairo_operator_t blendModeToCairoOperator(BlendMode bm)
+    {
+        cairo_operator_t newOperator;
+        switch (bm) {
+        case BlendMode::Multiply:
+            newOperator = CAIRO_OPERATOR_MULTIPLY;
+            break;
+        case BlendMode::Screen:
+            newOperator = CAIRO_OPERATOR_SCREEN;
+            break;
+        case BlendMode::Overlay:
+            newOperator = CAIRO_OPERATOR_OVERLAY;
+            break;
+        case BlendMode::Darken:
+            newOperator = CAIRO_OPERATOR_DARKEN;
+            break;
+        case BlendMode::Lighten:
+            newOperator = CAIRO_OPERATOR_LIGHTEN;
+            break;
+        case BlendMode::ColorDodge:
+            newOperator = CAIRO_OPERATOR_COLOR_DODGE;
+            break;
+        case BlendMode::ColorBurn:
+            newOperator = CAIRO_OPERATOR_COLOR_BURN;
+            break;
+        case BlendMode::HardLight:
+            newOperator = CAIRO_OPERATOR_HARD_LIGHT;
+            break;
+        case BlendMode::SoftLight:
+            newOperator = CAIRO_OPERATOR_SOFT_LIGHT;
+            break;
+        case BlendMode::Difference:
+            newOperator = CAIRO_OPERATOR_DIFFERENCE;
+            break;
+        case BlendMode::Exclusion:
+            newOperator = CAIRO_OPERATOR_EXCLUSION;
+            break;
+        case BlendMode::Hue:
+            newOperator = CAIRO_OPERATOR_HSL_HUE;
+            break;
+        case BlendMode::Saturation:
+            newOperator = CAIRO_OPERATOR_HSL_SATURATION;
+            break;
+        case BlendMode::Color:
+            newOperator = CAIRO_OPERATOR_HSL_COLOR;
+            break;
+        case BlendMode::Luminosity:
+            newOperator = CAIRO_OPERATOR_HSL_LUMINOSITY;
+            break;
+        default:
+            newOperator = CAIRO_OPERATOR_OVER;
+        }
+        return newOperator;
     }
 } // namespace CanvasCairoUtils
 } // namespace Starfish

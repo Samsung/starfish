@@ -498,6 +498,11 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
+    if (style()->mixBlendMode() != BlendMode::Normal) {
+        ctx.m_canvas->setCompositeOperator(CanvasCompositeOperator::SourceOver,
+                                           style()->mixBlendMode());
+    }
+
     node()->document()->removeSVGPaintClientElement(node()->asSVGElement());
 
     auto vp = viewport();

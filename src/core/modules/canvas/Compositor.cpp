@@ -19,14 +19,13 @@
 
 #include "StarfishConfig.h"
 
-#include "Compositor.h"
-
 #include "Starfish.h"
 #include "core/page/WebView.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "core/modules/renderer/Renderer.h"
+#include "Compositor.h"
 #include "Canvas.h"
 #include "CompositorFactory.h"
 

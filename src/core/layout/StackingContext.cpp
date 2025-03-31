@@ -2226,6 +2226,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
     canvas->save();
 
+    if (owner()->style()->mixBlendMode() != BlendMode::Normal) {
+        canvas->setCompositeOperator(CanvasCompositeOperator::SourceOver,
+                                     owner()->style()->mixBlendMode());
+    }
+
     if (opacity != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity(), visibleRect());
     }

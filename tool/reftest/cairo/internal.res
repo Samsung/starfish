@@ -791,6 +791,7 @@ test/cairo/internal-test/crash/js-module-01.html
 test/cairo/internal-test/css/scroll/scroll-into-view-options.html
 test/cairo/internal-test/css/scroll/scrollLeft_setter_and_event.html
 test/cairo/internal-test/css/scroll/scrollTop_setter_and_event.html
+test/cairo/internal-test/css/mix-blend-mode-01.html
 test/cairo/internal-test/dom/text-element-added.html
 test/cairo/internal-test/dom/same_origin_01.html
 test/cairo/internal-test/window/window-security.https.html
