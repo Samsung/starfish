@@ -67,38 +67,10 @@ void SVGAnimateTransformElement::didAttributeChanged(QualifiedName name,
         if (parseType(value, type)) {
             if (!m_type.hasValue() || m_type.value() != type) {
                 m_type = type;
+                updateValueFamilyAttribute();
             }
         } else {
-            // TODO: Use default value 'translate' when type is not specified.
-            STARFISH_UNIMPLEMENTED();
-        }
-    }
-
-    if (m_attributeName.hasValue() && m_type.hasValue()) {
-        if (ss->m_from == name) {
-            CSSStyleValuePair from;
-            if (parseFromTo(m_attributeName.value(), value, from)) {
-                if (!m_from.hasValue() || m_from.value() != from) {
-                    m_from = from;
-                }
-            }
-        } else if (ss->m_to == name) {
-            CSSStyleValuePair to;
-            if (parseFromTo(m_attributeName.value(), value, to)) {
-                if (!m_to.hasValue() || m_to.value() != to) {
-                    m_to = to;
-                }
-            }
-        } else if (ss->m_values == name) {
-            GCVector<CSSStyleValuePair> values;
-            if (parseValues(m_attributeName.value(), value, values)) {
-                if (!m_values.hasValue() ||
-                    m_values.value().size() != values.size() ||
-                    !std::equal(m_values.value().begin(),
-                                m_values.value().end(), values.begin())) {
-                    m_values = std::move(values);
-                }
-            }
+            m_type.reset();
         }
     }
 }
@@ -146,6 +118,10 @@ bool SVGAnimateTransformElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                                              const String* value,
                                              CSSStyleValuePair& output)
 {
+    if (!m_type.hasValue()) {
+        return false;
+    }
+
     String* transformValue = nullptr;
     if (!toCSSTransformValue(m_type.value(), const_cast<String*>(value),
                              &transformValue)) {
