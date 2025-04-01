@@ -149,7 +149,7 @@ bool AnimationApplier::apply()
     return hasAppliedAnimation;
 }
 
-bool AnimationApplier::applySVGAnimateElement()
+bool AnimationApplier::applySVGAnimation()
 {
     STARFISH_ASSERT(m_originAnimationElement.hasValue());
     STARFISH_ASSERT(

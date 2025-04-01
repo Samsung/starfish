@@ -279,7 +279,7 @@ void SVGAnimationElement::beginElementAtInternal(
     m_animationKeyframes = animationKeyframes;
     AnimationApplier applier(targetElement, AnimationType::SVGAnimation,
                              targetElement->style(), this);
-    if (!applier.applySVGAnimateElement()) {
+    if (!applier.applySVGAnimation()) {
         m_animationKeyframes = nullptr;
         STARFISH_LOG_ERROR("Failed to apply animation.");
         return;
