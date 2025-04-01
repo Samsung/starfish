@@ -409,8 +409,8 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
 {
     double cancelTick = 0.0;
     double endTick = 0.0;
-    std::vector<ActiveAnimationTask*> expiredAnimationTasks;
-    std::vector<ActiveAnimationTask*> repeatedAnimationTasks;
+    std::set<SVGAnimationElement*> expiredAnimationTasks;
+    std::set<SVGAnimationElement*> repeatedAnimationTasks;
 
     auto iter = m_activeAnimations.begin();
     while (iter != m_activeAnimations.end()) {
@@ -423,6 +423,9 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
 
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
+        bool needsToFireAnimationRepeatEvent = false;
+        bool isSVGAnimation = activeElementAnimation->animationType() ==
+                              AnimationType::SVGAnimation;
         float iterationCount = activeElementAnimation->iterationCount();
         for (size_t i = 0; i < animationTasks.size(); i++) {
             ActiveAnimationTask* task = animationTasks[i];
@@ -536,17 +539,21 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     task->markInForwardsFillMode();
                 }
 
-                if (needsToFireAnimationEndEvent &&
-                    activeElementAnimation->animationType() ==
-                        AnimationType::SVGAnimation) {
-                    expiredAnimationTasks.push_back(task);
+                if (needsToFireAnimationEndEvent && isSVGAnimation) {
+                    STARFISH_ASSERT(isSVGAnimation &&
+                                    task->originAnimationElement().hasValue());
+                    expiredAnimationTasks.insert(
+                        task->originAnimationElement().value());
                 }
                 context.m_needsToRecomputeStylePropertyDamage = true;
                 context.m_needsToCheckActiveExecutorInWebView = true;
             } else {
                 context.m_hasActiveTask = true;
-                if (isRepeat) {
-                    repeatedAnimationTasks.push_back(task);
+                if (isRepeat && isSVGAnimation) {
+                    STARFISH_ASSERT(isSVGAnimation &&
+                                    task->originAnimationElement().hasValue());
+                    repeatedAnimationTasks.insert(
+                        task->originAnimationElement().value());
                 }
             }
         }
@@ -666,12 +673,11 @@ void AnimationExecutor::fireKeyFramesAnimationEvent(
 }
 
 void AnimationExecutor::fireSVGAnimationEvents(
-    const std::vector<ActiveAnimationTask*>& animationTasks,
+    const std::set<SVGAnimationElement*>& originAnimationElements,
     SVGAnimationEventType type)
 {
-    for (auto& task : animationTasks) {
-        STARFISH_ASSERT(task->originAnimationElement().hasValue());
-        fireSVGAnimationEvent(task->originAnimationElement().getValue(), type);
+    for (auto& element : originAnimationElements) {
+        fireSVGAnimationEvent(element, type);
     }
 }
 

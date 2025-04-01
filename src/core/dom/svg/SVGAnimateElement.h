@@ -41,6 +41,13 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGAnimateElement() const override;
 
+    virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+    virtual bool parseFromTo(CSSStyleValuePair::KeyKind keyKind,
+                             const String* value,
+                             CSSStyleValuePair& output) override;
+
 protected:
 };
 } // namespace Starfish

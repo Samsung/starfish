@@ -116,7 +116,12 @@ protected:
                                GCVector<CSSStyleValuePair>& values);
 
     virtual bool parseFromTo(CSSStyleValuePair::KeyKind keyKind,
-                             const String* value, CSSStyleValuePair& output);
+                             const String* value, CSSStyleValuePair& output)
+    {
+        STARFISH_UNIMPLEMENTED();
+        return false;
+    }
+
     bool parseDur(const String* durValue, CSSTime& duration);
     bool parseFill(const String* fillValue, SVGAnimationFill& fill);
     bool parseRepeatCount(const String* repeatCountValue, float& repeatCount);

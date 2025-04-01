@@ -73,11 +73,51 @@ void SVGAnimateTransformElement::didAttributeChanged(QualifiedName name,
             STARFISH_UNIMPLEMENTED();
         }
     }
+
+    if (m_attributeName.hasValue() && m_type.hasValue()) {
+        if (ss->m_from == name) {
+            CSSStyleValuePair from;
+            if (parseFromTo(m_attributeName.value(), value, from)) {
+                if (!m_from.hasValue() || m_from.value() != from) {
+                    m_from = from;
+                }
+            }
+        } else if (ss->m_to == name) {
+            CSSStyleValuePair to;
+            if (parseFromTo(m_attributeName.value(), value, to)) {
+                if (!m_to.hasValue() || m_to.value() != to) {
+                    m_to = to;
+                }
+            }
+        } else if (ss->m_values == name) {
+            GCVector<CSSStyleValuePair> values;
+            if (parseValues(m_attributeName.value(), value, values)) {
+                if (!m_values.hasValue() ||
+                    m_values.value().size() != values.size() ||
+                    !std::equal(m_values.value().begin(),
+                                m_values.value().end(), values.begin())) {
+                    m_values = std::move(values);
+                }
+            }
+        }
+    }
 }
 
 void SVGAnimateTransformElement::beginElementAt(float offset)
 {
-    SVGAnimationElement::beginElementAt(offset);
+    if (!m_attributeName.hasValue()) {
+        STARFISH_UNIMPLEMENTED("Handle invalid animation name.");
+        return;
+    }
+
+    if (!m_type.hasValue()) {
+        STARFISH_UNIMPLEMENTED("Handle invalid type.");
+        return;
+    }
+
+    // TODO: Support values attribute.
+    beginElementAtInternal(offset, m_attributeName.value(), m_from, m_to,
+                           nullptr);
 }
 
 bool SVGAnimateTransformElement::parseType(const String* typeValue,
@@ -106,19 +146,34 @@ bool SVGAnimateTransformElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                                              const String* value,
                                              CSSStyleValuePair& output)
 {
-    if (!m_type.hasValue()) {
-        return false;
-    }
     String* transformValue = nullptr;
-    if (!toCSSTransfromValue(m_type.value(), const_cast<String*>(value),
+    if (!toCSSTransformValue(m_type.value(), const_cast<String*>(value),
                              &transformValue)) {
         return false;
     }
-    return parseValue(CSSStyleValuePair::KeyKind::Transform, transformValue,
-                      output);
+
+    CSSStyleValuePair temp;
+    bool ret = transformValue->peekUTF8Buffer(
+        [](const char* buffer, size_t len, void* data) -> size_t {
+            CSSStyleValuePair* pair = static_cast<CSSStyleValuePair*>(data);
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, buffer, len);
+            if (!pair->updateValueTransform(tokens, true,
+                                            Separator::SpaceSeparator)) {
+                return 0;
+            }
+            pair->setKeyKind(CSSStyleValuePair::KeyKind::Transform);
+            return 1;
+        },
+        &temp);
+
+    if (ret) {
+        output = temp;
+    }
+    return ret;
 }
 
-bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
+bool SVGAnimateTransformElement::toCSSTransformValue(const TransformType type,
                                                      String* nubmer,
                                                      String** transformValue)
 {
@@ -137,11 +192,27 @@ bool SVGAnimateTransformElement::toCSSTransfromValue(const TransformType type,
         builder.appendChar(')');
         *transformValue = builder.finalize();
         return true;
-    case TransformType::Rotate:
+    case TransformType::Rotate: {
+        // <rotate-angle> [<cx> <cy>].
+        GCVector<StringView> tokens;
+        StringUtils::wordTokenizer(nubmer, tokens);
+        if (tokens.size() != 1 && tokens.size() != 3) {
+            return false;
+        }
+
         builder.appendString("rotate(");
-        builder.appendString(nubmer->trim());
-        builder.appendString("deg)");
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (i != 0) {
+                builder.appendChar(' ');
+            }
+            builder.appendString(tokens[i]);
+            if (i == 0) {
+                builder.appendString("deg");
+            }
+        }
+        builder.appendChar(')');
         *transformValue = builder.finalize();
+    }
         return true;
     case TransformType::SkewX:
         builder.appendString("skewX(");

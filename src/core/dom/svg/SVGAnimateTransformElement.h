@@ -61,7 +61,7 @@ private:
                              const String* value,
                              CSSStyleValuePair& output) override;
 
-    bool toCSSTransfromValue(const TransformType type, String* value,
+    bool toCSSTransformValue(const TransformType type, String* value,
                              String** transformValue);
 
     Optional<TransformType> m_type;
