@@ -46,7 +46,7 @@ public:
 
     bool apply();
 
-    bool applySVGAnimateElement();
+    bool applySVGAnimation();
 
 private:
     bool applyProperty(size_t s, String* name,
