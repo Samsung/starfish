@@ -105,7 +105,21 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
             if (!m_attributeName.hasValue() ||
                 m_attributeName.value() != keyKind) {
                 m_attributeName = keyKind;
+                updateValueFamilyAttribute();
             }
+        } else {
+            m_attributeName.reset();
+            updateValueFamilyAttribute();
+        }
+    }
+
+    if (m_attributeName.hasValue()) {
+        if (ss->m_from == name) {
+            updateFromTo(value, m_from);
+        } else if (ss->m_to == name) {
+            updateFromTo(value, m_to);
+        } else if (ss->m_values == name) {
+            updateValues(value);
         }
     }
 
@@ -509,6 +523,60 @@ bool SVGAnimationElement::parseKeySplines(const String* keySplinesValue,
     }
 
     return true;
+}
+
+void SVGAnimationElement::updateValueFamilyAttribute()
+{
+    if (!m_attributeName.hasValue()) {
+        m_from.reset();
+        m_to.reset();
+        m_values.reset();
+        return;
+    }
+
+    Optional<String*> maybeFrom =
+        getAttribute(starfish()->staticStrings()->m_from);
+    if (maybeFrom) {
+        updateFromTo(maybeFrom.value(), m_from);
+    }
+
+    Optional<String*> maybeTo = getAttribute(starfish()->staticStrings()->m_to);
+    if (maybeTo) {
+        updateFromTo(maybeTo.value(), m_to);
+    }
+
+    Optional<String*> maybeValues =
+        getAttribute(starfish()->staticStrings()->m_values);
+    if (maybeValues) {
+        updateValues(maybeValues.value());
+    }
+}
+
+void SVGAnimationElement::updateFromTo(String* value,
+                                       Optional<CSSStyleValuePair>& output)
+{
+    CSSStyleValuePair temp;
+    if (parseFromTo(m_attributeName.value(), value, temp)) {
+        if (!output.hasValue() || output.value() != temp) {
+            output = temp;
+        }
+    } else {
+        output.reset();
+    }
+}
+
+void SVGAnimationElement::updateValues(String* value)
+{
+    GCVector<CSSStyleValuePair> values;
+    if (parseValues(m_attributeName.value(), value, values)) {
+        if (!m_values.hasValue() || m_values.value().size() != values.size() ||
+            !std::equal(m_values.value().begin(), m_values.value().end(),
+                        values.begin())) {
+            m_values = std::move(values);
+        }
+    } else {
+        m_values.reset();
+    }
 }
 
 void SVGAnimationElement::AddAnimationKeyframe(

@@ -46,46 +46,6 @@ void* SVGAnimateElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void SVGAnimateElement::didAttributeChanged(QualifiedName name,
-                                            Optional<String*> old,
-                                            String* value,
-                                            bool attributeCreated,
-                                            bool attributeRemoved)
-{
-    SVGAnimationElement::didAttributeChanged(name, old, value, attributeCreated,
-                                             attributeRemoved);
-
-    StaticStrings* ss = starfish()->staticStrings();
-
-    if (m_attributeName.hasValue()) {
-        if (ss->m_from == name) {
-            CSSStyleValuePair from;
-            if (parseFromTo(m_attributeName.value(), value, from)) {
-                if (!m_from.hasValue() || m_from.value() != from) {
-                    m_from = from;
-                }
-            }
-        } else if (ss->m_to == name) {
-            CSSStyleValuePair to;
-            if (parseFromTo(m_attributeName.value(), value, to)) {
-                if (!m_to.hasValue() || m_to.value() != to) {
-                    m_to = to;
-                }
-            }
-        } else if (ss->m_values == name) {
-            GCVector<CSSStyleValuePair> values;
-            if (parseValues(m_attributeName.value(), value, values)) {
-                if (!m_values.hasValue() ||
-                    m_values.value().size() != values.size() ||
-                    !std::equal(m_values.value().begin(),
-                                m_values.value().end(), values.begin())) {
-                    m_values = std::move(values);
-                }
-            }
-        }
-    }
-}
-
 bool SVGAnimateElement::parseFromTo(CSSStyleValuePair::KeyKind keyKind,
                                     const String* value,
                                     CSSStyleValuePair& output)

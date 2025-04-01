@@ -130,6 +130,10 @@ protected:
     bool parseKeySplines(const String* keySplinesValue,
                          GCVector<TimingFunction*>& keySplines);
 
+    void updateValueFamilyAttribute();
+    void updateFromTo(String* value, Optional<CSSStyleValuePair>& output);
+    void updateValues(String* value);
+
     void AddAnimationKeyframe(
         CSSStyleValuePair::KeyKind keyKind,
         AnimationKeyframes* animationKeyframes,
