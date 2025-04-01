@@ -2657,7 +2657,9 @@ SkMatrix ComputedStyle::transformToMatrix(StyleTransformDataGroup* transforms,
             matrix.preScale(m->x(), m->y());
         } else if (t.type() == StyleTransformData::Rotate) {
             RotateTransform* m = t.rotate();
-            matrix.preRotate(m->angle(), m->cx().fixed(), m->cy().fixed());
+            matrix.preRotate(m->angle(),
+                             m->cx().specifiedValue(containerWidth, f),
+                             m->cy().specifiedValue(containerWidth, f));
         } else if (t.type() == StyleTransformData::Skew) {
             SkewTransform* m = t.skew();
             matrix.preSkew(tan(UnitHelper::convertFromDegToRad(m->angleX())),

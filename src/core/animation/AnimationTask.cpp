@@ -57,6 +57,46 @@ static float interpolate(const T from, const T to, double progress,
     }
 }
 
+static Length interpolateLength(double progress, const Length& from,
+                                const Length& to, bool isForward)
+{
+    Length newLength;
+    if ((to.isPercent() || to.isZero()) &&
+        (from.isPercent() || from.isZero())) {
+        float fromPercent = 0;
+        if (!from.isZero()) {
+            fromPercent = from.percent();
+        }
+        float toPercent = 0;
+        if (!to.isZero()) {
+            toPercent = to.percent();
+        }
+        newLength = Length(Length::Percent, interpolate(fromPercent, toPercent,
+                                                        progress, isForward));
+    } else if (from.isAuto() || to.isAuto()) {
+        if (progress < 0.5) {
+            if (!from.isAuto()) {
+                newLength = from;
+            } else {
+                newLength = Length();
+            }
+        } else {
+            if (!to.isAuto()) {
+                newLength = to;
+            } else {
+                newLength = Length();
+            }
+        }
+    } else {
+        float fromFixed = from.fixed();
+        float toFixed = to.fixed();
+        newLength = Length(Length::Fixed, interpolate(fromFixed, toFixed,
+                                                      progress, isForward));
+    }
+
+    return newLength;
+}
+
 void* ActiveAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveAnimationTask));
@@ -735,8 +775,15 @@ void ActiveTransformAnimationTask::execute(double progress,
                            aData.translate()->ty().fixed() * (1 - progress) +
                                bData.translate()->ty().fixed() * progress));
             } else if (aData.type() == StyleTransformData::Rotate) {
-                newData.setRotate(aData.rotate()->angle() * (1 - progress) +
-                                  bData.rotate()->angle() * progress);
+                double angle = aData.rotate()->angle() * (1 - progress) +
+                               bData.rotate()->angle() * progress;
+                Length cx =
+                    interpolateLength(progress, aData.rotate()->cx(),
+                                      bData.rotate()->cx(), m_isForward);
+                Length cy =
+                    interpolateLength(progress, aData.rotate()->cy(),
+                                      bData.rotate()->cy(), m_isForward);
+                newData.setRotate(angle, cx, cy);
             } else if (aData.type() == StyleTransformData::Scale) {
                 newData.setScale(aData.scale()->x() * (1 - progress) +
                                      bData.scale()->x() * progress,
@@ -819,40 +866,8 @@ void ActiveTransformOriginAnimationTask::execute(double progress,
 
     Length newValues[3];
     for (size_t i = 0; i < 3; i++) {
-        if ((toValues[i].isPercent() || toValues[i].isZero()) &&
-            (fromValues[i].isPercent() || fromValues[i].isZero())) {
-            float fromPercent = 0;
-            if (!fromValues[i].isZero()) {
-                fromPercent = fromValues[i].percent();
-            }
-            float toPercent = 0;
-            if (!toValues[i].isZero()) {
-                toPercent = toValues[i].percent();
-            }
-            newValues[i] =
-                Length(Length::Percent, interpolate(fromPercent, toPercent,
-                                                    progress, m_isForward));
-        } else if (fromValues[i].isAuto() || toValues[i].isAuto()) {
-            if (progress < 0.5) {
-                if (!fromValues[i].isAuto()) {
-                    newValues[i] = fromValues[i];
-                } else {
-                    newValues[i] = Length();
-                }
-            } else {
-                if (!toValues[i].isAuto()) {
-                    newValues[i] = toValues[i];
-                } else {
-                    newValues[i] = Length();
-                }
-            }
-        } else {
-            float fromFixed = fromValues[i].fixed();
-            float toFixed = toValues[i].fixed();
-            newValues[i] =
-                Length(Length::Fixed,
-                       interpolate(fromFixed, toFixed, progress, m_isForward));
-        }
+        newValues[i] = interpolateLength(progress, fromValues[i], toValues[i],
+                                         m_isForward);
     }
 
     style->ensureTransformOrigin()->originValue()->setData(

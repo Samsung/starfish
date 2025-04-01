@@ -650,6 +650,11 @@ public:
         return m_hasValue;
     }
 
+    void reset()
+    {
+        *this = Optional<T>();
+    }
+
     operator bool() const
     {
         return m_hasValue;
@@ -747,6 +752,11 @@ public:
     bool hasValue() const
     {
         return !!m_value;
+    }
+
+    void reset()
+    {
+        *this = Optional<T*>();
     }
 
     operator bool() const

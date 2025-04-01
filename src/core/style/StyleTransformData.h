@@ -78,7 +78,9 @@ public:
         } else if (m_type == Rotate) {
             newData.setType(Rotate);
             if (m_value.m_rotate) {
-                newData.setRotate(m_value.m_rotate->angle());
+                newData.setRotate(m_value.m_rotate->angle(),
+                                  m_value.m_rotate->cx(),
+                                  m_value.m_rotate->cy());
             }
         } else if (m_type == Skew) {
             newData.setType(Skew);

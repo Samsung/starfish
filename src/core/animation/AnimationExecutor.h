@@ -255,7 +255,7 @@ public:
                                      double elapsedTime);
 
     void fireSVGAnimationEvents(
-        const std::vector<ActiveAnimationTask*>& repeatedAnimationTasks,
+        const std::set<SVGAnimationElement*>& originAnimationElements,
         SVGAnimationEventType type);
     void fireSVGAnimationEvent(Element* element, SVGAnimationEventType type);
 
