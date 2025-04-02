@@ -968,7 +968,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     if (UNLIKELY(current->isSVGSVGElement())) {
         currentFrame = FrameTreeBuilder::buildSVGFrameTree(
             current->asSVGElement(), nullptr, force);
-        if (!currentFrame->parent()) {
+        if (currentFrame && !currentFrame->parent()) {
             FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
                                           currentFrame, current, ctx);
         }
