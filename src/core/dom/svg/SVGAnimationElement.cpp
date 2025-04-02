@@ -206,6 +206,14 @@ void SVGAnimationElement::beginElementAtInternal(
 
     window()->webView()->layoutIfNeeded(false);
 
+    {
+        // FIXME: SVG animations should play without computed styles.
+        Optional<Element*> maybeTargetElement = targetElement();
+        if (maybeTargetElement && !maybeTargetElement->style()) {
+            return;
+        }
+    }
+
     AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
 
     // set duration
