@@ -25,6 +25,8 @@
 #include "core/style/CalcData.h"
 #include "core/style/Length.h"
 #include "core/style/LengthUtil.h"
+#include "core/dom/Element.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -307,6 +309,45 @@ Optional<AnimatedValue*> AnimatedValue::create(
         if (neededOriginProperty) {
             return new AnimatedValue(style->ry());
         }
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    default:
+        STARFISH_UNIMPLEMENTED();
+        return Optional<AnimatedValue*>();
+    }
+
+    return Optional<AnimatedValue*>();
+}
+
+Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
+    Element* element, const CSSStyleValuePair& property,
+    const CSSStyleValuePair::KeyKind& keyKind)
+{
+    // Create AnimatedValues for SVG's animation attribues.
+
+    switch (keyKind) {
+    case CSSStyleValuePair::Transform:
+        if (property.valueKind() ==
+            CSSStyleValuePair::ValueKind::TransformFunctions) {
+            // dummy computed style to create StyleTransformDataGroup.
+            ComputedStyle dummy(element->document()->style());
+
+            auto transformValue = property.transformValue();
+            transformValue->toTransformDataGroup(element, &dummy);
+            STARFISH_ASSERT(dummy.transforms() != nullptr);
+            return new AnimatedValue(dummy.transforms());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::X:
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::Y:
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::CX:
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::CY:
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::RX:
+        return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::RY:
         return AnimatedValue::createAnimatedValueFromLength(property);
     default:
         STARFISH_UNIMPLEMENTED();

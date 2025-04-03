@@ -269,11 +269,22 @@ void BrowsingContext::resolveStyleIfNeeds()
                 uint64_t cancelTick = 0;
                 bool canceled = false;
                 for (auto task = animation.begin(); task != animation.end();) {
-                    if (((*task)->targetElement()->isInDocumentScope() ==
-                         false) ||
-                        ((*task)->targetElement()->style() == nullptr) ||
-                        (*task)->targetElement()->style()->display() ==
-                            DisplayValue::NoneDisplayValue) {
+                    Element* targetElement = (*task)->targetElement();
+                    bool nullComputedStyleOrDisplayNone =
+                        !targetElement->style() ||
+                        targetElement->style()->display() ==
+                            DisplayValue::NoneDisplayValue;
+
+                    if (!targetElement->isInDocumentScope() ||
+                        nullComputedStyleOrDisplayNone) {
+                        if (nullComputedStyleOrDisplayNone &&
+                            (*task)->animationType() ==
+                                AnimationType::SVGAnimation) {
+                            // SVG animation must be played even if the display
+                            // is none if already started.
+                            task++;
+                            continue;
+                        }
                         canceled = true;
                         (*task)->detachFromElement();
                         double progress = (*task)->fraction(currentTick);

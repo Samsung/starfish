@@ -515,7 +515,7 @@ const char* getWindowsTempDir();
 
 #define STARFISH_UNIMPLEMENTED(...)                       \
     do {                                                  \
-        STARFISH_LOG_WARN("UNIMPLEMENTED! " __VA_ARGS__); \
+        STARFISH_LOG_WARN("UNIMPLEMENTED: " __VA_ARGS__); \
     } while (0)
 
 #define STARFISH_UNSUPPORTED(...)                      \

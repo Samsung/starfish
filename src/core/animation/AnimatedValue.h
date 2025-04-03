@@ -53,6 +53,10 @@ public:
         const CSSStyleValuePair::KeyKind& keyKind, size_t layer,
         bool neededOriginProperty);
 
+    static Optional<AnimatedValue*> createForSVGAnimation(
+        Element* element, const CSSStyleValuePair& property,
+        const CSSStyleValuePair::KeyKind& keyKind);
+
     static Optional<AnimatedValue*> createAnimatedValueFromColor(
         const CSSStyleValuePair& property);
 

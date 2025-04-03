@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishAnimationApplier__
-#define __StarfishAnimationApplier__
+#ifndef __StarfishSVGAnimationApplier__
+#define __StarfishSVGAnimationApplier__
 
 #include "core/style/Style.h"
 
@@ -27,7 +27,6 @@ namespace Starfish {
 enum class AnimationType ENSURE_ENUM_UNSIGNED;
 
 class Element;
-class ComputedStyle;
 class TimingFunction;
 class AnimatedValue;
 class AnimationExecutor;
@@ -36,32 +35,27 @@ class AnimationKeyframes;
 class ActiveAnimationTask;
 class SVGAnimationElement;
 
-class AnimationApplier : public gc {
+class SVGAnimationApplier : public gc {
 public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
-    AnimationApplier(Element* element, AnimationType animatoinType,
-                     ComputedStyle* style);
+    SVGAnimationApplier(Element* element,
+                        SVGAnimationElement* originAnimationElement);
 
     bool apply();
 
 private:
-    bool applyProperty(size_t s, String* name,
-                       CSSStyleValuePair::KeyKind keyKind,
-                       const GCVector<GCVector<AnimatedValue*>>& values,
+    bool applyProperty(String* name, CSSStyleValuePair::KeyKind keyKind,
+                       const GCVector<AnimatedValue*>& values,
                        const GCAtomicVector<double>& offsets,
                        const GCVector<TimingFunction*>& timingFunctions,
                        uint64_t duration, int64_t delay, float iterationCount,
                        AnimationDirectionValue direction,
                        AnimationPlayStateValue playState,
                        AnimationFillModeValue fillMode);
-    bool createLayerdValues(const AnimationKeyframes* currentKeyFrames,
-                            CSSStyleValuePair::KeyKind currentKeyKind,
-                            size_t currentPropertyIndex,
-                            GCVector<GCVector<AnimatedValue*>>& layeredValues);
     bool createValues(const AnimationKeyframes* currentKeyFrames,
                       CSSStyleValuePair::KeyKind currentKeyKind,
-                      size_t currentPropertyIndex, size_t layer,
+                      size_t currentPropertyIndex,
                       GCVector<AnimatedValue*>& values);
     void createOffsetAndTimingFunction(
         AnimationKeyframes* currentKeyFrames, size_t currentPropertyIndex,
@@ -78,13 +72,8 @@ private:
         AnimationPlayStateValue playState, ActiveAnimationTask* task);
 
     Element* m_element;
-    AnimationType m_animatoinType;
-    ComputedStyle* m_style;
+    SVGAnimationElement* m_originAnimationElement;
 
-    Font* m_font;
-    Length m_currentFontSize;
-    Length m_rootFontSize;
-    LayoutSize m_windowSize;
     AnimationExecutor* m_executor;
 };
 

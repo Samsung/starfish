@@ -683,6 +683,11 @@ void ActiveTransformAnimationTask::resolveTransformValues()
 
 void ActiveTransformAnimationTask::resolveUnresolvedAnimatedValues()
 {
+    if (!m_targetElement->frame()) {
+        // Resolve it in the next tick.
+        return;
+    }
+
     if (!m_isEveryAnimiatedValueResolved) {
         removePercentValuesFromTransform();
         resolveTransformValues();
@@ -1032,6 +1037,11 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 isEveryValueHasPercent = false;
                 break;
             }
+        }
+
+        if (!m_targetElement->frame()) {
+            // Resolve it in the next tick.
+            return;
         }
 
         if (!isEveryValueHasPercent) {
