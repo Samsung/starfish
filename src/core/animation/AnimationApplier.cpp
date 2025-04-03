@@ -51,13 +51,12 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
-AnimationApplier::AnimationApplier(
-    Element* element, AnimationType animatoinType, ComputedStyle* style,
-    Optional<SVGAnimationElement*> originAnimationElement)
+AnimationApplier::AnimationApplier(Element* element,
+                                   AnimationType animatoinType,
+                                   ComputedStyle* style)
     : m_element(element)
     , m_animatoinType(animatoinType)
     , m_style(style)
-    , m_originAnimationElement(originAnimationElement)
     , m_font(style->font())
     , m_currentFontSize(m_style->fontSize())
     , m_windowSize(element->window()->innerWidth(),
@@ -146,58 +145,6 @@ bool AnimationApplier::apply()
             hasAppliedAnimation = true;
         }
     }
-    return hasAppliedAnimation;
-}
-
-bool AnimationApplier::applySVGAnimation()
-{
-    STARFISH_ASSERT(m_originAnimationElement.hasValue());
-    STARFISH_ASSERT(
-        m_originAnimationElement.getValue()->isSVGAnimationElement());
-
-    Optional<AnimationKeyframes*> maybekeyFrames =
-        m_originAnimationElement.getValue()
-            ->asSVGAnimationElement()
-            ->animationKeyframes();
-    if (!maybekeyFrames) {
-        return false;
-    }
-
-    AnimationKeyframes* currentKeyFrames = maybekeyFrames.value();
-    AnimationKeyframe* fromAnimationKeyframe =
-        currentKeyFrames->animationKeyframeList()[0];
-    bool hasAppliedAnimation = false;
-    for (size_t i = 0; i < fromAnimationKeyframe->propertySize(); i++) {
-        CSSStyleValuePair::KeyKind currentKeyKind =
-            fromAnimationKeyframe->keyKinds()[i];
-
-        GCVector<GCVector<AnimatedValue*>> layeredValues;
-        if (!createLayerdValues(currentKeyFrames, currentKeyKind, i,
-                                layeredValues)) {
-            // Failed to create AnimatedValue.
-            continue;
-        }
-
-        GCAtomicVector<double> offsets;
-        GCVector<TimingFunction*> timingFunctions;
-        createOffsetAndTimingFunction(currentKeyFrames, i, offsets,
-                                      timingFunctions);
-        STARFISH_ASSERT(layeredValues[0].size() == offsets.size());
-        STARFISH_ASSERT(offsets.size() == timingFunctions.size());
-
-        hasAppliedAnimation |= applyProperty(
-            0, currentKeyFrames->name(), currentKeyKind, layeredValues, offsets,
-            timingFunctions, currentKeyFrames->duration().toTimeValue(),
-            currentKeyFrames->delay().toTimeValue(),
-            currentKeyFrames->iterationCount(), currentKeyFrames->direction(),
-            currentKeyFrames->playState(), currentKeyFrames->fillMode());
-    }
-
-    if (hasAppliedAnimation) {
-        m_executor->fireSVGAnimationEvent(m_originAnimationElement.getValue(),
-                                          SVGAnimationEventType::BeginEvent);
-    }
-
     return hasAppliedAnimation;
 }
 
@@ -367,11 +314,6 @@ bool AnimationApplier::applyProperty(
     init.iterationCount = iterationCount;
     init.offsets = offsets;
     init.timingFunctions = timingFunctions;
-
-    if (m_originAnimationElement.hasValue()) {
-        STARFISH_ASSERT(m_animatoinType == AnimationType::SVGAnimation);
-        init.originAnimationElement = m_originAnimationElement;
-    }
 
     for (size_t i = 0; i < layeredValues.size(); i++) {
         ActiveAnimationTask* task = nullptr;

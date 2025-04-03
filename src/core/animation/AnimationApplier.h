@@ -41,12 +41,9 @@ public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
     AnimationApplier(Element* element, AnimationType animatoinType,
-                     ComputedStyle* style,
-                     Optional<SVGAnimationElement*> originAnimationElement);
+                     ComputedStyle* style);
 
     bool apply();
-
-    bool applySVGAnimation();
 
 private:
     bool applyProperty(size_t s, String* name,
@@ -83,7 +80,6 @@ private:
     Element* m_element;
     AnimationType m_animatoinType;
     ComputedStyle* m_style;
-    Optional<SVGAnimationElement*> m_originAnimationElement;
 
     Font* m_font;
     Length m_currentFontSize;

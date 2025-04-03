@@ -612,7 +612,7 @@ void AnimationExecutor::addNewActiveAnimationsIfNeeds(ExecutionContext& context)
 
     AnimationApplier animationApplier(context.m_element,
                                       AnimationType::KeyFramesAnimation,
-                                      context.m_toStyle, nullptr);
+                                      context.m_toStyle);
     if (animationApplier.apply()) {
         context.m_hasActiveTask = true;
         context.m_needsToCheckActiveExecutorInWebView = true;

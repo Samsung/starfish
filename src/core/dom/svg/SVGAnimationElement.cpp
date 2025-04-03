@@ -23,8 +23,8 @@
 
 #include "StaticStrings.h"
 #include "Starfish.h"
-#include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationTask.h"
+#include "core/animation/SVGAnimationApplier.h"
 #include "core/style/Style.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -204,16 +204,6 @@ void SVGAnimationElement::beginElementAtInternal(
 {
     // TODO: Apply offset.
 
-    window()->webView()->layoutIfNeeded(false);
-
-    {
-        // FIXME: SVG animations should play without computed styles.
-        Optional<Element*> maybeTargetElement = targetElement();
-        if (maybeTargetElement && !maybeTargetElement->style()) {
-            return;
-        }
-    }
-
     AnimationKeyframes* animationKeyframes = new AnimationKeyframes();
 
     // set duration
@@ -299,9 +289,8 @@ void SVGAnimationElement::beginElementAtInternal(
 
     // Apply animation for svg.
     m_animationKeyframes = animationKeyframes;
-    AnimationApplier applier(targetElement, AnimationType::SVGAnimation,
-                             targetElement->style(), this);
-    if (!applier.applySVGAnimation()) {
+    SVGAnimationApplier applier(targetElement, this);
+    if (!applier.apply()) {
         m_animationKeyframes = nullptr;
         STARFISH_LOG_ERROR("Failed to apply animation.");
         return;

@@ -53,6 +53,9 @@ public:
         CSSStyleValuePair::KeyKind keyKind);
     static bool isPropertyForActiveLengthSizeAnimationTask(
         CSSStyleValuePair::KeyKind keyKind);
+
+    static bool isPropertyForActiveLengthAnimationTaskForSVG(
+        CSSStyleValuePair::KeyKind keyKind);
 };
 } // namespace Starfish
 

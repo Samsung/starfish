@@ -387,6 +387,23 @@ bool AnimationUtil::isPropertyForActiveLengthAnimationTask(
     return false;
 }
 
+bool AnimationUtil::isPropertyForActiveLengthAnimationTaskForSVG(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::X:
+    case CSSStyleValuePair::KeyKind::Y:
+    case CSSStyleValuePair::KeyKind::RX:
+    case CSSStyleValuePair::KeyKind::RY:
+    case CSSStyleValuePair::KeyKind::CX:
+    case CSSStyleValuePair::KeyKind::CY:
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
 bool AnimationUtil::isPropertyForActiveLengthSizeAnimationTask(
     CSSStyleValuePair::KeyKind keyKind)
 {
