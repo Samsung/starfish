@@ -74,6 +74,7 @@ public:
     void setDefer(bool b);
 
     bool isModule();
+    bool isImportMap();
 
     String* nonce() const;
     void setNonce(String* str);

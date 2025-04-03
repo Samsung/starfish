@@ -558,6 +558,23 @@ public:
         return m_moduleScripts;
     }
 
+    struct ImportMapData : public gc {
+        String* id;
+        ResourceURL* url;
+        ImportMapData(String* id, ResourceURL* url)
+            : id(id)
+            , url(url)
+        {
+        }
+    };
+
+    GCVector<ImportMapData*>& importMap()
+    {
+        return m_importMap;
+    }
+
+    Optional<ResourceURL*> resolveModuleSrcFromImportMap(String* src);
+
     void attachNodeIterator(NodeIterator* ni);
     void willNodeBeRemoved(Node* parent, Node* oldChild);
 
@@ -767,6 +784,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredSVGScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_moduleScripts));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_importMap));
 
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_elementInClickProgressList));
@@ -831,6 +849,7 @@ protected:
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
     GCVector<ScriptModuleData*> m_moduleScripts;
+    GCVector<ImportMapData*> m_importMap;
 
     BloomFilter<12> m_nameIdFilter;
     ReferrerPolicy m_referrerPolicy;
