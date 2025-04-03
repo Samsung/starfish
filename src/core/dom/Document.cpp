@@ -2749,6 +2749,24 @@ void Document::removeSVGPaintClientElement(SVGElement* client)
     }
 }
 
+Optional<ResourceURL*> Document::resolveModuleSrcFromImportMap(String* src)
+{
+    if (src->startsWith("./")) {
+        src = src->substring(2, src->length() - 2);
+    }
+    Optional<ResourceURL*> submatch;
+    for (auto d : importMap()) {
+        if (d->id->equals(src)) {
+            return d->url;
+        }
+        if (d->id->contains("/") && src->startsWith(d->id)) {
+            src = src->replaceAll(d->id, d->url->string());
+            submatch = new ResourceURL(src, baseURI());
+        }
+    }
+    return submatch;
+}
+
 DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, click);

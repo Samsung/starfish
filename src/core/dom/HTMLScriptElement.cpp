@@ -38,6 +38,8 @@
 #include "platform/loader/ResourceLoader.h"
 #include "platform/loader/ElementResourceClient.h"
 
+#include "rapidjson/document.h"
+
 namespace Starfish {
 
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
@@ -116,9 +118,9 @@ public:
 class DeferredScriptDownloadClient : public ResourceClient {
 public:
     DeferredScriptDownloadClient(HTMLScriptElement* script, Resource* res,
-                                 bool fromParser)
+                                 bool fromParser, bool module)
         : ResourceClient(res)
-        , m_isModule(script->isModule())
+        , m_isModule(module)
         , m_isLoaded(false)
         , m_successToLoad(false)
         , m_fromParser(fromParser)
@@ -321,6 +323,7 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
                                        bool defer, bool module, bool fromParser,
                                        bool shouldResumeParsing, bool forceSync)
 {
+    ResourceURL* targetURL = rurl;
     if (module) {
         auto& moduleScripts = element->document()->moduleScripts();
         for (auto* ms : moduleScripts) {
@@ -330,18 +333,25 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
             }
         }
 
-        moduleScripts.push_back(
-            new Document::ScriptModuleData(nullptr, rurl, element, fromParser));
+        auto resolvedURL =
+            element->document()->resolveModuleSrcFromImportMap(rurl->string());
+        if (resolvedURL) {
+            targetURL = resolvedURL.value();
+        }
+
+        moduleScripts.push_back(new Document::ScriptModuleData(
+            nullptr, targetURL, element, fromParser));
     }
+
     String* charset = element
                           ->getAttributeOrEmpty(
                               element->starfish()->staticStrings()->m_charset)
                           ->trim();
     TextResource* res =
-        element->document()->resourceLoader().fetchText(rurl, charset);
+        element->document()->resourceLoader().fetchText(targetURL, charset);
     if (module || (!async && defer)) {
         res->addResourceClient(
-            new DeferredScriptDownloadClient(element, res, fromParser));
+            new DeferredScriptDownloadClient(element, res, fromParser, module));
     } else {
         res->addResourceClient(
             new ScriptDownloadClient(element, res, shouldResumeParsing));
@@ -353,7 +363,7 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
     }
 
     RequestData* reqData = new RequestData();
-    reqData->m_url = rurl;
+    reqData->m_url = targetURL;
     reqData->m_referrer = new ReferrerURL(element->document()->documentURI());
     reqData->m_destination = RequestDestination::Script;
     reqData->m_syncLevel =
@@ -415,6 +425,119 @@ private:
     static unsigned s_scriptNestingLevel;
     bool m_started = false;
 };
+
+template <typename Encoding>
+struct JSONStringReadonlyStream {
+    typedef typename Encoding::Ch Ch;
+
+    JSONStringReadonlyStream(const Ch* src, size_t length)
+        : src_(src)
+        , head_(src)
+        , tail_(src + length)
+    {
+    }
+
+    Ch Peek() const
+    {
+        if (UNLIKELY(tail_ <= src_)) {
+            return 0;
+        }
+        return *src_;
+    }
+    Ch Take()
+    {
+        if (UNLIKELY(tail_ <= src_)) {
+            return 0;
+        }
+        return *src_++;
+    }
+    size_t Tell() const
+    {
+        return static_cast<size_t>(src_ - head_);
+    }
+    Ch* PutBegin()
+    {
+        RAPIDJSON_ASSERT(false);
+        return 0;
+    }
+    void Put(Ch)
+    {
+        RAPIDJSON_ASSERT(false);
+    }
+    void Flush()
+    {
+        RAPIDJSON_ASSERT(false);
+    }
+    size_t PutEnd(Ch*)
+    {
+        RAPIDJSON_ASSERT(false);
+        return 0;
+    }
+
+    const Ch* src_;  //!< Current read position.
+    const Ch* head_; //!< Original head of the string.
+    const Ch* tail_;
+};
+
+static bool processImportMap(Document* document, String* txt)
+{
+    auto scriptBindingInstance = document->scriptBindingInstance();
+    rapidjson::Document jsonDocument;
+    txt->peekUTF8Buffer(
+        [](const char* ptr, size_t len, void* data) -> size_t {
+            rapidjson::Document* document =
+                reinterpret_cast<rapidjson::Document*>(data);
+            JSONStringReadonlyStream<rapidjson::UTF8<char>> stringStream(ptr,
+                                                                         len);
+            document->ParseStream(stringStream);
+            return 0;
+        },
+        &jsonDocument);
+
+    if (jsonDocument.HasParseError()) {
+        return false;
+    }
+
+    auto iter = jsonDocument.MemberBegin();
+    while (iter != jsonDocument.MemberEnd()) {
+        std::string str(iter->name.GetString(), iter->name.GetStringLength());
+        if (str == "imports") {
+            auto& obj = iter->value;
+            if (!obj.IsObject()) {
+                return false;
+            }
+
+            auto subIter = obj.MemberBegin();
+            while (subIter != obj.MemberEnd()) {
+                if (subIter->value.IsString()) {
+                    String* s =
+                        String::fromUTF8(subIter->name.GetString(),
+                                         subIter->name.GetStringLength());
+                    if (s->startsWith("./")) {
+                        s = s->substring(2, s->length() - 2);
+                    }
+
+                    document->importMap().push_back(new Document::ImportMapData(
+                        String::fromUTF8(subIter->name.GetString(),
+                                         subIter->name.GetStringLength()),
+                        new ResourceURL(
+                            String::fromUTF8(subIter->value.GetString(),
+                                             subIter->value.GetStringLength()),
+                            document->baseURL()->baseURI())));
+                }
+                subIter++;
+            }
+
+            break;
+        } else if (str == "imports" || str == "integrity") {
+            STARFISH_UNIMPLEMENTED(
+                "HTMLScriptElement importmap (scopes, integrity)");
+        }
+        iter++;
+    }
+
+    return true;
+}
 
 unsigned ScriptExecutionScope::s_scriptNestingLevel = 0;
 
@@ -487,9 +610,18 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                         }
 
                         buildScriptResourceRequest(this, rurl, false, false,
-                                                   inParser, true, false,
+                                                   true, inParser, false,
                                                    false);
                     }
+                }
+            } else if (isImportMap()) {
+                if (!processImportMap(document(), script)) {
+                    String* eventType =
+                        starfish()->staticStrings()->m_error.localName();
+                    Event* e = new Event(executionContext(), eventType,
+                                         EventInit(false, false));
+                    dispatchEventIdleTimeByUA(e);
+                    return false;
                 }
             } else {
                 Document::CurrentScriptManager currentScriptManager(document(),
@@ -510,6 +642,10 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
             if (!checkSrcSecurity(this, rurl)) {
+                return false;
+            }
+
+            if (isImportMap()) {
                 return false;
             }
 
@@ -739,6 +875,11 @@ bool HTMLScriptElement::isModule()
     return type()->equalsIgnoreCase("module");
 }
 
+bool HTMLScriptElement::isImportMap()
+{
+    return type()->equalsIgnoreCase("importmap");
+}
+
 Node* HTMLScriptElement::clone()
 {
     HTMLScriptElement* n = HTMLElement::clone()->asHTMLScriptElement();
@@ -754,6 +895,10 @@ bool HTMLScriptElement::isValidScriptType()
     }
 
     if (isModule()) {
+        return true;
+    }
+
+    if (isImportMap()) {
         return true;
     }
 

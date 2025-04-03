@@ -83,6 +83,14 @@ public:
             relatedContext->vmInstance());
     }
 
+    Escargot::StringRef* makeModuleLoadErrorString(String* srcString)
+    {
+        StringBuilder sb;
+        sb.appendString("failed to load module : ");
+        sb.appendString(srcString);
+        return toJSString(sb.finalize());
+    }
+
     virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
                                           Escargot::ScriptRef* whereRequestFrom,
                                           Escargot::StringRef* moduleSrc,
@@ -91,38 +99,50 @@ public:
         auto executionContext = fetchExecutionContext(relatedContext);
         auto& moduleScripts = executionContext->document()->moduleScripts();
 
-        String* baseURI;
-        if (whereRequestFrom->src()->length()) {
-            baseURI =
-                (new ResourceURL(toBrowserString(
-                     executionContext->document()->scriptBindingInstance(),
-                     whereRequestFrom->src())))
-                    ->baseURI();
+        String* srcString = toBrowserString(
+            executionContext->document()->scriptBindingInstance(), moduleSrc);
+
+        ResourceURL* src;
+        Optional<ResourceURL*> importMapResolvedURL;
+#if !defined(STARFISH_WEBWORKER_HOST)
+        importMapResolvedURL =
+            executionContext->document()->resolveModuleSrcFromImportMap(
+                srcString);
+#endif
+        if (importMapResolvedURL) {
+            src = importMapResolvedURL.value();
         } else {
-            baseURI = executionContext->baseURL()->baseURI();
+            String* baseURI;
+            if (whereRequestFrom->src()->length()) {
+                baseURI =
+                    (new ResourceURL(toBrowserString(
+                         executionContext->document()->scriptBindingInstance(),
+                         whereRequestFrom->src())))
+                        ->baseURI();
+            } else {
+                baseURI = executionContext->baseURL()->baseURI();
+            }
+            src = new ResourceURL(
+                toBrowserString(
+                    executionContext->document()->scriptBindingInstance(),
+                    moduleSrc),
+                baseURI);
         }
-        ResourceURL* src = new ResourceURL(
-            toBrowserString(
-                executionContext->document()->scriptBindingInstance(),
-                moduleSrc),
-            baseURI);
 
         for (size_t i = 0; i < moduleScripts.size(); i++) {
             Document::ScriptModuleData* data = moduleScripts[i];
             if (data->url.hasValue() && *data->url.value() == *src) {
                 if (!data->module.hasValue()) {
-                    // failed to load the module
                     return LoadModuleResult(
                         Escargot::ErrorObjectRef::Code::None,
-                        Escargot::StringRef::createFromASCII(
-                            "failed to load module"));
+                        makeModuleLoadErrorString(srcString));
                 }
                 return LoadModuleResult(data->module.value());
             }
         }
 
         return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                Escargot::StringRef::emptyString());
+                                makeModuleLoadErrorString(srcString));
     }
 
     virtual void didLoadModule(
