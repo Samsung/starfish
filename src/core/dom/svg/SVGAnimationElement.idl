@@ -5,7 +5,7 @@ interface SVGAnimationElement : SVGElement {
 
   [Unimplemented] readonly attribute SVGElement? targetElement;
 
-  [Unimplemented] attribute EventHandler onbegin;
+  attribute EventHandler onbegin;
   [Unimplemented] attribute EventHandler onend;
   [Unimplemented] attribute EventHandler onrepeat;
 

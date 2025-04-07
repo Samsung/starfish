@@ -96,6 +96,10 @@ public:
 
     virtual void beginElementAt(float offset);
 
+    EventListener* onbegin();
+
+    void setOnbegin(EventListener* onbegin);
+
 protected:
     void beginElementAtInternal(
         float offset, CSSStyleValuePair::KeyKind keyKind,

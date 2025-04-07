@@ -166,6 +166,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
                 m_keySplines = std::move(keySplines);
             }
         }
+    } else if (name == ss->m_onbegin) {
+        setAttributeEventListener(ss->m_beginEvent, value, this);
     }
 }
 
@@ -594,6 +596,22 @@ void SVGAnimationElement::AddAnimationKeyframe(
             keyframe->setTimingFunction(animationKeyframes->timingFunction());
         }
         animationKeyframes->animationKeyframeList().push_back(keyframe);
+    }
+}
+
+EventListener* SVGAnimationElement::onbegin()
+{
+    QualifiedName attr = staticStrings()->m_beginEvent;
+    return attributeEventListener(attr);
+}
+
+void SVGAnimationElement::setOnbegin(EventListener* onbegin)
+{
+    QualifiedName attr = staticStrings()->m_beginEvent;
+    if (onbegin) {
+        setAttributeEventListener(attr, onbegin);
+    } else {
+        clearAttributeEventListener(attr);
     }
 }
 
