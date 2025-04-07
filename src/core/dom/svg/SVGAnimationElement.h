@@ -97,8 +97,10 @@ public:
     virtual void beginElementAt(float offset);
 
     EventListener* onbegin();
-
     void setOnbegin(EventListener* onbegin);
+
+    EventListener* onend();
+    void setOnend(EventListener* onend);
 
 protected:
     void beginElementAtInternal(

@@ -723,6 +723,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "slotchange"));
     m_onbegin =
         QualifiedName(AtomicString::createAtomicString(starfish, "onbegin"));
+    m_onend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onend"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)

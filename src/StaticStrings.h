@@ -711,6 +711,7 @@ public:
     QualifiedName m_lostpointercapture;
     QualifiedName m_slotchange;
     QualifiedName m_onbegin;
+    QualifiedName m_onend;
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
