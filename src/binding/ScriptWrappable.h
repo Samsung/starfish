@@ -76,6 +76,7 @@ class WebView;
 class ScriptBindingInstance;
 class Window;
 class String;
+class Promise;
 class WorkerGlobalScope;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
@@ -236,6 +237,10 @@ Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
 GCVector<String*> moduleRequests(ScriptModule module);
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
 bool isExcutedModule(ScriptModule module);
+void notifyDynamicLoadedModuleResult(ScriptBindingInstance* instance,
+                                     ScriptModule module, Promise* promise);
+void notifyDynamicLoadedModuleError(ScriptBindingInstance* instance,
+                                    Promise* promise);
 
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
                                        ScriptObject object, ScriptValue key,

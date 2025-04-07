@@ -133,6 +133,10 @@ public:
         m_didModuleLoadOrErrorEventFired = true;
     }
 
+    static void requestDynamicImportedModule(ExecutionContext* executionContext,
+                                             ResourceURL* targetURL,
+                                             Promise* promise);
+
 protected:
     bool m_isAlreadyStarted : 1;
     bool m_isParserInserted : 1;

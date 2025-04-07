@@ -37,6 +37,8 @@
 #if defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#else
+#include "core/dom/HTMLScriptElement.h"
 #endif /* defined(STARFISH_WEBWORKER_HOST) */
 
 #include <EscargotPublic.h>
@@ -91,11 +93,12 @@ public:
         return toJSString(sb.finalize());
     }
 
-    virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
-                                          Escargot::ScriptRef* whereRequestFrom,
-                                          Escargot::StringRef* moduleSrc,
-                                          ModuleType type) override
+    std::tuple<LoadModuleResult, ResourceURL*, bool> loadModule(
+        Escargot::ContextRef* relatedContext,
+        Escargot::ScriptRef* whereRequestFrom, Escargot::StringRef* moduleSrc,
+        ModuleType type)
     {
+        bool existOnLoadedModuleList = false;
         auto executionContext = fetchExecutionContext(relatedContext);
         auto& moduleScripts = executionContext->document()->moduleScripts();
 
@@ -132,17 +135,32 @@ public:
         for (size_t i = 0; i < moduleScripts.size(); i++) {
             Document::ScriptModuleData* data = moduleScripts[i];
             if (data->url.hasValue() && *data->url.value() == *src) {
+                existOnLoadedModuleList = true;
                 if (!data->module.hasValue()) {
-                    return LoadModuleResult(
-                        Escargot::ErrorObjectRef::Code::None,
-                        makeModuleLoadErrorString(srcString));
+                    return std::make_tuple(
+                        LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                                         makeModuleLoadErrorString(srcString)),
+                        src, existOnLoadedModuleList);
                 }
-                return LoadModuleResult(data->module.value());
+                return std::make_tuple(LoadModuleResult(data->module.value()),
+                                       src, existOnLoadedModuleList);
             }
         }
 
-        return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                makeModuleLoadErrorString(srcString));
+        return std::make_tuple(
+            LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                             makeModuleLoadErrorString(srcString)),
+            src, existOnLoadedModuleList);
+    }
+
+    virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
+                                          Escargot::ScriptRef* whereRequestFrom,
+                                          Escargot::StringRef* moduleSrc,
+                                          ModuleType type) override
+    {
+        auto loadedModuleResult =
+            loadModule(relatedContext, whereRequestFrom, moduleSrc, type);
+        return std::get<0>(loadedModuleResult);
     }
 
     virtual void didLoadModule(
@@ -157,49 +175,27 @@ public:
                                              StringRef* src, ModuleType type,
                                              PromiseObjectRef* promise) override
     {
-        LoadModuleResult loadedModuleResult =
-            onLoadModule(relatedContext, referrer, src, type);
+        auto loadedModuleResult =
+            loadModule(relatedContext, referrer, src, type);
+#if !defined(STARFISH_WEBWORKER_HOST)
+        bool existOnLoadedModuleList = std::get<2>(loadedModuleResult);
+        if (!existOnLoadedModuleList) {
+            fetchScriptBindingInstance(relatedContext)
+                ->dynamicImportedModuleData()
+                .push_back(std::make_tuple(src, referrer, promise, this));
+            HTMLScriptElement::requestDynamicImportedModule(
+                fetchExecutionContext(relatedContext),
+                std::get<1>(loadedModuleResult),
+                new Promise(fetchExecutionContext(relatedContext)
+                                ->scriptBindingInstance(),
+                            promise));
+            return;
+        }
+#endif
 
-        Evaluator::EvaluatorResult executionResult = Evaluator::execute(
-            relatedContext,
-            [](ExecutionStateRef* state, LoadModuleResult loadedModuleResult,
-               PromiseObjectRef* promise) -> ValueRef* {
-                if (loadedModuleResult.script) {
-                    if (loadedModuleResult.script.value()->isExecuted()) {
-                        if (loadedModuleResult.script.value()
-                                ->wasThereErrorOnModuleEvaluation()) {
-                            state->throwException(
-                                loadedModuleResult.script.value()
-                                    ->moduleEvaluationError());
-                        }
-                    } else {
-                        loadedModuleResult.script.value()->execute(state);
-                    }
-                } else {
-                    state->throwException(ErrorObjectRef::create(
-                        state, loadedModuleResult.errorCode,
-                        loadedModuleResult.errorMessage));
-                }
-                return loadedModuleResult.script.value()->moduleNamespace(
-                    state);
-            },
-            loadedModuleResult, promise);
-
-        Evaluator::execute(
-            relatedContext,
-            [](ExecutionStateRef* state, bool isSuccessful, ValueRef* value,
-               PromiseObjectRef* promise) -> ValueRef* {
-                if (isSuccessful) {
-                    promise->fulfill(state, value);
-                } else {
-                    promise->reject(state, value);
-                }
-                return ValueRef::createUndefined();
-            },
-            executionResult.isSuccessful(),
-            executionResult.isSuccessful() ? executionResult.result
-                                           : executionResult.error.value(),
-            promise);
+        this->notifyHostImportModuleDynamicallyResult(
+            relatedContext, referrer, src, promise,
+            std::get<0>(loadedModuleResult));
     }
 
     virtual void markJSJobFromAnotherThreadExists(
@@ -1630,6 +1626,44 @@ bool executeModule(ScriptBindingInstance* instance, ScriptModule module)
 bool isExcutedModule(ScriptModule module)
 {
     return module->isExecuted();
+}
+
+static void notifyDynamicLoadedModuleResult(
+    ScriptBindingInstance* instance, Promise* promise,
+    const Escargot::PlatformRef::LoadModuleResult& loadModuleResult)
+{
+    ContextRef* relatedContext = instance->scriptContext();
+    auto po = promise->scriptValue()->asPromiseObject();
+    auto& vec = instance->dynamicImportedModuleData();
+    for (auto iter = vec.begin(); iter < vec.end(); iter++) {
+        if (std::get<2>(*iter) == po) {
+            Escargot::StringRef* stringRef = std::get<0>(*iter);
+            Escargot::ScriptRef* scriptRef = std::get<1>(*iter);
+            Escargot::PlatformRef* platformRef = std::get<3>(*iter);
+            vec.erase(iter);
+            platformRef->notifyHostImportModuleDynamicallyResult(
+                relatedContext, scriptRef, stringRef, po, loadModuleResult);
+            return;
+        }
+    }
+
+    STARFISH_ASSERT_NOT_REACHED();
+}
+
+void notifyDynamicLoadedModuleResult(ScriptBindingInstance* instance,
+                                     ScriptModule module, Promise* promise)
+{
+    Escargot::PlatformRef::LoadModuleResult loadModuleResult(module);
+    notifyDynamicLoadedModuleResult(instance, promise, loadModuleResult);
+}
+
+void notifyDynamicLoadedModuleError(ScriptBindingInstance* instance,
+                                    Promise* promise)
+{
+    Escargot::PlatformRef::LoadModuleResult loadModuleResult(
+        ErrorObjectRef::Code::None,
+        StringRef::createFromASCII("failed to load Module"));
+    notifyDynamicLoadedModuleResult(instance, promise, loadModuleResult);
 }
 
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,

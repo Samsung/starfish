@@ -27,7 +27,10 @@ class ValueRef;
 class StringRef;
 class ObjectRef;
 class FunctionObjectRef;
+class PromiseObjectRef;
 class ExecutionStateRef;
+class ScriptRef;
+class PlatformRef;
 } // namespace Escargot
 
 #include "binding/generated/Interfaces.h"
@@ -162,6 +165,13 @@ public:
     }
 #endif
 
+    GCVector<std::tuple<Escargot::StringRef*, Escargot::ScriptRef*,
+                        Escargot::PromiseObjectRef*, Escargot::PlatformRef*>>&
+    dynamicImportedModuleData()
+    {
+        return m_dynamicImportedModuleData;
+    }
+
 protected:
     Escargot::ContextRef* m_scriptContext;
 
@@ -174,6 +184,11 @@ protected:
 #ifdef TIZEN_DEVICE_API
     ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI = nullptr;
 #endif
+
+    GCVector<std::tuple<Escargot::StringRef*, Escargot::ScriptRef*,
+                        Escargot::PromiseObjectRef*, Escargot::PlatformRef*>>
+        m_dynamicImportedModuleData;
+
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,
                                        Escargot::ExecutionStateRef* state);
 };
