@@ -674,7 +674,8 @@ static void executeModule(Document* document,
             }
 
             // dispatch load, error event of js module
-            if (!data->source->didModuleLoadOrErrorEventFired() &&
+            if (data->source &&
+                !data->source->didModuleLoadOrErrorEventFired() &&
                 data->url.hasValue()) {
                 String* eventType;
                 if (data->wasSuccessful) {
@@ -687,11 +688,16 @@ static void executeModule(Document* document,
                                     ->m_error.localName();
                 }
                 data->source->dispatchEventByUA(
-                    data->source,
+                    data->source.value(),
                     new Event(document->executionContext(), eventType,
                               EventInit(false, false)),
                     true);
                 data->source->markModuleLoadOrErrorEventFired();
+            }
+            if (data->promise) {
+                notifyDynamicLoadedModuleResult(
+                    document->scriptBindingInstance(), data->module.value(),
+                    data->promise.value());
             }
         }
     }

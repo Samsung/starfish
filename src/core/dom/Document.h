@@ -536,17 +536,20 @@ public:
     struct ScriptModuleData : public gc {
         Optional<ScriptModule> module;
         Optional<ResourceURL*> url;
-        HTMLScriptElement* source;
+        Optional<HTMLScriptElement*> source;
+        Optional<Promise*> promise;
         bool fromParser;
         bool hasLoadingError;
         bool wasSuccessful;
 
         ScriptModuleData(Optional<ScriptModule> module,
-                         Optional<ResourceURL*> url, HTMLScriptElement* source,
-                         bool fromParser)
+                         Optional<ResourceURL*> url,
+                         Optional<HTMLScriptElement*> source,
+                         Optional<Promise*> promise, bool fromParser)
             : module(module)
             , url(url)
             , source(source)
+            , promise(promise)
             , fromParser(fromParser)
             , hasLoadingError(false)
             , wasSuccessful(false)
@@ -844,7 +847,8 @@ protected:
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
     MediaQueryListMatcher* m_mediaQueryListMatcher;
-    GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
+    GCVector<
+        std::pair<Optional<HTMLScriptElement*>, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;

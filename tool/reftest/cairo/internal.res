@@ -834,3 +834,4 @@ test/cairo/internal-test/shadowdom/shadowdom-svg-use.html
 test/cairo/internal-test/web-animation/element_animate_01.html
 test/cairo/internal-test/fe-framework-test/react-19-1-releasebuild/index.html
 test/cairo/internal-test/fe-framework-test/react-19-1-w-babel/index.html
+test/cairo/internal-test/fe-framework-test/angular-v19-app-dist/index.html
