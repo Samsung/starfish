@@ -168,6 +168,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
         }
     } else if (name == ss->m_onbegin) {
         setAttributeEventListener(ss->m_beginEvent, value, this);
+    } else if (name == ss->m_onend) {
+        setAttributeEventListener(ss->m_endEvent, value, this);
     }
 }
 
@@ -610,6 +612,22 @@ void SVGAnimationElement::setOnbegin(EventListener* onbegin)
     QualifiedName attr = staticStrings()->m_beginEvent;
     if (onbegin) {
         setAttributeEventListener(attr, onbegin);
+    } else {
+        clearAttributeEventListener(attr);
+    }
+}
+
+EventListener* SVGAnimationElement::onend()
+{
+    QualifiedName attr = staticStrings()->m_endEvent;
+    return attributeEventListener(attr);
+}
+
+void SVGAnimationElement::setOnend(EventListener* onend)
+{
+    QualifiedName attr = staticStrings()->m_endEvent;
+    if (onend) {
+        setAttributeEventListener(attr, onend);
     } else {
         clearAttributeEventListener(attr);
     }

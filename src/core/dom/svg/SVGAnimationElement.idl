@@ -6,7 +6,7 @@ interface SVGAnimationElement : SVGElement {
   [Unimplemented] readonly attribute SVGElement? targetElement;
 
   attribute EventHandler onbegin;
-  [Unimplemented] attribute EventHandler onend;
+  attribute EventHandler onend;
   [Unimplemented] attribute EventHandler onrepeat;
 
   [Unimplemented] float getStartTime();
