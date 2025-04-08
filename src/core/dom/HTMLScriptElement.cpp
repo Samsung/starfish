@@ -241,10 +241,6 @@ public:
                                     requestDynamicImportedScriptOrItsSubScript(
                                         m_document->executionContext(),
                                         targetURL, nullptr);
-                                    moduleScripts.push_back(
-                                        new Document::ScriptModuleData(
-                                            nullptr, targetURL, nullptr,
-                                            nullptr, false));
                                 }
                             }
                         }
