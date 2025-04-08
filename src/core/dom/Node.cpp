@@ -662,14 +662,14 @@ void Node::normalize()
     }
 }
 
-bool Node::isDescendantOf(const Node* other)
+bool Node::isDescendantOf(Optional<Node*> other)
 {
     // Return true if other is an ancestor of this, otherwise false
-    if (!other || !other->hasChildNodes()) {
+    if (!other) {
         return false;
     }
-    for (const Node* n = parentNode(); n; n = n->parentNode()) {
-        if (n == other) {
+    for (Node* n = parentNode(); n; n = n->parentNode()) {
+        if (n == other.value()) {
             return true;
         }
     }

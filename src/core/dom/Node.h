@@ -366,7 +366,7 @@ public:
 
     void normalize();
 
-    bool isDescendantOf(const Node* other);
+    bool isDescendantOf(Optional<Node*> other);
 
     unsigned index();
 
