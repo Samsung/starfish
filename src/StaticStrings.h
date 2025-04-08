@@ -712,6 +712,7 @@ public:
     QualifiedName m_slotchange;
     QualifiedName m_onbegin;
     QualifiedName m_onend;
+    QualifiedName m_onrepeat;
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)

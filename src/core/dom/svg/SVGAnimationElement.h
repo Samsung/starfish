@@ -102,6 +102,9 @@ public:
     EventListener* onend();
     void setOnend(EventListener* onend);
 
+    EventListener* onrepeat();
+    void setOnrepeat(EventListener* onrepeat);
+
 protected:
     void beginElementAtInternal(
         float offset, CSSStyleValuePair::KeyKind keyKind,
