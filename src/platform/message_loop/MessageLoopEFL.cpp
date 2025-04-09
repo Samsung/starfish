@@ -48,6 +48,7 @@ MessageLoopEFL::MessageLoopEFL()
 
 void MessageLoopEFL::destroy()
 {
+    STARFISH_LOG_INFO("MessageLoopEFL::destroy()");
     m_inClosingState = true;
 
     while (true) {
@@ -195,7 +196,11 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                 0.0,
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
-                    {
+                    // FIXME: When elm is shut down, there is an issue where the
+                    // timer that was previously executed is restarted. To
+                    // prevent malfunction, we use the following two if
+                    // statements.
+                    if (id->m_ml) {
                         Locker<Mutex> l(
                             *id->m_ml->m_idlersFromOtherThreadMutex);
                         removeIderFromList(id->m_ml->m_idlersFromOtherThread,
@@ -206,6 +211,7 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                         id->m_fn((size_t)id, id->m_data);
                     }
 
+                    id->m_ml = nullptr;
                     delete id;
                     return ECORE_CALLBACK_CANCEL;
                 },
@@ -239,7 +245,11 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                 0.0,
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
-                    {
+                    // FIXME: When elm is shut down, there is an issue where the
+                    // timer that was previously executed is restarted. To
+                    // prevent malfunction, we use the following two if
+                    // statements.
+                    if (id->m_ml) {
                         Locker<Mutex> l(
                             *id->m_ml->m_idlersFromOtherThreadMutex);
                         removeIderFromList(id->m_ml->m_idlersFromOtherThread,
@@ -251,6 +261,7 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                             (size_t)id, id->m_data, id->m_data1);
                     }
 
+                    id->m_ml = nullptr;
                     delete id;
                     return ECORE_CALLBACK_CANCEL;
                 },
@@ -284,6 +295,7 @@ void MessageLoopEFL::removeIdlerWithNoGCRooting(size_t handle)
 
 void MessageLoopEFL::clearPendingIdlers(GlobalScope* globalScope)
 {
+    STARFISH_LOG_INFO("clearPendingIdlers: globalScope[%p]", globalScope);
     STARFISH_ASSERT(isMainThread());
 
     clearMicroTasks(globalScope);
