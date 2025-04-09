@@ -667,7 +667,7 @@ static void executeModule(Document* document,
             if (!data->hasLoadingError) {
                 STARFISH_ASSERT(data->module.hasValue());
                 auto scriptModule = data->module.value();
-                if (!isExcutedModule(scriptModule)) {
+                if (isExecutableModule(scriptModule)) {
                     data->wasSuccessful = executeModule(
                         document->scriptBindingInstance(), scriptModule);
                 }
@@ -694,18 +694,20 @@ static void executeModule(Document* document,
                     true);
                 data->source->markModuleLoadOrErrorEventFired();
             }
-            if (data->promise) {
+            for (auto* promise : data->promiseForDynamicLoadedModule) {
                 notifyDynamicLoadedModuleResult(
                     document->scriptBindingInstance(), data->module.value(),
-                    data->promise.value());
+                    promise);
             }
+            data->promiseForDynamicLoadedModule.clear();
         }
     }
 }
 
 void Document::notifyDomContentLoaded()
 {
-    if (m_deferredScriptElements.size() || m_deferredSVGScriptElements.size()) {
+    if (m_deferredScriptElements.size() || m_deferredSVGScriptElements.size() ||
+        m_pendingDynamicLoadedModules.size()) {
         return;
     }
 
