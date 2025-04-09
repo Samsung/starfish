@@ -537,19 +537,17 @@ public:
         Optional<ScriptModule> module;
         Optional<ResourceURL*> url;
         Optional<HTMLScriptElement*> source;
-        Optional<Promise*> promise;
+        GCVector<Promise*> promiseForDynamicLoadedModule;
         bool fromParser;
         bool hasLoadingError;
         bool wasSuccessful;
 
         ScriptModuleData(Optional<ScriptModule> module,
                          Optional<ResourceURL*> url,
-                         Optional<HTMLScriptElement*> source,
-                         Optional<Promise*> promise, bool fromParser)
+                         Optional<HTMLScriptElement*> source, bool fromParser)
             : module(module)
             , url(url)
             , source(source)
-            , promise(promise)
             , fromParser(fromParser)
             , hasLoadingError(false)
             , wasSuccessful(false)
@@ -786,6 +784,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredSVGScriptElements));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(Document, m_pendingDynamicLoadedModules));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_moduleScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_importMap));
 
@@ -852,6 +852,8 @@ protected:
         m_deferredScriptElements;
     GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
         m_deferredSVGScriptElements;
+    GCVector<std::pair<ResourceURL*, DeferredScriptDownloadClient*>>
+        m_pendingDynamicLoadedModules;
     GCVector<ScriptModuleData*> m_moduleScripts;
     GCVector<ImportMapData*> m_importMap;
 

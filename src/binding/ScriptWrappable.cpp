@@ -177,25 +177,30 @@ public:
     {
         auto loadedModuleResult =
             loadModule(relatedContext, referrer, src, type);
-#if !defined(STARFISH_WEBWORKER_HOST)
-        bool existOnLoadedModuleList = std::get<2>(loadedModuleResult);
-        if (!existOnLoadedModuleList) {
-            fetchScriptBindingInstance(relatedContext)
-                ->dynamicImportedModuleData()
-                .push_back(std::make_tuple(src, referrer, promise, this));
-            HTMLScriptElement::requestDynamicImportedModule(
-                fetchExecutionContext(relatedContext),
-                std::get<1>(loadedModuleResult),
-                new Promise(fetchExecutionContext(relatedContext)
-                                ->scriptBindingInstance(),
-                            promise));
+
+        if (std::get<0>(loadedModuleResult).script.hasValue()) {
+            this->notifyHostImportModuleDynamicallyResult(
+                relatedContext, referrer, src, promise,
+                std::get<0>(loadedModuleResult));
             return;
         }
-#endif
 
+#if !defined(STARFISH_WEBWORKER_HOST)
+        fetchScriptBindingInstance(relatedContext)
+            ->dynamicImportedModuleData()
+            .push_back(std::make_tuple(src, referrer, promise, this));
+
+        HTMLScriptElement::requestDynamicImportedModule(
+            fetchExecutionContext(relatedContext),
+            std::get<1>(loadedModuleResult),
+            new Promise(
+                fetchExecutionContext(relatedContext)->scriptBindingInstance(),
+                promise));
+#else
         this->notifyHostImportModuleDynamicallyResult(
             relatedContext, referrer, src, promise,
             std::get<0>(loadedModuleResult));
+#endif
     }
 
     virtual void markJSJobFromAnotherThreadExists(
@@ -1623,9 +1628,11 @@ bool executeModule(ScriptBindingInstance* instance, ScriptModule module)
     return true;
 }
 
-bool isExcutedModule(ScriptModule module)
+bool isExecutableModule(ScriptModule module)
 {
-    return module->isExecuted();
+    auto ms = module->moduleStatus();
+    return ms < Escargot::ScriptRef::Evaluating &&
+           ms != Escargot::ScriptRef::Instantiating;
 }
 
 static void notifyDynamicLoadedModuleResult(

@@ -116,6 +116,16 @@ public:
 #endif
 };
 
+static ResourceURL* resolveModuleSrcFromImportMap(Document* document,
+                                                  ResourceURL* src)
+{
+    auto resolvedURL = document->resolveModuleSrcFromImportMap(src->string());
+    if (resolvedURL) {
+        return resolvedURL.value();
+    }
+    return src;
+}
+
 class DeferredScriptDownloadClient : public ResourceClient {
 public:
     static void requestDynamicImportedScriptOrItsSubScript(
@@ -123,8 +133,12 @@ public:
         Optional<Promise*> promise)
     {
         auto& moduleScripts = executionContext->document()->moduleScripts();
-        moduleScripts.push_back(new Document::ScriptModuleData(
-            nullptr, targetURL, nullptr, promise, false));
+        moduleScripts.push_back(
+            new Document::ScriptModuleData(nullptr, targetURL, nullptr, false));
+        if (promise) {
+            moduleScripts.back()->promiseForDynamicLoadedModule.push_back(
+                promise.value());
+        }
 
         Document* document = executionContext->document();
         TextResource* res = document->resourceLoader().fetchText(targetURL);
@@ -164,8 +178,33 @@ public:
         , m_document(document)
         , m_element(nullptr)
     {
-        m_document->m_deferredScriptElements.push_back(
-            std::make_pair(nullptr, this));
+        m_document->m_pendingDynamicLoadedModules.push_back(
+            std::make_pair(res->url(), this));
+    }
+
+    void removeThisClientFromDocumentList()
+    {
+        size_t pos = 0;
+        if (m_element) {
+            while (true) {
+                if (m_document->m_deferredScriptElements[pos].second == this) {
+                    break;
+                }
+                pos++;
+            }
+
+            m_document->m_deferredScriptElements.erase(pos);
+        } else {
+            while (true) {
+                if (m_document->m_pendingDynamicLoadedModules[pos].second ==
+                    this) {
+                    break;
+                }
+                pos++;
+            }
+
+            m_document->m_pendingDynamicLoadedModules.erase(pos);
+        }
     }
 
     virtual void didLoadFailed()
@@ -185,27 +224,88 @@ public:
             m_resource->resourceRequest()->responseMimeType());
         m_responseMIMEType = mimeType.stringWithoutParameter();
 
-        auto& deferredScriptElements = m_document->m_deferredScriptElements;
-        while (deferredScriptElements.size() &&
-               deferredScriptElements.begin()->second->m_isLoaded) {
-            auto client = deferredScriptElements.begin()->second;
-            auto s =
-                client->m_responseMIMEType->toASCIILower()->toUTF8NonGCString();
-            if (isJavaScriptType(s.data(), s.length())) {
-                String* text = client->m_resource->asTextResource()->text();
-                if (m_isModule) {
+        if (m_element) {
+            auto& deferredScriptElements = m_document->m_deferredScriptElements;
+            while (deferredScriptElements.size() &&
+                   deferredScriptElements.begin()->second->m_isLoaded) {
+                auto client = deferredScriptElements.begin()->second;
+                auto s = client->m_responseMIMEType->toASCIILower()
+                             ->toUTF8NonGCString();
+                if (isJavaScriptType(s.data(), s.length())) {
+                    String* text = client->m_resource->asTextResource()->text();
+                    if (m_isModule) {
+                        Optional<ScriptModule> module = initModule(
+                            m_document->window()->scriptBindingInstance(), text,
+                            client->resource()->url()->urlString());
+                        auto& moduleScripts = m_document->moduleScripts();
+                        if (module) {
+                            bool fromParser = false;
+                            for (auto* ms : moduleScripts) {
+                                if (ms->url && *ms->url.value() ==
+                                                   *client->resource()->url()) {
+                                    STARFISH_ASSERT(!ms->module.hasValue());
+                                    ms->module = module;
+                                    fromParser = ms->fromParser;
+                                    break;
+                                }
+                            }
+
+                            auto requests = moduleRequests(module.value());
+                            for (size_t i = 0; i < requests.size(); i++) {
+                                String* src = requests[i];
+                                ResourceURL* rurl = new ResourceURL(
+                                    src,
+                                    client->resource()->url()->urlString());
+                                buildScriptResourceRequest(
+                                    m_element.value(), rurl, false, false, true,
+                                    fromParser, false, false);
+                            }
+                        } else {
+                            // parsing error
+                            for (auto* ms : moduleScripts) {
+                                if (ms->url && *ms->url.value() ==
+                                                   *client->resource()->url()) {
+                                    ms->hasLoadingError = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        STARFISH_ASSERT(client->m_element.hasValue());
+                        Document::CurrentScriptManager manager(
+                            client->m_element->document(),
+                            client->m_element.value());
+                        ScriptProfileLogger logger;
+                        evaluateString(
+                            client->m_element->window()
+                                ->scriptBindingInstance(),
+                            text,
+                            ResourceClient::resource()->url()->urlString());
+                    }
+                }
+                deferredScriptElements.erase(deferredScriptElements.begin());
+            }
+        } else {
+            // dynamic loaded script
+            auto& pendingDynamicLoadedModules =
+                m_document->m_pendingDynamicLoadedModules;
+            while (pendingDynamicLoadedModules.size() &&
+                   pendingDynamicLoadedModules.begin()->second->m_isLoaded) {
+                auto client = pendingDynamicLoadedModules.begin()->second;
+                auto s = client->m_responseMIMEType->toASCIILower()
+                             ->toUTF8NonGCString();
+                if (isJavaScriptType(s.data(), s.length())) {
+                    String* text = client->m_resource->asTextResource()->text();
                     Optional<ScriptModule> module = initModule(
                         m_document->window()->scriptBindingInstance(), text,
                         client->resource()->url()->urlString());
                     auto& moduleScripts = m_document->moduleScripts();
                     if (module) {
-                        bool fromParser = false;
                         for (auto* ms : moduleScripts) {
                             if (ms->url && *ms->url.value() ==
                                                *client->resource()->url()) {
                                 STARFISH_ASSERT(!ms->module.hasValue());
                                 ms->module = module;
-                                fromParser = ms->fromParser;
                                 break;
                             }
                         }
@@ -215,33 +315,21 @@ public:
                             String* src = requests[i];
                             ResourceURL* rurl = new ResourceURL(
                                 src, client->resource()->url()->urlString());
-                            if (m_element) {
-                                buildScriptResourceRequest(
-                                    m_element.value(), rurl, false, false, true,
-                                    fromParser, false, false);
-                            } else {
-                                // dynamic loaded script
-                                ResourceURL* targetURL = rurl;
-                                auto resolvedURL =
-                                    m_document->resolveModuleSrcFromImportMap(
-                                        rurl->string());
-                                if (resolvedURL) {
-                                    targetURL = resolvedURL.value();
-                                }
+                            ResourceURL* targetURL =
+                                resolveModuleSrcFromImportMap(m_document, rurl);
 
-                                bool hasURL = false;
-                                for (auto* ms : moduleScripts) {
-                                    if (ms->url && *ms->url.value() == *rurl) {
-                                        // we already have the module.
-                                        hasURL = true;
-                                        break;
-                                    }
+                            bool hasURL = false;
+                            for (auto* ms : moduleScripts) {
+                                if (ms->url && *ms->url.value() == *targetURL) {
+                                    // we already have the module.
+                                    hasURL = true;
+                                    break;
                                 }
-                                if (!hasURL) {
-                                    requestDynamicImportedScriptOrItsSubScript(
-                                        m_document->executionContext(),
-                                        targetURL, nullptr);
-                                }
+                            }
+                            if (!hasURL) {
+                                requestDynamicImportedScriptOrItsSubScript(
+                                    m_document->executionContext(), targetURL,
+                                    nullptr);
                             }
                         }
                     } else {
@@ -254,18 +342,10 @@ public:
                             }
                         }
                     }
-                } else {
-                    STARFISH_ASSERT(client->m_element.hasValue());
-                    Document::CurrentScriptManager manager(
-                        client->m_element->document(),
-                        client->m_element.value());
-                    ScriptProfileLogger logger;
-                    evaluateString(
-                        client->m_element->window()->scriptBindingInstance(),
-                        text, ResourceClient::resource()->url()->urlString());
                 }
+                pendingDynamicLoadedModules.erase(
+                    pendingDynamicLoadedModules.begin());
             }
-            deferredScriptElements.erase(deferredScriptElements.begin());
         }
         didScriptLoaded();
     }
@@ -276,15 +356,7 @@ public:
             m_element->m_didScriptExecuted = true;
         }
         if (!m_successToLoad) {
-            size_t pos = 0;
-            while (true) {
-                if (m_document->m_deferredScriptElements[pos].second == this) {
-                    break;
-                }
-                pos++;
-            }
-
-            m_document->m_deferredScriptElements.erase(pos);
+            removeThisClientFromDocumentList();
 
             auto& moduleScripts = m_document->moduleScripts();
             for (auto* ms : moduleScripts) {
@@ -293,10 +365,12 @@ public:
 
                     // dynamic loaded script
                     if (!m_element) {
-                        m_document->executionContext();
-                        notifyDynamicLoadedModuleError(
-                            m_document->scriptBindingInstance(),
-                            ms->promise.value());
+                        for (auto* promise :
+                             ms->promiseForDynamicLoadedModule) {
+                            notifyDynamicLoadedModuleError(
+                                m_document->scriptBindingInstance(), promise);
+                        }
+                        ms->promiseForDynamicLoadedModule.clear();
                     }
 
                     break;
@@ -404,14 +478,9 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
             }
         }
 
-        auto resolvedURL =
-            element->document()->resolveModuleSrcFromImportMap(rurl->string());
-        if (resolvedURL) {
-            targetURL = resolvedURL.value();
-        }
-
+        targetURL = resolveModuleSrcFromImportMap(element->document(), rurl);
         moduleScripts.push_back(new Document::ScriptModuleData(
-            nullptr, targetURL, element, nullptr, fromParser));
+            nullptr, targetURL, element, fromParser));
     }
 
     String* charset = element
@@ -668,8 +737,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     initModule(window()->scriptBindingInstance(), script);
                 if (module) {
                     document()->moduleScripts().push_back(
-                        new Document::ScriptModuleData(
-                            module.value(), nullptr, this, nullptr, inParser));
+                        new Document::ScriptModuleData(module.value(), nullptr,
+                                                       this, inParser));
 
                     auto requests = moduleRequests(module.value());
                     for (size_t i = 0; i < requests.size(); i++) {
@@ -1028,14 +1097,13 @@ void HTMLScriptElement::requestDynamicImportedModule(
     Promise* promise)
 {
     auto& moduleScripts = executionContext->document()->moduleScripts();
-#if !defined(NDEBUG)
     for (auto* ms : moduleScripts) {
         if (ms->url && *ms->url.value() == *targetURL) {
             // we already have the module.
-            STARFISH_ASSERT_NOT_REACHED();
+            ms->promiseForDynamicLoadedModule.push_back(promise);
+            return;
         }
     }
-#endif
 
     DeferredScriptDownloadClient::requestDynamicImportedScriptOrItsSubScript(
         executionContext, targetURL, promise);

@@ -236,7 +236,7 @@ Optional<ScriptModule> initModule(ScriptBindingInstance* instance,
                                   String* fileName = String::emptyString);
 GCVector<String*> moduleRequests(ScriptModule module);
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module);
-bool isExcutedModule(ScriptModule module);
+bool isExecutableModule(ScriptModule module);
 void notifyDynamicLoadedModuleResult(ScriptBindingInstance* instance,
                                      ScriptModule module, Promise* promise);
 void notifyDynamicLoadedModuleError(ScriptBindingInstance* instance,
