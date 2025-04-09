@@ -690,6 +690,29 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         }
     }
 
+    // remove `../` from url if possible
+    size_t dotdotSlashPos;
+    while ((dotdotSlashPos = url->rfind("../", 3, url->length())) != SIZE_MAX) {
+        int64_t newLength = static_cast<int64_t>(url->length()) -
+                            static_cast<int64_t>(dotdotSlashPos) - 3;
+        if (newLength < 0) {
+            break;
+        }
+        size_t slashPos = url->rfind("/", 1, dotdotSlashPos - 2);
+        while (dotdotSlashPos > 3 &&
+               url->rfind("../", 3, dotdotSlashPos - 1) == dotdotSlashPos - 3) {
+            dotdotSlashPos -= 3;
+            slashPos = url->rfind("/", 1, dotdotSlashPos - 2);
+        }
+        if (slashPos == SIZE_MAX) {
+            break;
+        }
+        StringBuilder sb;
+        sb.appendSubString(url, 0, slashPos + 1);
+        sb.appendSubString(url, dotdotSlashPos + 3, url->length());
+        url = sb.finalize();
+    }
+
     m_urlString = url;
     if (m_urlString->isStringView()) {
         m_urlString = String::fromStringView(m_urlString);
