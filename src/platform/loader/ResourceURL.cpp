@@ -138,7 +138,11 @@ String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
         if (!urlEncoded) {
             // https://tools.ietf.org/html/rfc3629#section-3
             if (ch32 <= 0x007F) {
-                toHexAndAppend(encoded, ch32);
+                if (ch32 == '\\') {
+                    encoded.appendChar('/');
+                } else {
+                    toHexAndAppend(encoded, ch32);
+                }
             } else if (0x0080 <= ch32 && ch32 <= 0x07FF) {
                 toHexAndAppend(encoded, 0x00C0 + (ch32 & 0x07C0) / 0x0040);
                 toHexAndAppend(encoded, 0x0080 + (ch32 & 0x003F));
