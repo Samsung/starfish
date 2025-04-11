@@ -209,7 +209,7 @@ public:
             STARFISH_LOG_WARN(
                 "Refused to display in iframe according to X-Frame-Options");
         }
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
         auto request = m_resource->resourceRequest();
         if (request->isRedirected()) {
             auto csp = browsingContext->document()->contentSecurityPolicy();

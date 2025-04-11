@@ -25,6 +25,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/page/HashChangeEvent.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -144,6 +145,7 @@ void Location::setSearch(String* search)
 
 void Location::setHash(String* search)
 {
+    ResourceURL* oldUrl = document()->documentURI();
     ResourceURL* newUrl = url()->setHash(search);
     document()->setDocumentURI(newUrl);
     String* str = newUrl->hash();
@@ -153,6 +155,16 @@ void Location::setHash(String* search)
         if (e) {
             e->scrollIntoView();
         }
+    }
+
+    if (*oldUrl != *newUrl) {
+        String* eventName = String::createASCIIStringWithNoCopy("hashchange");
+        HashChangeEventInit init;
+        init.setOldURL(oldUrl->urlString());
+        init.setNewURL(newUrl->urlString());
+        HashChangeEvent* e = new HashChangeEvent(document()->executionContext(),
+                                                 eventName, init);
+        window()->dispatchEventByUA(e);
     }
 }
 

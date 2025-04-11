@@ -42,6 +42,7 @@
 #include "core/dom/FocusEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
+#include "core/page/HashChangeEvent.h"
 #include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -2188,9 +2189,7 @@ Event* Document::createEvent(String* type)
         break;
     case 15:
         if (type->equals("hashchangeevent")) {
-            STARFISH_UNSUPPORTED("HashChangeEvent is unsupported(%s)",
-                                 __PRETTY_FUNCTION__);
-            e = new Event(executionContext());
+            e = new HashChangeEvent(executionContext());
         } else if (type->equals("transitionevent")) {
             STARFISH_UNSUPPORTED("TransitionEvent is unsupported(%s)",
                                  __PRETTY_FUNCTION__);

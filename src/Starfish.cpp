@@ -137,7 +137,7 @@ void Starfish::destroy()
     STARFISH_LOG_INFO("Starfish::destroy");
     NetworkSharedResourceManager::destroy();
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
     LWE::CookieManager::Destroy();
 #endif
 
@@ -252,7 +252,7 @@ void Starfish::printEveryReachableGCObjects()
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
             STARFISH_LOG_ERROR("@@@ kind %d pointer %p", (int)kind, ptr);
 #if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID) && \
-                         !defined(STARFISH_WEBWORKER_HOST))
+                         defined(STARFISH_WEBWORKER_NOT_HOST))
             GC_print_backtrace(ptr);
 #endif
         },

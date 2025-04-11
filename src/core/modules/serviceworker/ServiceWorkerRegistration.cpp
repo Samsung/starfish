@@ -90,7 +90,7 @@ void ServiceWorkerRegistration::updateRegistrationState(
     case ServiceWorkerRegistrationState::Active:
         m_activeWorker = serviceWorker;
         //  Start fetch event task
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
         handleTaskSource(m_data->scope);
 #endif
         break;
@@ -177,7 +177,7 @@ Promise* ServiceWorkerRegistration::showNotification(
 
 #endif // defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
 {
     auto swProcessManager = ServiceWorkerProcessManager::instance();
@@ -191,7 +191,7 @@ void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
     }
 }
 
-#endif // #if !defined(STARFISH_WEBWORKER_HOST)
+#endif // #if defined(STARFISH_WEBWORKER_NOT_HOST)
 } // namespace Starfish
 
 #endif

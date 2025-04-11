@@ -48,7 +48,7 @@
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #endif
@@ -274,7 +274,8 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
         [](size_t handle, void* data) {
             TRACE_SCOPE(SVCWORKER);
             ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
                     job->data()->scopeURL);
@@ -440,7 +441,8 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
             TRACE_SCOPE(SVCWORKER);
             auto swrequest = castTo<ServiceWorkerRequest*>(data1);
             auto urlString = castTo<String*>(data2);
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
                     swrequest->scope);

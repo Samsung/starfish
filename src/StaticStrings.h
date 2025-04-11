@@ -713,6 +713,7 @@ public:
     QualifiedName m_onbegin;
     QualifiedName m_onend;
     QualifiedName m_onrepeat;
+    QualifiedName m_hashchange;
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)

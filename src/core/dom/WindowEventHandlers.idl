@@ -6,7 +6,7 @@ interface WindowEventHandlers {
   [Unimplemented] attribute EventHandler onafterprint;
   [Unimplemented] attribute EventHandler onbeforeprint;
   [Unimplemented] attribute OnBeforeUnloadEventHandler onbeforeunload;
-  [Unimplemented] attribute EventHandler onhashchange;
+  [STARFISH_WEBWORKER_NOT_HOST] attribute EventHandler onhashchange;
   [Unimplemented] attribute EventHandler onlanguagechange;
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;

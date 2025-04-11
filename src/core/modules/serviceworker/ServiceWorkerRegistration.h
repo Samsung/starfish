@@ -80,7 +80,7 @@ private:
     ServiceWorkerRegistrationData* m_data;
     ServiceWorkerJobClientInterface* m_jobClient;
     PushManager* m_pushManager;
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
     void handleTaskSource(String* scopeURL);
 #endif
 };

@@ -129,7 +129,8 @@ private:
     void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
 
     ResourceRequest* m_orgProxy;
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
     ServiceWorkerFetchTask* m_serviceWorkerFetchTask;
 #endif
 };

@@ -1,0 +1,18 @@
+// https://dontcallmedom.github.io/webidlpedia/names/HashChangeEvent.html
+[
+ Constructor(DOMString type, optional HashChangeEventInit eventInitDict),
+ ConstructorCallWith=ExecutionContext,
+ Exposed=(Window)
+] interface HashChangeEvent : Event {
+  // Use starfish's ExtendedAttributes 'Constructor' instead of 'constructor' in idl.
+  // Also the binding generator can't handle 'optional HashChangeEventInit eventInitDict = {}'
+  // constructor(DOMString type, optional HashChangeEventInit eventInitDict = {});
+
+  readonly attribute USVString oldURL;
+  readonly attribute USVString newURL;
+};
+
+dictionary HashChangeEventInit : EventInit {
+  USVString oldURL = "";
+  USVString newURL = "";
+};

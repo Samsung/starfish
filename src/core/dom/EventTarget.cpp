@@ -310,7 +310,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     EventTarget* activationTarget = nullptr;
     GCVector<EventTarget*> eventPath;
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
     // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
     // Let isActivationEvent be true, if event is a MouseEvent object and
     // event’s type attribute is "click", and false otherwise.
@@ -345,7 +345,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     }
 #else
     eventPath.push_back(origin);
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
+#endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
 
     // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
     // 1) Path : highest ancestor -> origin
@@ -449,7 +449,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             }
         }
     }
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
     if (event->defaultPrevented()) {
         if (event->type()->equals("keydown")) {
             executionContext()
@@ -464,7 +464,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 ->setCompositionStartEventDefeaultPrevented(true);
         }
     }
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
+#endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
     // dispatch default event
     if (!event->defaultPrevented()) {
         for (size_t i = 0; i < eventPath.size(); i++) {

@@ -24,7 +24,7 @@
 #include "core/page/WebBase.h"
 #include "core/modules/profiling/Profiling.h"
 
-#if defined(STARFISH_ENABLE_TEST) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_WEBWORKER_NOT_HOST)
 void starfishRecordTestFailure();
 #endif
 
@@ -181,7 +181,7 @@ void Console::assertion(bool condition, Optional<String*> data)
                          ? data.value()
                          : AtomicString::createAtomicString(
                                m_webBase->starfish(), "console.assert"));
-#if defined(STARFISH_ENABLE_TEST) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_WEBWORKER_NOT_HOST)
         starfishRecordTestFailure();
 #endif
     } else {

@@ -727,6 +727,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "onend"));
     m_onrepeat =
         QualifiedName(AtomicString::createAtomicString(starfish, "onrepeat"));
+    m_hashchange =
+        QualifiedName(AtomicString::createAtomicString(starfish, "hashchange"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)

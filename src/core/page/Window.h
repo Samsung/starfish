@@ -378,7 +378,9 @@ public:
     // DECLARE_EVENT_LISTENER(afterprint);
     // DECLARE_EVENT_LISTENER(beforeprint);
     // DECLARE_EVENT_LISTENER(beforeunload);
-    // DECLARE_EVENT_LISTENER(hashchange);
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
+    DECLARE_EVENT_LISTENER(hashchange);
+#endif
     // DECLARE_EVENT_LISTENER(languagechange);
     DECLARE_EVENT_LISTENER(message);
     DECLARE_EVENT_LISTENER(messageerror);

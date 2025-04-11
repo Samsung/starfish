@@ -107,7 +107,7 @@ public:
 
         ResourceURL* src;
         Optional<ResourceURL*> importMapResolvedURL;
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
         importMapResolvedURL =
             executionContext->document()->resolveModuleSrcFromImportMap(
                 srcString);
@@ -185,7 +185,7 @@ public:
             return;
         }
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
         fetchScriptBindingInstance(relatedContext)
             ->dynamicImportedModuleData()
             .push_back(std::make_tuple(src, referrer, promise, this));
@@ -553,7 +553,7 @@ ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
     return fetchExecutionContext(ctx)->scriptBindingInstance();
 }
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 WebView* fetchWebView(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
@@ -584,7 +584,7 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
 
-#endif // !defined(STARFISH_WEBWORKER_HOST)
+#endif // defined(STARFISH_WEBWORKER_NOT_HOST)
 
 class EscargotStringView : public String {
 public:
