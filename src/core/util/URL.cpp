@@ -76,7 +76,7 @@ void URL::revokeObjectURL(ExecutionContext* executionContext,
         if (webBase->isValidBlobURL(store)) {
             webBase->removeBlobFromBlobURLStore((Blob*)store.m_blob);
         }
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_WEBWORKER_NOT_HOST)
         else {
             WebView* webView = webBase->asWebView();
             if (webView->isValidMediaSourceBlobURL(store)) {

@@ -71,4 +71,8 @@
 #define PORT_CANVAS_NEEDS_PREMULTIPLIED_ALPHA
 #endif
 
+#if !defined(STARFISH_WEBWORKER_HOST)
+#define STARFISH_WEBWORKER_NOT_HOST
+#endif
+
 #endif

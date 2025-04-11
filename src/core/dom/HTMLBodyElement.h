@@ -54,7 +54,7 @@ public:
     // DECLARE_EVENT_LISTENER(afterprint);
     // DECLARE_EVENT_LISTENER(beforeprint);
     // DECLARE_EVENT_LISTENER(beforeunload);
-    // DECLARE_EVENT_LISTENER(hashchange);
+    DECLARE_EVENT_LISTENER(hashchange);
     // DECLARE_EVENT_LISTENER(languagechange);
     DECLARE_EVENT_LISTENER(message);
     DECLARE_EVENT_LISTENER(messageerror);

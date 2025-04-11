@@ -891,6 +891,9 @@ DEFINE_EVENT_LISTENER(Window, pause);
 DEFINE_EVENT_LISTENER(Window, ratechange);
 DEFINE_EVENT_LISTENER(Window, volumechange);
 #endif
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
+DEFINE_EVENT_LISTENER(Window, hashchange);
+#endif
 
 CSSStyleDeclaration* Window::getComputedStyle(Element* element)
 {

@@ -39,6 +39,7 @@ DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, resize);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, message);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, messageerror);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
+DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, hashchange);
 
 void HTMLBodyElement::didComputedStyleChanged(
     ComputedStyle* oldStyle, ComputedStyle* newStyle,

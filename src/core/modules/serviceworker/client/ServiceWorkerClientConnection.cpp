@@ -529,7 +529,7 @@ ServiceWorkerClientConnection::findServiceWorkerContainer(
     TRACE_SCOPE(CLIENT);
     auto swpm = ServiceWorkerProcessManager::instance();
     auto globalScope = swpm->findGlobalScope(id);
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
     if (globalScope != nullptr) {
         auto executionContext = globalScope->executionContext();
         if ((executionContext != nullptr) && executionContext->hasDocument()) {

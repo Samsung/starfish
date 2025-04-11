@@ -52,7 +52,8 @@
 #define STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS 5000
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
 #include "core/modules/serviceworker/client/ServiceWorkerFetchTask.h"
 #endif
 
@@ -376,7 +377,8 @@ void AsyncNetworkWorkHelper::abortHandlerWrapper(NetworkURLWorkerData* nwd)
 NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
     ResourceRequest* proxy)
     : m_orgProxy(proxy)
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
     , m_serviceWorkerFetchTask(new ServiceWorkerFetchTask(proxy))
 #endif
 {
@@ -386,7 +388,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(m_orgProxy->url()->isHTTPFamilyURL());
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    defined(STARFISH_WEBWORKER_NOT_HOST)
     if (m_serviceWorkerFetchTask->request(body)) {
         return;
     }

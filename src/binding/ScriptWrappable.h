@@ -159,7 +159,7 @@ WebBase* fetchWebBase(Escargot::ContextRef* context);
 ScriptBindingInstance* fetchScriptBindingInstance(
     Escargot::ContextRef* context);
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 WebView* fetchWebView(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);

@@ -39,7 +39,7 @@
 #include "platform/loader/ResourceLoader.h"
 #include "core/modules/worker/WorkerDummyClass.h"
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 #include "core/dom/Document.h"
 #include "core/dom/DOMParser.h"
 #include "core/dom/xml/XMLSerializer.h"
