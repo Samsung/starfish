@@ -839,3 +839,4 @@ test/cairo/internal-test/form/input-checkbox-click.html
 test/cairo/internal-test/fe-framework-test/react-19-1-releasebuild/index.html
 #test/cairo/internal-test/fe-framework-test/react-19-1-w-babel/index.html
 test/cairo/internal-test/fe-framework-test/angular-v19-app-dist/index.html
+test/cairo/internal-test/fe-framework-test/vue-3-2-todo-dist/index.html
