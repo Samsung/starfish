@@ -822,6 +822,12 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
     }
 }
 
+void LayoutContext::clearRegisteredAbsolutePositionedBoxes(
+    FrameBlockBox* containingBlock)
+{
+    m_absolutePositionedBoxes.erase(containingBlock);
+}
+
 void LayoutContext::addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf)
 {
     FrameBlockBox* cb = containingFrameBlockBox(box);
