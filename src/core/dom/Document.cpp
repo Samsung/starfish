@@ -1932,8 +1932,18 @@ Element* Document::activeElement()
 
 bool Document::hasFocus() const
 {
-    STARFISH_UNSUPPORTED_METHOD();
-    return true;
+    if (browsingContext()->focusedNode()) {
+        return true;
+    }
+
+    bool hasFocus = false;
+    if (!browsingContext()->focusedNode()) {
+        browsingContext()->iterateChildContext(
+            [&hasFocus](BrowsingContext* ctx) {
+                hasFocus |= ctx->document()->hasFocus();
+            });
+    }
+    return hasFocus;
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#designMode
