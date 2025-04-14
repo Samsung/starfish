@@ -554,6 +554,11 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 
             if (child->needToEstablishKindsOfFormattingContext()) {
                 child->layout(ctx, ResolveAll);
+                if (child->isFrameBlockBox()) {
+                    // clear remaining abs-postioned boxes
+                    ctx.clearRegisteredAbsolutePositionedBoxes(
+                        child->asFrameBlockBox());
+                }
             } else {
                 child->quickLayout(ctx);
             }

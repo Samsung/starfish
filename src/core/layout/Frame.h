@@ -458,6 +458,8 @@ public:
     void layoutRegisteredAbsolutePositionedBoxes(
         FrameBlockBox* containingBlock);
 
+    void clearRegisteredAbsolutePositionedBoxes(FrameBlockBox* containingBlock);
+
     void addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf);
 
     void layoutRegisteredRelativePositionedBoxes(
