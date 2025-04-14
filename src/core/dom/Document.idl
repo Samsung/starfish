@@ -106,7 +106,7 @@ interface Document : Node {
   // user interaction
   [Custom=Getter] readonly attribute WindowProxy? defaultView;
   readonly attribute Element? activeElement;
-  [Unimplemented] boolean hasFocus();
+  boolean hasFocus();
   [CEReactions] attribute DOMString designMode;
   [Unimplemented, CEReactions] boolean execCommand(DOMString commandId, optional boolean showUI = false, optional DOMString value = "");
   [Unimplemented] boolean queryCommandEnabled(DOMString commandId);
