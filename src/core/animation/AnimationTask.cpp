@@ -638,11 +638,13 @@ void ActiveTransformAnimationTask::removePercentValuesFromTransform()
 
 void ActiveTransformAnimationTask::resolveTransformValues()
 {
+    Frame* frm = m_targetElement->frame();
+    if (!frm) {
+        return;
+    }
     m_shouldUseDecompositing =
         needsDecompositing(currentAnimatedFromValue()->getTransformData(),
                            currentAnimatedToValue()->getTransformData());
-
-    Frame* frm = m_targetElement->frame();
 
     StyleTransformDataGroup* fromTransfromStyle =
         currentAnimatedFromValue()->getTransformData();
