@@ -467,7 +467,6 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             }
 
             // animation property gone || other properties changed
-            bool toAnimationHasGone = false;
             if (!shouldRemove &&
                 task->animationType() == AnimationType::KeyFramesAnimation) {
                 if (context.m_toStyle->animation()) {
@@ -508,7 +507,6 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     }
                 } else {
                     shouldRemove = true;
-                    toAnimationHasGone = true;
                 }
             }
 
@@ -528,9 +526,11 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                 // FIXME
                 // TODO: What is FIXME for?
                 task->detachFromElement();
+                bool animationPropetyHasGone =
+                    !isSVGAnimation && !context.m_toStyle->animation();
 
                 if (task->fillMode() != AnimationFillModeValue::Forwards ||
-                    toAnimationHasGone) {
+                    animationPropetyHasGone) {
                     animationTasks.erase(i);
                     i--;
                 } else {

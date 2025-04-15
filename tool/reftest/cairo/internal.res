@@ -523,6 +523,7 @@ test/cairo/internal-test/animation/a36.html
 test/cairo/internal-test/animation/animation_cancel_01.html
 test/cairo/internal-test/animation/animation_event_borderWidth.html
 test/cairo/internal-test/animation/animation_event.html
+test/cairo/internal-test/animation/animation_forwards_remove.html
 test/cairo/internal-test/animation/animation_svg_rx_ry.html
 test/cairo/internal-test/animation/animation_svg_cx_cy.html
 test/cairo/internal-test/animation/animation_transform-origin.html
