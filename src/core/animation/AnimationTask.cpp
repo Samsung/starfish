@@ -351,6 +351,18 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
     return m_timingFunctions[m_frameIdx];
 }
 
+bool ActiveAnimationTask::needsContinuousRendering()
+{
+    bool b = !!m_targetElement->frame();
+    if (b) {
+        return true;
+    }
+
+    // TODO <Introduce new ActiveTasks for SVGAnimatedXX values if needs>
+    // check SVGAnimatedValue are referenced by JS
+    return false;
+}
+
 double ActiveAnimationTask::computeProgress(double& fraction)
 {
     STARFISH_ASSERT(fraction >= 0.0);

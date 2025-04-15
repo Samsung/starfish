@@ -46,6 +46,7 @@
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
 bool g_forceRendering = false;
+int32_t g_renderingCount;
 #endif
 
 namespace Starfish {
@@ -442,6 +443,9 @@ void Renderer::setNeedsRendering()
 
 RenderResult Renderer::rendering()
 {
+#ifdef STARFISH_ENABLE_TEST
+    g_renderingCount++;
+#endif
     if (UNLIKELY(!canRendering())) {
         return RenderResult();
     }

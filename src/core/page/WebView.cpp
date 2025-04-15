@@ -1871,9 +1871,12 @@ RenderResult WebView::rendering(bool force)
                         if (animation.first->playState() ==
                             AnimationPlayStateValue::Running) {
                             if (!task->isInForwardsFillMode()) {
-                                task->targetElement()
-                                    ->setNeedsStyleRecalcForAnimation();
-                                needsContinuousRendering = true;
+                                bool b = task->needsContinuousRendering();
+                                if (b) {
+                                    task->targetElement()
+                                        ->setNeedsStyleRecalcForAnimation();
+                                    needsContinuousRendering = true;
+                                }
                             }
 
                             if (task->playState() ==

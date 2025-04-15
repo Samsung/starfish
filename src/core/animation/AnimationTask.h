@@ -270,6 +270,8 @@ public:
         return m_values;
     }
 
+    bool needsContinuousRendering();
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
