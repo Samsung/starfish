@@ -40,7 +40,7 @@
 using namespace Escargot;
 
 #ifdef STARFISH_ENABLE_TEST
-
+extern int32_t g_renderingCount;
 static bool g_gotFailure = false;
 void starfishRecordTestFailure()
 {
@@ -411,6 +411,13 @@ static ValueRef* isPixelTestFunction(ExecutionStateRef* state,
     } else {
         return ValueRef::create(false);
     }
+}
+
+static ValueRef* renderingCountFunction(ExecutionStateRef* state,
+                                        ValueRef* thisValue, size_t argc,
+                                        ValueRef** argv, bool isNewExpression)
+{
+    return ValueRef::create(g_renderingCount);
 }
 
 static void screenShotTimeoutHandler(void* data)
@@ -790,6 +797,7 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
             DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
             DEFINE_TEST_FUNCTION(isPixelTest, 0);
+            DEFINE_TEST_FUNCTION(renderingCount, 0);
             DEFINE_TEST_FUNCTION(screenShot, 2);
             DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
             DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
