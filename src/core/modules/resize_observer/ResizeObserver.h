@@ -82,7 +82,7 @@ private:
 
 struct ResizeObserverRegistration : public gc {
     ResizeObserver* observer = nullptr;
-    Unit::Rect previousSizeRect = { 0, 0, 0, 0 };
+    LayoutSize previousSize = { LayoutUnit::min(), LayoutUnit::min() };
 };
 
 } // namespace Starfish

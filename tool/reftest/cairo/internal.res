@@ -805,6 +805,7 @@ test/cairo/internal-test/event/pointerevent_constructor.html
 test/cairo/internal-test/event/mouse_enter_leave_event_order.html
 test/cairo/internal-test/dom/DOMRect01.html
 test/cairo/internal-test/resize-observer/observe.html
+test/cairo/internal-test/resize-observer/observe2.html
 test/cairo/internal-test/resize-observer/notify.html
 test/cairo/internal-test/fetch/readablestreamdefaultreader_read.html
 test/cairo/internal-test/intl/hangle_NFD_to_NFC.html

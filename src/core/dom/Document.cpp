@@ -2539,25 +2539,29 @@ void Document::updateResizeObservation()
     GCVector<ResizeObserver*> observersToNotify;
     for (auto* observer : m_resizeObservers) {
         for (auto* target : observer->targets()) {
-            Unit::Rect currentRect = { 0, 0, 0, 0 };
-            DOMRect* targetBoundingClientRect = target->getBoundingClientRect();
-            currentRect.setWidth(targetBoundingClientRect->width());
-            currentRect.setHeight(targetBoundingClientRect->height());
+            LayoutSize currentSize;
+            if (target->frame() && target->frame()->isFrameBox()) {
+                currentSize =
+                    LayoutSize(target->frame()->asFrameBox()->contentWidth(),
+                               target->frame()->asFrameBox()->contentHeight());
+            }
             ResizeObserverRegistration* registration =
                 target->findResizeObserverRegistration(observer);
 
             bool isResizeRectChanged =
-                registration->previousSizeRect != currentRect;
+                registration->previousSize != currentSize;
             if (isResizeRectChanged) {
+                DOMRect* targetBoundingClientRect =
+                    target->getBoundingClientRect();
                 ResizeObserverEntry* entry = new ResizeObserverEntry(
                     executionContext(),
                     new DOMRectReadOnly(executionContext(), 0, 0,
-                                        currentRect.width(),
-                                        currentRect.height()),
+                                        currentSize.width().toFloat(),
+                                        currentSize.height().toFloat()),
                     target);
                 observer->queueResizeObserverEntry(entry);
             }
-            registration->previousSizeRect = currentRect;
+            registration->previousSize = currentSize;
         }
 
         if (observer->hasRecords()) {
