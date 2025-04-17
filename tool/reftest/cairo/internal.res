@@ -817,6 +817,7 @@ test/cairo/internal-test/mutation-observer/observe_attribute_subtree_true.html
 test/cairo/internal-test/mutation-observer/observe_attribute_with_inline-style.html
 test/cairo/internal-test/mutation-observer/observe_attribute.html
 test/cairo/internal-test/mutation-observer/observe_throw_errors.html
+test/cairo/internal-test/scripting/execution_order/microTask_with_promise.html
 test/cairo/internal-test/scripting/module/test1.html
 test/cairo/internal-test/scripting/module/test2.html
 test/cairo/internal-test/scripting/module/test3.html
