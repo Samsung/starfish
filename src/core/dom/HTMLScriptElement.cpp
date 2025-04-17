@@ -688,7 +688,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
     }
 
     ScriptExecutionScope scope;
-    if (!scope.isExecutingScript() && document()) {
+    if (!scope.isExecutingScript() && document() && inParser) {
         executionContext()
             ->globalScope()
             ->webBase()
