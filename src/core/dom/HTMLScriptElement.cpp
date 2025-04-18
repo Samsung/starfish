@@ -231,9 +231,10 @@ public:
                 auto client = deferredScriptElements.begin()->second;
                 auto s = client->m_responseMIMEType->toASCIILower()
                              ->toUTF8NonGCString();
+                bool isModule = client->m_isModule;
                 if (isJavaScriptType(s.data(), s.length())) {
                     String* text = client->m_resource->asTextResource()->text();
-                    if (m_isModule) {
+                    if (isModule) {
                         Optional<ScriptModule> module = initModule(
                             m_document->window()->scriptBindingInstance(), text,
                             client->resource()->url()->urlString());
@@ -688,7 +689,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
     }
 
     ScriptExecutionScope scope;
-    if (!scope.isExecutingScript() && document() && inParser) {
+    if (!scope.isExecutingScript() && inParser) {
         executionContext()
             ->globalScope()
             ->webBase()

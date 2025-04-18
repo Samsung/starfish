@@ -153,9 +153,11 @@ void MessageLoop::removeMicroTask(size_t handle)
 
 void MessageLoop::invokeMicroTasksIfExist()
 {
-    auto tasks(std::move(m_microTasks));
-    for (size_t i = 0; i < tasks.size(); i++) {
-        tasks[i].m_callback(tasks[i].m_id, tasks[i].m_data);
+    while (m_microTasks.size()) {
+        auto tasks(std::move(m_microTasks));
+        for (size_t i = 0; i < tasks.size(); i++) {
+            tasks[i].m_callback(tasks[i].m_id, tasks[i].m_data);
+        }
     }
 }
 
