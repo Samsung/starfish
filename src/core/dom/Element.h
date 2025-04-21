@@ -430,6 +430,7 @@ public:
     bool tabIndexSetExplicitly() const;
 
     /* Element-level focus APIs */
+    // https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
     virtual void focus();
     virtual void blur();
 

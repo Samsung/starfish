@@ -2291,10 +2291,20 @@ bool Element::tabIndexSetExplicitly() const
     return m_tabIndexWasSetExplicitly;
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
 void Element::focus()
 {
-    // TODO: Consider nested browsing contexts.
+    // TODO If the allow focus steps given this's node document return false,
+    // then return. Run the focusing steps for this.
     window()->browsingContext()->setFocusedNode(this, false);
+    // TODO If options["focusVisible"] is true, or does not exist but in an
+    // implementation-defined way the user agent determines it would be best to
+    // do so, then indicate focus.
+    // TODO If options["preventScroll"] is false, then scroll a target into view
+    // given this, "auto", "center", and "center".
+    scrollIntoView(ScrollIntoViewOptions(ScrollOptions::ScrollBehavior::Auto,
+                                         ScrollLogicalPosition::Center,
+                                         ScrollLogicalPosition::Center));
 }
 
 void Element::blur()
