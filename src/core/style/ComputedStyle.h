@@ -61,7 +61,8 @@ enum ComputedStyleDamage {
     ComputedStyleDamageEstablishesStackingContext = 1 << 3,
     ComputedStyleDamageComputeStackingContextProperties = 1 << 4,
     ComputedStyleDamagePainting = 1 << 5,
-    ComputedStyleDamageComposite = 1 << 6
+    ComputedStyleDamageComposite = 1 << 6,
+    ComputedStyleDamageAnimation = 1 << 7
 };
 
 union FontFamilyData {

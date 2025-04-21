@@ -2194,7 +2194,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     } else if (!oldAnimation || !newAnimation) {
         damagedKeys[CSSStyleValuePair::KeyKind::Animation] = true;
         damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+            ComputedStyleDamage::ComputedStyleDamageAnimation | damage);
     }
 
     String* oldAnimationName = oldStyle->hasRareComputeStyleData()
@@ -2206,7 +2206,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (!oldAnimationName->equals(newAnimationName)) {
         damagedKeys[CSSStyleValuePair::KeyKind::AnimationName] = true;
         damage = static_cast<ComputedStyleDamage>(
-            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+            ComputedStyleDamage::ComputedStyleDamageAnimation | damage);
     }
 
     if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
