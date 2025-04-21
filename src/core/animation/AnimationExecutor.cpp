@@ -599,7 +599,8 @@ void AnimationExecutor::addNewActiveAnimationsIfNeeds(ExecutionContext& context)
         return;
     }
 
-    if (context.m_damage == ComputedStyleDamage::ComputedStyleDamageNone) {
+    if (!(context.m_damage &
+          ComputedStyleDamage::ComputedStyleDamageAnimation)) {
         return;
     }
 

@@ -9250,6 +9250,24 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     context.end();
 }
 
+static ComputedStyleDamage DamageComputedStyleDamageForBeginAnimation(
+    Element* element, ComputedStyle* style)
+{
+    if (!element->style() || !element->frame()) {
+        // `!element->style()` usually means that the first style resolve for
+        // that element.
+        // `!element->frame()` usually means that element that was not
+        // displayed will be displayed again at this time.
+
+        if (style->animation()) {
+            // In these cases the css animation should be able to begin.
+            element->clearDidPrepareAnimation();
+            return ComputedStyleDamage::ComputedStyleDamageAnimation;
+        }
+    }
+    return ComputedStyleDamage::ComputedStyleDamageNone;
+}
+
 static ComputedStyleDamage applyStyleToElement(Element* element,
                                                ComputedStyle* style,
                                                StyleResolveContext& ctx)
@@ -9292,6 +9310,8 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
             element->clearDidPrepareAnimation();
         }
     }
+    damage = (ComputedStyleDamage)(
+        damage | DamageComputedStyleDamageForBeginAnimation(element, style));
 
     ComputedStyle* oldStyle = element->style();
     Frame* oldFrame = element->frame();
