@@ -4,8 +4,7 @@ interface SVGElement : Element {
   [CEReactions, RaisesException] attribute DOMString xmlbase;
   readonly attribute SVGElement? ownerSVGElement;
   readonly attribute SVGElement? viewportElement;
-
-  attribute long tabIndex;
 };
 
 SVGElement implements ElementCSSInlineStyle;
+SVGElement implements HTMLOrSVGElement;

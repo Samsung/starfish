@@ -1,0 +1,5 @@
+// https://html.spec.whatwg.org/multipage/interaction.html#focus-management-apis
+dictionary FocusOptions {
+  boolean preventScroll = false;
+  boolean focusVisible;
+};

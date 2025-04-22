@@ -1,0 +1,13 @@
+// https://html.spec.whatwg.org/multipage/dom.html#htmlorsvgelement
+// mixin
+[PartialInterface,
+ NoInterfaceObject]
+interface HTMLOrSVGElement {
+  [SameObject] readonly attribute DOMStringMap dataset;
+  [Unimplemented] attribute DOMString nonce; // intentionally no [CEReactions]
+
+  [Unimplemented, CEReactions] attribute boolean autofocus;
+  [CEReactions] attribute long tabIndex;
+  void focus(optional FocusOptions options);
+  void blur();
+};
