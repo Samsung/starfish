@@ -24,6 +24,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/FocusOptions.h"
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
 #include "core/page/ScrollOptions.h"
@@ -431,8 +432,8 @@ public:
 
     /* Element-level focus APIs */
     // https://html.spec.whatwg.org/multipage/interaction.html#dom-focus
-    virtual void focus();
-    virtual void blur();
+    void focus(const FocusOptions& focusOptions = FocusOptions());
+    void blur();
 
     inline bool hasClass()
     {

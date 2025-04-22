@@ -6,14 +6,10 @@ interface HTMLElement : Element {
   [CEReactions] attribute DOMString lang;
   [Unimplemented, CEReactions] attribute boolean translate;
   [CEReactions] attribute DOMString dir;
-  [SameObject] readonly attribute DOMStringMap dataset;
 
   // user interaction
   [CEReactions] attribute boolean hidden;
   void click();
-  [CEReactions] attribute long tabIndex;
-  void focus();
-  void blur();
   [Unimplemented, CEReactions] attribute DOMString accessKey;
   [Unimplemented] readonly attribute DOMString accessKeyLabel;
   [Unimplemented, CEReactions] attribute boolean draggable;
@@ -35,3 +31,4 @@ HTMLElement implements GlobalEventHandlers;
 HTMLElement implements DocumentAndElementEventHandlers;
 HTMLElement implements ElementContentEditable;
 HTMLElement implements ElementCSSInlineStyle;
+HTMLElement implements HTMLOrSVGElement;
