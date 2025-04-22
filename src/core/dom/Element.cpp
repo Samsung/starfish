@@ -1036,18 +1036,44 @@ bool Element::handleDefaultEvent(Event* event)
     return false;
 }
 
-void Element::scrollIntoViewIfNeeded()
+static bool domRectContainsDOMRect(DOMRect* a, DOMRect* b)
 {
-    DOMRect* rect = getBoundingClientRect();
+    LayoutRect aRect(a->x(), a->y(), a->width(), a->height());
+    LayoutRect bRect(b->x(), b->y(), b->width(), b->height());
+    return aRect.containsInVisual(bRect);
+}
 
-    LayoutRect windowRect(0, 0, window()->innerWidth(),
-                          window()->innerHeight());
+static bool isVisibleToUser(Element* e)
+{
+    DOMRect* rect = e->getBoundingClientRect();
+
+    LayoutRect windowRect(0, 0, e->window()->innerWidth(),
+                          e->window()->innerHeight());
 
     if (!windowRect.contains(rect->x(), rect->y()) ||
         !windowRect.contains(rect->x() + rect->width(), rect->y()) ||
         !windowRect.contains(rect->x(), rect->y() + rect->height()) ||
         !windowRect.contains(rect->x() + rect->width(),
                              rect->y() + rect->height())) {
+        return false;
+    }
+
+    auto element = e->parentElement();
+    while (element) {
+        DOMRect* dm = element->getBoundingClientRect();
+        if (!domRectContainsDOMRect(dm, rect)) {
+            return false;
+        }
+
+        element = element->parentElement();
+    }
+
+    return true;
+}
+
+void Element::scrollIntoViewIfNeeded()
+{
+    if (!isVisibleToUser(this)) {
         scrollIntoView();
     }
 }
@@ -2302,7 +2328,7 @@ void Element::focus(const FocusOptions& focusOptions)
     // do so, then indicate focus.
     // If options["preventScroll"] is false, then scroll a target into view
     // given this, "auto", "center", and "center".
-    if (!focusOptions.preventScroll()) {
+    if (!focusOptions.preventScroll() && !isVisibleToUser(this)) {
         scrollIntoView(ScrollIntoViewOptions(
             ScrollOptions::ScrollBehavior::Auto, ScrollLogicalPosition::Center,
             ScrollLogicalPosition::Center));
