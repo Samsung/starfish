@@ -22,8 +22,9 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
-#include "FrameSVGSVGBox.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/page/WebView.h"
+#include "FrameSVGSVGBox.h"
 
 namespace Starfish {
 
@@ -185,6 +186,10 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
     const IntrinsicSize& intrinsicSize)
 {
     SkMatrix result = SkMatrix::I();
+
+    const auto& si = element->webView()->screenInfo();
+    float screenScale = 1.f / si.devicePixelRatio;
+    result.preScale(screenScale, screenScale);
 
     LayoutUnit svgWidth = svgSize.width();
     LayoutUnit svgHeight = svgSize.height();
