@@ -1060,11 +1060,12 @@ static bool isVisibleToUser(Element* e)
 
     auto element = e->parentElement();
     while (element) {
-        DOMRect* dm = element->getBoundingClientRect();
-        if (!domRectContainsDOMRect(dm, rect)) {
-            return false;
+        if (element->frame() && element->frame()->shouldApplyOverflow()) {
+            DOMRect* dm = element->getBoundingClientRect();
+            if (!domRectContainsDOMRect(dm, rect)) {
+                return false;
+            }
         }
-
         element = element->parentElement();
     }
 
