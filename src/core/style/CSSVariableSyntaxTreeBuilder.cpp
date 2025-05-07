@@ -352,7 +352,13 @@ CSSVariableSyntaxTreeBuilder::generateStyle(
                                     MutablePropertyValue customProperty =
                                         currentCustomValues->values()[k];
                                     if (customProperty.name() ==
-                                        variable->m_value) {
+                                            variable->m_value &&
+                                        // Prevent recursive behavior when
+                                        // resolving a variable. This is a
+                                        // temporary solution and should be
+                                        // removed.
+                                        !customProperty.value()->contains(
+                                            customProperty.name().string())) {
                                         appendString(findValue,
                                                      customProperty.value());
                                         found = true;
