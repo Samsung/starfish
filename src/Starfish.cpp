@@ -67,7 +67,7 @@ Starfish::Starfish(const StarfishConfiguration& config)
             STARFISH_LOG_ERROR("%s", msg);
         });
 
-        GC_set_warn_proc([](char* msg, GC_word arg) {
+        GC_set_warn_proc([](const char* msg, GC_uintptr_t arg) {
             STARFISH_LOG_ERROR("Starfish: GC warning");
             STARFISH_LOG_ERROR("%s", msg);
         });
@@ -249,7 +249,11 @@ void Starfish::printEveryReachableGCObjects()
             size_t size;
             int kind = GC_get_kind_and_size(obj, &size);
             STARFISH_ASSERT(size == bytes);
+#if defined(NDEBUG)
+            void* ptr = obj;
+#else
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
+#endif
             STARFISH_LOG_ERROR("@@@ kind %d pointer %p", (int)kind, ptr);
 #if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID) && \
                          defined(STARFISH_WEBWORKER_NOT_HOST))

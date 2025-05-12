@@ -492,14 +492,16 @@ static void loggingJSErrorInfo(
             size_t preLineSoFar = 0;
             size_t afterLineSoFar = 0;
 
+            auto bad = src->stringBufferAccessData();
+
             size_t start = sbResult.stackTrace[i].loc.index;
             int64_t idx = (int64_t)start;
             while (start - idx < preLineMax) {
                 if (idx == 0) {
                     break;
                 }
-                if (src->charAt((size_t)idx) == '\r' ||
-                    src->charAt((size_t)idx) == '\n') {
+                if (bad.charAt((size_t)idx) == '\r' ||
+                    bad.charAt((size_t)idx) == '\n') {
                     idx++;
                     break;
                 }
@@ -509,20 +511,19 @@ static void loggingJSErrorInfo(
 
             idx = start;
             while (idx - start < afterLineMax) {
-                if ((size_t)idx == src->length() - 1) {
+                if ((size_t)idx == bad.length - 1) {
                     break;
                 }
-                if (src->charAt((size_t)idx) == '\r' ||
-                    src->charAt((size_t)idx) == '\n') {
+                if (bad.charAt((size_t)idx) == '\r' ||
+                    bad.charAt((size_t)idx) == '\n') {
                     break;
                 }
                 idx++;
             }
             afterLineSoFar = idx;
 
-            if (preLineSoFar <= afterLineSoFar &&
-                preLineSoFar <= src->length() &&
-                afterLineSoFar <= src->length()) {
+            if (preLineSoFar <= afterLineSoFar && preLineSoFar <= bad.length &&
+                afterLineSoFar <= bad.length) {
                 auto subSrc = src->substring(preLineSoFar, afterLineSoFar);
                 STARFISH_LOG_INFO("%s", subSrc->toStdUTF8String().data());
                 std::string sourceCodePosition;
