@@ -54,6 +54,11 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
     } else {
         m_engineInstance->setMaxCompiledByteCodeSize(1024 * 1024 * 4);
     }
+
+    size_t c = m_engineInstance->config();
+    c = c & (~static_cast<size_t>(Escargot::VMInstanceRef::ConfigFlag::
+                                      CompressCompressibleStringsWhileGC));
+    m_engineInstance->setConfig(c);
 }
 
 void ScriptEngineInstance::dispose()

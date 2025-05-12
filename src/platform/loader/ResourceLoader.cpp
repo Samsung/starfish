@@ -353,8 +353,11 @@ void ResourceLoader::cachePruning()
                 size_t size;
                 int kind = GC_get_kind_and_size(obj, &size);
                 STARFISH_ASSERT(size == bytes);
+#if defined(NDEBUG)
+                void* ptr = obj;
+#else
                 void* ptr = GC_USR_PTR_FROM_BASE(obj);
-
+#endif
                 int srcKind = (int)(size_t)cd;
                 if (kind == srcKind) {
                     ((BufferedNativeImageData*)ptr)->m_isSeenByGC = true;

@@ -96,6 +96,7 @@ SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_ROOT}/src
     ${THIRD_PARTY_ROOT}/escargot/third_party/GCutil
     ${THIRD_PARTY_ROOT}/escargot/third_party/GCutil/bdwgc/include
+    ${THIRD_PARTY_ROOT}/escargot/third_party/GCutil/bdwgc/include/gc
     ${THIRD_PARTY_ROOT}/escargot/src/api
     ${THIRD_PARTY_ROOT}/clipper/cpp
     ${THIRD_PARTY_ROOT}/skia_matrix

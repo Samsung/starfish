@@ -67,7 +67,7 @@ ENDIF()
 
 ADD_LIBRARY (gcutil STATIC ${GCUTIL_BDWGC_SRC} ${GCUTIL_SRC})
 TARGET_COMPILE_OPTIONS (gcutil PRIVATE ${GCUTIL_CFLAGS_INTERNAL})
-TARGET_INCLUDE_DIRECTORIES (gcutil PRIVATE ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include)
+TARGET_INCLUDE_DIRECTORIES (gcutil PRIVATE ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include/gc)
 
 #######################################################
 # SOURCE FILES
