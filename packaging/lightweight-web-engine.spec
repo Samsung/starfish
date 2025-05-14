@@ -99,6 +99,12 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
+%if 0%{?tizen_version_major} >= 9
+%define enable_tls_access_by_address 1
+%else
+%define enable_tls_access_by_address 0
+%endif
+
 %if 0%{?enable_codecache:1}
 %else
 %define enable_codecache 0
@@ -503,7 +509,7 @@ CXXFLAGS+=' -fno-lto '
 # Variables for build
 # This features_config values are used in cmake command.
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
-  -DSERVICE_WORKER='%{enable_serviceworker}' \\\
+  -DSERVICE_WORKER='%{enable_serviceworker}' -DENABLE_TLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}'
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
