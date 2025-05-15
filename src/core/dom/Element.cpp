@@ -1043,22 +1043,20 @@ static bool domRectContainsDOMRect(DOMRect* a, DOMRect* b)
     return aRect.containsInVisual(bRect);
 }
 
-static bool isVisibleToUser(Element* e)
+static bool isVisibleToUser(DOMRect* rect, Element* sourceElement)
 {
-    DOMRect* rect = e->getBoundingClientRect();
+    LayoutRect windowRect(0, 0, sourceElement->window()->innerWidth(),
+                          sourceElement->window()->innerHeight());
 
-    LayoutRect windowRect(0, 0, e->window()->innerWidth(),
-                          e->window()->innerHeight());
-
-    if (!windowRect.contains(rect->x(), rect->y()) ||
-        !windowRect.contains(rect->x() + rect->width(), rect->y()) ||
-        !windowRect.contains(rect->x(), rect->y() + rect->height()) ||
-        !windowRect.contains(rect->x() + rect->width(),
-                             rect->y() + rect->height())) {
+    if (!windowRect.containsInVisual(rect->x(), rect->y()) ||
+        !windowRect.containsInVisual(rect->x() + rect->width(), rect->y()) ||
+        !windowRect.containsInVisual(rect->x(), rect->y() + rect->height()) ||
+        !windowRect.containsInVisual(rect->x() + rect->width(),
+                                     rect->y() + rect->height())) {
         return false;
     }
 
-    auto element = e->parentElement();
+    auto element = sourceElement->parentElement();
     while (element) {
         if (element->frame() && element->frame()->shouldApplyOverflow()) {
             DOMRect* dm = element->getBoundingClientRect();
@@ -1070,6 +1068,12 @@ static bool isVisibleToUser(Element* e)
     }
 
     return true;
+}
+
+static bool isVisibleToUser(Element* e)
+{
+    DOMRect* rect = e->getBoundingClientRect();
+    return isVisibleToUser(rect, e);
 }
 
 void Element::scrollIntoViewIfNeeded()
@@ -1128,6 +1132,12 @@ LayoutUnit Element::scrollBlockAlign(ScrollLogicalPosition position)
                             false);
             LayoutUnit now = e->scrollTop(false);
             remainSpaceToScrollEnd -= (now - initialValue);
+            auto rect = getBoundingClientRect(false);
+            rect->setWidth(0);
+            if (isVisibleToUser(rect, this)) {
+                remainSpaceToScrollEnd = 0;
+                break;
+            }
         }
         e = e->parentElement();
     }
@@ -1172,6 +1182,12 @@ LayoutUnit Element::scrollInlineAlign(ScrollLogicalPosition position)
                 initialValue + remainSpaceToScrollEndHorizontal - outer, false);
             LayoutUnit now = e->scrollLeft(false);
             remainSpaceToScrollEndHorizontal -= (now - initialValue);
+            auto rect = getBoundingClientRect(false);
+            rect->setHeight(0);
+            if (isVisibleToUser(rect, this)) {
+                remainSpaceToScrollEndHorizontal = 0;
+                break;
+            }
         }
         e = e->parentElement();
     }
@@ -1185,6 +1201,8 @@ void Element::scrollIntoView(ScrollIntoViewOptions options)
 
     LayoutUnit remainSpaceToScrollEnd;
     LayoutUnit remainSpaceToScrollEndHorizontal;
+    LayoutRect windowRect(0, 0, window()->innerWidth(),
+                          window()->innerHeight());
 
     if (options.blockValue() == ScrollLogicalPosition::Nearest) {
         Element* e = parentElement();
@@ -1192,8 +1210,8 @@ void Element::scrollIntoView(ScrollIntoViewOptions options)
             LayoutUnit rectHeight = (rect->bottom() - rect->top());
             DOMRect* eBounds = e->getBoundingClientRect();
             LayoutUnit eHeight = (eBounds->bottom() - eBounds->top());
-            // If the upper and lower sides of "eBound" are inside "right", do
-            // nothing.
+            // If the upper and lower sides of "eBound" are inside "right",
+            // do nothing.
             if ((rect->top() < eBounds->top() && rectHeight < eHeight) ||
                 (rect->bottom() > eBounds->bottom() && rectHeight > eHeight)) {
                 remainSpaceToScrollEnd =
@@ -1217,8 +1235,8 @@ void Element::scrollIntoView(ScrollIntoViewOptions options)
             LayoutUnit rectWidth = rect->right() - rect->left();
             DOMRect* eBounds = e->getBoundingClientRect();
             LayoutUnit eWidth = eBounds->right() - eBounds->left();
-            // If the left and right sides of "eBound" are inside "right", do
-            // nothing.
+            // If the left and right sides of "eBound" are inside "right",
+            // do nothing.
             if ((rect->left() < eBounds->left() && rectWidth < eWidth) ||
                 (rect->right() > eBounds->right() && rectWidth > eWidth)) {
                 remainSpaceToScrollEndHorizontal =
