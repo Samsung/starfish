@@ -353,13 +353,20 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
 
 bool ActiveAnimationTask::needsContinuousRendering()
 {
-    bool b = !!m_targetElement->frame();
-    if (b) {
-        return true;
-    }
-
     // TODO <Introduce new ActiveTasks for SVGAnimatedXX values if needs>
     // check SVGAnimatedValue are referenced by JS
+    bool b = !!m_targetElement->frame();
+    if (b) {
+        auto f = m_targetElement->frame();
+        f = f->parent();
+        while (f) {
+            if (f->style() && f->style()->opacity() == 0) {
+                return false;
+            }
+            f = f->layoutParent();
+        }
+        return true;
+    }
     return false;
 }
 
