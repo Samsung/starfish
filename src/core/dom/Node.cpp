@@ -2501,6 +2501,11 @@ void Node::didNodeRemovedFromDocumentTree()
     if (document()->activeElement() == this) {
         document()->browsingContext()->releaseFocusedNode(this);
     }
+
+    if (m_isRegisteredToObserverBefore) {
+        document()->finalizeObservation(this);
+    }
+
     clearDidPrepareAnimation();
     setState(NodeStateNormal, false);
     setStyle(nullptr);
@@ -2546,6 +2551,8 @@ Node::registerOrUpdateMutationObserver(
     MutationObserver* observer, MutationObserverOptionType options,
     const GCUnorderedSet<String*>& attributeFilter)
 {
+    markIsRegisteredToObserverBefore();
+
     bool isNewRegistration = false;
     MutationObserverRegistration* registration = nullptr;
 

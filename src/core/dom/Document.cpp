@@ -2695,6 +2695,48 @@ void Document::updateIntersectionObservation()
     }
 }
 
+static bool compare(Optional<ElementOrDocument> o, Node* nd)
+{
+    if (o) {
+        if (o.value().isDocumentValue() && o.value().getDocumentValue() == nd) {
+            return true;
+        } else if (o.value().isElementValue() &&
+                   o.value().getElementValue() == nd) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Document::finalizeObservation(Node* node)
+{
+    for (auto iter = m_intersectionObservers.begin();
+         iter < m_intersectionObservers.end();) {
+        auto ob = *iter;
+        if (compare(ob->root(), node)) {
+            ob->disconnect();
+            iter = m_intersectionObservers.erase(iter);
+            continue;
+        } else if (node->isElement()) {
+            ob->unobserve(node->asElement());
+        }
+        iter++;
+    }
+
+    for (auto iter = m_resizeObservers.begin();
+         iter < m_resizeObservers.end();) {
+        auto ob = *iter;
+        if (compare(ob->root(), node)) {
+            ob->disconnect();
+            iter = m_resizeObservers.erase(iter);
+            continue;
+        } else if (node->isElement()) {
+            ob->unobserve(node->asElement());
+        }
+        iter++;
+    }
+}
+
 ContentSecurityPolicy* Document::contentSecurityPolicy()
 {
     return executionContext()->contentSecurityPolicy();

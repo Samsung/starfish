@@ -55,6 +55,11 @@ public:
 
     bool isResizeObserver() const override;
 
+    Optional<ElementOrDocument> root()
+    {
+        return m_root;
+    }
+
     void observe(Element* target);
     void observe(Element* target, ResizeObserverOptions options);
     void unobserve(Element* target);

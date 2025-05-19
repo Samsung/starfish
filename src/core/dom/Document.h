@@ -650,6 +650,8 @@ public:
     void updateIntersectionObservation();
     void updateResizeObservation();
 
+    void finalizeObservation(Node* node);
+
     bool isFullyActive();
 
     void registerSVGPaintClientElements(const AtomicString& id,
