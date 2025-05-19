@@ -62,6 +62,8 @@ void ResizeObserver::observe(Element* target, ResizeObserverOptions options)
         return;
     }
 
+    target->markIsRegisteredToObserverBefore();
+
     ResizeObserverRegistration* resizeObserverRegistration =
         new ResizeObserverRegistration();
 

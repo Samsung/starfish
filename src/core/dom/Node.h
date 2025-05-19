@@ -152,6 +152,7 @@ protected:
         , m_didPrepareAnimation(false)
         , m_inShadowRoot(false)
         , m_isSlotted(false)
+        , m_isRegisteredToObserverBefore(false)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
@@ -251,6 +252,11 @@ public:
     bool isSlotted() const
     {
         return m_isSlotted;
+    }
+
+    void markIsRegisteredToObserverBefore()
+    {
+        m_isRegisteredToObserverBefore = true;
     }
 
     ShadowRoot* parentShadowRoot() const
@@ -946,6 +952,7 @@ protected:
     bool m_didPrepareAnimation : 1;
     bool m_inShadowRoot : 1;
     bool m_isSlotted : 1;
+    bool m_isRegisteredToObserverBefore : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;

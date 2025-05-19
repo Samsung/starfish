@@ -148,6 +148,8 @@ void IntersectionObserver::observe(Element* target)
         return;
     }
 
+    target->markIsRegisteredToObserverBefore();
+
     IntersectionObserverRegistration* intersectionObserverRegistration =
         new IntersectionObserverRegistration();
     intersectionObserverRegistration->observer = this;
