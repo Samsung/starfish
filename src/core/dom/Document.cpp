@@ -867,6 +867,19 @@ void Document::dispose()
     GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
 }
 
+void Document::onIdle()
+{
+    const auto& v = loadedWebFontList();
+    for (size_t i = 0; i < v.size(); i++) {
+        if (v[i]->fontFace()) {
+            v[i]->fontFace()->clearCache();
+        }
+    }
+
+    clearNativeGradientCacheIfNeeds();
+    m_svgPaintClientElements.clear();
+}
+
 String* Document::characterSet()
 {
     return executionContext()->characterSet();
@@ -1621,14 +1634,6 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
 
     if (UNLIKELY(oldChild->isHTMLBaseElement())) {
         processBaseElement();
-    } else if (UNLIKELY(oldChild->isSVGElement())) {
-        if (oldChild->asSVGElement()->isPaintServerLikeElement()) {
-            if (oldChild->asElement()->atomicId().string()->length()) {
-                notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
-                    oldChild->asElement()->atomicId(), true);
-            }
-        }
-        removeSVGPaintClientElement(oldChild->asSVGElement());
     }
 
     updateDOMVersion();
