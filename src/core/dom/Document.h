@@ -419,6 +419,7 @@ public:
 
     void init(ReferrerURL* referrerURL);
     void dispose();
+    void onIdle();
 
     Document* open(Document* responsibleDoc, String* type, String* replace);
     WindowProxy* open(String* url, String* name, String* features);

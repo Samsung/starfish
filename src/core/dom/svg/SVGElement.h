@@ -81,6 +81,7 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
     virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+    virtual void didNodeRemovedFromDocumentTree() override;
 
     Optional<SVGElement*> ownerSVGElement();
     Optional<SVGElement*> viewportElement();

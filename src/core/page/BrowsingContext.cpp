@@ -528,13 +528,7 @@ void BrowsingContext::registerMediaElement(HTMLMediaElement* element)
 void BrowsingContext::onIdle()
 {
     if (document()) {
-        const auto& v = document()->loadedWebFontList();
-        for (size_t i = 0; i < v.size(); i++) {
-            if (v[i]->fontFace()) {
-                v[i]->fontFace()->clearCache();
-            }
-        }
-        document()->clearNativeGradientCacheIfNeeds();
+        document()->onIdle();
     }
 
     iterateChildContext([](BrowsingContext* ctx) { ctx->onIdle(); });

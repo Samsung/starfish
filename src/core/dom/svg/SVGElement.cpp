@@ -302,6 +302,19 @@ void SVGElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+void SVGElement::didNodeRemovedFromDocumentTree()
+{
+    Element::didNodeRemovedFromDocumentTree();
+
+    if (isPaintServerLikeElement()) {
+        if (atomicId().string()->length()) {
+            document()->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                atomicId(), true);
+        }
+    }
+    document()->removeSVGPaintClientElement(this);
+}
+
 String* SVGElement::xmlbase()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_xmlBase);
