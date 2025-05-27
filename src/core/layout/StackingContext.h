@@ -54,12 +54,12 @@ public:
 
     size_t bufferWidth() const
     {
-        return m_bufferWidth;
+        return m_tileDataWidth * m_horizontalTileCount;
     }
 
     size_t bufferHeight() const
     {
-        return m_bufferHeight;
+        return m_tileDataHeight * m_verticalTileCount;
     }
 
     size_t horizontalTileCount() const
@@ -85,8 +85,6 @@ public:
 
 protected:
     GCVector<CanvasSurface*> m_surfaces;
-    size_t m_bufferWidth;
-    size_t m_bufferHeight;
     size_t m_tileDataWidth;
     size_t m_tileDataHeight;
     size_t m_horizontalTileCount;

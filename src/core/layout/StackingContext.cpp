@@ -180,17 +180,12 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
                                            size_t screenWidth,
                                            size_t screenHeight,
                                            StackingContext* sc)
-    : m_bufferWidth(bufferWidth)
-    , m_bufferHeight(bufferHeight)
-    , m_tileDataWidth(bufferWidth)
+    : m_tileDataWidth(bufferWidth)
     , m_tileDataHeight(bufferHeight)
     , m_horizontalTileCount(1)
     , m_verticalTileCount(1)
     , m_additionalPixelRatio(sc->additionalPixelRatio())
 {
-    STARFISH_ASSERT(m_bufferWidth);
-    STARFISH_ASSERT(m_bufferHeight);
-
     bool dontSplitGraphicsBufferCond = false;
 
     if (sc->owner()->style()->hasFilter() || sc->owner()->isFrameSVGSVGBox()) {
@@ -207,9 +202,9 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     }
 
     if (dontSplitGraphicsBufferCond) {
-        m_tileDataWidth = m_bufferWidth;
+        m_tileDataWidth = ceil(bufferWidth * m_additionalPixelRatio);
         m_horizontalTileCount = 1;
-        m_tileDataHeight = m_bufferHeight;
+        m_tileDataHeight = ceil(bufferHeight * m_additionalPixelRatio);
         m_verticalTileCount = 1;
 
         m_surfaces.resize(1);
@@ -219,8 +214,8 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
             ceil(CanvasSurface::g_canvasSurfaceTileSize /
                  sc->owner()->node()->webView()->screenInfo().devicePixelRatio);
 
-        float effectiveWidth = m_bufferWidth * sc->additionalPixelRatio();
-        float effectiveHeight = m_bufferHeight * sc->additionalPixelRatio();
+        float effectiveWidth = bufferWidth * m_additionalPixelRatio;
+        float effectiveHeight = bufferHeight * m_additionalPixelRatio;
 
         size_t wTextureCount = 1;
         while (effectiveWidth / wTextureCount > tileSize) {
@@ -267,8 +262,6 @@ void GraphicsBufferHolder::detachNativeBuffers()
     m_tileDataHeight = 0;
     m_horizontalTileCount = 0;
     m_verticalTileCount = 0;
-    m_bufferWidth = 0;
-    m_bufferHeight = 0;
 }
 
 void* GraphicsBufferHolder::operator new(size_t size)
@@ -2613,6 +2606,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
             size_t tileIndex = 0;
             size_t coveredRowsCount = 0;
+            float additionalPixelRatio = this->additionalPixelRatio();
 
             compositor->translate(minX, minY);
 
@@ -2630,6 +2624,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         m_rareData->m_graphicsBufferHolder->bufferHeight() -
                             coveredRowsCount);
 
+                    float tx = tileDataX / additionalPixelRatio;
+                    float ty = tileDataY / additionalPixelRatio;
+                    float w = tileDataWidth / additionalPixelRatio;
+                    float h = tileDataHeight / additionalPixelRatio;
+
                     if (tileIndex < m_rareData->m_graphicsBufferHolder
                                         ->m_surfaces.size() &&
                         m_rareData->m_graphicsBufferHolder
@@ -2637,8 +2636,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         compositor->drawSurface(
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex],
-                            Unit::Rect(tileDataX, tileDataY, tileDataWidth,
-                                       tileDataHeight));
+                            Unit::Rect(tx, ty, w, h));
                     }
                     tileIndex++;
                     coveredColsCount += wTileSize;
