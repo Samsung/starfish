@@ -2873,12 +2873,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::CustomProperty: {
-        if (style->hasCustomProperty()) {
+        Node* nd = m_node;
+        AtomicString key = AtomicString::createAtomicString(m_node->starfish(),
+                                                            customPropertyName);
+        while (true) {
+            if (!nd->style()) {
+                break;
+            }
+            auto cs = nd->style();
             Optional<MutablePropertyValueList*> customPropertyties =
-                style->customProperty();
+                cs->customProperty();
             if (customPropertyties) {
-                AtomicString key = AtomicString::createAtomicString(
-                    m_node->starfish(), customPropertyName);
                 Optional<String*> value =
                     customPropertyties.value()->property(key);
                 if (value) {
@@ -2901,8 +2906,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                         String::fromUTF8(refValue.data(), refValue.length());
 
                     setCustomProperty(key, value.value());
+                    break;
                 }
             }
+            if (!nd->parentNode()) {
+                break;
+            }
+            nd = nd->parentNode();
         }
     } break;
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
