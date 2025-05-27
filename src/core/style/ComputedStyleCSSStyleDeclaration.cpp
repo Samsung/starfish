@@ -2896,7 +2896,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                                 element,
                                 OptionalUTF8String(refValue.data(),
                                                    refValue.length()),
-                                element->styleResolver().cssCustomValues());
+                                customPropertyties.value());
                         if (newRefValue == refValue) {
                             break;
                         }
@@ -2909,10 +2909,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     break;
                 }
             }
-            if (!nd->parentNode()) {
+            if (!nd->renderingParentNode()) {
                 break;
             }
-            nd = nd->parentNode();
+            nd = nd->renderingParentNode();
         }
     } break;
 #define ADD_VALUE_PAIR_BORDER_RADIUS(Name1Name2, name1Name2)                  \
