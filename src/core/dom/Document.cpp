@@ -2715,30 +2715,28 @@ static bool compare(Optional<ElementOrDocument> o, Node* nd)
 
 void Document::finalizeObservation(Node* node)
 {
-    for (auto iter = m_intersectionObservers.begin();
-         iter < m_intersectionObservers.end();) {
-        auto ob = *iter;
+    for (size_t i = 0; i < m_intersectionObservers.size();) {
+        auto* ob = m_intersectionObservers[i];
         if (compare(ob->root(), node)) {
             ob->disconnect();
-            iter = m_intersectionObservers.erase(iter);
+            m_intersectionObservers.erase(i);
             continue;
         } else if (node->isElement()) {
             ob->unobserve(node->asElement());
         }
-        iter++;
+        i++;
     }
 
-    for (auto iter = m_resizeObservers.begin();
-         iter < m_resizeObservers.end();) {
-        auto ob = *iter;
+    for (size_t i = 0; i < m_resizeObservers.size();) {
+        auto* ob = m_resizeObservers[i];
         if (compare(ob->root(), node)) {
             ob->disconnect();
-            iter = m_resizeObservers.erase(iter);
+            m_resizeObservers.erase(i);
             continue;
         } else if (node->isElement()) {
             ob->unobserve(node->asElement());
         }
-        iter++;
+        i++;
     }
 }
 
