@@ -724,6 +724,7 @@ test/cairo/internal-test/svg/svg_filter_in_output_01.html
 test/cairo/internal-test/svg/svg_filter_geometry_01.html
 test/cairo/internal-test/svg/svg_fe_morphology1.html
 test/cairo/internal-test/svg/svg_inline_style_01.html
+test/cairo/internal-test/svg/additional-pixel-ratio.html
 test/cairo/internal-test/transition/transition_event_borderWidth.html
 test/cairo/internal-test/transition/transition_transform.html
 test/cairo/internal-test/canvas/basicFillRect.html
