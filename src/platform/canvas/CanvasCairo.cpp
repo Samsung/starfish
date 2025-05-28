@@ -89,7 +89,6 @@ public:
     }
 
     FontFaceImplCairo* storage{ nullptr };
-    uint64_t id{ g_id++ };
 
 private:
     // cairo_font_face_set_user_data callback;
@@ -98,11 +97,7 @@ private:
         FontFaceReferenceHolder* holder = (FontFaceReferenceHolder*)data;
         GC_FREE(holder);
     }
-
-    static uint64_t g_id;
 };
-
-uint64_t FontFaceReferenceHolder::g_id = 0;
 
 class NativeGradientCairo : public NativeGradient {
 public:

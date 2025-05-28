@@ -171,12 +171,6 @@ public:
     {
         STARFISH_LOG_INFO("FontFaceImplCairo clearCache [%p]", this);
         GlyphIndexCache().swap(m_glyphIndexCache);
-        if (m_face) {
-            hb_font_destroy(m_hbFace);
-            FT_Done_Face(m_face);
-            m_hbFace = nullptr;
-            m_face = nullptr;
-        }
     }
 
     bool loadGlyph(
