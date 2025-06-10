@@ -726,15 +726,15 @@ void NetworkSharedResourceManager::appendPendingMultiRequest(
     if (iter != m_curlMultiRequestData.end()) {
         iter->second->m_pendingRequests.push_back(r);
         if (iter->second->m_finishing) {
-            if (iter->second->m_thread->isAlive()) {
-                iter->second->m_thread->finishUnjoined();
-            }
             // restart thread if finished
             iter->second->m_finishing = false;
             iter->second->m_ml->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t, void* data) {
                     CurlMultiData* d = (CurlMultiData*)data;
+                    if (d->m_thread->isAlive()) {
+                        d->m_thread->finishUnjoined();
+                    }
                     d->m_thread->run(d->m_ml, curlMultiWorker, d);
                 },
                 iter->second);
