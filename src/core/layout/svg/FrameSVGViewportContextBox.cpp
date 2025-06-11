@@ -112,7 +112,7 @@ void FrameSVGViewportContextBox::layoutChildren(SVGLayoutContext& ctx,
 {
     SVGLayoutContext childCtx = { ctx.layoutContext, viewport(),
                                   normalizedDiagonalViewportLength(),
-                                  ctx.clippedRects };
+                                  ctx.clippedRects, ctx.m_fillRects };
 
     m_viewport = ctx.viewport;
     if (node()->asSVGElement()->hasViewBox()) {

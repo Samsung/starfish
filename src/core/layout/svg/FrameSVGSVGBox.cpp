@@ -149,8 +149,10 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
         setContentHeight(orgHeight);
 
         std::vector<LayoutRect> clippedRects;
+        std::map<void*, LayoutRect> fillRects;
         FrameSVGBox::SVGLayoutContext svgLayoutContext = {
-            ctx, m_viewport, normalizedDiagonalViewportLength(), clippedRects
+            ctx, m_viewport, normalizedDiagonalViewportLength(), clippedRects,
+            fillRects
         };
 
         SkMatrix matrix = SkMatrix::I();

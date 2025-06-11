@@ -77,6 +77,7 @@ public:
         LayoutSize viewport;
         LayoutUnit normalizedDiagonalViewportLength;
         std::vector<LayoutRect>& clippedRects;
+        std::map<void*, LayoutRect> m_fillRects;
     };
     virtual void layout(SVGLayoutContext& ctx, SkMatrix matrix);
 

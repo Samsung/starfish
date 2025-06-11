@@ -780,6 +780,8 @@ public:
     QualifiedName m_maskType;
     QualifiedName m_tspan;
     QualifiedName m_filter;
+    QualifiedName m_maskUnits;
+    QualifiedName m_maskContentUnits;
 
 #ifdef STARFISH_ENABLE_WEBRTC
     QualifiedName m_srcObject;

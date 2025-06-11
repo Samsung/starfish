@@ -21,6 +21,7 @@
 #define __StarfishSVGMaskElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGAnimatedEnumeration.h"
 
 namespace Starfish {
 
@@ -68,16 +69,21 @@ public:
         return true;
     }
 
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x1);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y1);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x2);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y2);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
+
+    SVGAnimatedEnumeration* maskUnits();
+    SVGAnimatedEnumeration* maskContentUnits();
 
 private:
-    Optional<SVGAnimatedLength*> m_x1;
-    Optional<SVGAnimatedLength*> m_y1;
-    Optional<SVGAnimatedLength*> m_x2;
-    Optional<SVGAnimatedLength*> m_y2;
+    Optional<SVGAnimatedLength*> m_x;
+    Optional<SVGAnimatedLength*> m_y;
+    Optional<SVGAnimatedLength*> m_width;
+    Optional<SVGAnimatedLength*> m_height;
+    Optional<SVGAnimatedEnumeration*> m_maskUnits;
+    Optional<SVGAnimatedEnumeration*> m_maskContentUnits;
 };
 } // namespace Starfish
 
