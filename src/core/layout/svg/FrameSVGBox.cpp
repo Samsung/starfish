@@ -252,6 +252,92 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     self->setFrameRect(result);
 }
 
+static float resolveBoundingBoxUnitSVGLength(SVGLength* l, float parentLength)
+{
+    if (l->unitType() == SVGLength::UnitType::SVG_LENGTHTYPE_NUMBER) {
+        return l->valueInSpecifiedUnits(false);
+    } else if (l->unitType() ==
+               SVGLength::UnitType::SVG_LENGTHTYPE_PERCENTAGE) {
+        return l->valueInSpecifiedUnits(false) / 100;
+    } else {
+        return l->value() / parentLength;
+    }
+}
+
+static float resolveUserspaceUnitSVGLength(SVGLength* l, float viewportScale,
+                                           const LayoutUnit& viewportLength)
+{
+    if (l->unitType() == SVGLength::UnitType::SVG_LENGTHTYPE_NUMBER) {
+        return l->valueInSpecifiedUnits(false) * viewportScale;
+    } else if (l->unitType() ==
+               SVGLength::UnitType::SVG_LENGTHTYPE_PERCENTAGE) {
+        float p = l->valueInSpecifiedUnits(false) / 100;
+        p *= viewportLength;
+        return p;
+    } else {
+        return l->value(false);
+    }
+}
+
+static Unit::Rect getMaskRegionScale(FrameSVGBox::SVGLayoutContext& ctx,
+                                     SVGMaskElement* maskElement,
+                                     FrameSVGBox* targetBox,
+                                     SkMatrix transScale)
+{
+    auto x = maskElement->x()->baseVal();
+    auto y = maskElement->y()->baseVal();
+    auto width = maskElement->width()->baseVal();
+    auto height = maskElement->height()->baseVal();
+
+    bool isObjectBoundingBox = maskElement->maskUnits()->baseVal() ==
+                               SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX;
+
+    FrameSVGSVGBox* viewportBox = targetBox->outmostSVGViewportBox();
+
+    auto unAdjustedFrameRect = targetBox->frameRect();
+    Unit::Rect maskRegionInFloat(0, 0, 1, 1);
+    if (isObjectBoundingBox) {
+        maskRegionInFloat.setX(resolveBoundingBoxUnitSVGLength(
+            x, unAdjustedFrameRect.width().toFloat()));
+        maskRegionInFloat.setY(resolveBoundingBoxUnitSVGLength(
+            y, unAdjustedFrameRect.height().toFloat()));
+        maskRegionInFloat.setWidth(resolveBoundingBoxUnitSVGLength(
+            width, unAdjustedFrameRect.width().toFloat()));
+        maskRegionInFloat.setHeight(resolveBoundingBoxUnitSVGLength(
+            height, unAdjustedFrameRect.height().toFloat()));
+    } else {
+        auto vp = targetBox->viewport();
+        LayoutRect viewportRect(0, 0, transScale.getScaleX() * vp.width(),
+                                transScale.getScaleY() * vp.height());
+        LayoutRect absoluteRect(
+            resolveUserspaceUnitSVGLength(x, transScale.getScaleX(),
+                                          vp.width()),
+            resolveUserspaceUnitSVGLength(y, transScale.getScaleY(),
+                                          vp.height()),
+            resolveUserspaceUnitSVGLength(width, transScale.getScaleX(),
+                                          vp.width()),
+            resolveUserspaceUnitSVGLength(height, transScale.getScaleY(),
+                                          vp.height()));
+
+        if (absoluteRect.containsInVisual(viewportRect)) {
+            maskRegionInFloat = Unit::Rect(0, 0, 1, 1);
+        } else {
+            LayoutRect rt = targetBox->parent()->asFrameBox()->absoluteRect(
+                targetBox->outmostSVGViewportBox());
+            rt.setX(rt.x() + unAdjustedFrameRect.x());
+            rt.setY(rt.y() + unAdjustedFrameRect.y());
+            rt.setWidth(unAdjustedFrameRect.width());
+            rt.setHeight(unAdjustedFrameRect.height());
+            LayoutRect ort = LayoutRect::overlappedRect(absoluteRect, rt);
+            maskRegionInFloat = Unit::Rect((ort.x() - rt.x()) / rt.width(),
+                                           (ort.y() - rt.y()) / rt.height(),
+                                           ort.width() / rt.width(),
+                                           ort.height() / rt.height());
+        }
+    }
+    return maskRegionInFloat;
+}
+
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 {
     if (node()->asSVGElement()->needsSizingAttributes()) {
@@ -281,6 +367,15 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             m_frameRect =
                 LayoutRect(boundingRect.x(), boundingRect.y(),
                            boundingRect.width(), boundingRect.height());
+
+            auto fillPathRect = p->fillBoundingRect();
+            if (!fillPathRect.isEmpty()) {
+                ctx.m_fillRects.insert(std::make_pair(
+                    this,
+                    LayoutRect(fillPathRect.x(), fillPathRect.y(),
+                               fillPathRect.width(), fillPathRect.height())));
+            }
+
         } else {
             m_frameRect = LayoutRect();
         }
@@ -341,6 +436,15 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     if (maskElement) {
         Frame* maskFrame = maskElement->frame();
         if (maskFrame) {
+            LayoutRect targetMaskRect;
+            auto iter = ctx.m_fillRects.find(this);
+            if (iter == ctx.m_fillRects.end()) {
+                targetMaskRect = m_frameRect;
+            } else {
+                targetMaskRect = iter->second;
+            }
+            targetMaskRect = computeBoxExtent(targetMaskRect, matrix);
+
             // only invisible mask content can be used by this case
             bool isDecendentOfInvisibleFrame = false;
             for (Frame* f = maskFrame->parent();
@@ -354,20 +458,34 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 
             if (isDecendentOfInvisibleFrame) {
                 maskFrame->asFrameSVGBox()->layout(ctx, matrix);
-                LayoutRect rect;
-                Frame* f = maskFrame->firstChild();
-                while (f) {
-                    rect.unite(f->asFrameBox()->frameRect());
-                    f = f->next();
+                {
+                    auto targetBox = asFrameSVGBox();
+                    auto transScale = targetBox->outmostSVGViewportBox()
+                                          ->computeTranlateScaleOnPaint();
+                    Unit::Rect maskRegionInFloat =
+                        getMaskRegionScale(ctx, maskElement.getValue(),
+                                           targetBox, transScale.second);
+
+                    targetMaskRect.setX(targetMaskRect.x() +
+                                        targetMaskRect.width() *
+                                            maskRegionInFloat.x());
+                    targetMaskRect.setY(targetMaskRect.y() +
+                                        targetMaskRect.height() *
+                                            maskRegionInFloat.y());
+                    targetMaskRect.setWidth(targetMaskRect.width() *
+                                            maskRegionInFloat.width());
+                    targetMaskRect.setHeight(targetMaskRect.height() *
+                                             maskRegionInFloat.height());
                 }
-                maskRect = rect;
-                ctx.clippedRects.push_back(rect);
+                maskRect = targetMaskRect;
+                ctx.clippedRects.push_back(targetMaskRect);
             }
         }
     }
 
     if (!matrix.isIdentity() && needsComputeFrameRect) {
         m_frameRect = computeBoxExtent(m_frameRect, matrix);
+
         if (!m_computedSVGTransform) {
             m_computedSVGTransform =
                 new (GC_MALLOC_ATOMIC(sizeof(SkMatrix))) SkMatrix();

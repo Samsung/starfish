@@ -869,6 +869,11 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_tspan =
         QualifiedName(AtomicString::createAtomicString(starfish, "tspan"));
 
+    m_maskUnits =
+        QualifiedName(AtomicString::createAtomicString(starfish, "maskUnits"));
+    m_maskContentUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "maskContentUnits"));
+
 #ifdef STARFISH_ENABLE_WEBRTC
     m_srcObject =
         QualifiedName(AtomicString::createAtomicString(starfish, "srcObject"));

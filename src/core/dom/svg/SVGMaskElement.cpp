@@ -32,10 +32,10 @@ void* SVGMaskElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGMaskElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_x1));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y1));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_x2));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y2));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_x));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_width));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_height));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGMaskElement));
         typeInited = true;
     }
@@ -45,6 +45,14 @@ void* SVGMaskElement::operator new(size_t size)
 SVGMaskElement::SVGMaskElement(Document* document, const QualifiedName& qname)
     : SVGElement(document, qname)
 {
+    x()->baseVal()->setValueAsString(String::createASCIIString("-10%"), true,
+                                     false);
+    y()->baseVal()->setValueAsString(String::createASCIIString("-10%"), true,
+                                     false);
+    width()->baseVal()->setValueAsString(String::createASCIIString("120%"),
+                                         true, false);
+    height()->baseVal()->setValueAsString(String::createASCIIString("120%"),
+                                          true, false);
 }
 
 void SVGMaskElement::didAttributeChanged(QualifiedName name,
@@ -57,14 +65,18 @@ void SVGMaskElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_x1 == name) {
+    if (ss->m_x == name) {
         attributeOfPaintServerLikeUpdated(true);
-    } else if (ss->m_y1 == name) {
+        x()->baseVal()->setValueAsString(value, true, false);
+    } else if (ss->m_y == name) {
         attributeOfPaintServerLikeUpdated(true);
-    } else if (ss->m_x2 == name) {
+        y()->baseVal()->setValueAsString(value, true, false);
+    } else if (ss->m_width == name) {
         attributeOfPaintServerLikeUpdated(true);
-    } else if (ss->m_y2 == name) {
+        width()->baseVal()->setValueAsString(value, true, false);
+    } else if (ss->m_height == name) {
         attributeOfPaintServerLikeUpdated(true);
+        height()->baseVal()->setValueAsString(value, true, false);
     }
 }
 
@@ -72,14 +84,14 @@ void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
 {
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_x1 == name) {
-        setAttribute(ss->m_x1, x1()->baseVal()->valueAsString());
-    } else if (ss->m_y1 == name) {
-        setAttribute(ss->m_y1, y1()->baseVal()->valueAsString());
-    } else if (ss->m_x2 == name) {
-        setAttribute(ss->m_x2, x2()->baseVal()->valueAsString());
-    } else if (ss->m_y2 == name) {
-        setAttribute(ss->m_y2, y2()->baseVal()->valueAsString());
+    if (ss->m_x == name) {
+        setAttribute(ss->m_x, x()->baseVal()->valueAsString());
+    } else if (ss->m_y == name) {
+        setAttribute(ss->m_y, y()->baseVal()->valueAsString());
+    } else if (ss->m_width == name) {
+        setAttribute(ss->m_width, width()->baseVal()->valueAsString());
+    } else if (ss->m_height == name) {
+        setAttribute(ss->m_height, height()->baseVal()->valueAsString());
     }
 }
 
@@ -100,6 +112,30 @@ void SVGMaskElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     SVGElement::didNodeRemoved(parent, oldChild);
     attributeOfPaintServerLikeUpdated(true);
+}
+
+SVGAnimatedEnumeration* SVGMaskElement::maskUnits()
+{
+    if (!m_maskUnits.hasValue()) {
+        m_maskUnits = new SVGAnimatedEnumeration(
+            this, staticStrings()->m_maskUnits,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX,
+            SVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX);
+    }
+    return m_maskUnits.getValue();
+}
+
+SVGAnimatedEnumeration* SVGMaskElement::maskContentUnits()
+{
+    if (!m_maskContentUnits.hasValue()) {
+        m_maskContentUnits = new SVGAnimatedEnumeration(
+            this, staticStrings()->m_maskContentUnits,
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
+            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
+    }
+    return m_maskContentUnits.getValue();
 }
 
 } // namespace Starfish
