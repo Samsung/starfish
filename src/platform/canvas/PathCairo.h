@@ -69,6 +69,7 @@ public:
     virtual void translate(float x, float y) override;
     virtual Unit::Rect fillBoundingRect() override;
     virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) override;
+    virtual Unit::Rect boundingRect() override;
 
 private:
     void notifyBoundingRectDirty()
@@ -79,12 +80,14 @@ private:
     }
 
     void applyStrokeStyle(const StrokeStyle& style);
+    void updateBoundingRect();
 
     StrokeStyle m_needsComputeStrokeBoundingRect; // NaN stroke-width means
                                                   // needs computing
     bool m_needsComputeFillBoundingRect;
     Unit::Rect m_computedStrokeBoundingRect;
     Unit::Rect m_computedFillBoundingRect;
+    Unit::Rect m_boundingRect{ FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX };
     cairo_t* m_cairoContext;
     cairo_surface_t* m_dumyCairoSurface;
 };

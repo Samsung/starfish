@@ -188,6 +188,7 @@ void PathCairo::moveTo(float x, float y)
     notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_move_to(m_cairoContext, x, y);
+    updateBoundingRect();
 }
 
 void PathCairo::lineTo(float x, float y)
@@ -195,6 +196,7 @@ void PathCairo::lineTo(float x, float y)
     notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_line_to(m_cairoContext, x, y);
+    updateBoundingRect();
 }
 
 void PathCairo::translate(float x, float y)
@@ -215,6 +217,7 @@ void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
                    2.0 / 3.0 * cpy + 1.0 / 3.0 * y0,
                    2.0 / 3.0 * cpx + 1.0 / 3.0 * x,
                    2.0 / 3.0 * cpy + 1.0 / 3.0 * y, x, y);
+    updateBoundingRect();
 }
 
 void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
@@ -223,6 +226,7 @@ void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
     notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_curve_to(m_cairoContext, cp1x, cp1y, cp2x, cp2y, x, y);
+    updateBoundingRect();
 }
 
 void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
@@ -247,6 +251,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
     // all points on a line logic
     if (cos_phi == -1) {
         cairo_line_to(m_cairoContext, x1, y1);
+        updateBoundingRect();
         return;
     }
     if (cos_phi == 1) {
@@ -256,6 +261,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
         float ex = x0 + factor_max * p1p0_x;
         float ey = y0 + factor_max * p1p0_y;
         cairo_line_to(m_cairoContext, ex, ey);
+        updateBoundingRect();
         return;
     }
 
@@ -316,6 +322,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
     }
 
     cairo_line_to(m_cairoContext, t_p1p0_x, t_p1p0_y);
+    updateBoundingRect();
 
     arc(x, y, radius, sa, ea, anticlockwise);
 }
@@ -325,6 +332,7 @@ void PathCairo::rect(float x, float y, float w, float h)
     notifyBoundingRectDirty();
     m_needNewSubPath = false;
     cairo_rectangle(m_cairoContext, x, y, w, h);
+    updateBoundingRect();
 }
 
 // the arc functions belows are import from WebKit project
@@ -358,6 +366,7 @@ void PathCairo::arc(float x, float y, float radius, float startAngle,
             cairo_arc(m_cairoContext, x, y, radius, startAngle, endAngle);
         }
     }
+    updateBoundingRect();
 }
 
 void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
@@ -377,6 +386,7 @@ void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
     } else {
         cairo_arc(m_cairoContext, 0, 0, 1, startAngle, endAngle);
     }
+    updateBoundingRect();
     cairo_restore(m_cairoContext);
 }
 
@@ -454,6 +464,48 @@ Unit::Rect PathCairo::strokeBoundingRect(const StrokeStyle& style)
     Unit::Rect result(x0, y0, x1 - x0, y1 - y0);
     m_computedStrokeBoundingRect = result;
     return result;
+}
+
+void PathCairo::updateBoundingRect()
+{
+    double x_min = m_boundingRect.x();
+    double y_min = m_boundingRect.y();
+    double x_max = m_boundingRect.x() + m_boundingRect.width();
+    double y_max = m_boundingRect.y() + m_boundingRect.height();
+
+    double x, y;
+    cairo_get_current_point(m_cairoContext, &x, &y);
+
+    x_min = std::min(x_min, x);
+    y_min = std::min(y_min, y);
+    x_max = std::max(x_max, x);
+    y_max = std::max(y_max, y);
+
+    m_boundingRect.setX(x_min);
+    m_boundingRect.setY(y_min);
+    m_boundingRect.setWidth(x_max - x_min);
+    m_boundingRect.setHeight(y_max - y_min);
+}
+
+Unit::Rect PathCairo::boundingRect()
+{
+    double x0 = 0;
+    double x1 = 0;
+    double y0 = 0;
+    double y1 = 0;
+    cairo_path_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+
+    double x_min = m_boundingRect.x();
+    double y_min = m_boundingRect.y();
+    double x_max = m_boundingRect.x() + m_boundingRect.width();
+    double y_max = m_boundingRect.y() + m_boundingRect.height();
+
+    x_min = std::min(x_min, x0);
+    y_min = std::min(y_min, y0);
+    x_max = std::max(x_max, x1);
+    y_max = std::max(y_max, y1);
+
+    return Unit::Rect(x_min, y_min, x_max - x_min, y_max - y_min);
 }
 
 } // namespace Starfish
