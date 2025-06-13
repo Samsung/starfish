@@ -56,6 +56,8 @@ public:
     virtual void setCTM(const SkMatrix& matrix) override;
     virtual Unit::Rect fillBoundingRect() override;
     virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) override;
+    virtual Unit::Rect boundingRect() override;
+
     virtual void append(Path* path) override;
     virtual void translate(float x, float y) override;
 

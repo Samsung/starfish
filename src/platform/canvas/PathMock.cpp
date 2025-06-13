@@ -109,6 +109,11 @@ Unit::Rect PathMock::strokeBoundingRect(const StrokeStyle& style)
     return Unit::Rect();
 }
 
+Unit::Rect PathMock::boundingRect()
+{
+    return Unit::Rect();
+}
+
 Unit::Rect PathMock::fillBoundingRect()
 {
     return Unit::Rect();

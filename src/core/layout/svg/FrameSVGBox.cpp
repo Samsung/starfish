@@ -368,7 +368,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                 LayoutRect(boundingRect.x(), boundingRect.y(),
                            boundingRect.width(), boundingRect.height());
 
-            auto fillPathRect = p->fillBoundingRect();
+            auto fillPathRect = p->boundingRect();
             if (!fillPathRect.isEmpty()) {
                 ctx.m_fillRects.insert(std::make_pair(
                     this,

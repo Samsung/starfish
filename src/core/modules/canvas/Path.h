@@ -96,6 +96,7 @@ public:
 
     virtual Unit::Rect fillBoundingRect() = 0;
     virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) = 0;
+    virtual Unit::Rect boundingRect() = 0;
 
     bool needNewSubPath()
     {
