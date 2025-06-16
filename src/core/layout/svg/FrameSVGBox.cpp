@@ -477,8 +477,16 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                     targetMaskRect.setHeight(targetMaskRect.height() *
                                              maskRegionInFloat.height());
                 }
-                maskRect = targetMaskRect;
-                ctx.clippedRects.push_back(targetMaskRect);
+
+                LayoutRect rect = targetMaskRect;
+                Frame* f = maskFrame->firstChild();
+                while (f) {
+                    rect = LayoutRect::overlappedRect(
+                        rect, f->asFrameBox()->frameRect());
+                    f = f->next();
+                }
+                maskRect = rect;
+                ctx.clippedRects.push_back(rect);
             }
         }
     }
