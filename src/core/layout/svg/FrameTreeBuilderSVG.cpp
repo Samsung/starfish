@@ -39,6 +39,7 @@
 #include "core/layout/svg/FrameSVGLineBox.h"
 #include "core/layout/svg/FrameSVGClipPathBox.h"
 #include "core/layout/svg/FrameSVGInvisibleBox.h"
+#include "core/layout/svg/FrameSVGGBox.h"
 #include "core/layout/svg/FrameSVGUseBox.h"
 #include "core/layout/svg/FrameSVGViewportContextBox.h"
 #include "core/layout/svg/FrameSVGMaskBox.h"
@@ -96,7 +97,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         } else if (svgElement->isSVGRectElement()) {
             newFrame = new FrameSVGRectBox(svgElement);
         } else if (svgElement->isSVGGElement()) {
-            newFrame = new FrameSVGBox(svgElement);
+            newFrame = new FrameSVGGBox(svgElement);
         } else if (svgElement->isSVGPathElement()) {
             newFrame = new FrameSVGPathBox(svgElement);
         } else if (svgElement->isSVGPolygonElement()) {

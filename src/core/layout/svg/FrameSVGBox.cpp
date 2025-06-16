@@ -26,6 +26,7 @@
 #include "FrameSVGMaskBox.h"
 #include "FrameSVGSVGBox.h"
 #include "FrameSVGViewportContextBox.h"
+#include "FrameSVGGBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/CanvasGradient.h"
@@ -338,6 +339,25 @@ static Unit::Rect getMaskRegionScale(FrameSVGBox::SVGLayoutContext& ctx,
     return maskRegionInFloat;
 }
 
+LayoutRect getMaskRect(FrameSVGBox::SVGLayoutContext& ctx,
+                       LayoutRect targetMaskRect, FrameSVGBox* targetBox,
+                       SVGMaskElement* maskElement)
+{
+    auto transScale =
+        targetBox->outmostSVGViewportBox()->computeTranlateScaleOnPaint();
+
+    Unit::Rect maskRegionInFloat =
+        getMaskRegionScale(ctx, maskElement, targetBox, transScale.second);
+    targetMaskRect.setX(targetMaskRect.x() +
+                        targetMaskRect.width() * maskRegionInFloat.x());
+    targetMaskRect.setY(targetMaskRect.y() +
+                        targetMaskRect.height() * maskRegionInFloat.y());
+    targetMaskRect.setWidth(targetMaskRect.width() * maskRegionInFloat.width());
+    targetMaskRect.setHeight(targetMaskRect.height() *
+                             maskRegionInFloat.height());
+    return targetMaskRect;
+}
+
 void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 {
     if (node()->asSVGElement()->needsSizingAttributes()) {
@@ -432,6 +452,8 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     }
 
     auto maskElement = node()->asSVGElement()->maskElement();
+    bool isDecendentOfInvisibleFrame = false;
+
     Optional<LayoutRect> maskRect;
     if (maskElement) {
         Frame* maskFrame = maskElement->frame();
@@ -446,7 +468,6 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             targetMaskRect = computeBoxExtent(targetMaskRect, matrix);
 
             // only invisible mask content can be used by this case
-            bool isDecendentOfInvisibleFrame = false;
             for (Frame* f = maskFrame->parent();
                  !f->isFrameSVGSVGBox() && !f->isFrameSVGViewportContextBox();
                  f = f->parent()) {
@@ -458,35 +479,19 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
 
             if (isDecendentOfInvisibleFrame) {
                 maskFrame->asFrameSVGBox()->layout(ctx, matrix);
-                {
-                    auto targetBox = asFrameSVGBox();
-                    auto transScale = targetBox->outmostSVGViewportBox()
-                                          ->computeTranlateScaleOnPaint();
-                    Unit::Rect maskRegionInFloat =
-                        getMaskRegionScale(ctx, maskElement.getValue(),
-                                           targetBox, transScale.second);
-
-                    targetMaskRect.setX(targetMaskRect.x() +
-                                        targetMaskRect.width() *
-                                            maskRegionInFloat.x());
-                    targetMaskRect.setY(targetMaskRect.y() +
-                                        targetMaskRect.height() *
-                                            maskRegionInFloat.y());
-                    targetMaskRect.setWidth(targetMaskRect.width() *
-                                            maskRegionInFloat.width());
-                    targetMaskRect.setHeight(targetMaskRect.height() *
-                                             maskRegionInFloat.height());
+                if (!node()->isSVGGElement()) {
+                    LayoutRect rect =
+                        getMaskRect(ctx, targetMaskRect, asFrameSVGBox(),
+                                    maskElement.getValue());
+                    Frame* f = maskFrame->firstChild();
+                    while (f) {
+                        auto childRect = f->asFrameBox()->frameRect();
+                        rect = LayoutRect::overlappedRect(rect, childRect);
+                        f = f->next();
+                    }
+                    maskRect = rect;
+                    ctx.clippedRects.push_back(rect);
                 }
-
-                LayoutRect rect = targetMaskRect;
-                Frame* f = maskFrame->firstChild();
-                while (f) {
-                    rect = LayoutRect::overlappedRect(
-                        rect, f->asFrameBox()->frameRect());
-                    f = f->next();
-                }
-                maskRect = rect;
-                ctx.clippedRects.push_back(rect);
             }
         }
     }
@@ -542,6 +547,29 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             f->asFrameBox()->setX(childRect.x() - m_frameRect.x());
             f->asFrameBox()->setY(childRect.y() - m_frameRect.y());
             f = f->next();
+        }
+    }
+
+    if (maskElement) {
+        Frame* maskFrame = maskElement->frame();
+        if (maskFrame && node()->isSVGGElement()) {
+            LayoutRect targetMaskRect = asFrameSVGGBox()->boundingRect();
+            targetMaskRect = computeBoxExtent(targetMaskRect, matrix);
+
+            // only invisible mask content can be used by this case
+            if (isDecendentOfInvisibleFrame) {
+                maskFrame->asFrameSVGBox()->layout(ctx, matrix);
+                LayoutRect rect =
+                    getMaskRect(ctx, targetMaskRect, asFrameSVGBox(),
+                                maskElement.getValue());
+                Frame* f = maskFrame->firstChild();
+                while (f) {
+                    rect = LayoutRect::overlappedRect(
+                        rect, f->asFrameBox()->frameRect());
+                    f = f->next();
+                }
+                m_frameRect = rect;
+            }
         }
     }
 
