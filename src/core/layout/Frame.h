@@ -51,7 +51,6 @@ class FrameSVGSVGBox;
 class FrameSVGClipPathBox;
 class FrameSVGMaskBox;
 class FrameSVGViewportContextBox;
-class FrameSVGGBox;
 class FrameText;
 class FrameCounterText;
 class FrameQuoteText;
@@ -1558,12 +1557,6 @@ public:
     {
         STARFISH_ASSERT(isFrameSVGViewportContextBox());
         return (FrameSVGViewportContextBox*)this;
-    }
-
-    FrameSVGGBox* asFrameSVGGBox()
-    {
-        STARFISH_ASSERT(isFrameSVGGBox());
-        return (FrameSVGGBox*)this;
     }
 
 #ifdef STARFISH_ENABLE_CANVAS

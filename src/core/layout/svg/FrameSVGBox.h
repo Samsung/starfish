@@ -105,6 +105,8 @@ public:
         return nullptr;
     }
 
+    virtual LayoutRect boundingRect();
+
     virtual bool isVisible() override
     {
         return true;
