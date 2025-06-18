@@ -26,7 +26,6 @@
 #include "FrameSVGMaskBox.h"
 #include "FrameSVGSVGBox.h"
 #include "FrameSVGViewportContextBox.h"
-#include "FrameSVGGBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/CanvasGradient.h"
@@ -553,7 +552,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
     if (maskElement) {
         Frame* maskFrame = maskElement->frame();
         if (maskFrame && node()->isSVGGElement()) {
-            LayoutRect targetMaskRect = asFrameSVGGBox()->boundingRect();
+            LayoutRect targetMaskRect = asFrameSVGBox()->boundingRect();
             targetMaskRect = computeBoxExtent(targetMaskRect, matrix);
 
             // only invisible mask content can be used by this case
@@ -568,7 +567,18 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                         rect, f->asFrameBox()->frameRect());
                     f = f->next();
                 }
-                m_frameRect = rect;
+
+                float oldFrameRectX = (float)m_frameRect.x();
+                float oldFrameRectY = (float)m_frameRect.y();
+                m_frameRect = LayoutRect::overlappedRect(m_frameRect, rect);
+
+                f = firstChild();
+                while (f) {
+                    LayoutRect childRect = f->asFrameBox()->frameRect();
+                    f->asFrameBox()->moveX(oldFrameRectX - m_frameRect.x());
+                    f->asFrameBox()->moveY(oldFrameRectY - m_frameRect.y());
+                    f = f->next();
+                }
             }
         }
     }
@@ -598,6 +608,27 @@ void FrameSVGBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
     }
 }
 
+LayoutRect FrameSVGBox::boundingRect()
+{
+    LayoutRect result;
+    Frame* child = firstChild();
+    while (child) {
+        if (child) {
+            if (child->isFrameSVGBox()) {
+                FrameSVGBox* childBox = child->asFrameSVGBox();
+                auto childRect = childBox->boundingRect();
+                if (childBox->computedSVGTransform().hasValue()) {
+                    auto svgMatrix =
+                        *childBox->computedSVGTransform().getValue();
+                    childRect = computeBoxExtent(childRect, svgMatrix);
+                }
+                result.unite(childRect);
+            }
+        }
+        child = child->next();
+    }
+    return result;
+}
 void FrameSVGBox::layout(LayoutContext& ctx,
                          Frame::LayoutWantToResolve resolveWhat)
 {
@@ -923,7 +954,6 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
     } else if (matchingSvg->isSVGRadialGradientElement()) {
         // TODO: RadialGradient works partially, 'fx', 'fy', 'fr' need to be
         // implemented.
-        STARFISH_UNIMPLEMENTED();
         SVGRadialGradientElement* gradientElement =
             matchingSvg->asSVGRadialGradientElement();
 

@@ -50,4 +50,14 @@ Optional<Path*> FrameSVGLineBox::path()
 
     return path;
 }
+
+LayoutRect FrameSVGLineBox::boundingRect()
+{
+    auto p = path();
+    if (p) {
+        Unit::Rect rect = p.getValue()->boundingRect();
+        return LayoutRect(rect.x(), rect.y(), rect.width(), rect.height());
+    }
+    return LayoutRect();
+}
 } // namespace Starfish

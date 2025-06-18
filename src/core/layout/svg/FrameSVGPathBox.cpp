@@ -52,4 +52,14 @@ Optional<Path*> FrameSVGPathBox::path()
 {
     return node()->asSVGPathElement()->path();
 }
+
+LayoutRect FrameSVGPathBox::boundingRect()
+{
+    auto p = path();
+    if (p) {
+        Unit::Rect rect = p.getValue()->boundingRect();
+        return LayoutRect(rect.x(), rect.y(), rect.width(), rect.height());
+    }
+    return LayoutRect();
+}
 } // namespace Starfish

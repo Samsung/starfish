@@ -38,6 +38,7 @@ public:
     }
 
     virtual Optional<Path*> path() override;
+    virtual LayoutRect boundingRect() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
