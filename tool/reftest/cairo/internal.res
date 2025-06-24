@@ -699,6 +699,7 @@ test/cairo/internal-test/svg/svg_mask_05.html
 test/cairo/internal-test/svg/svg_mask_06.html
 test/cairo/internal-test/svg/svg_mask_07.html
 test/cairo/internal-test/svg/svg_mask_08.html
+test/cairo/internal-test/svg/svg_mask_09.html
 test/cairo/internal-test/svg/svg_transform_rotate.html
 test/cairo/internal-test/svg/svg_use_shadowRoot_01.html
 test/cairo/internal-test/svg/svg_flex_size_01.html

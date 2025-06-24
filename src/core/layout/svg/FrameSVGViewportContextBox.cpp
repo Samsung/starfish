@@ -65,7 +65,7 @@ Optional<Path*> FrameSVGViewportContextBox::path()
     return path;
 }
 
-std::pair<bool, SkMatrix>
+std::pair<int, SkMatrix>
 FrameSVGViewportContextBox::computeTranlateScaleOnPaint()
 {
     auto nearestViewport = FrameSVGBox::viewport();
@@ -81,7 +81,8 @@ FrameSVGViewportContextBox::computeTranlateScaleOnPaint()
     auto cs = FrameSVGSVGBox::computeTranlateScaleOnPaint(
         node()->asSVGElement(), svgSize, viewport, intrinsicSize);
 
-    if (!intrinsicSize.m_hasViewport && node()->asSVGElement()->hasViewBox()) {
+    if (!intrinsicSize.m_hasViewport && node()->asSVGElement()->hasViewBox() &&
+        cs.first < 2) {
         Unit::Rect viewBox = node()->asSVGElement()->viewBox();
         float dx =
             (viewport.width() - viewBox.width() * cs.second.getScaleX()) / 2;
