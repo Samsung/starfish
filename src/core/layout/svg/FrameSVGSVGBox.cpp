@@ -28,6 +28,103 @@
 
 namespace Starfish {
 
+static SkMatrix SVGPreserveAspectRatioValueMatrix(
+    float logicalX, float logicalY, float logicalWidth, float logicalHeight,
+    float physicalWidth, float physicalHeight,
+    NativeImageData::PreserveAspectRatioAlign m_align,
+    NativeImageData::PreserveAspectRatioMeetOrSlice m_meetOrSlice)
+{
+    SkMatrix transform = SkMatrix::I();
+    if (!logicalWidth || !logicalHeight || !physicalWidth || !physicalHeight) {
+        return transform;
+    }
+
+    if (m_align == NativeImageData::PreserveAspectRatioAlign::None) {
+        return transform;
+    }
+
+    double extendedLogicalX = logicalX;
+    double extendedLogicalY = logicalY;
+    double extendedLogicalWidth = logicalWidth;
+    double extendedLogicalHeight = logicalHeight;
+    double extendedPhysicalWidth = physicalWidth;
+    double extendedPhysicalHeight = physicalHeight;
+    double logicalRatio = extendedLogicalWidth / extendedLogicalHeight;
+    double physicalRatio = extendedPhysicalWidth / extendedPhysicalHeight;
+
+    if (m_align == NativeImageData::None) {
+        transform.preScale(extendedPhysicalWidth / extendedLogicalWidth,
+                           extendedPhysicalHeight / extendedLogicalHeight);
+        transform.preTranslate(-extendedLogicalX, -extendedLogicalY);
+        return transform;
+    }
+
+    if ((logicalRatio < physicalRatio &&
+         (m_meetOrSlice ==
+          NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)) ||
+        (logicalRatio >= physicalRatio &&
+         (m_meetOrSlice ==
+          NativeImageData::PreserveAspectRatioMeetOrSlice::Slice))) {
+        transform.preScale(extendedPhysicalHeight / extendedLogicalHeight,
+                           extendedPhysicalHeight / extendedLogicalHeight);
+
+        if (m_align == NativeImageData::PreserveAspectRatioAlign::xMinYMin ||
+            m_align == NativeImageData::PreserveAspectRatioAlign::xMinYMid ||
+            m_align == NativeImageData::PreserveAspectRatioAlign::xMinYMax) {
+            transform.preTranslate(-extendedLogicalX, -extendedLogicalY);
+        } else if (m_align ==
+                       NativeImageData::PreserveAspectRatioAlign::xMidYMin ||
+                   m_align ==
+                       NativeImageData::PreserveAspectRatioAlign::xMidYMid ||
+                   m_align ==
+                       NativeImageData::PreserveAspectRatioAlign::xMidYMax) {
+            transform.preTranslate(
+                -extendedLogicalX -
+                    (extendedLogicalWidth - extendedPhysicalWidth *
+                                                extendedLogicalHeight /
+                                                extendedPhysicalHeight) /
+                        2,
+                -extendedLogicalY);
+
+        } else {
+            transform.preTranslate(
+                -extendedLogicalX -
+                    (extendedLogicalWidth - extendedPhysicalWidth *
+                                                extendedLogicalHeight /
+                                                extendedPhysicalHeight),
+                -extendedLogicalY);
+        }
+        return transform;
+    }
+
+    transform.preScale(extendedPhysicalWidth / extendedLogicalWidth,
+                       extendedPhysicalWidth / extendedLogicalWidth);
+
+    if (m_align == NativeImageData::PreserveAspectRatioAlign::xMinYMin ||
+        m_align == NativeImageData::PreserveAspectRatioAlign::xMidYMin ||
+        m_align == NativeImageData::PreserveAspectRatioAlign::xMaxYMin) {
+        transform.preTranslate(-extendedLogicalX, -extendedLogicalY);
+
+    } else if (m_align == NativeImageData::PreserveAspectRatioAlign::xMinYMid ||
+               m_align == NativeImageData::PreserveAspectRatioAlign::xMidYMid ||
+               m_align == NativeImageData::PreserveAspectRatioAlign::xMaxYMid) {
+        transform.preTranslate(
+            -extendedLogicalX,
+            -extendedLogicalY - (extendedLogicalHeight -
+                                 extendedPhysicalHeight * extendedLogicalWidth /
+                                     extendedPhysicalWidth) /
+                                    2);
+
+    } else {
+        transform.preTranslate(
+            -extendedLogicalX,
+            -extendedLogicalY - (extendedLogicalHeight -
+                                 extendedPhysicalHeight * extendedLogicalWidth /
+                                     extendedPhysicalWidth));
+    }
+    return transform;
+}
+
 void* FrameSVGSVGBox::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameSVGSVGBox));
@@ -183,7 +280,7 @@ LayoutRect FrameSVGSVGBox::overflowRepaintRect()
     return rt;
 }
 
-std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
+std::pair<int, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
     SVGElement* element, const LayoutSize& svgSize, const LayoutSize& viewport,
     const IntrinsicSize& intrinsicSize)
 {
@@ -202,7 +299,7 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
     double sToViewport = 1;
     if (sxToViewport == 0 || syToViewport == 0 || std::isnan(sxToViewport) ||
         std::isnan(syToViewport)) {
-        return std::make_pair(false, result);
+        return std::make_pair(0, result);
     }
 
     bool hasViewBox = element->hasViewBox();
@@ -230,7 +327,7 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
         double sToContentSize = std::min(sx, sy);
 
         if (sToContentSize == 0 || std::isnan(sToContentSize)) {
-            return std::make_pair(false, result);
+            return std::make_pair(0, result);
         }
 
         if (svgAlign == NativeImageData::None) {
@@ -242,7 +339,7 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
         float tx = viewBox.x();
         float ty = viewBox.y();
         if (std::isnan(tx) || std::isnan(ty)) {
-            return std::make_pair(false, result);
+            return std::make_pair(0, result);
         }
 
         result.preTranslate(-tx, -ty);
@@ -262,10 +359,11 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
                 dx = (viewport.width().toFloat() - svgWidth * sx) / 2;
                 dy = (viewport.height().toFloat() - svgHeight * sy) / 2;
             } else {
-                // scale to viewport directly
-                dx = (viewport.width().toFloat() - svgWidth * sToViewport) / 2;
-                dy =
-                    (viewport.height().toFloat() - svgHeight * sToViewport) / 2;
+                auto preserveAspectMatrix = SVGPreserveAspectRatioValueMatrix(
+                    viewBox.x(), viewBox.y(), viewBox.width(), viewBox.height(),
+                    viewport.width().toFloat(), viewport.height().toFloat(),
+                    svgAlign, element->preserveAspectRatioMeetOrSlice());
+                return std::make_pair(2, preserveAspectMatrix);
             }
         }
 
@@ -285,17 +383,17 @@ std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
                                 dy / (sToContentSize * sToViewport));
         }
     }
-    return std::make_pair(true, result);
+    return std::make_pair(1, result);
 }
 
-std::pair<bool, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
+std::pair<int, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint()
 {
     LayoutUnit svgWidth = contentWidth();
     LayoutUnit svgHeight = contentHeight();
     IntrinsicSize intrinsicSizeInfo = intrinsicSize();
     SkMatrix result = SkMatrix::I();
     if (svgWidth == 0 || svgHeight == 0) {
-        return std::make_pair(false, result);
+        return std::make_pair(0, result);
     }
 
     LayoutSize viewport;
@@ -360,13 +458,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         auto vp = viewport();
 
         if (!hasBiggerViewBoxThenContentArea) {
-            if (m_viewBox) {
-                canvas->clip(Unit::Rect(m_viewBox.value().x(),
-                                        m_viewBox.value().y(), vp.width(),
-                                        vp.height()));
-            } else {
-                canvas->clip(Unit::Rect(0, 0, vp.width(), vp.height()));
-            }
+            canvas->clip(Unit::Rect(0, 0, vp.width(), vp.height()));
         }
     } else {
         canvas->postMatrix(tranlateScaleValue.second);

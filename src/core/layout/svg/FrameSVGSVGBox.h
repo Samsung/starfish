@@ -73,10 +73,10 @@ public:
         return m_viewport;
     }
 
-    static std::pair<bool, SkMatrix> computeTranlateScaleOnPaint(
+    static std::pair<int, SkMatrix> computeTranlateScaleOnPaint(
         SVGElement* element, const LayoutSize& svgSize,
         const LayoutSize& viewport, const IntrinsicSize& intrinsicSize);
-    std::pair<bool, SkMatrix> computeTranlateScaleOnPaint();
+    std::pair<int, SkMatrix> computeTranlateScaleOnPaint();
 
     LayoutRect topmostMaskPaintingRect();
     LayoutRect computeCanvasLayerRect(FrameSVGBox* box);

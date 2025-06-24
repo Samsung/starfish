@@ -553,7 +553,6 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         Frame* maskFrame = maskElement->frame();
         if (maskFrame && node()->isSVGGElement()) {
             LayoutRect targetMaskRect = asFrameSVGBox()->boundingRect();
-            targetMaskRect = computeBoxExtent(targetMaskRect, matrix);
 
             // only invisible mask content can be used by this case
             if (isDecendentOfInvisibleFrame) {
@@ -567,11 +566,9 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
                         rect, f->asFrameBox()->frameRect());
                     f = f->next();
                 }
-
                 float oldFrameRectX = (float)m_frameRect.x();
                 float oldFrameRectY = (float)m_frameRect.y();
                 m_frameRect = LayoutRect::overlappedRect(m_frameRect, rect);
-
                 f = firstChild();
                 while (f) {
                     LayoutRect childRect = f->asFrameBox()->frameRect();
