@@ -3927,7 +3927,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         }
 
         // son of brother of source also needs computing
-        if (!isAncestor && !isBrother) {
+        if (!isAncestor && !isBrother && ctx.sourceStackingContext->parent()) {
             bool meetSource = false;
             auto iter =
                 ctx.sourceStackingContext->parent()->childContexts().begin();
