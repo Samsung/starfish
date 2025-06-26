@@ -479,15 +479,17 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             if (isDecendentOfInvisibleFrame) {
                 maskFrame->asFrameSVGBox()->layout(ctx, matrix);
                 if (!node()->isSVGGElement()) {
-                    LayoutRect rect =
+                    LayoutRect mrect =
                         getMaskRect(ctx, targetMaskRect, asFrameSVGBox(),
                                     maskElement.getValue());
+                    LayoutRect rect;
                     Frame* f = maskFrame->firstChild();
                     while (f) {
                         auto childRect = f->asFrameBox()->frameRect();
-                        rect = LayoutRect::overlappedRect(rect, childRect);
+                        rect.unite(childRect);
                         f = f->next();
                     }
+                    rect = LayoutRect::overlappedRect(rect, mrect);
                     maskRect = rect;
                     ctx.clippedRects.push_back(rect);
                 }
@@ -557,15 +559,17 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
             // only invisible mask content can be used by this case
             if (isDecendentOfInvisibleFrame) {
                 maskFrame->asFrameSVGBox()->layout(ctx, matrix);
-                LayoutRect rect =
+                LayoutRect mrect =
                     getMaskRect(ctx, targetMaskRect, asFrameSVGBox(),
                                 maskElement.getValue());
+                LayoutRect rect;
                 Frame* f = maskFrame->firstChild();
                 while (f) {
-                    rect = LayoutRect::overlappedRect(
-                        rect, f->asFrameBox()->frameRect());
+                    rect.unite(f->asFrameBox()->frameRect());
                     f = f->next();
                 }
+                rect = LayoutRect::overlappedRect(rect, mrect);
+
                 float oldFrameRectX = (float)m_frameRect.x();
                 float oldFrameRectY = (float)m_frameRect.y();
                 m_frameRect = LayoutRect::overlappedRect(m_frameRect, rect);
