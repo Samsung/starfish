@@ -36,6 +36,8 @@ void* SVGMaskElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_width));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_height));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_maskUnits));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_maskContentUnits));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGMaskElement));
         typeInited = true;
     }
