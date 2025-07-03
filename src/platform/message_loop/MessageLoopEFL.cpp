@@ -46,10 +46,32 @@ MessageLoopEFL::MessageLoopEFL()
     ecore_animator_frametime_set(1 / 120.0);
 }
 
+struct IdlerData {
+    void (*m_fn)(size_t, void*);
+    void* m_data;
+    void* m_data1;
+    void* m_data2;
+    Ecore_Timer* m_idler;
+    MessageLoopEFL* m_ml;
+    GlobalScope* m_globalScope;
+    volatile bool m_needsRun;
+    volatile bool m_isDestoried;
+    bool m_isMainThreadData;
+};
+
 void MessageLoopEFL::destroy()
 {
     STARFISH_LOG_INFO("MessageLoopEFL::destroy()");
     m_inClosingState = true;
+    {
+        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
+        auto iterOther = m_idlersFromOtherThread.begin();
+        while (iterOther != m_idlersFromOtherThread.end()) {
+            IdlerData* id = (IdlerData*)*iterOther;
+            id->m_isDestoried = true;
+            iterOther++;
+        }
+    }
 
     while (true) {
         {
@@ -65,18 +87,6 @@ void MessageLoopEFL::destroy()
     std::unordered_set<size_t>().swap(m_idlers);
     std::unordered_set<size_t>().swap(m_idlersFromOtherThread);
 }
-
-struct IdlerData {
-    void (*m_fn)(size_t, void*);
-    void* m_data;
-    void* m_data1;
-    void* m_data2;
-    Ecore_Timer* m_idler;
-    MessageLoopEFL* m_ml;
-    GlobalScope* m_globalScope;
-    volatile bool m_valid;
-    bool m_isMainThreadData;
-};
 
 static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
 {
@@ -180,7 +190,8 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
     STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
-    id->m_valid = true;
+    id->m_needsRun = true;
+    id->m_isDestoried = false;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
@@ -200,15 +211,18 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                     // timer that was previously executed is restarted. To
                     // prevent malfunction, we use the following two if
                     // statements.
-                    if (id->m_ml) {
-                        Locker<Mutex> l(
-                            *id->m_ml->m_idlersFromOtherThreadMutex);
-                        removeIderFromList(id->m_ml->m_idlersFromOtherThread,
-                                           id);
-                    }
-                    if (id->m_valid) {
-                        id->m_ml->invokeMicroTasksIfExist();
-                        id->m_fn((size_t)id, id->m_data);
+                    if (!id->m_isDestoried) {
+                        if (id->m_ml &&
+                            id->m_ml->m_idlersFromOtherThreadMutex) {
+                            Locker<Mutex> l(
+                                *id->m_ml->m_idlersFromOtherThreadMutex);
+                            removeIderFromList(
+                                id->m_ml->m_idlersFromOtherThread, id);
+                        }
+                        if (id->m_needsRun) {
+                            id->m_ml->invokeMicroTasksIfExist();
+                            id->m_fn((size_t)id, id->m_data);
+                        }
                     }
 
                     id->m_ml = nullptr;
@@ -228,7 +242,8 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
     STARFISH_ASSERT(!isMainThread());
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
-    id->m_valid = true;
+    id->m_needsRun = true;
+    id->m_isDestoried = false;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
     id->m_data1 = data1;
@@ -249,16 +264,19 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                     // timer that was previously executed is restarted. To
                     // prevent malfunction, we use the following two if
                     // statements.
-                    if (id->m_ml) {
-                        Locker<Mutex> l(
-                            *id->m_ml->m_idlersFromOtherThreadMutex);
-                        removeIderFromList(id->m_ml->m_idlersFromOtherThread,
-                                           id);
-                    }
-                    if (id->m_valid) {
-                        id->m_ml->invokeMicroTasksIfExist();
-                        ((void (*)(size_t, void*, void*))id->m_fn)(
-                            (size_t)id, id->m_data, id->m_data1);
+                    if (!id->m_isDestoried) {
+                        if (id->m_ml &&
+                            id->m_ml->m_idlersFromOtherThreadMutex) {
+                            Locker<Mutex> l(
+                                *id->m_ml->m_idlersFromOtherThreadMutex);
+                            removeIderFromList(
+                                id->m_ml->m_idlersFromOtherThread, id);
+                        }
+                        if (id->m_needsRun) {
+                            id->m_ml->invokeMicroTasksIfExist();
+                            ((void (*)(size_t, void*, void*))id->m_fn)(
+                                (size_t)id, id->m_data, id->m_data1);
+                        }
                     }
 
                     id->m_ml = nullptr;
@@ -290,7 +308,7 @@ void MessageLoopEFL::removeIdlerWithNoGCRooting(size_t handle)
         return;
     }
     IdlerData* id = (IdlerData*)handle;
-    id->m_valid = false;
+    id->m_needsRun = false;
 }
 
 void MessageLoopEFL::clearPendingIdlers(GlobalScope* globalScope)
@@ -319,8 +337,8 @@ void MessageLoopEFL::clearPendingIdlers(GlobalScope* globalScope)
     while (iterOther != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iterOther;
         if ((id->m_globalScope == globalScope || globalScope == nullptr) &&
-            id->m_valid) {
-            id->m_valid = false;
+            id->m_needsRun) {
+            id->m_needsRun = false;
         }
         iterOther++;
     }
