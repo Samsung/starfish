@@ -993,6 +993,14 @@ void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             m_lineBoxes[i]->computeVisibleRect(ctx);
         }
     }
+
+    bool hasPadding = paddingWidth() > 0;
+    bool exceedsScrollingWidth =
+        ctx.result.width() > frameScrollingRect().width();
+
+    if (hasPadding && exceedsScrollingWidth) {
+        ctx.result.setWidth(ctx.result.width() + paddingRight());
+    }
 }
 
 static bool isNonSelfCollapsingHeight(LayoutContext& ctx, FrameBlockBox* box,
