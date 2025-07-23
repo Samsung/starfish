@@ -63,16 +63,6 @@ void MessageLoopEFL::destroy()
 {
     STARFISH_LOG_INFO("MessageLoopEFL::destroy()");
     m_inClosingState = true;
-    {
-        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-        auto iterOther = m_idlersFromOtherThread.begin();
-        while (iterOther != m_idlersFromOtherThread.end()) {
-            IdlerData* id = (IdlerData*)*iterOther;
-            id->m_isDestoried = true;
-            iterOther++;
-        }
-    }
-
     while (true) {
         {
             Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -83,7 +73,15 @@ void MessageLoopEFL::destroy()
 
         ecore_main_loop_iterate();
     }
-
+    {
+        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
+        auto iterOther = m_idlersFromOtherThread.begin();
+        while (iterOther != m_idlersFromOtherThread.end()) {
+            IdlerData* id = (IdlerData*)*iterOther;
+            id->m_isDestoried = true;
+            iterOther++;
+        }
+    }
     std::unordered_set<size_t>().swap(m_idlers);
     std::unordered_set<size_t>().swap(m_idlersFromOtherThread);
 }
@@ -265,6 +263,7 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                     // prevent malfunction, we use the following two if
                     // statements.
                     if (!id->m_isDestoried) {
+                        id->m_isDestoried = true;
                         if (id->m_ml &&
                             id->m_ml->m_idlersFromOtherThreadMutex) {
                             Locker<Mutex> l(
