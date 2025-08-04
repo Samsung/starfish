@@ -995,10 +995,7 @@ void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     bool hasPadding = paddingWidth() > 0;
-    bool exceedsScrollingWidth =
-        ctx.result.width() > frameScrollingRect().width();
-
-    if (hasPadding && exceedsScrollingWidth) {
+    if (hasPadding) {
         ctx.result.setWidth(ctx.result.width() + paddingRight());
     }
 }
