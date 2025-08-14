@@ -229,6 +229,9 @@ public:
 
     void registerTransition(ActiveAnimationTask* task);
 
+    bool hasActiveAnimationTask(Element* element, AnimationType animationType,
+                                CSSStyleValuePair::KeyKind p, size_t layer = 0);
+
     void removeActiveAnimationTaskIfNeeds(Element* element,
                                           AnimationType animationType,
                                           CSSStyleValuePair::KeyKind p,
