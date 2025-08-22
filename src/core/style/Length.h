@@ -57,6 +57,8 @@ public:
         InheritableNumber,
         Calc,
         FitContent,
+        MinContent,
+        MaxContent
     };
 
     STARFISH_MAKE_STACK_ALLOCATED();
@@ -178,9 +180,19 @@ public:
         return m_type == FitContent;
     }
 
+    bool isMinContent() const
+    {
+        return m_type == MinContent;
+    }
+
+    bool isMaxContent() const
+    {
+        return m_type == MaxContent;
+    }
+
     bool isIntrinsic() const
     {
-        return isFitContent() /* || isMinContent() || isMaxContent() */;
+        return isFitContent() || isMinContent() || isMaxContent();
     }
 
     bool isIntrinsicOrAuto() const

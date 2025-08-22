@@ -3528,6 +3528,12 @@ void StyleResolver::applyProperty(Element* element,
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
             switch (newCssValue.widthHeightKeywordValue()) {
+            case WidthHeightKeywordValue::MinContentValue:
+                style->setWidth(Length(Length::Type::MinContent));
+                break;
+            case WidthHeightKeywordValue::MaxContentValue:
+                style->setWidth(Length(Length::Type::MaxContent));
+                break;
             case WidthHeightKeywordValue::FitContentValue:
                 style->setWidth(Length(Length::Type::FitContent));
                 break;
@@ -3582,7 +3588,20 @@ void StyleResolver::applyProperty(Element* element,
             style->setMinWidth(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_UNIMPLEMENTED();
+            switch (newCssValue.widthHeightKeywordValue()) {
+            case WidthHeightKeywordValue::MinContentValue:
+                style->setMinWidth(Length(Length::Type::MinContent));
+                break;
+            case WidthHeightKeywordValue::MaxContentValue:
+                style->setMinWidth(Length(Length::Type::MaxContent));
+                break;
+            case WidthHeightKeywordValue::FitContentValue:
+                style->setMinWidth(Length(Length::Type::FitContent));
+                break;
+            default:
+                break;
+            }
+
         } else {
             Optional<Length> length = LengthUtil::convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());

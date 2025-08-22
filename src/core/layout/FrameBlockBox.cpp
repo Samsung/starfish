@@ -131,7 +131,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 }
             }
 
-            if (width.isFitContent()) {
+            if (width.isFitContent() || width.isMinContent() ||
+                width.isMaxContent()) {
                 PreferredWidthContext p(ctx, nullptr, this, this,
                                         lastKnownWidth);
                 p.computePreferredWidth();
