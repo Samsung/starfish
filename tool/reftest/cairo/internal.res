@@ -308,6 +308,7 @@ test/cairo/internal-test/css/position2/left-margin-auto-right-margin-fixed-width
 test/cairo/internal-test/xhr/whitespace-in-url.html
 test/cairo/internal-test/css/position2/left-margin-fixed-right-margin-auto-width-fixed.html
 test/cairo/internal-test/css/minmaxwidthheight/min_max_width_height_with_replaced.html
+test/cairo/internal-test/css/minmaxwidthheight/minwidth_mincontent_sample.html
 test/cairo/internal-test/css/text/text-indent-basic.html
 test/cairo/internal-test/css/text/text-align-001.html
 test/cairo/internal-test/css/width/dont-break-line.html
