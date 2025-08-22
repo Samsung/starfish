@@ -4174,9 +4174,7 @@ void PreferredWidthContext::computePreferredWidth()
         updatePreferredMinWidth(it.getValue().m_preferredMinWidth);
         return;
     }
-
     m_frame->computePreferredWidth(*this);
-
     PreferredWidthValue value(preferredWidth(), preferredMinWidth());
     m_layoutContext.registerPreferredWidthInfo(key, value);
 }
@@ -4739,7 +4737,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 f = f->next();
             }
 
-            if (w > ctx.remainingWidth()) {
+            if (w > ctx.remainingWidth() && !ctx.isIntrinsicMode()) {
                 f = firstChild();
 
                 LayoutUnit minWidth;

@@ -4149,6 +4149,25 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
                 return minWidth;
             }
         }
+    } else if (style->minWidth().isIntrinsic()) {
+        LayoutUnit minWidth = intMaxForLayoutUnit;
+        if (!underComputingPreferredWidth) {
+            if (!isFrameReplaced() && style->width().isSpecified()) {
+                LayoutUnit width =
+                    style->width().specifiedValue(parentWidth, this);
+                width = contentWidthAfterApplyingBoxSizing(width);
+                minWidth = width;
+            }
+
+            PreferredWidthContext p(ctx, nullptr, this, this, parentWidth);
+            p.setIntrinsicMode(true);
+            p.computePreferredWidth();
+            minWidth = std::max(p.preferredWidth(), p.preferredMinWidth());
+            if (minWidth != intMaxForLayoutUnit && minWidth > width) {
+                return minWidth;
+            }
+        }
+
     } else if (isFlexItem()) {
         LayoutUnit minWidth = intMaxForLayoutUnit;
 

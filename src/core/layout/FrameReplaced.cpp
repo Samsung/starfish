@@ -338,7 +338,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         return;
     } else if ((width.isIntrinsicOrAuto() && height.isAuto()) ||
                isBrokenImageWithAuto) {
-        if (width.isAuto() || width.isFitContent() || isBrokenImageWithAuto) {
+        if (width.isAuto() || width.isFitContent() || width.isMinContent() ||
+            width.isMaxContent() || isBrokenImageWithAuto) {
             LayoutSize size = contentSizeConsiderContainingBlockWidth(
                 intrinsicWidth, intrinsicHeight, parentContentWidth,
                 cb->isFlexItem());
