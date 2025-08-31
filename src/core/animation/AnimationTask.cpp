@@ -173,10 +173,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
-    double f = 0;
-    if (m_startTimeMs != 0) {
-        f = fraction(currentTickCount);
-    }
+    double f = fraction(currentTickCount);
 
     if (isTransition()) {
         execute(computeProgress(f), style);
@@ -192,6 +189,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
             m_frameIdx++;
             if (m_frameIdx == m_frameSize - 1) {
                 m_frameIdx = 0;
+                m_startTimeMs = 0;
                 m_delayMs = 0;
                 m_isInDelayedTime = false;
             }
@@ -199,6 +197,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
             m_frameIdx--;
             if (m_frameIdx == 0) {
                 m_frameIdx = m_frameSize - 1;
+                m_startTimeMs = 0;
                 m_delayMs = 0;
                 m_isInDelayedTime = false;
             }
