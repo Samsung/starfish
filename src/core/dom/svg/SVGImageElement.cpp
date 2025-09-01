@@ -131,6 +131,9 @@ void SVGImageElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+    if (old.hasValue() && old->equals(value)) {
+        return;
+    }
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_href == name || ss->m_xlinkHref == name ||
