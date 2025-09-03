@@ -131,10 +131,6 @@ void SVGImageElement::didAttributeChanged(QualifiedName name,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    if (old.hasValue() && old->equals(value)) {
-        return;
-    }
-
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_href == name || ss->m_xlinkHref == name ||
         (!name.hasPrefix() &&
@@ -143,7 +139,9 @@ void SVGImageElement::didAttributeChanged(QualifiedName name,
         if (attributeRemoved) {
             unloadImage();
         } else {
-            loadImage(value);
+            if (!old.hasValue() || (old.hasValue() && !old->equals(value))) {
+                loadImage(value);
+            }
         }
     } else if (name == ss->m_preserveAspectRatio) {
         setNeedsPainting();
