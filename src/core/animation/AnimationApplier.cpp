@@ -272,8 +272,8 @@ void AnimationApplier::updateActiveAnimationTaskRegistration(
     float iterationCount, AnimationDirectionValue direction,
     AnimationPlayStateValue playState, ActiveAnimationTask* task)
 {
-    if (!m_executor->hasActiveAnimationTask(m_element, m_animatoinType, keyKind,
-                                            layer)) {
+    if (!m_executor->hasActiveAnimationTask(name, m_element, m_animatoinType,
+                                            keyKind, layer)) {
         m_executor->removeActiveAnimationTaskIfNeeds(m_element, m_animatoinType,
                                                      keyKind, layer);
         m_executor->registerAnimation(task, name, s, iterationCount, direction,

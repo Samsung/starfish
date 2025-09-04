@@ -207,7 +207,8 @@ void AnimationExecutor::registerTransition(ActiveAnimationTask* task)
     task->fireTransitionStartEvent();
 }
 
-bool AnimationExecutor::hasActiveAnimationTask(Element* element,
+bool AnimationExecutor::hasActiveAnimationTask(String* animationName,
+                                               Element* element,
                                                AnimationType animationType,
                                                CSSStyleValuePair::KeyKind p,
                                                size_t layer)
@@ -215,13 +216,15 @@ bool AnimationExecutor::hasActiveAnimationTask(Element* element,
     STARFISH_ASSERT(element != nullptr);
     for (auto animations = m_activeAnimations.begin();
          animations != m_activeAnimations.end();) {
+        auto activeElementAnimation = (*animations).first;
         if ((*animations).second.size() != 0) {
             for (auto task = (*animations).second.begin();
                  task != (*animations).second.end();) {
                 if ((*task)->targetElement() == element &&
                     (*task)->animationType() == animationType &&
                     (*task)->property() == p &&
-                    (*task)->layerIndex() == layer) {
+                    (*task)->layerIndex() == layer &&
+                    activeElementAnimation->name()->equals(animationName)) {
                     return true;
                 } else {
                     task++;
