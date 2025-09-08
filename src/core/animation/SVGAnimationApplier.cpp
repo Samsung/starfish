@@ -160,7 +160,7 @@ void SVGAnimationApplier::updateActiveAnimationTaskRegistration(
     AnimationPlayStateValue playState, ActiveAnimationTask* task)
 {
     m_executor->removeActiveAnimationTaskIfNeeds(
-        m_element, AnimationType::SVGAnimation, keyKind, layer);
+        name, m_element, AnimationType::SVGAnimation, keyKind, layer);
     m_executor->registerAnimation(task, name, s, iterationCount, direction,
                                   playState, AnimationType::SVGAnimation);
 }

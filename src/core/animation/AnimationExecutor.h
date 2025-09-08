@@ -233,7 +233,8 @@ public:
                                 AnimationType animationType,
                                 CSSStyleValuePair::KeyKind p, size_t layer = 0);
 
-    void removeActiveAnimationTaskIfNeeds(Element* element,
+    void removeActiveAnimationTaskIfNeeds(String* animationName,
+                                          Element* element,
                                           AnimationType animationType,
                                           CSSStyleValuePair::KeyKind p,
                                           size_t layer = 0);
