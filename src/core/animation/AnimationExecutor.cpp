@@ -237,13 +237,14 @@ bool AnimationExecutor::hasActiveAnimationTask(String* animationName,
 }
 
 void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
-    Element* element, AnimationType animationType, CSSStyleValuePair::KeyKind p,
-    size_t layer)
+    String* animationName, Element* element, AnimationType animationType,
+    CSSStyleValuePair::KeyKind p, size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
 
     for (auto animations = m_activeAnimations.begin();
          animations != m_activeAnimations.end();) {
+        auto activeElementAnimation = (*animations).first;
         if ((*animations).second.size() == 0) {
             animations = m_activeAnimations.erase(animations);
         } else {
@@ -252,7 +253,8 @@ void AnimationExecutor::removeActiveAnimationTaskIfNeeds(
                 if ((*task)->targetElement() == element &&
                     (*task)->animationType() == animationType &&
                     (*task)->property() == p &&
-                    (*task)->layerIndex() == layer) {
+                    (*task)->layerIndex() == layer &&
+                    activeElementAnimation->name()->equals(animationName)) {
                     task = animations.value().erase(task);
                 } else {
                     task++;
