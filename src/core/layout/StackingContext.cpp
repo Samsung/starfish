@@ -475,20 +475,25 @@ void StackingContext::computeTransformMatrix()
 }
 
 static void extractMaxScaleFactorFromAnimation(AnimatedValue* v,
-                                               float& transformScaleMaxValue)
+                                               float& transformScaleMaxValue,
+                                               ActiveAnimationTask* task)
 {
     if (v->isTransformData()) {
-        auto transformData = v->getTransformData();
-        for (size_t i = 0; i < transformData->size(); i++) {
-            if (transformData->at(i).type() == StyleTransformData::Scale) {
-                transformScaleMaxValue =
-                    std::max(transformScaleMaxValue,
-                             (float)transformData->at(i).scale()->x());
-                transformScaleMaxValue =
-                    std::max(transformScaleMaxValue,
-                             (float)transformData->at(i).scale()->y());
+        auto transformData =
+            ((ActiveTransformAnimationTask*)task)->toTransformValue();
+        if (transformData) {
+            for (size_t i = 0; i < transformData->size(); i++) {
+                if (transformData->at(i).type() == StyleTransformData::Scale) {
+                    transformScaleMaxValue =
+                        std::max(transformScaleMaxValue,
+                                 (float)transformData->at(i).scale()->x());
+                    transformScaleMaxValue =
+                        std::max(transformScaleMaxValue,
+                                 (float)transformData->at(i).scale()->y());
+                }
             }
         }
+
     } else {
         auto m = v->getMatrix();
         transformScaleMaxValue =
@@ -504,7 +509,8 @@ static void findAnimationTaskRelatedWithTransformScale(
     if (task->property() == CSSStyleValuePair::Transform) {
         const auto& v = task->values();
         for (size_t i = 0; i < v.size(); i++) {
-            extractMaxScaleFactorFromAnimation(v.at(i), transformScaleMaxValue);
+            extractMaxScaleFactorFromAnimation(v.at(i), transformScaleMaxValue,
+                                               task);
         }
     }
 }
@@ -1090,7 +1096,6 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                     *iter, transformScaleMaxValue);
                 iter++;
             }
-
             auto& animations = m_owner->node()
                                    ->document()
                                    ->animationExecutor()
