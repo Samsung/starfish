@@ -396,6 +396,11 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    StyleTransformDataGroup* toTransformValue()
+    {
+        return m_toTransformValue;
+    }
+
 protected:
     bool needsDecompositing(StyleTransformDataGroup* from,
                             StyleTransformDataGroup* to);
