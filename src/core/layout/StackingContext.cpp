@@ -192,6 +192,11 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         dontSplitGraphicsBufferCond = true;
     }
 
+    // Temp soluation.
+    if (m_additionalPixelRatio != 1) {
+        dontSplitGraphicsBufferCond = true;
+    }
+
     LayoutRect screenRect(0, 0, screenWidth, screenHeight);
     // if buffer is smaller than screen && whole content will be shown on
     // screen
