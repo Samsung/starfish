@@ -27,6 +27,7 @@
 #include "core/dom/svg/SVGFEGaussianBlurElement.h"
 #include "core/dom/svg/SVGFECompositeElement.h"
 #include "core/dom/svg/SVGFEMorphologyElement.h"
+#include "core/dom/svg/SVGFETurbulenceElement.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -121,6 +122,7 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("auto"));
         } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else if (m_targetAttribute ==
@@ -132,6 +134,7 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("strokeWidth"));
         } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else if (m_targetAttribute ==
@@ -146,6 +149,7 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("repeat"));
         } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else if (m_targetAttribute ==
@@ -167,6 +171,7 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("mirror"));
         } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else if (m_sourceElement->isSVGComponentTransferFunctionElement() &&
@@ -198,6 +203,22 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("gamma"));
         } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGFETurbulenceElement() &&
+               m_targetAttribute ==
+                   m_sourceElement->starfish()->staticStrings()->m_type) {
+        if (m_baseVal == SVGFETurbulenceElement::TurbulenceType::
+                             SVG_TURBULENCE_TYPE_FRACTALNOISE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("fractalNoise"));
+        } else if (m_baseVal == SVGFETurbulenceElement::TurbulenceType::
+                                    SVG_TURBULENCE_TYPE_TURBULENCE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("turbulence"));
+        } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else if (m_sourceElement->isSVGFEColorMatrixElement() &&
@@ -268,6 +289,22 @@ void SVGAnimatedEnumeration::updateAttribute()
             m_sourceElement->setAttribute(m_targetAttribute,
                                           String::fromUTF8("dilate"));
         } else {
+            STARFISH_ASSERT(m_baseVal == 0);
+        }
+    } else if (m_sourceElement->isSVGFETurbulenceElement() &&
+               m_targetAttribute == m_sourceElement->starfish()
+                                        ->staticStrings()
+                                        ->m_stitchTiles) {
+        if (m_baseVal ==
+            SVGFETurbulenceElement::StitchType::SVG_STITCHTYPE_NOSTITCH) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("nostitch"));
+        } else if (m_baseVal ==
+                   SVGFETurbulenceElement::StitchType::SVG_STITCHTYPE_STITCH) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("stitch"));
+        } else {
+            m_sourceElement->removeAttribute(m_targetAttribute);
             STARFISH_ASSERT(m_baseVal == 0);
         }
     } else {
