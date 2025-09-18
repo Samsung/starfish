@@ -51,30 +51,31 @@ class String;
 
 namespace Unit {
 
-    class Size {
+    template <typename T>
+    class SizeImpl {
     public:
-        Size(float w = 0, float h = 0)
+        SizeImpl(T w = 0, T h = 0)
         {
             m_width = w;
             m_height = h;
         }
 
-        void setWidth(float w)
+        void setWidth(T w)
         {
             m_width = w;
         }
 
-        void setHeight(float h)
+        void setHeight(T h)
         {
             m_height = h;
         }
 
-        float width() const
+        T width() const
         {
             return m_width;
         }
 
-        float height() const
+        T height() const
         {
             return m_height;
         }
@@ -85,8 +86,48 @@ namespace Unit {
         }
 
     protected:
-        float m_width, m_height;
+        T m_width, m_height;
     };
+
+    using Size = SizeImpl<float>;
+    using FloatSize = Size;
+    using IntSize = SizeImpl<int32_t>;
+
+    template <typename T>
+    class PointImpl {
+    public:
+        PointImpl(T x = 0, T y = 0)
+        {
+            m_x = x;
+            m_y = y;
+        }
+
+        void setX(T x)
+        {
+            m_x = x;
+        }
+
+        void setY(T y)
+        {
+            m_y = y;
+        }
+
+        T x() const
+        {
+            return m_x;
+        }
+
+        T y() const
+        {
+            return m_y;
+        }
+
+    protected:
+        T m_x, m_y;
+    };
+
+    using FloatPoint = PointImpl<float>;
+    using IntPoint = PointImpl<int32_t>;
 
     class Location {
     public:

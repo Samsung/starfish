@@ -35,7 +35,7 @@ public:
 
     void setBaseVal(float baseVal, bool fromSetAttribute = false)
     {
-        m_baseVal = baseVal;
+        m_animVal = m_baseVal = baseVal;
         if (!fromSetAttribute) {
             updateTargetElementAttribute();
         }

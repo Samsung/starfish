@@ -229,6 +229,7 @@ namespace Starfish {
     F(fefuncr)                         \
     F(fefuncb)                         \
     F(fefuncg)                         \
+    F(feturbulence)                    \
     F(feTurbulence)
 
 // FIXME: current parser converts linearGradient to lineargradient
@@ -579,6 +580,7 @@ public:
     QualifiedName m_k4;
     QualifiedName m_azimuth;
     QualifiedName m_elevation;
+    QualifiedName m_baseFrequency;
     QualifiedName m_baseFrequencyX;
     QualifiedName m_baseFrequencyY;
     QualifiedName m_numOctaves;

@@ -640,6 +640,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "azimuth"));
     m_elevation =
         QualifiedName(AtomicString::createAtomicString(starfish, "elevation"));
+    m_baseFrequency = QualifiedName(
+        AtomicString::createAtomicString(starfish, "baseFrequency"));
     m_baseFrequencyX = QualifiedName(
         AtomicString::createAtomicString(starfish, "baseFrequencyX"));
     m_baseFrequencyY = QualifiedName(

@@ -796,6 +796,10 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_diffuseConstant,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("basefrequency")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_baseFrequency,
+                          tokenAttribute.value());
         } else if (tokenAttribute.name().localName()->equals(
                        "basefrequencyx")) {
             tokenAttribute =
