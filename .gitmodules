@@ -1,10 +1,10 @@
 [submodule "third_party/deviceapi"]
 	path = third_party/deviceapi
-	url = git@github.sec.samsung.net:lws/tizen_device_api_loader.git
+	url = https://github.sec.samsung.net/lws/tizen_device_api_loader.git
 	ignore = untracked
 [submodule "binding_generator"]
 	path = binding_generator
-	url = git@github.sec.samsung.net:lws/binding_generator.git
+	url = https://github.sec.samsung.net/lws/binding_generator.git
 	ignore = untracked
 [submodule "third_party/escargot"]
 	path = third_party/escargot
@@ -12,87 +12,87 @@
 	ignore = untracked
 [submodule "third_party/MP4Parse"]
 	path = third_party/MP4Parse
-	url = git@github.sec.samsung.net:lws-submodules/MP4Parse.git
+	url = https://github.sec.samsung.net/lws-submodules/MP4Parse.git
 	ignore = untracked
 [submodule "third_party/clipper"]
 	path = third_party/clipper
-	url = git@github.sec.samsung.net:lws-submodules/clipper.git
+	url = https://github.sec.samsung.net/lws-submodules/clipper.git
 	ignore = untracked
 [submodule "third_party/rapidxml"]
 	path = third_party/rapidxml
-	url = git@github.sec.samsung.net:lws-submodules/rapidxml.git
+	url = https://github.sec.samsung.net/lws-submodules/rapidxml.git
 	ignore = untracked
 [submodule "third_party/skia_matrix"]
 	path = third_party/skia_matrix
-	url = git@github.sec.samsung.net:lws-submodules/skia_matrix.git
+	url = https://github.sec.samsung.net/lws-submodules/skia_matrix.git
 	ignore = untracked
 [submodule "third_party/webm"]
 	path = third_party/webm
-	url = git@github.sec.samsung.net:lws-submodules/webm.git
+	url = https://github.sec.samsung.net/lws-submodules/webm.git
 	ignore = untracked
 [submodule "tool/gyp"]
 	path = tool/gyp
-	url = git@github.sec.samsung.net:lws-misc/gyp.git
+	url = https://github.sec.samsung.net/lws-misc/gyp.git
 	ignore = untracked
 [submodule "third_party/libtuv"]
 	path = third_party/libtuv
-	url = git@github.sec.samsung.net:lws-submodules/libtuv.git
+	url = https://github.sec.samsung.net/lws-submodules/libtuv.git
 	ignore = untracked
 [submodule "third_party/windows/cairo"]
 	path = third_party/windows/cairo
-	url = git@github.sec.samsung.net:lws-submodules/cairo.git
+	url = https://github.sec.samsung.net/lws-submodules/cairo.git
 	ignore = untracked
 [submodule "third_party/windows/curl"]
 	path = third_party/windows/curl
-	url = git@github.sec.samsung.net:lws-submodules/curl.git
+	url = https://github.sec.samsung.net/lws-submodules/curl.git
 	ignore = untracked
 [submodule "third_party/windows/fontconfig"]
 	path = third_party/windows/fontconfig
-	url = git@github.sec.samsung.net:lws-submodules/fontconfig.git
+	url = https://github.sec.samsung.net/lws-submodules/fontconfig.git
 	ignore = untracked
 [submodule "third_party/windows/freetype2"]
 	path = third_party/windows/freetype2
-	url = git@github.sec.samsung.net:lws-submodules/freetype2.git
+	url = https://github.sec.samsung.net/lws-submodules/freetype2.git
 	ignore = untracked
 [submodule "third_party/windows/giflib"]
 	path = third_party/windows/giflib
-	url = git@github.sec.samsung.net:lws-submodules/giflib.git
+	url = https://github.sec.samsung.net/lws-submodules/giflib.git
 	ignore = untracked
 [submodule "third_party/windows/harfbuzz"]
 	path = third_party/windows/harfbuzz
-	url = git@github.sec.samsung.net:lws-submodules/harfbuzz.git
+	url = https://github.sec.samsung.net/lws-submodules/harfbuzz.git
 	ignore = untracked
 [submodule "third_party/windows/libiconv"]
 	path = third_party/windows/libiconv
-	url = git@github.sec.samsung.net:lws-submodules/libiconv.git
+	url = https://github.sec.samsung.net/lws-submodules/libiconv.git
 	ignore = untracked
 [submodule "third_party/windows/libpng"]
 	path = third_party/windows/libpng
-	url = git@github.sec.samsung.net:lws-submodules/libpng.git
+	url = https://github.sec.samsung.net/lws-submodules/libpng.git
 	ignore = untracked
 [submodule "third_party/windows/libxml2"]
 	path = third_party/windows/libxml2
-	url = git@github.sec.samsung.net:lws-submodules/libxml2.git
+	url = https://github.sec.samsung.net/lws-submodules/libxml2.git
 	ignore = untracked
 [submodule "third_party/windows/pixman"]
 	path = third_party/windows/pixman
-	url = git@github.sec.samsung.net:lws-submodules/pixman.git
+	url = https://github.sec.samsung.net/lws-submodules/pixman.git
 	ignore = untracked
 [submodule "third_party/windows/windows_pthread"]
 	path = third_party/windows/windows_pthread
-	url = git@github.sec.samsung.net:lws-submodules/windows_pthread.git
+	url = https://github.sec.samsung.net/lws-submodules/windows_pthread.git
 	ignore = untracked
 [submodule "third_party/windows/zlib"]
 	path = third_party/windows/zlib
-	url = git@github.sec.samsung.net:lws-submodules/zlib.git
+	url = https://github.sec.samsung.net/lws-submodules/zlib.git
 	ignore = untracked
 [submodule "third_party/earcut.hpp"]
 	path = third_party/earcut.hpp
-	url = git@github.sec.samsung.net:lws-submodules/earcut.hpp.git
+	url = https://github.sec.samsung.net/lws-submodules/earcut.hpp.git
 	ignore = untracked
 [submodule "test"]
 	path = test
-	url = git@github.sec.samsung.net:lws-test/web_tc_new.git
+	url = https://github.sec.samsung.net/lws-test/web_tc_new.git
 	ignore = dirty
 [submodule "third_party/nanomsg"]
 	path = third_party/nanomsg
@@ -108,38 +108,38 @@
 	ignore = untracked
 [submodule "third_party/webrtc"]
 	path = third_party/webrtc
-	url = git@github.sec.samsung.net:lws-submodules/webrtc.git
+	url = https://github.sec.samsung.net/lws-submodules/webrtc.git
 [submodule "third_party/libwebsockets"]
 	path = third_party/libwebsockets
-	url = git@github.sec.samsung.net:lws-submodules/libwebsockets.git
+	url = https://github.sec.samsung.net/lws-submodules/libwebsockets.git
 [submodule "third_party/openssl"]
 	path = third_party/openssl
-	url = git@github.sec.samsung.net:lws-submodules/openssl.git
+	url = https://github.sec.samsung.net/lws-submodules/openssl.git
 [submodule "third_party/libjpeg-turbo"]
 	path = third_party/libjpeg-turbo
-	url = git@github.sec.samsung.net:lws-submodules/libjpeg-turbo.git
+	url = https://github.sec.samsung.net/lws-submodules/libjpeg-turbo.git
 [submodule "third_party/giflib"]
 	path = third_party/giflib
-	url = git@github.sec.samsung.net:lws-submodules/giflib.git
+	url = https://github.sec.samsung.net/lws-submodules/giflib.git
 [submodule "third_party/libpng"]
 	path = third_party/libpng
-	url = git@github.sec.samsung.net:lws-submodules/libpng.git
+	url = https://github.sec.samsung.net/lws-submodules/libpng.git
 [submodule "third_party/windows/openssl"]
 	path = third_party/windows/openssl
-	url = git@github.sec.samsung.net:lws-submodules/openssl.git
+	url = https://github.sec.samsung.net/lws-submodules/openssl.git
 [submodule "third_party/windows/libwebsockets"]
 	path = third_party/windows/libwebsockets
-	url = git@github.sec.samsung.net:lws-submodules/libwebsockets.git
+	url = https://github.sec.samsung.net/lws-submodules/libwebsockets.git
 [submodule "third_party/windows/libtuv"]
 	path = third_party/windows/libtuv
-	url = git@github.sec.samsung.net:lws-submodules/libtuv.git
+	url = https://github.sec.samsung.net/lws-submodules/libtuv.git
 	ignore = untracked
 [submodule "third_party/windows/glew"]
 	path = third_party/windows/glew
-	url = git@github.sec.samsung.net:lws-submodules/glew.git
+	url = https://github.sec.samsung.net/lws-submodules/glew.git
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
 [submodule "third_party/libwebp"]
 	path = third_party/libwebp
-	url = git@github.sec.samsung.net:tizen/libwebp.git
+	url = https://github.sec.samsung.net/tizen/libwebp.git
