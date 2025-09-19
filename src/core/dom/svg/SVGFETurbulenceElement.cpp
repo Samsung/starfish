@@ -68,6 +68,10 @@ void SVGFETurbulenceElement::didAttributeChanged(QualifiedName name,
     if (ss->m_baseFrequency == name) {
         notifyAttributeOfPaintServerLikeUpdated(true);
 
+        // The baseFrequency attribute can have one or two values.
+        // If it has two values, they are assigned to baseFrequencyX and
+        // baseFrequencyY. If it has one value, it is assigned to both
+        // baseFrequencyX and baseFrequencyY.
         if (value->containsWhitespace()) {
             auto s = StringUtils::split(
                 value->stripAndCollapseASCIIwhitespace()->toUTF8NonGCString(),

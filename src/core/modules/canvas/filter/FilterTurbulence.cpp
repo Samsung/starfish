@@ -33,6 +33,8 @@
 #include "core/page/WebView.h"
 #include "core/layout/svg/FrameSVGBox.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
+#include <cmath>
+#include <algorithm>
 
 namespace Starfish {
 
@@ -62,13 +64,13 @@ void* FilterTurbulence::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
-/*
+
 // The turbulence calculation code is an adapted version of what appears in the
 // SVG 1.1 specification: http://www.w3.org/TR/SVG11/filters.html#feTurbulence
 
 FilterTurbulence::PaintingData FilterTurbulence::initPaintingData(
-    TurbulenceType type, float baseFrequencyX, float baseFrequencyY,
-    int numOctaves, long seed, bool stitchTiles, const IntSize& paintingSize)
+    int type, float baseFrequencyX, float baseFrequencyY, int numOctaves,
+    long seed, bool stitchTiles, const Unit::IntSize& paintingSize)
 {
     PaintingData paintingData{ type, baseFrequencyX, baseFrequencyY, numOctaves,
                                seed, stitchTiles,    paintingSize,   {},
@@ -80,11 +82,10 @@ FilterTurbulence::PaintingData FilterTurbulence::initPaintingData(
     if (paintingData.seed > s_randMaximum - 1)
         paintingData.seed = s_randMaximum - 1;
 
-    std::span<float> gradient;
     for (int channel = 0; channel < 4; ++channel) {
         for (int i = 0; i < s_blockSize; ++i) {
             paintingData.latticeSelector[i] = i;
-            gradient = paintingData.gradient[channel][i];
+            auto& gradient = paintingData.gradient[channel][i];
             do {
                 gradient[0] = static_cast<float>(
                                   (paintingData.random() % (2 * s_blockSize)) -
@@ -104,8 +105,8 @@ FilterTurbulence::PaintingData FilterTurbulence::initPaintingData(
     for (int i = s_blockSize - 1; i > 0; --i) {
         int k = paintingData.latticeSelector[i];
         int j = paintingData.random() % s_blockSize;
-        ASSERT(j >= 0);
-        ASSERT(j < 2 * s_blockSize + 2);
+        STARFISH_ASSERT(j >= 0);
+        STARFISH_ASSERT(j < 2 * s_blockSize + 2);
         paintingData.latticeSelector[i] = paintingData.latticeSelector[j];
         paintingData.latticeSelector[j] = k;
     }
@@ -124,18 +125,16 @@ FilterTurbulence::PaintingData FilterTurbulence::initPaintingData(
     return paintingData;
 }
 
-FETurbulenceSoftwareApplier::StitchData
-FETurbulenceSoftwareApplier::computeStitching(IntSize tileSize,
-                                              float& baseFrequencyX,
-                                              float& baseFrequencyY,
-                                              bool stitchTiles)
+FilterTurbulence::StitchData FilterTurbulence::computeStitching(
+    Unit::IntSize tileSize, float& baseFrequencyX, float& baseFrequencyY,
+    bool stitchTiles)
 {
     if (!stitchTiles)
         return {};
 
     float tileWidth = tileSize.width();
     float tileHeight = tileSize.height();
-    ASSERT(tileWidth > 0 && tileHeight > 0);
+    STARFISH_ASSERT(tileWidth > 0 && tileHeight > 0);
 
     // When stitching tiled turbulence, the frequencies must be adjusted
     // so that the tile borders will be continuous.
@@ -168,9 +167,9 @@ FETurbulenceSoftwareApplier::computeStitching(IntSize tileSize,
 
 // This is taken 1:1 from SVG spec:
 // http://www.w3.org/TR/SVG11/filters.html#feTurbulenceElement.
-ColorComponents<float, 4> FETurbulenceSoftwareApplier::noise2D(
+std::array<float, 4> FilterTurbulence::noise2D(
     const PaintingData& paintingData, const StitchData& stitchData,
-    const FloatPoint& noiseVector)
+    const Unit::FloatPoint& noiseVector)
 {
     struct NoisePosition {
         int index;      // bx0, by0 in the spec text.
@@ -235,15 +234,15 @@ ColorComponents<float, 4> FETurbulenceSoftwareApplier::noise2D(
         // b00 = uLatticeSelector[i + by0]
         int b00 = paintingData.latticeSelector[latticeIndex + noiseY.index];
         // q = fGradient[nColorChannel][b00]; u = rx0 * q[0] + ry0 * q[1];
-        std::span<const float> q = paintingData.gradient[channel][b00];
-        float u = noiseX.fraction * q[0] + noiseY.fraction * q[1];
+        const auto& q1 = paintingData.gradient[channel][b00];
+        float u = noiseX.fraction * q1[0] + noiseY.fraction * q1[1];
 
         // b10 = uLatticeSelector[j + by0];
         int b10 = paintingData.latticeSelector[nextLatticeIndex + noiseY.index];
         // rx1 = rx0 - 1.0f;
         // q = fGradient[nColorChannel][b10]; v = rx1 * q[0] + ry0 * q[1];
-        q = paintingData.gradient[channel][b10];
-        float v = (noiseX.fraction - 1) * q[0] + noiseY.fraction * q[1];
+        const auto& q2 = paintingData.gradient[channel][b10];
+        float v = (noiseX.fraction - 1) * q2[0] + noiseY.fraction * q2[1];
         // a = lerp(sx, u, v);
         float a = linearInterpolation(sx, u, v);
 
@@ -251,15 +250,15 @@ ColorComponents<float, 4> FETurbulenceSoftwareApplier::noise2D(
         int b01 = paintingData.latticeSelector[latticeIndex + noiseY.nextIndex];
         // ry1 = ry0 - 1.0f;
         // q = fGradient[nColorChannel][b01]; u = rx0 * q[0] + ry1 * q[1];
-        q = paintingData.gradient[channel][b01];
-        u = noiseX.fraction * q[0] + (noiseY.fraction - 1) * q[1];
+        const auto& q3 = paintingData.gradient[channel][b01];
+        u = noiseX.fraction * q3[0] + (noiseY.fraction - 1) * q3[1];
 
         // b11 = uLatticeSelector[j + by1];
         int b11 =
             paintingData.latticeSelector[nextLatticeIndex + noiseY.nextIndex];
         // q = fGradient[nColorChannel][b11]; v = rx1 * q[0] + ry1 * q[1];
-        q = paintingData.gradient[channel][b11];
-        v = (noiseX.fraction - 1) * q[0] + (noiseY.fraction - 1) * q[1];
+        const auto& q4 = paintingData.gradient[channel][b11];
+        v = (noiseX.fraction - 1) * q4[0] + (noiseY.fraction - 1) * q4[1];
         // b = lerp(sx, u, v);
         float b = linearInterpolation(sx, u, v);
 
@@ -275,34 +274,39 @@ ColorComponents<float, 4> FETurbulenceSoftwareApplier::noise2D(
 // conversion to color components.
 // FIXME: This should use colorConvert<SRGBA<uint8>>(SRGBA<float>) to get the
 // same behavior.
-ColorComponents<uint8_t, 4>
-FETurbulenceSoftwareApplier::toIntBasedColorComponents(
-    const ColorComponents<float, 4>& floatComponents)
+std::array<uint8_t, 4> FilterTurbulence::toIntBasedColorComponents(
+    const std::array<float, 4>& floatComponents)
 {
     return {
-        std::clamp<uint8_t>(static_cast<int>(floatComponents[0] * 255), 0, 255),
-        std::clamp<uint8_t>(static_cast<int>(floatComponents[1] * 255), 0, 255),
-        std::clamp<uint8_t>(static_cast<int>(floatComponents[2] * 255), 0, 255),
-        std::clamp<uint8_t>(static_cast<int>(floatComponents[3] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[0] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[1] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[2] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[3] * 255), 0, 255),
     };
 }
 
-ColorComponents<uint8_t, 4>
-FETurbulenceSoftwareApplier::calculateTurbulenceValueForPoint(
+std::array<uint8_t, 4> FilterTurbulence::calculateTurbulenceValueForPoint(
     const PaintingData& paintingData, StitchData stitchData,
-    const FloatPoint& point)
+    const Unit::FloatPoint& point)
 {
-    ColorComponents<float, 4> turbulenceFunctionResult;
-    FloatPoint noiseVector(point.x() * paintingData.baseFrequencyX,
-                           point.y() * paintingData.baseFrequencyY);
+    std::array<float, 4> turbulenceFunctionResult{ 0, 0, 0, 0 };
+    Unit::FloatPoint noiseVector(point.x() * paintingData.baseFrequencyX,
+                                 point.y() * paintingData.baseFrequencyY);
     float ratio = 1;
     for (int octave = 0; octave < paintingData.numOctaves; ++octave) {
-        if (paintingData.type == TurbulenceType::FractalNoise)
-            turbulenceFunctionResult +=
-                noise2D(paintingData, stitchData, noiseVector) / ratio;
-        else
-            turbulenceFunctionResult +=
-                noise2D(paintingData, stitchData, noiseVector).abs() / ratio;
+        auto noise = noise2D(paintingData, stitchData, noiseVector);
+        if (paintingData.type ==
+            SVGFETurbulenceElement::SVG_TURBULENCE_TYPE_FRACTALNOISE) {
+            turbulenceFunctionResult[0] += noise[0] / ratio;
+            turbulenceFunctionResult[1] += noise[1] / ratio;
+            turbulenceFunctionResult[2] += noise[2] / ratio;
+            turbulenceFunctionResult[3] += noise[3] / ratio;
+        } else {
+            turbulenceFunctionResult[0] += std::abs(noise[0]) / ratio;
+            turbulenceFunctionResult[1] += std::abs(noise[1]) / ratio;
+            turbulenceFunctionResult[2] += std::abs(noise[2]) / ratio;
+            turbulenceFunctionResult[3] += std::abs(noise[3]) / ratio;
+        }
 
         noiseVector.setX(noiseVector.x() * 2);
         noiseVector.setY(noiseVector.y() * 2);
@@ -322,12 +326,16 @@ FETurbulenceSoftwareApplier::calculateTurbulenceValueForPoint(
     // The value of turbulenceFunctionResult comes from
     // ((turbulenceFunctionResult * 255) + 255) / 2 by fractalNoise and
     // (turbulenceFunctionResult * 255) by turbulence.
-    if (paintingData.type == TurbulenceType::FractalNoise)
-        turbulenceFunctionResult = turbulenceFunctionResult * 0.5f + 0.5f;
+    if (paintingData.type ==
+        SVGFETurbulenceElement::SVG_TURBULENCE_TYPE_FRACTALNOISE) {
+        turbulenceFunctionResult[0] = turbulenceFunctionResult[0] * 0.5f + 0.5f;
+        turbulenceFunctionResult[1] = turbulenceFunctionResult[1] * 0.5f + 0.5f;
+        turbulenceFunctionResult[2] = turbulenceFunctionResult[2] * 0.5f + 0.5f;
+        turbulenceFunctionResult[3] = turbulenceFunctionResult[3] * 0.5f + 0.5f;
+    }
 
     return toIntBasedColorComponents(turbulenceFunctionResult);
 }
-*/
 
 void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
                              Filter::FilterApplyContext& ctx)
@@ -342,15 +350,31 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
 
     float baseFrequencyX = e->baseFrequencyX()->animVal();
     float baseFrequencyY = e->baseFrequencyY()->animVal();
-    /*
-    auto stitchData =
-        computeStitching(Unit::Size(ctx.width, ctx.height), baseFrequencyX,
-                         baseFrequencyY, e->stitchTiles()->animVal());
-    auto paintingData = initPaintingData(
-        e->type()->animVal(), baseFrequencyX, baseFrequencyY,
-        e->numOctaves()->animVal(), e->seed()->animVal(),
-        e->stitchTiles()->animVal(), Unit::Size(ctx.width, ctx.height));
-*/
+
+    auto stitchData = computeStitching(
+        Unit::IntSize(ctx.width, ctx.height), baseFrequencyX, baseFrequencyY,
+        e->stitchTiles()->animVal() ==
+            SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH);
+    auto paintingData =
+        initPaintingData(e->type()->animVal(), baseFrequencyX, baseFrequencyY,
+                         e->numOctaves()->animVal(), e->seed()->animVal(),
+                         e->stitchTiles()->animVal() ==
+                             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH,
+                         Unit::IntSize(ctx.width, ctx.height));
+
+    unsigned char* data = (unsigned char*)outputSource->data();
+    for (uint y = 0; y < ctx.height; y++) {
+        for (uint x = 0; x < ctx.width; x++) {
+            auto color = calculateTurbulenceValueForPoint(
+                paintingData, stitchData, Unit::FloatPoint(x, y));
+            int offset = y * ctx.stride + x * 4;
+            data[offset + 0] = color[0];
+            data[offset + 1] = color[1];
+            data[offset + 2] = color[2];
+            data[offset + 3] = color[3];
+        }
+    }
+
     convertImageBufferAsPremultipliedAlphaIfNeeds(
         outputSource->data(), ctx.width, ctx.stride, ctx.height);
 

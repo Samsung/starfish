@@ -25,14 +25,30 @@
 
 namespace Starfish {
 
+/**
+ * @brief The SVGFETurbulenceElement class implements the <feTurbulence> SVG
+ * filter primitive.
+ *
+ * The <feTurbulence> filter primitive creates an image using the Perlin
+ * turbulence function. It allows the synthesis of artificial textures like
+ * clouds or marble. https://www.w3.org/TR/SVG/filters.html#feTurbulenceElement
+ */
 class SVGFETurbulenceElement : public SVGFilterPrimitiveStandardAttributes {
 public:
+    /**
+     * @brief The TurbulenceType enum corresponds to the 'type' attribute of the
+     * <feTurbulence> element.
+     */
     enum TurbulenceType {
         SVG_TURBULENCE_TYPE_UNKNOWN = 0,
         SVG_TURBULENCE_TYPE_FRACTALNOISE,
         SVG_TURBULENCE_TYPE_TURBULENCE,
     };
 
+    /**
+     * @brief The StitchType enum corresponds to the 'stitchTiles' attribute of
+     * the <feTurbulence> element.
+     */
     enum StitchType {
         SVG_STITCHTYPE_UNKNOWN = 0,
         SVG_STITCHTYPE_STITCH,
@@ -56,11 +72,33 @@ public:
         CSSStyleValuePairVectorHolder& cssValues,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
+    /**
+     * @brief Corresponds to the 'baseFrequencyX' attribute of the
+     * <feTurbulence> element.
+     */
     SVGAnimatedNumber* baseFrequencyX();
+    /**
+     * @brief Corresponds to the 'baseFrequencyY' attribute of the
+     * <feTurbulence> element.
+     */
     SVGAnimatedNumber* baseFrequencyY();
+    /**
+     * @brief Corresponds to the 'numOctaves' attribute of the <feTurbulence>
+     * element.
+     */
     SVGAnimatedInteger* numOctaves();
+    /**
+     * @brief Corresponds to the 'seed' attribute of the <feTurbulence> element.
+     */
     SVGAnimatedNumber* seed();
+    /**
+     * @brief Corresponds to the 'stitchTiles' attribute of the <feTurbulence>
+     * element.
+     */
     SVGAnimatedEnumeration* stitchTiles();
+    /**
+     * @brief Corresponds to the 'type' attribute of the <feTurbulence> element.
+     */
     SVGAnimatedEnumeration* type();
 
 private:

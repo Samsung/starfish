@@ -27,8 +27,18 @@
 #define __StarfishFilterTurbulence__
 
 #include "core/modules/canvas/filter/FilterPrimitive.h"
+#include "core/dom/svg/SVGFETurbulenceElement.h"
+#include <array>
 
 namespace Starfish {
+
+/**
+ * @brief The FilterTurbulence class implements the filter primitive for the
+ * <feTurbulence> element.
+ *
+ * This class is responsible for generating the turbulence image based on the
+ * attributes of the SVGFETurbulenceElement.
+ */
 class FilterTurbulence : public FilterPrimitive {
 private:
     // Produces results in the range [1, 2**31 - 2]. Algorithm is:
@@ -76,16 +86,6 @@ private:
         int wrapX{ 0 }; // Minimum value to wrap.
         int height{ 0 };
         int wrapY{ 0 };
-    };
-
-    struct ApplyParameters {
-        Unit::Rect filterRegion;
-        Unit::FloatSize filterScale;
-        // PixelBuffer* pixelBuffer;
-        PaintingData* paintingData;
-        StitchData stitchData;
-        int startY;
-        int endY;
     };
 
     static inline float smoothCurve(float t)
