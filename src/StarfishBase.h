@@ -1088,4 +1088,10 @@ private:
 #define STARFISH_PIXEL_A_INDEX 3
 #endif
 
+template <class T>
+constexpr const T& clamp(const T& value, const T& low, const T& high)
+{
+    return (value < low) ? low : (high < value) ? high : value;
+}
+
 #endif
