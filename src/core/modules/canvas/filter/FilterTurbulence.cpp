@@ -270,10 +270,6 @@ std::array<float, 4> FilterTurbulence::noise2D(
              noiseForChannel(3) };
 }
 
-// https://www.w3.org/TR/SVG/filters.html#feTurbulenceElement describes this
-// conversion to color components.
-// FIXME: This should use colorConvert<SRGBA<uint8>>(SRGBA<float>) to get the
-// same behavior.
 std::array<uint8_t, 4> FilterTurbulence::toIntBasedColorComponents(
     const std::array<float, 4>& floatComponents)
 {
@@ -368,10 +364,10 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
             auto color = calculateTurbulenceValueForPoint(
                 paintingData, stitchData, Unit::FloatPoint(x, y));
             int offset = y * ctx.stride + x * 4;
-            data[offset + 0] = color[0];
-            data[offset + 1] = color[1];
-            data[offset + 2] = color[2];
-            data[offset + 3] = color[3];
+            data[offset + STARFISH_PIXEL_R_INDEX] = color[0];
+            data[offset + STARFISH_PIXEL_G_INDEX] = color[1];
+            data[offset + STARFISH_PIXEL_B_INDEX] = color[2];
+            data[offset + STARFISH_PIXEL_A_INDEX] = color[3];
         }
     }
 
