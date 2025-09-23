@@ -28,6 +28,7 @@
 #include "core/modules/canvas/filter/FilterOffset.h"
 #include "core/modules/canvas/filter/FilterFlood.h"
 #include "core/modules/canvas/filter/FilterTurbulence.h"
+#include "core/modules/canvas/filter/FilterDisplacementMap.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
@@ -331,6 +332,8 @@ Optional<FilterPrimitive*> Filter::createFilterPrimitive(
         primitive = new FilterFlood(this, filterPrimitiveNode);
     } else if (filterPrimitiveNode->isSVGFETurbulenceElement()) {
         primitive = new FilterTurbulence(this, filterPrimitiveNode);
+    } else if (filterPrimitiveNode->isSVGFEDisplacementMapElement()) {
+        primitive = new FilterDisplacementMap(this, filterPrimitiveNode);
     }
     return primitive;
 }

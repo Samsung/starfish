@@ -203,7 +203,6 @@ namespace Starfish {
     F(fecomposite)                     \
     F(feConvolveMatrix)                \
     F(feDiffuseLighting)               \
-    F(feDisplacementMap)               \
     F(feDropShadow)                    \
     F(feSpotLight)                     \
     F(feGaussianBlur)                  \
@@ -230,7 +229,9 @@ namespace Starfish {
     F(fefuncb)                         \
     F(fefuncg)                         \
     F(feturbulence)                    \
-    F(feTurbulence)
+    F(feTurbulence)                    \
+    F(feDisplacementMap)               \
+    F(fedisplacementmap)
 
 // FIXME: current parser converts linearGradient to lineargradient
 // Remove F(lineargradient) after fixing this issue
