@@ -124,6 +124,16 @@ void SVGImageElement::loadImage(String* src)
     m_imageResource->request(reqData, true);
 }
 
+void SVGImageElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (name == ss->m_preserveAspectRatio) {
+        setNeedsPainting();
+    }
+}
+
 void SVGImageElement::didAttributeChanged(QualifiedName name,
                                           Optional<String*> old, String* value,
                                           bool attributeCreated,
@@ -143,8 +153,6 @@ void SVGImageElement::didAttributeChanged(QualifiedName name,
                 loadImage(value);
             }
         }
-    } else if (name == ss->m_preserveAspectRatio) {
-        setNeedsPainting();
     }
 }
 

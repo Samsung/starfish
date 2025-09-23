@@ -74,6 +74,8 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
 
 protected:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
 

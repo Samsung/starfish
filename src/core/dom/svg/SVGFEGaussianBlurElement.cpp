@@ -50,6 +50,24 @@ void* SVGFEGaussianBlurElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEGaussianBlurElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_stdDeviation == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_stdDeviationX == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_stdDeviationY == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_edgeMode == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    }
+}
+
 void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
                                                    Optional<String*> old,
                                                    String* value,

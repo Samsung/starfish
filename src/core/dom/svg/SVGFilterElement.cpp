@@ -46,6 +46,28 @@ void* SVGFilterElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFilterElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_filterUnits == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_primitiveUnits == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_x == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_y == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_width == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_height == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    }
+}
+
 void SVGFilterElement::didAttributeChanged(QualifiedName name,
                                            Optional<String*> old, String* value,
                                            bool attributeCreated,
@@ -56,8 +78,6 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_filterUnits == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated(true);
         if (filterUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_filterUnits->setBaseValWithoutUpdateAttribute(
@@ -68,8 +88,6 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_primitiveUnits == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated(true);
         if (primitiveUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_primitiveUnits->setBaseValWithoutUpdateAttribute(
@@ -80,16 +98,12 @@ void SVGFilterElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_x == name) {
-        attributeOfPaintServerLikeUpdated(true);
         x()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_y == name) {
-        attributeOfPaintServerLikeUpdated(true);
         y()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_width == name) {
-        attributeOfPaintServerLikeUpdated(true);
         width()->baseVal()->setValueAsString(value, true);
     } else if (ss->m_height == name) {
-        attributeOfPaintServerLikeUpdated(true);
         height()->baseVal()->setValueAsString(value, true);
     }
 }

@@ -65,6 +65,8 @@ public:
     void setOrientToAngle(SVGAngle* angle);
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     SVGAnimatedEnumeration* m_markerUnits;
     SVGAnimatedAngle* m_orientAngle;
     SVGAnimatedEnumeration* m_orientType;

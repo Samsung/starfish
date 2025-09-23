@@ -28,15 +28,16 @@
 #include "core/style/Style.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-// TODO implement animVal
 #define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                \
     SVGAnimatedLength* attrName()                                    \
     {                                                                \
         if (!m_##attrName.hasValue()) {                              \
             SVGLength* baseVal =                                     \
                 new SVGLength(this, staticStrings()->m_##attrName);  \
+            SVGLength* animVal =                                     \
+                new SVGLength(this, staticStrings()->m_##attrName);  \
             m_##attrName =                                           \
-                new SVGAnimatedLength(document(), baseVal, nullptr); \
+                new SVGAnimatedLength(document(), baseVal, animVal); \
         }                                                            \
         return m_##attrName.value();                                 \
     }
@@ -44,8 +45,9 @@
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2, customs) \
     {                                                                    \
         CSSStyleValuePair pair;                                          \
-        String* name = getAttributeOrVarReferencedValue(                 \
-            staticStrings()->m_##name, customs);                         \
+        String* name =                                                   \
+            getAttributeConsiderAnimatedAttributeOrVarReferencedValue(   \
+                staticStrings()->m_##name.localNameAtomic(), customs);   \
         if (name->length()) {                                            \
             pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);          \
             pair.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
@@ -67,6 +69,7 @@ class SVGClipPathElement;
 class SVGFilterElement;
 class SVGSVGElement;
 class SVGMaskElement;
+class ActiveSVGLengthAnimationTask;
 
 class SVGElement : public Element {
 public:
@@ -97,6 +100,7 @@ public:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Element::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGElement, m_animatedAttributes));
     }
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
@@ -215,10 +219,82 @@ public:
 
     virtual void attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout);
 
+    void setAnimatedAttribute(AtomicString s, String* v,
+                              ActiveSVGLengthAnimationTask* task)
+    {
+        for (auto& e : ensureAnimatedAttributes()) {
+            if (std::get<0>(e) == s) {
+                std::get<1>(e) = v;
+                computeAttributeChangeDamage(s);
+                return;
+            }
+        }
+        ensureAnimatedAttributes().push_back(std::make_tuple(s, v, task));
+        computeAttributeChangeDamage(s);
+    }
+
+    void removeAnimatedAttribute(AtomicString s,
+                                 ActiveSVGLengthAnimationTask* task)
+    {
+        if (!m_animatedAttributes) {
+            return;
+        }
+        for (size_t i = 0; i < m_animatedAttributes->size(); i++) {
+            if (std::get<0>(m_animatedAttributes->at(i)) == s &&
+                std::get<2>(m_animatedAttributes->at(i)) == task) {
+                m_animatedAttributes->erase(i);
+                computeAttributeChangeDamage(s);
+                return;
+            }
+        }
+    }
+
+    Optional<String*> animatedAttribute(AtomicString s) const
+    {
+        if (!m_animatedAttributes) {
+            return nullptr;
+        }
+        for (auto& e : *m_animatedAttributes) {
+            if (std::get<0>(e) == s) {
+                return std::get<1>(e);
+            }
+        }
+        return nullptr;
+    }
+
+    String* getAttributeConsiderAnimatedAttribute(AtomicString s)
+    {
+        auto v = animatedAttribute(s);
+        if (v && v->length()) {
+            return v.value();
+        }
+        return getAttributeOrEmpty(s);
+    }
+
+    String* getAttributeConsiderAnimatedAttributeOrVarReferencedValue(
+        AtomicString s,
+        Optional<const MutablePropertyValueList*> cssCustomValues);
+
 protected:
+    virtual void computeAttributeChangeDamage(AtomicString attrName);
+
+    GCVector<std::tuple<AtomicString, String*, ActiveSVGLengthAnimationTask*>>&
+    ensureAnimatedAttributes()
+    {
+        if (!m_animatedAttributes) {
+            m_animatedAttributes =
+                new GCVector<std::tuple<AtomicString, String*,
+                                        ActiveSVGLengthAnimationTask*>>();
+        }
+        return *m_animatedAttributes.value();
+    }
+
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
+    Optional<GCVector<
+        std::tuple<AtomicString, String*, ActiveSVGLengthAnimationTask*>>*>
+        m_animatedAttributes;
 };
 } // namespace Starfish
 

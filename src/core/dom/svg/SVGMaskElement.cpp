@@ -57,6 +57,23 @@ SVGMaskElement::SVGMaskElement(Document* document, const QualifiedName& qname)
                                           true, false);
 }
 
+void SVGMaskElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_y == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_width == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_height == name) {
+        attributeOfPaintServerLikeUpdated(true);
+    }
+}
+
 void SVGMaskElement::didAttributeChanged(QualifiedName name,
                                          Optional<String*> old, String* value,
                                          bool attributeCreated,
@@ -68,16 +85,12 @@ void SVGMaskElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_x == name) {
-        attributeOfPaintServerLikeUpdated(true);
         x()->baseVal()->setValueAsString(value, true, false);
     } else if (ss->m_y == name) {
-        attributeOfPaintServerLikeUpdated(true);
         y()->baseVal()->setValueAsString(value, true, false);
     } else if (ss->m_width == name) {
-        attributeOfPaintServerLikeUpdated(true);
         width()->baseVal()->setValueAsString(value, true, false);
     } else if (ss->m_height == name) {
-        attributeOfPaintServerLikeUpdated(true);
         height()->baseVal()->setValueAsString(value, true, false);
     }
 }

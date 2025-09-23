@@ -45,6 +45,17 @@ void* SVGFEComponentTransferElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEComponentTransferElement::computeAttributeChangeDamage(
+    AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
                                                         Optional<String*> old,
                                                         String* value,
@@ -53,12 +64,6 @@ void SVGFEComponentTransferElement::didAttributeChanged(QualifiedName name,
 {
     SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-
-    StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
-        in()->setBaseVal(value, true);
-    }
 }
 
 void SVGFEComponentTransferElement::updateSVGAttributeNeeded(QualifiedName name)

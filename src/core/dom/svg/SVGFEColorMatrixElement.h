@@ -63,6 +63,8 @@ public:
     SVGAnimatedNumberList* values();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedEnumeration*> m_type;
     Optional<SVGAnimatedNumberList*> m_values;

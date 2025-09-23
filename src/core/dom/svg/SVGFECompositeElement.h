@@ -64,6 +64,8 @@ public:
     SVGAnimatedNumber* k4();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in1;
     Optional<SVGAnimatedString*> m_in2;
     Optional<SVGAnimatedEnumeration*> m_operator;

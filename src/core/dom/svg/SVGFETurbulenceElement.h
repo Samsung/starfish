@@ -102,6 +102,8 @@ public:
     SVGAnimatedEnumeration* type();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedNumber*> m_baseFrequencyX;
     Optional<SVGAnimatedNumber*> m_baseFrequencyY;
     Optional<SVGAnimatedInteger*> m_numOctaves;

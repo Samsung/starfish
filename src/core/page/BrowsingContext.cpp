@@ -71,6 +71,7 @@
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/InputEvent.h"
+#include "core/dom/svg/SVGAnimationElement.h"
 #include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceLoader.h"
 
@@ -221,6 +222,15 @@ void BrowsingContext::resolveStyleIfNeeds()
                         .recalcRuleSetIfNeeds();
                 }
             });
+        }
+
+        // execute pending svg animation
+        {
+            auto s(std::move(
+                document()->m_svgAnimateElementsNeedExecuteAnimation));
+            for (auto e : s) {
+                e->beginElementAt(0);
+            }
         }
 
         // resolve style

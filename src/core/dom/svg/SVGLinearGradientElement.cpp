@@ -41,6 +41,22 @@ GCVector<ColorStop*> SVGLinearGradientElement::colorStops()
     return colorStops;
 }
 
+void SVGLinearGradientElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGGradientElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_x1 == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_y1 == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_x2 == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_y2 == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
                                                    Optional<String*> old,
                                                    String* value,
@@ -53,16 +69,12 @@ void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
     if (!old || !old->equals(value)) {
         StaticStrings* ss = starfish()->staticStrings();
         if (ss->m_x1 == name) {
-            attributeOfPaintServerLikeUpdated(false);
             x1()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y1 == name) {
-            attributeOfPaintServerLikeUpdated(false);
             y1()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_x2 == name) {
-            attributeOfPaintServerLikeUpdated(false);
             x2()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y2 == name) {
-            attributeOfPaintServerLikeUpdated(false);
             y2()->baseVal()->setValueAsString(value, true, false);
         }
     }

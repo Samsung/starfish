@@ -48,6 +48,9 @@ public:
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
+
+private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 };
 } // namespace Starfish
 

@@ -44,6 +44,16 @@ void* SVGFEFloodElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEFloodElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_floodColor == name || ss->m_floodOpacity == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFEFloodElement::didAttributeChanged(QualifiedName name,
                                             Optional<String*> old,
                                             String* value,
@@ -52,11 +62,6 @@ void SVGFEFloodElement::didAttributeChanged(QualifiedName name,
 {
     SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-
-    StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_floodColor == name || ss->m_floodOpacity == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
-    }
 }
 
 void SVGFEFloodElement::styleForPresentationAttribute(

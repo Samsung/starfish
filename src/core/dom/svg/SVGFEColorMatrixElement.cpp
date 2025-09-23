@@ -47,6 +47,20 @@ void* SVGFEColorMatrixElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEColorMatrixElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_type == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_values == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
                                                   Optional<String*> old,
                                                   String* value,
@@ -58,10 +72,8 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_type == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         if (type()->isUpdated() == false) {
             if (value->equals("matrix")) {
                 m_type->setBaseValWithoutUpdateAttribute(
@@ -81,7 +93,6 @@ void SVGFEColorMatrixElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_values == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         SVGNumberList* valueList = values()->baseVal();
         valueList->setValueByString(value);
     }

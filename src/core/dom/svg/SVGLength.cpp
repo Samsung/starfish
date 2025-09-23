@@ -57,6 +57,16 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
 {
 }
 
+void SVGLength::updateByAttribute()
+{
+    if (m_sourceElement) {
+        // set fromElementDidAttributeChanged for prevent update of attribute
+        setValueAsString(
+            m_sourceElement->getAttributeOrEmpty(m_targetAttribute), true,
+            false);
+    }
+}
+
 ScriptBindingInstance* SVGLength::scriptBindingInstance()
 {
     if (m_sourceElement == nullptr) {
@@ -88,6 +98,8 @@ void SVGLength::setUnitType(unsigned short unitType)
 
 float SVGLength::value(bool layoutIfNeeded)
 {
+    updateByAttribute();
+
     if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
         Length len = Length(Length::Percent, m_valueInSpecifiedUnits / 100.0);
         FrameBox* cb =

@@ -28,6 +28,16 @@
 
 namespace Starfish {
 
+void SVGFEMergeNodeElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    }
+}
+
 void SVGFEMergeNodeElement::didAttributeChanged(QualifiedName name,
                                                 Optional<String*> old,
                                                 String* value,
@@ -41,7 +51,6 @@ void SVGFEMergeNodeElement::didAttributeChanged(QualifiedName name,
 
     if (ss->m_in == name) {
         in()->setBaseVal(value, true);
-        notifyAttributeOfPaintServerLikeUpdated();
     }
 }
 

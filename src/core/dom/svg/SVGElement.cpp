@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
@@ -28,6 +29,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/FilterFunctions.h"
+#include "core/animation/AnimationTask.h"
 
 namespace Starfish {
 
@@ -56,38 +58,9 @@ void* SVGElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
-                                     String* value, bool attributeCreated,
-                                     bool attributeRemoved)
+void SVGElement::computeAttributeChangeDamage(AtomicString name)
 {
-    Element::didAttributeChanged(name, old, value, attributeCreated,
-                                 attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-
-    if (name == ss->m_onload) {
-        setAttributeEventListener(ss->m_load, value, this);
-    } else if (name == ss->m_onerror) {
-        setAttributeEventListener(ss->m_error, value, this);
-    }
-
-    if (isPaintServerLikeElement()) {
-        if (ss->m_id == name) {
-            if (isInDocumentScopeAndDocumentParticipateInRendering()) {
-                if (!attributeRemoved) {
-                    document()
-                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
-                            Element::atomicId(), true);
-                }
-                if (!attributeCreated) {
-                    document()
-                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
-                            AtomicString::createAtomicString(starfish(),
-                                                             old.value()),
-                            true);
-                }
-            }
-        }
-    }
 
     if (needsGeometryAttributes()) {
         if (ss->m_x == name) {
@@ -176,6 +149,89 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         }
     }
 
+    if (isRenderableElement()) {
+        if (ss->m_display == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    {
+        if (ss->m_mask == name || ss->m_maskType == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    {
+        if (ss->m_filter == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    if (needsTransformAttributes()) {
+        if (ss->m_transform == name || ss->m_transformOrigin == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+            Traverse::traverseIncludingShadowDOM(
+                this, [](Node* nd) { nd->setNeedsPainting(); });
+        }
+    }
+
+    // if this element decendent of mask or clip-path element
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+        auto p = parentElement();
+        while (p) {
+            if (p->isSVGSVGElement()) {
+                break;
+            }
+            if (p->isSVGMaskElement() || p->isSVGClipPathElement()) {
+                p->asSVGElement()->attributeOfPaintServerLikeUpdated(true);
+            }
+            p = p->parentElement();
+        }
+    }
+}
+
+void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved)
+{
+    Element::didAttributeChanged(name, old, value, attributeCreated,
+                                 attributeRemoved);
+
+    if (!old || !old->equals(value)) {
+        computeAttributeChangeDamage(name.localNameAtomic());
+    }
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (name == ss->m_onload) {
+        setAttributeEventListener(ss->m_load, value, this);
+    } else if (name == ss->m_onerror) {
+        setAttributeEventListener(ss->m_error, value, this);
+    }
+
+    if (isPaintServerLikeElement()) {
+        if (ss->m_id == name) {
+            if (isInDocumentScopeAndDocumentParticipateInRendering()) {
+                if (!attributeRemoved) {
+                    document()
+                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                            Element::atomicId(), true);
+                }
+                if (!attributeCreated) {
+                    document()
+                        ->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
+                            AtomicString::createAtomicString(starfish(),
+                                                             old.value()),
+                            true);
+                }
+            }
+        }
+    }
+
     if (needsPreserveAspectRatioValue()) {
         if (ss->m_preserveAspectRatio == name) {
             GCVector<StringView> result;
@@ -223,62 +279,11 @@ void SVGElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
             }
         }
     }
-
-    if (isRenderableElement()) {
-        if (ss->m_display == name) {
-            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-            setNeedsPainting();
-        }
-    }
-
-    {
-        if (ss->m_mask == name || ss->m_maskType == name) {
-            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-            setNeedsPainting();
-        }
-    }
-
-    {
-        if (ss->m_filter == name) {
-            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-            setNeedsPainting();
-        }
-    }
-
-    if (needsTransformAttributes()) {
-        if (ss->m_transform == name || ss->m_transformOrigin == name) {
-            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-            setNeedsLayout();
-            Traverse::traverseIncludingShadowDOM(
-                this, [](Node* nd) { nd->setNeedsPainting(); });
-        }
-    }
-
-    // if this element decendent of mask or clip-path element
-    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
-        auto p = parentElement();
-        while (p) {
-            if (p->isSVGSVGElement()) {
-                break;
-            }
-            if (p->isSVGMaskElement() || p->isSVGClipPathElement()) {
-                p->asSVGElement()->attributeOfPaintServerLikeUpdated(true);
-            }
-            p = p->parentElement();
-        }
-    }
 }
 
 void SVGElement::didNodeInserted(Node* parent, Node* newChild)
 {
     Element::didNodeInserted(parent, newChild);
-    if (newChild->isSVGAnimationElement()) {
-        SVGAnimationElement* animate = newChild->asSVGAnimationElement();
-        Optional<Element*> maybeTargetElement = animate->targetElement();
-        if (maybeTargetElement && this == maybeTargetElement.value()) {
-            animate->beginElement();
-        }
-    }
 }
 
 void SVGElement::didNodeRemoved(Node* parent, Node* oldChild)
@@ -361,6 +366,28 @@ void SVGElement::styleForPresentationAttribute(
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     Element::styleForPresentationAttribute(cssValues);
+
+    // execute ActiveSVG AnimationTasks
+    if (m_animatedAttributes) {
+        for (auto e : *m_animatedAttributes) {
+            auto task = std::get<2>(e);
+            if (!task->isInDelayedTime()) {
+                auto tick =
+                    document()->browsingContext()->styleResolveStartTick();
+                auto remainTime = task->remainTime(tick);
+
+                if (remainTime <= 0 &&
+                    task->fillMode() == AnimationFillModeValue::None &&
+                    !task->isInForwardsFillMode()) {
+                    task->end();
+                } else {
+                    double f = task->fraction(tick);
+                    task->execute(task->computeProgress(f));
+                }
+            }
+        }
+    }
+
     CSSStyleValuePair pair;
 
     if (needsGeometryAttributes()) {
@@ -376,20 +403,22 @@ void SVGElement::styleForPresentationAttribute(
                                                    cssCustomValues);
     }
 
-#define UPDATE_SVG_PRESENTATION_ATTRIBUTE(name, keyName)                \
-    {                                                                   \
-        String* value = getAttributeOrVarReferencedValue(               \
-            starfish()->staticStrings()->m_##name, cssCustomValues);    \
-        if (value->length()) {                                          \
-            pair.setKeyKind(CSSStyleValuePair::keyName);                \
-            auto u8str = value->toUTF8NonGCString();                    \
-            CSSTokenVector tokens;                                      \
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, u8str.data(), \
-                                                  u8str.length());      \
-            if (pair.updateValue##keyName(document(), tokens)) {        \
-                cssValues.push_back(pair);                              \
-            }                                                           \
-        }                                                               \
+#define UPDATE_SVG_PRESENTATION_ATTRIBUTE(name, keyName)                 \
+    {                                                                    \
+        String* value =                                                  \
+            getAttributeConsiderAnimatedAttributeOrVarReferencedValue(   \
+                starfish()->staticStrings()->m_##name.localNameAtomic(), \
+                cssCustomValues);                                        \
+        if (value->length()) {                                           \
+            pair.setKeyKind(CSSStyleValuePair::keyName);                 \
+            auto u8str = value->toUTF8NonGCString();                     \
+            CSSTokenVector tokens;                                       \
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, u8str.data(),  \
+                                                  u8str.length());       \
+            if (pair.updateValue##keyName(document(), tokens)) {         \
+                cssValues.push_back(pair);                               \
+            }                                                            \
+        }                                                                \
     }
 
     if (needsFillAttributes()) {
@@ -574,6 +603,18 @@ void SVGElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
         document()->notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
             Element::atomicId(), alsoNeedsLayout);
     }
+}
+
+String* SVGElement::getAttributeConsiderAnimatedAttributeOrVarReferencedValue(
+    AtomicString s, Optional<const MutablePropertyValueList*> cssCustomValues)
+{
+    String* attributeValue = getAttributeConsiderAnimatedAttribute(s);
+    if (attributeValue->startsWith("var(")) {
+        std::string newValue = StyleResolver::resolveVarReferencedValue(
+            this, attributeValue->toOptionalUTF8String(), cssCustomValues);
+        return String::fromUTF8(newValue.c_str(), newValue.size());
+    }
+    return attributeValue;
 }
 
 } // namespace Starfish

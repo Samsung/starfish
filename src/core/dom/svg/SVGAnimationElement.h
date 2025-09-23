@@ -60,6 +60,7 @@ public:
                    GC_WORD_OFFSET(SVGAnimationElement, m_animationKeyframes));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_href));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -85,11 +86,19 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
+
     Optional<Element*> targetElement();
 
     Optional<AnimationKeyframes*> animationKeyframes()
     {
         return m_animationKeyframes;
+    }
+
+    Optional<String*> attributeNameAsString()
+    {
+        return m_attributeNameAsString;
     }
 
     void beginElement();
@@ -143,7 +152,7 @@ protected:
     void updateFromTo(String* value, Optional<CSSStyleValuePair>& output);
     void updateValues(String* value);
 
-    void AddAnimationKeyframe(
+    void addAnimationKeyframe(
         CSSStyleValuePair::KeyKind keyKind,
         AnimationKeyframes* animationKeyframes,
         const GCVector<CSSStyleValuePair>& values, CubicBezierEaseType easeType,
@@ -151,8 +160,13 @@ protected:
 
     CSSStyleDeclaration* m_declarations;
 
+    Optional<String*> m_href;
+
     Optional<AnimationKeyframes*> m_animationKeyframes;
-    Optional<CSSStyleValuePair::KeyKind> m_attributeName;
+    Optional<CSSStyleValuePair::KeyKind>
+        m_attributeName; // keyKind::Unknown means generic svg attribute
+    Optional<String*>
+        m_attributeNameAsString; // keyKind::Unknown means generic svg attribute
     Optional<CSSStyleValuePair> m_from;
     Optional<CSSStyleValuePair> m_to;
     Optional<GCVector<CSSStyleValuePair>> m_values;

@@ -84,6 +84,8 @@ public:
     SVGAnimatedEnumeration* spreadMethod();
 
 protected:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedEnumeration*> m_gradientUnits;
     Optional<SVGAnimatedTransformList*> m_gradientTransform;
     Optional<SVGAnimatedEnumeration*> m_spreadMethod;

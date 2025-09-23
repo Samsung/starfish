@@ -82,6 +82,8 @@ protected:
     {
     }
 
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     void notifyAttributeOfPaintServerLikeUpdated();
 
     Optional<SVGAnimatedEnumeration*> m_type;

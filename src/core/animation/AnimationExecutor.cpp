@@ -554,14 +554,13 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     cancelTick = task->duration() * progress / 1000.0;
                     needsToFireAnimationCancelEvent = true;
                 }
-                // FIXME
-                // TODO: What is FIXME for?
-                task->detachFromElement();
+
                 bool animationPropetyHasGone =
                     !isSVGAnimation && !context.m_toStyle->animation();
 
                 if (task->fillMode() != AnimationFillModeValue::Forwards ||
                     animationPropetyHasGone) {
+                    task->detachFromElement();
                     animationTasks.erase(i);
                     i--;
                 } else {

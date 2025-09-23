@@ -87,6 +87,18 @@ void* SVGAnimationElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGAnimationElement::didNodeInsertedToDocumentTree()
+{
+    SVGElement::didNodeInsertedToDocumentTree();
+    beginElement();
+}
+
+void SVGAnimationElement::didNodeRemovedFromDocumentTree()
+{
+    SVGElement::didNodeRemovedFromDocumentTree();
+    // TODO stop animation
+}
+
 void SVGAnimationElement::didAttributeChanged(QualifiedName name,
                                               Optional<String*> old,
                                               String* value,
@@ -105,10 +117,16 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
             if (!m_attributeName.hasValue() ||
                 m_attributeName.value() != keyKind) {
                 m_attributeName = keyKind;
+                m_attributeNameAsString = value;
                 updateValueFamilyAttribute();
             }
-        } else {
+        } else if (attributeRemoved) {
             m_attributeName.reset();
+            m_attributeNameAsString.reset();
+            updateValueFamilyAttribute();
+        } else {
+            m_attributeName = CSSStyleValuePair::KeyKind::Unknown;
+            m_attributeNameAsString = value;
             updateValueFamilyAttribute();
         }
     }
@@ -172,14 +190,44 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
         setAttributeEventListener(ss->m_endEvent, value, this);
     } else if (name == ss->m_onrepeat) {
         setAttributeEventListener(ss->m_repeatEvent, value, this);
+    } else if (ss->m_href == name || ss->m_xlinkHref == name ||
+               (!name.hasPrefix() &&
+                ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
+                ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
+        if (attributeRemoved) {
+            m_href.reset();
+        } else {
+            m_href = value;
+        }
     }
 }
 
 Optional<Element*> SVGAnimationElement::targetElement()
 {
-    // TODO: Use href if present.
-    Element* targetElement = parentElement();
-    if (!targetElement->isSVGElement() ||
+    Optional<Element*> targetElement;
+    if (m_href) {
+        Optional<ResourceURL*> targetElementURL;
+        if (m_href->startsWith("#")) {
+            targetElementURL = document()->baseURL()->setHash(m_href.value());
+        } else {
+            targetElementURL =
+                new ResourceURL(m_href.value(), document()->baseURI());
+        }
+
+        if (targetElementURL) {
+            String* id = targetElementURL->getFragmentIdValue();
+            if (!id->isEmpty()) {
+                Element* element = document()->getElementById(id);
+                if (element && element->isSVGElement()) {
+                    targetElement = element;
+                }
+            }
+        }
+    } else {
+        targetElement = parentElement();
+    }
+
+    if (!targetElement || !targetElement->isSVGElement() ||
         !targetElement->asSVGElement()->isRenderableElement()) {
         return Optional<Element*>();
     }
@@ -188,7 +236,7 @@ Optional<Element*> SVGAnimationElement::targetElement()
 
 void SVGAnimationElement::beginElement()
 {
-    beginElementAt(0);
+    document()->registerSVGAnimateElementsNeedExecuteAnimation(this);
 }
 
 void SVGAnimationElement::beginElementAt(float offset)
@@ -282,7 +330,7 @@ void SVGAnimationElement::beginElementAtInternal(
     }
 
     // Add keyframes using values to animationKeyframes.
-    AddAnimationKeyframe(keyKind, animationKeyframes, valueList, easeType,
+    addAnimationKeyframe(keyKind, animationKeyframes, valueList, easeType,
                          m_keySplines);
 
     // get target element, if is not exist, return.
@@ -582,7 +630,7 @@ void SVGAnimationElement::updateValues(String* value)
     }
 }
 
-void SVGAnimationElement::AddAnimationKeyframe(
+void SVGAnimationElement::addAnimationKeyframe(
     CSSStyleValuePair::KeyKind keyKind, AnimationKeyframes* animationKeyframes,
     const GCVector<CSSStyleValuePair>& values, CubicBezierEaseType easeType,
     Optional<GCVector<TimingFunction*>> maybeKeySplines)

@@ -388,18 +388,26 @@ bool AnimationUtil::isPropertyForActiveLengthAnimationTask(
 }
 
 bool AnimationUtil::isPropertyForActiveLengthAnimationTaskForSVG(
-    CSSStyleValuePair::KeyKind keyKind)
+    StaticStrings& ss, AtomicString attrName)
 {
-    switch (keyKind) {
-    case CSSStyleValuePair::KeyKind::X:
-    case CSSStyleValuePair::KeyKind::Y:
-    case CSSStyleValuePair::KeyKind::RX:
-    case CSSStyleValuePair::KeyKind::RY:
-    case CSSStyleValuePair::KeyKind::CX:
-    case CSSStyleValuePair::KeyKind::CY:
+    if (ss.m_width == attrName) {
         return true;
-    default:
-        return false;
+    } else if (ss.m_height == attrName) {
+        return true;
+    } else if (ss.m_x == attrName) {
+        return true;
+    } else if (ss.m_y == attrName) {
+        return true;
+    } else if (ss.m_cx == attrName) {
+        return true;
+    } else if (ss.m_cy == attrName) {
+        return true;
+    } else if (ss.m_rx == attrName) {
+        return true;
+    } else if (ss.m_ry == attrName) {
+        return true;
+    } else if (ss.m_r == attrName) {
+        return true;
     }
     return false;
 }

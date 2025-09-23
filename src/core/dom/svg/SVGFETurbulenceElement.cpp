@@ -54,6 +54,28 @@ void* SVGFETurbulenceElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFETurbulenceElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_baseFrequency == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_baseFrequencyX == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_baseFrequencyY == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_seed == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_numOctaves == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_type == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_stitchTiles == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    }
+}
+
 void SVGFETurbulenceElement::didAttributeChanged(QualifiedName name,
                                                  Optional<String*> old,
                                                  String* value,
@@ -66,49 +88,24 @@ void SVGFETurbulenceElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_baseFrequency == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
-
-        // The baseFrequency attribute can have one or two values.
-        // If it has two values, they are assigned to baseFrequencyX and
-        // baseFrequencyY. If it has one value, it is assigned to both
-        // baseFrequencyX and baseFrequencyY.
-        if (value->containsWhitespace()) {
-            auto s = StringUtils::split(
-                value->stripAndCollapseASCIIwhitespace()->toUTF8NonGCString(),
-                ' ');
-            try {
-                if (s.size() == 1) {
-                    float f = std::stof(s[0]);
-                    baseFrequencyX()->setBaseVal(f, true);
-                    baseFrequencyY()->setBaseVal(f, true);
-                } else if (s.size() > 1) {
-                    baseFrequencyX()->setBaseVal(std::stof(s[0]), true);
-                    baseFrequencyY()->setBaseVal(std::stof(s[1]), true);
-                }
-            } catch (...) {
-                // stof throws when argument is invalid
-                baseFrequencyX()->setBaseVal(0, true);
-                baseFrequencyY()->setBaseVal(0, true);
-            }
-        } else {
-            float f = String::parseFloat(value);
-            baseFrequencyX()->setBaseVal(f, true);
-            baseFrequencyY()->setBaseVal(f, true);
+        GCVector<StringView> tokens;
+        DOMTokenList::tokenize(value, tokens);
+        if (tokens.size() == 1) {
+            baseFrequencyX()->setBaseVal(String::parseFloat(&tokens[0]), true);
+            baseFrequencyY()->setBaseVal(String::parseFloat(&tokens[0]), true);
+        } else if (tokens.size() > 1) {
+            baseFrequencyX()->setBaseVal(String::parseFloat(&tokens[0]), true);
+            baseFrequencyY()->setBaseVal(String::parseFloat(&tokens[1]), true);
         }
     } else if (ss->m_baseFrequencyX == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         baseFrequencyX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_baseFrequencyY == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         baseFrequencyY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_seed == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         seed()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_numOctaves == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         numOctaves()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_type == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         if (type()->isUpdated() == false) {
             if (value->equals("fractalNoise")) {
                 type()->setBaseValWithoutUpdateAttribute(
@@ -125,7 +122,6 @@ void SVGFETurbulenceElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_stitchTiles == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         if (stitchTiles()->isUpdated() == false) {
             if (value->equals("nostitch")) {
                 stitchTiles()->setBaseValWithoutUpdateAttribute(

@@ -21,6 +21,7 @@
 
 #include "SVGAnimationApplier.h"
 
+#include "Starfish.h"
 #include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/animation/util/AnimationUtil.h"
@@ -187,20 +188,20 @@ bool SVGAnimationApplier::applyProperty(
     init.offsets = offsets;
     init.timingFunctions = timingFunctions;
     init.originAnimationElement = m_originAnimationElement;
-
-    ActiveAnimationTask* task = nullptr;
     init.animatedValues = values;
 
-    // TODO: Introduce new ActiveTasks for SVGAnimatedXX values if needs.
-    // Perhaps the newly introduced task should change the animVal corresponding
-    // to SVGAnimatedXX for each property instead of changing the computed style
-    // value.
+    AtomicString attr = AtomicString::createAtomicString(
+        m_originAnimationElement->starfish(),
+        m_originAnimationElement->attributeNameAsString().value());
 
+    ActiveAnimationTask* task = nullptr;
     // Create ActiveAnimationTask based on the type of property.
-    if (AnimationUtil::isPropertyForActiveLengthAnimationTaskForSVG(keyKind)) {
-        task = new ActiveLengthAnimationTask(init, nullptr);
-    } else if (keyKind == CSSStyleValuePair::KeyKind::Transform) {
+    if (keyKind == CSSStyleValuePair::KeyKind::Transform) {
         task = new ActiveTransformAnimationTask(init, nullptr);
+    } else if (AnimationUtil::isPropertyForActiveLengthAnimationTaskForSVG(
+                   *m_originAnimationElement->starfish()->staticStrings(),
+                   attr)) {
+        task = new ActiveSVGLengthAnimationTask(init, attr);
     } else {
         STARFISH_UNIMPLEMENTED(
             "Unhandled property kind[%ud] for SVG animation.",

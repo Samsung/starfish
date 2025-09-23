@@ -41,6 +41,26 @@ GCVector<ColorStop*> SVGRadialGradientElement::colorStops()
     return colorStops;
 }
 
+void SVGRadialGradientElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGGradientElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_cx == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_cy == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_r == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_fx == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_fy == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_fr == name) {
+        attributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGRadialGradientElement::didAttributeChanged(QualifiedName name,
                                                    Optional<String*> old,
                                                    String* value,

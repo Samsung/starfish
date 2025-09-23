@@ -51,6 +51,17 @@ void* SVGSymbolElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGSymbolElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (name == starfish()->staticStrings()->m_viewBox) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsLayout();
+    }
+}
+
 void SVGSymbolElement::didAttributeChanged(QualifiedName name,
                                            Optional<String*> old, String* value,
                                            bool attributeCreated,
@@ -78,9 +89,6 @@ void SVGSymbolElement::didAttributeChanged(QualifiedName name,
                 m_hasViewBox = true;
             }
         }
-
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsLayout();
     }
 }
 

@@ -81,6 +81,8 @@ public:
     SVGAnimatedLength* height();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<Filter*> m_filter;
     Optional<SVGAnimatedEnumeration*> m_filterUnits;
     Optional<SVGAnimatedEnumeration*> m_primitiveUnits;

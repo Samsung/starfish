@@ -37,6 +37,20 @@ SVGMarkerElement::SVGMarkerElement(Document* document,
         SVG_MARKER_ORIENT_ANGLE, SVG_MARKER_ORIENT_ANGLE);
 }
 
+void SVGMarkerElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_orient == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_markerUnits == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    }
+}
+
 void SVGMarkerElement::didAttributeChanged(QualifiedName name,
                                            Optional<String*> old, String* value,
                                            bool attributeCreated,
@@ -48,8 +62,6 @@ void SVGMarkerElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_orient == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
         if (m_orientType->isUpdated() == true) {
             m_orientAngle->baseVal()
                 ->newValueSpecifiedUnitsWithoutUpdateAttribute(
@@ -69,8 +81,6 @@ void SVGMarkerElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_markerUnits == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
         if (m_markerUnits->isUpdated() == true) {
             m_markerUnits->unsetUpdated();
         } else {

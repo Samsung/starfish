@@ -28,6 +28,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/svg/SVGElement.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
@@ -1225,6 +1226,54 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
     ActiveAnimationTask::resolveUnresolvedAnimatedValues();
 }
 
+static Length computeLengthAnimationValue(AnimatedValue* fromValue,
+                                          AnimatedValue* toValue,
+                                          float progress, bool isForward)
+{
+    Length newLength;
+    if (!fromValue->isLength() || !toValue->isLength()) {
+        // newLength remains as auto
+    } else if (fromValue->getLength().isAuto() ||
+               toValue->getLength().isAuto()) {
+        if (progress < 0.5) {
+            if (fromValue->isLength()) {
+                newLength = fromValue->getLength();
+            } else {
+                newLength = Length();
+            }
+        } else {
+            if (toValue->isLength()) {
+                newLength = toValue->getLength();
+            } else {
+                newLength = Length();
+            }
+        }
+    } else {
+        if ((toValue->getLength().isPercent() ||
+             toValue->getLength().isZero()) &&
+            (fromValue->getLength().isPercent() ||
+             fromValue->getLength().isZero())) {
+            float fromPercent = 0;
+            if (!fromValue->getLength().isZero()) {
+                fromPercent = fromValue->getLength().percent();
+            }
+            float toPercent = 0;
+            if (!toValue->getLength().isZero()) {
+                toPercent = toValue->getLength().percent();
+            }
+            newLength =
+                Length(Length::Percent, interpolate(fromPercent, toPercent,
+                                                    progress, isForward));
+        } else {
+            float fromFixed = fromValue->getLength().fixed();
+            float toFixed = toValue->getLength().fixed();
+            newLength = Length(Length::Fixed, interpolate(fromFixed, toFixed,
+                                                          progress, isForward));
+        }
+    }
+    return newLength;
+}
+
 void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
@@ -1233,50 +1282,9 @@ void ActiveLengthAnimationTask::execute(double progress, ComputedStyle* style)
     if (!m_isEveryAnimiatedValueResolved) {
         newLength = currentAnimatedFromValue()->getLength();
     } else {
-        AnimatedValue* fromValue = currentAnimatedFromValue();
-        AnimatedValue* toValue = currentAnimatedToValue();
-
-        if (!fromValue->isLength() || !toValue->isLength()) {
-            // newLength remains as auto
-        } else if (fromValue->getLength().isAuto() ||
-                   toValue->getLength().isAuto()) {
-            if (progress < 0.5) {
-                if (fromValue->isLength()) {
-                    newLength = fromValue->getLength();
-                } else {
-                    newLength = Length();
-                }
-            } else {
-                if (toValue->isLength()) {
-                    newLength = toValue->getLength();
-                } else {
-                    newLength = Length();
-                }
-            }
-        } else {
-            if ((toValue->getLength().isPercent() ||
-                 toValue->getLength().isZero()) &&
-                (fromValue->getLength().isPercent() ||
-                 fromValue->getLength().isZero())) {
-                float fromPercent = 0;
-                if (!fromValue->getLength().isZero()) {
-                    fromPercent = fromValue->getLength().percent();
-                }
-                float toPercent = 0;
-                if (!toValue->getLength().isZero()) {
-                    toPercent = toValue->getLength().percent();
-                }
-                newLength =
-                    Length(Length::Percent, interpolate(fromPercent, toPercent,
-                                                        progress, m_isForward));
-            } else {
-                float fromFixed = fromValue->getLength().fixed();
-                float toFixed = toValue->getLength().fixed();
-                newLength =
-                    Length(Length::Fixed, interpolate(fromFixed, toFixed,
-                                                      progress, m_isForward));
-            }
-        }
+        newLength = computeLengthAnimationValue(currentAnimatedFromValue(),
+                                                currentAnimatedToValue(),
+                                                progress, m_isForward);
     }
 
     switch (m_property) {
@@ -1668,6 +1676,65 @@ bool applyTransitionIfNeeds(
     TransitionApplier transitionApplier(element, fromStyle, oldFrame, toStyle,
                                         damagedKeys);
     return transitionApplier.apply();
+}
+
+ActiveSVGLengthAnimationTask::ActiveSVGLengthAnimationTask(
+    const ActiveAnimationTaskInit& init, AtomicString attributeName)
+    : ActiveAnimationTask(init)
+    , m_attributeName(attributeName)
+{
+    STARFISH_ASSERT(init.animationType == AnimationType::SVGAnimation);
+    m_isEveryAnimiatedValueResolved = true;
+}
+
+void* ActiveSVGLengthAnimationTask::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ActiveSVGLengthAnimationTask));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveSVGLengthAnimationTask)] = {
+            0
+        };
+        fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(ActiveSVGLengthAnimationTask));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void ActiveSVGLengthAnimationTask::execute(double progress)
+{
+    Length newLength = computeLengthAnimationValue(currentAnimatedFromValue(),
+                                                   currentAnimatedToValue(),
+                                                   progress, m_isForward);
+
+    m_targetElement->asSVGElement()->setAnimatedAttribute(
+        m_attributeName, newLength.toString(), this);
+}
+
+void ActiveSVGLengthAnimationTask::end()
+{
+    m_targetElement->asSVGElement()->setAnimatedAttribute(
+        m_attributeName, String::emptyString, this);
+}
+
+bool ActiveSVGLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
+{
+    return true;
+}
+
+void ActiveSVGLengthAnimationTask::attachToElement()
+{
+    m_targetElement->asSVGElement()->setAnimatedAttribute(
+        m_attributeName, String::emptyString, this);
+}
+
+void ActiveSVGLengthAnimationTask::detachFromElement()
+{
+    m_targetElement->asSVGElement()->removeAnimatedAttribute(m_attributeName,
+                                                             this);
 }
 
 } // namespace Starfish
