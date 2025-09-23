@@ -347,8 +347,20 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
     float baseFrequencyX = e->baseFrequencyX()->animVal();
     float baseFrequencyY = e->baseFrequencyY()->animVal();
 
+    size_t xposition = 0;
+    size_t yposition = 0;
+    size_t width = ctx.width;
+    size_t height = ctx.height;
+
+    if (!isSubRegionCoversAll) {
+        xposition = ctx.width * normalizedSubRegion.x();
+        width = xposition + ctx.width * normalizedSubRegion.width();
+        yposition = ctx.height * normalizedSubRegion.y();
+        height = yposition + ctx.height * normalizedSubRegion.height();
+    }
+
     auto stitchData = computeStitching(
-        Unit::IntSize(ctx.width, ctx.height), baseFrequencyX, baseFrequencyY,
+        Unit::IntSize(width, height), baseFrequencyX, baseFrequencyY,
         e->stitchTiles()->animVal() ==
             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH);
     auto paintingData =
@@ -356,11 +368,11 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
                          e->numOctaves()->animVal(), e->seed()->animVal(),
                          e->stitchTiles()->animVal() ==
                              SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH,
-                         Unit::IntSize(ctx.width, ctx.height));
+                         Unit::IntSize(width, height));
 
     unsigned char* data = (unsigned char*)outputSource->data();
-    for (uint y = 0; y < ctx.height; y++) {
-        for (uint x = 0; x < ctx.width; x++) {
+    for (uint y = yposition; y < height; y++) {
+        for (uint x = xposition; x < width; x++) {
             auto color = calculateTurbulenceValueForPoint(
                 paintingData, stitchData, Unit::FloatPoint(x, y));
             int offset = y * ctx.stride + x * 4;
