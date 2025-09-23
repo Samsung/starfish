@@ -35,24 +35,11 @@ void SVGCircleElement::didAttributeChanged(QualifiedName name,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_r == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_cx == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_cy == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_transform == name) {
-        if (m_transform == nullptr ||
-            value->equals(transform()->baseVal()->toString()) == false) {
+    if (ss->m_transform == name) {
+        if (value->equals(transform()->baseVal()->toString()) == false) {
             transform()->baseVal()->updateListByAttribute();
             transform()->animVal()->updateListByAttribute();
         }
-
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
     }
 }
 
@@ -89,6 +76,23 @@ void* SVGCircleElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void SVGCircleElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_r == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_cx == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_cy == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    }
 }
 
 void SVGCircleElement::styleForPresentationAttribute(

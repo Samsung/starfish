@@ -47,6 +47,7 @@ class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLMapElement;
 class SVGElement;
+class SVGAnimationElement;
 class MediaQueryListMatcher;
 class NativeGradient;
 class NativeImageData;
@@ -660,6 +661,13 @@ public:
     void notifyNeedsLayoutOrPaintingToSVGPaintClientElements(
         const AtomicString& id, bool alsoNeedsLayout);
     void removeSVGPaintClientElement(SVGElement* client);
+
+    void registerSVGAnimateElementsNeedExecuteAnimation(
+        SVGAnimationElement* element)
+    {
+        m_svgAnimateElementsNeedExecuteAnimation.push_back(element);
+        setNeedsStyleRecalc();
+    }
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -802,6 +810,10 @@ protected:
         markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
 
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_svgPaintClientElements));
+
+        GC_set_bit(
+            desc,
+            GC_WORD_OFFSET(Document, m_svgAnimateElementsNeedExecuteAnimation));
     }
 
     bool m_inParsing : 1;
@@ -880,6 +892,8 @@ protected:
 
     GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>
         m_svgPaintClientElements;
+
+    GCVector<SVGAnimationElement*> m_svgAnimateElementsNeedExecuteAnimation;
 };
 } // namespace Starfish
 

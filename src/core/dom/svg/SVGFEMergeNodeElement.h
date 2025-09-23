@@ -56,6 +56,8 @@ public:
     }
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     void notifyAttributeOfPaintServerLikeUpdated();
 
     Optional<SVGAnimatedString*> m_in;

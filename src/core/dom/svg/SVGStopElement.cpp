@@ -27,13 +27,10 @@
 
 namespace Starfish {
 
-void SVGStopElement::didAttributeChanged(QualifiedName name,
-                                         Optional<String*> old, String* value,
-                                         bool attributeCreated,
-                                         bool attributeRemoved)
+void SVGStopElement::computeAttributeChangeDamage(AtomicString name)
 {
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGElement::computeAttributeChangeDamage(name);
+
     StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_stopColor || name == ss->m_stopOpacity ||
         name == ss->m_offset) {
@@ -46,6 +43,15 @@ void SVGStopElement::didAttributeChanged(QualifiedName name,
             p->asSVGGradientElement()->attributeOfPaintServerLikeUpdated(false);
         }
     }
+}
+
+void SVGStopElement::didAttributeChanged(QualifiedName name,
+                                         Optional<String*> old, String* value,
+                                         bool attributeCreated,
+                                         bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
 }
 
 ColorStop* SVGStopElement::colorStop()

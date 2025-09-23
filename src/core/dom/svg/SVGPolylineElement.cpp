@@ -24,6 +24,16 @@
 
 namespace Starfish {
 
+void SVGPolylineElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_points == name) {
+        setNeedsPainting();
+    }
+}
+
 void SVGPolylineElement::didAttributeChanged(QualifiedName name,
                                              Optional<String*> old,
                                              String* value,
@@ -33,9 +43,5 @@ void SVGPolylineElement::didAttributeChanged(QualifiedName name,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-
-    if (ss->m_points == name) {
-        setNeedsPainting();
-    }
 }
 } // namespace Starfish

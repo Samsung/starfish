@@ -25,33 +25,34 @@
 
 namespace Starfish {
 
-void SVGEllipseElement::didAttributeChanged(QualifiedName name,
-                                            Optional<String*> old,
-                                            String* value,
-                                            bool attributeCreated,
-                                            bool attributeRemoved)
+void SVGEllipseElement::computeAttributeChangeDamage(AtomicString name)
 {
-    STARFISH_ASSERT(value != nullptr);
-
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGElement::computeAttributeChangeDamage(name);
 
     StaticStrings* ss = starfish()->staticStrings();
-
     if (ss->m_cx == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_cy == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
-    }
-    if (ss->m_rx == name) {
+    } else if (ss->m_rx == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_ry == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
+}
+
+void SVGEllipseElement::didAttributeChanged(QualifiedName name,
+                                            Optional<String*> old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
 }
 
 void SVGEllipseElement::updateSVGAttributeNeeded(QualifiedName name)

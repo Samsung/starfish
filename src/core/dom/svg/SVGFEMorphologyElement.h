@@ -60,6 +60,8 @@ public:
     SVGAnimatedNumber* radiusY();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedNumber*> m_radiusX;
     Optional<SVGAnimatedNumber*> m_radiusY;

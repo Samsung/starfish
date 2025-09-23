@@ -85,6 +85,8 @@ public:
     bool hasRequestError();
 
 protected:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     void unloadImage();
     void loadImage(String* src);
     ResourceURL* origin();

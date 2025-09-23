@@ -57,6 +57,9 @@ public:
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     ColorStop* colorStop();
+
+private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 };
 } // namespace Starfish
 

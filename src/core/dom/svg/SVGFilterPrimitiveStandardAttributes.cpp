@@ -64,6 +64,25 @@ SVGFilterPrimitiveStandardAttributes::SVGFilterPrimitiveStandardAttributes(
                                           true, false);
 }
 
+void SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(
+    AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_x == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_y == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_width == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_height == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_output == name || ss->m_result == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
     QualifiedName name, Optional<String*> old, String* value,
     bool attributeCreated, bool attributeRemoved)
@@ -74,19 +93,14 @@ void SVGFilterPrimitiveStandardAttributes::didAttributeChanged(
     if (!old || !old->equals(value)) {
         StaticStrings* ss = starfish()->staticStrings();
         if (ss->m_x == name) {
-            notifyAttributeOfPaintServerLikeUpdated(true);
             x()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_y == name) {
-            notifyAttributeOfPaintServerLikeUpdated(true);
             y()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_width == name) {
-            notifyAttributeOfPaintServerLikeUpdated(true);
             width()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_height == name) {
-            notifyAttributeOfPaintServerLikeUpdated(true);
             height()->baseVal()->setValueAsString(value, true, false);
         } else if (ss->m_output == name || ss->m_result == name) {
-            notifyAttributeOfPaintServerLikeUpdated(false);
             output()->setBaseVal(value, true);
         }
     }

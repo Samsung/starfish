@@ -56,6 +56,8 @@ public:
     SVGAnimatedNumber* dy();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedNumber*> m_dx;
     Optional<SVGAnimatedNumber*> m_dy;

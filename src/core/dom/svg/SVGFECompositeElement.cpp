@@ -44,6 +44,28 @@ void* SVGFECompositeElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFECompositeElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in1 == name || ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_in2 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_k1 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_k2 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_k3 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_k4 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_operator == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFECompositeElement::didAttributeChanged(QualifiedName name,
                                                 Optional<String*> old,
                                                 String* value,

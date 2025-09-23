@@ -50,6 +50,23 @@ void SVGGradientElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+void SVGGradientElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_gradientUnits == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_gradientTransform == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        attributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_spreadMethod == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        attributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGGradientElement::didAttributeChanged(QualifiedName name,
                                              Optional<String*> old,
                                              String* value,
@@ -62,8 +79,6 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_gradientUnits == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated(false);
         if (gradientUnits()->isUpdated() == false) {
             if (value->equals("userSpaceOnUse")) {
                 m_gradientUnits->setBaseValWithoutUpdateAttribute(
@@ -74,16 +89,12 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
             }
         }
     } else if (ss->m_gradientTransform == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated(false);
         if (value->equals(gradientTransform()->baseVal()->toString()) ==
             false) {
             gradientTransform()->baseVal()->updateListByAttribute();
             gradientTransform()->animVal()->updateListByAttribute();
         }
     } else if (ss->m_spreadMethod == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        attributeOfPaintServerLikeUpdated(false);
         if (spreadMethod()->isUpdated() == false) {
             if (value->equals("pad")) {
                 m_spreadMethod->setBaseValWithoutUpdateAttribute(

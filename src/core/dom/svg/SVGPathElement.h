@@ -65,6 +65,8 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     static void parsePath(String* d, Path* path);
     Path* m_path;
 };

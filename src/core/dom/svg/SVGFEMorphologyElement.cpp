@@ -49,6 +49,24 @@ void* SVGFEMorphologyElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEMorphologyElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name || ss->m_in1 == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_radius == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_radiusX == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_radiusY == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    } else if (ss->m_operator == name) {
+        notifyAttributeOfPaintServerLikeUpdated(true);
+    }
+}
+
 void SVGFEMorphologyElement::didAttributeChanged(QualifiedName name,
                                                  Optional<String*> old,
                                                  String* value,
@@ -61,20 +79,15 @@ void SVGFEMorphologyElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_in == name || ss->m_in1 == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_radius == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusX()->setBaseVal(String::parseFloat(value), true);
         radiusY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_radiusX == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_radiusY == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         radiusY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_operator == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         if (domOperator()->isUpdated() == false) {
             if (value->equals("erode")) {
                 m_operator->setBaseValWithoutUpdateAttribute(

@@ -28,6 +28,30 @@
 
 namespace Starfish {
 
+void SVGComponentTransferFunctionElement::computeAttributeChangeDamage(
+    AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_type == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_tableValues == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_slope == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_intercept == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_amplitude == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_exponent == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    } else if (ss->m_offset == name) {
+        notifyAttributeOfPaintServerLikeUpdated();
+    }
+}
+
 void SVGComponentTransferFunctionElement::didAttributeChanged(
     QualifiedName name, Optional<String*> old, String* value,
     bool attributeCreated, bool attributeRemoved)
@@ -38,7 +62,6 @@ void SVGComponentTransferFunctionElement::didAttributeChanged(
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_type == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         if (type()->isUpdated() == false) {
             if (value->equals("identity")) {
                 m_type->setBaseValWithoutUpdateAttribute(
@@ -64,23 +87,17 @@ void SVGComponentTransferFunctionElement::didAttributeChanged(
             }
         }
     } else if (ss->m_tableValues == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         SVGNumberList* valueList = tableValues()->baseVal();
         valueList->setValueByString(value);
     } else if (ss->m_slope == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         slope()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_intercept == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         intercept()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_amplitude == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         amplitude()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_exponent == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         exponent()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_offset == name) {
-        notifyAttributeOfPaintServerLikeUpdated();
         offset()->setBaseVal(String::parseFloat(value), true);
     }
 }

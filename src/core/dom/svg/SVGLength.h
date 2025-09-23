@@ -76,6 +76,8 @@ public:
     bool hasSpecificValue();
 
 protected:
+    void updateByAttribute();
+
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
 

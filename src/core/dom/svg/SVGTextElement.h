@@ -108,6 +108,8 @@ public:
     SVGAnimatedLengthList* y();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     TextAnchor m_textAnchor{ TextAnchor::START };
     AlignmentBaseline m_alignmentBaseline{ AlignmentBaseline::AUTO };
 

@@ -47,6 +47,20 @@ void* SVGFEOffsetElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void SVGFEOffsetElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGFilterPrimitiveStandardAttributes::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_in == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_dx == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    } else if (ss->m_dy == name) {
+        notifyAttributeOfPaintServerLikeUpdated(false);
+    }
+}
+
 void SVGFEOffsetElement::didAttributeChanged(QualifiedName name,
                                              Optional<String*> old,
                                              String* value,
@@ -58,13 +72,10 @@ void SVGFEOffsetElement::didAttributeChanged(QualifiedName name,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_dx == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         dx()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_dy == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         dy()->setBaseVal(String::parseFloat(value), true);
     }
 }

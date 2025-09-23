@@ -65,6 +65,8 @@ public:
     SVGAnimatedTransformList* transform();
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedTransformList*> m_transform;
     Optional<SVGAnimatedLength*> m_cx;
     Optional<SVGAnimatedLength*> m_cy;

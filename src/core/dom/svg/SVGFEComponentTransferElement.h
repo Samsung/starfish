@@ -57,6 +57,8 @@ public:
     }
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in;
 };
 } // namespace Starfish

@@ -64,6 +64,8 @@ public:
     void setStdDeviation(float stdDeviationX, float stdDeviationY);
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedString*> m_in;
     Optional<SVGAnimatedNumber*> m_stdDeviationX;
     Optional<SVGAnimatedNumber*> m_stdDeviationY;

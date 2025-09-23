@@ -584,6 +584,8 @@ const char* getWindowsTempDir();
     (typenameWithoutPointer*)(LIKELY(bytes < 4096) ? alloca(bytes) \
                                                    : GC_MALLOC(bytes))
 
+enum NullOptionType { NullOption };
+
 template <typename T>
 struct Optional : public gc {
 public:
@@ -600,6 +602,12 @@ public:
     }
 
     Optional(std::nullptr_t value)
+        : m_hasValue(false)
+        , m_value()
+    {
+    }
+
+    Optional(NullOptionType)
         : m_hasValue(false)
         , m_value()
     {
@@ -717,6 +725,11 @@ public:
     }
 
     Optional(std::nullptr_t value)
+        : m_value(nullptr)
+    {
+    }
+
+    Optional(NullOptionType)
         : m_value(nullptr)
     {
     }

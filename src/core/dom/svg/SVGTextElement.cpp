@@ -32,6 +32,30 @@ SVGTextElement::SVGTextElement(Document* document, const QualifiedName& qname)
 {
 }
 
+void SVGTextElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_fontDashSize == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_fontDashFamily == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_textAnchor == name) {
+        setNeedsPainting();
+    } else if (ss->m_alignmentBaseline == name) {
+        setNeedsPainting();
+    } else if (ss->m_x == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_y == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    }
+}
+
 void SVGTextElement::didAttributeChanged(QualifiedName name,
                                          Optional<String*> old, String* value,
                                          bool attributeCreated,
@@ -41,13 +65,7 @@ void SVGTextElement::didAttributeChanged(QualifiedName name,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
 
-    if (ss->m_fontDashSize == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_fontDashFamily == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_textAnchor == name) {
+    if (ss->m_textAnchor == name) {
         TextAnchor ta = TextAnchor::START;
         if (value->equals(String::createASCIIString("middle"))) {
             ta = TextAnchor::MIDDLE;
@@ -55,30 +73,24 @@ void SVGTextElement::didAttributeChanged(QualifiedName name,
             ta = TextAnchor::END;
         }
         setTextAnchor(ta);
-        setNeedsPainting();
     } else if (ss->m_alignmentBaseline == name) {
         AlignmentBaseline al = AlignmentBaseline::AUTO;
         if (value->equals(String::createASCIIString("middle"))) {
             al = AlignmentBaseline::MIDDLE;
         }
         setAlignmentBaseline(al);
-        setNeedsPainting();
     } else if (ss->m_x == name) {
         if (x()->baseVal()->isUpdated()) {
             x()->baseVal()->unsetUpdated();
         } else {
             x()->baseVal()->updateListByAttribute();
         }
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
     } else if (ss->m_y == name) {
         if (y()->baseVal()->isUpdated()) {
             y()->baseVal()->unsetUpdated();
         } else {
             y()->baseVal()->updateListByAttribute();
         }
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
     }
 }
 

@@ -25,13 +25,9 @@
 
 namespace Starfish {
 
-void SVGRectElement::didAttributeChanged(QualifiedName name,
-                                         Optional<String*> old, String* value,
-                                         bool attributeCreated,
-                                         bool attributeRemoved)
+void SVGRectElement::computeAttributeChangeDamage(AtomicString name)
 {
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
+    SVGElement::computeAttributeChangeDamage(name);
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_rx == name) {
@@ -41,6 +37,15 @@ void SVGRectElement::didAttributeChanged(QualifiedName name,
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
+}
+
+void SVGRectElement::didAttributeChanged(QualifiedName name,
+                                         Optional<String*> old, String* value,
+                                         bool attributeCreated,
+                                         bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
 }
 
 void SVGRectElement::updateSVGAttributeNeeded(QualifiedName name)

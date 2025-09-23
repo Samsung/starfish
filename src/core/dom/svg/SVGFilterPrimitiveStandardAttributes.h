@@ -80,6 +80,7 @@ protected:
 
     Optional<SVGFilterElement*> filterElement();
     void notifyAttributeOfPaintServerLikeUpdated(bool needsLayoutAlso);
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 
 private:
     Optional<SVGAnimatedLength*> m_x;

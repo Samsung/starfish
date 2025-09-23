@@ -125,6 +125,7 @@ public:
     }
 
     double fraction(uint64_t tickCount) const;
+    double computeProgress(double& fraction);
 
     uint64_t remainTime(uint64_t tickCount) const;
 
@@ -261,6 +262,11 @@ public:
         }
     }
 
+    bool isInDelayedTime()
+    {
+        return m_isInDelayedTime;
+    }
+
     AnimatedValue* currentAnimatedFromValue();
     AnimatedValue* currentAnimatedToValue();
     TimingFunction* currentTimingFunction();
@@ -289,8 +295,6 @@ protected:
     }
 
     void initialize(const ActiveAnimationTaskInit& init);
-
-    double computeProgress(double& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
     CSSStyleValuePair::KeyKind m_property : 8;
@@ -495,6 +499,36 @@ public:
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+};
+
+class ActiveSVGLengthAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveSVGLengthAnimationTask(const ActiveAnimationTaskInit& init,
+                                 AtomicString attributeName);
+
+    void execute(double progress);
+    void end();
+    void execute(double progress, ComputedStyle* style) override
+    {
+        // DO NOTTHING
+        // ActiveSVGLengthAnimationTask tasks are executed on
+        // SVGElement::styleForPresentationAttribute
+    }
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        ActiveAnimationTask::fillGCDescriptor(desc);
+    }
+
+    virtual void attachToElement() override;
+    virtual void detachFromElement() override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    AtomicString m_attributeName;
 };
 
 } // namespace Starfish

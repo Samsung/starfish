@@ -45,6 +45,7 @@ public:
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 };
 } // namespace Starfish
 

@@ -82,6 +82,8 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y2);
 
 private:
+    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
+
     Optional<SVGAnimatedLength*> m_x1;
     Optional<SVGAnimatedLength*> m_y1;
     Optional<SVGAnimatedLength*> m_x2;

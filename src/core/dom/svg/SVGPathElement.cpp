@@ -689,6 +689,18 @@ void SVGPathElement::parsePath(String* d, Path* path)
     }
 }
 
+void SVGPathElement::computeAttributeChangeDamage(AtomicString name)
+{
+    SVGElement::computeAttributeChangeDamage(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_d == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsLayout();
+        setNeedsPainting();
+    }
+}
+
 void SVGPathElement::didAttributeChanged(QualifiedName name,
                                          Optional<String*> old, String* value,
                                          bool attributeCreated,
@@ -697,12 +709,6 @@ void SVGPathElement::didAttributeChanged(QualifiedName name,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-
-    if (ss->m_d == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsLayout();
-        setNeedsPainting();
-    }
 }
 
 void SVGPathElement::didComputedStyleChanged(ComputedStyle* oldStyle,
