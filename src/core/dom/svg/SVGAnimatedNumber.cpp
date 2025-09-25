@@ -25,13 +25,23 @@ namespace Starfish {
 
 SVGAnimatedNumber::SVGAnimatedNumber(SVGElement* targetElement,
                                      const QualifiedName& targetAttribute,
-                                     float baseVal, float animVal)
+                                     float baseVal)
     : ScriptWrappable(this)
     , m_targetElement(targetElement)
     , m_targetAttribute(targetAttribute)
     , m_baseVal(baseVal)
-    , m_animVal(animVal)
 {
+}
+
+float SVGAnimatedNumber::animVal() const
+{
+    auto val = m_targetElement->getAnimatedAttribute(
+        m_targetAttribute.localNameAtomic());
+    if (val) {
+        return String::parseFloat(val.value());
+    } else {
+        return m_baseVal;
+    }
 }
 
 void SVGAnimatedNumber::updateTargetElementAttribute()
@@ -42,5 +52,21 @@ void SVGAnimatedNumber::updateTargetElementAttribute()
 ScriptBindingInstance* SVGAnimatedNumber::scriptBindingInstance()
 {
     return m_targetElement->scriptBindingInstance();
+}
+
+float SVGAnimatedNumberWithFallbackAttribute::animVal() const
+{
+    auto val = m_targetElement->getAnimatedAttribute(
+        m_targetAttribute.localNameAtomic());
+    if (val) {
+        return String::parseFloat(val.value());
+    } else {
+        val = m_targetElement->getAnimatedAttribute(
+            m_fallbackAttribute.localNameAtomic());
+        if (val) {
+            return String::parseFloat(val.value());
+        }
+        return m_baseVal;
+    }
 }
 } // namespace Starfish

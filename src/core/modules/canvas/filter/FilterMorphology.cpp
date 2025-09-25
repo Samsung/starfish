@@ -179,9 +179,9 @@ std::pair<float, float> FilterMorphology::computeRadiusXY(
 {
     auto e = element()->asSVGFEMorphologyElement();
     float radiusX = filter()->resolveFilterPrimitiveValue(
-        e->radiusX()->baseVal(), targetSize.width(), viewportScale.first);
+        e->radiusX()->animVal(), targetSize.width(), viewportScale.first);
     float radiusY = filter()->resolveFilterPrimitiveValue(
-        e->radiusY()->baseVal(), targetSize.height(), viewportScale.second);
+        e->radiusY()->animVal(), targetSize.height(), viewportScale.second);
 
     return std::make_pair(radiusX, radiusY);
 }

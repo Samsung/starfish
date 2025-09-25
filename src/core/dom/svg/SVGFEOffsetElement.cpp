@@ -112,8 +112,8 @@ SVGAnimatedString* SVGFEOffsetElement::in()
 SVGAnimatedNumber* SVGFEOffsetElement::dx()
 {
     if (!m_dx.hasValue()) {
-        m_dx = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_dx, 0,
-                                     0);
+        m_dx =
+            new SVGAnimatedNumber(this, starfish()->staticStrings()->m_dx, 0);
     }
     return m_dx.getValue();
 }
@@ -121,8 +121,8 @@ SVGAnimatedNumber* SVGFEOffsetElement::dx()
 SVGAnimatedNumber* SVGFEOffsetElement::dy()
 {
     if (!m_dy.hasValue()) {
-        m_dy = new SVGAnimatedNumber(this, starfish()->staticStrings()->m_dy, 0,
-                                     0);
+        m_dy =
+            new SVGAnimatedNumber(this, starfish()->staticStrings()->m_dy, 0);
     }
     return m_dy.getValue();
 }

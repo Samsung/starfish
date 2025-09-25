@@ -170,8 +170,9 @@ void SVGFETurbulenceElement::styleForPresentationAttribute(
 SVGAnimatedNumber* SVGFETurbulenceElement::baseFrequencyX()
 {
     if (!m_baseFrequencyX.hasValue()) {
-        m_baseFrequencyX = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_baseFrequencyX, 0, 0);
+        m_baseFrequencyX = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_baseFrequencyX,
+            starfish()->staticStrings()->m_baseFrequency, 0);
     }
     return m_baseFrequencyX.getValue();
 }
@@ -179,8 +180,9 @@ SVGAnimatedNumber* SVGFETurbulenceElement::baseFrequencyX()
 SVGAnimatedNumber* SVGFETurbulenceElement::baseFrequencyY()
 {
     if (!m_baseFrequencyY.hasValue()) {
-        m_baseFrequencyY = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_baseFrequencyY, 0, 0);
+        m_baseFrequencyY = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_baseFrequencyY,
+            starfish()->staticStrings()->m_baseFrequency, 0);
     }
     return m_baseFrequencyY.getValue();
 }
@@ -189,7 +191,7 @@ SVGAnimatedInteger* SVGFETurbulenceElement::numOctaves()
 {
     if (!m_numOctaves.hasValue()) {
         m_numOctaves = new SVGAnimatedInteger(
-            this, starfish()->staticStrings()->m_numOctaves, 0, 0);
+            this, starfish()->staticStrings()->m_numOctaves, 0);
     }
     return m_numOctaves.getValue();
 }
@@ -197,8 +199,8 @@ SVGAnimatedInteger* SVGFETurbulenceElement::numOctaves()
 SVGAnimatedNumber* SVGFETurbulenceElement::seed()
 {
     if (!m_seed.hasValue()) {
-        m_seed = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_seed, 0, 0);
+        m_seed =
+            new SVGAnimatedNumber(this, starfish()->staticStrings()->m_seed, 0);
     }
     return m_seed.getValue();
 }

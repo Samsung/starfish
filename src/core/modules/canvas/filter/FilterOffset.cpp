@@ -57,9 +57,9 @@ Filter::FilterBias FilterOffset::computeBias(
 {
     auto e = element()->asSVGFEOffsetElement();
     float dx = filter()->resolveFilterPrimitiveValue(
-        e->dx()->baseVal(), targetSize.width(), viewportScale.first);
+        e->dx()->animVal(), targetSize.width(), viewportScale.first);
     float dy = filter()->resolveFilterPrimitiveValue(
-        e->dy()->baseVal(), targetSize.height(), viewportScale.second);
+        e->dy()->animVal(), targetSize.height(), viewportScale.second);
 
     return Filter::FilterBias(std::make_pair(0, 0),
                               std::make_pair(std::abs(dx), std::abs(dy)));
@@ -76,9 +76,9 @@ void FilterOffset::apply(const Unit::Rect& subRegionInFloat,
                   .second;
     auto targetSize = ctx.target->unadjustedFrameRectByFilter()->size();
     float dx = filter()->resolveFilterPrimitiveValue(
-        e->dx()->baseVal(), targetSize.width(), vm.getScaleX());
+        e->dx()->animVal(), targetSize.width(), vm.getScaleX());
     float dy = filter()->resolveFilterPrimitiveValue(
-        e->dy()->baseVal(), targetSize.height(), vm.getScaleY());
+        e->dy()->animVal(), targetSize.height(), vm.getScaleY());
 
     float dpr = element()->webView()->screenInfo().devicePixelRatio;
     dx *= dpr;

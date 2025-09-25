@@ -59,19 +59,13 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
 
 void SVGLength::updateByAttribute()
 {
-    if (m_sourceElement) {
-        // set fromElementDidAttributeChanged for prevent update of attribute
-        setValueAsString(
-            m_sourceElement->getAttributeOrEmpty(m_targetAttribute), true,
-            false);
-    }
+    // set fromElementDidAttributeChanged for prevent update of attribute
+    setValueAsString(m_sourceElement->getAttributeOrEmpty(m_targetAttribute),
+                     true, false);
 }
 
 ScriptBindingInstance* SVGLength::scriptBindingInstance()
 {
-    if (m_sourceElement == nullptr) {
-        return nullptr;
-    }
     return m_sourceElement->scriptBindingInstance();
 }
 

@@ -72,6 +72,8 @@ class SVGMaskElement;
 class ActiveSVGLengthAnimationTask;
 
 class SVGElement : public Element {
+    friend class ActiveSVGLengthAnimationTask;
+
 public:
     SVGElement(Document* document, const QualifiedName& qname);
 
@@ -258,6 +260,15 @@ public:
             if (std::get<0>(e) == s) {
                 return std::get<1>(e);
             }
+        }
+        return nullptr;
+    }
+
+    Optional<String*> getAnimatedAttribute(AtomicString s)
+    {
+        auto v = animatedAttribute(s);
+        if (v && v->length()) {
+            return v.value();
         }
         return nullptr;
     }

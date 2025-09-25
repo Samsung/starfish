@@ -202,6 +202,8 @@ bool SVGAnimationApplier::applyProperty(
                    *m_originAnimationElement->starfish()->staticStrings(),
                    attr)) {
         task = new ActiveSVGLengthAnimationTask(init, attr);
+    } else if (keyKind == CSSStyleValuePair::KeyKind::Unknown) {
+        task = new ActiveSVGLengthAnimationTask(init, attr);
     } else {
         STARFISH_UNIMPLEMENTED(
             "Unhandled property kind[%ud] for SVG animation.",

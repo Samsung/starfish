@@ -42,11 +42,11 @@ static void importValuesFromElement(
     fn.type =
         static_cast<SVGComponentTransferFunctionElement::ComponentTransferType>(
             element->type()->baseVal());
-    fn.slope = element->slope()->baseVal();
-    fn.intercept = element->intercept()->baseVal();
-    fn.amplitude = element->amplitude()->baseVal();
-    fn.exponent = element->exponent()->baseVal();
-    fn.offset = element->offset()->baseVal();
+    fn.slope = element->slope()->animVal();
+    fn.intercept = element->intercept()->animVal();
+    fn.amplitude = element->amplitude()->animVal();
+    fn.exponent = element->exponent()->animVal();
+    fn.offset = element->offset()->animVal();
 
     auto* input = element->tableValues()->baseVal();
     for (size_t i = 0; i < input->length(); i++) {

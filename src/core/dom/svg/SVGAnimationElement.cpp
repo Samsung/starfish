@@ -227,8 +227,7 @@ Optional<Element*> SVGAnimationElement::targetElement()
         targetElement = parentElement();
     }
 
-    if (!targetElement || !targetElement->isSVGElement() ||
-        !targetElement->asSVGElement()->isRenderableElement()) {
+    if (!targetElement || !targetElement->isSVGElement()) {
         return Optional<Element*>();
     }
     return targetElement;
@@ -403,6 +402,14 @@ bool SVGAnimationElement::parseValue(CSSStyleValuePair::KeyKind keyKind,
                                      const String* value,
                                      CSSStyleValuePair& pair)
 {
+    // handle non-computed style attribute
+    if (keyKind == CSSStyleValuePair::KeyKind::Unknown) {
+        CSSTokenVector tokens;
+        tokens.push_back(CSSTokenValue(value->toUTF8NonGCString()));
+        return pair.updateValueLength(tokens,
+                                      CSSPropertyParser::AllowWithoutUnit |
+                                          CSSPropertyParser::AllowPercent);
+    }
     // Parse each value in values using the rules for parsing the attribute
     // identified by the ‘attributeName’ attributes.
     // Note that ‘attributeName’ corresponds to an attribute name or a CSS
