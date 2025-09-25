@@ -184,48 +184,4 @@ SVGAnimatedEnumeration* SVGFilterElement::primitiveUnits()
     return m_primitiveUnits.getValue();
 }
 
-SVGAnimatedLength* SVGFilterElement::x()
-{
-    if (!m_x.hasValue()) {
-        SVGLength* baseVal =
-            new SVGLength(this, staticStrings()->m_x,
-                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, -10);
-        m_x = new SVGAnimatedLength(document(), baseVal, nullptr);
-    }
-    return m_x.value();
-}
-
-SVGAnimatedLength* SVGFilterElement::y()
-{
-    if (!m_y.hasValue()) {
-        SVGLength* baseVal =
-            new SVGLength(this, staticStrings()->m_y,
-                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, -10);
-        m_y = new SVGAnimatedLength(document(), baseVal, nullptr);
-    }
-    return m_y.value();
-}
-
-SVGAnimatedLength* SVGFilterElement::width()
-{
-    if (!m_width.hasValue()) {
-        SVGLength* baseVal =
-            new SVGLength(this, staticStrings()->m_width,
-                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, 120);
-        m_width = new SVGAnimatedLength(document(), baseVal, nullptr);
-    }
-    return m_width.value();
-}
-
-SVGAnimatedLength* SVGFilterElement::height()
-{
-    if (!m_height.hasValue()) {
-        SVGLength* baseVal =
-            new SVGLength(this, staticStrings()->m_height,
-                          SVGLength::SVG_LENGTHTYPE_PERCENTAGE, 120);
-        m_height = new SVGAnimatedLength(document(), baseVal, nullptr);
-    }
-    return m_height.value();
-}
-
 } // namespace Starfish

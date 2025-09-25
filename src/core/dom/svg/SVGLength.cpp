@@ -34,7 +34,8 @@
 
 namespace Starfish {
 
-SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
+SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
+                     bool isAnimVal)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
@@ -42,11 +43,12 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
     , m_valueInSpecifiedUnits(0)
     , m_readOnly(false)
     , m_hasSpecificValue(false)
+    , m_isAnimVal(isAnimVal)
 {
 }
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-                     unsigned short unitType, float value)
+                     unsigned short unitType, float value, bool isAnimVal)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
@@ -54,14 +56,21 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
     , m_valueInSpecifiedUnits(value)
     , m_readOnly(false)
     , m_hasSpecificValue(true)
+    , m_isAnimVal(isAnimVal)
 {
 }
 
 void SVGLength::updateByAttribute()
 {
     // set fromElementDidAttributeChanged for prevent update of attribute
-    setValueAsString(m_sourceElement->getAttributeOrEmpty(m_targetAttribute),
-                     true, false);
+    String* value;
+    if (m_isAnimVal) {
+        value = m_sourceElement->getAttributeConsiderAnimatedAttribute(
+            m_targetAttribute.localNameAtomic());
+    } else {
+        value = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
+    }
+    setValueAsString(value, true, false);
 }
 
 ScriptBindingInstance* SVGLength::scriptBindingInstance()
