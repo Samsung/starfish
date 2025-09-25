@@ -80,10 +80,8 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_in == name) {
-        notifyAttributeOfPaintServerLikeUpdated(false);
         in()->setBaseVal(value, true);
     } else if (ss->m_stdDeviation == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
         if (tokens.size() == 1) {
@@ -94,13 +92,10 @@ void SVGFEGaussianBlurElement::didAttributeChanged(QualifiedName name,
             stdDeviationY()->setBaseVal(String::parseFloat(&tokens[1]), true);
         }
     } else if (ss->m_stdDeviationX == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         stdDeviationX()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_stdDeviationY == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         stdDeviationY()->setBaseVal(String::parseFloat(value), true);
     } else if (ss->m_edgeMode == name) {
-        notifyAttributeOfPaintServerLikeUpdated(true);
         if (edgeMode()->isUpdated() == false) {
             if (value->equals("duplicate")) {
                 m_edgeMode->setBaseValWithoutUpdateAttribute(
@@ -163,8 +158,9 @@ SVGAnimatedString* SVGFEGaussianBlurElement::in()
 SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationX()
 {
     if (!m_stdDeviationX.hasValue()) {
-        m_stdDeviationX = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_stdDeviationX, 0, 0);
+        m_stdDeviationX = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_stdDeviationX,
+            starfish()->staticStrings()->m_stdDeviation, 0);
     }
     return m_stdDeviationX.getValue();
 }
@@ -172,8 +168,9 @@ SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationX()
 SVGAnimatedNumber* SVGFEGaussianBlurElement::stdDeviationY()
 {
     if (!m_stdDeviationY.hasValue()) {
-        m_stdDeviationY = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_stdDeviationY, 0, 0);
+        m_stdDeviationY = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_stdDeviationY,
+            starfish()->staticStrings()->m_stdDeviation, 0);
     }
     return m_stdDeviationY.getValue();
 }
@@ -191,16 +188,7 @@ SVGAnimatedEnumeration* SVGFEGaussianBlurElement::edgeMode()
 void SVGFEGaussianBlurElement::setStdDeviation(float stdDeviationX,
                                                float stdDeviationY)
 {
-    if (!m_stdDeviationX.hasValue()) {
-        m_stdDeviationX = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_stdDeviationX, 0, 0);
-    }
-    m_stdDeviationX->setBaseVal(stdDeviationX);
-
-    if (!m_stdDeviationY.hasValue()) {
-        m_stdDeviationY = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_stdDeviationY, 0, 0);
-    }
-    m_stdDeviationY->setBaseVal(stdDeviationY);
+    this->stdDeviationX()->setBaseVal(stdDeviationX);
+    this->stdDeviationY()->setBaseVal(stdDeviationY);
 }
 } // namespace Starfish

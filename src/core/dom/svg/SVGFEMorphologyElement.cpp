@@ -137,8 +137,9 @@ SVGAnimatedString* SVGFEMorphologyElement::in()
 SVGAnimatedNumber* SVGFEMorphologyElement::radiusX()
 {
     if (!m_radiusX.hasValue()) {
-        m_radiusX = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_radiusX, 0, 0);
+        m_radiusX = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_radiusX,
+            starfish()->staticStrings()->m_radius, 0);
     }
     return m_radiusX.getValue();
 }
@@ -146,8 +147,9 @@ SVGAnimatedNumber* SVGFEMorphologyElement::radiusX()
 SVGAnimatedNumber* SVGFEMorphologyElement::radiusY()
 {
     if (!m_radiusY.hasValue()) {
-        m_radiusY = new SVGAnimatedNumber(
-            this, starfish()->staticStrings()->m_radiusY, 0, 0);
+        m_radiusY = new SVGAnimatedNumberWithFallbackAttribute(
+            this, starfish()->staticStrings()->m_radiusY,
+            starfish()->staticStrings()->m_radius, 0);
     }
     return m_radiusY.getValue();
 }

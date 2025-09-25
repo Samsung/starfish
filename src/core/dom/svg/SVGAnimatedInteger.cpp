@@ -26,13 +26,12 @@ namespace Starfish {
 
 SVGAnimatedInteger::SVGAnimatedInteger(SVGElement* targetElement,
                                        const QualifiedName& targetAttribute,
-                                       long baseVal, long animVal)
+                                       long baseVal)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(targetElement->scriptBindingInstance())
     , m_targetElement(targetElement)
     , m_targetAttribute(targetAttribute)
     , m_baseVal(baseVal)
-    , m_animVal(animVal)
 {
 }
 
@@ -44,5 +43,16 @@ void SVGAnimatedInteger::updateTargetElementAttribute()
 ScriptBindingInstance* SVGAnimatedInteger::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
+}
+
+long SVGAnimatedInteger::animVal() const
+{
+    auto val = m_targetElement->getAnimatedAttribute(
+        m_targetAttribute.localNameAtomic());
+    if (val) {
+        return String::parseFloat(val.value());
+    } else {
+        return m_baseVal;
+    }
 }
 } // namespace Starfish

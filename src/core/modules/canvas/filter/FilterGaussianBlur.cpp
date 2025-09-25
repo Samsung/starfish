@@ -358,9 +358,9 @@ std::pair<float, float> FilterGaussianBlur::computeStdXY(
 {
     auto e = element()->asSVGFEGaussianBlurElement();
     float stdX = filter()->resolveFilterPrimitiveValue(
-        e->stdDeviationX()->baseVal(), targetSize.width(), viewportScale.first);
+        e->stdDeviationX()->animVal(), targetSize.width(), viewportScale.first);
     float stdY = filter()->resolveFilterPrimitiveValue(
-        e->stdDeviationY()->baseVal(), targetSize.height(),
+        e->stdDeviationY()->animVal(), targetSize.height(),
         viewportScale.second);
 
     return std::make_pair(stdX, stdY);

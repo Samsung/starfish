@@ -27,14 +27,13 @@ namespace Starfish {
 class SVGAnimatedInteger : public ScriptWrappable {
 public:
     SVGAnimatedInteger(SVGElement* targetElement,
-                       const QualifiedName& targetAttribute, long baseVal,
-                       long animVal);
+                       const QualifiedName& targetAttribute, long baseVal);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedInteger)
 
     void setBaseVal(long baseVal, bool fromSetAttribute = false)
     {
-        m_animVal = m_baseVal = baseVal;
+        m_baseVal = baseVal;
         if (!fromSetAttribute) {
             updateTargetElementAttribute();
         }
@@ -45,10 +44,7 @@ public:
         return m_baseVal;
     }
 
-    long animVal() const
-    {
-        return m_animVal;
-    }
+    long animVal() const;
 
 protected:
     void updateTargetElementAttribute();
@@ -56,7 +52,6 @@ protected:
     SVGElement* m_targetElement;
     QualifiedName m_targetAttribute;
     long m_baseVal;
-    long m_animVal;
 };
 } // namespace Starfish
 

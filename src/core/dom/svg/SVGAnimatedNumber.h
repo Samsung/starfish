@@ -28,14 +28,13 @@ class SVGAnimatedNumberList;
 class SVGAnimatedNumber : public ScriptWrappable {
 public:
     SVGAnimatedNumber(SVGElement* targetElement,
-                      const QualifiedName& targetAttribute, float baseVal,
-                      float animVal);
+                      const QualifiedName& targetAttribute, float baseVal);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedNumber)
 
     void setBaseVal(float baseVal, bool fromSetAttribute = false)
     {
-        m_animVal = m_baseVal = baseVal;
+        m_baseVal = baseVal;
         if (!fromSetAttribute) {
             updateTargetElementAttribute();
         }
@@ -46,17 +45,29 @@ public:
         return m_baseVal;
     }
 
-    float animVal() const
-    {
-        return m_animVal;
-    }
+    virtual float animVal() const;
 
 protected:
     void updateTargetElementAttribute();
     SVGElement* m_targetElement;
     QualifiedName m_targetAttribute;
     float m_baseVal;
-    float m_animVal;
+};
+
+class SVGAnimatedNumberWithFallbackAttribute : public SVGAnimatedNumber {
+public:
+    SVGAnimatedNumberWithFallbackAttribute(
+        SVGElement* targetElement, const QualifiedName& targetAttribute,
+        const QualifiedName& fallbackAttribute, float baseVal)
+        : SVGAnimatedNumber(targetElement, targetAttribute, baseVal)
+        , m_fallbackAttribute(fallbackAttribute)
+    {
+    }
+
+    virtual float animVal() const override;
+
+protected:
+    QualifiedName m_fallbackAttribute;
 };
 } // namespace Starfish
 

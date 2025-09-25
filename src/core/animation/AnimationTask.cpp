@@ -29,6 +29,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
@@ -349,10 +350,8 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
     return m_timingFunctions[m_frameIdx];
 }
 
-bool ActiveAnimationTask::needsContinuousRendering()
+bool ActiveAnimationTask::needsContinuousRendering(uint64_t tick)
 {
-    // TODO <Introduce new ActiveTasks for SVGAnimatedXX values if needs>
-    // check SVGAnimatedValue are referenced by JS
     bool b = !!m_targetElement->frame();
     if (b) {
         auto f = m_targetElement->frame();
@@ -1710,14 +1709,26 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
                                                    currentAnimatedToValue(),
                                                    progress, m_isForward);
 
+    STARFISH_ASSERT(newLength.isFixed());
+
+    char temp[100];
+    int len = snprintf(temp, sizeof(temp), "%.3f", newLength.fixed());
     m_targetElement->asSVGElement()->setAnimatedAttribute(
-        m_attributeName, newLength.toString(), this);
+        m_attributeName, String::fromUTF8(temp, strnlen(temp, len)), this);
 }
 
 void ActiveSVGLengthAnimationTask::end()
 {
     m_targetElement->asSVGElement()->setAnimatedAttribute(
         m_attributeName, String::emptyString, this);
+}
+
+void ActiveSVGLengthAnimationTask::execute(double progress,
+                                           ComputedStyle* style)
+{
+    // DO NOTTHING
+    // ActiveSVGLengthAnimationTask tasks are executed on
+    // SVGElement::styleForPresentationAttribute
 }
 
 bool ActiveSVGLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
@@ -1735,6 +1746,22 @@ void ActiveSVGLengthAnimationTask::detachFromElement()
 {
     m_targetElement->asSVGElement()->removeAnimatedAttribute(m_attributeName,
                                                              this);
+}
+
+bool ActiveSVGLengthAnimationTask::needsContinuousRendering(uint64_t tick)
+{
+    if (m_targetElement->asSVGElement()->isRenderableElement()) {
+        if (!ActiveAnimationTask::needsContinuousRendering(tick)) {
+            return false;
+        }
+    }
+    auto remainTime = this->remainTime(tick);
+
+    if (remainTime <= 0 && fillMode() == AnimationFillModeValue::None &&
+        !isInForwardsFillMode()) {
+        return false;
+    }
+    return true;
 }
 
 } // namespace Starfish

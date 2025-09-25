@@ -338,16 +338,14 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
         }
         break;
     case CSSStyleValuePair::KeyKind::X:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::Y:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::CX:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::CY:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::RX:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     case CSSStyleValuePair::KeyKind::RY:
+    case CSSStyleValuePair::KeyKind::Width:
+    case CSSStyleValuePair::KeyKind::Height:
+    case CSSStyleValuePair::KeyKind::Unknown:
         return AnimatedValue::createAnimatedValueFromLength(property);
     default:
         STARFISH_UNIMPLEMENTED();

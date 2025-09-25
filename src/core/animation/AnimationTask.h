@@ -276,7 +276,7 @@ public:
         return m_values;
     }
 
-    bool needsContinuousRendering();
+    virtual bool needsContinuousRendering(uint64_t tick);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -508,12 +508,8 @@ public:
 
     void execute(double progress);
     void end();
-    void execute(double progress, ComputedStyle* style) override
-    {
-        // DO NOTTHING
-        // ActiveSVGLengthAnimationTask tasks are executed on
-        // SVGElement::styleForPresentationAttribute
-    }
+
+    void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
 
     static inline void fillGCDescriptor(GC_word* desc)
@@ -523,6 +519,7 @@ public:
 
     virtual void attachToElement() override;
     virtual void detachFromElement() override;
+    virtual bool needsContinuousRendering(uint64_t tick) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
