@@ -43,9 +43,10 @@ public:
         SVG_LENGTHTYPE_PC
     };
 
-    SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute);
     SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-              unsigned short unitType, float value);
+              bool isAnimVal);
+    SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
+              unsigned short unitType, float value, bool isAnimVal);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -86,6 +87,7 @@ protected:
 
     bool m_readOnly;
     bool m_hasSpecificValue;
+    bool m_isAnimVal;
 };
 } // namespace Starfish
 

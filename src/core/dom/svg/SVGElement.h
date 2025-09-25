@@ -28,18 +28,35 @@
 #include "core/style/Style.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                \
-    SVGAnimatedLength* attrName()                                    \
-    {                                                                \
-        if (!m_##attrName.hasValue()) {                              \
-            SVGLength* baseVal =                                     \
-                new SVGLength(this, staticStrings()->m_##attrName);  \
-            SVGLength* animVal =                                     \
-                new SVGLength(this, staticStrings()->m_##attrName);  \
-            m_##attrName =                                           \
-                new SVGAnimatedLength(document(), baseVal, animVal); \
-        }                                                            \
-        return m_##attrName.value();                                 \
+#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                      \
+    SVGAnimatedLength* attrName()                                          \
+    {                                                                      \
+        if (!m_##attrName.hasValue()) {                                    \
+            SVGLength* baseVal =                                           \
+                new SVGLength(this, staticStrings()->m_##attrName, false); \
+            SVGLength* animVal =                                           \
+                new SVGLength(this, staticStrings()->m_##attrName, true);  \
+            m_##attrName =                                                 \
+                new SVGAnimatedLength(document(), baseVal, animVal);       \
+        }                                                                  \
+        return m_##attrName.value();                                       \
+    }
+
+#define STARFISH_SVG_ANIMATED_LENGTH_GETTER_TYPE_DEFAULT(attrName, type, \
+                                                         defaultValue)   \
+    SVGAnimatedLength* attrName()                                        \
+    {                                                                    \
+        if (!m_##attrName.hasValue()) {                                  \
+            SVGLength* baseVal =                                         \
+                new SVGLength(this, staticStrings()->m_##attrName,       \
+                              SVGLength::type, defaultValue, false);     \
+            SVGLength* animVal =                                         \
+                new SVGLength(this, staticStrings()->m_##attrName,       \
+                              SVGLength::type, defaultValue, true);      \
+            m_##attrName =                                               \
+                new SVGAnimatedLength(document(), baseVal, animVal);     \
+        }                                                                \
+        return m_##attrName.value();                                     \
     }
 
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2, customs) \

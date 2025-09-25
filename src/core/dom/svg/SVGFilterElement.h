@@ -75,10 +75,18 @@ public:
     SVGAnimatedEnumeration* filterUnits();
     SVGAnimatedEnumeration* primitiveUnits();
 
-    SVGAnimatedLength* x();
-    SVGAnimatedLength* y();
-    SVGAnimatedLength* width();
-    SVGAnimatedLength* height();
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER_TYPE_DEFAULT(x,
+                                                     SVG_LENGTHTYPE_PERCENTAGE,
+                                                     -10)
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER_TYPE_DEFAULT(y,
+                                                     SVG_LENGTHTYPE_PERCENTAGE,
+                                                     -10)
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER_TYPE_DEFAULT(width,
+                                                     SVG_LENGTHTYPE_PERCENTAGE,
+                                                     120)
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER_TYPE_DEFAULT(height,
+                                                     SVG_LENGTHTYPE_PERCENTAGE,
+                                                     120)
 
 private:
     virtual void computeAttributeChangeDamage(AtomicString attrName) override;
