@@ -149,12 +149,11 @@ public:
     }
 
     struct FilterBias {
-        std::pair<float, float> maximumBias; // for blur, morphology
-        std::pair<float, float> minimumBias; // for offset
+        Optional<Unit::Rect> maximumBias; // for blur, morphology
+        Optional<Unit::Rect> minimumBias; // for offset, turbulence
 
-        FilterBias(
-            const std::pair<float, float>& maximumBias = std::make_pair(0, 0),
-            const std::pair<float, float>& minimumBias = std::make_pair(0, 0))
+        FilterBias(Optional<Unit::Rect> maximumBias = NullOption,
+                   Optional<Unit::Rect> minimumBias = NullOption)
             : maximumBias(maximumBias)
             , minimumBias(minimumBias)
         {
@@ -162,6 +161,7 @@ public:
     };
 
     FilterBias computeBias(FrameSVGBox* target,
+                           const Unit::Rect& candidateFilterFrameRect,
                            const std::pair<float, float>& viewportScale);
 
     const GCVector<FilterPrimitive*>& filterPrimitives()

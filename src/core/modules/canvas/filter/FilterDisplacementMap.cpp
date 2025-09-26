@@ -38,12 +38,6 @@ FilterDisplacementMap::FilterDisplacementMap(
 {
 }
 
-Filter::FilterBias FilterDisplacementMap::computeBias(
-    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
-{
-    return Filter::FilterBias();
-}
-
 void* FilterDisplacementMap::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FilterDisplacementMap));

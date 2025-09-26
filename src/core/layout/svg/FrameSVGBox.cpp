@@ -134,8 +134,8 @@ LayoutSize FrameSVGBox::resolveStyleSize(const LayoutSize& viewport)
     return result;
 }
 
-static float computeSVGLength(SVGLength* length, float fullValue,
-                              bool isObjectBoundingBoxMode)
+float FrameSVGBox::computeSVGLength(SVGLength* length, float fullValue,
+                                    bool isObjectBoundingBoxMode)
 {
     if (length->unitType() == SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
         return length->valueInSpecifiedUnits(false) / 100 * fullValue;
@@ -162,18 +162,6 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     auto vp = self->viewport();
     FrameSVGSVGBox* viewportBox = self->outmostSVGViewportBox();
     auto transScale = viewportBox->computeTranlateScaleOnPaint();
-    auto bias =
-        fe->computeBias(self, std::make_pair(transScale.second.getScaleX(),
-                                             transScale.second.getScaleY()));
-    LayoutRect maximumBiasRect = unadjustedFrameRectByFilter;
-    maximumBiasRect.setX(self->x() -
-                         bias.maximumBias.first * matrix.getScaleX());
-    maximumBiasRect.setY(self->y() -
-                         bias.maximumBias.second * matrix.getScaleY());
-    maximumBiasRect.setWidth(self->width() +
-                             bias.maximumBias.first * 2 * matrix.getScaleX());
-    maximumBiasRect.setHeight(self->height() +
-                              bias.maximumBias.second * 2 * matrix.getScaleY());
 
     auto eX = filterElement->x();
     auto eY = filterElement->y();
@@ -191,14 +179,14 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
         fullHeight = vp.height();
     }
 
-    float x =
-        computeSVGLength(eX->baseVal(), fullWidth, isObjectBoundingBoxMode);
-    float y =
-        computeSVGLength(eY->baseVal(), fullHeight, isObjectBoundingBoxMode);
-    float width =
-        computeSVGLength(eWidth->baseVal(), fullWidth, isObjectBoundingBoxMode);
-    float height = computeSVGLength(eHeight->baseVal(), fullHeight,
-                                    isObjectBoundingBoxMode);
+    float x = FrameSVGBox::computeSVGLength(eX->animVal(), fullWidth,
+                                            isObjectBoundingBoxMode);
+    float y = FrameSVGBox::computeSVGLength(eY->animVal(), fullHeight,
+                                            isObjectBoundingBoxMode);
+    float width = FrameSVGBox::computeSVGLength(eWidth->animVal(), fullWidth,
+                                                isObjectBoundingBoxMode);
+    float height = FrameSVGBox::computeSVGLength(eHeight->animVal(), fullHeight,
+                                                 isObjectBoundingBoxMode);
 
     LayoutRect newFrameRect = unadjustedFrameRectByFilter;
     if (isObjectBoundingBoxMode) {
@@ -214,19 +202,23 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
         newFrameRect = computeBoxExtent(newFrameRect, matrix);
     }
 
+    auto bias =
+        fe->computeBias(self,
+                        Unit::Rect(newFrameRect.x(), newFrameRect.y(),
+                                   newFrameRect.width(), newFrameRect.height()),
+                        std::make_pair(transScale.second.getScaleX(),
+                                       transScale.second.getScaleY()));
+    LayoutRect maximumBiasRect = unadjustedFrameRectByFilter;
+    if (bias.maximumBias) {
+        Unit::Rect rt = bias.maximumBias.value();
+        maximumBiasRect = LayoutRect(rt.x(), rt.y(), rt.width(), rt.height());
+    }
+
     LayoutRect result =
         LayoutRect::overlappedRect(maximumBiasRect, newFrameRect);
-    if (bias.minimumBias.first || bias.minimumBias.second) {
-        LayoutRect minimumBiasRect = self->frameRect();
-        minimumBiasRect.setX(self->x() -
-                             bias.minimumBias.first * matrix.getScaleX());
-        minimumBiasRect.setY(self->y() -
-                             bias.minimumBias.second * matrix.getScaleY());
-        minimumBiasRect.setWidth(self->width() + bias.minimumBias.first * 2 *
-                                                     matrix.getScaleX());
-        minimumBiasRect.setHeight(self->height() + bias.minimumBias.second * 2 *
-                                                       matrix.getScaleY());
-        result.unite(minimumBiasRect);
+    if (bias.minimumBias) {
+        Unit::Rect rt = bias.minimumBias.value();
+        result.unite(LayoutRect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
     const auto& primitives = fe->filterPrimitives();

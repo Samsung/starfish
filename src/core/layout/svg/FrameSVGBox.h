@@ -127,6 +127,8 @@ public:
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
+    static float computeSVGLength(SVGLength* length, float fullValue,
+                                  bool isObjectBoundingBoxMode);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

@@ -367,13 +367,21 @@ std::pair<float, float> FilterGaussianBlur::computeStdXY(
 }
 
 Filter::FilterBias FilterGaussianBlur::computeBias(
-    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
+    const std::pair<float, float>& viewportScale)
 {
     auto e = element()->asSVGFEGaussianBlurElement();
     auto stdXY = computeStdXY(targetSize, viewportScale);
     auto kernel =
         FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
-    return Filter::FilterBias(std::make_pair(kernel.first, kernel.second));
+
+    Unit::Rect newRt = candidateFilterFrameRect;
+    newRt.setX(newRt.x() - kernel.first);
+    newRt.setY(newRt.y() - kernel.second);
+    newRt.setWidth(newRt.width() + kernel.first * 2);
+    newRt.setHeight(newRt.height() + kernel.second * 2);
+
+    return Filter::FilterBias(newRt);
 }
 
 void FilterGaussianBlur::apply(const Unit::Rect& subRegionInFloat,

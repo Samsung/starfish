@@ -53,7 +53,8 @@ void* FilterOffset::operator new(size_t size)
 }
 
 Filter::FilterBias FilterOffset::computeBias(
-    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
+    const std::pair<float, float>& viewportScale)
 {
     auto e = element()->asSVGFEOffsetElement();
     float dx = filter()->resolveFilterPrimitiveValue(
@@ -61,8 +62,12 @@ Filter::FilterBias FilterOffset::computeBias(
     float dy = filter()->resolveFilterPrimitiveValue(
         e->dy()->animVal(), targetSize.height(), viewportScale.second);
 
-    return Filter::FilterBias(std::make_pair(0, 0),
-                              std::make_pair(std::abs(dx), std::abs(dy)));
+    auto newRt = candidateFilterFrameRect;
+
+    newRt.setX(dx + newRt.x());
+    newRt.setY(dy + newRt.y());
+
+    return Filter::FilterBias(NullOption, newRt);
 }
 
 void FilterOffset::apply(const Unit::Rect& subRegionInFloat,

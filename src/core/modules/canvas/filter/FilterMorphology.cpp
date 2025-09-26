@@ -187,9 +187,18 @@ std::pair<float, float> FilterMorphology::computeRadiusXY(
 }
 
 Filter::FilterBias FilterMorphology::computeBias(
-    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
+    const std::pair<float, float>& viewportScale)
 {
-    return Filter::FilterBias(computeRadiusXY(targetSize, viewportScale));
+    auto r = computeRadiusXY(targetSize, viewportScale);
+
+    Unit::Rect newRt = candidateFilterFrameRect;
+    newRt.setX(newRt.x() - r.first);
+    newRt.setY(newRt.y() - r.second);
+    newRt.setWidth(newRt.width() + r.first * 2);
+    newRt.setHeight(newRt.height() + r.second * 2);
+
+    return Filter::FilterBias(newRt);
 }
 
 void* FilterMorphology::operator new(size_t size)
