@@ -945,6 +945,8 @@ void ActiveColorAnimationTask::execute(double progress, ComputedStyle* style)
         style->setOutlineColor(Unit::Color(r, g, b, a));
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
         style->setTextDecorationColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::Fill) {
+        style->setFill(new StylePaintData(Unit::Color(r, g, b, a)));
     } else {
         STARFISH_UNSUPPORTED("css animation property: %d", m_property);
     }

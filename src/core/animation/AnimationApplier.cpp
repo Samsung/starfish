@@ -323,9 +323,10 @@ bool AnimationApplier::applyProperty(
         init.animatedValues = layeredValues[i];
         init.layerIndex = i;
         // Create ActiveAnimationTask based on the type of property.
-        if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind)) {
+        if (AnimationUtil::isPropertyForActiveColorAnimationTask(keyKind) ||
+            (keyKind == CSSStyleValuePair::KeyKind::Fill &&
+             layeredValues[0][0]->isColor())) {
             task = new ActiveColorAnimationTask(init);
-
         } else if (AnimationUtil::isPropertyForActiveLengthAnimationTask(
                        keyKind)) {
             if (keyKind == CSSStyleValuePair::KeyKind::MarginTop ||

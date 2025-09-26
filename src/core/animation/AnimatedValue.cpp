@@ -310,6 +310,14 @@ Optional<AnimatedValue*> AnimatedValue::create(
             return new AnimatedValue(style->ry());
         }
         return AnimatedValue::createAnimatedValueFromLength(property);
+    case CSSStyleValuePair::KeyKind::Fill:
+        if (!neededOriginProperty) {
+            if (property.valueKind() ==
+                CSSStyleValuePair::ValueKind::ColorValueKind) {
+                return AnimatedValue::createAnimatedValueFromColor(property);
+            }
+        }
+        FALLTHROUGH;
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();
