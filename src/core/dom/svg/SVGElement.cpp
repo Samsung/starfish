@@ -370,20 +370,12 @@ void SVGElement::styleForPresentationAttribute(
     // execute ActiveSVG AnimationTasks
     if (m_animatedAttributes) {
         for (auto e : *m_animatedAttributes) {
-            auto task = std::get<2>(e);
+            auto task = std::get<3>(e);
             if (!task->isInDelayedTime()) {
                 auto tick =
                     document()->browsingContext()->styleResolveStartTick();
-                auto remainTime = task->remainTime(tick);
-
-                if (remainTime <= 0 &&
-                    task->fillMode() == AnimationFillModeValue::None &&
-                    !task->isInForwardsFillMode()) {
-                    task->end();
-                } else {
-                    double f = task->fraction(tick);
-                    task->execute(task->computeProgress(f));
-                }
+                double f = task->fraction(tick);
+                task->execute(task->computeProgress(f));
             }
         }
     }
