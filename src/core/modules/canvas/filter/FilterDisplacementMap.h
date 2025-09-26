@@ -33,9 +33,6 @@ public:
 
     virtual void apply(const Unit::Rect& subRegionInFloat,
                        Filter::FilterApplyContext& ctx) override;
-    virtual Filter::FilterBias computeBias(
-        const LayoutSize& targetSize,
-        const std::pair<float, float>& viewportScale) override;
 };
 } // namespace Starfish
 #endif

@@ -28,6 +28,7 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/svg/SVGFETurbulenceElement.h"
+#include "core/dom/svg/SVGFilterElement.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterTurbulence.h"
 #include "core/page/WebView.h"
@@ -64,9 +65,10 @@ FilterTurbulence::FilterTurbulence(
 }
 
 Filter::FilterBias FilterTurbulence::computeBias(
-    const LayoutSize& targetSize, const std::pair<float, float>& viewportScale)
+    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
+    const std::pair<float, float>& viewportScale)
 {
-    return Filter::FilterBias();
+    return Filter::FilterBias(NullOption, candidateFilterFrameRect);
 }
 
 void* FilterTurbulence::operator new(size_t size)

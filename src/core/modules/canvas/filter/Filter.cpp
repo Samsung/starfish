@@ -214,7 +214,7 @@ Unit::Rect Filter::computeSubRegion(
 
         if (absoluteRect.containsInVisual(viewportRect)) {
             subRegionInFloat = Unit::Rect(0, 0, 1, 1);
-        } else {
+        } else if (!unAdjustedFrameRect->isEmpty()) {
             LayoutRect rt = targetBox->parent()->asFrameBox()->absoluteRect(
                 targetBox->outmostSVGViewportBox());
             rt.setX(rt.x() + unAdjustedFrameRect->x());
@@ -266,22 +266,34 @@ void Filter::updateIfNeeds()
 }
 
 Filter::FilterBias Filter::computeBias(
-    FrameSVGBox* target, const std::pair<float, float>& viewportScale)
+    FrameSVGBox* target, const Unit::Rect& candidateFilterFrameRect,
+    const std::pair<float, float>& viewportScale)
 {
     updateIfNeeds();
 
     FilterBias ret;
     auto siz = target->frameRect().size();
     for (auto* f : m_filterPrimitives) {
-        auto subResult = f->computeBias(siz, viewportScale);
-        ret.maximumBias.first =
-            std::max(ret.maximumBias.first, subResult.maximumBias.first);
-        ret.maximumBias.second =
-            std::max(ret.maximumBias.second, subResult.maximumBias.second);
-        ret.minimumBias.first =
-            std::max(ret.minimumBias.first, subResult.minimumBias.first);
-        ret.minimumBias.second =
-            std::max(ret.minimumBias.second, subResult.minimumBias.second);
+        auto subResult =
+            f->computeBias(siz, candidateFilterFrameRect, viewportScale);
+
+        if (subResult.maximumBias) {
+            if (!ret.maximumBias) {
+                ret.maximumBias = subResult.maximumBias.value();
+            } else {
+                subResult.maximumBias.value().unite(ret.maximumBias.value());
+                ret.maximumBias = subResult.maximumBias.value();
+            }
+        }
+
+        if (subResult.minimumBias) {
+            if (!ret.minimumBias) {
+                ret.minimumBias = subResult.minimumBias.value();
+            } else {
+                subResult.minimumBias.value().unite(ret.minimumBias.value());
+                ret.minimumBias = subResult.minimumBias.value();
+            }
+        }
     }
 
     return ret;

@@ -44,9 +44,9 @@ public:
     };
 
     SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-              bool isAnimVal);
+              Optional<SVGLength*> sourceObject = nullptr);
     SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-              unsigned short unitType, float value, bool isAnimVal);
+              unsigned short unitType, float value);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -77,17 +77,18 @@ public:
     bool hasSpecificValue();
 
 protected:
+    void throwIfReadOnly();
     void updateByAttribute();
 
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
+    Optional<SVGLength*> m_sourceObject; // filled if animVal
 
     unsigned short m_unitType;
     float m_valueInSpecifiedUnits;
 
     bool m_isReadOnly;
     bool m_hasSpecificValue;
-    bool m_isAnimVal;
 };
 } // namespace Starfish
 

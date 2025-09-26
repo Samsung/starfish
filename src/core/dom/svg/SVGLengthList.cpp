@@ -108,7 +108,7 @@ SVGLength* SVGLengthList::initialize(SVGLength* newItem)
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
         item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value(), false);
+                             newItem->unitType(), newItem->value());
     }
 
     // 5. Append newItem to this list.
@@ -161,7 +161,7 @@ SVGLength* SVGLengthList::insertItemBefore(SVGLength* newItem,
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
         item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value(), false);
+                             newItem->unitType(), newItem->value());
     }
 
     // 3. If index is greater than the length of the list, then set index to be
@@ -212,7 +212,7 @@ SVGLength* SVGLengthList::replaceItem(SVGLength* newItem, unsigned long index)
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
         item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value(), false);
+                             newItem->unitType(), newItem->value());
     }
 
     // 4. Detach the element in the list at index index.
@@ -284,7 +284,7 @@ SVGLength* SVGLengthList::appendItem(SVGLength* newItem)
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
         item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value(), false);
+                             newItem->unitType(), newItem->value());
     }
 
     // 3. Let index be the length of the list.
@@ -364,7 +364,7 @@ void SVGLengthList::updateListByAttribute()
 
         for (size_t i = 0; i < tokens.size(); ++i) {
             SVGLength* newItem = new SVGLength(
-                m_sourceElement, AtomicString::emptyAtomicString(), false);
+                m_sourceElement, AtomicString::emptyAtomicString());
             newItem->setValueAsString(tokens[i].substring(), false, false);
 
             appendItemWithoutUpdateAttribute(newItem);

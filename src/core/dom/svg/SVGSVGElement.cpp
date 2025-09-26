@@ -165,7 +165,7 @@ SVGNumber* SVGSVGElement::createSVGNumber()
 
 SVGLength* SVGSVGElement::createSVGLength()
 {
-    return new SVGLength(this, AtomicString::emptyAtomicString(), false);
+    return new SVGLength(this, AtomicString::emptyAtomicString());
 }
 
 SVGAngle* SVGSVGElement::createSVGAngle()

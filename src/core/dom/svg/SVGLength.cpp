@@ -35,29 +35,38 @@
 namespace Starfish {
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-                     bool isAnimVal)
+                     Optional<SVGLength*> sourceObject)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
+    , m_sourceObject(sourceObject)
     , m_unitType(SVG_LENGTHTYPE_NUMBER)
     , m_valueInSpecifiedUnits(0)
-    , m_isReadOnly(isAnimVal)
+    , m_isReadOnly(!!sourceObject)
     , m_hasSpecificValue(false)
-    , m_isAnimVal(isAnimVal)
 {
 }
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
-                     unsigned short unitType, float value, bool isAnimVal)
+                     unsigned short unitType, float value)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
     , m_unitType(unitType)
     , m_valueInSpecifiedUnits(value)
-    , m_isReadOnly(isAnimVal)
+    , m_isReadOnly(false)
     , m_hasSpecificValue(true)
-    , m_isAnimVal(isAnimVal)
 {
+}
+
+void SVGLength::throwIfReadOnly()
+{
+    if (isReadOnly()) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "NoModificationAllowedError");
+        return;
+    }
 }
 
 void SVGLength::updateByAttribute()
@@ -74,35 +83,35 @@ ScriptBindingInstance* SVGLength::scriptBindingInstance()
 
 unsigned short SVGLength::unitType()
 {
+    if (m_sourceObject) {
+        return m_sourceObject->unitType();
+    }
     return m_unitType;
 }
 
 bool SVGLength::hasSpecificValue()
 {
+    if (m_sourceObject) {
+        return m_sourceObject->hasSpecificValue();
+    }
     return m_hasSpecificValue;
 }
 
 void SVGLength::setUnitType(unsigned short unitType)
 {
-    if (isReadOnly()) {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
-                               "NoModificationAllowedError");
-        return;
-    }
+    throwIfReadOnly();
     m_unitType = unitType;
 }
 
 float SVGLength::value(bool layoutIfNeeded)
 {
-    if (m_isAnimVal) {
+    if (m_sourceObject) {
         auto s = m_sourceElement->animatedAttributeRawValue(
             m_targetAttribute.localNameAtomic());
         if (s) {
             return s.value();
         }
-        String* org = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
-        return String::parseFloat(org);
+        return m_sourceObject->value(layoutIfNeeded);
     }
     updateByAttribute();
 
@@ -165,6 +174,8 @@ float SVGLength::value(bool layoutIfNeeded)
 
 void SVGLength::setValue(float v)
 {
+    throwIfReadOnly();
+
     // unimplemented PERCENTAGE, EMS, EXS
     if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
         setValueInSpecifiedUnits(v);
@@ -188,6 +199,9 @@ void SVGLength::setValue(float v)
 
 float SVGLength::valueInSpecifiedUnits(bool layoutIfNeeded)
 {
+    if (m_sourceObject) {
+        return m_sourceObject->valueInSpecifiedUnits(layoutIfNeeded);
+    }
     if (layoutIfNeeded) {
         m_sourceElement->document()->browsingContext()->layoutIfNeeded();
     }
@@ -197,12 +211,7 @@ float SVGLength::valueInSpecifiedUnits(bool layoutIfNeeded)
 void SVGLength::setValueInSpecifiedUnits(float v,
                                          bool fromElementDidAttributeChanged)
 {
-    if (isReadOnly()) {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
-                               "NoModificationAllowedError");
-        return;
-    }
+    throwIfReadOnly();
 
     if (std::isnan(v) || std::isinf(v)) {
         throw new DOMException(m_sourceElement->executionContext(),
@@ -254,6 +263,8 @@ void SVGLength::setValueAsString(String* valueAsString,
                                  bool fromElementDidAttributeChanged,
                                  bool throwDOMExceptionOnFailure)
 {
+    throwIfReadOnly();
+
     valueAsString = valueAsString->toLower();
 
     if (valueAsString->length()) {
@@ -322,6 +333,8 @@ void SVGLength::setValueAsString(String* valueAsString,
 void SVGLength::newValueSpecifiedUnits(unsigned short unitType,
                                        float valueInSpecifiedUnits)
 {
+    throwIfReadOnly();
+
     if (std::isnan(valueInSpecifiedUnits) ||
         std::isinf(valueInSpecifiedUnits)) {
         throw new DOMException(m_sourceElement->executionContext(),
@@ -335,6 +348,8 @@ void SVGLength::newValueSpecifiedUnits(unsigned short unitType,
 
 void SVGLength::convertToSpecifiedUnits(unsigned short unitType)
 {
+    throwIfReadOnly();
+
     if (unitType < SVG_LENGTHTYPE_NUMBER || unitType > SVG_LENGTHTYPE_PC) {
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::NOT_SUPPORTED_ERR,
@@ -356,6 +371,8 @@ void SVGLength::setReadOnly()
 
 void SVGLength::detach()
 {
+    throwIfReadOnly();
+
     // Set the SVGLength to no longer be associated with any element.
     m_sourceElement = nullptr;
     m_targetAttribute = AtomicString::emptyAtomicString();
@@ -369,6 +386,7 @@ void SVGLength::detach()
 
 void SVGLength::attach(SVGElement* sourceElement, QualifiedName targetAttribute)
 {
+    throwIfReadOnly();
     // Associate the SVGLength with the element that the list interface object
     // is associated with and set its directionality to that specified by the
     // attribute being reflected.
