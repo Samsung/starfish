@@ -239,16 +239,19 @@ public:
     virtual void attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout);
 
     void setAnimatedAttribute(AtomicString s, String* v,
+                              Optional<float> rawValue,
                               ActiveSVGLengthAnimationTask* task)
     {
         for (auto& e : ensureAnimatedAttributes()) {
             if (std::get<0>(e) == s) {
                 std::get<1>(e) = v;
+                std::get<2>(e) = rawValue;
                 computeAttributeChangeDamage(s);
                 return;
             }
         }
-        ensureAnimatedAttributes().push_back(std::make_tuple(s, v, task));
+        ensureAnimatedAttributes().push_back(
+            std::make_tuple(s, v, rawValue, task));
         computeAttributeChangeDamage(s);
     }
 
@@ -260,7 +263,7 @@ public:
         }
         for (size_t i = 0; i < m_animatedAttributes->size(); i++) {
             if (std::get<0>(m_animatedAttributes->at(i)) == s &&
-                std::get<2>(m_animatedAttributes->at(i)) == task) {
+                std::get<3>(m_animatedAttributes->at(i)) == task) {
                 m_animatedAttributes->erase(i);
                 computeAttributeChangeDamage(s);
                 return;
@@ -276,6 +279,19 @@ public:
         for (auto& e : *m_animatedAttributes) {
             if (std::get<0>(e) == s) {
                 return std::get<1>(e);
+            }
+        }
+        return nullptr;
+    }
+
+    Optional<float> animatedAttributeRawValue(AtomicString s) const
+    {
+        if (!m_animatedAttributes) {
+            return nullptr;
+        }
+        for (auto& e : *m_animatedAttributes) {
+            if (std::get<0>(e) == s && std::get<2>(e)) {
+                return std::get<2>(e);
             }
         }
         return nullptr;
@@ -306,12 +322,13 @@ public:
 protected:
     virtual void computeAttributeChangeDamage(AtomicString attrName);
 
-    GCVector<std::tuple<AtomicString, String*, ActiveSVGLengthAnimationTask*>>&
+    GCVector<std::tuple<AtomicString, String*, Optional<float>,
+                        ActiveSVGLengthAnimationTask*>>&
     ensureAnimatedAttributes()
     {
         if (!m_animatedAttributes) {
             m_animatedAttributes =
-                new GCVector<std::tuple<AtomicString, String*,
+                new GCVector<std::tuple<AtomicString, String*, Optional<float>,
                                         ActiveSVGLengthAnimationTask*>>();
         }
         return *m_animatedAttributes.value();
@@ -320,8 +337,8 @@ protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
-    Optional<GCVector<
-        std::tuple<AtomicString, String*, ActiveSVGLengthAnimationTask*>>*>
+    Optional<GCVector<std::tuple<AtomicString, String*, Optional<float>,
+                                 ActiveSVGLengthAnimationTask*>>*>
         m_animatedAttributes;
 };
 } // namespace Starfish

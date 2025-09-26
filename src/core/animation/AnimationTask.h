@@ -507,7 +507,6 @@ public:
                                  AtomicString attributeName);
 
     void execute(double progress);
-    void end();
 
     void execute(double progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;

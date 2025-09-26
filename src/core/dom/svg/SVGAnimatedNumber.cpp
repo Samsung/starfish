@@ -35,10 +35,10 @@ SVGAnimatedNumber::SVGAnimatedNumber(SVGElement* targetElement,
 
 float SVGAnimatedNumber::animVal() const
 {
-    auto val = m_targetElement->getAnimatedAttribute(
+    auto val = m_targetElement->animatedAttributeRawValue(
         m_targetAttribute.localNameAtomic());
     if (val) {
-        return String::parseFloat(val.value());
+        return val.value();
     } else {
         return m_baseVal;
     }
@@ -56,15 +56,15 @@ ScriptBindingInstance* SVGAnimatedNumber::scriptBindingInstance()
 
 float SVGAnimatedNumberWithFallbackAttribute::animVal() const
 {
-    auto val = m_targetElement->getAnimatedAttribute(
+    auto val = m_targetElement->animatedAttributeRawValue(
         m_targetAttribute.localNameAtomic());
     if (val) {
-        return String::parseFloat(val.value());
+        return val.value();
     } else {
-        val = m_targetElement->getAnimatedAttribute(
+        val = m_targetElement->animatedAttributeRawValue(
             m_fallbackAttribute.localNameAtomic());
         if (val) {
-            return String::parseFloat(val.value());
+            return val.value();
         }
         return m_baseVal;
     }

@@ -41,7 +41,7 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
     , m_targetAttribute(targetAttribute)
     , m_unitType(SVG_LENGTHTYPE_NUMBER)
     , m_valueInSpecifiedUnits(0)
-    , m_readOnly(false)
+    , m_isReadOnly(isAnimVal)
     , m_hasSpecificValue(false)
     , m_isAnimVal(isAnimVal)
 {
@@ -54,7 +54,7 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
     , m_targetAttribute(targetAttribute)
     , m_unitType(unitType)
     , m_valueInSpecifiedUnits(value)
-    , m_readOnly(false)
+    , m_isReadOnly(isAnimVal)
     , m_hasSpecificValue(true)
     , m_isAnimVal(isAnimVal)
 {
@@ -63,13 +63,7 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
 void SVGLength::updateByAttribute()
 {
     // set fromElementDidAttributeChanged for prevent update of attribute
-    String* value;
-    if (m_isAnimVal) {
-        value = m_sourceElement->getAttributeConsiderAnimatedAttribute(
-            m_targetAttribute.localNameAtomic());
-    } else {
-        value = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
-    }
+    String* value = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
     setValueAsString(value, true, false);
 }
 
@@ -101,6 +95,15 @@ void SVGLength::setUnitType(unsigned short unitType)
 
 float SVGLength::value(bool layoutIfNeeded)
 {
+    if (m_isAnimVal) {
+        auto s = m_sourceElement->animatedAttributeRawValue(
+            m_targetAttribute.localNameAtomic());
+        if (s) {
+            return s.value();
+        }
+        String* org = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
+        return String::parseFloat(org);
+    }
     updateByAttribute();
 
     if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
@@ -343,12 +346,12 @@ void SVGLength::convertToSpecifiedUnits(unsigned short unitType)
 
 bool SVGLength::isReadOnly()
 {
-    return m_readOnly;
+    return m_isReadOnly;
 }
 
 void SVGLength::setReadOnly()
 {
-    m_readOnly = true;
+    m_isReadOnly = true;
 }
 
 void SVGLength::detach()
@@ -360,7 +363,7 @@ void SVGLength::detach()
     // If the SVGLength is read only, set it to be no longer read only. Set the
     // SVGLength to have unspecified directionality.
     if (isReadOnly()) {
-        m_readOnly = false;
+        m_isReadOnly = false;
     }
 }
 

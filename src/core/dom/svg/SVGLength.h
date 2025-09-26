@@ -85,7 +85,7 @@ protected:
     unsigned short m_unitType;
     float m_valueInSpecifiedUnits;
 
-    bool m_readOnly;
+    bool m_isReadOnly;
     bool m_hasSpecificValue;
     bool m_isAnimVal;
 };
