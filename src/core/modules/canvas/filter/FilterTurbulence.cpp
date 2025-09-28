@@ -373,8 +373,8 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
     float baseFrequencyX = e->baseFrequencyX()->animVal();
     float baseFrequencyY = e->baseFrequencyY()->animVal();
 
-    size_t xposition = 0;
-    size_t yposition = 0;
+    size_t xposition = std::max(0, ctx.target->frameRect().x().toInt());
+    size_t yposition = std::max(0, ctx.target->frameRect().y().toInt());
     size_t width = ctx.width;
     size_t height = ctx.height;
 
@@ -397,10 +397,11 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
                          Unit::IntSize(width, height));
 
     unsigned char* data = (unsigned char*)outputSource->data();
-    for (uint y = yposition; y < height; y++) {
-        for (uint x = xposition; x < width; x++) {
+    for (uint y = 0; y < height; y++) {
+        for (uint x = 0; x < width; x++) {
             auto color = calculateTurbulenceValueForPoint(
-                paintingData, stitchData, Unit::FloatPoint(x, y));
+                paintingData, stitchData,
+                Unit::FloatPoint(x + xposition, y + yposition));
             int offset = y * ctx.stride + x * 4;
             data[offset + STARFISH_PIXEL_R_INDEX] = color[0];
             data[offset + STARFISH_PIXEL_G_INDEX] = color[1];
