@@ -52,20 +52,32 @@ void* FilterOffset::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Filter::FilterBias FilterOffset::computeBias(
-    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
-    const std::pair<float, float>& viewportScale)
+Filter::FilterBias FilterOffset::computeBias(ComputeBiasContext& ctx)
 {
     auto e = element()->asSVGFEOffsetElement();
     float dx = filter()->resolveFilterPrimitiveValue(
-        e->dx()->animVal(), targetSize.width(), viewportScale.first);
+        e->dx()->animVal(), ctx.targetSize.width(), ctx.viewportScale.first);
     float dy = filter()->resolveFilterPrimitiveValue(
-        e->dy()->animVal(), targetSize.height(), viewportScale.second);
+        e->dy()->animVal(), ctx.targetSize.height(), ctx.viewportScale.second);
 
-    auto newRt = candidateFilterFrameRect;
+    Unit::Rect newRt;
+    if (input()->equals("SourceGraphic")) {
+        newRt.setX(ctx.candidateFilterFrameRect.x());
+        newRt.setY(ctx.candidateFilterFrameRect.y());
+        newRt.setWidth(ctx.candidateFilterFrameRect.width());
+        newRt.setHeight(ctx.candidateFilterFrameRect.height());
+    } else {
+        newRt.setX(ctx.currentVisibleRect.x());
+        newRt.setY(ctx.currentVisibleRect.y());
+        newRt.setWidth(ctx.currentVisibleRect.width());
+        newRt.setHeight(ctx.currentVisibleRect.height());
+    }
 
-    newRt.setX(dx + newRt.x());
-    newRt.setY(dy + newRt.y());
+    newRt.setX(newRt.x() + dx);
+    newRt.setY(newRt.y() + dy);
+
+    ctx.currentVisibleRect.setX(ctx.currentVisibleRect.x() + dx);
+    ctx.currentVisibleRect.setY(ctx.currentVisibleRect.y() + dy);
 
     return Filter::FilterBias(NullOption, newRt);
 }

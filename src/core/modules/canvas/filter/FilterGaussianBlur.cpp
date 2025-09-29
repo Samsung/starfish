@@ -366,20 +366,37 @@ std::pair<float, float> FilterGaussianBlur::computeStdXY(
     return std::make_pair(stdX, stdY);
 }
 
-Filter::FilterBias FilterGaussianBlur::computeBias(
-    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
-    const std::pair<float, float>& viewportScale)
+Filter::FilterBias FilterGaussianBlur::computeBias(ComputeBiasContext& ctx)
 {
     auto e = element()->asSVGFEGaussianBlurElement();
-    auto stdXY = computeStdXY(targetSize, viewportScale);
+    auto stdXY = computeStdXY(ctx.targetSize, ctx.viewportScale);
     auto kernel =
         FilterGaussianBlur::computeKernelSize(stdXY.first, stdXY.second);
 
-    Unit::Rect newRt = candidateFilterFrameRect;
+    Unit::Rect newRt;
+    if (input()->equals("SourceGraphic")) {
+        newRt.setX(ctx.candidateFilterFrameRect.x());
+        newRt.setY(ctx.candidateFilterFrameRect.y());
+        newRt.setWidth(ctx.candidateFilterFrameRect.width());
+        newRt.setHeight(ctx.candidateFilterFrameRect.height());
+    } else {
+        newRt.setX(ctx.currentVisibleRect.x());
+        newRt.setY(ctx.currentVisibleRect.y());
+        newRt.setWidth(ctx.currentVisibleRect.width());
+        newRt.setHeight(ctx.currentVisibleRect.height());
+    }
+
     newRt.setX(newRt.x() - kernel.first);
     newRt.setY(newRt.y() - kernel.second);
     newRt.setWidth(newRt.width() + kernel.first * 2);
     newRt.setHeight(newRt.height() + kernel.second * 2);
+
+    ctx.currentVisibleRect.setX(ctx.currentVisibleRect.x() - kernel.first);
+    ctx.currentVisibleRect.setY(ctx.currentVisibleRect.y() - kernel.second);
+    ctx.currentVisibleRect.setWidth(ctx.currentVisibleRect.width() +
+                                    kernel.first * 2);
+    ctx.currentVisibleRect.setHeight(ctx.currentVisibleRect.height() +
+                                     kernel.second * 2);
 
     return Filter::FilterBias(newRt);
 }

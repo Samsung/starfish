@@ -266,7 +266,8 @@ void Filter::updateIfNeeds()
 }
 
 Filter::FilterBias Filter::computeBias(
-    FrameSVGBox* target, const Unit::Rect& candidateFilterFrameRect,
+    FrameSVGBox* target, const LayoutRect& unadjustedFrameRectByFilter,
+    const Unit::Rect& candidateFilterFrameRect,
     const std::pair<float, float>& viewportScale)
 {
     updateIfNeeds();
@@ -274,8 +275,16 @@ Filter::FilterBias Filter::computeBias(
     FilterBias ret;
     auto siz = target->frameRect().size();
     for (auto* f : m_filterPrimitives) {
-        auto subResult =
-            f->computeBias(siz, candidateFilterFrameRect, viewportScale);
+        if (f->canShrinkPreviousResult()) {
+            ret.maximumBias = NullOption;
+            ret.minimumBias = NullOption;
+        }
+
+        FilterPrimitive::ComputeBiasContext ctx{
+            siz, unadjustedFrameRectByFilter, candidateFilterFrameRect,
+            viewportScale, unadjustedFrameRectByFilter
+        };
+        auto subResult = f->computeBias(ctx);
 
         if (subResult.maximumBias) {
             if (!ret.maximumBias) {

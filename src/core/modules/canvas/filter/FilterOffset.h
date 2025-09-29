@@ -29,10 +29,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual Filter::FilterBias computeBias(
-        const LayoutSize& targetSize,
-        const Unit::Rect& candidateFilterFrameRect,
-        const std::pair<float, float>& viewportScale) override;
+    virtual Filter::FilterBias computeBias(ComputeBiasContext& ctx) override;
 
     virtual void apply(const Unit::Rect& subRegionInFloat,
                        Filter::FilterApplyContext& ctx) override;

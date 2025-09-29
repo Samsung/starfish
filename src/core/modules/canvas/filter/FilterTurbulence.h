@@ -125,10 +125,7 @@ public:
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale);
 
-    virtual Filter::FilterBias computeBias(
-        const LayoutSize& targetSize,
-        const Unit::Rect& candidateFilterFrameRect,
-        const std::pair<float, float>& viewportScale) override;
+    virtual Filter::FilterBias computeBias(ComputeBiasContext& ctx) override;
 
     virtual bool canSubRegionExpandFrameRect() override
     {

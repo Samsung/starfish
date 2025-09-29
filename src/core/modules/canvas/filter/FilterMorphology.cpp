@@ -186,17 +186,34 @@ std::pair<float, float> FilterMorphology::computeRadiusXY(
     return std::make_pair(radiusX, radiusY);
 }
 
-Filter::FilterBias FilterMorphology::computeBias(
-    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
-    const std::pair<float, float>& viewportScale)
+Filter::FilterBias FilterMorphology::computeBias(ComputeBiasContext& ctx)
 {
-    auto r = computeRadiusXY(targetSize, viewportScale);
+    auto r = computeRadiusXY(ctx.targetSize, ctx.viewportScale);
 
-    Unit::Rect newRt = candidateFilterFrameRect;
+    Unit::Rect newRt;
+    if (input()->equals("SourceGraphic")) {
+        newRt.setX(ctx.candidateFilterFrameRect.x());
+        newRt.setY(ctx.candidateFilterFrameRect.y());
+        newRt.setWidth(ctx.candidateFilterFrameRect.width());
+        newRt.setHeight(ctx.candidateFilterFrameRect.height());
+    } else {
+        newRt.setX(ctx.currentVisibleRect.x());
+        newRt.setY(ctx.currentVisibleRect.y());
+        newRt.setWidth(ctx.currentVisibleRect.width());
+        newRt.setHeight(ctx.currentVisibleRect.height());
+    }
+
     newRt.setX(newRt.x() - r.first);
     newRt.setY(newRt.y() - r.second);
     newRt.setWidth(newRt.width() + r.first * 2);
     newRt.setHeight(newRt.height() + r.second * 2);
+
+    ctx.currentVisibleRect.setX(ctx.currentVisibleRect.x() - r.first);
+    ctx.currentVisibleRect.setY(ctx.currentVisibleRect.y() - r.second);
+    ctx.currentVisibleRect.setWidth(ctx.currentVisibleRect.width() +
+                                    r.first * 2);
+    ctx.currentVisibleRect.setHeight(ctx.currentVisibleRect.height() +
+                                     r.second * 2);
 
     return Filter::FilterBias(newRt);
 }

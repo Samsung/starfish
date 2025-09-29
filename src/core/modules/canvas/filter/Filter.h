@@ -161,6 +161,7 @@ public:
     };
 
     FilterBias computeBias(FrameSVGBox* target,
+                           const LayoutRect& unadjustedFrameRectByFilter,
                            const Unit::Rect& candidateFilterFrameRect,
                            const std::pair<float, float>& viewportScale);
 
