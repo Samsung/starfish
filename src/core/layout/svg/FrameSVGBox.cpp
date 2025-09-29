@@ -203,7 +203,7 @@ static void adjustFrameRectByFilter(FrameSVGBox* self,
     }
 
     auto bias =
-        fe->computeBias(self,
+        fe->computeBias(self, unadjustedFrameRectByFilter,
                         Unit::Rect(newFrameRect.x(), newFrameRect.y(),
                                    newFrameRect.width(), newFrameRect.height()),
                         std::make_pair(transScale.second.getScaleX(),

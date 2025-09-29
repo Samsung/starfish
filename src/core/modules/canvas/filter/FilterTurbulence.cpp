@@ -64,11 +64,13 @@ FilterTurbulence::FilterTurbulence(
 {
 }
 
-Filter::FilterBias FilterTurbulence::computeBias(
-    const LayoutSize& targetSize, const Unit::Rect& candidateFilterFrameRect,
-    const std::pair<float, float>& viewportScale)
+Filter::FilterBias FilterTurbulence::computeBias(ComputeBiasContext& ctx)
 {
-    return Filter::FilterBias(NullOption, candidateFilterFrameRect);
+    ctx.currentVisibleRect.unite(LayoutRect(
+        ctx.candidateFilterFrameRect.x(), ctx.candidateFilterFrameRect.y(),
+        ctx.candidateFilterFrameRect.width(),
+        ctx.candidateFilterFrameRect.height()));
+    return Filter::FilterBias(NullOption, ctx.candidateFilterFrameRect);
 }
 
 void* FilterTurbulence::operator new(size_t size)

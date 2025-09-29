@@ -64,12 +64,22 @@ public:
         return m_output;
     }
 
-    virtual Filter::FilterBias computeBias(
-        const LayoutSize& targetSize,
-        const Unit::Rect& candidateFilterFrameRect,
-        const std::pair<float, float>& viewportScale)
+    struct ComputeBiasContext {
+        const LayoutSize& targetSize;
+        const LayoutRect& unadjustedFrameRectByFilter;
+        const Unit::Rect& candidateFilterFrameRect;
+        const std::pair<float, float>& viewportScale;
+        LayoutRect currentVisibleRect;
+    };
+
+    virtual Filter::FilterBias computeBias(ComputeBiasContext& ctx)
     {
         return Filter::FilterBias();
+    }
+
+    virtual bool canShrinkPreviousResult() const
+    {
+        return false;
     }
 
     static bool subRegionCoversAll(const Unit::Rect& subRegionInFloat)

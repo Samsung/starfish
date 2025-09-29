@@ -53,10 +53,47 @@ void* FilterDisplacementMap::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+bool FilterDisplacementMap::canShrinkPreviousResult() const
+{
+    if (input()->equals("SourceGraphic")) {
+        return true;
+    }
+    return false;
+}
+
+Filter::FilterBias FilterDisplacementMap::computeBias(ComputeBiasContext& ctx)
+{
+    if (input()->equals("SourceGraphic")) {
+        auto e = element()->asSVGFEDisplacementMapElement();
+        float scale = e->scale()->animVal();
+        scale *= std::max(ctx.viewportScale.first, ctx.viewportScale.second);
+
+        scale /= 2;
+        Unit::Rect newRt = Unit::Rect(ctx.unadjustedFrameRectByFilter.x(),
+                                      ctx.unadjustedFrameRectByFilter.y(),
+                                      ctx.unadjustedFrameRectByFilter.width(),
+                                      ctx.unadjustedFrameRectByFilter.height());
+        newRt.setX(newRt.x() - scale);
+        newRt.setY(newRt.y() - scale);
+        newRt.setWidth(newRt.width() + scale * 2);
+        newRt.setHeight(newRt.height() + scale * 2);
+
+        ctx.currentVisibleRect = ctx.unadjustedFrameRectByFilter;
+        ctx.currentVisibleRect.setX(ctx.currentVisibleRect.x() - scale);
+        ctx.currentVisibleRect.setY(ctx.currentVisibleRect.y() - scale);
+        ctx.currentVisibleRect.setWidth(ctx.currentVisibleRect.width() +
+                                        scale * 2);
+        ctx.currentVisibleRect.setHeight(ctx.currentVisibleRect.height() +
+                                         scale * 2);
+
+        return Filter::FilterBias(newRt);
+    }
+    return Filter::FilterBias();
+}
+
 void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
                                   Filter::FilterApplyContext& ctx)
 {
-    STARFISH_ASSERT(element()->isSVGFEDisplacementMapElement());
     auto e = element()->asSVGFEDisplacementMapElement();
 
     auto inputSource = filter()->fetchInputSource(ctx, this);

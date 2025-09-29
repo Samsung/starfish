@@ -39,10 +39,7 @@ public:
     std::pair<float, float> computeStdXY(
         const LayoutSize& targetSize,
         const std::pair<float, float>& viewportScale);
-    virtual Filter::FilterBias computeBias(
-        const LayoutSize& targetSize,
-        const Unit::Rect& candidateFilterFrameRect,
-        const std::pair<float, float>& viewportScale);
+    virtual Filter::FilterBias computeBias(ComputeBiasContext& ctx);
 };
 } // namespace Starfish
 #endif
