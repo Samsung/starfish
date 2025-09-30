@@ -22,6 +22,7 @@
 #include "core/dom/svg/SVGFEDisplacementMapElement.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterDisplacementMap.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 #include <cstring>
 #include <vector>
@@ -103,6 +104,10 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
 
     unsigned char* srcData = (unsigned char*)inputSource->data();
     unsigned char* srcData2 = (unsigned char*)inputSource2->data();
+
+    convertImageBufferAsUnmultipliedAlphaIfNeeds(
+        inputSource2->data(), ctx.width, ctx.stride, ctx.height);
+
     unsigned char* dstData = (unsigned char*)outputSource->data();
 
     if (!srcData || !srcData2 || !dstData) {
@@ -142,11 +147,6 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
     int height = ctx.height;
     int stride = ctx.stride;
 
-    // The calculations using the pixel values from ‘in2’ are performed using
-    // non-premultiplied color values. For displacement map, we just use the
-    // channel value directly, so we don't need to handle unpremultiplication
-    // explicitly here.
-
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int pixel_offset = (y * stride) + (x * 4);
@@ -168,10 +168,8 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
                 (unsigned int*)(void*)(dstData + pixel_offset);
 
             if (srcX < 0 || srcX >= width || srcY < 0 || srcY >= height) {
-                // printf("??[(%d.%d),(%d,%d)]\n",x,y,srcX,srcY);
                 *dstPixel = 0;
             } else {
-                // printf("[(%d.%d),(%d,%d)] ",x,y,srcX,srcY);
                 int src_pixel_offset = (srcY * stride) + (srcX * 4);
                 unsigned int* srcPixel =
 
@@ -180,6 +178,8 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
             }
         }
     }
+    convertImageBufferAsPremultipliedAlphaIfNeeds(
+        inputSource2->data(), ctx.width, ctx.stride, ctx.height);
 
     filter()->registerOutput(ctx, this, outputSource);
 }
