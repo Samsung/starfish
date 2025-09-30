@@ -296,15 +296,9 @@ std::array<uint8_t, 4> FilterTurbulence::toIntBasedColorComponents(
     const std::array<float, 4>& floatComponents)
 {
     return {
-        (uint8_t)clamp(
-            static_cast<int>(convertLinearRGBtoSRGB(floatComponents[0]) * 255),
-            0, 255),
-        (uint8_t)clamp(
-            static_cast<int>(convertLinearRGBtoSRGB(floatComponents[1]) * 255),
-            0, 255),
-        (uint8_t)clamp(
-            static_cast<int>(convertLinearRGBtoSRGB(floatComponents[2]) * 255),
-            0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[0] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[1] * 255), 0, 255),
+        (uint8_t)clamp(static_cast<int>(floatComponents[2] * 255), 0, 255),
         (uint8_t)clamp(static_cast<int>(floatComponents[3] * 255), 0, 255),
     };
 }
