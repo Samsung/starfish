@@ -363,6 +363,8 @@ bool AnimationApplier::applyProperty(
             task = new ActiveTransformOriginAnimationTask(init);
         } else if (keyKind == CSSStyleValuePair::KeyKind::Visibility) {
             task = new ActiveVisibilityAnimationTask(init);
+        } else if (keyKind == CSSStyleValuePair::KeyKind::Filter) {
+            task = new ActiveFilterAnimationTask(init);
         }
 
         // Register ActiveAnimationTask.

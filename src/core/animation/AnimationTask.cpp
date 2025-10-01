@@ -45,6 +45,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/animation/AnimationApplier.h"
 #include "core/animation/TransitionApplier.h"
+#include "core/style/FilterFunctions.h"
 
 namespace Starfish {
 
@@ -1753,6 +1754,60 @@ bool ActiveSVGLengthAnimationTask::needsContinuousRendering(uint64_t tick)
         return false;
     }
     return true;
+}
+
+ActiveFilterAnimationTask::ActiveFilterAnimationTask(
+    const ActiveAnimationTaskInit& init)
+    : ActiveAnimationTask(init)
+{
+}
+
+void ActiveFilterAnimationTask::execute(double progress, ComputedStyle* style)
+{
+    STARFISH_ASSERT(style != nullptr);
+
+    FilterFunction* from = currentAnimatedFromValue()->getFilterValue();
+    FilterFunction* to = currentAnimatedToValue()->getFilterValue();
+
+    STARFISH_ASSERT(from->type() == to->type());
+
+    if (to->type() == FilterFunctionType::BlurFilterFunctionType) {
+        BlurFilterFunction* interpolatedBlur = interpolateBlurFilter(
+            static_cast<BlurFilterFunction*>(from),
+            static_cast<BlurFilterFunction*>(to), progress);
+        applyBlurFilterToStyle(interpolatedBlur, style);
+    }
+}
+
+BlurFilterFunction* ActiveFilterAnimationTask::interpolateBlurFilter(
+    BlurFilterFunction* from, BlurFilterFunction* to, double progress)
+{
+    BlurFilterFunction* newBlurFunction =
+        new BlurFilterFunction(*from->toCSSFilterFunction());
+
+    float fromStandardDeviation = from->standardDeviation().fixed();
+    float toStandardDeviation = to->standardDeviation().fixed();
+    float interpolatedStandardDeviation = interpolate(
+        fromStandardDeviation, toStandardDeviation, progress, m_isForward);
+
+    newBlurFunction->setStandardDeviation(
+        Length(Length::Fixed, interpolatedStandardDeviation));
+
+    return newBlurFunction;
+}
+
+void ActiveFilterAnimationTask::applyBlurFilterToStyle(
+    BlurFilterFunction* blurFilter, ComputedStyle* style)
+{
+    CSSStyleValuePair newValue;
+    newValue.setKeyKind(CSSStyleValuePair::KeyKind::Filter);
+
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
+    list->emplace_back(CSSStyleValuePair::ValueKind::FilterFunctionValueKind,
+                       blurFilter->toCSSFilterFunction());
+    newValue.setValueList(list);
+
+    style->setFilter(FilterFunctions::create(newValue));
 }
 
 } // namespace Starfish

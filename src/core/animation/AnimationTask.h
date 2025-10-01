@@ -24,12 +24,14 @@
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
 #include "core/animation/AnimatedValue.h"
+#include "core/style/FilterFunctions.h"
 
 namespace Starfish {
 
 class Node;
 class StyleTransformDataGroup;
 class TimingFunction;
+class BlurFilterFunction;
 
 enum class AnimationType ENSURE_ENUM_UNSIGNED {
     Transition,
@@ -525,6 +527,19 @@ public:
 
 protected:
     AtomicString m_attributeName;
+};
+
+class ActiveFilterAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveFilterAnimationTask(const ActiveAnimationTaskInit& init);
+    void execute(double progress, ComputedStyle* style) override;
+
+private:
+    BlurFilterFunction* interpolateBlurFilter(BlurFilterFunction* from,
+                                              BlurFilterFunction* to,
+                                              double progress);
+    void applyBlurFilterToStyle(BlurFilterFunction* blurFilter,
+                                ComputedStyle* style);
 };
 
 } // namespace Starfish
