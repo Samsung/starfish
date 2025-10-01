@@ -30,6 +30,7 @@ class Node;
 class StyleTransformDataGroup;
 class TimingFunction;
 class StyleTransformOrigin;
+class FilterFunction;
 
 class AnimatedValue : public gc {
     enum class ValueType ENSURE_ENUM_UNSIGNED {
@@ -43,7 +44,8 @@ class AnimatedValue : public gc {
         Matrix,
         TransformData,
         TransformOriginData,
-        Visibility
+        Visibility,
+        Filter
     };
 
 public:
@@ -68,6 +70,9 @@ public:
 
     static Optional<AnimatedValue*> createAnimatedValueFromBackgroundSize(
         const CSSStyleValuePair& property, size_t layer);
+
+    static Optional<AnimatedValue*> createAnimatedValueFromFilter(
+        const CSSStyleValuePair& property);
 
     AnimatedValue()
     {
@@ -137,6 +142,12 @@ public:
         m_type = ValueType::Visibility;
     }
 
+    AnimatedValue(FilterFunction* v)
+    {
+        m_data.m_filterFunction = v;
+        m_type = ValueType::Filter;
+    }
+
     bool isColor() const
     {
         return m_type == ValueType::Color;
@@ -180,6 +191,11 @@ public:
     bool isTransformOriginData() const
     {
         return m_type == ValueType::TransformOriginData;
+    }
+
+    bool isFilter() const
+    {
+        return m_type == ValueType::Filter;
     }
 
     Unit::Color getColor() const
@@ -248,6 +264,12 @@ public:
         return m_data.m_visibilityValue;
     }
 
+    FilterFunction* getFilterValue() const
+    {
+        STARFISH_ASSERT(m_type == ValueType::Filter);
+        return m_data.m_filterFunction;
+    }
+
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutUnit viewportWidth,
                                LayoutUnit viewportHeight,
@@ -291,6 +313,7 @@ protected:
         StyleTransformDataGroup* m_transformData;
         StyleTransformOrigin* m_transformOriginData;
         VisibilityValue m_visibilityValue;
+        FilterFunction* m_filterFunction;
         ValueData()
             : m_int(0)
         {

@@ -27,6 +27,7 @@
 #include "core/style/LengthUtil.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
+#include "core/style/FilterFunctions.h"
 
 namespace Starfish {
 
@@ -318,6 +319,11 @@ Optional<AnimatedValue*> AnimatedValue::create(
             }
         }
         FALLTHROUGH;
+    case CSSStyleValuePair::KeyKind::Filter:
+        if (!neededOriginProperty) {
+            return AnimatedValue::createAnimatedValueFromFilter(property);
+        }
+        FALLTHROUGH;
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();
@@ -452,6 +458,26 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromBackgroundSize(
         STARFISH_UNIMPLEMENTED();
     }
 
+    return Optional<AnimatedValue*>();
+}
+
+Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromFilter(
+    const CSSStyleValuePair& property)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = property.multiValue();
+        if (list->size() == 1) {
+            CSSStyleValuePair property = (*list)[0];
+            if (property.valueKind() ==
+                CSSStyleValuePair::ValueKind::FilterFunctionValueKind) {
+                FilterFunction* filterFunc =
+                    FilterFunction::create(*property.filterFunctionValue());
+                return new AnimatedValue(filterFunc);
+            }
+        } else {
+            STARFISH_UNIMPLEMENTED();
+        }
+    }
     return Optional<AnimatedValue*>();
 }
 
