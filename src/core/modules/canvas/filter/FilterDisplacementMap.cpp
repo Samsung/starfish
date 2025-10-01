@@ -116,6 +116,7 @@ void FilterDisplacementMap::apply(const Unit::Rect& subRegionInFloat,
     }
 
     float scale = e->scale()->animVal();
+    scale *= std::max(ctx.viewportScaleX, ctx.viewportScaleY);
     auto xChannel = e->xChannelSelector()->animVal();
     auto yChannel = e->yChannelSelector()->animVal();
 

@@ -375,29 +375,31 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
     size_t height = ctx.height;
 
     if (!isSubRegionCoversAll) {
-        xposition = ctx.width * normalizedSubRegion.x();
+        xposition = xposition + ctx.width * normalizedSubRegion.x();
         width = xposition + ctx.width * normalizedSubRegion.width();
-        yposition = ctx.height * normalizedSubRegion.y();
+        yposition = yposition + ctx.height * normalizedSubRegion.y();
         height = yposition + ctx.height * normalizedSubRegion.height();
     }
 
     auto stitchData = computeStitching(
-        Unit::IntSize(width, height), baseFrequencyX, baseFrequencyY,
+        Unit::IntSize(width / ctx.viewportScaleX, height / ctx.viewportScaleY),
+        baseFrequencyX, baseFrequencyY,
         e->stitchTiles()->animVal() ==
             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH);
-    auto paintingData =
-        initPaintingData(e->type()->animVal(), baseFrequencyX, baseFrequencyY,
-                         e->numOctaves()->animVal(), e->seed()->animVal(),
-                         e->stitchTiles()->animVal() ==
-                             SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH,
-                         Unit::IntSize(width, height));
+    auto paintingData = initPaintingData(
+        e->type()->animVal(), baseFrequencyX, baseFrequencyY,
+        e->numOctaves()->animVal(), e->seed()->animVal(),
+        e->stitchTiles()->animVal() ==
+            SVGFETurbulenceElement::SVG_STITCHTYPE_STITCH,
+        Unit::IntSize(width / ctx.viewportScaleX, height / ctx.viewportScaleY));
 
     unsigned char* data = (unsigned char*)outputSource->data();
     for (uint y = 0; y < height; y++) {
         for (uint x = 0; x < width; x++) {
             auto color = calculateTurbulenceValueForPoint(
                 paintingData, stitchData,
-                Unit::FloatPoint(x + xposition, y + yposition));
+                Unit::FloatPoint((x + xposition) / ctx.viewportScaleX,
+                                 (y + yposition) / ctx.viewportScaleY));
             int offset = y * ctx.stride + x * 4;
             data[offset + STARFISH_PIXEL_R_INDEX] = color[0];
             data[offset + STARFISH_PIXEL_G_INDEX] = color[1];

@@ -36,7 +36,7 @@ SVGAnimatedString::SVGAnimatedString(SVGElement* targetElement,
 
 void SVGAnimatedString::setBaseVal(String* baseVal, bool fromSetAttribute)
 {
-    m_baseVal = baseVal;
+    m_animVal = m_baseVal = baseVal;
     if (!fromSetAttribute) {
         m_targetElement->updateSVGAttributeNeeded(m_targetAttribute);
     }

@@ -32,7 +32,7 @@ public:
 
     void setBaseVal(bool baseVal)
     {
-        m_baseVal = baseVal;
+        m_animVal = m_baseVal = baseVal;
     }
 
     bool baseVal() const
