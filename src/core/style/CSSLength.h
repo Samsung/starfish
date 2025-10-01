@@ -48,7 +48,7 @@ public:
         PERCENT
     };
 
-    CSSLength(float f)
+    CSSLength(float f = 0)
     {
         m_kind = PX;
         m_value = f;

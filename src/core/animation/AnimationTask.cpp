@@ -1710,14 +1710,8 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
     Length newLength = computeLengthAnimationValue(currentAnimatedFromValue(),
                                                    currentAnimatedToValue(),
                                                    progress, m_isForward);
-
-    STARFISH_ASSERT(newLength.isFixed());
-
-    char temp[100];
-    int len = snprintf(temp, sizeof(temp), "%.12f", newLength.fixed());
-    m_targetElement->asSVGElement()->setAnimatedAttribute(
-        m_attributeName, String::fromUTF8(temp, strnlen(temp, len)),
-        newLength.fixed(), this);
+    m_targetElement->asSVGElement()->setAnimatedAttribute(m_attributeName,
+                                                          newLength, this);
 }
 
 void ActiveSVGLengthAnimationTask::execute(double progress,
@@ -1735,8 +1729,8 @@ bool ActiveSVGLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 
 void ActiveSVGLengthAnimationTask::attachToElement()
 {
-    m_targetElement->asSVGElement()->setAnimatedAttribute(
-        m_attributeName, String::emptyString, NullOption, this);
+    m_targetElement->asSVGElement()->setAnimatedAttribute(m_attributeName,
+                                                          NullOption, this);
 }
 
 void ActiveSVGLengthAnimationTask::detachFromElement()

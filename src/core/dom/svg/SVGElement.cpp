@@ -370,7 +370,7 @@ void SVGElement::styleForPresentationAttribute(
     // execute ActiveSVG AnimationTasks
     if (m_animatedAttributes) {
         for (auto e : *m_animatedAttributes) {
-            auto task = std::get<3>(e);
+            auto task = std::get<2>(e);
             if (!task->isInDelayedTime()) {
                 auto tick =
                     document()->browsingContext()->styleResolveStartTick();
@@ -395,22 +395,29 @@ void SVGElement::styleForPresentationAttribute(
                                                    cssCustomValues);
     }
 
-#define UPDATE_SVG_PRESENTATION_ATTRIBUTE(name, keyName)                 \
-    {                                                                    \
-        String* value =                                                  \
-            getAttributeConsiderAnimatedAttributeOrVarReferencedValue(   \
-                starfish()->staticStrings()->m_##name.localNameAtomic(), \
-                cssCustomValues);                                        \
-        if (value->length()) {                                           \
-            pair.setKeyKind(CSSStyleValuePair::keyName);                 \
-            auto u8str = value->toUTF8NonGCString();                     \
-            CSSTokenVector tokens;                                       \
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, u8str.data(),  \
-                                                  u8str.length());       \
-            if (pair.updateValue##keyName(document(), tokens)) {         \
-                cssValues.push_back(pair);                               \
-            }                                                            \
-        }                                                                \
+#define UPDATE_SVG_PRESENTATION_ATTRIBUTE(name, keyName)                    \
+    {                                                                       \
+        auto aniVal = animatedAttributeAsStyleValue(                        \
+            staticStrings()->m_##name.localNameAtomic());                   \
+        if (aniVal) {                                                       \
+            auto& s = aniVal.value();                                       \
+            s.setKeyKind(CSSStyleValuePair::keyName);                       \
+            cssValues.push_back(s);                                         \
+        } else {                                                            \
+            String* value = getAttributeOrVarReferencedValue(               \
+                starfish()->staticStrings()->m_##name.localNameAtomic(),    \
+                cssCustomValues);                                           \
+            if (value->length()) {                                          \
+                pair.setKeyKind(CSSStyleValuePair::keyName);                \
+                auto u8str = value->toUTF8NonGCString();                    \
+                CSSTokenVector tokens;                                      \
+                CSSStyleDeclaration::tokenizeCSSValue(tokens, u8str.data(), \
+                                                      u8str.length());      \
+                if (pair.updateValue##keyName(document(), tokens)) {        \
+                    cssValues.push_back(pair);                              \
+                }                                                           \
+            }                                                               \
+        }                                                                   \
     }
 
     if (needsFillAttributes()) {
@@ -597,16 +604,32 @@ void SVGElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
     }
 }
 
-String* SVGElement::getAttributeConsiderAnimatedAttributeOrVarReferencedValue(
-    AtomicString s, Optional<const MutablePropertyValueList*> cssCustomValues)
+Optional<CSSStyleValuePair> SVGElement::animatedAttributeAsStyleValue(
+    AtomicString s) const
 {
-    String* attributeValue = getAttributeConsiderAnimatedAttribute(s);
-    if (attributeValue->startsWith("var(")) {
-        std::string newValue = StyleResolver::resolveVarReferencedValue(
-            this, attributeValue->toOptionalUTF8String(), cssCustomValues);
-        return String::fromUTF8(newValue.c_str(), newValue.size());
+    auto aniVal = animatedAttribute(s);
+    if (!aniVal) {
+        return NullOption;
     }
-    return attributeValue;
+
+    CSSStyleValuePair pair;
+    if (aniVal.value().isFixed()) {
+        pair.setNumberValue(aniVal.value().numberData());
+        return pair;
+    } else if (aniVal.value().isPercent()) {
+        pair.setPercentageValue(aniVal.value().percent());
+        return pair;
+    }
+
+    auto u8 = aniVal.value().toString()->toUTF8NonGCString();
+    if (CSSPropertyParser::parseLength(u8.data(),
+                                       CSSPropertyParser::AllowPercent |
+                                           CSSPropertyParser::AllowWithoutUnit |
+                                           CSSPropertyParser::AllowNegative,
+                                       &pair)) {
+        return pair;
+    }
+    return NullOption;
 }
 
 } // namespace Starfish

@@ -84,6 +84,13 @@ ScriptBindingInstance* SVGLength::scriptBindingInstance()
 unsigned short SVGLength::unitType()
 {
     if (m_sourceObject) {
+        auto s = m_sourceElement->animatedAttribute(
+            m_targetAttribute.localNameAtomic());
+        if (s) {
+            SVGLength len(m_sourceElement, m_targetAttribute);
+            len.setValueAsString(s.value().toString(), true, false);
+            return len.unitType();
+        }
         return m_sourceObject->unitType();
     }
     return m_unitType;
@@ -106,70 +113,22 @@ void SVGLength::setUnitType(unsigned short unitType)
 float SVGLength::value(bool layoutIfNeeded)
 {
     if (m_sourceObject) {
-        auto s = m_sourceElement->animatedAttributeRawValue(
+        auto s = m_sourceElement->animatedAttribute(
             m_targetAttribute.localNameAtomic());
         if (s) {
-            return s.value();
+            SVGLength len(m_sourceElement, m_targetAttribute);
+            len.setValueAsString(s.value().toString(), true, false);
+            return value(len.unitType(), len.valueInSpecifiedUnits(false));
         }
         return m_sourceObject->value(layoutIfNeeded);
     }
     updateByAttribute();
 
-    if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
-        Length len = Length(Length::Percent, m_valueInSpecifiedUnits / 100.0);
-        FrameBox* cb =
-            m_sourceElement->frame()
-                ? m_sourceElement->frame()->layoutParent()->asFrameBox()
-                : nullptr;
-        FrameBox* svgBox = nullptr;
-        if (cb) {
-            svgBox = cb;
-            while (svgBox != nullptr) {
-                if (svgBox->isFrameReplaced() &&
-                    svgBox->asFrameReplaced()->isFrameSVGSVGBox()) {
-                    break;
-                }
-                if (svgBox->layoutParent() != nullptr) {
-                    svgBox = svgBox->layoutParent()->asFrameBox();
-                } else {
-                    break;
-                }
-            }
-        }
-
-        LayoutUnit result = len.specifiedValue(
-            cb ? (float)cb->contentWidth() : 0.f, m_sourceElement);
-        if (svgBox) {
-            result = result * ((FrameSVGSVGBox*)svgBox)->svgScale();
-        }
-        return result;
-    } else {
-        // unimplemented EMS, EXS
-        if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
-            return valueInSpecifiedUnits(layoutIfNeeded);
-        } else if (m_unitType == SVG_LENGTHTYPE_PX) {
-            return valueInSpecifiedUnits(layoutIfNeeded);
-        } else if (m_unitType == SVG_LENGTHTYPE_CM) {
-            return UnitHelper::convertFromCmToPx(
-                valueInSpecifiedUnits(layoutIfNeeded));
-        } else if (m_unitType == SVG_LENGTHTYPE_MM) {
-            return UnitHelper::convertFromMmToPx(
-                valueInSpecifiedUnits(layoutIfNeeded));
-        } else if (m_unitType == SVG_LENGTHTYPE_IN) {
-            return UnitHelper::convertFromInToPx(
-                valueInSpecifiedUnits(layoutIfNeeded));
-        } else if (m_unitType == SVG_LENGTHTYPE_PT) {
-            return UnitHelper::convertFromPtToPx(
-                valueInSpecifiedUnits(layoutIfNeeded));
-        } else if (m_unitType == SVG_LENGTHTYPE_PC) {
-            return UnitHelper::convertFromPcToPx(
-                valueInSpecifiedUnits(layoutIfNeeded));
-        } else {
-            STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
-                                 (int)m_unitType);
-        }
+    if (layoutIfNeeded) {
+        m_sourceElement->document()->browsingContext()->layoutIfNeeded();
     }
-    return 0;
+
+    return value(m_unitType, m_valueInSpecifiedUnits);
 }
 
 void SVGLength::setValue(float v)
@@ -197,9 +156,71 @@ void SVGLength::setValue(float v)
     }
 }
 
+float SVGLength::value(unsigned short unitType, float rawValue)
+{
+    if (unitType == SVG_LENGTHTYPE_PERCENTAGE) {
+        Length len = Length(Length::Percent, rawValue / 100.0);
+        FrameBox* cb =
+            m_sourceElement->frame()
+                ? m_sourceElement->frame()->layoutParent()->asFrameBox()
+                : nullptr;
+        FrameBox* svgBox = nullptr;
+        if (cb) {
+            svgBox = cb;
+            while (svgBox != nullptr) {
+                if (svgBox->isFrameReplaced() &&
+                    svgBox->asFrameReplaced()->isFrameSVGSVGBox()) {
+                    break;
+                }
+                if (svgBox->layoutParent() != nullptr) {
+                    svgBox = svgBox->layoutParent()->asFrameBox();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        LayoutUnit result = len.specifiedValue(
+            cb ? (float)cb->contentWidth() : 0.f, m_sourceElement);
+        if (svgBox) {
+            result = result * ((FrameSVGSVGBox*)svgBox)->svgScale();
+        }
+        return result;
+    } else {
+        return rawValue;
+        // unimplemented EMS, EXS
+        if (unitType == SVG_LENGTHTYPE_NUMBER) {
+            return rawValue;
+        } else if (unitType == SVG_LENGTHTYPE_PX) {
+            return rawValue;
+        } else if (unitType == SVG_LENGTHTYPE_CM) {
+            return UnitHelper::convertFromCmToPx(rawValue);
+        } else if (unitType == SVG_LENGTHTYPE_MM) {
+            return UnitHelper::convertFromMmToPx(rawValue);
+        } else if (unitType == SVG_LENGTHTYPE_IN) {
+            return UnitHelper::convertFromInToPx(rawValue);
+        } else if (unitType == SVG_LENGTHTYPE_PT) {
+            return UnitHelper::convertFromPtToPx(rawValue);
+        } else if (unitType == SVG_LENGTHTYPE_PC) {
+            return UnitHelper::convertFromPcToPx(rawValue);
+        } else {
+            STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
+                                 (int)unitType);
+        }
+    }
+    return 0;
+}
+
 float SVGLength::valueInSpecifiedUnits(bool layoutIfNeeded)
 {
     if (m_sourceObject) {
+        auto s = m_sourceElement->animatedAttribute(
+            m_targetAttribute.localNameAtomic());
+        if (s) {
+            SVGLength len(m_sourceElement, m_targetAttribute);
+            len.setValueAsString(s.value().toString(), true, false);
+            return len.valueInSpecifiedUnits(false);
+        }
         return m_sourceObject->valueInSpecifiedUnits(layoutIfNeeded);
     }
     if (layoutIfNeeded) {
@@ -227,29 +248,26 @@ void SVGLength::setValueInSpecifiedUnits(float v,
     }
 }
 
-String* SVGLength::valueAsString()
+String* SVGLength::valueAsString(bool layoutIfNeeded)
 {
-    if (!m_hasSpecificValue) {
-        return String::emptyString;
-    }
-
-    String* str = String::fromFloat(valueInSpecifiedUnits());
+    String* str = String::fromFloat(valueInSpecifiedUnits(layoutIfNeeded));
+    auto unitType = this->unitType();
 
     // unimplemented EMS, EXS
-    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
-    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+    if (unitType == SVG_LENGTHTYPE_NUMBER) {
+    } else if (unitType == SVG_LENGTHTYPE_PX) {
         str = str->concat("px");
-    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+    } else if (unitType == SVG_LENGTHTYPE_CM) {
         str = str->concat("cm");
-    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+    } else if (unitType == SVG_LENGTHTYPE_MM) {
         str = str->concat("mm");
-    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+    } else if (unitType == SVG_LENGTHTYPE_IN) {
         str = str->concat("in");
-    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+    } else if (unitType == SVG_LENGTHTYPE_PT) {
         str = str->concat("pt");
-    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+    } else if (unitType == SVG_LENGTHTYPE_PC) {
         str = str->concat("pc");
-    } else if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
+    } else if (unitType == SVG_LENGTHTYPE_PERCENTAGE) {
         str = str->concat("%");
     } else {
         STARFISH_UNSUPPORTED("Unsupported unit type in svg (type: %d)",
@@ -327,6 +345,8 @@ void SVGLength::setValueAsString(String* valueAsString,
                                    DOMException::Code::SYNTAX_ERR,
                                    "SyntaxError");
         }
+        setUnitType(SVG_LENGTHTYPE_NUMBER);
+        setValueInSpecifiedUnits(0, fromElementDidAttributeChanged);
     }
 }
 

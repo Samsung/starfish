@@ -60,21 +60,28 @@
 
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2, customs) \
     {                                                                    \
-        CSSStyleValuePair pair;                                          \
-        String* name =                                                   \
-            getAttributeConsiderAnimatedAttributeOrVarReferencedValue(   \
-                staticStrings()->m_##name.localNameAtomic(), customs);   \
-        if (name->length()) {                                            \
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);          \
-            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
-            auto s = name->toUTF8NonGCString();                          \
-            if (CSSPropertyParser::parseLength(                          \
-                    s.data(),                                            \
-                    CSSPropertyParser::AllowPercent |                    \
-                        CSSPropertyParser::AllowWithoutUnit |            \
-                        CSSPropertyParser::AllowNegative,                \
-                    &pair)) {                                            \
-                cssValues.push_back(pair);                               \
+        auto aniVal = animatedAttributeAsStyleValue(                     \
+            staticStrings()->m_##name.localNameAtomic());                \
+        if (aniVal) {                                                    \
+            auto& s = aniVal.value();                                    \
+            s.setKeyKind(CSSStyleValuePair::KeyKind::name2);             \
+            cssValues.push_back(s);                                      \
+        } else {                                                         \
+            CSSStyleValuePair pair;                                      \
+            String* name = getAttributeOrVarReferencedValue(             \
+                staticStrings()->m_##name, customs);                     \
+            if (name->length()) {                                        \
+                pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);      \
+                pair.setValueKind(CSSStyleValuePair::ValueKind::Length); \
+                auto s = name->toUTF8NonGCString();                      \
+                if (CSSPropertyParser::parseLength(                      \
+                        s.data(),                                        \
+                        CSSPropertyParser::AllowPercent |                \
+                            CSSPropertyParser::AllowWithoutUnit |        \
+                            CSSPropertyParser::AllowNegative,            \
+                        &pair)) {                                        \
+                    cssValues.push_back(pair);                           \
+                }                                                        \
             }                                                            \
         }                                                                \
     }
@@ -237,20 +244,18 @@ public:
 
     virtual void attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout);
 
-    void setAnimatedAttribute(AtomicString s, String* v,
-                              Optional<float> rawValue,
+    void setAnimatedAttribute(AtomicString s, Optional<Length> rawValue,
                               ActiveSVGLengthAnimationTask* task)
     {
         for (auto& e : ensureAnimatedAttributes()) {
             if (std::get<0>(e) == s) {
-                std::get<1>(e) = v;
-                std::get<2>(e) = rawValue;
+                std::get<1>(e) = rawValue;
                 computeAttributeChangeDamage(s);
                 return;
             }
         }
         ensureAnimatedAttributes().push_back(
-            std::make_tuple(s, v, rawValue, task));
+            std::make_tuple(s, rawValue, task));
         computeAttributeChangeDamage(s);
     }
 
@@ -262,7 +267,7 @@ public:
         }
         for (size_t i = 0; i < m_animatedAttributes->size(); i++) {
             if (std::get<0>(m_animatedAttributes->at(i)) == s &&
-                std::get<3>(m_animatedAttributes->at(i)) == task) {
+                std::get<2>(m_animatedAttributes->at(i)) == task) {
                 m_animatedAttributes->erase(i);
                 computeAttributeChangeDamage(s);
                 return;
@@ -270,64 +275,32 @@ public:
         }
     }
 
-    Optional<String*> animatedAttribute(AtomicString s) const
+    Optional<Length> animatedAttribute(AtomicString s) const
     {
         if (!m_animatedAttributes) {
             return nullptr;
         }
         for (auto& e : *m_animatedAttributes) {
-            if (std::get<0>(e) == s) {
+            if (std::get<0>(e) == s && std::get<1>(e)) {
                 return std::get<1>(e);
             }
         }
         return nullptr;
     }
 
-    Optional<float> animatedAttributeRawValue(AtomicString s) const
-    {
-        if (!m_animatedAttributes) {
-            return nullptr;
-        }
-        for (auto& e : *m_animatedAttributes) {
-            if (std::get<0>(e) == s && std::get<2>(e)) {
-                return std::get<2>(e);
-            }
-        }
-        return nullptr;
-    }
-
-    Optional<String*> getAnimatedAttribute(AtomicString s)
-    {
-        auto v = animatedAttribute(s);
-        if (v && v->length()) {
-            return v.value();
-        }
-        return nullptr;
-    }
-
-    String* getAttributeConsiderAnimatedAttribute(AtomicString s)
-    {
-        auto v = animatedAttribute(s);
-        if (v && v->length()) {
-            return v.value();
-        }
-        return getAttributeOrEmpty(s);
-    }
-
-    String* getAttributeConsiderAnimatedAttributeOrVarReferencedValue(
-        AtomicString s,
-        Optional<const MutablePropertyValueList*> cssCustomValues);
+    Optional<CSSStyleValuePair> animatedAttributeAsStyleValue(
+        AtomicString s) const;
 
 protected:
     virtual void computeAttributeChangeDamage(AtomicString attrName);
 
-    GCVector<std::tuple<AtomicString, String*, Optional<float>,
+    GCVector<std::tuple<AtomicString, Optional<Length>,
                         ActiveSVGLengthAnimationTask*>>&
     ensureAnimatedAttributes()
     {
         if (!m_animatedAttributes) {
             m_animatedAttributes =
-                new GCVector<std::tuple<AtomicString, String*, Optional<float>,
+                new GCVector<std::tuple<AtomicString, Optional<Length>,
                                         ActiveSVGLengthAnimationTask*>>();
         }
         return *m_animatedAttributes.value();
@@ -336,7 +309,7 @@ protected:
     NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
     NativeImageData::PreserveAspectRatioMeetOrSlice
         m_preserveAspectRatioMeetOrSlice;
-    Optional<GCVector<std::tuple<AtomicString, String*, Optional<float>,
+    Optional<GCVector<std::tuple<AtomicString, Optional<Length>,
                                  ActiveSVGLengthAnimationTask*>>*>
         m_animatedAttributes;
 };

@@ -282,7 +282,7 @@ String* Length::toString() const
     if (isFixed()) {
         snprintf(temp, sizeof(temp), "%.1fpx", fixed());
     } else if (isPercent()) {
-        snprintf(temp, sizeof(temp), "%.1f%%", percent());
+        snprintf(temp, sizeof(temp), "%.1f%%", percent() * 100);
     } else if (isViewportPercent()) {
         if (m_type == Vw) {
             snprintf(temp, sizeof(temp), "%.1fvw", viewportPercent());

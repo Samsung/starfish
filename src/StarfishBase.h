@@ -613,13 +613,13 @@ public:
     {
     }
 
-    T value()
+    T& value()
     {
         STARFISH_ASSERT(m_hasValue);
         return m_value;
     }
 
-    const T value() const
+    const T& value() const
     {
         STARFISH_ASSERT(m_hasValue);
         return m_value;
@@ -641,7 +641,7 @@ public:
         return defaultValue;
     }
 
-    T getValue()
+    T& getValue()
     {
         STARFISH_ASSERT(m_hasValue);
         return m_value;

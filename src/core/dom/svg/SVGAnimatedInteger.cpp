@@ -47,10 +47,10 @@ ScriptBindingInstance* SVGAnimatedInteger::scriptBindingInstance()
 
 long SVGAnimatedInteger::animVal() const
 {
-    auto val = m_targetElement->getAnimatedAttribute(
-        m_targetAttribute.localNameAtomic());
+    auto val =
+        m_targetElement->animatedAttribute(m_targetAttribute.localNameAtomic());
     if (val) {
-        return String::parseFloat(val.value());
+        return val.value().fixed();
     } else {
         return m_baseVal;
     }
