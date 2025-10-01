@@ -171,6 +171,7 @@ static float resolveUserspaceUnitSVGLength(SVGLength* l, float viewportScale,
                SVGLength::UnitType::SVG_LENGTHTYPE_PERCENTAGE) {
         float p = l->valueInSpecifiedUnits(false) / 100;
         p *= viewportLength;
+        p *= viewportScale;
         return p;
     } else {
         return l->value(false);
