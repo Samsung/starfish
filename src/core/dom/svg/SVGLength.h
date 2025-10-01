@@ -58,7 +58,7 @@ public:
     float value(bool layoutIfNeeded = true);
     void setValue(float v);
     float valueInSpecifiedUnits(bool layoutIfNeeded = true);
-    String* valueAsString();
+    String* valueAsString(bool layoutIfNeeded = true);
     void setValueAsString(String* valueAsString,
                           bool fromElementDidAttributeChanged = false,
                           bool throwDOMExceptionOnFailure = true);
@@ -79,6 +79,7 @@ public:
 protected:
     void throwIfReadOnly();
     void updateByAttribute();
+    float value(unsigned short unitType, float rawValue);
 
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
