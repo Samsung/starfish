@@ -1776,6 +1776,8 @@ void ActiveFilterAnimationTask::execute(double progress, ComputedStyle* style)
             static_cast<BlurFilterFunction*>(from),
             static_cast<BlurFilterFunction*>(to), progress);
         applyBlurFilterToStyle(interpolatedBlur, style);
+    } else {
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
