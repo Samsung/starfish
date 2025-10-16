@@ -12,7 +12,7 @@ P /.circleci
 - /third_party/android
 - /third_party/googletest
 + /third_party/windows
-- /compat
++ /compat
 - /test
 + /tool/imgdiff
 - /tool/*.py
