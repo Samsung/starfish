@@ -1,0 +1,62 @@
+name: Release flutter port
+
+on:
+  workflow_call:
+    inputs:
+      gbs_conf:
+        description: 'gbs conf'
+        default: 'tizen'
+        required: true
+        type: string
+      gbs_profile:
+        description: 'gbs profile'
+        default: 'tizen_standard'
+        required: true
+        type: string             
+      gbs_arch:
+        description: 'target arch'
+        default: 'armv7l'
+        required: true
+        type: string        
+      gbs_device:
+        description: 'device'
+        default: 'mobile'
+        required: true
+        type: string
+    
+jobs:
+  build_tizen:
+    runs-on: [code-extra-2xlarge]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root --privileged
+
+    # Set reasonable timeout value.
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: "recursive"
+      - name: container fix
+        run: |
+          sudo /usr/sbin/update-binfmts --disable
+          sudo systemctl disable binfmt-support.service
+          sudo systemctl enable binfmt-support.service
+          sudo /usr/sbin/update-binfmts --enable
+          sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/status"
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard                    
+      - name: Build gbs
+        run: |
+          gbs -c .github/gbs-configuration/sr/${{ inputs.gbs_conf }}.conf build -A ${{ inputs.gbs_arch }} -P profile.${{ inputs.gbs_profile }} --include-all --incremental --define "build_profile ${{ inputs.gbs_device }}"
+          find ~/ -name 'lightweight-web-engine-profile*.rpm' ! -name "*debuginfo*" | xargs -I {} sh -c "cp {} ./"
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish_rpm
+          path: |
+            ./*.rpm
