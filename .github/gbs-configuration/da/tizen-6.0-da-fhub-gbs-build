@@ -1,0 +1,79 @@
+#!/bin/bash
+CONFDIR=$HOME/da/gbs-configuration
+BUILDDIR=$HOME/gbs-root/tizen_6.0
+mkdir -p ${BUILDDIR}
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION "
+echo "==========================================="
+echo "1.[AD] Tizen-6.0-DA-FHUB:KANTM:armv7l"
+echo "2.[AD] Tizen-6.0-DA-FHUB:MESON64:armv7l"
+echo "3.[AD] Tizen-6.0-DA-FHUB:MESON64:aarch64"
+echo "4.[DV] Prod-DV-Tizen-6.0-DA-FHUB9:KANTM:armv7l"
+echo "5.[DV] Prod-DV-Tizen-6.0-DA-FHUB9:MESON64:armv7l"
+echo "6.[DV] Prod-DV-Tizen-6.0-DA-FHUB9:MESON64:aarch64"
+echo "7.[DV] Prod-DV-Tizen-6.0-DA-FHUB8:KANTM:armv7l"
+echo "8.[DV] Prod-DV-Tizen-6.0-DA-FHUB8:MESON64:armv7l"
+echo "9.[DV] Prod-DV-Tizen-6.0-DA-FHUB8:MESON64:aarch64"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ];then
+	exit
+fi
+
+case ${option} in
+	0)
+		exit 0
+		;;
+	1)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.ad_fhub_kantm_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	2)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.ad_fhub_meson64_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	3)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.ad_fhub_meson64_aarch64 -A aarch64 --include-all --baselibs "$@"
+		;;
+
+	4)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub9_kantm_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	5)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub9_meson64_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	6)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub9_meson64_aarch64 -A aarch64 --include-all --baselibs "$@"
+		;;
+
+	7)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub8_kantm_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	8)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub8_meson64_arm -A armv7l --include-all --baselibs "$@"
+		;;
+
+	9)
+		gbs -c ${CONFDIR}/TIZEN_6.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub8_meson64_aarch64 -A aarch64 --include-all --baselibs "$@"
+		;;
+
+	*)
+		echo "Invalid choice"
+		;;
+esac

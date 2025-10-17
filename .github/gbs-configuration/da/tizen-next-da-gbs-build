@@ -1,0 +1,148 @@
+#!/bin/bash
+CONFDIR=$HOME/da/gbs-configuration
+BUILD_DIR_PLATFORM=$HOME/gbs-root/tizen-next/da-platform/ad/
+BUILD_DIR_HAL=$HOME/gbs-root/tizen-next/da-hal/ad/
+
+mkdir -p ${BUILD_DIR_PLATFORM} ${BUILD_DIR_HAL}
+
+BUILD_GBS=${CONFDIR}/TIZEN_NEXT_DA_GBS.conf
+BUILD_DEVEL_MODE=1
+BUILD_TYPE=INT
+
+count=1
+BUILD_NAME[$count]="Tizen-DA-Platform:armv7l"
+BUILD_ARCH[$count]=armv7l
+BUILD_PROFILE[$count]=profile.da_platform
+BUILD_ROOT[$count]=${BUILD_DIR_PLATFORM}/standard/
+BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-Platform:aarch64"
+BUILD_ARCH[$count]=aarch64
+BUILD_PROFILE[$count]=profile.da_platform
+BUILD_ROOT[$count]=${BUILD_DIR_PLATFORM}/standard/
+BUILD_SEPARATE[$count]=1
+
+# For only platform build
+PLATFORM_BUILD_COUNT=$count
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:MESON64:armv7l"
+BUILD_ARCH[$count]=armv7l
+BUILD_PROFILE[$count]=profile.da_hal_meson64
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/meson64/
+BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:MESON64:aarch64"
+BUILD_ARCH[$count]=aarch64
+BUILD_PROFILE[$count]=profile.da_hal_meson64
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/meson64/
+BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:QRB4210:aarch64"
+BUILD_ARCH[$count]=aarch64
+BUILD_PROFILE[$count]=profile.da_hal_qrb4210
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/qrb4210/
+BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:KODIAK:aarch64"
+BUILD_ARCH[$count]=aarch64
+BUILD_PROFILE[$count]=profile.da_hal_kodiak
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/kodiak/
+BUILD_SEPARATE[$count]=0
+
+# count=$(($count + 1))
+# BUILD_NAME[$count]="Tizen-DA-HAL:PONTUSML:armv7l"
+# BUILD_ARCH[$count]=armv7l
+# BUILD_PROFILE[$count]=profile.da_hal_pontusml
+# BUILD_ROOT[$count]=${BUILD_DIR_HAL}/pontusml/
+# BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:EMULATOR:armv7l"
+BUILD_ARCH[$count]=armv7l
+BUILD_PROFILE[$count]=profile.da_hal_emulator
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/emulator/
+BUILD_SEPARATE[$count]=0
+
+count=$(($count + 1))
+BUILD_NAME[$count]="Tizen-DA-HAL:EMULATOR:aarch64"
+BUILD_ARCH[$count]=aarch64
+BUILD_PROFILE[$count]=profile.da_hal_emulator
+BUILD_ROOT[$count]=${BUILD_DIR_HAL}/emulator/
+BUILD_SEPARATE[$count]=1
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION"
+echo "==========================================="
+for index in $(seq 1 $count); do
+    echo "$index. ${BUILD_NAME[$index]}"
+    if [ ${BUILD_SEPARATE[$index]} -eq 1 ]; then
+        echo "-------------------------------------------"
+    fi
+done
+echo "98.Tizen-DA-Platform:All"
+echo "99.Tizen-DA-HAL:All"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ] || [ ${option} -eq 0 ];then
+    exit 0
+fi
+
+if [ ${option} -le ${count} ]; then
+    echo "Building ${BUILD_NAME[$option]} ..."
+    gbs -c ${BUILD_GBS} build -A ${BUILD_ARCH[$option]} \
+        --profile=${BUILD_PROFILE[$option]} \
+        --buildroot=${BUILD_ROOT[$option]}/${BUILD_ARCH[$option]} \
+        --define "_da_build_type ${BUILD_TYPE}" \
+        --define "tizen_build_devel_mode ${BUILD_DEVEL_MODE}" \
+        --include-all --baselibs "$@"
+    exit $?
+fi
+
+
+if [ ${option} -eq 98 ]; then
+    set -e #Exit if error occurs in build
+    for index in $(seq 1 ${PLATFORM_BUILD_COUNT}); do
+        echo "Building ${BUILD_NAME[$index]} ..."
+        gbs -c ${BUILD_GBS} build -A ${BUILD_ARCH[$index]} \
+            --profile=${BUILD_PROFILE[$index]} \
+            --buildroot=${BUILD_ROOT[$index]}/${BUILD_ARCH[$index]} \
+            --define "_da_build_type ${BUILD_TYPE}" \
+            --define "tizen_build_devel_mode ${BUILD_DEVEL_MODE}" \
+            --include-all --baselibs "$@"
+    done
+    exit $?
+fi
+
+HAL_BUILD_START=$((${PLATFORM_BUILD_COUNT} + 1))
+if [ ${option} -eq 99 ]; then
+    for index in $(seq ${HAL_BUILD_START} ${count}); do
+        echo "Building ${BUILD_NAME[$index]} ..."
+        gbs -c ${BUILD_GBS} build -A ${BUILD_ARCH[$index]} \
+            --profile=${BUILD_PROFILE[$index]} \
+            --buildroot=${BUILD_ROOT[$index]}/${BUILD_ARCH[$index]} \
+            --define "_da_build_type ${BUILD_TYPE}" \
+            --define "tizen_build_devel_mode ${BUILD_DEVEL_MODE}" \
+            --include-all --baselibs "$@"
+        if [[ $? -eq 0 ]] ; then
+            BUILD_RESULT[$index]="PASS"
+        else
+            BUILD_RESULT[$index]="FAIL"
+        fi
+    done
+    for index in $(seq ${HAL_BUILD_START} ${count}); do
+        echo "Build result for ${BUILD_NAME[$index]} is ${BUILD_RESULT[$index]}"
+    done
+    exit $?
+fi
+
+# If we reach here, the user has made an invalid selection.  Print an error message and exit.
+echo "Invalid choice"
+exit 1

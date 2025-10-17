@@ -1,0 +1,42 @@
+#!/bin/bash
+clear
+CONFDIR=$HOME/gbs-configuration
+BUILDDIR=$HOME/gbs-root/tizen_5.5
+mkdir -p ${BUILDDIR}
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION (GITHUB)"
+echo "==========================================="
+echo "1.[AD] Tizen:5.5:DA:FHUB5:KANTM:armv7l"
+echo "2.[AD] Tizen:5.5:DA:FHUB5:MESON64:armv7l"
+echo "3.[AD] Tizen:5.5:DA:FHUB5:MESON64:aarch64"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ];then
+	exit
+fi
+
+case ${option} in
+	0)
+		exit 0
+		;;
+	1)
+		gbs -c ${CONFDIR}/TIZEN_5.5_DA_FHUB5_GBS.conf build \
+			--profile=profile.fhub5_kantm_arm -A armv7l --include-all --baselibs $@
+		;;
+
+	2)
+		gbs -c ${CONFDIR}/TIZEN_5.5_DA_FHUB5_GBS.conf build \
+			--profile=profile.fhub5_meson64_arm -A armv7l --include-all --baselibs $@
+		;;
+	3)
+		gbs -c ${CONFDIR}/TIZEN_5.5_DA_FHUB5_GBS.conf build \
+			--profile=profile.fhub5_meson64_aarch64 -A aarch64 --include-all --baselibs $@
+		;;
+	*)
+		echo "Invalid choice"
+		;;
+esac

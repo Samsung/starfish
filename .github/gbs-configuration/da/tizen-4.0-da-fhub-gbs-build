@@ -1,0 +1,65 @@
+#!/bin/bash
+clear
+CONFDIR=$HOME/tizen/spin/product/da/scm/meta/gbs-build-config
+BUILDDIR=$HOME/gbs-root/tizen_4.0_spin
+mkdir -p ${BUILDDIR}
+
+echo "---------------------------------------"
+echo " SELECT TARGET BUILD CONFIGURATION "
+echo "---------------------------------------"
+echo " 1.[AD] Family Hub 4.0 Kant-M "
+echo " 2.[DV] Family Hub 4.0 Kant-M "
+echo " 3.[DV] Family Hub 5.0 Kant-M "
+echo " 4.[MP] Family Hub 4.0 Kant-M "
+echo " 5.[MP] Family Hub 5.0 Kant-M "
+echo " 6.[AD] Family Hub 4.0 Emulator 32"
+echo " 7.[AD] Family Hub 4.0 Emulator 64"
+echo " 0. Exit"
+echo "---------------------------------------"
+read option
+
+if [ -z "${option}" ];then
+	exit
+fi
+
+case ${option} in
+	0)
+		exit 0
+		;;
+
+	1)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.fhub4_kantm -A armv7l --include-all $@
+		;;
+	2)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub4_kantm -A armv7l --include-all $@
+		;;
+	3)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.dv_fhub5_kantm -A armv7l --include-all $@
+		;;
+
+	4)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.mp_fhub4_kantm -A armv7l --include-all $@
+		;;
+
+	5)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.mp_fhub5_kantm -A armv7l --include-all $@
+		;;
+
+	6)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.fhub4_emulator32 -A i586 --include-all $@
+		;;
+	7)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_FHUB_GBS.conf build \
+			--profile=profile.fhub4_emulator64 -A x86_64 --include-all $@
+		;;
+
+	*)
+		echo "Invalid choice"
+		;;
+esac

@@ -1,0 +1,62 @@
+#!/bin/bash
+CONFDIR=$HOME/da/gbs-configuration
+BUILDDIR=$HOME/gbs-root/tizen_7.0
+mkdir -p ${BUILDDIR}
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION"
+echo "==========================================="
+echo "1.[AD] Tizen:7.0:DA:Unified:Meson64:aarch64"
+echo "2.[AD] Tizen:7.0:DA:Unified:Meson64:armv7l"
+echo "3.[AD] Tizen:7.0:DA:Unified:Emulator:aarch64"
+echo "4.[AD] Tizen:7.0:DA:Unified:Emulator:armv7l"
+echo "5.[AD] Tizen:7.0:DA:Unified:QRB4210:aarch64"
+echo "6.[AD] Tizen:7.0:DA:Unified:KantM:armv7l"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ];then
+    exit
+fi
+
+case ${option} in
+    0)
+        exit 0
+        ;;
+
+    1)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_meson64_aarch64 -A aarch64 --include-all --baselibs "$@"
+        ;;
+
+    2)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_meson64_armv7l -A armv7l --include-all --baselibs "$@"
+        ;;
+
+    3)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_emulator_aarch64 -A aarch64 --include-all --baselibs "$@"
+        ;;
+
+    4)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_emulator_armv7l -A armv7l --include-all --baselibs "$@"
+        ;;
+
+    5)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_qrb4210_aarch64 -A aarch64 --include-all --baselibs "$@"
+        ;;
+
+    6)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_UNIFIED_GBS.conf build \
+        --profile=profile.da_unified_kantm_armv7l -A armv7l --include-all --baselibs "$@"
+        ;;
+
+    *)
+        echo "Invalid choice"
+    ;;
+esac

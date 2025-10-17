@@ -1,0 +1,136 @@
+#!/bin/bash
+CONFDIR=$HOME/da/gbs-configuration
+BUILDDIR=$HOME/gbs-root/tizen_7.0
+mkdir -p ${BUILDDIR}
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION"
+echo "==========================================="
+echo "1.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:Meson64:aarch64"
+echo "2.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:Meson64:armv7l"
+echo "3.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:Emulator:aarch64"
+echo "4.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:Emulator:armv7l"
+echo "5.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:QRB4210:aarch64"
+echo "6.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:KantM:armv7l"
+echo "7.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:Meson64:aarch64"
+echo "8.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:Meson64:armv7l"
+echo "9.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:Emulator:aarch64"
+echo "10.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:Emulator:armv7l"
+echo "11.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:QRB4210:aarch64"
+echo "12.Prod-MP-Tizen-7.0-DA-Platform-Y25-Stg:KantM:armv7l"
+echo "-------------------------------------------"
+echo "99.Prod-MP-Tizen-7.0-DA-Platform-Y25-Dev:All"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ];then
+    exit
+fi
+
+case ${option} in
+    0)
+        exit 0
+        ;;
+
+    1)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_meson64_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    2)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_meson64_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    3)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_emulator_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    4)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_emulator_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    5)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_qrb4210_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    6)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_dev_kantm_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type DEV" --define "tizen_build_devel_mode 1" "$@"
+        ;;
+
+    7)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_meson64_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    8)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_meson64_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    9)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_emulator_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    10)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_emulator_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    11)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_qrb4210_aarch64 -A aarch64 --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    12)
+        gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+        --profile=profile.da_platform_y25_stg_kantm_armv7l -A armv7l --include-all --baselibs \
+        --define "_da_build_type STG" --define "tizen_build_devel_mode 0" "$@"
+        ;;
+
+    99)
+        profile=("da_platform_y25_dev_meson64_aarch64" "da_platform_y25_dev_meson64_armv7l"
+                 "da_platform_y25_dev_emulator_aarch64" "da_platform_y25_dev_emulator_armv7l"
+                 "da_platform_y25_dev_qrb4210_aarch64" "da_platform_y25_dev_kantm_armv7l")
+        arch=("aarch64" "armv7l" "aarch64" "armv7l" "aarch64" "armv7l")
+
+        count=${#profile[@]}
+        for i in $(seq 0 $((${count}-1))); do
+            gbs -c ${CONFDIR}/TIZEN_7.0_DA_PLATFORM_Y25_GBS.conf build \
+                --profile=profile.${profile[$i]} -A ${arch[$i]} --include-all --baselibs \
+                --define "_da_build_type DEV" --define "tizen_build_devel_mode 1"
+            if [[ $? -eq 0 ]] ; then
+                BUILD_RESULT[$i]="PASS"
+            else
+                BUILD_RESULT[$i]="FAIL"
+            fi
+        done
+        # result
+        for i in $(seq 0 $((${count}-1))); do
+            echo "Build result for ${profile[$i]} is ${BUILD_RESULT[$i]}"
+        done
+        ;;
+
+    *)
+        echo "Invalid choice"
+    ;;
+esac
+

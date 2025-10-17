@@ -1,0 +1,37 @@
+name: Trigger CI
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'ci_work'  
+  workflow_dispatch:
+    inputs:
+      conf:
+        default: 'tizen'
+        description: 'gbs conf'
+      profile:
+        default: 'tizen_standard'
+        description: 'gbs profile'
+      arch:
+        default: 'armv7l'
+        description: 'arch'
+      device:
+        default: 'mobile'
+        description: 'device'
+jobs:
+
+  build_gbs:
+    uses: ./.github/workflows/gbs.yml
+    with:
+      # gbs_conf: tizen
+      # gbs_profile: tizen_standard
+      # gbs_arch: armv7l
+      # gbs_device: mobile
+      gbs_conf: ${{ inputs.conf }}
+      gbs_profile: ${{ inputs.profile }}
+      gbs_arch: ${{ inputs.arch }}
+      gbs_device: ${{ inputs.device }}
+
+    secrets: inherit
+

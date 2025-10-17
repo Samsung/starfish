@@ -1,0 +1,35 @@
+#!/bin/bash
+CONFDIR=$HOME/da/gbs-configuration
+BUILDDIR=$HOME/gbs-root/tizen_6.5
+mkdir -p ${BUILDDIR}
+
+echo "==========================================="
+echo " SELECT TARGET BUILD CONFIGURATION"
+echo "==========================================="
+echo "1.[AD] Tizen:6.5:DA:Robot:R18:aarch64"
+echo "2.[AD] Tizen:6.5:DA:Robot:QRB4210:aarch64"
+echo "-------------------------------------------"
+echo "0. Exit"
+echo "==========================================="
+read option
+
+if [ -z "${option}" ];then
+	exit
+fi
+
+case ${option} in
+	0)
+		exit 0
+		;;
+	1)
+		gbs -c ${CONFDIR}/TIZEN_6.5_DA_ROBOT_GBS.conf build \
+			--profile=profile.da_robot_r18_aarch64 -A aarch64 --include-all --baselibs $@
+		;;
+	2)
+		gbs -c ${CONFDIR}/TIZEN_6.5_DA_ROBOT_GBS.conf build \
+		--profile=profile.da_robot_qrb4210_aarch64 -A aarch64 --include-all --baselibs $@
+		;;
+	*)
+		echo "Invalid choice"
+		;;
+esac

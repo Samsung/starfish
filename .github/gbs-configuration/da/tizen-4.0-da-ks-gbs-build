@@ -1,0 +1,67 @@
+#!/bin/bash
+clear
+CONFDIR=$HOME/tizen/spin/product/da/scm/meta/gbs-build-config
+BUILDDIR=$HOME/gbs-root/tizen_4.0_spin
+mkdir -p ${BUILDDIR}
+
+echo "---------------------------------------"
+echo " SELECT TARGET BUILD CONFIGURATION "
+echo "---------------------------------------"
+echo "  1.[AD] CO1S(Chill Out 1st small) R18 32-bit"
+echo "  2.[AD] CO1S(Chill Out 1st small) R18 64-bit"
+echo "  3.[AD] CO1S(Chill Out 1st small) i586 (32-bit)"
+echo "  4.[AD] CO1S(Chill Out 1st small) x86_64 (64-bit)"
+echo "---------------------------------------"
+echo "  5.[AD] CO2S(Chill Out 2nd Entry) R18 32-bit"
+echo "  6.[AD] CO2S(Chill Out 2nd Entry) R18 64-bit"
+echo "  7.[AD] CO2S(Chill Out 2nd Entry) i586 (32-bit)"
+echo "  8.[AD] CO2S(Chill Out 2nd Entry) x86_64 (64-bit)"
+echo "  0. Exit"
+echo "---------------------------------------"
+read option
+
+if [ -z "${option}" ];then
+	exit
+fi
+
+case ${option} in
+	0)
+		exit 0
+		;;
+
+	1)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co1s_r18_arm32 -A armv7l --include-all $@
+		;;
+	2)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co1s_r18_arm64 -A aarch64 --include-all $@
+		;;
+	3)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co1s_r18_i586 -A i586 --include-all $@
+		;;
+	4)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co1s_r18_x86_64 -A x86_64 --include-all $@
+		;;
+	5)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co2s_r18_arm32 -A armv7l --include-all $@
+		;;
+	6)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co2s_r18_arm64 -A aarch64 --include-all $@
+		;;
+	7)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co2s_r18_i586 -A i586 --include-all $@
+		;;
+	8)
+		gbs -c ${CONFDIR}/TIZEN_4.0_DA_KS_GBS.conf build \
+			--profile=profile.da_ks_co2s_r18_x86_64 -A x86_64 --include-all $@
+		;;
+	*)
+		echo "Invalid choice"
+		;;
+esac

@@ -1,0 +1,47 @@
+#!/bin/bash
+clear
+CONFDIR=$HOME/tizen/spin/product/da/scm/meta/gbs-build-config
+BUILDDIR=$HOME/gbs-root/tizen_3.0_spin
+mkdir -p ${BUILDDIR}
+
+echo "---------------------------------------"
+echo " SELECT TARGET BUILD CONFIGURATION "
+echo "---------------------------------------"
+echo " 1. [AD] Family Hub 3.0 KANTM "
+echo " 2. [AD] Family Hub 3.0 KANTM2 "
+echo " 3. [AD] Family Hub 3.0 EMULATOR "
+echo " 4. [DV] Family Hub 3.0 KANTM "
+echo " 5. [DV] Family Hub 3.0 EMULATOR "
+echo " 0. Exit"
+echo "---------------------------------------"
+read option
+
+if [ -z "${option}" ];then
+    exit
+fi
+
+case ${option} in
+    0)
+        exit 0
+        ;;
+
+    1)
+        gbs -c ${CONFDIR}/TIZEN_3.0_FHUB3.0_COMMON_GBS.conf build --profile=profile.fhub3.0_kantm_ad -A armv7l --include-all $@
+        ;;
+    2)
+        gbs -c ${CONFDIR}/TIZEN_3.0_FHUB3.0_COMMON_GBS.conf build --profile=profile.fhub3.0_kantm2_ad -A armv7l --include-all $@
+        ;;
+    3)
+        gbs -c ${CONFDIR}/TIZEN_3.0_FHUB3.0_COMMON_GBS.conf build --profile=profile.fhub3.0_emulator32_ad -A i586 --include-all $@
+        ;;
+    4)
+        gbs -c ${CONFDIR}/TIZEN_3.0_FHUB3.0_COMMON_GBS.conf build --profile=profile.fhub3.0_kantm_dv -A armv7l --include-all $@
+        ;;
+    5)
+        gbs -c ${CONFDIR}/TIZEN_3.0_FHUB3.0_COMMON_GBS.conf build --profile=profile.fhub3.0_emulator32_dv -A i586 --include-all $@
+        ;;
+
+	*)
+        echo "Invalid choice"
+        ;;
+esac
