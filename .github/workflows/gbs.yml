@@ -1,4 +1,4 @@
-name: Release flutter port
+name: Build Starfish (gbs)
 
 on:
   workflow_call:
@@ -51,7 +51,7 @@ jobs:
           sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/status"
       - name: Reset Submodule
         run: git submodule foreach --recursive git reset --hard                    
-      - name: Build gbs
+      - name: Build Starfish( ${{ inputs.gbs_profile }} , ${{ inputs.gbs_arch }} )
         run: |
           gbs -c .github/gbs-configuration/sr/${{ inputs.gbs_conf }}.conf build -A ${{ inputs.gbs_arch }} -P profile.${{ inputs.gbs_profile }} --include-all --incremental --define "build_profile ${{ inputs.gbs_device }}"
           find ~/ -name 'lightweight-web-engine-profile*.rpm' ! -name "*debuginfo*" | xargs -I {} sh -c "cp {} ./"
