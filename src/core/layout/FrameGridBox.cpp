@@ -1877,7 +1877,8 @@ void GridFormattingContext::applyAlignItems()
 
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.rowStart() < yOffsetsForRows.size());
-        LayoutUnit yOffset = yOffsetsForRows[area.rowStart()];
+        LayoutUnit yOffset =
+            yOffsetsForRows[area.rowStart()] + m_container->paddingTop();
 
         LayoutUnit trackSize;
         for (size_t i = area.rowStart(); i < area.rowEnd(); i++) {
@@ -1925,7 +1926,8 @@ void GridFormattingContext::applyJustifyContent()
     LayoutUnit remainingWidth = m_availableWidth - sumOfColumns;
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.columnStart() < xOffsetsForColumns.size());
-        LayoutUnit xOffset = xOffsetsForColumns[area.columnStart()];
+        LayoutUnit xOffset =
+            xOffsetsForColumns[area.columnStart()] + m_container->paddingLeft();
 
         LayoutUnit trackSize;
         for (size_t i = area.columnStart(); i < area.columnEnd(); i++) {
