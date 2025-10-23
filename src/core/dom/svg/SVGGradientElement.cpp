@@ -92,7 +92,6 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
         if (value->equals(gradientTransform()->baseVal()->toString()) ==
             false) {
             gradientTransform()->baseVal()->updateListByAttribute();
-            gradientTransform()->animVal()->updateListByAttribute();
         }
     } else if (ss->m_spreadMethod == name) {
         if (spreadMethod()->isUpdated() == false) {
@@ -155,7 +154,7 @@ SVGAnimatedTransformList* SVGGradientElement::gradientTransform()
         SVGTransformList* baseVal =
             new SVGTransformList(this, staticStrings()->m_gradientTransform);
         SVGTransformList* animVal = new SVGTransformList(
-            this, staticStrings()->m_gradientTransform, true);
+            this, staticStrings()->m_gradientTransform, baseVal);
 
         m_gradientTransform =
             new SVGAnimatedTransformList(document(), baseVal, animVal);

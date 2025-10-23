@@ -36,7 +36,7 @@ public:
     {
     }
 
-    void setData(Length& a, Length& b)
+    void setData(const Length& a, const Length& b)
     {
         m_tx = a;
         m_ty = b;

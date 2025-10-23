@@ -831,6 +831,11 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_filterUnits,
                           tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "gradienttransform")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_gradientTransform,
+                tokenAttribute.value());
         }
     }
 }

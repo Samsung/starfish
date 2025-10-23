@@ -33,6 +33,8 @@ class SVGTransformList : public ScriptWrappable {
 public:
     SVGTransformList(SVGElement* sourceElement, QualifiedName targetAttribute,
                      bool readOnly = false);
+    SVGTransformList(SVGElement* sourceElement, QualifiedName targetAttribute,
+                     SVGTransformList* sourceObject);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -64,12 +66,14 @@ public:
 protected:
     void clearWithoutUpdateAttribute()
     {
+        STARFISH_ASSERT(!m_sourceObject);
         m_v.clear();
     }
 
     bool insertItemWithoutUpdateAttribute(SVGTransform* newItem,
                                           unsigned long index)
     {
+        STARFISH_ASSERT(!m_sourceObject);
         if (index < length()) {
             m_v.insert(index, newItem);
             return true;
@@ -80,6 +84,7 @@ protected:
 
     bool removeItemWithoutUpdateAttribute(unsigned long index)
     {
+        STARFISH_ASSERT(!m_sourceObject);
         if (index < length()) {
             m_v.erase((size_t)index);
             return true;
@@ -90,11 +95,13 @@ protected:
 
     void appendItemWithoutUpdateAttribute(SVGTransform* newItem)
     {
+        STARFISH_ASSERT(!m_sourceObject);
         m_v.push_back(newItem);
     }
 
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
+    Optional<SVGTransformList*> m_sourceObject; // filled if animVal
 
     bool m_readOnly;
     GCVector<SVGTransform*> m_v;

@@ -1708,11 +1708,67 @@ void* ActiveSVGLengthAnimationTask::operator new(size_t size)
 
 void ActiveSVGLengthAnimationTask::execute(double progress)
 {
-    Length newLength = computeLengthAnimationValue(currentAnimatedFromValue(),
-                                                   currentAnimatedToValue(),
-                                                   progress, m_isForward);
-    m_targetElement->asSVGElement()->setAnimatedAttribute(m_attributeName,
-                                                          newLength, this);
+    auto a1 = currentAnimatedFromValue();
+    auto a2 = currentAnimatedToValue();
+    Optional<StyleTransformData*> transformValue;
+    if (a1->isTransformData() && a2->isTransformData()) {
+        auto t1 = a1->getTransformData()->at(0);
+        auto t2 = a2->getTransformData()->at(0);
+        STARFISH_ASSERT(t1.type() == t2.type());
+
+        transformValue = new StyleTransformData(t1.clone());
+
+        switch (t1.type()) {
+        case StyleTransformData::Translate: {
+            auto d1 = t1.translate();
+            auto d2 = t2.translate();
+            double tx =
+                d1->tx().fixed() * (1 - progress) + d2->tx().fixed() * progress;
+            double ty =
+                d1->ty().fixed() * (1 - progress) + d2->ty().fixed() * progress;
+            transformValue->translate()->setData(Length(Length::Fixed, tx),
+                                                 Length(Length::Fixed, ty));
+        } break;
+        case StyleTransformData::Scale: {
+            auto d1 = t1.scale();
+            auto d2 = t2.scale();
+            double tx = d1->x() * (1 - progress) + d2->x() * progress;
+            double ty = d1->y() * (1 - progress) + d2->y() * progress;
+            transformValue->scale()->setData(tx, ty);
+        } break;
+        case StyleTransformData::Rotate: {
+            auto d1 = t1.rotate();
+            auto d2 = t2.rotate();
+            double newAngle =
+                d1->angle() * (1 - progress) + d2->angle() * progress;
+            double newCX = d1->cx().numberData() * (1 - progress) +
+                           d2->cx().numberData() * progress;
+            double newCY = d1->cy().numberData() * (1 - progress) +
+                           d2->cy().numberData() * progress;
+            transformValue->rotate()->setData(newAngle,
+                                              Length(Length::Fixed, newCX),
+                                              Length(Length::Fixed, newCY));
+        } break;
+        case StyleTransformData::Skew: {
+            auto d1 = t1.skew();
+            auto d2 = t2.skew();
+            double x = d1->angleX() * (1 - progress) + d2->angleX() * progress;
+            double y = d1->angleY() * (1 - progress) + d2->angleY() * progress;
+            transformValue->skew()->setData(x, y);
+        } break;
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+    }
+    if (transformValue) {
+        m_targetElement->asSVGElement()->setAnimatedAttribute(
+            m_attributeName, NullOption, transformValue, this);
+    } else {
+        Length newLength =
+            computeLengthAnimationValue(a1, a2, progress, m_isForward);
+        m_targetElement->asSVGElement()->setAnimatedAttribute(
+            m_attributeName, newLength, NullOption, this);
+    }
 }
 
 void ActiveSVGLengthAnimationTask::execute(double progress,
@@ -1730,8 +1786,8 @@ bool ActiveSVGLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 
 void ActiveSVGLengthAnimationTask::attachToElement()
 {
-    m_targetElement->asSVGElement()->setAnimatedAttribute(m_attributeName,
-                                                          NullOption, this);
+    m_targetElement->asSVGElement()->setAnimatedAttribute(
+        m_attributeName, NullOption, NullOption, this);
 }
 
 void ActiveSVGLengthAnimationTask::detachFromElement()

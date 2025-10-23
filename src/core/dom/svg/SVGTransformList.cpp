@@ -34,6 +34,17 @@ SVGTransformList::SVGTransformList(SVGElement* sourceElement,
     updateListByAttribute();
 }
 
+SVGTransformList::SVGTransformList(SVGElement* sourceElement,
+                                   QualifiedName targetAttribute,
+                                   SVGTransformList* sourceObject)
+    : ScriptWrappable(this)
+    , m_sourceElement(sourceElement)
+    , m_targetAttribute(targetAttribute)
+    , m_sourceObject(sourceObject)
+    , m_readOnly(true)
+{
+}
+
 ScriptBindingInstance* SVGTransformList::scriptBindingInstance()
 {
     return m_sourceElement->scriptBindingInstance();
@@ -46,7 +57,15 @@ unsigned long SVGTransformList::length()
 
 unsigned long SVGTransformList::numberOfItems()
 {
-    return m_v.size();
+    if (m_sourceObject) {
+        if (m_sourceElement->animatedTransformAttribute(
+                m_targetAttribute.localNameAtomic())) {
+            return 1;
+        }
+        return m_sourceObject->numberOfItems();
+    } else {
+        return m_v.size();
+    }
 }
 
 void SVGTransformList::clear()
@@ -101,6 +120,35 @@ SVGTransform* SVGTransformList::getItem(unsigned long index)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::INDEX_SIZE_ERR, "IndexSizeError");
         return nullptr;
+    }
+
+    if (m_sourceObject) {
+        auto v = m_sourceElement->animatedTransformAttribute(
+            m_targetAttribute.localNameAtomic());
+        if (v) {
+            SVGTransform* newItem = new SVGTransform(
+                m_sourceElement, AtomicString::emptyAtomicString(),
+                CSSTransformFunction::Matrix, false);
+            if (v.value()->type() == StyleTransformData::Rotate) {
+                newItem->setRotate(v.value()->rotate()->angle(),
+                                   v.value()->rotate()->cx().fixed(),
+                                   v.value()->rotate()->cy().fixed());
+            } else if (v.value()->type() == StyleTransformData::Scale) {
+                newItem->setScale(v.value()->scale()->x(),
+                                  v.value()->scale()->y());
+            } else if (v.value()->type() == StyleTransformData::Translate) {
+                newItem->setTranslate(v.value()->translate()->m_tx.fixed(),
+                                      v.value()->translate()->m_ty.fixed());
+            } else {
+                STARFISH_ASSERT(v.value()->type() == StyleTransformData::Skew);
+                newItem->setSkewX(v.value()->skew()->angleX());
+                newItem->setSkewY(v.value()->skew()->angleY());
+            }
+            return newItem;
+        }
+        return m_sourceObject->getItem(index);
+    } else {
+        return m_v.at(index);
     }
 
     return m_v.at(index);
@@ -250,6 +298,7 @@ void* SVGTransformList::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(SVGTransformList)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_v));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_sourceElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_sourceObject));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGTransformList));
         typeInited = true;

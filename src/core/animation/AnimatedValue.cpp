@@ -339,7 +339,16 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
     // Create AnimatedValues for SVG's animation attribues.
 
     switch (keyKind) {
-    case CSSStyleValuePair::Transform:
+    case CSSStyleValuePair::KeyKind::X:
+    case CSSStyleValuePair::KeyKind::Y:
+    case CSSStyleValuePair::KeyKind::CX:
+    case CSSStyleValuePair::KeyKind::CY:
+    case CSSStyleValuePair::KeyKind::RX:
+    case CSSStyleValuePair::KeyKind::RY:
+    case CSSStyleValuePair::KeyKind::Width:
+    case CSSStyleValuePair::KeyKind::Height:
+    case CSSStyleValuePair::KeyKind::Transform:
+    case CSSStyleValuePair::KeyKind::Unknown:
         if (property.valueKind() ==
             CSSStyleValuePair::ValueKind::TransformFunctions) {
             // dummy computed style to create StyleTransformDataGroup.
@@ -349,18 +358,9 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
             transformValue->toTransformDataGroup(element, &dummy);
             STARFISH_ASSERT(dummy.transforms() != nullptr);
             return new AnimatedValue(dummy.transforms());
+        } else {
+            return AnimatedValue::createAnimatedValueFromLength(property);
         }
-        break;
-    case CSSStyleValuePair::KeyKind::X:
-    case CSSStyleValuePair::KeyKind::Y:
-    case CSSStyleValuePair::KeyKind::CX:
-    case CSSStyleValuePair::KeyKind::CY:
-    case CSSStyleValuePair::KeyKind::RX:
-    case CSSStyleValuePair::KeyKind::RY:
-    case CSSStyleValuePair::KeyKind::Width:
-    case CSSStyleValuePair::KeyKind::Height:
-    case CSSStyleValuePair::KeyKind::Unknown:
-        return AnimatedValue::createAnimatedValueFromLength(property);
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();

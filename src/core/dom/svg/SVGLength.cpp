@@ -84,7 +84,7 @@ ScriptBindingInstance* SVGLength::scriptBindingInstance()
 unsigned short SVGLength::unitType()
 {
     if (m_sourceObject) {
-        auto s = m_sourceElement->animatedAttribute(
+        auto s = m_sourceElement->animatedLengthAttribute(
             m_targetAttribute.localNameAtomic());
         if (s) {
             SVGLength len(m_sourceElement, m_targetAttribute);
@@ -113,7 +113,7 @@ void SVGLength::setUnitType(unsigned short unitType)
 float SVGLength::value(bool layoutIfNeeded)
 {
     if (m_sourceObject) {
-        auto s = m_sourceElement->animatedAttribute(
+        auto s = m_sourceElement->animatedLengthAttribute(
             m_targetAttribute.localNameAtomic());
         if (s) {
             SVGLength len(m_sourceElement, m_targetAttribute);
@@ -214,7 +214,7 @@ float SVGLength::value(unsigned short unitType, float rawValue)
 float SVGLength::valueInSpecifiedUnits(bool layoutIfNeeded)
 {
     if (m_sourceObject) {
-        auto s = m_sourceElement->animatedAttribute(
+        auto s = m_sourceElement->animatedLengthAttribute(
             m_targetAttribute.localNameAtomic());
         if (s) {
             SVGLength len(m_sourceElement, m_targetAttribute);

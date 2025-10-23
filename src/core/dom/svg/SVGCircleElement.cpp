@@ -38,7 +38,6 @@ void SVGCircleElement::didAttributeChanged(QualifiedName name,
     if (ss->m_transform == name) {
         if (value->equals(transform()->baseVal()->toString()) == false) {
             transform()->baseVal()->updateListByAttribute();
-            transform()->animVal()->updateListByAttribute();
         }
     }
 }
