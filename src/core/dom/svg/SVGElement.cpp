@@ -370,7 +370,7 @@ void SVGElement::styleForPresentationAttribute(
     // execute ActiveSVG AnimationTasks
     if (m_animatedAttributes) {
         for (auto e : *m_animatedAttributes) {
-            auto task = std::get<2>(e);
+            auto task = std::get<3>(e);
             if (!task->isInDelayedTime()) {
                 auto tick =
                     document()->browsingContext()->styleResolveStartTick();
@@ -607,7 +607,7 @@ void SVGElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
 Optional<CSSStyleValuePair> SVGElement::animatedAttributeAsStyleValue(
     AtomicString s) const
 {
-    auto aniVal = animatedAttribute(s);
+    auto aniVal = animatedLengthAttribute(s);
     if (!aniVal) {
         return NullOption;
     }
