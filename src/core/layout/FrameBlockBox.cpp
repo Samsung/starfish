@@ -309,7 +309,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     }
 
     Length height = style()->height();
-
     if (ctx.frameDocument()->node()->asDocument()->inQuirksMode()) {
         if (node() && node()->isHTMLBodyElement() && height.isAuto()) {
             LayoutUnit contentHeightForQuirks = ctx.frameDocument()

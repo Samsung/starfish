@@ -1868,17 +1868,23 @@ void GridFormattingContext::applyAlignItems()
     // Compute y-offsets.
     GCVector<LayoutUnit> yOffsetsForRows;
     LayoutUnit yOffsetForRowsSoFar = 0;
+    bool needAdjustCenter = true;
     yOffsetsForRows.push_back(yOffsetForRowsSoFar);
     for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
         yOffsetsForRows.push_back(yOffsetForRowsSoFar);
         GridTrack& track = m_gridTemplateRows[i];
-        yOffsetForRowsSoFar += m_rowGap + track.size();
+        yOffsetForRowsSoFar += track.size();
+        if (track.isLength()) {
+            needAdjustCenter = false;
+        }
+        if (i != m_gridTemplateRows.size()) {
+            yOffsetForRowsSoFar += m_rowGap;
+        }
     }
 
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.rowStart() < yOffsetsForRows.size());
-        LayoutUnit yOffset =
-            yOffsetsForRows[area.rowStart()] + m_container->paddingTop();
+        LayoutUnit yOffset = yOffsetsForRows[area.rowStart()];
 
         LayoutUnit trackSize;
         for (size_t i = area.rowStart(); i < area.rowEnd(); i++) {
@@ -1892,6 +1898,10 @@ void GridFormattingContext::applyAlignItems()
             // Do nothing.
             break;
         case AlignItemValue::CenterAlignItemValue: {
+            if (needAdjustCenter &&
+                m_container->height() > yOffsetForRowsSoFar) {
+                yOffset += ((m_container->height() - yOffsetForRowsSoFar) / 2);
+            }
             LayoutUnit yPos =
                 yOffset + (trackSize / 2) - (area.box()->height() / 2);
             area.box()->setY(yPos);
@@ -1926,8 +1936,7 @@ void GridFormattingContext::applyJustifyContent()
     LayoutUnit remainingWidth = m_availableWidth - sumOfColumns;
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.columnStart() < xOffsetsForColumns.size());
-        LayoutUnit xOffset =
-            xOffsetsForColumns[area.columnStart()] + m_container->paddingLeft();
+        LayoutUnit xOffset = xOffsetsForColumns[area.columnStart()];
 
         LayoutUnit trackSize;
         for (size_t i = area.columnStart(); i < area.columnEnd(); i++) {
@@ -1951,7 +1960,7 @@ void GridFormattingContext::applyJustifyContent()
         } break;
         default:
             // Other values are not supported.
-            STARFISH_UNSUPPORTED("unsupported ustify-content value in grid");
+            STARFISH_UNSUPPORTED("unsupported justify-content value in grid");
             break;
         }
     }
