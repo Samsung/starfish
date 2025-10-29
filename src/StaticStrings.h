@@ -164,6 +164,8 @@ namespace Starfish {
     F(animate)                         \
     F(animateTransform)                \
     F(animatetransform)                \
+    F(animateMotion)                   \
+    F(animatemotion)                   \
     F(svg)                             \
     F(switch)                          \
     F(rect)                            \
@@ -604,9 +606,11 @@ public:
     QualifiedName m_calcMode;
     QualifiedName m_keySplines;
     QualifiedName m_dur;
+    QualifiedName m_begin;
     QualifiedName m_from;
     QualifiedName m_to;
     QualifiedName m_values;
+    QualifiedName m_path;
 
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;

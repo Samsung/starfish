@@ -64,10 +64,11 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    static void parsePath(String* d, Path* path);
+
 private:
     virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 
-    static void parsePath(String* d, Path* path);
     Path* m_path;
 };
 } // namespace Starfish

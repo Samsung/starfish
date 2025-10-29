@@ -61,6 +61,8 @@ public:
     virtual void append(Path* path) override;
     virtual void translate(float x, float y) override;
 
+    virtual GCAtomicVector<Unit::FloatPoint> pointList() override;
+
 private:
 };
 

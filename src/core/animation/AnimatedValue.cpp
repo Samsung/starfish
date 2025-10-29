@@ -358,6 +358,9 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
             transformValue->toTransformDataGroup(element, &dummy);
             STARFISH_ASSERT(dummy.transforms() != nullptr);
             return new AnimatedValue(dummy.transforms());
+        } else if (property.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AnimateMotionValueKind) {
+            return new AnimatedValue(property.animateMotion());
         } else {
             return AnimatedValue::createAnimatedValueFromLength(property);
         }
@@ -479,6 +482,12 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromFilter(
         }
     }
     return Optional<AnimatedValue*>();
+}
+
+Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromAnimateMotion(
+    const CSSStyleValuePair& property)
+{
+    return new AnimatedValue(property.animateMotion());
 }
 
 void AnimatedValue::changeToFixedIfNeeded(Length curFontSize,

@@ -54,10 +54,10 @@ bool SVGAnimationApplier::apply()
         return false;
     }
 
+    bool hasAppliedAnimation = false;
     AnimationKeyframes* currentKeyFrames = maybekeyFrames.value();
     AnimationKeyframe* fromAnimationKeyframe =
         currentKeyFrames->animationKeyframeList()[0];
-    bool hasAppliedAnimation = false;
     for (size_t propertyIndex = 0;
          propertyIndex < fromAnimationKeyframe->propertySize();
          propertyIndex++) {
@@ -190,9 +190,12 @@ bool SVGAnimationApplier::applyProperty(
     init.originAnimationElement = m_originAnimationElement;
     init.animatedValues = values;
 
-    AtomicString attr = AtomicString::createAtomicString(
-        m_originAnimationElement->starfish(),
-        m_originAnimationElement->attributeNameAsString().value());
+    AtomicString attr;
+    if (!m_originAnimationElement->isSVGAnimateMotionElement()) {
+        attr = AtomicString::createAtomicString(
+            m_originAnimationElement->starfish(),
+            m_originAnimationElement->attributeNameAsString().value());
+    }
 
     ActiveAnimationTask* task = nullptr;
     // Create ActiveAnimationTask based on the type of property.

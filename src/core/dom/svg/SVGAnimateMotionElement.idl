@@ -1,0 +1,4 @@
+// https://svgwg.org/specs/animations/#InterfaceSVGAnimateMotionElement
+// Object-oriented access to the attributes of the animateMotion element via the SVG DOM is not available.
+[Exposed=Window]
+interface SVGAnimateMotionElement : SVGAnimationElement { };

@@ -70,6 +70,7 @@ public:
     virtual Unit::Rect fillBoundingRect() override;
     virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) override;
     virtual Unit::Rect boundingRect() override;
+    virtual GCAtomicVector<Unit::FloatPoint> pointList() override;
 
 private:
     void notifyBoundingRectDirty()

@@ -1818,7 +1818,6 @@ RenderResult WebView::rendering(bool force)
             auto& transitions =
                 m_activeAnimationExecutor[i]->activeTransitions();
             for (auto task : transitions) {
-                task->initializeStartTimeIfNeeded(tick);
                 needsContinuousRendering = true;
                 if (task->targetElement()->isPseudoElement() == true) {
                     // we should give damage on parent element
@@ -1837,7 +1836,6 @@ RenderResult WebView::rendering(bool force)
             for (auto& animation : animations) {
                 size_t idx = animation.first->index();
                 for (auto task : animation.second) {
-                    task->initializeStartTimeIfNeeded(tick);
                     if (task->targetElement()->isPseudoElement() == true) {
                         // we should give damage on parent element
                         // because style of pseudo element is computed by

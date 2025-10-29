@@ -682,10 +682,13 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_keySplines =
         QualifiedName(AtomicString::createAtomicString(starfish, "keysplines"));
     m_dur = QualifiedName(AtomicString::createAtomicString(starfish, "dur"));
+    m_begin =
+        QualifiedName(AtomicString::createAtomicString(starfish, "begin"));
     m_from = QualifiedName(AtomicString::createAtomicString(starfish, "from"));
     m_to = QualifiedName(AtomicString::createAtomicString(starfish, "to"));
     m_values =
         QualifiedName(AtomicString::createAtomicString(starfish, "values"));
+    m_path = QualifiedName(AtomicString::createAtomicString(starfish, "path"));
 
     m_textAnchor = QualifiedName(
         AtomicString::createAtomicString(starfish, "text-anchor"));

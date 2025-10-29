@@ -66,6 +66,8 @@ public:
     LayoutLocation resolveStylePosition(const LayoutSize& viewport);
     LayoutSize resolveStyleSize(const LayoutSize& viewport);
 
+    Optional<Unit::FloatPoint> motionTransformedPoint();
+
     // util function for FrameSVGBox and FrameSVGSVGBox
     static LayoutLocation resolveStylePosition(FrameBox* box,
                                                const LayoutSize& viewport);
@@ -104,6 +106,8 @@ public:
     {
         return nullptr;
     }
+
+    Optional<Path*> motionTransformedPath();
 
     virtual LayoutRect boundingRect();
 

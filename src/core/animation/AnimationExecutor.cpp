@@ -472,7 +472,8 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
             task->setIsForward(
                 activeElementAnimation->isForwardDirection(task));
 
-            if (task->fraction(context.m_tick) >= 1) {
+            if (task->didReachedToEnd()) {
+                task->clearDidReachedToEnd();
                 if (std::isinf(iterationCount)) {
                     float f = task->iterationStart() == 1 ? 0 : 1;
                     task->setIterationStart(f);
@@ -568,8 +569,11 @@ void AnimationExecutor::checkActiveAnimationsState(ExecutionContext& context)
                     // if already in fill-mode, we should not fire end event
                     if (task->isInForwardsFillMode()) {
                         needsToFireAnimationEndEvent = false;
+                    } else {
+                        task->markInForwardsFillMode();
+                        task->setForwardsFillModeState(context.m_tick);
+                        task->step(context.m_tick, context.m_toStyle);
                     }
-                    task->markInForwardsFillMode();
                 }
 
                 if (needsToFireAnimationEndEvent && isSVGAnimation) {

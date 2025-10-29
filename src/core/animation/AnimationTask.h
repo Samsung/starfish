@@ -153,6 +153,26 @@ public:
         m_isInForwardsFillMode = false;
     }
 
+    bool didReachedToEnd()
+    {
+        return m_didReachedToEnd;
+    }
+
+    void clearDidReachedToEnd()
+    {
+        m_didReachedToEnd = false;
+    }
+
+    void setForwardsFillModeState(uint64_t tick)
+    {
+        m_startTimeMs = tick - m_durationMs;
+        if (m_isForward) {
+            m_frameIdx = m_frameSize - 2;
+        } else {
+            m_frameIdx = 0;
+        }
+    }
+
     void fireTransitionStartEvent();
     void fireTransitionEndEvent();
     void fireTransitionCancelEvent();
@@ -165,13 +185,6 @@ public:
     uint64_t duration()
     {
         return m_durationMs;
-    }
-
-    void initializeStartTimeIfNeeded(uint64_t d)
-    {
-        if (m_startTimeMs == 0) {
-            m_startTimeMs = d;
-        }
     }
 
     void setStartTime(uint64_t t)
@@ -317,6 +330,7 @@ protected:
     bool m_isForward;
     bool m_isRunning;
     bool m_isInForwardsFillMode;
+    bool m_didReachedToEnd;
 
     unsigned int m_frameIdx;
     unsigned int m_frameSize;

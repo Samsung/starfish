@@ -45,7 +45,8 @@ class AnimatedValue : public gc {
         TransformData,
         TransformOriginData,
         Visibility,
-        Filter
+        Filter,
+        AnimateMotion
     };
 
 public:
@@ -72,6 +73,9 @@ public:
         const CSSStyleValuePair& property, size_t layer);
 
     static Optional<AnimatedValue*> createAnimatedValueFromFilter(
+        const CSSStyleValuePair& property);
+
+    static Optional<AnimatedValue*> createAnimatedValueFromAnimateMotion(
         const CSSStyleValuePair& property);
 
     AnimatedValue()
@@ -148,6 +152,12 @@ public:
         m_type = ValueType::Filter;
     }
 
+    AnimatedValue(GCAtomicVector<Unit::FloatPoint>* v)
+    {
+        m_data.m_animateMotion = v;
+        m_type = ValueType::AnimateMotion;
+    }
+
     bool isColor() const
     {
         return m_type == ValueType::Color;
@@ -196,6 +206,11 @@ public:
     bool isFilter() const
     {
         return m_type == ValueType::Filter;
+    }
+
+    bool isAnimateMotion() const
+    {
+        return m_type == ValueType::AnimateMotion;
     }
 
     Unit::Color getColor() const
@@ -270,6 +285,12 @@ public:
         return m_data.m_filterFunction;
     }
 
+    GCAtomicVector<Unit::FloatPoint>* getAnimateMotionValue() const
+    {
+        STARFISH_ASSERT(m_type == ValueType::AnimateMotion);
+        return m_data.m_animateMotion;
+    }
+
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutUnit viewportWidth,
                                LayoutUnit viewportHeight,
@@ -314,6 +335,7 @@ protected:
         StyleTransformOrigin* m_transformOriginData;
         VisibilityValue m_visibilityValue;
         FilterFunction* m_filterFunction;
+        GCAtomicVector<Unit::FloatPoint>* m_animateMotion;
         ValueData()
             : m_int(0)
         {

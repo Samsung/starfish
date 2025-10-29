@@ -894,7 +894,7 @@ class CSSFilterFunction;
     F(Bottom, bottom)   \
     F(Left, left)
 
-class CSSTransformFunction {
+class CSSTransformFunction : public gc {
 public:
     enum Kind {
         None,
@@ -1187,6 +1187,9 @@ public:
 
         // mix-blend-mode
         BlendModeValueKind,
+
+        // AnimateMotion
+        AnimateMotionValueKind
     };
 
     enum class TransformUnit {
@@ -1877,6 +1880,12 @@ public:
         return m_value.m_strokeLineJoin;
     }
 
+    GCAtomicVector<Unit::FloatPoint>* animateMotion() const
+    {
+        STARFISH_ASSERT(m_valueKind == AnimateMotionValueKind);
+        return m_value.m_animateMotion;
+    }
+
     bool valueEquals(const CSSStyleValuePair& src) const;
     bool operator==(const CSSStyleValuePair& src) const;
     bool operator!=(const CSSStyleValuePair& src) const
@@ -1970,6 +1979,7 @@ public:
         MaskTypeValue m_maskType;
         ::Starfish::StrokeLineCap m_strokeLineCap;
         ::Starfish::StrokeLineJoin m_strokeLineJoin;
+        GCAtomicVector<Unit::FloatPoint>* m_animateMotion;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2323,6 +2333,11 @@ public:
             : m_maskType(v)
         {
         }
+
+        ValueData(GCAtomicVector<Unit::FloatPoint>* v)
+            : m_animateMotion(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2590,6 +2605,12 @@ public:
     {
         m_valueKind = StrokeLineJoinValueKind;
         m_value.m_strokeLineJoin = c;
+    }
+
+    void setAnimateMotionValue(GCAtomicVector<Unit::FloatPoint>* c)
+    {
+        m_valueKind = AnimateMotionValueKind;
+        m_value.m_animateMotion = c;
     }
 
     bool updateValueForAttributeBasic(Document* document,

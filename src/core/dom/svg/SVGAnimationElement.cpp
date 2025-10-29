@@ -147,6 +147,18 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
             if (!m_dur.hasValue() || m_dur.value() != dur) {
                 m_dur = dur;
             }
+        } else {
+            m_dur.reset();
+        }
+    }
+    if (ss->m_begin == name) {
+        CSSTime begin;
+        if (parseDur(value, begin)) {
+            if (!m_begin.hasValue() || m_begin.value() != begin) {
+                m_begin = begin;
+            }
+        } else {
+            m_begin.reset();
         }
     } else if (ss->m_fill == name) {
         SVGAnimationFill fill;
@@ -154,6 +166,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
             if (!m_fill.hasValue() || m_fill.value() != fill) {
                 m_fill = fill;
             }
+        } else {
+            m_fill.reset();
         }
     } else if (ss->m_repeatCount == name) {
         float repeatCount;
@@ -162,6 +176,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
                 m_repeatCount.value() != repeatCount) {
                 m_repeatCount = repeatCount;
             }
+        } else {
+            m_repeatCount.reset();
         }
     } else if (ss->m_calcMode == name) {
         SVGAnimationCalcMode calcMode;
@@ -169,6 +185,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
             if (!m_calcMode.hasValue() || m_calcMode.value() != calcMode) {
                 m_calcMode = calcMode;
             }
+        } else {
+            m_calcMode.reset();
         }
     } else if (ss->m_keySplines == name) {
         GCVector<TimingFunction*> keySplines;
@@ -183,6 +201,8 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
                     })) {
                 m_keySplines = std::move(keySplines);
             }
+        } else {
+            m_keySplines.reset();
         }
     } else if (name == ss->m_onbegin) {
         setAttributeEventListener(ss->m_beginEvent, value, this);
@@ -267,6 +287,11 @@ void SVGAnimationElement::beginElementAtInternal(
         // Fire beginEvent but never fire endEvent.
         STARFISH_UNIMPLEMENTED("Handle invalid duration");
         return;
+    }
+
+    // set begin
+    if (m_begin.hasValue()) {
+        animationKeyframes->setDelay(m_begin.value());
     }
 
     // set iteration count. The default value is 1.0.

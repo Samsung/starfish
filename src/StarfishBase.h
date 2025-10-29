@@ -590,26 +590,26 @@ template <typename T>
 struct Optional : public gc {
 public:
     Optional()
-        : m_hasValue(false)
-        , m_value()
+        : m_value()
+        , m_hasValue(false)
     {
     }
 
     Optional(T value)
-        : m_hasValue(true)
-        , m_value(value)
+        : m_value(value)
+        , m_hasValue(true)
     {
     }
 
     Optional(std::nullptr_t value)
-        : m_hasValue(false)
-        , m_value()
+        : m_value()
+        , m_hasValue(false)
     {
     }
 
     Optional(NullOptionType)
-        : m_hasValue(false)
-        , m_value()
+        : m_value()
+        , m_hasValue(false)
     {
     }
 
@@ -695,8 +695,8 @@ public:
     }
 
 protected:
-    bool m_hasValue;
     T m_value;
+    bool m_hasValue;
 };
 
 template <typename T>

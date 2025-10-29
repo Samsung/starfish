@@ -127,6 +127,11 @@ void PathMock::append(Path* path)
 {
 }
 
+GCAtomicVector<Unit::FloatPoint> PathMock::pointList()
+{
+    return GCAtomicVector<Unit::FloatPoint>();
+}
+
 Path* Path::create()
 {
     return new PathMock();
