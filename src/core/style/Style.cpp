@@ -334,7 +334,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
     STARFISH_ASSERT(style != nullptr);
 
     for (unsigned c = 0; c < this->size(); c++) {
-        CSSTransformFunction f = this->at(c);
+        CSSTransformFunction& f = this->at(c);
         size_t valueSize = f.values()->size();
         float* dValues = ALLOCA(valueSize * sizeof(float), float);
         ValueList convertedValueList(*f.values());
@@ -1432,6 +1432,9 @@ void* CSSStyleValuePair::toPointerValueIfPossible() const
     case ValueListKind:
         ptr = m_value.m_multiValue;
         break;
+    case AnimateMotionValueKind:
+        ptr = m_value.m_animateMotion;
+        break;
     default:
         break;
     }
@@ -2482,6 +2485,8 @@ String* CSSStyleValuePair::toString() const
         return strokeLineCapToString(strokeLineCap());
     case CSSStyleValuePair::ValueKind::StrokeLineJoinValueKind:
         return strokeLineJoinToString(strokeLineJoin());
+    case CSSStyleValuePair::ValueKind::AnimateMotionValueKind:
+        break;
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

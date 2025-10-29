@@ -101,6 +101,13 @@ LayoutLocation FrameSVGBox::resolveStylePosition(const LayoutSize& viewport)
 {
     STARFISH_ASSERT(node()->asSVGElement()->needsGeometryAttributes());
     LayoutLocation result;
+
+    auto mt = motionTransformedPoint();
+    if (UNLIKELY(mt)) {
+        result.setX(mt.value().x());
+        result.setY(mt.value().y());
+    }
+
     auto styleX = style()->x();
     if (styleX.isSpecified()) {
         result.setX(styleX.specifiedValue(viewport.width(), this));
@@ -110,6 +117,7 @@ LayoutLocation FrameSVGBox::resolveStylePosition(const LayoutSize& viewport)
     if (styleY.isSpecified()) {
         result.setY(styleY.specifiedValue(viewport.height(), this));
     }
+
     return result;
 }
 
@@ -132,6 +140,19 @@ LayoutSize FrameSVGBox::resolveStyleSize(const LayoutSize& viewport)
     }
     result.setHeight(height);
     return result;
+}
+
+Optional<Unit::FloatPoint> FrameSVGBox::motionTransformedPoint()
+{
+    auto dx = node()->asSVGElement()->animatedLengthAttribute(
+        node()->starfish()->staticStrings()->m_dx.localNameAtomic());
+    auto dy = node()->asSVGElement()->animatedLengthAttribute(
+        node()->starfish()->staticStrings()->m_dy.localNameAtomic());
+
+    if (dx && dy) {
+        return Unit::FloatPoint(dx.value().fixed(), dy.value().fixed());
+    }
+    return NullOption;
 }
 
 float FrameSVGBox::computeSVGLength(SVGLength* length, float fullValue,
@@ -365,7 +386,7 @@ void FrameSVGBox::layout(SVGLayoutContext& ctx, SkMatrix matrix)
         ctx.normalizedDiagonalViewportLength, this));
 
     if (node()->asSVGElement()->isShapeElement()) {
-        auto p = path();
+        auto p = motionTransformedPath();
         if (p) {
             Unit::Rect boundingRect = p->strokeBoundingRect({
                 strokeWidth,
@@ -599,6 +620,18 @@ void FrameSVGBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
         }
         f = f->next();
     }
+}
+
+Optional<Path*> FrameSVGBox::motionTransformedPath()
+{
+    auto p = path();
+    if (p) {
+        auto mt = motionTransformedPoint();
+        if (UNLIKELY(mt)) {
+            p->translate(mt.value().x(), mt.value().y());
+        }
+    }
+    return p;
 }
 
 LayoutRect FrameSVGBox::boundingRect()
@@ -1208,7 +1241,7 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
     Optional<CanvasFillStrokeSource*> fillInfo;
     Optional<CanvasFillStrokeSource*> strokeInfo;
 
-    auto path = this->path();
+    auto path = this->motionTransformedPath();
     if (path) {
         auto strokeWidth = cs->strokeWidth().specifiedValue(
             normalizedDiagonalViewportLength(), this);

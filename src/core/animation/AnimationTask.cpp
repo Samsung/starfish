@@ -30,6 +30,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGFilterPrimitiveStandardAttributes.h"
+#include "core/dom/svg/SVGAnimateMotionElement.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
@@ -145,6 +146,7 @@ void ActiveAnimationTask::initialize(const ActiveAnimationTaskInit& init)
     m_isForward = true;
     m_isRunning = true;
     m_isInForwardsFillMode = false;
+    m_didReachedToEnd = false;
     m_frameIdx = 0;
 
     if (init.animationType == AnimationType::Transition) {
@@ -176,33 +178,49 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
-    double f = fraction(currentTickCount);
+    if (!m_startTimeMs) {
+        m_startTimeMs = currentTickCount;
+    }
 
     if (isTransition()) {
+        double f = fraction(currentTickCount);
         execute(computeProgress(f), style);
     } else {
-        if ((m_isInDelayedTime && f == 0) || !m_isEveryAnimiatedValueResolved) {
+        if (!m_isEveryAnimiatedValueResolved) {
             return;
         }
 
+        if (m_isInDelayedTime) {
+            if (m_startTimeMs + m_delayMs > currentTickCount) {
+                return;
+            } else {
+                m_startTimeMs += m_delayMs;
+                m_delayMs = 0;
+                m_isInDelayedTime = false;
+            }
+        }
+
+        double f = fraction(currentTickCount);
         execute(computeProgress(f), style);
+
+        if (m_isInForwardsFillMode) {
+            return;
+        }
 
         auto frameIdxBefore = m_frameIdx;
         if (f >= 1.0 && m_isForward) {
             m_frameIdx++;
             if (m_frameIdx == m_frameSize - 1) {
                 m_frameIdx = 0;
-                m_startTimeMs = 0;
-                m_delayMs = 0;
-                m_isInDelayedTime = false;
+                m_startTimeMs = m_startTimeMs + m_durationMs;
+                m_didReachedToEnd = true;
             }
         } else if (f <= 0.0 && !m_isForward) {
             m_frameIdx--;
             if (m_frameIdx == 0) {
                 m_frameIdx = m_frameSize - 1;
-                m_startTimeMs = 0;
-                m_delayMs = 0;
-                m_isInDelayedTime = false;
+                m_startTimeMs = m_startTimeMs + m_durationMs;
+                m_didReachedToEnd = true;
             }
         }
         if (frameIdxBefore != m_frameIdx) {
@@ -235,6 +253,7 @@ double ActiveAnimationTask::fraction(uint64_t tickCount) const
     if (tickCount < (m_startTimeMs + m_delayMs)) {
         return 0;
     }
+
     uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
     double result = timeDiff / static_cast<double>(m_durationMs);
 
@@ -1710,8 +1729,8 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
 {
     auto a1 = currentAnimatedFromValue();
     auto a2 = currentAnimatedToValue();
-    Optional<StyleTransformData*> transformValue;
     if (a1->isTransformData() && a2->isTransformData()) {
+        Optional<StyleTransformData*> transformValue;
         auto t1 = a1->getTransformData()->at(0);
         auto t2 = a2->getTransformData()->at(0);
         STARFISH_ASSERT(t1.type() == t2.type());
@@ -1759,16 +1778,33 @@ void ActiveSVGLengthAnimationTask::execute(double progress)
         default:
             STARFISH_ASSERT_NOT_REACHED();
         }
-    }
-    if (transformValue) {
+
         m_targetElement->asSVGElement()->setAnimatedAttribute(
             m_attributeName, NullOption, transformValue, this);
-    } else {
-        Length newLength =
-            computeLengthAnimationValue(a1, a2, progress, m_isForward);
+        return;
+    } else if (a1->isAnimateMotion()) {
+        auto pt = SVGAnimateMotionElement::computePoint(
+            *a1->getAnimateMotionValue(), progress);
+        // NOTE use dx, dy to store point
+        // it is not orientated from spec
         m_targetElement->asSVGElement()->setAnimatedAttribute(
-            m_attributeName, newLength, NullOption, this);
+            m_targetElement->starfish()
+                ->staticStrings()
+                ->m_dx.localNameAtomic(),
+            Length(Length::Fixed, pt.x()), NullOption, this);
+        m_targetElement->asSVGElement()->setAnimatedAttribute(
+            m_targetElement->starfish()
+                ->staticStrings()
+                ->m_dy.localNameAtomic(),
+            Length(Length::Fixed, pt.y()), NullOption, this);
+        m_targetElement->setNeedsLayout();
+        return;
     }
+
+    Length newLength =
+        computeLengthAnimationValue(a1, a2, progress, m_isForward);
+    m_targetElement->asSVGElement()->setAnimatedAttribute(
+        m_attributeName, newLength, NullOption, this);
 }
 
 void ActiveSVGLengthAnimationTask::execute(double progress,

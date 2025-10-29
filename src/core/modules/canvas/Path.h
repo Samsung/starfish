@@ -98,6 +98,8 @@ public:
     virtual Unit::Rect strokeBoundingRect(const StrokeStyle& style) = 0;
     virtual Unit::Rect boundingRect() = 0;
 
+    virtual GCAtomicVector<Unit::FloatPoint> pointList() = 0;
+
     bool needNewSubPath()
     {
         return m_needNewSubPath;

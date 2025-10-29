@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2025-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,59 +17,37 @@
  *  USA
  */
 
-#ifndef __StarfishSVGPathElement__
-#define __StarfishSVGPathElement__
+#ifndef __StarfishSVGSVGAnimateMotionElement__
+#define __StarfishSVGSVGAnimateMotionElement__
 
-#include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGAnimationElement.h"
 
 namespace Starfish {
 
 class Path;
 
-class SVGPathElement : public SVGElement {
+class SVGAnimateMotionElement : public SVGAnimationElement {
 public:
-    SVGPathElement(Document* document, const QualifiedName& qname);
-
-    Optional<Path*> path()
-    {
-        return m_path;
-    }
+    SVGAnimateMotionElement(Document* document, const QualifiedName& qname);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGPathElement() const override;
+    virtual bool isSVGAnimateMotionElement() const override;
 
-    virtual bool isRenderableElement() override
-    {
-        return true;
-    }
-
-    virtual bool isShapeElement() override
-    {
-        return true;
-    }
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void didComputedStyleChanged(
-        ComputedStyle* oldStyle, ComputedStyle* newStyle,
-        Optional<StyleResolveContext*> ctx) override;
+    virtual void beginElementAt(float offset) override;
 
-    virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues,
-        Optional<const MutablePropertyValueList*> cssCustomValues) override;
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-    static void parsePath(String* d, Path* path);
+    static Unit::FloatPoint computePoint(
+        const GCAtomicVector<Unit::FloatPoint>& pl, float progress);
 
 private:
-    virtual void computeAttributeChangeDamage(AtomicString attrName) override;
-
-    Path* m_path;
+    GCAtomicVector<Unit::FloatPoint> m_pointList;
 };
 } // namespace Starfish
 

@@ -22,6 +22,7 @@
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGAnimateElement.h"
 #include "core/dom/svg/SVGAnimateTransformElement.h"
+#include "core/dom/svg/SVGAnimateMotionElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGRectElement.h"
 #include "core/dom/svg/SVGPathElement.h"
@@ -194,6 +195,10 @@ Element* SVGDocument::createSVGElement(Document* document,
                str->m_svgfedisplacementmapTagName == localName) {
         return new SVGFEDisplacementMapElement(
             document, str->m_svgfeDisplacementMapTagName);
+    } else if (str->m_svganimateMotionTagName == localName ||
+               str->m_svganimatemotionTagName == localName) {
+        return new SVGAnimateMotionElement(document,
+                                           str->m_svganimateMotionTagName);
     } else {
         return new SVGElement(document, qname);
     }

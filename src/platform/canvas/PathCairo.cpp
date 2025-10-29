@@ -508,5 +508,45 @@ Unit::Rect PathCairo::boundingRect()
     return Unit::Rect(x_min, y_min, x_max - x_min, y_max - y_min);
 }
 
+GCAtomicVector<Unit::FloatPoint> PathCairo::pointList()
+{
+    auto path = cairo_copy_path_flat(m_cairoContext);
+    GCAtomicVector<Unit::FloatPoint> points;
+
+    cairo_path_data_t* data;
+    int i;
+    double lastX = 0, lastY = 0;
+    double lastMoveX = 0, lastMoveY = 0;
+    for (i = 0; i < path->num_data; i += path->data[i].header.length) {
+        data = &path->data[i];
+        switch (data->header.type) {
+        case CAIRO_PATH_MOVE_TO:
+            lastMoveX = data[1].point.x;
+            lastMoveY = data[1].point.y;
+            // to remove trailing move to
+            if (i + path->data[i].header.length == path->num_data) {
+                break;
+            }
+            points.push_back(
+                Unit::FloatPoint(data[1].point.x, data[1].point.y));
+            break;
+        case CAIRO_PATH_LINE_TO:
+            points.push_back(
+                Unit::FloatPoint(data[1].point.x, data[1].point.y));
+            break;
+        case CAIRO_PATH_CLOSE_PATH:
+            points.push_back(Unit::FloatPoint(lastMoveX, lastMoveY));
+            break;
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+            break;
+        }
+    }
+
+    cairo_path_destroy(path);
+
+    return points;
+}
+
 } // namespace Starfish
 #endif

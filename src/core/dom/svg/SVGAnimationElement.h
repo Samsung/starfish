@@ -61,6 +61,12 @@ public:
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_href));
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(SVGAnimationElement, m_attributeNameAsString));
+        for (size_t i = 0; i < sizeof(m_from) / sizeof(size_t); i++) {
+            GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_from) + i);
+            GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_to) + i);
+        }
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -140,13 +146,14 @@ protected:
         return false;
     }
 
-    bool parseDur(const String* durValue, CSSTime& duration);
-    bool parseFill(const String* fillValue, SVGAnimationFill& fill);
-    bool parseRepeatCount(const String* repeatCountValue, float& repeatCount);
-    bool parseCalcMode(const String* caclModeValue,
-                       SVGAnimationCalcMode& calcMode);
-    bool parseKeySplines(const String* keySplinesValue,
-                         GCVector<TimingFunction*>& keySplines);
+    static bool parseDur(const String* durValue, CSSTime& duration);
+    static bool parseFill(const String* fillValue, SVGAnimationFill& fill);
+    static bool parseRepeatCount(const String* repeatCountValue,
+                                 float& repeatCount);
+    static bool parseCalcMode(const String* caclModeValue,
+                              SVGAnimationCalcMode& calcMode);
+    static bool parseKeySplines(const String* keySplinesValue,
+                                GCVector<TimingFunction*>& keySplines);
 
     void updateValueFamilyAttribute();
     void updateFromTo(String* value, Optional<CSSStyleValuePair>& output);
@@ -171,6 +178,7 @@ protected:
     Optional<CSSStyleValuePair> m_to;
     Optional<GCVector<CSSStyleValuePair>> m_values;
     Optional<CSSTime> m_dur;
+    Optional<CSSTime> m_begin;
     Optional<SVGAnimationFill> m_fill;
     Optional<float> m_repeatCount;
     Optional<SVGAnimationCalcMode> m_calcMode;

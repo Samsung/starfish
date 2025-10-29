@@ -374,6 +374,15 @@ void SVGElement::styleForPresentationAttribute(
             if (!task->isInDelayedTime()) {
                 auto tick =
                     document()->browsingContext()->styleResolveStartTick();
+                ComputedStyle dummy(document()->style());
+                task->step(tick, &dummy);
+                if (task->didReachedToEnd()) {
+                    if (!std::isinf(task->iterationCount()) &&
+                        task->iterationStart() <= 1 &&
+                        task->fillMode() == AnimationFillModeValue::Forwards) {
+                        task->setForwardsFillModeState(tick);
+                    }
+                }
                 double f = task->fraction(tick);
                 task->execute(task->computeProgress(f));
             }
