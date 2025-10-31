@@ -523,10 +523,6 @@ GCAtomicVector<Unit::FloatPoint> PathCairo::pointList()
         case CAIRO_PATH_MOVE_TO:
             lastMoveX = data[1].point.x;
             lastMoveY = data[1].point.y;
-            // to remove trailing move to
-            if (i + path->data[i].header.length == path->num_data) {
-                break;
-            }
             points.push_back(
                 Unit::FloatPoint(data[1].point.x, data[1].point.y));
             break;
