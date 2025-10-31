@@ -120,6 +120,7 @@ Unit::FloatPoint SVGAnimateMotionElement::computePoint(
 
     float targetDistance = totalDistance * progress;
     float distance = 0;
+    last = pl.size() ? *pl.begin() : Unit::FloatPoint();
     for (size_t i = 1; i < pl.size(); i++) {
         float currentDistance =
             std::sqrt((last.x() - pl[i].x()) * (last.x() - pl[i].x()) +

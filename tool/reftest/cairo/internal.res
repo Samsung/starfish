@@ -668,6 +668,7 @@ test/cairo/internal-test/svg/animation/animation_onend.html
 test/cairo/internal-test/svg/animation/animation_onrepeat.html
 test/cairo/internal-test/svg/animation/animation_svg_transform_rotate_screenshot.html
 test/cairo/internal-test/svg/animation/animation_svg_transform_rotate.html
+test/cairo/internal-test/svg/animation/animateMotion.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/svg_03.html
