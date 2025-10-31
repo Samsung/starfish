@@ -47,7 +47,6 @@ public:
         const GCAtomicVector<Unit::FloatPoint>& pl, float progress);
 
 private:
-    GCAtomicVector<Unit::FloatPoint> m_pointList;
 };
 } // namespace Starfish
 

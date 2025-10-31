@@ -192,6 +192,7 @@ namespace Starfish {
     F(mask)                            \
     F(tspan)                           \
     F(marker)                          \
+    F(mpath)                           \
     F(symbol)                          \
     F(filter)                          \
     F(feBlend)                         \

@@ -241,6 +241,7 @@ public:
     Optional<SVGMaskElement*> maskElement();
     Optional<SVGFilterElement*> filterElement();
     SVGElement* getSVGElementById(const AtomicString& id);
+    Optional<SVGElement*> findHrefTarget(String* href);
 
     virtual void attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout);
 

@@ -75,32 +75,12 @@ Optional<SVGElement*> SVGUseElement::updateShadowTree()
     Optional<Node*> oldClonedTarget = shadowRoot->firstChild();
     Optional<Node*> newClonedTarget;
 
-    // In case that SVG element is loaded as an image resource through
-    // MockHTMLIFrameElement. At this case, we can find baseURI at its
-    // referrerURL.
-    if (document()->baseURL()->isDataURL()) {
-        targetElementURL = new ResourceURL(m_href, document()->referrer());
-    } else {
-        if (m_href->startsWith("#")) {
-            targetElementURL = document()->baseURL()->setHash(m_href);
-        } else {
-            targetElementURL = new ResourceURL(m_href, document()->baseURI());
-        }
-    }
-
-    if (targetElementURL) {
-        String* id = targetElementURL->getFragmentIdValue();
-        if (!id->isEmpty()) {
-            Element* element = document()->getElementById(id);
-            if (element && element->isSVGElement()) {
-                if (!element->contains(this)) {
-                    auto newClonedElement = element->makeShadowClone();
-                    if (newClonedElement && newClonedElement->isSVGElement()) {
-                        newTarget = element->asSVGElement();
-                        newClonedTarget = newClonedElement;
-                    }
-                }
-            }
+    auto targetElement = findHrefTarget(m_href);
+    if (targetElement && !targetElement->contains(this)) {
+        auto newClonedElement = targetElement->makeShadowClone();
+        if (newClonedElement && newClonedElement->isSVGElement()) {
+            newTarget = targetElement->asSVGElement();
+            newClonedTarget = newClonedElement;
         }
     }
 

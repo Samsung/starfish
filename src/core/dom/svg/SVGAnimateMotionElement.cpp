@@ -29,6 +29,7 @@
 
 #include "core/dom/svg/SVGAnimateElement.h"
 #include "core/dom/svg/SVGPathElement.h"
+#include "core/dom/svg/SVGMPathElement.h"
 
 #include "core/modules/canvas/Path.h"
 
@@ -41,7 +42,6 @@ void* SVGAnimateMotionElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGAnimateMotionElement)] = { 0 };
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimateMotionElement, m_pointList));
         SVGAnimateElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGAnimateMotionElement));
 
@@ -64,24 +64,40 @@ void SVGAnimateMotionElement::didAttributeChanged(QualifiedName name,
 {
     SVGAnimationElement::didAttributeChanged(name, old, value, attributeCreated,
                                              attributeRemoved);
-
-    StaticStrings* ss = starfish()->staticStrings();
-
-    if (name == ss->m_path) {
-        auto path = Path::create();
-        SVGPathElement::parsePath(value, path);
-        m_pointList = path->pointList();
-    }
 }
 
 void SVGAnimateMotionElement::beginElementAt(float offset)
 {
-    if (!m_pointList.size()) {
-        return;
+    StaticStrings* ss = starfish()->staticStrings();
+
+    String* value = String::emptyString;
+
+    if (firstElementChild()) {
+        if (firstElementChild()->isSVGMPathElement()) {
+            SVGMPathElement* mpath = firstElementChild()->asSVGMPathElement();
+            auto href = mpath->href();
+            if (href) {
+                auto target = findHrefTarget(href.value());
+                if (target && target->isSVGPathElement()) {
+                    value = target->asSVGPathElement()->getAttributeOrEmpty(
+                        ss->m_d);
+                }
+            }
+        }
     }
 
+    if (value->isEmpty()) {
+        value = getAttributeOrEmpty(ss->m_path);
+    }
+
+    if (value->isEmpty()) {
+        return;
+    }
+    auto path = Path::create();
+    SVGPathElement::parsePath(value, path);
+
     GCVector<CSSStyleValuePair> v;
-    auto vec = new GCAtomicVector<Unit::FloatPoint>(m_pointList);
+    auto vec = new GCAtomicVector<Unit::FloatPoint>(path->pointList());
     CSSStyleValuePair p;
     p.setAnimateMotionValue(vec);
     v.push_back(p);

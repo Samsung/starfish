@@ -1,0 +1,8 @@
+// https://svgwg.org/specs/animations/#InterfaceSVGAnimateMotionElement
+// TODO implement SVGURIReference
+
+[Exposed=Window]
+interface SVGMPathElement : SVGElement {
+};
+
+// SVGMPathElement includes SVGURIReference;
