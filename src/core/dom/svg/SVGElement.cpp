@@ -604,6 +604,34 @@ SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
     return descendant->asSVGElement();
 }
 
+Optional<SVGElement*> SVGElement::findHrefTarget(String* href)
+{
+    Optional<ResourceURL*> targetElementURL;
+    // In case that SVG element is loaded as an image resource through
+    // MockHTMLIFrameElement. At this case, we can find baseURI at its
+    // referrerURL.
+    if (document()->baseURL()->isDataURL()) {
+        targetElementURL = new ResourceURL(href, document()->referrer());
+    } else {
+        if (href->startsWith("#")) {
+            targetElementURL = document()->baseURL()->setHash(href);
+        } else {
+            targetElementURL = new ResourceURL(href, document()->baseURI());
+        }
+    }
+
+    if (targetElementURL) {
+        String* id = targetElementURL->getFragmentIdValue();
+        if (!id->isEmpty()) {
+            Element* element = document()->getElementById(id);
+            if (element && element->isSVGElement()) {
+                return element->asSVGElement();
+            }
+        }
+    }
+    return nullptr;
+}
+
 void SVGElement::attributeOfPaintServerLikeUpdated(bool alsoNeedsLayout)
 {
     STARFISH_ASSERT(isPaintServerLikeElement());

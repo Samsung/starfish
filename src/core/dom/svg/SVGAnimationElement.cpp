@@ -226,23 +226,7 @@ Optional<Element*> SVGAnimationElement::targetElement()
 {
     Optional<Element*> targetElement;
     if (m_href) {
-        Optional<ResourceURL*> targetElementURL;
-        if (m_href->startsWith("#")) {
-            targetElementURL = document()->baseURL()->setHash(m_href.value());
-        } else {
-            targetElementURL =
-                new ResourceURL(m_href.value(), document()->baseURI());
-        }
-
-        if (targetElementURL) {
-            String* id = targetElementURL->getFragmentIdValue();
-            if (!id->isEmpty()) {
-                Element* element = document()->getElementById(id);
-                if (element && element->isSVGElement()) {
-                    targetElement = element;
-                }
-            }
-        }
+        targetElement = findHrefTarget(m_href.value()).valueOr(nullptr);
     } else {
         targetElement = parentElement();
     }

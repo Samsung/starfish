@@ -17,36 +17,43 @@
  *  USA
  */
 
-#ifndef __StarfishSVGSVGAnimateMotionElement__
-#define __StarfishSVGSVGAnimateMotionElement__
+#ifndef __StarfishSVGMPathElement__
+#define __StarfishSVGMPathElement__
 
-#include "core/dom/svg/SVGAnimationElement.h"
+#include "core/dom/svg/SVGElement.h"
 
 namespace Starfish {
 
 class Path;
 
-class SVGAnimateMotionElement : public SVGAnimationElement {
+class SVGMPathElement : public SVGElement {
 public:
-    SVGAnimateMotionElement(Document* document, const QualifiedName& qname);
+    SVGMPathElement(Document* document, const QualifiedName& qname);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGAnimateMotionElement() const override;
+    virtual bool isSVGMPathElement() const override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMPathElement, m_href));
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+    Optional<String*> href() const
+    {
+        return m_href;
+    }
 
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void beginElementAt(float offset) override;
-
-    static Unit::FloatPoint computePoint(
-        const GCAtomicVector<Unit::FloatPoint>& pl, float progress);
-
 private:
+    Optional<String*> m_href;
 };
 } // namespace Starfish
 

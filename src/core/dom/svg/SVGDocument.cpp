@@ -43,6 +43,7 @@
 #include "core/dom/svg/SVGStopElement.h"
 #include "core/dom/svg/SVGClipPathElement.h"
 #include "core/dom/svg/SVGMaskElement.h"
+#include "core/dom/svg/SVGMPathElement.h"
 #include "core/dom/svg/SVGTSpanElement.h"
 #include "core/dom/svg/SVGMarkerElement.h"
 #include "core/dom/svg/SVGSwitchElement.h"
@@ -199,6 +200,8 @@ Element* SVGDocument::createSVGElement(Document* document,
                str->m_svganimatemotionTagName == localName) {
         return new SVGAnimateMotionElement(document,
                                            str->m_svganimateMotionTagName);
+    } else if (str->m_svgmpathTagName == localName) {
+        return new SVGMPathElement(document, str->m_svgmpathTagName);
     } else {
         return new SVGElement(document, qname);
     }
