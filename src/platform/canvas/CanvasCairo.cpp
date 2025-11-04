@@ -165,9 +165,12 @@ private:
         if (info->type == GradientType::LinearGradient) {
             initializePatternToLinearGradient(info->x1, info->y1, info->x2,
                                               info->y2);
+            applyGradientMatrixInternal(info);
+
         } else if (info->type == GradientType::RadialGradient) {
             initializePatternToRadialGradient(info->x1, info->y1, info->r1,
                                               info->x2, info->y2, info->r2);
+            applyGradientMatrixInternal(info);
         } else {
             STARFISH_UNSUPPORTED("Canvas: unsupported gradient type");
         }
@@ -178,6 +181,20 @@ private:
             const auto& offset = info->colorStops[i]->offset().percent();
             addColorStop(offset, color);
         }
+    }
+
+    void applyGradientMatrixInternal(GradientDrawingInfo* info)
+    {
+        cairo_matrix_t matrix;
+        cairo_matrix_init_identity(&matrix);
+        matrix.xx = info->matrix.getScaleX();
+        matrix.yx = info->matrix.getSkewY();
+        matrix.xy = info->matrix.getSkewX();
+        matrix.yy = info->matrix.getScaleY();
+        matrix.x0 = info->matrix.getTranslateX();
+        matrix.y0 = info->matrix.getTranslateY();
+        cairo_matrix_invert(&matrix);
+        cairo_pattern_set_matrix(m_pattern, &matrix);
     }
 
     void initializePatternToLinearGradient(double x0, double y0, double x1,

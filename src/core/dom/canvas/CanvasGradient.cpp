@@ -56,6 +56,13 @@ CanvasGradient::CanvasGradient(ExecutionContext* executionContext, double x0,
     m_nativeGardient = NativeGradient::create(x0, y0, r0, x1, y1, r1);
 }
 
+CanvasGradient::CanvasGradient(ExecutionContext* executionContext,
+                               GradientDrawingInfo* info)
+    : CanvasGradient(executionContext)
+{
+    m_nativeGardient = NativeGradient::create(info);
+}
+
 ScriptBindingInstance* CanvasGradient::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
