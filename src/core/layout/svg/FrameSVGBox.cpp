@@ -915,61 +915,70 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             isUserSpaceOnUseMode = true;
         }
 
-        double x1 = rect.x();
+        double x1;
         if (gradientElement->x1()->animVal()->unitType() ==
             SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            x1 += gradientElement->x1()->animVal()->valueInSpecifiedUnits() *
-                  rect.width() / 100;
+            x1 =
+                gradientElement->x1()->animVal()->valueInSpecifiedUnits() / 100;
         } else {
-            x1 += gradientElement->x1()->animVal()->value();
+            x1 = gradientElement->x1()->animVal()->value();
         }
 
-        double y1 = rect.y();
+        double y1;
         if (gradientElement->y1()->animVal()->unitType() ==
             SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            y1 += gradientElement->y1()->animVal()->valueInSpecifiedUnits() *
-                  rect.height() / 100;
+            y1 =
+                gradientElement->y1()->animVal()->valueInSpecifiedUnits() / 100;
         } else {
-            y1 += gradientElement->y1()->animVal()->value();
+            y1 = gradientElement->y1()->animVal()->value();
         }
 
-        double x2 = rect.x();
+        double x2;
         if (gradientElement->x2()->animVal()->unitType() ==
             SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            x2 += gradientElement->x2()->animVal()->valueInSpecifiedUnits() *
-                  rect.width() / 100;
+            x2 =
+                gradientElement->x2()->animVal()->valueInSpecifiedUnits() / 100;
         } else {
-            x2 += gradientElement->x2()->animVal()->value();
+            x2 = gradientElement->x2()->animVal()->value();
         }
 
-        double y2 = rect.y();
+        double y2;
         if (gradientElement->y2()->animVal()->unitType() ==
             SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            y2 += gradientElement->y2()->animVal()->valueInSpecifiedUnits() *
-                  rect.height() / 100;
+            y2 =
+                gradientElement->y2()->animVal()->valueInSpecifiedUnits() / 100;
         } else {
-            y2 += gradientElement->y2()->animVal()->value();
+            y2 = gradientElement->y2()->animVal()->value();
         }
 
         SVGTransformList* gradientTransform =
             gradientElement->gradientTransform()->animVal();
         SkMatrix mat = SkMatrix::I();
+        SkMatrix objectBoundingMatrix = SkMatrix::I();
+
+        objectBoundingMatrix.preTranslate(rect.x(), rect.y());
+        objectBoundingMatrix.preScale(rect.width(), rect.height());
+
         for (size_t i = 0; i < gradientTransform->length(); ++i) {
             mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
         }
-
-        double xx1 = x1 * mat[0] + y1 * mat[1] + rect.width() * mat[2];
-        double yy1 = x1 * mat[3] + y1 * mat[4] + rect.height() * mat[5];
-        double xx2 = x2 * mat[0] + y2 * mat[1] + rect.width() * mat[2];
-        double yy2 = x2 * mat[3] + y2 * mat[4] + rect.height() * mat[5];
-
-        gradient = new CanvasGradient(matchingSvg->executionContext(), xx1, yy1,
-                                      xx2, yy2);
+        objectBoundingMatrix.preConcat(mat);
 
         GradientData* gradientData = new LinearGradientData();
         gradientData->colorStopList() = gradientElement->colorStops();
-        gradient->nativeGradient()->setGradientDrawingInfo(
-            gradientData->makeGradientDrawingInfo(rect, this));
+
+        GradientDrawingInfo* gradientDrawinginfo =
+            gradientData->makeGradientDrawingInfo(rect, this);
+
+        gradientDrawinginfo->x1 = x1;
+        gradientDrawinginfo->y1 = y1;
+        gradientDrawinginfo->x2 = x2;
+        gradientDrawinginfo->y2 = y2;
+        gradientDrawinginfo->matrix = objectBoundingMatrix;
+
+        gradient = new CanvasGradient(matchingSvg->executionContext(),
+                                      gradientDrawinginfo);
+        gradient->nativeGradient()->setGradientDrawingInfo(gradientDrawinginfo);
 
         const auto& colorStops = gradientElement->colorStops();
         size_t size = colorStops.size();

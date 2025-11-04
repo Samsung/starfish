@@ -20,6 +20,8 @@
 #ifndef __StarfishGradientData__
 #define __StarfishGradientData__
 
+#include <SkMatrix.h>
+
 #ifdef STARFISH_ENABLE_TEST
 // To enable cache mode in pixel-test, it must be set to 25 * 25.
 #define CACHEABLE_GRADIENT_ITEM_EXTENT (25.0f * 25.0f)
@@ -128,6 +130,7 @@ struct GradientDrawingInfo : public gc {
     float computedAngle;
     float firstRadius;
     float secondRadius;
+    SkMatrix matrix;
     GCVector<ColorStop*> colorStops;
 
     GradientDrawingInfo(GradientType t, const Unit::Rect& rt)
@@ -142,6 +145,7 @@ struct GradientDrawingInfo : public gc {
         , computedAngle(0.0f)
         , firstRadius(0.0f)
         , secondRadius(0.0f)
+        , matrix(SkMatrix::I())
         , colorStops()
         , hash(0)
     {
