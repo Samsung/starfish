@@ -692,9 +692,11 @@ test/cairo/internal-test/svg/svg_linearGradient02.html
 test/cairo/internal-test/svg/svg_linearGradient03.html
 test/cairo/internal-test/svg/svg_linearGradient04.html
 test/cairo/internal-test/svg/svg_linearGradient05.html
+test/cairo/internal-test/svg/svg_linearGradient06.html
 test/cairo/internal-test/svg/svg_radialGradient01.html
 test/cairo/internal-test/svg/svg_radialGradient02.html
 test/cairo/internal-test/svg/svg_radialGradient03.html
+test/cairo/internal-test/svg/svg_radialGradient04.html
 test/cairo/internal-test/svg/svg_mask_01.html
 test/cairo/internal-test/svg/svg_mask_02.html
 test/cairo/internal-test/svg/svg_mask_03.html
