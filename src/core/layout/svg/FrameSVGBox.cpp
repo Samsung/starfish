@@ -998,44 +998,32 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             isUserSpaceOnUseMode = true;
         }
 
-        double cx = rect.x();
+        double cx;
         if (gradientElement->cx()->animVal()->hasSpecificValue()) {
             if (gradientElement->cx()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                cx +=
-                    gradientElement->cx()->animVal()->valueInSpecifiedUnits() *
-                    rect.width() / 100;
+                cx = gradientElement->cx()->animVal()->valueInSpecifiedUnits() /
+                     100;
             } else {
-                if (isUserSpaceOnUseMode) {
-                    cx += gradientElement->cx()->animVal()->value();
-                } else {
-                    cx += gradientElement->cx()->animVal()->value() *
-                          rect.width();
-                }
+                cx = gradientElement->cx()->animVal()->value();
             }
         } else {
             // Default value: 50%
-            cx += 0.5 * rect.width();
+            cx = 0.5;
         }
 
-        double cy = rect.y();
+        double cy;
         if (gradientElement->cy()->animVal()->hasSpecificValue()) {
             if (gradientElement->cy()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                cy +=
-                    gradientElement->cy()->animVal()->valueInSpecifiedUnits() *
-                    rect.height() / 100;
+                cy = gradientElement->cy()->animVal()->valueInSpecifiedUnits() /
+                     100;
             } else {
-                if (isUserSpaceOnUseMode) {
-                    cy += gradientElement->cy()->animVal()->value();
-                } else {
-                    cy += gradientElement->cy()->animVal()->value() *
-                          rect.height();
-                }
+                cy = gradientElement->cy()->animVal()->value();
             }
         } else {
             // Default value: 50%
-            cy += 0.5 * rect.height();
+            cy = 0.5;
         }
 
         // Default value: 50%
@@ -1043,57 +1031,36 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
         if (gradientElement->r()->animVal()->hasSpecificValue()) {
             if (gradientElement->r()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                if (isUserSpaceOnUseMode) {
-                    r = gradientElement->r()
-                            ->animVal()
-                            ->valueInSpecifiedUnits() /
-                        100 * normalizedDiagonalViewportLength().toFloat();
-                } else {
-                    r = gradientElement->r()
-                            ->animVal()
-                            ->valueInSpecifiedUnits() /
-                        100;
-                }
+                r = gradientElement->r()->animVal()->valueInSpecifiedUnits() /
+                    100;
             } else {
                 r = gradientElement->r()->animVal()->value();
             }
         }
 
         // Default value: cx
-        double fx = rect.x();
+        double fx;
         if (gradientElement->fx()->animVal()->hasSpecificValue()) {
             if (gradientElement->fx()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                fx +=
-                    gradientElement->fx()->animVal()->valueInSpecifiedUnits() *
-                    rect.width() / 100;
+                fx = gradientElement->fx()->animVal()->valueInSpecifiedUnits() /
+                     100;
             } else {
-                if (isUserSpaceOnUseMode) {
-                    fx += gradientElement->fx()->animVal()->value();
-                } else {
-                    fx += gradientElement->fx()->animVal()->value() *
-                          rect.width();
-                }
+                fx = gradientElement->fx()->animVal()->value();
             }
         } else {
             fx = cx;
         }
 
         // Default value: cy
-        double fy = rect.y();
+        double fy;
         if (gradientElement->fy()->animVal()->hasSpecificValue()) {
             if (gradientElement->fy()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                fy +=
-                    gradientElement->fy()->animVal()->valueInSpecifiedUnits() *
-                    rect.height() / 100;
+                fy = gradientElement->fy()->animVal()->valueInSpecifiedUnits() /
+                     100;
             } else {
-                if (isUserSpaceOnUseMode) {
-                    fy += gradientElement->fy()->animVal()->value();
-                } else {
-                    fy += gradientElement->fy()->animVal()->value() *
-                          rect.height();
-                }
+                fy = gradientElement->fy()->animVal()->value();
             }
         } else {
             fy = cy;
@@ -1104,25 +1071,16 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
         if (gradientElement->fr()->animVal()->hasSpecificValue()) {
             if (gradientElement->fr()->animVal()->unitType() ==
                 SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                if (isUserSpaceOnUseMode) {
-                    fr = gradientElement->fr()
-                             ->animVal()
-                             ->valueInSpecifiedUnits() /
-                         100 * normalizedDiagonalViewportLength().toFloat();
-                } else {
-                    fr = gradientElement->fr()
-                             ->animVal()
-                             ->valueInSpecifiedUnits() /
-                         100;
-                }
+                fr = gradientElement->fr()->animVal()->valueInSpecifiedUnits() /
+                     100;
             } else {
                 fr = gradientElement->fr()->animVal()->value();
             }
         }
-
         SVGTransformList* gradientTransform =
             gradientElement->gradientTransform()->animVal();
         SkMatrix mat = SkMatrix::I();
+
         for (size_t i = 0; i < gradientTransform->length(); ++i) {
             mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
         }
@@ -1155,39 +1113,30 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             gradient->nativeGradient()->setGradientDrawingInfo(
                 gradientDrawingInfo.getValue());
         } else {
+            SkMatrix objectBoundingMatrix = SkMatrix::I();
+            objectBoundingMatrix.preTranslate(rect.x(), rect.y());
+            objectBoundingMatrix.preScale(rect.width(), rect.height());
+            objectBoundingMatrix.preConcat(mat);
+
             GradientData* gradientData = new RadialGradientData();
-            gradientData->setHorizontalSide(SideValue::LeftSideValue);
-            gradientData->setVerticalSide(SideValue::TopSideValue);
 
             RadialGradientData* radialGradient =
                 gradientData->asRadialGradientData();
-            radialGradient->setHorizontalSideOffset(
-                Length(Length::Type::Fixed, cx));
-            radialGradient->setVerticalSideOffset(
-                Length(Length::Type::Fixed, cy));
-            radialGradient->setFirstRadius(Length(Length::Type::Percent, r));
-            radialGradient->setSecondRadius(Length(Length::Type::Percent, r));
-            radialGradient->colorStopList() = gradientElement->colorStops();
-
-            double xx1 =
-                rect.x() * mat[0] + rect.y() * mat[1] + rect.width() * mat[2];
-            double yy1 =
-                rect.x() * mat[3] + rect.y() * mat[4] + rect.height() * mat[5];
 
             radialGradient->colorStopList() = gradientElement->colorStops();
             Optional<GradientDrawingInfo*> gradientDrawingInfo =
-                radialGradient->makeGradientDrawingInfo(
-                    Unit::Rect(xx1, yy1, rect.width(), rect.height()), this);
+                radialGradient->makeGradientDrawingInfo(Unit::Rect(0, 0, 0, 0),
+                                                        this);
+            gradientDrawingInfo->x1 = fx;
+            gradientDrawingInfo->y1 = fy;
+            gradientDrawingInfo->x2 = cx;
+            gradientDrawingInfo->y2 = cy;
+            gradientDrawingInfo->r1 = fr;
+            gradientDrawingInfo->r2 = r;
+            gradientDrawingInfo->matrix = objectBoundingMatrix;
 
-            fx = gradientDrawingInfo.getValue()->x1;
-            fy = gradientDrawingInfo.getValue()->y1;
-            cx = gradientDrawingInfo.getValue()->x2;
-            cy = gradientDrawingInfo.getValue()->y2;
-            fr = gradientDrawingInfo.getValue()->r1;
-            r = gradientDrawingInfo.getValue()->r2;
-
-            gradient = new CanvasGradient(matchingSvg->executionContext(), fx,
-                                          fy, fr, cx, cy, r);
+            gradient = new CanvasGradient(matchingSvg->executionContext(),
+                                          gradientDrawingInfo.getValue());
 
             gradient->nativeGradient()->setGradientDrawingInfo(
                 gradientDrawingInfo.getValue());
