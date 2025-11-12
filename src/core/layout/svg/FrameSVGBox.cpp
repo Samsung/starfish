@@ -884,96 +884,54 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     return result;
 }
 
-Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
-    const AtomicString& id, const Unit::Rect& svgRect)
-{
-    Unit::Rect rect = svgRect;
+namespace {
 
-    auto owner = node()->asSVGElement()->ownerSVGElement();
-    STARFISH_ASSERT(owner);
+    struct SVGCoordinate {
+        double value;
+        bool isPercent;
+    };
 
-    document()->registerSVGPaintClientElements(id, node()->asSVGElement());
-
-    auto matchingSvg = owner->getSVGElementById(id);
-    if (!matchingSvg) {
-        return nullptr;
+    SVGCoordinate extractCoordinate(SVGLength* length, double defaultValue)
+    {
+        if (length->hasSpecificValue()) {
+            if (length->unitType() == SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                return { length->valueInSpecifiedUnits() / 100, true };
+            }
+            return { length->value(), false };
+        }
+        return { defaultValue, false };
     }
 
-    // Use extents of the path
-    CanvasGradient* gradient = nullptr;
-    bool isUserSpaceOnUseMode = false;
-    auto vp = viewport();
-    Unit::Rect vpRect = Unit::Rect(0, 0, vp.width(), vp.height());
+    CanvasGradient* createLinearGradient(
+        FrameSVGBox* self, SVGLinearGradientElement* gradientElement,
+        const Unit::Rect& rect, bool isUserSpaceOnUseMode, const SkMatrix& mat)
+    {
+        auto x1Coord = extractCoordinate(gradientElement->x1()->animVal(), 0);
+        auto y1Coord = extractCoordinate(gradientElement->y1()->animVal(), 1);
+        auto x2Coord = extractCoordinate(gradientElement->x2()->animVal(), 0);
+        auto y2Coord = extractCoordinate(gradientElement->y2()->animVal(), 0);
 
-    if (matchingSvg->isSVGLinearGradientElement()) {
-        bool hasPercentValue = false;
-        SVGLinearGradientElement* gradientElement =
-            matchingSvg->asSVGLinearGradientElement();
+        double x1 = x1Coord.value;
+        double y1 = y1Coord.value;
+        double x2 = x2Coord.value;
+        double y2 = y2Coord.value;
 
-        if (gradientElement->gradientUnits()->animVal() ==
-            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-            rect = vpRect;
-            isUserSpaceOnUseMode = true;
-        }
+        bool hasPercentValue = x1Coord.isPercent || y1Coord.isPercent ||
+                               x2Coord.isPercent || y2Coord.isPercent;
 
-        double x1;
-        if (gradientElement->x1()->animVal()->unitType() ==
-            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            x1 =
-                gradientElement->x1()->animVal()->valueInSpecifiedUnits() / 100;
-            hasPercentValue = true;
-        } else {
-            x1 = gradientElement->x1()->animVal()->value();
-        }
-
-        double y1;
-        if (gradientElement->y1()->animVal()->unitType() ==
-            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            y1 =
-                gradientElement->y1()->animVal()->valueInSpecifiedUnits() / 100;
-            hasPercentValue = true;
-        } else {
-            y1 = gradientElement->y1()->animVal()->value();
-        }
-
-        double x2;
-        if (gradientElement->x2()->animVal()->unitType() ==
-            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            x2 =
-                gradientElement->x2()->animVal()->valueInSpecifiedUnits() / 100;
-            hasPercentValue = true;
-        } else {
-            x2 = gradientElement->x2()->animVal()->value();
-        }
-
-        double y2;
-        if (gradientElement->y2()->animVal()->unitType() ==
-            SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-            y2 =
-                gradientElement->y2()->animVal()->valueInSpecifiedUnits() / 100;
-            hasPercentValue = true;
-        } else {
-            y2 = gradientElement->y2()->animVal()->value();
-        }
-
-        SVGTransformList* gradientTransform =
-            gradientElement->gradientTransform()->animVal();
-        SkMatrix mat = SkMatrix::I();
-        for (size_t i = 0; i < gradientTransform->length(); ++i) {
-            mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
-        }
+        CanvasGradient* gradient = nullptr;
         if (isUserSpaceOnUseMode && !hasPercentValue) {
             double xx1 = x1 * mat[0] + y1 * mat[1] + rect.width() * mat[2];
             double yy1 = x1 * mat[3] + y1 * mat[4] + rect.height() * mat[5];
             double xx2 = x2 * mat[0] + y2 * mat[1] + rect.width() * mat[2];
             double yy2 = x2 * mat[3] + y2 * mat[4] + rect.height() * mat[5];
 
-            gradient = new CanvasGradient(matchingSvg->executionContext(), xx1,
-                                          yy1, xx2, yy2);
+            gradient = new CanvasGradient(gradientElement->executionContext(),
+                                          xx1, yy1, xx2, yy2);
             GradientData* gradientData = new LinearGradientData();
             gradientData->colorStopList() = gradientElement->colorStops();
             gradient->nativeGradient()->setGradientDrawingInfo(
-                gradientData->makeGradientDrawingInfo(rect, this));
+                gradientData->makeGradientDrawingInfo(rect, self));
         } else {
             SkMatrix objectBoundingMatrix = SkMatrix::I();
             objectBoundingMatrix.preTranslate(rect.x(), rect.y());
@@ -984,7 +942,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             gradientData->colorStopList() = gradientElement->colorStops();
 
             GradientDrawingInfo* gradientDrawinginfo =
-                gradientData->makeGradientDrawingInfo(rect, this);
+                gradientData->makeGradientDrawingInfo(rect, self);
 
             gradientDrawinginfo->x1 = x1;
             gradientDrawinginfo->y1 = y1;
@@ -992,125 +950,46 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             gradientDrawinginfo->y2 = y2;
             gradientDrawinginfo->matrix = objectBoundingMatrix;
 
-            gradient = new CanvasGradient(matchingSvg->executionContext(),
+            gradient = new CanvasGradient(gradientElement->executionContext(),
                                           gradientDrawinginfo);
             gradient->nativeGradient()->setGradientDrawingInfo(
                 gradientDrawinginfo);
         }
+        return gradient;
+    }
 
-        const auto& colorStops = gradientElement->colorStops();
-        size_t size = colorStops.size();
-        for (size_t i = 0; i < size; ++i) {
-            gradient->addColorStop(colorStops[i]->offset().numberData(),
-                                   colorStops[i]->color());
-        }
-    } else if (matchingSvg->isSVGRadialGradientElement()) {
-        // TODO: RadialGradient works partially, 'fx', 'fy', 'fr' need to be
-        // implemented.
-        SVGRadialGradientElement* gradientElement =
-            matchingSvg->asSVGRadialGradientElement();
+    CanvasGradient* createRadialGradient(
+        FrameSVGBox* self, SVGRadialGradientElement* gradientElement,
+        const Unit::Rect& rect, bool isUserSpaceOnUseMode, const SkMatrix& mat)
+    {
+        double cx =
+            extractCoordinate(gradientElement->cx()->animVal(), 0.5).value;
+        double cy =
+            extractCoordinate(gradientElement->cy()->animVal(), 0.5).value;
+        double r =
+            extractCoordinate(gradientElement->r()->animVal(), 0.5).value;
+        double fx =
+            gradientElement->fx()->animVal()->hasSpecificValue()
+                ? extractCoordinate(gradientElement->fx()->animVal(), 0.0).value
+                : cx;
+        double fy =
+            gradientElement->fy()->animVal()->hasSpecificValue()
+                ? extractCoordinate(gradientElement->fy()->animVal(), 0.0).value
+                : cy;
+        double fr =
+            gradientElement->fr()->animVal()->hasSpecificValue()
+                ? extractCoordinate(gradientElement->fr()->animVal(), 0.0).value
+                : 0.0;
 
-        if (gradientElement->gradientUnits()->animVal() ==
-            SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-            rect = vpRect;
-            isUserSpaceOnUseMode = true;
-        }
-
-        double cx;
-        if (gradientElement->cx()->animVal()->hasSpecificValue()) {
-            if (gradientElement->cx()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                cx = gradientElement->cx()->animVal()->valueInSpecifiedUnits() /
-                     100;
-            } else {
-                cx = gradientElement->cx()->animVal()->value();
-            }
-        } else {
-            // Default value: 50%
-            cx = 0.5;
-        }
-
-        double cy;
-        if (gradientElement->cy()->animVal()->hasSpecificValue()) {
-            if (gradientElement->cy()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                cy = gradientElement->cy()->animVal()->valueInSpecifiedUnits() /
-                     100;
-            } else {
-                cy = gradientElement->cy()->animVal()->value();
-            }
-        } else {
-            // Default value: 50%
-            cy = 0.5;
-        }
-
-        // Default value: 50%
-        double r = 0.5;
-        if (gradientElement->r()->animVal()->hasSpecificValue()) {
-            if (gradientElement->r()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                r = gradientElement->r()->animVal()->valueInSpecifiedUnits() /
-                    100;
-            } else {
-                r = gradientElement->r()->animVal()->value();
-            }
-        }
-
-        // Default value: cx
-        double fx;
-        if (gradientElement->fx()->animVal()->hasSpecificValue()) {
-            if (gradientElement->fx()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                fx = gradientElement->fx()->animVal()->valueInSpecifiedUnits() /
-                     100;
-            } else {
-                fx = gradientElement->fx()->animVal()->value();
-            }
-        } else {
-            fx = cx;
-        }
-
-        // Default value: cy
-        double fy;
-        if (gradientElement->fy()->animVal()->hasSpecificValue()) {
-            if (gradientElement->fy()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                fy = gradientElement->fy()->animVal()->valueInSpecifiedUnits() /
-                     100;
-            } else {
-                fy = gradientElement->fy()->animVal()->value();
-            }
-        } else {
-            fy = cy;
-        }
-
-        // Default value: 0
-        double fr = 0;
-        if (gradientElement->fr()->animVal()->hasSpecificValue()) {
-            if (gradientElement->fr()->animVal()->unitType() ==
-                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-                fr = gradientElement->fr()->animVal()->valueInSpecifiedUnits() /
-                     100;
-            } else {
-                fr = gradientElement->fr()->animVal()->value();
-            }
-        }
-        SVGTransformList* gradientTransform =
-            gradientElement->gradientTransform()->animVal();
-        SkMatrix mat = SkMatrix::I();
-
-        for (size_t i = 0; i < gradientTransform->length(); ++i) {
-            mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
-        }
-
+        CanvasGradient* gradient = nullptr;
         if (isUserSpaceOnUseMode) {
             double xx1 = fx * mat[0] + fy * mat[1] + rect.width() * mat[2];
             double yy1 = fx * mat[3] + fy * mat[4] + rect.height() * mat[5];
             double xx2 = cx * mat[0] + cy * mat[1] + rect.width() * mat[2];
             double yy2 = cx * mat[3] + cy * mat[4] + rect.height() * mat[5];
 
-            gradient = new CanvasGradient(matchingSvg->executionContext(), xx1,
-                                          yy1, fr, xx2, yy2, r);
+            gradient = new CanvasGradient(gradientElement->executionContext(),
+                                          xx1, yy1, fr, xx2, yy2, r);
 
             RadialGradientData* radialGradient = new RadialGradientData();
             radialGradient->setHorizontalSide(SideValue::LeftSideValue);
@@ -1127,7 +1006,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
                 radialGradient->makeGradientDrawingInfo(
                     Unit::Rect(xx1, yy1, std::abs(xx2 - xx1),
                                std::abs(yy2 - yy1)),
-                    this);
+                    self);
             gradient->nativeGradient()->setGradientDrawingInfo(
                 gradientDrawingInfo.getValue());
         } else {
@@ -1137,14 +1016,13 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             objectBoundingMatrix.preConcat(mat);
 
             GradientData* gradientData = new RadialGradientData();
-
             RadialGradientData* radialGradient =
                 gradientData->asRadialGradientData();
-
             radialGradient->colorStopList() = gradientElement->colorStops();
+
             Optional<GradientDrawingInfo*> gradientDrawingInfo =
                 radialGradient->makeGradientDrawingInfo(Unit::Rect(0, 0, 0, 0),
-                                                        this);
+                                                        self);
             gradientDrawingInfo->x1 = fx;
             gradientDrawingInfo->y1 = fy;
             gradientDrawingInfo->x2 = cx;
@@ -1153,27 +1031,84 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
             gradientDrawingInfo->r2 = r;
             gradientDrawingInfo->matrix = objectBoundingMatrix;
 
-            gradient = new CanvasGradient(matchingSvg->executionContext(),
+            gradient = new CanvasGradient(gradientElement->executionContext(),
                                           gradientDrawingInfo.getValue());
-
             gradient->nativeGradient()->setGradientDrawingInfo(
                 gradientDrawingInfo.getValue());
         }
+        return gradient;
+    }
 
-        const auto& colorStops = gradientElement->colorStops();
-        size_t size = colorStops.size();
-        for (size_t i = 0; i < size; ++i) {
-            gradient->addColorStop(colorStops[i]->offset().numberData(),
-                                   colorStops[i]->color());
+} // anonymous namespace
+
+Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
+    const AtomicString& id, const Unit::Rect& svgRect)
+{
+    Unit::Rect rect = svgRect;
+
+    auto owner = node()->asSVGElement()->ownerSVGElement();
+    STARFISH_ASSERT(owner);
+
+    document()->registerSVGPaintClientElements(id, node()->asSVGElement());
+
+    auto matchingSvg = owner->getSVGElementById(id);
+    if (!matchingSvg || !matchingSvg->isSVGGradientElement()) {
+        return nullptr;
+    }
+
+    SVGGradientElement* gradientElement = matchingSvg->asSVGGradientElement();
+
+    CanvasGradient* canvasGradient = nullptr;
+    bool isUserSpaceOnUseMode = false;
+    auto vp = viewport();
+    Unit::Rect vpRect = Unit::Rect(0, 0, vp.width(), vp.height());
+
+    if (gradientElement->gradientUnits()->animVal() ==
+        SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
+        rect = vpRect;
+        isUserSpaceOnUseMode = true;
+    }
+
+    // Handle gradient transform
+    SVGTransformList* gradientTransform =
+        gradientElement->gradientTransform()->animVal();
+    SkMatrix mat = SkMatrix::I();
+    for (size_t i = 0; i < gradientTransform->length(); ++i) {
+        mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+    }
+
+    if (matchingSvg->isSVGLinearGradientElement()) {
+        auto linearElement = matchingSvg->asSVGLinearGradientElement();
+        canvasGradient = createLinearGradient(this, linearElement, rect,
+                                              isUserSpaceOnUseMode, mat);
+        // Add color stops
+        const auto& colorStops = linearElement->colorStops();
+        for (const auto& stop : colorStops) {
+            canvasGradient->addColorStop(stop->offset().numberData(),
+                                         stop->color());
         }
-
+    } else if (matchingSvg->isSVGRadialGradientElement()) {
+        auto radialElement = matchingSvg->asSVGRadialGradientElement();
+        canvasGradient = createRadialGradient(this, radialElement, rect,
+                                              isUserSpaceOnUseMode, mat);
+        // Add color stops
+        const auto& colorStops = radialElement->colorStops();
+        for (const auto& stop : colorStops) {
+            canvasGradient->addColorStop(stop->offset().numberData(),
+                                         stop->color());
+        }
     } else {
         STARFISH_UNSUPPORTED("SVG Gradient type");
         return nullptr;
     }
 
-    auto canvasStyle = CanvasStyle::createCanvasGradient(gradient);
-    return new CanvasFillStrokeSource(canvasStyle);
+    if (canvasGradient) {
+        auto canvasStyle = CanvasStyle::createCanvasGradient(canvasGradient);
+        if (!canvasStyle.isNoneValue()) {
+            return new CanvasFillStrokeSource(canvasStyle);
+        }
+    }
+    return nullptr;
 }
 
 bool FrameSVGBox::applyTransformTo(Canvas* canvas, const LayoutSize& vp)
