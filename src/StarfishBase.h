@@ -523,9 +523,9 @@ const char* getWindowsTempDir();
         STARFISH_LOG_WARN("Unsupported " __VA_ARGS__); \
     } while (0)
 
-#define STARFISH_UNSUPPORTED_METHOD()                                       \
-    do {                                                                    \
-        STARFISH_UNSUPPORTED("Unsupported method %s", __PRETTY_FUNCTION__); \
+#define STARFISH_UNSUPPORTED_METHOD()                           \
+    do {                                                        \
+        STARFISH_UNSUPPORTED("method %s", __PRETTY_FUNCTION__); \
     } while (0)
 
 #define DEFINE_GETTER(Type, MemberName) \
