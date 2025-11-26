@@ -176,6 +176,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
         return document;
     } else if (type->equalsIgnoreCase("text/xml") ||
                type->equalsIgnoreCase("application/xml") ||
+               type->equalsIgnoreCase("application/dash+xml") ||
                type->equalsIgnoreCase("image/svg+xml")) {
         rapidxml::xml_document<char> doc;
         auto utf8String = str->toUTF8NonGCString();
