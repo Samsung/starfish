@@ -1285,7 +1285,7 @@ void HTMLMediaElement::setPlayEndPos(double end)
     m_currentPlayStart = std::numeric_limits<double>::quiet_NaN();
 }
 
-MediaError* HTMLMediaElement::error()
+Optional<MediaError*> HTMLMediaElement::error()
 {
     STARFISH_UNIMPLEMENTED();
     return nullptr;

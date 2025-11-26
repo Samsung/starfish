@@ -347,7 +347,7 @@ public:
     void processNextOperationQueue();
 
     DOMTokenList* controlsList();
-    MediaError* error();
+    Optional<MediaError*> error();
 
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow();  \
