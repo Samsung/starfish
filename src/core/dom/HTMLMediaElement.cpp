@@ -30,6 +30,7 @@
 #include "core/dom/TextTrack.h"
 #include "core/dom/TextTrackList.h"
 #include "core/dom/DOMTokenList.h"
+#include "core/dom/MediaError.h"
 #include "core/extra/MimeType.h"
 #include "core/extra/TimeRanges.h"
 #include "core/modules/mediasource/MediaSource.h"
@@ -1282,6 +1283,12 @@ void HTMLMediaElement::setPlayEndPos(double end)
                                             end);
     }
     m_currentPlayStart = std::numeric_limits<double>::quiet_NaN();
+}
+
+MediaError* HTMLMediaElement::error()
+{
+    STARFISH_UNIMPLEMENTED();
+    return nullptr;
 }
 
 MediaOperationQueueData::MediaOperationQueueData(HTMLMediaElement* p)
