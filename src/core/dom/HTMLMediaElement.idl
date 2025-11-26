@@ -15,7 +15,7 @@ typedef MediaStream MediaProvider;
 interface HTMLMediaElement : HTMLElement {
 
   // error state
-  [Unimplemented] readonly attribute MediaError? error;
+  readonly attribute MediaError? error;
 
   // network state
   [CEReactions] attribute DOMString src;

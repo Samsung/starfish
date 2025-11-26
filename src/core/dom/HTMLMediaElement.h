@@ -36,6 +36,7 @@ class TextTrack;
 class TextTrackList;
 class TimeRanges;
 class URL;
+class MediaError;
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 // TODO: Rename the unofficial use of MediaStream in MediaPlayerTizen
@@ -346,6 +347,7 @@ public:
     void processNextOperationQueue();
 
     DOMTokenList* controlsList();
+    MediaError* error();
 
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow();  \
