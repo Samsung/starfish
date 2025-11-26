@@ -1183,8 +1183,8 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     for (size_t i = 0; i < m_packetGroups.size(); i++) {
         MediaPacketGroup* grp = m_packetGroups[i];
         if (grp->m_streamIndex == streamIdx) {
-            if (grp->m_groupTimestampStart <= startPositionInDTSWantToFind &&
-                startPositionInDTSWantToFind <= grp->m_groupTimestampEnd) {
+            if (grp->m_groupDtsTimestampStart <= startPositionInDTSWantToFind &&
+                startPositionInDTSWantToFind <= grp->m_groupDtsTimestampEnd) {
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
                     if (v[j]->m_dts >= startPositionInDTSWantToFind) {
@@ -1193,12 +1193,12 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                         return std::make_pair(v[j], grp->m_initSegmentIndex);
                     }
                 }
-            } else if (grp->m_groupTimestampStart >
+            } else if (grp->m_groupDtsTimestampStart >
                        startPositionInDTSWantToFind) {
-                if (grp->m_groupTimestampStart <
+                if (grp->m_groupDtsTimestampStart <
                     nearestPacketGroupInfo.second) {
                     nearestPacketGroupInfo =
-                        std::make_pair(i, grp->m_groupTimestampStart);
+                        std::make_pair(i, grp->m_groupDtsTimestampStart);
                 }
             }
         }
@@ -1207,6 +1207,7 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
     if (nearestPacketGroupInfo.first != SIZE_MAX) {
         m_packetAccessCachePerStream[streamIdx] =
             std::make_pair(nearestPacketGroupInfo.first, 0);
+
         return std::make_pair(
             m_packetGroups[nearestPacketGroupInfo.first]->m_packets[0],
             m_packetGroups[nearestPacketGroupInfo.first]->m_initSegmentIndex);

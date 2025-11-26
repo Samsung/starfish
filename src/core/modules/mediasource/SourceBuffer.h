@@ -56,6 +56,9 @@ struct MediaPacketGroup {
     size_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
+    uint64_t m_groupDtsTimestampStart;
+    uint64_t m_groupDtsTimestampEnd;
+
     std::vector<MediaPacket*> m_packets;
     MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo,
                      size_t maxFrameDuration = 0,
@@ -76,6 +79,8 @@ struct MediaPacketGroup {
         m_maxFrameDuration = 0;
         m_groupTimestampStart = std::numeric_limits<uint64_t>::max();
         m_groupTimestampEnd = 0;
+        m_groupDtsTimestampStart = std::numeric_limits<uint64_t>::max();
+        m_groupDtsTimestampEnd = 0;
         m_dataSize = 0;
         for (size_t i = 0; i < m_packets.size(); i++) {
             updateGroupInfo(m_packets[i]);
@@ -90,8 +95,14 @@ struct MediaPacketGroup {
         if (packet->m_pts < m_groupTimestampStart) {
             m_groupTimestampStart = packet->m_pts;
         }
+        if (packet->m_pts < m_groupDtsTimestampStart) {
+            m_groupDtsTimestampStart = packet->m_dts;
+        }
         if (packet->m_pts + packet->m_duration > m_groupTimestampEnd) {
             m_groupTimestampEnd = packet->m_pts + packet->m_duration;
+        }
+        if (packet->m_dts + packet->m_duration > m_groupDtsTimestampEnd) {
+            m_groupDtsTimestampEnd = packet->m_dts + packet->m_duration;
         }
         m_dataSize += packet->m_dataSize;
     }
