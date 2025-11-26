@@ -30,7 +30,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
-    virtual bool isMediaError() const override;
+    virtual bool isMediaError() const;
 
     int32_t code() const;
     String* message() const;
