@@ -110,10 +110,10 @@ def vendor_test_webkit():
     run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc_manual.res", "cairo", "--font-dep"])
 
 
-def vendor_test_khronos():
+def run_vendor_test_khronos(root, name):
     from http_server import popen_server
 
-    ROOT = "test/cairo/reftest/vendor/khronos/webgl/1.0.3"
+    ROOT = root
     DIR = working_directory
     ADDRESS = "localhost"
     PORT = 11010
@@ -124,7 +124,17 @@ def vendor_test_khronos():
         env[ENVOPTS.REPLACE_STR] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
 
     with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
-        run_test(["basic", "tool/reftest/cairo/khronos_webgl.res", "common"], env)
+        run_test(["basic", name, "common"], env)
+
+
+def vendor_test_khronos():
+    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/1.0.3",
+                            "tool/reftest/cairo/khronos_webgl.res")
+
+
+def vendor_test_khronos2():
+    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/2.0.0",
+                            "tool/reftest/cairo/khronos_webgl2.res")
 
 
 def vendor_test():
@@ -132,6 +142,7 @@ def vendor_test():
     vendor_test_gecko()
     vendor_test_webkit()
     vendor_test_khronos()
+    vendor_test_khronos2()
 
 
 def wpt_css_css21():
