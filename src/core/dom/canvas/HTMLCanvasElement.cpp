@@ -24,10 +24,11 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
-#include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
+#include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrWebGL2RenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/ImageEncoder.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContext.h"
+#include "core/dom/canvas/webgl/WebGL2RenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/ImageBitmapRenderingContext.h"
 #include "core/dom/DOMException.h"
@@ -144,9 +145,9 @@ Optional<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
                 createImageBitmapRenderingContext(
                     (ImageBitmapRenderingContext*)m_canvasRenderingContext);
         }
+#if defined(STARFISH_ENABLE_WEBGL)
     } else if (contextId->equals("webgl") ||
                contextId->equals("experimental-webgl")) {
-#if defined(STARFISH_ENABLE_WEBGL)
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextModeWebGL;
             auto context = new WebGLRenderingContext(this);
@@ -159,6 +160,22 @@ Optional<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
         if (m_contextMode == CanvasContextModeWebGL) {
             return RenderingContextBindindingUnion::createWebGLRenderingContext(
                 static_cast<WebGLRenderingContext*>(m_canvasRenderingContext));
+        }
+    } else if (contextId->equals("webgl2")) {
+        if (m_contextMode == CanvasContextModeNone) {
+            m_contextMode = CanvasContextModeWebGL2;
+            auto context = new WebGL2RenderingContext(this);
+            context->preInitialize(arguments.empty() ? scriptUndefined()
+                                                     : arguments[0]);
+            m_canvasRenderingContext = context;
+            m_canvasRenderingContext->initialize();
+            m_canvasRenderingContext->setOriginCleanFlag(true);
+        }
+        if (m_contextMode == CanvasContextModeWebGL2) {
+            return RenderingContextBindindingUnion::
+                createWebGL2RenderingContext(
+                    static_cast<WebGL2RenderingContext*>(
+                        m_canvasRenderingContext));
         }
 #endif
     }

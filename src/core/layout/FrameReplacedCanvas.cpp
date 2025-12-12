@@ -28,7 +28,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
+#include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrWebGL2RenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
 
