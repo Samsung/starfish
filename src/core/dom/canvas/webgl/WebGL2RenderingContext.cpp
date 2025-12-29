@@ -24,6 +24,12 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/util/debug/Trace.h"
+#include "platform/canvas/gl/IncludeGL.h"
+
+/* WebGL constants */
+static constexpr char kShadingLanguageVersion[] = "WebGL GLSL ES 3.00";
+static constexpr char kVersion[] = "WebGL 2.0";
 
 namespace Starfish {
 
@@ -72,6 +78,51 @@ WebGL2RenderingContext::~WebGL2RenderingContext()
 ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
+}
+
+// WebGLRenderingContextBase
+
+#define ENTER_CONTEXT_SCOPE_IMPL(bailoutValue, ...) \
+    GLContextScope contextScope_(m_context);        \
+    if (contextScope_.hasError()) {                 \
+        TRACE(WEBGL,                                \
+              "\033[33m"                            \
+              "GL Context error detected."          \
+              "\033[0m");                           \
+        return bailoutValue;                        \
+    }
+
+#if defined(NDEBUG) and !defined(ENABLE_TRACE)
+#define ENTER_CONTEXT_SCOPE(bailoutValue, ...) \
+    ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);
+#else
+#define ENTER_CONTEXT_SCOPE(bailoutValue, ...)       \
+    ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);          \
+    auto onScopeLeave = OnScopeLeave::create([&]() { \
+        if (hasGLError()) {                          \
+            TRACE(WEBGL,                             \
+                  "\033[33m"                         \
+                  "GL error detected."               \
+                  "\033[0m");                        \
+        }                                            \
+    });
+#endif
+
+ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
+{
+    {
+        ENTER_CONTEXT_SCOPE(scriptNull());
+
+        switch (pname) {
+        // DOMString
+        case GL_SHADING_LANGUAGE_VERSION:
+            return createScriptValue(
+                createScriptASCIIString(kShadingLanguageVersion));
+        case GL_VERSION:
+            return createScriptValue(createScriptASCIIString(kVersion));
+        }
+    }
+    return WebGLRenderingContext::getParameter(pname);
 }
 
 // WebGL2RenderingContextOverloads
