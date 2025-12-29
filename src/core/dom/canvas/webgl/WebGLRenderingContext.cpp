@@ -1101,14 +1101,15 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
         m_gl->getIntegerv(pname, &values[0]);
         return ValueRef::create(values[0]);
     }
+    // GLfloat
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
         if (!isExtensionEnabled("EXT_texture_filter_anisotropic")) {
             setGLError(GL_INVALID_ENUM);
             return scriptNull();
         }
-        std::vector<int> values(1);
-        m_gl->getIntegerv(pname, &values[0]);
-        return ValueRef::create(values[0]);
+        std::vector<GLfloat> values(1);
+        gl()->getFloatv(pname, &values[0]);
+        return createScriptValue(values[0]);
     }
     // WebGLProgram
     case GL_CURRENT_PROGRAM: {
