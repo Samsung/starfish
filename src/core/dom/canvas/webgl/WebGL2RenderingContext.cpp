@@ -25,6 +25,7 @@
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/util/debug/Trace.h"
+#include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
 
 /* WebGL constants */
@@ -120,6 +121,12 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
                 createScriptASCIIString(kShadingLanguageVersion));
         case GL_VERSION:
             return createScriptValue(createScriptASCIIString(kVersion));
+        // GLfloat
+        case GL_MAX_TEXTURE_LOD_BIAS: {
+            std::vector<GLfloat> values(1);
+            gl()->getFloatv(pname, &values[0]);
+            return createScriptValue(values[0]);
+        }
         }
     }
     return WebGLRenderingContext::getParameter(pname);
