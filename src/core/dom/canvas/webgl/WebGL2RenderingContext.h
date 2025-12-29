@@ -89,6 +89,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WebGL2RenderingContext);
 
+    // Implement WebGLRenderingContextBase
+
+    ScriptValue getParameter(GLenum pname);
+
     // Implement WebGL2RenderingContextOverloads
 
     // WebGL1:
