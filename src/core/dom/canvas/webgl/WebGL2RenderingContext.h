@@ -91,6 +91,16 @@ public:
 
     ScriptValue getParameter(GLenum pname);
 
+    // Implement WebGL2RenderingContextBase
+
+    /* Sync objects */
+    Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
+    GLboolean isSync(Optional<WebGLSync*> sync);
+    void deleteSync(Optional<WebGLSync*> sync);
+    GLenum clientWaitSync(WebGLSync* sync, GLbitfield flags, GLuint64 timeout);
+    void waitSync(WebGLSync* sync, GLbitfield flags, GLint64 timeout);
+    ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
+
     // Implement WebGL2RenderingContextOverloads
 
     // WebGL1:

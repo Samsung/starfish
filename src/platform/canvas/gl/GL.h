@@ -272,7 +272,15 @@ public:
     }
 
     // WebGL2
+    virtual GLsync fenceSync(GLenum condition, GLbitfield flags) = 0;
+    virtual GLboolean isSync(GLsync sync) = 0;
+    virtual void deleteSync(GLsync sync) = 0;
+    virtual GLenum clientWaitSync(GLsync sync, GLbitfield flags,
+                                  GLuint64 timeout) = 0;
+    virtual void waitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) = 0;
     virtual void getInteger64v(GLenum pname, GLint64 *data) = 0;
+    virtual void getSynciv(GLsync sync, GLenum pname, GLsizei bufSize,
+                           GLsizei *length, GLint *values) = 0;
 };
 
 } // namespace Starfish

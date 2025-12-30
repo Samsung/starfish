@@ -156,6 +156,107 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
     return WebGLRenderingContext::getParameter(pname);
 }
 
+// WebGL2RenderingContextBase
+
+Optional<WebGLSync*> WebGL2RenderingContext::fenceSync(GLenum condition,
+                                                       GLbitfield flags)
+{
+    ENTER_CONTEXT_SCOPE(Optional<WebGLSync*>());
+
+    GLsync sync = gl()->fenceSync(condition, flags);
+    return new WebGLSync(scriptBindingInstance(), this, sync);
+}
+
+GLboolean WebGL2RenderingContext::isSync(Optional<WebGLSync*> sync)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!sync.hasValue() || sync.value()->context() != this ||
+        sync.value()->invalidated()) {
+        return false;
+    }
+    return gl()->isSync(sync.value()->glObject());
+}
+
+void WebGL2RenderingContext::deleteSync(Optional<WebGLSync*> sync)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!sync.hasValue()) {
+        return;
+    }
+    WebGLSync* value = sync.value();
+    if (value->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (value->isDeleted()) {
+        return;
+    }
+    value->markDeleted();
+    gl()->deleteSync(value->glObject());
+}
+
+GLenum WebGL2RenderingContext::clientWaitSync(WebGLSync* sync, GLbitfield flags,
+                                              GLuint64 timeout)
+{
+    ENTER_CONTEXT_SCOPE(GL_WAIT_FAILED);
+
+    if (sync->context() != this || flags & ~GL_SYNC_FLUSH_COMMANDS_BIT ||
+        timeout > kMaxClientWaitTimeoutWebgl) {
+        setGLError(GL_INVALID_OPERATION);
+        return GL_WAIT_FAILED;
+    }
+    return gl()->clientWaitSync(sync->glObject(), flags, timeout);
+}
+
+void WebGL2RenderingContext::waitSync(WebGLSync* sync, GLbitfield flags,
+                                      GLint64 timeout)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (sync->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    gl()->waitSync(sync->glObject(), flags, timeout);
+}
+
+ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
+                                                     GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (sync->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+    switch (pname) {
+    // GLbitfield
+    case GL_SYNC_FLAGS: {
+        GLint value;
+        gl()->getSynciv(sync->glObject(), pname, 1, nullptr, &value);
+        if (hasGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLbitfield>(value));
+    }
+    // GLenum
+    case GL_OBJECT_TYPE:
+    case GL_SYNC_STATUS:
+    case GL_SYNC_CONDITION: {
+        GLint value;
+        gl()->getSynciv(sync->glObject(), pname, 1, nullptr, &value);
+        if (hasGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLenum>(value));
+    }
+    }
+    setGLError(GL_INVALID_ENUM);
+    return scriptNull();
+}
+
 // WebGL2RenderingContextOverloads
 
 void WebGL2RenderingContext::bufferData(GLenum target, GLsizeiptr size,

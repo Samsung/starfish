@@ -1586,7 +1586,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/context/context-type-
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-get-calls.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-getstring.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/state/gl-object-get-calls.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/sync/sync-webgl-specific.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/sync/sync-webgl-specific.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/misc/copy-texture-image.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/misc/copy-texture-image-luma-format.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/textures/misc/copy-texture-image-webgl-specific.html
