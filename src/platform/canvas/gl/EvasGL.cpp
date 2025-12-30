@@ -841,9 +841,41 @@ public:
         m_evasGLAPI->glEvasGLImageTargetTexture2DOES(target, image);
     }
 
+    GLsync fenceSync(GLenum condition, GLbitfield flags) override
+    {
+        return m_evasGLAPI->glFenceSync(condition, flags);
+    }
+
+    GLboolean isSync(GLsync sync) override
+    {
+        return m_evasGLAPI->glIsSync(sync);
+    }
+
+    void deleteSync(GLsync sync) override
+    {
+        m_evasGLAPI->glDeleteSync(sync);
+    }
+
+    GLenum clientWaitSync(GLsync sync, GLbitfield flags,
+                          GLuint64 timeout) override
+    {
+        return m_evasGLAPI->glClientWaitSync(sync, flags, timeout);
+    }
+
+    void waitSync(GLsync sync, GLbitfield flags, GLuint64 timeout) override
+    {
+        m_evasGLAPI->glWaitSync(sync, flags, timeout);
+    }
+
     void getInteger64v(GLenum pname, GLint64 *data) override
     {
         m_evasGLAPI->glGetInteger64v(pname, data);
+    }
+
+    void getSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length,
+                   GLint *values) override
+    {
+        m_evasGLAPI->glGetSynciv(sync, pname, bufSize, length, values);
     }
 
     EvasGL(void *p)
