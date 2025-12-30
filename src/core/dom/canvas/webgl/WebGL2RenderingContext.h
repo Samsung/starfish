@@ -30,8 +30,6 @@ namespace Starfish {
 
 class Uint32ArrayOrSequenceOfGLuint;
 
-using GLint64 = long long;
-using GLuint64 = unsigned long long;
 using Uint32List = Uint32ArrayOrSequenceOfGLuint;
 
 class WebGLQuery : public WebGLObject {

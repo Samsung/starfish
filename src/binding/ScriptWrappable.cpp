@@ -866,6 +866,16 @@ ScriptValue createScriptValue(uint32_t value)
     return ValueRef::create((unsigned long)value);
 }
 
+ScriptValue createScriptValue(int64_t value)
+{
+    return ValueRef::create(value);
+}
+
+ScriptValue createScriptValue(uint64_t value)
+{
+    return ValueRef::create(value);
+}
+
 ScriptValue createScriptValue(String* value)
 {
     return createScriptString(value);

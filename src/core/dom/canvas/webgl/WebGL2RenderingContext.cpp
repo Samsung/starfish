@@ -28,7 +28,11 @@
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
 
+/* WebGL-specific enums */
+static constexpr GLenum kMAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
+
 /* WebGL constants */
+static constexpr GLint64 kMaxClientWaitTimeoutWebgl = 0;
 static constexpr char kShadingLanguageVersion[] = "WebGL GLSL ES 3.00";
 static constexpr char kVersion[] = "WebGL 2.0";
 
@@ -125,6 +129,18 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
         case GL_MAX_TEXTURE_LOD_BIAS: {
             std::vector<GLfloat> values(1);
             gl()->getFloatv(pname, &values[0]);
+            return createScriptValue(values[0]);
+        }
+        // GLint64
+        case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+            return createScriptValue(kMaxClientWaitTimeoutWebgl);
+        case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+        case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+        case GL_MAX_ELEMENT_INDEX:
+        case GL_MAX_SERVER_WAIT_TIMEOUT:
+        case GL_MAX_UNIFORM_BLOCK_SIZE: {
+            std::vector<GLint64> values(1);
+            gl()->getInteger64v(pname, &values[0]);
             return createScriptValue(values[0]);
         }
         }
