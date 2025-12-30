@@ -841,6 +841,11 @@ public:
         m_evasGLAPI->glEvasGLImageTargetTexture2DOES(target, image);
     }
 
+    void getInteger64v(GLenum pname, GLint64 *data) override
+    {
+        m_evasGLAPI->glGetInteger64v(pname, data);
+    }
+
     EvasGL(void *p)
         : m_evasGLAPI(static_cast<Evas_GL_API *>(p))
     {

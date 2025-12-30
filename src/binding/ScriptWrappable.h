@@ -199,6 +199,8 @@ ScriptValue createScriptValue(ScriptUint8ClampedArray array);
 ScriptValue createScriptValue(bool value);
 ScriptValue createScriptValue(int32_t value);
 ScriptValue createScriptValue(uint32_t value);
+ScriptValue createScriptValue(int64_t value);
+ScriptValue createScriptValue(uint64_t value);
 ScriptValue createScriptValue(String* value);
 ScriptValue createScriptValue(double value);
 

@@ -270,6 +270,9 @@ public:
     virtual void xglImageTargetTexture2DOES(GLenum target, void *image)
     {
     }
+
+    // WebGL2
+    virtual void getInteger64v(GLenum pname, GLint64 *data) = 0;
 };
 
 } // namespace Starfish

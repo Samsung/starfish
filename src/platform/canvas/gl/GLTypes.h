@@ -37,6 +37,8 @@ typedef uint32_t GLuint;
 typedef float GLfloat;
 typedef float GLclampf;
 typedef int32_t GLfixed;
+typedef int64_t GLint64;
+typedef uint64_t GLuint64;
 
 #if defined(STARFISH_WINDOWS)
 typedef ptrdiff_t GLintptr;
