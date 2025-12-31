@@ -125,6 +125,14 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
                 createScriptASCIIString(kShadingLanguageVersion));
         case GL_VERSION:
             return createScriptValue(createScriptASCIIString(kVersion));
+        // GLboolean
+        case GL_RASTERIZER_DISCARD:
+        case GL_TRANSFORM_FEEDBACK_ACTIVE:
+        case GL_TRANSFORM_FEEDBACK_PAUSED: {
+            std::vector<GLboolean> values(1);
+            gl()->getBooleanv(pname, &values[0]);
+            return createScriptValue(static_cast<bool>(values[0]));
+        }
         // GLfloat
         case GL_MAX_TEXTURE_LOD_BIAS: {
             std::vector<GLfloat> values(1);
