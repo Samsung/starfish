@@ -1191,6 +1191,28 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
             reinterpret_cast<const char*>(glGetString(pname));
         return StringRef::createFromASCII(output.c_str(), output.length());
     }
+    // GLboolean
+    case GL_BLEND:
+    case GL_CULL_FACE:
+    case GL_DEPTH_TEST:
+    case GL_DEPTH_WRITEMASK:
+    case GL_DITHER:
+    case GL_POLYGON_OFFSET_FILL:
+    case GL_SAMPLE_ALPHA_TO_COVERAGE:
+    case GL_SAMPLE_COVERAGE:
+    case GL_SAMPLE_COVERAGE_INVERT:
+    case GL_SCISSOR_TEST:
+    case GL_STENCIL_TEST: {
+        std::vector<GLboolean> values(1);
+        m_gl->getBooleanv(pname, &values[0]);
+        return createScriptValue(static_cast<bool>(values[0]));
+    }
+    case kUNPACK_FLIP_Y_WEBGL: {
+        return createScriptValue(m_unpackFlipY);
+    }
+    case kUNPACK_PREMULTIPLY_ALPHA_WEBGL: {
+        return createScriptValue(m_unpackPremultiplyAlpha);
+    }
     // Int32Array (with 2 elements)
     case GL_MAX_VIEWPORT_DIMS: {
         std::vector<int> values(2);
