@@ -704,6 +704,10 @@ WebGLShader* WebGLRenderingContext::createShader(unsigned long type)
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
+    if (type != GL_VERTEX_SHADER && type != GL_FRAGMENT_SHADER) {
+        setGLError(GL_INVALID_ENUM);
+        return nullptr;
+    }
     return new WebGLShader(scriptBindingInstance(), this,
                            m_gl->createShader(type));
 }
