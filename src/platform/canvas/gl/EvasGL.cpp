@@ -841,6 +841,11 @@ public:
         m_evasGLAPI->glEvasGLImageTargetTexture2DOES(target, image);
     }
 
+    GLint getFragDataLocation(GLuint program, const GLchar *name) override
+    {
+        return m_evasGLAPI->glGetFragDataLocation(program, name);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return m_evasGLAPI->glFenceSync(condition, flags);
