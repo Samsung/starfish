@@ -1247,9 +1247,18 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveAttrib(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+
     GLint maxNameLength;
     m_gl->getProgramiv(program->glObject(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,
                        &maxNameLength);
+
+    if (hasGLError()) {
+        return nullptr;
+    }
 
     GLint size;
     GLenum type;
@@ -1276,9 +1285,18 @@ WebGLActiveInfo* WebGLRenderingContext::getActiveUniform(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(nullptr);
 
+    if (!isFromCurrentContext(program)) {
+        setGLError(GL_INVALID_OPERATION);
+        return nullptr;
+    }
+
     GLint maxNameLength;
     m_gl->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORM_MAX_LENGTH,
                        &maxNameLength);
+
+    if (hasGLError()) {
+        return nullptr;
+    }
 
     GLint size;
     GLenum type;
