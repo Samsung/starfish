@@ -381,7 +381,7 @@ interface WebGL2RenderingContextBase
                                                       optional GLuint srcLengthOverride = 0);
 
     /* Programs and shaders */
-    [WebGLHandlesContextLoss, Unimplemented] GLint getFragDataLocation(WebGLProgram program, DOMString name);
+    [WebGLHandlesContextLoss] GLint getFragDataLocation(WebGLProgram program, DOMString name);
 
     /* Uniforms */
     [Unimplemented] undefined uniform1ui(WebGLUniformLocation? location, GLuint v0);

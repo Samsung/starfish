@@ -24,6 +24,7 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/canvas/webgl/WebGLProgram.h"
 #include "core/util/debug/Trace.h"
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
@@ -157,6 +158,18 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
 }
 
 // WebGL2RenderingContextBase
+
+GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
+                                                  String* name)
+{
+    ENTER_CONTEXT_SCOPE(-1);
+
+    if (program->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return -1;
+    }
+    return gl()->getFragDataLocation(program->glObject(), CSTR(name));
+}
 
 Optional<WebGLSync*> WebGL2RenderingContext::fenceSync(GLenum condition,
                                                        GLbitfield flags)

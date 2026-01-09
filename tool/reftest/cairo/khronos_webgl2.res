@@ -503,17 +503,17 @@
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/ogles/GL/vec/vec_009_to_016.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/ogles/GL/vec/vec_017_to_018.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/ogles/GL/vec3/vec3_001_to_008.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/get-active-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-bind-attrib-location-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-bind-attrib-location-long-names-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-get-active-attribute.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-get-active-uniform.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-getshadersource.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-shader-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/invalid-UTF-16.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/program-infolog.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/program-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/get-active-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-bind-attrib-location-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-bind-attrib-location-long-names-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-get-active-attribute.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-get-active-uniform.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-getshadersource.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/gl-shader-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/invalid-UTF-16.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/program-infolog.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/program-test.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/reading/read-pixels-pack-alignment.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/reading/read-pixels-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/renderbuffers/feedback-loop.html
@@ -1552,7 +1552,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/context/context-type-
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/misc/object-deletion-behaviour-2.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/misc/uninitialized-test-2.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/misc/views-with-offsets.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/programs/gl-get-frag-data-location.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/programs/gl-get-frag-data-location.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/query/occlusion-query.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/query/query.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/reading/read-pixels-from-fbo-test.html

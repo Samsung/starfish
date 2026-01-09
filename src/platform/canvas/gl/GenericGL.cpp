@@ -857,6 +857,11 @@ public:
 #endif
     }
 
+    GLint getFragDataLocation(GLuint program, const GLchar *name) override
+    {
+        return glGetFragDataLocation(program, name);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return glFenceSync(condition, flags);
