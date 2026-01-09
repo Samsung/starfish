@@ -577,7 +577,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec3/vec3_001
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_001_to_008.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_009_to_016.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/vec/vec_017_to_018.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/get-active-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/get-active-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-long-names-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-bind-attrib-location-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-get-active-attribute.html
