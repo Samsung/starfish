@@ -157,6 +157,46 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
     return WebGLRenderingContext::getParameter(pname);
 }
 
+ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
+                                                        GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (program->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    GLint params = 0;
+    gl()->getProgramiv(program->glObject(), pname, &params);
+
+    if (hasGLError()) {
+        return scriptNull();
+    }
+
+    switch (pname) {
+    // GLboolean
+    case GL_DELETE_STATUS:
+    case GL_LINK_STATUS:
+    case GL_VALIDATE_STATUS:
+        return createScriptValue(static_cast<bool>(params));
+    // GLenum
+    case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
+        return createScriptValue(static_cast<GLenum>(params));
+    // GLint
+    case GL_ACTIVE_ATTRIBUTES:
+    case GL_ACTIVE_UNIFORMS:
+    case GL_ACTIVE_UNIFORM_BLOCKS:
+    case GL_ATTACHED_SHADERS:
+    case GL_TRANSFORM_FEEDBACK_VARYINGS:
+        return createScriptValue(params);
+    default:
+        break;
+    }
+    setGLError(GL_INVALID_ENUM);
+    return scriptNull();
+}
+
 // WebGL2RenderingContextBase
 
 GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
