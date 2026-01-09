@@ -585,7 +585,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-get-active
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-getshadersource.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/gl-shader-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/invalid-UTF-16.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/program-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/program-test.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/programs/use-program-crash-with-discard-in-fragment-shader.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/reading/read-pixels-pack-alignment.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/reading/read-pixels-test.html
