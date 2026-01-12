@@ -433,42 +433,7 @@ void Scrolling::markAsActive()
     }
 }
 
-static bool needsRepaintingWhenScrolling(StackingContext* sc)
-{
-    if (!sc->needsGraphicsBuffer()) {
-        return true;
-    }
-
-    // check border
-    auto paddingBox = sc->owner()->makeRect(BoxValue::PaddingBoxBoxValue);
-    if ((paddingBox.width() != sc->owner()->width().toFloat()) ||
-        (paddingBox.height() != sc->owner()->height().toFloat())) {
-        return true;
-    }
-
-    if (sc->owner()->hasFrameBorderRadius()) {
-        return true;
-    }
-
-    auto visibleRect = sc->owner()->frameVisibleRect();
-    if ((visibleRect.width() != sc->owner()->width()) ||
-        (visibleRect.height() != sc->owner()->height())) {
-        return true;
-    }
-
-    if (sc->owner()->node()->isElement()) {
-        if (sc->owner()->node()->asElement()->scrollWidth() !=
-                visibleRect.width().toUnsigned() ||
-            sc->owner()->node()->asElement()->scrollHeight() !=
-                visibleRect.height().toUnsigned()) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
+void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
 {
     if (m_target->isWindow()) {
         StackingContext* ctx = m_target->asWindow()
@@ -478,12 +443,14 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
                                    ->asFrameBox()
                                    ->stackingContext();
         if (ctx && ctx->needsGraphicsBuffer()) {
-            if (needsRepaintingWhenScrolling(ctx)) {
-                ctx->owner()->node()->setNeedsPainting();
-            } else {
+            if (inScrollbarAppearingOrDisappearing ||
+                !ctx->needsRepaintingWhenScrolling()) {
                 m_target->asWindow()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();
+
+            } else {
+                ctx->owner()->node()->setNeedsPainting();
             }
 
         } else {
@@ -509,7 +476,9 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
             FrameBox* box = m_target->asElement()->frame()->asFrameBox();
             StackingContext* sc = box->stackingContext();
 
-            if (!needsRepaintingWhenScrolling(sc)) {
+            if ((inScrollbarAppearingOrDisappearing &&
+                 sc->needsGraphicsBuffer()) ||
+                !sc->needsRepaintingWhenScrolling()) {
                 m_target->asElement()
                     ->webView()
                     ->markNeedsCompositeConsiderInRendering();

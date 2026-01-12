@@ -41,12 +41,24 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
 {
     if (frame->shouldApplyOverflow()) {
         if (tracker.m_willCompositing) {
-            tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
-                computeBoxExtent(frame->overflowRepaintRect(),
-                                 frame->computeMatrixOnGraphicsBuffer()),
-                tracker.findNearestStackingContextOwner(frame)
-                    ->stackingContext(),
-                frame));
+            // buffer owner
+            auto nearOwner = tracker.findNearestStackingContextOwner(frame);
+            if (nearOwner == frame) {
+                LayoutRect scrollRect = frame->overflowRepaintRect();
+                if (frame->isFrameBlockBox()) {
+                    scrollRect.unite(LayoutRect(
+                        0, 0, frame->asFrameBlockBox()->scrollWidth(),
+                        frame->asFrameBlockBox()->scrollHeight()));
+                }
+                tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
+                    scrollRect, frame->stackingContext(), frame));
+            } else {
+                tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
+                    computeBoxExtent(
+                        frame->overflowRepaintRect(),
+                        frame->computeMatrixOnGraphicsBuffer(false)),
+                    nearOwner->stackingContext(), frame));
+            }
         } else {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
                 computeBoxExtent(frame->overflowRepaintRect(), matrix), nullptr,
@@ -173,10 +185,10 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
         }
     }
     m_repaintRegionPerGraphicsLayer[nullptr].unite(tmp);
-
     if (m_willCompositing) {
         if (sc && sc->needsGraphicsBuffer()) {
-            r = computeBoxExtent(r, frame->computeMatrixOnGraphicsBuffer());
+            r = computeBoxExtent(r,
+                                 frame->computeMatrixOnGraphicsBuffer(false));
             m_repaintRegionPerGraphicsLayer[frame->node()].unite(r);
         } else {
             if (frame->isFrameDocument() && frame->parent() == nullptr) {
@@ -185,7 +197,8 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                             root->owner()->computeScreenMatrix(),
                             root->visibleRect());
             } else {
-                r = computeBoxExtent(r, frame->computeMatrixOnGraphicsBuffer());
+                r = computeBoxExtent(
+                    r, frame->computeMatrixOnGraphicsBuffer(false));
                 StackingContext* s =
                     findNearestStackingContextOwner(frame)->stackingContext();
 
@@ -333,13 +346,22 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                 needsRepainting = true;
             } else if (compositedBefore &&
                        compositedBefore == willBeComposited) {
-                if (iter != m_prevDrawnStackingContextInfoMap.end()) {
-                    if (iter->second.graphicsBufferVisibleRect !=
-                            sc->visibleRect() ||
-                        iter->second.additionalPixelRatio !=
+                if (compositedBefore) {
+                    if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                        if (iter->second.additionalPixelRatio !=
                             sc->additionalPixelRatio()) {
-                        // visible rect changed
-                        needsRepainting = true;
+                            needsRepainting = true;
+                        }
+                    }
+                } else {
+                    if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                        if (iter->second.graphicsBufferVisibleRect !=
+                                sc->visibleRect() ||
+                            iter->second.additionalPixelRatio !=
+                                sc->additionalPixelRatio()) {
+                            // visible rect changed
+                            needsRepainting = true;
+                        }
                     }
                 }
 
@@ -365,7 +387,7 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                            !iter->second.needsGraphicsBuffer) {
                     LayoutRect extentThisTime = computeBoxExtent(
                         LayoutRect(0, 0, frame->width(), frame->height()),
-                        frame->computeMatrixOnGraphicsBuffer());
+                        frame->computeMatrixOnGraphicsBuffer(false));
                     if (iter->second.extentOnGraphicsLayer == extentThisTime) {
                         iter.value().isEqualsWithPrevDrawing = true;
                     }

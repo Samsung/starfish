@@ -26,6 +26,7 @@
 #include "core/dom/Element.h"
 #include "core/layout/StackingContext.h"
 #include "core/layout/FrameDocument.h"
+#include "core/page/WebView.h"
 
 namespace Starfish {
 
@@ -156,21 +157,37 @@ static void traceRepaintRegionJob(
         rootedNodeSet.insert(node);
         rootedNodeSet.insert(lastStackingContextOwner->node());
 
-        LayoutRect newLayoutResultRect =
-            currentFrameBox->absoluteRectIncludingScroll(
-                lastStackingContextOwner);
-
         // if frame box establish StackingContext, this box cared by
         // RepaintTracker
         bool needToEstablishStackingContext =
             currentFrame->needToEstablishStackingContext();
         if (needToEstablishStackingContext) {
+            // compute new result
+            LayoutRect newLayoutResultRect;
+            auto graphicsOwner = lastStackingContextOwner;
+            auto sc = currentFrameBox->stackingContext();
+            bool flag = true;
+            if (currentFrameBox->node()->webView()->needsComposite() && sc &&
+                !sc->needsGraphicsBuffer()) {
+                while (sc) {
+                    if (sc->needsGraphicsBuffer()) {
+                        graphicsOwner = sc->owner();
+                        flag = false;
+                        break;
+                    }
+                    sc = sc->parent();
+                }
+            }
+
+            newLayoutResultRect = currentFrameBox->absoluteRectIncludingScroll(
+                graphicsOwner, flag);
+
             // check last result
             auto iter = oldResultMap.find(node);
-
             bool gotNewNode = iter == oldResultMap.end();
             bool frameRectChanged =
                 !gotNewNode && (iter->second.first != newLayoutResultRect);
+
             if (gotNewNode || frameRectChanged) {
                 // got new node || frameRectChanged -> dirty
                 gotPaintingDirty = true;
@@ -215,6 +232,11 @@ static void traceRepaintRegionJob(
 
             lastStackingContextOwner = currentFrameBox;
         } else {
+            // compute new result
+            LayoutRect newLayoutResultRect =
+                currentFrameBox->absoluteRectIncludingScroll(
+                    lastStackingContextOwner);
+
             // check last result
             LayoutRepaintTracker::ComputeOverflow::reduceRect(
                 tracker, newLayoutResultRect, lastStackingContextOwner);
