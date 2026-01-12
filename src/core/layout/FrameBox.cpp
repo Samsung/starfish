@@ -915,7 +915,7 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 
     paintInsetBoxShadows(canvas);
 
-    paintBorders(canvas, LayoutRect(0, 0, width(), height()));
+    paintBorders(canvas, rect);
 
     canvas->restore();
 }
@@ -4366,7 +4366,9 @@ ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
     }
 }
 
-static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
+static SkMatrix computeBoxMatrix(
+    FrameBox* self, ComputeMatrixFor forWhat,
+    bool includesScrollOnTopForGraphicsLayerMode = false)
 {
     bool seenFixedPositionedLayer = false;
     bool inRendering = false;
@@ -4474,7 +4476,8 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
         iter++;
     }
 
-    if (forWhat == GraphicsLayer && graphicsLayerHolder) {
+    if (forWhat == GraphicsLayer && graphicsLayerHolder &&
+        includesScrollOnTopForGraphicsLayerMode) {
         if (graphicsLayerHolder->isFrameBlockBox()) {
             m.postTranslate(
                 -graphicsLayerHolder->asFrameBlockBox()->scrollLeft(),
@@ -4485,14 +4488,20 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     return m;
 }
 
-SkMatrix FrameBox::computeScreenMatrix()
+SkMatrix FrameBox::computeScreenMatrix(bool includesScrollOnTop)
 {
-    return computeBoxMatrix(this, ComputeMatrixFor::Screen);
+    auto m = computeBoxMatrix(this, ComputeMatrixFor::Screen);
+    if (includesScrollOnTop && shouldApplyOverflow() && isFrameBlockBox()) {
+        m.postTranslate(-asFrameBlockBox()->scrollLeft(),
+                        -asFrameBlockBox()->scrollTop());
+    }
+    return m;
 }
 
-SkMatrix FrameBox::computeMatrixOnGraphicsBuffer()
+SkMatrix FrameBox::computeMatrixOnGraphicsBuffer(bool includesScrollOnTop)
 {
-    return computeBoxMatrix(this, ComputeMatrixFor::GraphicsLayer);
+    return computeBoxMatrix(this, ComputeMatrixFor::GraphicsLayer,
+                            includesScrollOnTop);
 }
 
 SkMatrix FrameBox::computeMatrixOnGraphicsBufferOnGraphicsBuffer()

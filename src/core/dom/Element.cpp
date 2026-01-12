@@ -1274,7 +1274,7 @@ double Element::scrollLeftProperty(bool layoutIfNeeds)
 {
     // NOTE DOM interface only
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (document()->rootElement() == this) {
@@ -1308,7 +1308,7 @@ double Element::scrollLeftProperty(bool layoutIfNeeds)
 double Element::scrollLeft(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -1358,7 +1358,7 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (!window()) {
@@ -1406,7 +1406,7 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
 double Element::scrollTopProperty(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (document()->rootElement() == this) {
@@ -1438,7 +1438,7 @@ double Element::scrollTopProperty(bool layoutIfNeeds)
 double Element::scrollTop(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -1458,7 +1458,7 @@ double Element::scrollTop(bool layoutIfNeeds)
 bool Element::canScrollVerticaly(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -1499,7 +1499,7 @@ bool Element::setScrollTop(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        window()->browsingContext()->webView()->layoutIfNeeded(true);
     }
 
     if (!window()) {
@@ -1546,7 +1546,7 @@ bool Element::setScrollTop(double s, bool layoutIfNeeds)
 
 uint32_t Element::scrollWidth()
 {
-    window()->browsingContext()->webView()->layoutIfNeeded(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(true);
     if (!frame()) {
         return 0;
     }
@@ -1558,7 +1558,7 @@ uint32_t Element::scrollWidth()
 
 uint32_t Element::scrollHeight()
 {
-    window()->browsingContext()->webView()->layoutIfNeeded(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(true);
     if (!frame()) {
         return 0;
     }
@@ -1575,7 +1575,7 @@ void Element::scroll(double x, double y)
 
 void Element::scrollTo(double x, double y)
 {
-    window()->browsingContext()->webView()->layoutIfNeeded(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(true);
 
     if (!window()) {
         return;

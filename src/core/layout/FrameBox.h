@@ -830,10 +830,10 @@ public:
         return LayoutRect(0, 0, width(), height());
     }
 
-    SkMatrix computeScreenMatrix();
+    SkMatrix computeScreenMatrix(bool includesScrollOnTop = false);
     LayoutRect computeScreenExtent();
 
-    SkMatrix computeMatrixOnGraphicsBuffer();
+    SkMatrix computeMatrixOnGraphicsBuffer(bool includesScrollOnTop = true);
     SkMatrix computeMatrixOnWindow();
     SkMatrix computeMatrixOnGraphicsBufferOnGraphicsBuffer();
 

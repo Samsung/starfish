@@ -175,6 +175,7 @@ public:
 
     struct PaintingStackingContextContext {
         bool willCompositing;
+        Optional<StackingContext*> paintingForCompositingStartingFrom;
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap;
         LayoutRect screenClipRect;
         RepaintRegion& repaintRegion;
@@ -251,6 +252,8 @@ public:
         return nullptr;
     }
     void clearGraphicsBuffer();
+
+    bool needsRepaintingWhenScrolling();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

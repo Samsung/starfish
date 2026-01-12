@@ -393,6 +393,37 @@ void StackingContext::clearGraphicsBuffer()
     }
 }
 
+bool StackingContext::needsRepaintingWhenScrolling()
+{
+    // can't scroll
+    if (!m_owner->isFrameBlockBox()) {
+        return false;
+    }
+
+    if (!needsGraphicsBuffer()) {
+        return true;
+    }
+
+    // check border
+    auto paddingBox = owner()->makeRect(BoxValue::PaddingBoxBoxValue);
+    if ((paddingBox.width() != owner()->width().toFloat()) ||
+        (paddingBox.height() != owner()->height().toFloat())) {
+        return true;
+    }
+
+    if (owner()->hasFrameBorderRadius()) {
+        return true;
+    }
+
+    auto visibleRect = owner()->frameVisibleRect();
+    if ((visibleRect.width() != owner()->width()) ||
+        (visibleRect.height() != owner()->height())) {
+        return true;
+    }
+
+    return false;
+}
+
 bool StackingContext::isIFrameStackingContext()
 {
     if (m_owner->layoutParent() && m_owner->layoutParent()->isFrameDocument()) {
@@ -964,11 +995,17 @@ void StackingContext::applyStackingContextProperties(
         }
 
         SkMatrix l = SkMatrix::I();
-        Frame::ComputeVisibleRectContext ctx(
+        bool needsScrolling =
+            m_owner->node()->isElement() &&
+            m_owner->node()->asElement()->rareMembers() &&
+            m_owner->node()->asElement()->rareMembers()->m_scrolling;
+        Frame::ComputeVisibleRectContext::ComputePurpose purpose =
             willBeCompositedDueToSelf
                 ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
-                : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer,
-            this, l, m_rareData->m_visibleRect);
+                : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer;
+
+        Frame::ComputeVisibleRectContext ctx(purpose, this, l,
+                                             m_rareData->m_visibleRect);
 
         if (shouldPaintWindowBackgroundImage) {
             ctx.isVisibleRectCollapsible = false;
@@ -984,6 +1021,19 @@ void StackingContext::applyStackingContextProperties(
             m_rareData->m_visibleRect.unite(
                 LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
                            m_owner->node()->window()->innerHeight()));
+        } else if (needsScrolling && !m_rareData->m_visibleRect.isEmpty()) {
+            LayoutRect scrollRect(0, 0,
+                                  m_owner->asFrameBlockBox()->scrollWidth(),
+                                  m_owner->asFrameBlockBox()->scrollHeight());
+            if (needsRepaintingWhenScrolling()) {
+                auto paddingBox =
+                    owner()->makeRect(BoxValue::PaddingBoxBoxValue);
+                auto bw = owner()->width().toFloat() - paddingBox.width();
+                auto bh = owner()->height().toFloat() - paddingBox.height();
+                scrollRect.setWidth(scrollRect.width() + bw);
+                scrollRect.setHeight(scrollRect.height() + bh);
+            }
+            m_rareData->m_visibleRect.unite(scrollRect);
         }
 
         if (m_owner->isRootElement()) {
@@ -1033,9 +1083,7 @@ void StackingContext::applyStackingContextProperties(
             if (prevDrawnMapIter->second.graphicsBufferVisibleRect !=
                 visibleRect()) {
                 // visible rect changed
-                m_owner->node()
-                    ->webView()
-                    ->markNeedsPaintingConsiderInRendering();
+                m_owner->node()->setNeedsPainting();
             }
         }
     } else if (!compositedBefore && !willBeComposited) {
@@ -1424,24 +1472,44 @@ void StackingContext::fillGraphicsBufferContents(
 
     bool canRejectPainting =
         canvas->canRejectPainting(StackingContext::visibleRect());
+    bool needsComputeOverflow =
+        !isRootContext() && !isIFrameStackingContext() &&
+        m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow();
+    bool canApplyScroll =
+        !ctx.willCompositing ||
+        ctx.paintingForCompositingStartingFrom.valueOrNull() != this;
+    bool drawBorderAtAnotherPlaceDueToScroll =
+        !canApplyScroll && needsRepaintingWhenScrolling();
 
     if (!canRejectPainting) {
         applyMask(canvas, ctx);
+        if (drawBorderAtAnotherPlaceDueToScroll) {
+            canvas->save();
+            canvas->translate(m_owner->asFrameBlockBox()->scrollLeft(),
+                              m_owner->asFrameBlockBox()->scrollTop());
+        }
         m_owner->paintBackgroundAndBorders(canvas);
+        if (drawBorderAtAnotherPlaceDueToScroll) {
+            canvas->restore();
+        }
     }
-
-    bool needsComputeScroll = !isRootContext() && !isIFrameStackingContext() &&
-                              m_owner->isFrameBlockBox() &&
-                              m_owner->shouldApplyOverflow();
-    if (needsComputeScroll) {
+    if (needsComputeOverflow && canApplyScroll) {
         canvas->save();
         canvas->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
-        canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                          -m_owner->asFrameBlockBox()->scrollTop());
-        ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
-        ctx.layerScrollY = m_owner->asFrameBlockBox()->scrollTop();
+        if (canApplyScroll) {
+            canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                              -m_owner->asFrameBlockBox()->scrollTop());
+            ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
+            ctx.layerScrollY = m_owner->asFrameBlockBox()->scrollTop();
+        }
+    } else if (drawBorderAtAnotherPlaceDueToScroll) {
+        canvas->save();
+        auto rt = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
+        rt.setX(rt.x() + m_owner->asFrameBlockBox()->scrollLeft());
+        rt.setY(rt.y() + m_owner->asFrameBlockBox()->scrollTop());
+        canvas->clip(rt);
     }
 
     // Within each stacking context, the following layers are painted in
@@ -1548,7 +1616,9 @@ void StackingContext::fillGraphicsBufferContents(
         }
     }
 
-    if (needsComputeScroll) {
+    if (needsComputeOverflow && canApplyScroll) {
+        canvas->restore();
+    } else if (drawBorderAtAnotherPlaceDueToScroll) {
         canvas->restore();
     }
 
@@ -1696,7 +1766,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
             LayoutRect screenRect = computeScreenRect(this);
             LayoutRect windowRect = computeWindowRectOnScreen(this);
-            auto screenMatrix = m_owner->computeScreenMatrix();
+            auto screenMatrix = m_owner->computeScreenMatrix(true);
 
             size_t hVisibleTextureStart = hTextureCount;
             size_t hVisibleTextureEnd = 0;
@@ -1913,6 +1983,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                     ->webView()
                                     ->m_prevDrawnStackingContextInfo,
                                 LayoutRect(0, 0, 0, 0), rr, 0, 0);
+                            ctx.paintingForCompositingStartingFrom = this;
 
                             ctx.layerBaseX = tileDataX;
                             ctx.layerBaseY = tileDataY;
@@ -2038,7 +2109,7 @@ bool StackingContext::fillGraphicsBufferContents(
     size_t hTextureCount =
         m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
 
-    auto screenMatrix = m_owner->computeScreenMatrix();
+    auto screenMatrix = m_owner->computeScreenMatrix(true);
 
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect windowRect = computeWindowRectOnScreen(this);
@@ -2109,7 +2180,7 @@ bool StackingContext::fillGraphicsBufferContents(
                         true, globalCtx.prevDrawnStackingContextInfoMap,
                         globalCtx.screenClipRect, globalCtx.repaintRegion,
                         globalCtx.scrollX, globalCtx.scrollY);
-
+                    ctx.paintingForCompositingStartingFrom = this;
                     ctx.layerBaseX = tileDataX;
                     ctx.layerBaseY = tileDataY;
 
@@ -2538,6 +2609,16 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
 
     ComputeOverflow<Compositor> r(compositor, this, parentBox);
+
+    if (m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow()) {
+        if (needsRepaintingWhenScrolling()) {
+            compositor->clip(m_owner->makeRect(BoxValue::BorderBoxBoxValue));
+        } else {
+            compositor->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
+        }
+        compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                              -m_owner->asFrameBlockBox()->scrollTop());
+    }
 
     // If current matrix is invalid, we could not composite StackckingContext
     SkMatrix test;
