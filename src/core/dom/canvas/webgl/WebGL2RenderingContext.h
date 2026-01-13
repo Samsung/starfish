@@ -24,8 +24,6 @@
 
 #include "core/dom/canvas/webgl/WebGLRenderingContext.h"
 
-typedef struct __GLsync* GLsync;
-
 namespace Starfish {
 
 class Uint32ArrayOrSequenceOfGLuint;
