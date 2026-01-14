@@ -415,12 +415,21 @@ bool StackingContext::needsRepaintingWhenScrolling()
         return true;
     }
 
-    auto visibleRect = owner()->frameVisibleRect();
-    if ((visibleRect.width() != owner()->width()) ||
-        (visibleRect.height() != owner()->height())) {
-        return true;
-    }
+    return false;
+}
 
+bool StackingContext::inScrollActive()
+{
+    bool nonVisibleOverflowValueApplied =
+        m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
+        m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
+    if (nonVisibleOverflowValueApplied && m_owner->node() &&
+        m_owner->node()->isElement()) {
+        if (m_owner->node()->asElement()->scrollLeft(false) ||
+            m_owner->node()->asElement()->scrollTop(false)) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -673,17 +682,10 @@ void StackingContext::computeStackingContextProperties(
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
     } else {
-        bool nonVisibleOverflowValueApplied =
-            m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
-            m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
-        if (nonVisibleOverflowValueApplied && m_owner->node() &&
-            m_owner->node()->isElement()) {
-            if (m_owner->node()->asElement()->scrollLeft(false) ||
-                m_owner->node()->asElement()->scrollTop(false)) {
-                compositedBySelf = true;
-                reason = NeedsGraphicsLayerReason::
-                    NeedsGraphicsLayerReasonNeedsScroll;
-            }
+        if (inScrollActive()) {
+            compositedBySelf = true;
+            reason =
+                NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNeedsScroll;
         }
         compositingState.compositeFlagInfoBecauseSelf[this] = compositedBySelf;
     }
@@ -973,6 +975,7 @@ void StackingContext::applyStackingContextProperties(
     }
 
     if (willBeComposited) {
+        m_needsGraphicsBuffer = true;
         ensureRareData();
         bool shouldPaintWindowBackgroundImage = false;
         if (m_owner->isRootElement()) {
@@ -995,10 +998,6 @@ void StackingContext::applyStackingContextProperties(
         }
 
         SkMatrix l = SkMatrix::I();
-        bool needsScrolling =
-            m_owner->node()->isElement() &&
-            m_owner->node()->asElement()->rareMembers() &&
-            m_owner->node()->asElement()->rareMembers()->m_scrolling;
         Frame::ComputeVisibleRectContext::ComputePurpose purpose =
             willBeCompositedDueToSelf
                 ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
@@ -1021,19 +1020,20 @@ void StackingContext::applyStackingContextProperties(
             m_rareData->m_visibleRect.unite(
                 LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
                            m_owner->node()->window()->innerHeight()));
-        } else if (needsScrolling && !m_rareData->m_visibleRect.isEmpty()) {
-            LayoutRect scrollRect(0, 0,
-                                  m_owner->asFrameBlockBox()->scrollWidth(),
-                                  m_owner->asFrameBlockBox()->scrollHeight());
+        } else if (inScrollActive()) {
             if (needsRepaintingWhenScrolling()) {
+                // expand visibleRect to draw border
+                LayoutRect scrollRect(
+                    0, 0, m_owner->asFrameBlockBox()->scrollWidth(),
+                    m_owner->asFrameBlockBox()->scrollHeight());
                 auto paddingBox =
                     owner()->makeRect(BoxValue::PaddingBoxBoxValue);
                 auto bw = owner()->width().toFloat() - paddingBox.width();
                 auto bh = owner()->height().toFloat() - paddingBox.height();
                 scrollRect.setWidth(scrollRect.width() + bw);
                 scrollRect.setHeight(scrollRect.height() + bh);
+                m_rareData->m_visibleRect.unite(scrollRect);
             }
-            m_rareData->m_visibleRect.unite(scrollRect);
         }
 
         if (m_owner->isRootElement()) {
@@ -1069,10 +1069,12 @@ void StackingContext::applyStackingContextProperties(
             m_needsGraphicsBufferReason !=
                 NeedsGraphicsLayerReasonNeedsScroll) {
             willBeComposited = false;
+            m_needsGraphicsBuffer = false;
         }
 
         m_isVisibleRectComputedForNonGraphicsLayer = true;
     } else {
+        m_needsGraphicsBuffer = false;
         m_isVisibleRectComputedForNonGraphicsLayer = false;
     }
 
@@ -1081,7 +1083,7 @@ void StackingContext::applyStackingContextProperties(
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         if (prevDrawnMapIter != prevDrawnMap.end()) {
             if (prevDrawnMapIter->second.graphicsBufferVisibleRect !=
-                visibleRect()) {
+                m_rareData->m_visibleRect) {
                 // visible rect changed
                 m_owner->node()->setNeedsPainting();
             }
@@ -1103,12 +1105,6 @@ void StackingContext::applyStackingContextProperties(
                     ->markNeedsPaintingConsiderInRendering();
             }
         }
-    }
-
-    if (willBeComposited) {
-        m_needsGraphicsBuffer = true;
-    } else {
-        m_needsGraphicsBuffer = false;
     }
 
     if (isRootContext() && willBeComposited) {
@@ -1499,8 +1495,6 @@ void StackingContext::fillGraphicsBufferContents(
         const LayoutRect rect(0, 0, m_owner->width(), m_owner->height());
         m_owner->applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (canApplyScroll) {
-            canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                              -m_owner->asFrameBlockBox()->scrollTop());
             ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
             ctx.layerScrollY = m_owner->asFrameBlockBox()->scrollTop();
         }
@@ -2610,16 +2604,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     ComputeOverflow<Compositor> r(compositor, this, parentBox);
 
-    if (m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow()) {
-        if (needsRepaintingWhenScrolling()) {
-            compositor->clip(m_owner->makeRect(BoxValue::BorderBoxBoxValue));
-        } else {
-            compositor->clip(m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
-        }
-        compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
-                              -m_owner->asFrameBlockBox()->scrollTop());
-    }
-
     // If current matrix is invalid, we could not composite StackckingContext
     SkMatrix test;
     if (!r.canvasOrCompositor()->currentTransformMatrix().invert(&test)) {
@@ -2686,6 +2670,18 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         }
 
         if (m_rareData->m_graphicsBufferHolder) {
+            compositor->save();
+            if (m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow()) {
+                if (needsRepaintingWhenScrolling()) {
+                    compositor->clip(
+                        m_owner->makeRect(BoxValue::BorderBoxBoxValue));
+                } else {
+                    compositor->clip(
+                        m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
+                }
+                compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                                      -m_owner->asFrameBlockBox()->scrollTop());
+            }
             size_t wTileSize =
                 m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
             size_t hTileSize =
@@ -2736,7 +2732,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 coveredRowsCount += hTileSize;
             }
 
-            compositor->translate(-minX, -minY);
+            compositor->restore();
         }
 
         if (contentSurface) {

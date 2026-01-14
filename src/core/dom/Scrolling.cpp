@@ -476,8 +476,7 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
             FrameBox* box = m_target->asElement()->frame()->asFrameBox();
             StackingContext* sc = box->stackingContext();
 
-            if ((inScrollbarAppearingOrDisappearing &&
-                 sc->needsGraphicsBuffer()) ||
+            if (inScrollbarAppearingOrDisappearing ||
                 !sc->needsRepaintingWhenScrolling()) {
                 m_target->asElement()
                     ->webView()

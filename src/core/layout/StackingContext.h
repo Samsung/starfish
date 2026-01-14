@@ -254,6 +254,11 @@ public:
     void clearGraphicsBuffer();
 
     bool needsRepaintingWhenScrolling();
+    bool inScrollActive();
+    bool inScrollWithGraphicsBufferActive()
+    {
+        return needsGraphicsBuffer() && inScrollActive();
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
