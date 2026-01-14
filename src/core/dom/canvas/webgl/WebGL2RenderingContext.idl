@@ -481,7 +481,7 @@ interface WebGL2RenderingContextBase
     [Unimplemented] undefined bindBufferRange(GLenum target, GLuint index, WebGLBuffer? buffer, GLintptr offset, GLsizeiptr size);
     [Unimplemented] any getIndexedParameter(GLenum target, GLuint index);
     [Unimplemented] sequence<GLuint>? getUniformIndices(WebGLProgram program, sequence<DOMString> uniformNames);
-    [Unimplemented] any getActiveUniforms(WebGLProgram program, sequence<GLuint> uniformIndices, GLenum pname);
+    any getActiveUniforms(WebGLProgram program, sequence<GLuint> uniformIndices, GLenum pname);
     [Unimplemented] GLuint getUniformBlockIndex(WebGLProgram program, DOMString uniformBlockName);
     [Unimplemented] any getActiveUniformBlockParameter(WebGLProgram program, GLuint uniformBlockIndex, GLenum pname);
     [Unimplemented] DOMString? getActiveUniformBlockName(WebGLProgram program, GLuint uniformBlockIndex);
