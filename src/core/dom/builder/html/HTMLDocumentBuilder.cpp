@@ -38,6 +38,7 @@
 #include "core/csp/SecurityPolicyViolationEvent.h"
 #include "platform/loader/ResourceURL.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/page/WebView.h"
 
 namespace Starfish {
 
@@ -242,12 +243,14 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        m_htmlSource = String::createASCIIString(
-            "<div style='text-align:center;margin-top:50px;'>Cannot open "
-            "page ");
-        m_htmlSource = m_htmlSource->concat(m_resource->url()->urlString());
-        m_htmlSource =
-            m_htmlSource->concat(String::createASCIIString("</div>"));
+        if (m_builder.m_document->window()->webView()->showLoadFailMsg()) {
+            m_htmlSource = String::createASCIIString(
+                "<div style='text-align:center;margin-top:50px;'>Cannot open "
+                "page ");
+            m_htmlSource = m_htmlSource->concat(m_resource->url()->urlString());
+            m_htmlSource =
+                m_htmlSource->concat(String::createASCIIString("</div>"));
+        }
 #ifdef STARFISH_ENABLE_TEST
         if (getenv("REF_TEST_STATE") && atoi(getenv("REF_TEST_STATE")) > 0) {
             m_htmlSource = m_htmlSource->concat(String::createASCIIString(
