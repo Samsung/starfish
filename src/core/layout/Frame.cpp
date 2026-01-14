@@ -1176,11 +1176,12 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
     , result(result)
 {
     if (sourceStackingContext->owner()->shouldApplyOverflow()) {
-        LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
-
-        boundMaxExtentDueToOverflow.push_back(
-            std::make_tuple(computeBoxExtent(rt, SkMatrix::I()),
-                            sourceStackingContext->owner()));
+        if (!sourceStackingContext->inScrollWithGraphicsBufferActive()) {
+            LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
+            boundMaxExtentDueToOverflow.push_back(
+                std::make_tuple(computeBoxExtent(rt, SkMatrix::I()),
+                                sourceStackingContext->owner()));
+        }
     }
 }
 
@@ -1222,12 +1223,16 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
                             tmp = LayoutRect::overlappedRect(
                                 tmp,
                                 std::get<0>(boundMaxExtentDueToOverflow[i]));
+
                             break;
                         }
                     }
 
 #ifndef NDEBUG
-                    STARFISH_ASSERT(finded);
+                    STARFISH_ASSERT(finded ||
+                                    (sourceStackingContext &&
+                                     sourceStackingContext
+                                         ->inScrollWithGraphicsBufferActive()));
 #endif
                     status.reset(f);
                 }
@@ -1235,7 +1240,9 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
         }
 
         // test source has buffer & overflow
-        if (sourceStackingContext && purpose >= GraphicsBufferBySelf &&
+        if (sourceStackingContext &&
+            !sourceStackingContext->inScrollWithGraphicsBufferActive() &&
+            purpose >= GraphicsBufferBySelf &&
             sourceFrameBox->shouldApplyOverflow()) {
             STARFISH_ASSERT(std::get<1>(boundMaxExtentDueToOverflow[0]) ==
                             sourceFrameBox);
@@ -1268,9 +1275,14 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
 {
     if (ctx.fragmentBoxStack.size() &&
         ctx.fragmentBoxStack.back()->isFrameBlockBox()) {
-        ctx.tranformMatrix.preTranslate(
-            -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollLeft(),
-            -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollTop());
+        auto sc = ctx.fragmentBoxStack.back()->stackingContext();
+        if (ctx.purpose <
+                Frame::ComputeVisibleRectContext::GraphicsBufferBySelf ||
+            !(sc && sc->inScrollWithGraphicsBufferActive())) {
+            ctx.tranformMatrix.preTranslate(
+                -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollLeft(),
+                -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollTop());
+        }
     }
     ctx.fragmentBoxStack.push_back(fragmentBox);
 
