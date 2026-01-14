@@ -187,6 +187,11 @@ public:
     void waitSync(WebGLSync* sync, GLbitfield flags, GLint64 timeout);
     ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
 
+    /* Uniform Buffer Objects and Transform Feedback Buffers */
+    ScriptValue getActiveUniforms(WebGLProgram* program,
+                                  GCAtomicVector<GLuint> uniformIndices,
+                                  GLenum pname);
+
     /* Vertex Array Objects */
     WebGLVertexArrayObject* createVertexArray();
     void deleteVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);

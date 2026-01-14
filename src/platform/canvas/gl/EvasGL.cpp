@@ -991,6 +991,14 @@ public:
         m_evasGLAPI->glUniform4uiv(location, count, value);
     }
 
+    void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
+                             const GLuint *uniformIndices, GLenum pname,
+                             GLint *params) override
+    {
+        m_evasGLAPI->glGetActiveUniformsiv(program, uniformCount,
+                                           uniformIndices, pname, params);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return m_evasGLAPI->glFenceSync(condition, flags);

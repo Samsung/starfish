@@ -323,6 +323,9 @@ public:
                              const GLuint *value) = 0;
     virtual void uniform4uiv(GLint location, GLsizei count,
                              const GLuint *value) = 0;
+    virtual void getActiveUniformsiv(GLuint program, GLsizei uniformCount,
+                                     const GLuint *uniformIndices, GLenum pname,
+                                     GLint *params) = 0;
     virtual GLsync fenceSync(GLenum condition, GLbitfield flags) = 0;
     virtual GLboolean isSync(GLsync sync) = 0;
     virtual void deleteSync(GLsync sync) = 0;
