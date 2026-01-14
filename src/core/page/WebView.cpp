@@ -310,6 +310,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_needsDownScaleImageResourceLargerThan(0)
     , m_glCompsitorScale(1)
     , m_showFps(false)
+    , m_showLoadFailMsg(true)
 {
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);

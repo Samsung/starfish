@@ -479,6 +479,16 @@ public:
         m_showFps = showFps;
     }
 
+    void setShowLoadFailMsg(bool showLoadFailMsg)
+    {
+        m_showLoadFailMsg = showLoadFailMsg;
+    }
+
+    bool showLoadFailMsg()
+    {
+        return m_showLoadFailMsg;
+    }
+
     bool didFirstRenderingAfterWakeup()
     {
         return m_didFirstRenderingAfterWakeup;
@@ -650,6 +660,7 @@ private:
     uint32_t m_needsDownScaleImageResourceLargerThan;
     float m_glCompsitorScale;
     bool m_showFps;
+    bool m_showLoadFailMsg;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };

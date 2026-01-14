@@ -120,6 +120,7 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
 #endif
     UpdateSetting("useExternalPopup", "False");
     UpdateSetting("useSpatialNavigation", "False");
+    UpdateSetting("showLoadFailMsg", "true");
 }
 
 SettingsImpl::SettingsImpl(SettingsImpl* other)
