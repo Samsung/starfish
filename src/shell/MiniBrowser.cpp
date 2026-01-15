@@ -303,7 +303,6 @@ void MiniBrowser::setSettings(const Settings& settings)
     lweSettings.SetTTSMode(settings.ttsMode);
     lweSettings.SetTTSLanguage(settings.language);
     lweSettings.SetUseHttp2(settings.useHTTP2);
-    lweSettings.UpdateSetting("showLoadFailMsg", "true");
 
     m_lwe->SetSettings(lweSettings);
 }
