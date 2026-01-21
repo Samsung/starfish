@@ -440,6 +440,9 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
     }
 
     if (needsRepainting) {
+        if (sc && sc->inScrollWithGraphicsBufferActive()) {
+            currentVisibleRect = sc->visibleRect();
+        }
         notifyDirty(frame, sc, currentMatrix, currentVisibleRect);
         auto iter =
             m_oldContext.m_visibleRectOfFrameRectIsOverflowedBoxes.find(frame);

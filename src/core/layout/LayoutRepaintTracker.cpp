@@ -73,16 +73,21 @@ static void collectInlineBoxes(
     InlineBoxLayoutParentBox* parent,
     LayoutRepaintTracker::InlineLayoutResult* oldResult,
     LayoutRepaintTracker::InlineLayoutResult* result,
-    FrameBox* stackingContextOwner)
+    FrameBox* stackingContextOwner,
+    Optional<FrameBox*> lastGraphicsBufferContext)
 {
     auto& b = parent->boxes();
+    auto* parentStackingContextBox = lastGraphicsBufferContext
+                                         ? lastGraphicsBufferContext.value()
+                                         : stackingContextOwner;
+    bool includeTopMostScroll = lastGraphicsBufferContext ? false : true;
     for (size_t i = 0; i < b.size(); i++) {
         Frame* f = b[i];
         bool inserted = false;
         if (f->isInlineTextBox()) {
             LayoutRepaintTracker::InlineLayoutResultItem r;
             r.m_frameRect = f->asFrameBox()->absoluteRectIncludingScroll(
-                stackingContextOwner);
+                parentStackingContextBox, includeTopMostScroll);
 
             float diff =
                 FONT_WIDTH_DIFFERENCE_GLYPH_ADVANCE_AND_ACTUAL_WIDTH_OF_GLYPH(
@@ -104,7 +109,7 @@ static void collectInlineBoxes(
         } else if (f->isInlineNonReplacedBox()) {
             LayoutRepaintTracker::InlineLayoutResultItem r;
             r.m_frameRect = f->asFrameBox()->absoluteRectIncludingScroll(
-                stackingContextOwner);
+                parentStackingContextBox, includeTopMostScroll);
             r.m_textStartEndValue = 0;
             inserted = true;
             result->push_back(r);
@@ -121,14 +126,32 @@ static void collectInlineBoxes(
 
         if (f->isInlineBoxLayoutParentBox()) {
             collectInlineBoxes(f->asInlineBoxLayoutParentBox(), oldResult,
-                               result, stackingContextOwner);
+                               result, stackingContextOwner,
+                               lastGraphicsBufferContext);
         }
     }
+}
+
+static LayoutRect computeLayoutRect(
+    FrameBox* currentFrameBox, FrameBox* lastStackingContextOwner,
+    Optional<FrameBox*> lastGraphicsBufferContext)
+{
+    LayoutRect newLayoutResultRect;
+
+    if (lastGraphicsBufferContext) {
+        newLayoutResultRect = currentFrameBox->absoluteRectIncludingScroll(
+            lastGraphicsBufferContext.value(), false);
+    } else {
+        newLayoutResultRect = currentFrameBox->absoluteRectIncludingScroll(
+            lastStackingContextOwner, true);
+    }
+    return newLayoutResultRect;
 }
 
 static void traceRepaintRegionJob(
     LayoutRepaintTracker& tracker, Frame* currentFrame,
     FrameBox* lastStackingContextOwner,
+    Optional<FrameBox*> lastGraphicsBufferContext,
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>>& oldResultMap,
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>>& newLayoutResultMap,
     GCVector<std::tuple<FrameBlockBox*, FrameBox*,
@@ -140,7 +163,7 @@ static void traceRepaintRegionJob(
     std::unordered_map<Node*, LayoutRect>& dirtyAreaMapPerStackingContext,
     GCUnorderedSet<Node*, std::hash<Node*>, std::equal_to<Node*>,
                    GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
-    bool& gotPaintingDirty)
+    bool& gotPaintingDirty, bool inCompositeMode)
 {
     // if box is invisible from here, ignore from currentBox
     if (currentFrame->isFrameBox() &&
@@ -163,24 +186,15 @@ static void traceRepaintRegionJob(
             currentFrame->needToEstablishStackingContext();
         if (needToEstablishStackingContext) {
             // compute new result
-            LayoutRect newLayoutResultRect;
-            auto graphicsOwner = lastStackingContextOwner;
-            auto sc = currentFrameBox->stackingContext();
-            bool flag = true;
-            if (currentFrameBox->node()->webView()->needsComposite() && sc &&
-                !sc->needsGraphicsBuffer()) {
-                while (sc) {
-                    if (sc->needsGraphicsBuffer()) {
-                        graphicsOwner = sc->owner();
-                        flag = false;
-                        break;
-                    }
-                    sc = sc->parent();
+            if (lastGraphicsBufferContext) {
+                if (currentFrameBox->stackingContext() &&
+                    currentFrameBox->stackingContext()->needsGraphicsBuffer()) {
+                    lastGraphicsBufferContext = currentFrameBox;
                 }
             }
-
-            newLayoutResultRect = currentFrameBox->absoluteRectIncludingScroll(
-                graphicsOwner, flag);
+            LayoutRect newLayoutResultRect =
+                computeLayoutRect(currentFrameBox, lastStackingContextOwner,
+                                  lastGraphicsBufferContext);
 
             // check last result
             auto iter = oldResultMap.find(node);
@@ -301,7 +315,8 @@ static void traceRepaintRegionJob(
         auto& lineBoxes = currentFrame->asFrameBlockBox()->lineBoxes();
         for (size_t i = 0; i < lineBoxes.size(); i++) {
             collectInlineBoxes(lineBoxes[i], oldInlineResult, inlineResult,
-                               lastStackingContextOwner);
+                               lastStackingContextOwner,
+                               lastGraphicsBufferContext);
         }
 
         if (oldInlineResult) {
@@ -356,9 +371,10 @@ static void traceRepaintRegionJob(
     Frame* f = currentFrame->firstChild();
     while (f) {
         traceRepaintRegionJob(
-            tracker, f, lastStackingContextOwner, oldResultMap,
-            newLayoutResultMap, oldInlineResultMap, newInlineResultMap,
-            dirtyAreaMapPerStackingContext, rootedNodeSet, gotPaintingDirty);
+            tracker, f, lastStackingContextOwner, lastGraphicsBufferContext,
+            oldResultMap, newLayoutResultMap, oldInlineResultMap,
+            newInlineResultMap, dirtyAreaMapPerStackingContext, rootedNodeSet,
+            gotPaintingDirty, inCompositeMode);
         f = f->next();
     }
 }
@@ -370,11 +386,19 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
         newInlineLayoutResult;
     LayoutRect dirtyArea;
     bool gotPaintingDirty = false;
+    bool needsComposite = fd->node()->webView()->needsComposite();
+    Optional<FrameBox*> lastGraphicsContext;
     auto oldRootedNodeSet = std::move(m_rootedNodeSet);
-    traceRepaintRegionJob(*this, fd, fd, m_lastLayoutResult, newResult,
-                          m_lastInlineTextLayoutResult, newInlineLayoutResult,
-                          m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet,
-                          gotPaintingDirty);
+
+    if (needsComposite) {
+        lastGraphicsContext = fd;
+    }
+
+    traceRepaintRegionJob(
+        *this, fd, fd, lastGraphicsContext, m_lastLayoutResult, newResult,
+        m_lastInlineTextLayoutResult, newInlineLayoutResult,
+        m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet, gotPaintingDirty,
+        fd->node()->webView()->needsComposite());
 
     auto iter = m_lastLayoutResult.begin();
     while (iter != m_lastLayoutResult.end()) {

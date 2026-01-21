@@ -850,6 +850,12 @@ public:
     virtual void computeVisibleRect(
         FrameBox::ComputeVisibleRectContext& ctx) override;
 
+    virtual bool needToEstablishStackingContext() override
+    {
+        return FrameBox::needToEstablishStackingContext() ||
+               needsToEstablishStackingContextForScrolling();
+    }
+
     virtual bool hasBlockFlow()
     {
         if (!firstChild()) {

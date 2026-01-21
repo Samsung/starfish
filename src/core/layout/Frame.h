@@ -2113,7 +2113,7 @@ public:
         return m_flags.m_needToEstablishBlockFormattingContext;
     }
 
-    bool needToEstablishStackingContext() const
+    virtual bool needToEstablishStackingContext()
     {
         return m_flags.m_needToEstablishStackingContext;
     }

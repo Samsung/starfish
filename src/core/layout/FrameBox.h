@@ -650,29 +650,8 @@ public:
         return outerHeight;
     }
 
-    bool canOwnsStackingContext()
-    {
-        if (isRootElement()) {
-            return true;
-        } else if (needsGraphicsBuffer()) {
-            return true;
-        } else if (style()->hasTransforms(this)) {
-            return true;
-        } else if (style()->position() == FixedPositionValue) {
-            return true;
-        } else if ((isPositioned() || isFlexItem()) &&
-                   style()->isSpecifiedZIndex()) {
-            return true;
-        } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
-            return true;
-        } else if (style()->hasAvailableFilter()) {
-            return true;
-        } else if (style()->maskLayerSize()) {
-            return true;
-        }
-
-        return false;
-    }
+    bool needsToEstablishStackingContextForScrolling();
+    bool canOwnsStackingContext();
     bool needsToPaintBackgroundOrBorderOrBoxShadow();
     virtual void paintContent(PaintingContext& ctx);
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
