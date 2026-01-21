@@ -38,6 +38,10 @@
 #include <cairo.h>
 #endif
 
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+#include "platform/multimedia/MediaPlayerLinux.h"
+#endif
+
 #include <array>
 #include <clipper.hpp>
 
@@ -1723,6 +1727,48 @@ public:
                 m_textureFragments.push_back(fragment);
             }
 #endif
+            {
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+                CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
+                    fragment;
+
+                if (fragment.textureID == 0) {
+                    GLuint textureID;
+                    gl()->genTextures(1, &textureID);
+                    checkError(gl());
+                    fragment.textureID = static_cast<size_t>(textureID);
+                }
+                gl()->bindTexture(GL_TEXTURE_2D,
+                                  static_cast<GLuint>(fragment.textureID));
+                checkError(gl());
+                gl()->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_bufferWidth,
+                                 m_bufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                                 m_buffer);
+                checkError(gl());
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                    GL_LINEAR);
+                checkError(gl());
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                    GL_LINEAR);
+                checkError(gl());
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                    GL_CLAMP_TO_EDGE);
+                checkError(gl());
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                    GL_CLAMP_TO_EDGE);
+                checkError(gl());
+                gl()->bindTexture(GL_TEXTURE_2D, 0);
+                checkError(gl());
+
+                fragment.textureWidth = m_bufferWidth;
+                fragment.textureHeight = m_bufferHeight;
+                fragment.srcX = 0;
+                fragment.srcY = 0;
+                fragment.srcWidth = 1;
+                fragment.srcHeight = 1;
+                m_textureFragments.push_back(fragment);
+#endif
+            }
             return;
         }
 
@@ -2072,6 +2118,13 @@ public:
         w = outDesc.width;
         h = outDesc.height;
         m_buffer = nullptr;
+#elif defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+        LinuxMediaPacket* packet = static_cast<LinuxMediaPacket*>(buffer);
+        uint8_t* pixelData = packet->buffer();
+        w = packet->width();
+        h = packet->height();
+        m_bufferStride = packet->stride();
+        m_buffer = reinterpret_cast<unsigned char*>(pixelData);
 #endif
 
         m_width = w;
@@ -2113,6 +2166,7 @@ protected:
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
     AHardwareBuffer* m_aHardwareBuffer;
     EGLImageKHR m_eglImage;
+
 #endif
 };
 
@@ -3185,7 +3239,11 @@ public:
                                            screenHeight, texPosition);
                     drawTexture(csGL, texPosition,
                                 csGL->m_textureFragments[0].textureID,
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+                                GL_TEXTURE_2D, -1,
+#else
                                 GL_TEXTURE_EXTERNAL_OES, -1,
+#endif
                                 csGL->m_bufferWidth, csGL->m_bufferHeight);
                 }
 

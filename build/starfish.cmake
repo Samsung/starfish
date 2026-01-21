@@ -110,6 +110,25 @@ SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_TIZEN_INCLUDE_DIRS}
 )
 
+IF (${USE_FFMPEG_MEDIA_PLAYER} STREQUAL "1" AND ${HOST} STREQUAL "linux")
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    pkg_check_modules(AVCODEC REQUIRED libavcodec)
+    pkg_check_modules(AVFORMAT REQUIRED libavformat)
+    pkg_check_modules(AVUTIL REQUIRED libavutil)
+    pkg_check_modules(SWSCALE libswscale)
+    if (NOT SWSCALE_FOUND)
+        find_library(SWSCALE_LIBRARIES swscale)
+        find_path(SWSCALE_INCLUDE_DIRS libswscale/swscale.h)
+        if (SWSCALE_LIBRARIES AND SWSCALE_INCLUDE_DIRS)
+            set(SWSCALE_FOUND TRUE)
+        endif()
+    endif()
+    message(STATUS "AVCODEC_LIBRARIES: ${AVCODEC_LIBRARIES}")
+    message(STATUS "AVFORMAT_LIBRARIES: ${AVFORMAT_LIBRARIES}")
+    message(STATUS "AVUTIL_LIBRARIES: ${AVUTIL_LIBRARIES}")
+    message(STATUS "SWSCALE_LIBRARIES: ${SWSCALE_LIBRARIES}")
+ENDIF()
+
 #######################################################
 # LINK LIBRARIES
 #######################################################
@@ -132,6 +151,10 @@ SET (STARFISH_LINK_LIBRARIES
     ${STARFISH_TIZEN_CUSTOM_BUNDLE_LIBRARIES}
     ${STARFISH_TIZEN_CUSTOM_VCONF_LIBRARIES}
     ${STARFISH_TIZEN_CUSTOM_WEBRTC_LIBRARIES}
+    ${AVUTIL_LIBRARIES}
+    ${AVCODEC_LIBRARIES}
+    ${AVFORMAT_LIBRARIES}
+    ${SWSCALE_LIBRARIES}
 )
 
 #######################################################
