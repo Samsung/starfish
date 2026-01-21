@@ -1659,6 +1659,9 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
         style->visibility() == VisibilityValue::VisibleVisibilityValue) {
         if (rootOrBodyelement && isRootOrBodyElementNeedsInCompositeState) {
             // skip painting. compositor will draw color
+        } else if (box->stackingContext() &&
+                   box->stackingContext()->inScrollWithGraphicsBufferActive()) {
+            // skip painting. compositor will draw color
         } else {
             canvas->save();
             Unit::Rect paintingRect;
@@ -3398,6 +3401,51 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     canvas->restore();
 }
 
+bool FrameBox::needsToEstablishStackingContextForScrolling()
+{
+    if (isFrameBlockBox()) {
+        if (appliedOverflowX() == OverflowValue::AutoOverflow ||
+            appliedOverflowX() == OverflowValue::ScrollOverflow) {
+            if (asFrameBlockBox()->hasBiggerContentThanFrameWidth()) {
+                return true;
+            }
+        }
+        if (appliedOverflowY() == OverflowValue::AutoOverflow ||
+            appliedOverflowY() == OverflowValue::ScrollOverflow) {
+            if (asFrameBlockBox()->hasBiggerContentThanFrameHeight()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool FrameBox::canOwnsStackingContext()
+{
+    if (isRootElement()) {
+        return true;
+    } else if (needsGraphicsBuffer()) {
+        return true;
+    } else if (style()->hasTransforms(this)) {
+        return true;
+    } else if (style()->position() == FixedPositionValue) {
+        return true;
+    } else if ((isPositioned() || isFlexItem()) &&
+               style()->isSpecifiedZIndex()) {
+        return true;
+    } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
+        return true;
+    } else if (style()->hasAvailableFilter()) {
+        return true;
+    } else if (style()->maskLayerSize()) {
+        return true;
+    } else if (needsToEstablishStackingContextForScrolling()) {
+        return true;
+    }
+
+    return false;
+}
+
 bool FrameBox::needsToPaintBackgroundOrBorderOrBoxShadow()
 {
     auto s = style();
@@ -3491,20 +3539,22 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
                                                   ->asFrameBox()
                                                   ->stackingContext());
             }
-        } else {
-            FrameBox* p;
-            p = layoutParent()->asFrameBox();
+        } else if (layoutParent()) {
+            FrameBox* p = layoutParent()->asFrameBox();
             while (true) {
                 if (p->needToEstablishStackingContext()) {
                     if (p->canOwnsStackingContext() ||
                         p->shouldApplyOverflow()) {
+                        ensureFrameBoxRareData()->m_stackingContext =
+                            new StackingContext(this, p->stackingContext());
                         break;
                     }
                 }
+                if (!p->layoutParent()) {
+                    break;
+                }
                 p = p->layoutParent()->asFrameBox();
             }
-            ensureFrameBoxRareData()->m_stackingContext =
-                new StackingContext(this, p->stackingContext());
         }
     }
 }
@@ -3982,6 +4032,14 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     bool ret = !shouldApplyOverflow();
+    // we need to return true when `true ==
+    // StackingContext->inScrollWithGraphicsBufferActive()` since we need to
+    // test children boxes for scrolling
+    if (ctx.sourceStackingContext &&
+        ctx.sourceStackingContext->inScrollWithGraphicsBufferActive() &&
+        ctx.sourceStackingContext == stackingContext()) {
+        ret = true;
+    }
     bool boxHasDrawableContents = true;
     bool drawableContentsInStyle = true;
     if (ctx.isVisibleRectCollapsible) {

@@ -1526,7 +1526,7 @@ RenderResult WebView::rendering(bool force)
             {
                 auto iter = m_repaintRegionInRendering.begin();
                 while (iter != m_repaintRegionInRendering.end()) {
-                    if (iter->first) {
+                    if (iter->first && iter->first->isElement()) {
                         STARFISH_LOG_INFO(
                             "repaint region node %s #%s className(%s) %f %f %f "
                             "%f",

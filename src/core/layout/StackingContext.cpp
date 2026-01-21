@@ -180,7 +180,9 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
                                            size_t screenWidth,
                                            size_t screenHeight,
                                            StackingContext* sc)
-    : m_tileDataWidth(bufferWidth)
+    : m_bufferWidth(bufferWidth)
+    , m_bufferHeight(bufferHeight)
+    , m_tileDataWidth(bufferWidth)
     , m_tileDataHeight(bufferHeight)
     , m_horizontalTileCount(1)
     , m_verticalTileCount(1)
@@ -415,6 +417,10 @@ bool StackingContext::needsRepaintingWhenScrolling()
         return true;
     }
 
+    if (owner()->style()->backgroundLayerSize()) {
+        return true;
+    }
+
     return false;
 }
 
@@ -429,6 +435,9 @@ bool StackingContext::inScrollActive()
             m_owner->node()->asElement()->scrollTop(false)) {
             return true;
         }
+    }
+    if (m_owner->needsToEstablishStackingContextForScrolling()) {
+        return true;
     }
     return false;
 }
@@ -700,7 +709,11 @@ void StackingContext::computeStackingContextProperties(
 
         StackingContext* p = parent();
         StackingContext* compositedAncestor = nullptr;
+        bool hasScrollBetweenThisStackigContextAndGraphicsBuffer = false;
         while (p) {
+            if (p->inScrollActive()) {
+                hasScrollBetweenThisStackigContextAndGraphicsBuffer = true;
+            }
             if (compositingState.isCompsitedLayer(p, &ancestorIndex)) {
                 compositedAncestor = p;
                 break;
@@ -734,16 +747,20 @@ void StackingContext::computeStackingContextProperties(
             }
         }
 
-        if (parentIsRootElementLayer ||
-            (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) ==
-                 true &&
-             parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) ==
-                 true &&
-             parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) ==
-                 true &&
-             parentExtent.containsInVisual(selfExtent.maxX(),
-                                           selfExtent.maxY())) ||
-            thereIsOverflowHiddenBetweenSelfAndCompositedAncestor) {
+        if (m_owner->isAbsolutePositioned() &&
+            hasScrollBetweenThisStackigContextAndGraphicsBuffer) {
+            reason = NeedsGraphicsLayerReason::
+                NeedsGraphicsLayerReasonNotCoveredByParent;
+        } else if (parentIsRootElementLayer ||
+                   (parentExtent.containsInVisual(selfExtent.x(),
+                                                  selfExtent.y()) == true &&
+                    parentExtent.containsInVisual(selfExtent.maxX(),
+                                                  selfExtent.y()) == true &&
+                    parentExtent.containsInVisual(selfExtent.x(),
+                                                  selfExtent.maxY()) == true &&
+                    parentExtent.containsInVisual(selfExtent.maxX(),
+                                                  selfExtent.maxY())) ||
+                   thereIsOverflowHiddenBetweenSelfAndCompositedAncestor) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
@@ -894,6 +911,10 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
                                Frame::ComputeVisibleRectContext& ctx)
 {
     if (c != source && c->needsGraphicsBuffer()) {
+        return;
+    }
+
+    if (c->owner()->isBoxesInvisibleFromHere()) {
         return;
     }
 
@@ -1061,15 +1082,6 @@ void StackingContext::applyStackingContextProperties(
                     m_rareData->m_visibleRect.setHeight(0);
                 }
             }
-        }
-
-        if (m_rareData->m_visibleRect.width() == 0 &&
-            m_rareData->m_visibleRect.height() == 0 &&
-            !m_owner->isRootElement() && !inAnimation &&
-            m_needsGraphicsBufferReason !=
-                NeedsGraphicsLayerReasonNeedsScroll) {
-            willBeComposited = false;
-            m_needsGraphicsBuffer = false;
         }
 
         m_isVisibleRectComputedForNonGraphicsLayer = true;
@@ -1914,11 +1926,11 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                     size_t tileDataY = coveredRowsCount;
                     size_t tileDataWidth = std::min(
                         wTileSize,
-                        m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                        m_rareData->m_graphicsBufferHolder->tileBufferWidth() -
                             coveredColsCount);
                     size_t tileDataHeight = std::min(
                         hTileSize,
-                        m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                        m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
                             coveredRowsCount);
 
                     LayoutRect tileExtent = computeBoxExtent(
@@ -2115,12 +2127,14 @@ bool StackingContext::fillGraphicsBufferContents(
         for (size_t x = 0; x < wTextureCount; x++) {
             size_t tileDataX = coveredColsCount;
             size_t tileDataY = coveredRowsCount;
-            size_t tileDataWidth = std::min(
-                wTileSize, m_rareData->m_graphicsBufferHolder->bufferWidth() -
-                               coveredColsCount);
+            size_t tileDataWidth =
+                std::min(wTileSize,
+                         m_rareData->m_graphicsBufferHolder->tileBufferWidth() -
+                             coveredColsCount);
             size_t tileDataHeight = std::min(
-                hTileSize, m_rareData->m_graphicsBufferHolder->bufferHeight() -
-                               coveredRowsCount);
+                hTileSize,
+                m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
+                    coveredRowsCount);
 
             LayoutRect tileExtent =
                 computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
@@ -2672,13 +2686,24 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         if (m_rareData->m_graphicsBufferHolder) {
             compositor->save();
             if (m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow()) {
+                Unit::Rect fullRect;
+
                 if (needsRepaintingWhenScrolling()) {
-                    compositor->clip(
-                        m_owner->makeRect(BoxValue::BorderBoxBoxValue));
+                    fullRect = m_owner->makeRect(BoxValue::BorderBoxBoxValue);
                 } else {
-                    compositor->clip(
-                        m_owner->makeRect(BoxValue::PaddingBoxBoxValue));
+                    fullRect = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
                 }
+
+                auto clr = owner()->style()->backgroundColor();
+                if (!clr.isTransparent()) {
+                    compositor->save();
+                    compositor->setFillColor(clr);
+                    compositor->drawRect(fullRect);
+                    compositor->restore();
+                }
+
+                compositor->clip(fullRect);
+
                 compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                                       -m_owner->asFrameBlockBox()->scrollTop());
             }
@@ -2704,11 +2729,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     size_t tileDataY = coveredRowsCount;
                     size_t tileDataWidth = std::min(
                         wTileSize,
-                        m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                        m_rareData->m_graphicsBufferHolder->tileBufferWidth() -
                             coveredColsCount);
                     size_t tileDataHeight = std::min(
                         hTileSize,
-                        m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                        m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
                             coveredRowsCount);
 
                     float tx = tileDataX / additionalPixelRatio;
