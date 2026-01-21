@@ -18,7 +18,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
+#if !defined(STARFISH_USE_FFMPEG_MEDIAPLAYER) && !defined(STARFISH_TIZEN)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
