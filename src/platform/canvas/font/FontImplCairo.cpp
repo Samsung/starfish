@@ -546,20 +546,6 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
         }
     }
 
-#if !defined(STARFISH_ENABLE_TEST)
-    if (f->weight() > 4) { // 4 means default weight
-        for (size_t i = 0; i < f->fontFaceList().size() &&
-                           i < f->seenUnresolvedWebFontIndex();
-             i++) {
-            auto ft = reinterpret_cast<FontFaceImplCairo*>(f->fontFaceList()[i])
-                          ->freetypeFace();
-            if (!(ft->style_flags & FT_STYLE_FLAG_BOLD)) {
-                return false;
-            }
-        }
-    }
-#endif
-
     if (f->fontKerning() == FontKerningAutoValue) {
         if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
                 ->m_supportsKerning) {
