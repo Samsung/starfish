@@ -448,6 +448,15 @@ public:
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);
                     FcPatternDestroy(pattern);
+#if defined(STARFISH_TIZEN)
+                    if (familyName.find("samsungone") == 0) {
+                        auto newResult = findFont("one ui sans app",
+                                                  isGenericName, style, weight);
+                        if (newResult.size()) {
+                            return newResult;
+                        }
+                    }
+#endif
                     return UTF8StringDataNonGCStd();
                 }
             }
