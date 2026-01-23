@@ -1770,9 +1770,15 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
             size_t tileIndex = 0;
             size_t coveredRowsCount = 0;
 
+            auto screenMatrix = m_owner->computeScreenMatrix(true);
             LayoutRect screenRect = computeScreenRect(this);
             LayoutRect windowRect = computeWindowRectOnScreen(this);
-            auto screenMatrix = m_owner->computeScreenMatrix(true);
+            Optional<LayoutRect> scrollRect;
+            if (inScrollWithGraphicsBufferActive()) {
+                scrollRect = computeBoxExtent(
+                    LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+                    m_owner->computeScreenMatrix(false));
+            }
 
             size_t hVisibleTextureStart = hTextureCount;
             size_t hVisibleTextureEnd = 0;
@@ -1802,6 +1808,12 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                     bool willPaintOnScreen =
                         screenRect.intersects(tileExtent) &&
                         windowRect.intersects(tileExtent);
+
+                    if (scrollRect) {
+                        willPaintOnScreen =
+                            willPaintOnScreen &&
+                            scrollRect.value().intersects(tileExtent);
+                    }
 
                     if (willPaintOnScreen) {
                         wVisibleTextureStart =
@@ -2119,7 +2131,12 @@ bool StackingContext::fillGraphicsBufferContents(
 
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect windowRect = computeWindowRectOnScreen(this);
-
+    Optional<LayoutRect> scrollRect;
+    if (inScrollWithGraphicsBufferActive()) {
+        scrollRect = computeBoxExtent(
+            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+            m_owner->computeScreenMatrix(false));
+    }
     size_t tileIndex = 0;
     size_t coveredRowsCount = 0;
     for (size_t y = 0; y < hTextureCount; y++) {
@@ -2144,6 +2161,10 @@ bool StackingContext::fillGraphicsBufferContents(
 
             bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
                                      windowRect.intersects(tileExtent);
+            if (scrollRect) {
+                willPaintOnScreen = willPaintOnScreen &&
+                                    scrollRect.value().intersects(tileExtent);
+            }
 
             LayoutRect layerClipRect = globalCtx.repaintRegion[owner()->node()];
             bool isOverlappedWithScreenClipRect =
@@ -2749,6 +2770,22 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex],
                             Unit::Rect(tx, ty, w, h));
+#ifdef STARFISH_ENABLE_TEST
+                        if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
+                                     StarfishStartUpFlag::
+                                         enableDebugGraphicsLayer)) {
+                            compositor->save();
+                            compositor->setFillColor(
+                                Unit::Color(255, 64, 0, 64));
+                            compositor->drawRect(Unit::Rect(tx, ty, 1, h));
+                            compositor->drawRect(Unit::Rect(tx, ty, w, 1));
+                            compositor->drawRect(
+                                Unit::Rect(tx, ty + h - 1, w, 1));
+                            compositor->drawRect(
+                                Unit::Rect(tx + w - 1, ty, 1, h));
+                            compositor->restore();
+                        }
+#endif
                     }
                     tileIndex++;
                     coveredColsCount += wTileSize;
