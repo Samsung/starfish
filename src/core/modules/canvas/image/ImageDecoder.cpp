@@ -239,19 +239,22 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
         return;
     }
 
-    uint32_t wh = dHandle->image_width * dHandle->image_height;
+    dHandle->buffered_image = jpeg_has_multiple_scans(dHandle);
+    jpeg_calc_output_dimensions(dHandle);
+
+#ifdef PORT_PIXEL_ORDER_RGBA
+    dHandle->out_color_space = JCS_EXT_RGBX;
+#else
+    dHandle->out_color_space = JCS_EXT_BGRX;
+#endif
+    dHandle->enable_2pass_quant = FALSE;
+    dHandle->do_block_smoothing = TRUE;
+
+    uint64_t wh = dHandle->image_width * dHandle->image_height;
     if (needsDownScaleImageResourceLargerThan &&
         wh >= needsDownScaleImageResourceLargerThan) {
-        if (wh > 7680 * 4320) {
-            dHandle->scale_num = 1;
-            dHandle->scale_denom = 8;
-        } else if (wh > 3840 * 2160) {
-            dHandle->scale_num = 1;
-            dHandle->scale_denom = 4;
-        } else if (wh > 1920 * 1080) {
-            dHandle->scale_num = 1;
-            dHandle->scale_denom = 2;
-        }
+        dHandle->scale_num = 1;
+        dHandle->scale_denom = std::ceil(wh / (1920.0 * 1080.0));
         dHandle->mem->max_memory_to_use = 100 * 1024 * 1024;
         dHandle->two_pass_quantize = FALSE;
         dHandle->do_fancy_upsampling = FALSE;
@@ -265,7 +268,16 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
             dHandle->image_width, dHandle->image_height, dHandle->scale_num,
             dHandle->scale_denom);
     }
+
     if (jpeg_start_decompress(dHandle) != 1) {
+        return;
+    }
+
+    // fail when image is extremely large
+    if (dHandle->output_width >=
+            static_cast<size_t>(std::numeric_limits<int16_t>::max()) ||
+        dHandle->output_height >=
+            static_cast<size_t>(std::numeric_limits<int16_t>::max())) {
         return;
     }
 
@@ -274,22 +286,7 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
     result.m_stride = result.m_width * 4;
 
     if (!needsDecoding) {
-        // decode first line for testing
-        result.m_buffer = (uint8_t*)malloc(result.m_stride);
-        STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
-
-        unsigned char* buffer_array[1];
-        if (dHandle->output_scanline < dHandle->output_height) {
-            buffer_array[0] = (unsigned char*)result.m_buffer +
-                              (dHandle->output_scanline) * result.m_stride;
-            jpeg_read_scanlines(dHandle, buffer_array, 1);
-            result.m_isSuccessful = true;
-        } else {
-            result.m_isSuccessful = false;
-        }
-
-        free(result.m_buffer);
-        result.m_buffer = nullptr;
+        result.m_isSuccessful = true;
         return;
     }
 
@@ -297,58 +294,78 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
     result.m_buffer = (uint8_t*)malloc(dstSize);
     STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
 
-    unsigned char* buffer_array[1];
-    if (dHandle->out_color_space == JCS_GRAYSCALE) {
-        while (dHandle->output_scanline < dHandle->output_height) {
-            buffer_array[0] = (unsigned char*)result.m_buffer +
-                              (dHandle->output_scanline) * result.m_stride;
-            jpeg_read_scanlines(dHandle, buffer_array, 1);
-            {
-                uint8_t* buf_raw = static_cast<uint8_t*>(buffer_array[0]);
-                uint8_t* iter = buf_raw;
-                iter += result.m_width;
-                int g;
-                for (int i = result.m_stride - 1; i >= 0; i -= 4) {
-                    g = *--iter;
-                    buf_raw[i] = 255;
-                    buf_raw[i - 1] = g;
-                    buf_raw[i - 2] = g;
-                    buf_raw[i - 3] = g;
+    // progressive image mode
+    if (dHandle->buffered_image) {
+        int status;
+        do {
+            status = jpeg_consume_input(dHandle);
+        } while ((status != JPEG_SUSPENDED) && (status != JPEG_REACHED_EOI));
+
+        for (;;) {
+            if (!dHandle->output_scanline) {
+                int scan = dHandle->input_scan_number;
+                if (!dHandle->output_scan_number && (scan > 1) &&
+                    (status != JPEG_REACHED_EOI)) {
+                    --scan;
                 }
+
+                if (!jpeg_start_output(dHandle, scan)) {
+                    goto jpegDecodeFail;
+                }
+            }
+
+            if (dHandle->output_scanline == 0xffffff) {
+                dHandle->output_scanline = 0;
+            }
+
+            int width = dHandle->output_width;
+            while (dHandle->output_scanline < dHandle->output_height) {
+                int sourceY = dHandle->output_scanline;
+                unsigned char* buffer_array[1];
+                buffer_array[0] =
+                    (unsigned char*)result.m_buffer + sourceY * result.m_stride;
+
+                if (jpeg_read_scanlines(dHandle, buffer_array, 1) != 1) {
+                    goto jpegDecodeFail;
+                }
+            }
+
+            if (!dHandle->output_scanline) {
+                dHandle->output_scanline = 0xffffff;
+            }
+
+            if (dHandle->output_scanline == dHandle->output_height) {
+                if (!jpeg_finish_output(dHandle)) {
+                    goto jpegDecodeFail;
+                }
+
+                if (jpeg_input_complete(dHandle) &&
+                    (dHandle->input_scan_number ==
+                     dHandle->output_scan_number)) {
+                    break;
+                }
+
+                dHandle->output_scanline = 0;
             }
         }
     } else {
+        unsigned char* buffer_array[1];
         while (dHandle->output_scanline < dHandle->output_height) {
             buffer_array[0] = (unsigned char*)result.m_buffer +
                               (dHandle->output_scanline) * result.m_stride;
             jpeg_read_scanlines(dHandle, buffer_array, 1);
-            {
-                uint8_t* buf_raw = static_cast<uint8_t*>(buffer_array[0]);
-                uint8_t* iter = buf_raw;
-                iter += (result.m_stride * 3 / 4);
-                int r, g, b;
-                for (int i = result.m_stride - 1; i >= 0; i -= 4) {
-                    b = *--iter;
-                    g = *--iter;
-                    r = *--iter;
-#ifdef PORT_PIXEL_ORDER_RGBA
-                    buf_raw[i] = 255;
-                    buf_raw[i - 1] = b;
-                    buf_raw[i - 2] = g;
-                    buf_raw[i - 3] = r;
-#else
-                    buf_raw[i] = 255;
-                    buf_raw[i - 1] = r;
-                    buf_raw[i - 2] = g;
-                    buf_raw[i - 3] = b;
-#endif
-                }
-            }
         }
     }
-
     jpeg_finish_decompress(dHandle);
     result.m_isSuccessful = true;
+    return;
+
+jpegDecodeFail:
+    free(result.m_buffer);
+    result.m_buffer = nullptr;
+    result.m_isSuccessful = false;
+    jpeg_finish_decompress(dHandle);
+    return;
 }
 
 struct custom_error_mgr {
