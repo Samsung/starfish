@@ -92,8 +92,8 @@ SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_INCLUDE_DIRS_CUSTOM}
     ${STARFISH_INCLUDE_ADDITIONAL_DIRS}
     ${GCUTIL_ROOT}
-    ${GCUTIL_ROOT}/bdwgc/include
-    ${GCUTIL_ROOT}/bdwgc/include/gc
+    ${GCUTIL_ROOT}/include
+    ${GCUTIL_ROOT}/include/gc
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/runtime_icu_binder
     ${THIRD_PARTY_ROOT}/robin_map/include
