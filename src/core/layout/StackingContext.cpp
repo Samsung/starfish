@@ -2747,6 +2747,17 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     compositor->restore();
                 }
 
+                if ((!owner()->style()->outlineWidth().isZero()) &&
+                    (owner()->style()->outlineStyle() !=
+                     BorderStyleValue::NoneBorderStyleValue)) {
+                    fullRect.setX(fullRect.x() - owner()->outlineThickness());
+                    fullRect.setY(fullRect.y() - owner()->outlineThickness());
+                    fullRect.setWidth(fullRect.width() +
+                                      owner()->outlineThickness() * 2);
+                    fullRect.setHeight(fullRect.height() +
+                                       owner()->outlineThickness() * 2);
+                }
+
                 compositor->clip(fullRect);
 
                 compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
