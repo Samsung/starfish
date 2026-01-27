@@ -585,9 +585,11 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                     scrollMoveRatio * (scrollMovableArea - scrollBarWidth));
         }
 
-        canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f), rr);
-        canvas->drawRect(rr);
-        canvas->endOpacityLayer();
+        if (!rr.isEmpty()) {
+            canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f), rr);
+            canvas->drawRect(rr);
+            canvas->endOpacityLayer();
+        }
         canvas->restore();
     }
 }

@@ -266,6 +266,7 @@ public:
     void clearGraphicsBuffer();
 
     bool needsRepaintingWhenScrolling();
+    bool needsToDrawScrollbar();
     bool inScrollActive();
     bool inScrollWithGraphicsBufferActive()
     {
