@@ -146,7 +146,7 @@ private:
     int dummy;
 };
 
-template <typename T>
+template <typename T, const bool forDrawScrollBar = false>
 class ComputeOverflow {
 private:
     std::vector<std::pair<Frame*, std::pair<bool, bool>>>
@@ -207,6 +207,10 @@ private:
                                 bool& canScroll)
     {
         bool applyOverflow = status.canApplyOverflow(frame);
+        if (forDrawScrollBar && !applyOverflow) {
+            applyOverflow =
+                frame && frame->style() && frame->style()->hasBorderRadius();
+        }
         if (applyOverflow) {
             status.reset(frame);
             canScroll =
