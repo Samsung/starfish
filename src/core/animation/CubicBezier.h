@@ -41,7 +41,7 @@ public:
                 CubicBezierEaseType type = CubicBezierEaseType::Custom);
     double getValue(double x) override;
 
-    TimingFunctionType timingFunctionType()
+    TimingFunctionType timingFunctionType() override
     {
         return TimingFunctionType::CUBIC_BEZIER;
     }

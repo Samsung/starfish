@@ -110,11 +110,15 @@ public:
             } else {
                 m_data.m_numberData += 0.01;
             }
-            m_data.m_numberData =
-                ((m_data.m_numberData > std::numeric_limits<unsigned>::max()) ||
-                 (m_data.m_numberData < std::numeric_limits<unsigned>::min()))
-                    ? 0
-                    : static_cast<unsigned>(m_data.m_numberData);
+            if (m_data.m_numberData >
+                    static_cast<float>(std::numeric_limits<unsigned>::max()) ||
+                m_data.m_numberData <
+                    static_cast<float>(std::numeric_limits<unsigned>::min())) {
+                m_data.m_numberData = 0;
+            } else {
+                m_data.m_numberData =
+                    static_cast<unsigned>(m_data.m_numberData);
+            }
         }
     }
 

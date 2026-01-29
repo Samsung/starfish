@@ -54,7 +54,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isPerformance() const;
+    virtual bool isPerformance() const override;
     virtual ExecutionContext* executionContext() const override
     {
         return m_executionContext;

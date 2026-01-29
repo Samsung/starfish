@@ -659,7 +659,7 @@ struct StringBufferAccessData {
         if (bufferDataKind == ASCIIData) {
             return asciiData()[idx];
         } else if (bufferDataKind == BMPData) {
-            return utf16Data()[idx];
+            return static_cast<char32_t>(utf16Data()[idx]);
         } else {
             return utf32Data()[idx];
         }
@@ -1341,7 +1341,7 @@ public:
 
     virtual char32_t charAt(const size_t& idx) const override
     {
-        return m_data.data()[idx];
+        return static_cast<char32_t>(m_data.data()[idx]);
     }
 
     virtual StringBufferAccessData bufferAccessData() const override
@@ -1415,7 +1415,7 @@ public:
 
     virtual char32_t charAt(const size_t& idx) const override
     {
-        return m_data[idx];
+        return static_cast<char32_t>(m_data[idx]);
     }
 
     virtual StringBufferAccessData bufferAccessData() const override
