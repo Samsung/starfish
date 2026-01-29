@@ -43,7 +43,7 @@ public:
                         (floor(m_numberOfSteps * t) + 1) / m_numberOfSteps);
     }
 
-    TimingFunctionType timingFunctionType()
+    TimingFunctionType timingFunctionType() override
     {
         return TimingFunctionType::STEPS;
     }

@@ -36,7 +36,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isImageData() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;

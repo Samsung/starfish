@@ -94,7 +94,7 @@ public:
         return m_closing;
     }
 
-    ScriptBindingInstance* scriptBindingInstance()
+    ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

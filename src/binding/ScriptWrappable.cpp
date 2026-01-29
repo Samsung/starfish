@@ -53,14 +53,14 @@ public:
     {
     }
 
-    virtual void customInfoLogger(const char* format, va_list arg)
+    virtual void customInfoLogger(const char* format, va_list arg) override
     {
         char buf[1024];
         vsnprintf(buf, sizeof(buf), format, arg);
         STARFISH_LOG_INFO("%s", buf);
     }
 
-    virtual void customErrorLogger(const char* format, va_list arg)
+    virtual void customErrorLogger(const char* format, va_list arg) override
     {
         char buf[1024];
         vsnprintf(buf, sizeof(buf), format, arg);
@@ -602,7 +602,7 @@ public:
 
     virtual char32_t charAt(const size_t& idx) const override
     {
-        return m_data->charAt(idx);
+        return static_cast<char32_t>(m_data->charAt(idx));
     }
 
     virtual StringBufferAccessData bufferAccessData() const override
@@ -797,7 +797,7 @@ StringRef* createScriptString(String* str)
             int ret = utf32ToUtf16(src, dst);
 
             if (ret == 1) {
-                out.push_back(src);
+                out.push_back(static_cast<char16_t>(src));
             } else if (ret == 2) {
                 out.push_back(dst[0]);
                 out.push_back(dst[1]);
@@ -1357,7 +1357,7 @@ static StringRef* createCompressibleScriptString(
             int ret = utf32ToUtf16(src, dst);
 
             if (ret == 1) {
-                *buf = src;
+                *buf = static_cast<char16_t>(src);
                 buf++;
             } else if (ret == 2) {
                 *buf = dst[0];

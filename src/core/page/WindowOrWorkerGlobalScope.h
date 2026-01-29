@@ -33,7 +33,7 @@ typedef CanvasImageSourceOrBlobOrImageData ImageBitmapSource;
 namespace Starfish {
 
 class String;
-class StructuredSerializeOptions;
+struct StructuredSerializeOptions;
 
 namespace WindowOrWorkerGlobalScope {
     String* btoa(ExecutionContext* executionContext, String* data);
