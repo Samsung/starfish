@@ -2739,12 +2739,14 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     fullRect = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
                 }
 
-                auto clr = owner()->style()->backgroundColor();
-                if (!clr.isTransparent()) {
-                    compositor->save();
-                    compositor->setFillColor(clr);
-                    compositor->drawRect(fullRect);
-                    compositor->restore();
+                if (inScrollWithGraphicsBufferActive()) {
+                    auto clr = owner()->style()->backgroundColor();
+                    if (!clr.isTransparent()) {
+                        compositor->save();
+                        compositor->setFillColor(clr);
+                        compositor->drawRect(fullRect);
+                        compositor->restore();
+                    }
                 }
 
                 if ((!owner()->style()->outlineWidth().isZero()) &&
