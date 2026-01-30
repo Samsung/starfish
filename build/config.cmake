@@ -349,10 +349,11 @@ ELSE()
     SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
 ENDIF()
 
-IF (${COMPILER} STREQUAL "gcc")
-    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter)
-ELSEIF (${COMPILER} STREQUAL "clang")
-    SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -stdlib=libc++ -Wno-expansion-to-defined -Wno-dynamic-class-memaccess)
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU")
+    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow)
+ELSEIF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
+    SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -stdlib=libc++ -Wno-expansion-to-defined -Wno-dynamic-class-memaccess -Wno-unused-but-set-variable -Wno-unknown-warning-option -Wno-enum-int-mismatch -Wno-string-concatenation -Wno-inconsistent-missing-override
+ -Wno-unused-but-set-parameter -Wno-tautological-pointer-compare -Wno-unused-lambda-capture -Wno-delete-non-abstract-non-virtual-dtor -Wno-array-parameter)
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
@@ -366,6 +367,10 @@ IF (${MODE} STREQUAL "debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     SET (LWE_CXXFLAGS_MODE -O0)
 ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     SET (LWE_CXXFLAGS_MODE -O2)
+ENDIF()
+
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
+    SET (LWE_LDFLAGS_CLANG -stdlib=libc++)
 ENDIF()
 
 IF (${LTO} STREQUAL "1")
@@ -424,6 +429,7 @@ SET (LWE_LDFLAGS
     ${LWE_LDFLAGS_ASAN}
     ${LDFLAGS_FROM_ENV}
     ${LWE_LDFLAGS_COVERAGE}
+    ${LWE_LDFLAGS_CLANG}    
     ${LWE_LDFLAGS_FORCE_NOLTO} # Please keep it at the end of the list
 )
 #######################################################
@@ -515,7 +521,7 @@ if (STARFISH_HAVE_LIBCAP)
 	list(APPEND STARFISH_LIBRARIES_DEFAULT cap )
 endif()
 
-IF (${COMPILER} STREQUAL "clang")
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
     SET (STARFISH_LIBRARIES_COMPILER -stdlib=libc++)
 ENDIF()
 

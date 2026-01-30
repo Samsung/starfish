@@ -314,7 +314,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
-    virtual uint32_t which() const
+    virtual uint32_t which() const override
     {
         return buttons();
     }

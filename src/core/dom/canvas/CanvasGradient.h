@@ -25,7 +25,7 @@
 namespace Starfish {
 class NativeGradient;
 class ExecutionContext;
-class GradientDrawingInfo;
+struct GradientDrawingInfo;
 
 class CanvasGradient : public ScriptWrappable {
 public:

@@ -125,6 +125,7 @@ private:
 
 class StdOut : public Logger::Output {
 public:
+    virtual ~StdOut() = default;
     void flush(std::stringstream& ss) override;
 };
 

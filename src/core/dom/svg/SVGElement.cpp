@@ -586,7 +586,7 @@ Optional<SVGFilterElement*> SVGElement::filterElement()
 
 SVGElement* SVGElement::getSVGElementById(const AtomicString& id)
 {
-    Node* descendant = Traverse::findDescendant(this, [this, id](Node* node) {
+    Node* descendant = Traverse::findDescendant(this, [id](Node* node) {
         if (UNLIKELY(!node->isSVGElement())) {
             return false;
         }
