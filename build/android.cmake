@@ -41,7 +41,7 @@ ENDIF()
 # GCUTIL
 #######################################################
 
-FILE(GLOB GCUTIL_BDWGC_SRC ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/*.c)
+FILE(GLOB GCUTIL_BDWGC_SRC ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/*.c)
 FILE(GLOB GCUTIL_SRC ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/*.cpp)
 
 SET (GCUTIL_CFLAGS_INTERNAL ${NDK_CFLAGS})
@@ -67,7 +67,7 @@ ENDIF()
 
 ADD_LIBRARY (gcutil STATIC ${GCUTIL_BDWGC_SRC} ${GCUTIL_SRC})
 TARGET_COMPILE_OPTIONS (gcutil PRIVATE ${GCUTIL_CFLAGS_INTERNAL})
-TARGET_INCLUDE_DIRECTORIES (gcutil PRIVATE ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include/gc)
+TARGET_INCLUDE_DIRECTORIES (gcutil PRIVATE ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include/gc)
 
 #######################################################
 # SOURCE FILES
@@ -100,8 +100,8 @@ set(LWE_INCLUDE_DIRS
         ${STARFISH_ROOT} ${STARFISH_ROOT}/inc ${STARFISH_ROOT}/src
         ${OUTPUT_DIRECTORY}/starfish_generated/
         ${OUTPUT_DIRECTORY}/escargot_generated/
-        ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include
-        ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/bdwgc/include/gc
+        ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include
+        ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include/gc
         ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil
         ${STARFISH_ROOT}/third_party/escargot/src/
         ${STARFISH_ROOT}/third_party/escargot/src/api
