@@ -36,9 +36,6 @@ public:
     TTS(WebView* webView)
         : WebViewHoldable(webView)
         , m_isAccessibilityMode(false)
-        , m_isCreatedVoiceList(false)
-        , m_isPaused(false)
-        , m_state(-1)
         , m_lweTTSMode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
         , m_userLanguage()
@@ -155,9 +152,6 @@ private:
     friend void utteranceCompletedCB(tts_h handle, int utteranceId, void* data);
 #endif
     bool m_isAccessibilityMode;
-    bool m_isCreatedVoiceList;
-    bool m_isPaused;
-    int m_state;
     LWE::TTSMode m_lweTTSMode;
     SpeechSynthesisUtterance* m_utterance;
     std::pair<Element*, String*> m_pendingSpeech;
@@ -165,7 +159,6 @@ private:
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;
     std::string m_userLanguage;
-    int m_defaultVoiceType;
     int m_currentUtterId;
 };
 } // namespace Starfish

@@ -340,7 +340,7 @@ public:
         return m_keyboardEventData.charCode();
     }
 
-    virtual uint32_t which() const
+    virtual uint32_t which() const override
     {
         return m_keyboardEventData.which();
     }

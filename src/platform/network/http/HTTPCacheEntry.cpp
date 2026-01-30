@@ -121,7 +121,7 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
     }
 
     size_t length = out->write(rawData.data(), sizeof(char), rawData.size());
-    bool ret = (rawData.size() == length) & (out->flush() == 0);
+    bool ret = (rawData.size() == length) && (out->flush() == 0);
 
     if (ret) {
         m_entryFileInfo.lastModificationTime = out->lastModificationTime();

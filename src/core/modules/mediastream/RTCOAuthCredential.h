@@ -36,7 +36,7 @@ class ValueRef;
 
 namespace Starfish {
 class String;
-class RTCOAuthCredential;
+struct RTCOAuthCredential;
 
 extern RTCOAuthCredential toRTCOAuthCredentialFromValueRef(
     Escargot::ExecutionStateRef* state, Escargot::ValueRef* from);

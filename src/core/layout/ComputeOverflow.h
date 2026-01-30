@@ -141,9 +141,6 @@ public:
     void endOpacityLayer()
     {
     }
-
-private:
-    int dummy;
 };
 
 template <typename T, const bool forDrawScrollBar = false>

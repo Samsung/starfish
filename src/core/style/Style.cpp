@@ -15167,7 +15167,7 @@ static CSSTransformFunction::Kind transformFunctionKind(
 }
 
 bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
-                                            TransformUnit units[],
+                                            TransformUnit units[16],
                                             int& minArgCnt, int& maxArgCnt)
 {
     // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
