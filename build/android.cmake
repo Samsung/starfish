@@ -5,7 +5,6 @@ set (STARFISH_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/starfish)
 set (THIRD_PARTY_ROOT ${STARFISH_ROOT}/third_party)
 set (ESCARGOT_ROOT ${STARFISH_ROOT}/third_party/escargot)
 
-
 # CONFIGURE ESCARGOT VERSION
 FIND_PACKAGE(Git)
 IF (GIT_FOUND)
@@ -84,6 +83,8 @@ LIST (REMOVE_ITEM STARFISH_SUB_SRC
 
 file(GLOB DOUBLEC_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/double_conversion/*.cc" )
 file(GLOB YARR_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/yarr/*.cpp" )
+file(GLOB XSUM_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/xsum/*.cpp" )
+file(GLOB SIMDUTF_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/simdutf/*.cpp" )
 IF (ENABLE_RUNTIME_ICU_BINDER)
     file(GLOB RUNTIME_ICU_BINDER_SRC "${STARFISH_ROOT}/third_party/escargot/third_party/runtime_icu_binder/*.cpp" )
 ELSE()
@@ -91,6 +92,33 @@ ELSE()
 ENDIF()
 file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT}/third_party/escargot/src/**/*.cpp" )
 list(REMOVE_ITEM ESCARGOT_SRC "${STARFISH_ROOT}/third_party/escargot/src/shell/Shell.cpp")
+
+# Generate UnicodeIdentifierTables.cpp
+MAKE_DIRECTORY(${OUTPUT_DIRECTORY}/escargot_generated/parser)
+EXECUTE_PROCESS(
+    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/gen_unicode.py --derived_core_properties ${ESCARGOT_ROOT}/tools/unicode_data/DerivedCoreProperties.txt --dst ${OUTPUT_DIRECTORY}/escargot_generated/parser/UnicodeIdentifierTables.cpp
+)
+SET (ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/parser/UnicodeIdentifierTables.cpp)
+
+# Generate YarrCanonicalizeUnicode.cpp
+MAKE_DIRECTORY(${OUTPUT_DIRECTORY}/escargot_generated/yarr)
+EXECUTE_PROCESS(
+    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrCanonicalizeUnicode.py ${ESCARGOT_ROOT}/tools/unicode_data/CaseFolding.txt ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp
+)
+
+FILE(READ ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp UNICODE_FILE_CONTENTS)
+STRING(REPLACE "config.h" "WTFBridge.h" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
+STRING(REPLACE "constexpr const" "const" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
+STRING(REPLACE "constexpr size_t UNICODE" "const size_t UNICODE" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
+STRING(REPLACE "constexpr CanonicalizationRange unicodeRangeInfo" "const CanonicalizationRange unicodeRangeInfo" UNICODE_FILE_CONTENTS "${UNICODE_FILE_CONTENTS}")
+FILE(WRITE ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp "${UNICODE_FILE_CONTENTS}")
+
+SET(ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUnicode.cpp)
+
+# yarr/UnicodePatternTables.h
+EXECUTE_PROCESS(
+    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrUnicodePropertyTables.py ${ESCARGOT_ROOT}/tools/unicode_data ${OUTPUT_DIRECTORY}/escargot_generated/yarr/UnicodePatternTables.h
+)
 
 #######################################################
 # INCLUDE DIRS
@@ -100,17 +128,21 @@ set(LWE_INCLUDE_DIRS
         ${STARFISH_ROOT} ${STARFISH_ROOT}/inc ${STARFISH_ROOT}/src
         ${OUTPUT_DIRECTORY}/starfish_generated/
         ${OUTPUT_DIRECTORY}/escargot_generated/
+        ${OUTPUT_DIRECTORY}/escargot_generated/yarr/
         ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include
         ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil/include/gc
         ${STARFISH_ROOT}/third_party/escargot/third_party/GCutil
         ${STARFISH_ROOT}/third_party/escargot/src/
         ${STARFISH_ROOT}/third_party/escargot/src/api
+        ${STARFISH_ROOT}/third_party/escargot/third_party/
         ${STARFISH_ROOT}/third_party/escargot/third_party/checked_arithmetic
         ${STARFISH_ROOT}/third_party/escargot/third_party/double_conversion
         ${STARFISH_ROOT}/third_party/escargot/third_party/rapidjson/include
         ${STARFISH_ROOT}/third_party/escargot/third_party/yarr
         ${STARFISH_ROOT}/third_party/escargot/third_party/runtime_icu_binder
         ${STARFISH_ROOT}/third_party/escargot/third_party/libbf
+        ${STARFISH_ROOT}/third_party/escargot/third_party/simdutf
+        ${STARFISH_ROOT}/third_party/escargot/third_party/xsum
         ${THIRD_PARTY_ROOT}/clipper/cpp
         ${THIRD_PARTY_ROOT}/rapidxml
         ${THIRD_PARTY_ROOT}/earcut.hpp/include/mapbox
@@ -388,6 +420,8 @@ add_library(lwe
         ${STARFISH_SUB_SRC}
         ${DOUBLEC_SRC}
         ${YARR_SRC}
+        ${XSUM_SRC}
+        ${SIMDUTF_SRC}
         ${RUNTIME_ICU_BINDER_SRC}
         ${ESCARGOT_SRC}
         )
