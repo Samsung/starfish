@@ -26,7 +26,12 @@ P /.circleci
 - /third_party/escargot/third_party/wasm/wabt/third_party
 - /third_party/escargot/third_party/wasm/wabt/test
 - /third_party/escargot/test
-- /third_party/escargot/tools
+- /third_party/escargot/tools/debugger
+- /third_party/escargot/tools/kangax
+- /third_party/escargot/tools/test
+- /third_party/escargot/tools/check_tidy.py
+- /third_party/escargot/tools/run-tests.py
+- /third_party/escargot/tools/visualize_heap_usage.py
 + /third_party/libwebsockets
 - /third_party/openssl
 - /third_party/googletest
