@@ -303,7 +303,7 @@ public:
 
     bool isCellWidthAuto(unsigned i);
 
-    virtual void resetIfNeeds(LayoutContext& ctx);
+    void resetIfNeeds(LayoutContext& ctx);
 
     FrameTableSectionBox* thead() const
     {

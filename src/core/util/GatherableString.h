@@ -253,10 +253,11 @@ void GatherableString<InlineStorageSize>::toLower()
     size_t len = length();
     for (size_t i = 0; i < len; i++) {
         if (i < InlineStorageSize) {
-            m_builtInBuffer[i] = tolower(m_builtInBuffer[i]);
+            m_builtInBuffer[i] =
+                static_cast<char16_t>(tolower(m_builtInBuffer[i]));
         } else {
-            (*m_externalString)[i - InlineStorageSize] =
-                tolower((*m_externalString)[i - InlineStorageSize]);
+            (*m_externalString)[i - InlineStorageSize] = static_cast<char16_t>(
+                tolower((*m_externalString)[i - InlineStorageSize]));
         }
     }
 }
@@ -278,7 +279,7 @@ String* GatherableString<InlineStorageSize>::toString() const
         newStringData.resize(length());
 
         for (size_t i = 0; i < length(); i++) {
-            newStringData[i] = charAt(i);
+            newStringData[i] = static_cast<char16_t>(charAt(i));
         }
 
         return new StringDataBMP(std::move(newStringData));

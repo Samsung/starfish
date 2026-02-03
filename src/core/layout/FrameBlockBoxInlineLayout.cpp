@@ -3555,7 +3555,7 @@ static void textBidiResolver(FrameText* frameText,
 
             /* U16_NEXT post-increments */
             for (size_t i = start; i < (size_t)end;) {
-                char32_t c;
+                char16_t c;
                 U16_NEXT((const UChar*)str.data(), i, (size_t)end, c);
                 utf32Len++;
             }
