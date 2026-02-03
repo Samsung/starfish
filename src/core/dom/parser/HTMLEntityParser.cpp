@@ -139,7 +139,7 @@ static bool consumeNamedEntity(SegmentedString& source,
             break;
         }
         consumedCharacters.push_back(cc);
-        source.advanceAndASSERT(cc);
+        source.advanceAndASSERT(static_cast<UChar>(cc));
     }
     notEnoughCharacters = source.isEmpty();
     if (notEnoughCharacters) {
@@ -165,7 +165,7 @@ static bool consumeNamedEntity(SegmentedString& source,
             cc = source.currentChar();
             // ASSERT_UNUSED(reference, cc == *reference++);
             consumedCharacters.push_back(cc);
-            source.advanceAndASSERT(cc);
+            source.advanceAndASSERT(static_cast<UChar>(cc));
             STARFISH_ASSERT(!(source.length() == 0));
         }
         cc = source.currentChar();
@@ -269,7 +269,7 @@ bool consumeHTMLEntity(SegmentedString& source,
                     result = result * 16 + asHexDigit(cc);
                 }
             } else if (cc == ';') {
-                source.advanceAndASSERT(cc);
+                source.advanceAndASSERT(static_cast<UChar>(cc));
                 appendLegalEntityFor(result, decodedEntity);
                 return true;
             } else {
@@ -284,7 +284,7 @@ bool consumeHTMLEntity(SegmentedString& source,
                     result = result * 10 + cc - '0';
                 }
             } else if (cc == ';') {
-                source.advanceAndASSERT(cc);
+                source.advanceAndASSERT(static_cast<UChar>(cc));
                 appendLegalEntityFor(result, decodedEntity);
                 return true;
             } else {
@@ -305,7 +305,7 @@ bool consumeHTMLEntity(SegmentedString& source,
         }
 
         consumedCharacters.push_back(cc);
-        source.advanceAndASSERT(cc);
+        source.advanceAndASSERT(static_cast<UChar>(cc));
     }
     STARFISH_ASSERT(source.length() == 0);
     notEnoughCharacters = true;

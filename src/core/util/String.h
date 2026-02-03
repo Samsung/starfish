@@ -570,7 +570,7 @@ size_t utf16ToUtf32(const T* UTF16, const T* bufferEnd, char32_t& uc)
         uc = 0xFFFD;
         tRequiredSize = 1;
     } else {
-        uc = UTF16[0];
+        uc = static_cast<char32_t>(UTF16[0]);
         tRequiredSize = 1;
     }
 

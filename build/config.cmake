@@ -352,8 +352,8 @@ ENDIF()
 IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU")
     SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow)
 ELSEIF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
-    SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -stdlib=libc++ -Wno-expansion-to-defined -Wno-dynamic-class-memaccess -Wno-unused-but-set-variable -Wno-unknown-warning-option -Wno-enum-int-mismatch -Wno-string-concatenation -Wno-inconsistent-missing-override
- -Wno-unused-but-set-parameter -Wno-tautological-pointer-compare -Wno-unused-lambda-capture -Wno-delete-non-abstract-non-virtual-dtor -Wno-array-parameter)
+    SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -Wno-expansion-to-defined -Wno-dynamic-class-memaccess -Wno-unused-but-set-variable -Wno-unknown-warning-option -Wno-enum-int-mismatch -Wno-string-concatenation -Wno-inconsistent-missing-override
+ -Wno-unused-but-set-parameter -Wno-tautological-pointer-compare -Wno-unused-lambda-capture -Wno-delete-non-abstract-non-virtual-dtor -Wno-array-parameter -Wno-error=character-conversion -Wno-error=unnecessary-virtual-specifier)
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
@@ -367,10 +367,6 @@ IF (${MODE} STREQUAL "debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     SET (LWE_CXXFLAGS_MODE -O0)
 ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     SET (LWE_CXXFLAGS_MODE -O2)
-ENDIF()
-
-IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
-    SET (LWE_LDFLAGS_CLANG -stdlib=libc++)
 ENDIF()
 
 IF (${LTO} STREQUAL "1")
@@ -520,10 +516,6 @@ CHECK_LIBRARY_EXISTS(cap cap_set_flag "" STARFISH_HAVE_LIBCAP)
 if (STARFISH_HAVE_LIBCAP)
 	list(APPEND STARFISH_LIBRARIES_DEFAULT cap )
 endif()
-
-IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
-    SET (STARFISH_LIBRARIES_COMPILER -stdlib=libc++)
-ENDIF()
 
 IF (${BACKEND} STREQUAL "efl_cairo_gl" OR ${BACKEND} STREQUAL "flutter" OR ${BACKEND} STREQUAL "uv_cairo_gl")
     IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")

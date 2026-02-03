@@ -57,8 +57,6 @@ public:
         STARFISH_ASSERT(exception != nullptr);
     }
 
-    DOMExceptionOr(nullptr_t) = delete;
-
     bool isDOMException() const
     {
         return m_isDOMException;
@@ -94,7 +92,6 @@ public:
     }
 
     DOMExceptionOr() = default;
-    DOMExceptionOr(nullptr_t) = delete;
 
     bool isDOMException() const
     {

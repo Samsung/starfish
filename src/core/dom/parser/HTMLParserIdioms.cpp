@@ -226,7 +226,7 @@ static bool parseHTMLIntegerInternal(const CharType* position,
     STARFISH_ASSERT(position < end);
 
     // Step 7
-    if (!String::isASCIIDigit(*position)) {
+    if (!String::isASCIIDigit(static_cast<char32_t>(*position))) {
         return false;
     }
 
@@ -244,7 +244,8 @@ static bool parseHTMLIntegerInternal(const CharType* position,
         }
         temp = temp * base + digitValue;
         ++position;
-    } while (position < end && String::isASCIIDigit(*position));
+    } while (position < end &&
+             String::isASCIIDigit(static_cast<char32_t>(*position)));
 
     // Step 9
     value = isNegative ? (0 - temp) : temp;
