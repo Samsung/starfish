@@ -1,0 +1,126 @@
+name: Build Starfish (x64 test clang)
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR Number'
+        default: 'master'
+        required: true
+        type: string
+
+jobs:
+  build_x64_clang:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    strategy:
+      matrix:
+        options: ["-DWEBGL=1 -DWORKER=1 -DIDB=1"]
+
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Build Starfish
+        run: |
+          cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
+            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw -DENABLE_DYNAMIC_LOADER=1 -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang\
+            ${{ matrix.options }}
+          ninja starfish.executable
+      - uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish-x64_glfw_debug
+          path: |
+            ./out/debug/bin/lightweight-web-engine
+            ./out/debug/lib/*.so
+            ./build.ninja
+            ./rules.ninja
+
+      - name: Leave comment
+        if: ${{ failure() }}
+        uses: CODE-Actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Please check the build status.'
+            })
+
+  test_clang:
+    needs: build_x64_clang
+    timeout-minutes: 60
+    runs-on: [ runner-type3 ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Checkout Testcase..
+        run: |
+          git submodule init
+          git submodule update test
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_glfw_debug
+
+      - name: Prepare Test
+        run: |
+          mkdir -p ~/.fonts
+          cp /root/workspace/Ahem.ttf ~/.fonts
+          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
+          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
+          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          /root/workspace/set_up_hosts.sh
+
+      - name: Build image diff tool
+        run: |
+          cmake build/test -G Ninja
+          ninja install_pixel_test_dep
+
+      - name: Run unit-test
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish unit-test || exit 1
+
+      - name: Run internal_test
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py internal_test || exit 1
+
+      - name: Run reftest_all
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1

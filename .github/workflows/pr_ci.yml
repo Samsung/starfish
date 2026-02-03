@@ -67,6 +67,13 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
     secrets: inherit
 
+  x64_test_clang:
+    needs: [ squash_thirdparty ]
+    uses: ./.github/workflows/x64_test_clang.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
   windows:
     needs: [ squash_thirdparty ]
     uses: ./.github/workflows/windows.yml
