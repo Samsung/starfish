@@ -101,7 +101,6 @@ public:
     }
 
 private:
-    const char* m_data;
     const char* const m_end;
     char* m_position;
     bool m_isError;

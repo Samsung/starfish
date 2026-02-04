@@ -30,7 +30,7 @@ class ExecutionContext;
 class DOMException;
 class IDBObjectStore;
 class IDBTransaction;
-class IDBTaskQueueItem;
+struct IDBTaskQueueItem;
 
 enum class IDBRequestErrorType : uint8_t {
     None,
