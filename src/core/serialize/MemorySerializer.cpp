@@ -70,8 +70,7 @@ void MemorySerializeWriter::writeTerminator()
 
 MemorySerializeReader::MemorySerializeReader(const char* data,
                                              const size_t length)
-    : m_data(data)
-    , m_end(data + length)
+    : m_end(data + length)
     , m_position(const_cast<char*>(data))
     , m_isError(false)
 {

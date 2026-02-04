@@ -30,6 +30,7 @@ enum class IDBRequestErrorType : uint8_t;
 
 class IDBBackingStore {
 public:
+    virtual ~IDBBackingStore() = default;
     virtual void open(String* name, unsigned long long version) = 0;
     virtual IDBRequestErrorType addOrPut(String* name, const char* data,
                                          size_t dataSize, IDBKey* key,
