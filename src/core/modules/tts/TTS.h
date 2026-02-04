@@ -159,6 +159,7 @@ private:
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;
     std::string m_userLanguage;
+    int m_defaultVoiceType;
     int m_currentUtterId;
 };
 } // namespace Starfish

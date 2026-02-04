@@ -62,7 +62,7 @@ MessageLoopLibUV::MessageLoopLibUV()
 MessageLoopLibUV::MessageLoopLibUV(RunLoopLibUV* runLoop)
     : m_runLoop(runLoop)
 {
-    m_idlerThreadAsyncHandle = new uv_async_t();
+    m_idlerThreadAsyncHandle = (uv_async_t*)malloc(sizeof(uv_async_t));
 
     uv_async_init(uvLoop(), m_idlerThreadAsyncHandle, [](uv_async_t* handle) {
         {

@@ -45,6 +45,7 @@ void TTS::initialize()
 
 int TTS::createHandle()
 {
+    m_defaultVoiceType = 0;
     return 0;
 }
 
