@@ -265,10 +265,6 @@ IF (${WEBGL} STREQUAL "1")
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "linux")
-    SET (WORKER "1")
-ENDIF()
-
 IF (${WORKER} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WORKER
@@ -377,6 +373,8 @@ ENDIF()
 IF (${ASAN} STREQUAL "1")
     SET (LWE_CXXFLAGS_ASAN -fsanitize=address)
     SET (LWE_LDFLAGS_ASAN -lasan)
+    # SET (LWE_CXXFLAGS_ASAN -fsanitize=thread)
+    # SET (LWE_LDFLAGS_ASAN -ltsan)
 ENDIF()
 
 IF (${COVERAGE} STREQUAL "1")
