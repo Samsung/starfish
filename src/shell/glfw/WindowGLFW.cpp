@@ -183,16 +183,9 @@ bool WindowGLFW::createSimpleWindow(const char* appName, int width, int height)
     m_window = glfwCreateWindow(width, height, appName, nullptr, nullptr);
     if (m_window == nullptr) {
         printf(
-            "Failed to create OpenGL 3.0  context. try OpenGL ES 3.0 "
-            "instead");
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-        m_window = glfwCreateWindow(width, height, appName, nullptr, nullptr);
-        if (m_window == nullptr) {
-            printf(
-                "Failed to create OpenGL ES 3.0 context. please check your "
-                "environment...");
-            return false;
-        }
+            "Failed to create OpenGL ES 3.0 context, please check your "
+            "environment.");
+        return false;
     }
 
     glfwSetWindowSize(m_window, width, height);
