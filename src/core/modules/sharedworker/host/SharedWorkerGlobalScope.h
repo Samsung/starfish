@@ -30,7 +30,7 @@ class ResourceURL;
 class String;
 class ScriptBindingInstance;
 class SharedWorkerMessagePortConnection;
-class MessagePortConnectionInfo;
+struct MessagePortConnectionInfo;
 
 class SharedWorkerGlobalScope final : public WorkerGlobalScope {
 public:

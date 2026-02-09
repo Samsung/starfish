@@ -31,7 +31,7 @@ class WorkerGlobalScope;
 class WebWorker;
 class WorkerHost;
 class SharedWorkerGlobalScope;
-class MessagePortConnectionInfo;
+struct MessagePortConnectionInfo;
 struct WorkerHostInitData;
 
 class SharedWorkerThread final : public WorkerThread {

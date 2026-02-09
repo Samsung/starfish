@@ -58,6 +58,7 @@ Starfish::Starfish(const StarfishConfiguration& config)
     , m_gcFrequency(config.gcFrequency)
     , m_backend(config.backend)
     , m_rendererType(config.rendererType)
+    , m_isThreadMode(config.isThreadMode)
 {
     if (!g_starfishGlobalInit) {
         g_starfishGlobalInit = true;

@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <memory>
+#include <atomic>
 
 namespace Starfish {
 class MessageLoop;
@@ -44,12 +45,10 @@ public:
                                       const std::function<void()>& functor);
 
 private:
-    static ThreadedCallHelper* m_instance;
-
     ThreadedCallHelper();
     void CreateLWEMainThread();
 
-    bool m_isLWEThreadStarted = false;
+    std::atomic<bool> m_isLWEThreadStarted;
     pthread_mutex_t m_mainThreadInitLocker;
 };
 

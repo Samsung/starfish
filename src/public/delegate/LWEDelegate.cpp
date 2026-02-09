@@ -67,6 +67,9 @@ void LWE::Initialize(const char* storageDirectoryPath)
     if (backend == "efl_headless") {
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
+#ifdef STARFISH_ENABLE_TEST
+    setenv("BACKEND", backend.data(), TRUE);
+#endif
 
     ThreadedCallHelper::Instance()->Initialize(isThreadMode);
 
