@@ -34,12 +34,42 @@ using namespace Escargot;
 
 template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
 
+// explicitly declare ctor for clang
+template <>
+ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>::
+    ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+                                DedicatedWorkerGlobalScope* workerGlobalScope)
+    : ScriptBindingInstance(engineInstance)
+    , m_ownerWorkerGlobalScope(workerGlobalScope)
+{
+}
+
 #if defined(STARFISH_WEBWORKER_HOST)
 #if defined(STARFISH_ENABLE_SHARED_WORKER)
 template class ScriptBindingWorkerInstance<SharedWorkerGlobalScope>;
+
+// explicitly declare ctor for clang
+template <>
+ScriptBindingWorkerInstance<SharedWorkerGlobalScope>::
+    ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+                                SharedWorkerGlobalScope* workerGlobalScope)
+    : ScriptBindingInstance(engineInstance)
+    , m_ownerWorkerGlobalScope(workerGlobalScope)
+{
+}
 #endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
+
+// explicitly declare ctor for clang
+template <>
+ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>::
+    ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+                                ServiceWorkerGlobalScope* workerGlobalScope)
+    : ScriptBindingInstance(engineInstance)
+    , m_ownerWorkerGlobalScope(workerGlobalScope)
+{
+}
 #endif
 #endif
 

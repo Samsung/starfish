@@ -57,17 +57,17 @@ void customExit(int returnCode)
         return;
     }
 
-// TODO enable this every port
-// --hide-window + EFL window is not working correctly
-// because EFL throws error
-#ifdef PORT_WEBVIEW_BRIDGE_GLFW
-    std::string exitCode = std::to_string(returnCode);
-    setenv("EXIT_CODE", exitCode.c_str(), 1);
-    raise(SIGINT);
-    exit(returnCode);
-#else
-    exit(returnCode);
-#endif
+    // TODO enable this every port
+    // --hide-window + EFL window is not working correctly
+    // because EFL throws error
+    if (getenv("BACKEND") &&
+        std::string(getenv("BACKEND")).find("efl") == std::string::npos) {
+        std::string exitCode = std::to_string(returnCode);
+        setenv("EXIT_CODE", exitCode.c_str(), 1);
+        raise(SIGINT);
+    } else {
+        exit(returnCode);
+    }
 }
 #endif
 

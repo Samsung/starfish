@@ -45,8 +45,8 @@ class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
-class RegistrationOptions;
 class ServiceWorkerRegistration;
+struct RegistrationOptions;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClientInterface {

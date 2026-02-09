@@ -72,7 +72,6 @@ private:
     bool m_eventCanceled{ false };
     Response* m_response{ nullptr };
     Promise* m_eventHandled{ nullptr };
-    ServiceWorkerRegistration* m_registration{ nullptr };
     ServiceWorkerFetchKey m_id{ 0 };
 };
 

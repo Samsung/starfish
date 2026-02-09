@@ -117,6 +117,11 @@ public:
         return m_rendererType;
     }
 
+    bool isThreadMode()
+    {
+        return m_isThreadMode;
+    }
+
     void setRendererType(StarfishRendererType rendererType)
     {
         m_rendererType = rendererType;
@@ -156,6 +161,7 @@ protected:
     unsigned char m_gcFrequency = BDWGC_FREE_SPACE_DIVISOR;
     std::string m_backend;
     StarfishRendererType m_rendererType = StarfishRendererType::kOpenGL;
+    bool m_isThreadMode;
 
 private:
     void initNetworkSharedResourceManager();

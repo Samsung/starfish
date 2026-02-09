@@ -66,6 +66,11 @@ bool LWEDelegateLoader::load()
 
 void LWEDelegateLoader::unload()
 {
+    // FIXME we cannot close shared-library
+    // dlclose does not end lwe main thread
+    // but global variables are reseted next dlopen with clang-compiled binary
+    return;
+    /*
     if (m_handle) {
         dlclose(m_handle);
         m_handle = nullptr;
@@ -77,6 +82,7 @@ void LWEDelegateLoader::unload()
     unloadSettingsProcTable();
     unloadWebContainerProcTable();
     unloadWebViewProcTable();
+    */
 }
 
 bool LWEDelegateLoader::isLoaded()

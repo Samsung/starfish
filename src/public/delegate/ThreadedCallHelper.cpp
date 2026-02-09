@@ -29,19 +29,16 @@
 
 namespace LWEDelegate {
 
-ThreadedCallHelper* ThreadedCallHelper::m_instance = nullptr;
-
 ThreadedCallHelper* ThreadedCallHelper::Instance()
 {
-    if (m_instance == nullptr) {
-        m_instance = new ThreadedCallHelper();
-    }
-    return m_instance;
+    static ThreadedCallHelper instance;
+    return &instance;
 }
 
 ThreadedCallHelper::ThreadedCallHelper()
     : m_isLWEThreadStarted(false)
 {
+    pthread_mutex_init(&m_mainThreadInitLocker, nullptr);
 }
 
 void ThreadedCallHelper::Initialize(bool isThreadMode)
@@ -69,7 +66,6 @@ void ThreadedCallHelper::PostTaskToLWEMainThreadAsync(
 
 void ThreadedCallHelper::CreateLWEMainThread()
 {
-    pthread_mutex_init(&m_mainThreadInitLocker, nullptr);
     pthread_mutex_lock(&m_mainThreadInitLocker);
 
     pthread_attr_t attr;
