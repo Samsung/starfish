@@ -28,7 +28,7 @@
 
 namespace Starfish {
 
-Blob ::Blob(ExecutionContext* executionContext)
+Blob::Blob(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
@@ -52,9 +52,9 @@ Blob::Blob(ExecutionContext* executionContext,
     initialize(blobParts, options);
 }
 
-Blob ::Blob(ExecutionContext* executionContext, uint64_t size, String* type,
-            void* data, bool isClosed, bool isEntryOfBlobURLStore,
-            bool isAllocatedByMalloc)
+Blob::Blob(ExecutionContext* executionContext, uint64_t size, String* type,
+           void* data, bool isClosed, bool isEntryOfBlobURLStore,
+           bool isAllocatedByMalloc)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore,
