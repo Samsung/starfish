@@ -108,7 +108,6 @@ size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
 
-            id->m_ml->invokeMicroTasksIfExist();
             id->m_fn((size_t)id, id->m_data);
 
             GC_FREE(id);
@@ -138,7 +137,6 @@ size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
 
-            id->m_ml->invokeMicroTasksIfExist();
             ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                        id->m_data1);
 
@@ -170,7 +168,6 @@ size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
 
-            id->m_ml->invokeMicroTasksIfExist();
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
 
@@ -218,7 +215,6 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                                 id->m_ml->m_idlersFromOtherThread, id);
                         }
                         if (id->m_needsRun) {
-                            id->m_ml->invokeMicroTasksIfExist();
                             id->m_fn((size_t)id, id->m_data);
                         }
                     }
@@ -272,7 +268,6 @@ size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
                                 id->m_ml->m_idlersFromOtherThread, id);
                         }
                         if (id->m_needsRun) {
-                            id->m_ml->invokeMicroTasksIfExist();
                             ((void (*)(size_t, void*, void*))id->m_fn)(
                                 (size_t)id, id->m_data, id->m_data1);
                         }
@@ -314,8 +309,6 @@ void MessageLoopEFL::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_LOG_INFO("clearPendingIdlers: globalScope[%p]", globalScope);
     STARFISH_ASSERT(isMainThread());
-
-    clearMicroTasks(globalScope);
 
     // Remove idlers
     auto iter = m_idlers.begin();

@@ -98,6 +98,7 @@ class Console;
 class Inspector;
 class Blob;
 class WebView;
+class WebWorker;
 class ThreadPool;
 class Timer;
 
@@ -111,6 +112,7 @@ public:
     {
         return false;
     }
+
     virtual bool isWebWorker() const
     {
         return false;
@@ -118,7 +120,14 @@ public:
 
     WebView* asWebView()
     {
+        STARFISH_ASSERT(isWebView());
         return reinterpret_cast<WebView*>(this);
+    }
+
+    WebWorker* asWebWorker()
+    {
+        STARFISH_ASSERT(isWebWorker());
+        return reinterpret_cast<WebWorker*>(this);
     }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)

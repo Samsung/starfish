@@ -41,10 +41,33 @@ public:
 
     void dispose();
     void enterIdleMode();
+    void drainMicroTaskQueue();
+
+    size_t& macroTaskCounter()
+    {
+        return m_macroTaskCounter;
+    }
 
 protected:
+    bool m_inDrainMicroTaskQueue;
+    size_t m_macroTaskCounter;
     ScriptEngine m_engineInstance;
 };
+
+class MicroTaskExecutionManager {
+public:
+    MicroTaskExecutionManager(ScriptEngineInstance* e)
+        : m_engine(e)
+    {
+        e->macroTaskCounter()++;
+    }
+
+    ~MicroTaskExecutionManager();
+
+private:
+    ScriptEngineInstance* m_engine;
+};
+
 } // namespace Starfish
 
 #endif

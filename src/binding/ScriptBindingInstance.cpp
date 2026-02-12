@@ -207,6 +207,7 @@ static ValueRef* instantiateStreamingWASMFunction(ExecutionStateRef* state,
 
 ScriptBindingInstance::ScriptBindingInstance(
     ScriptEngineInstance* engineInstance)
+    : m_engineInstance(engineInstance)
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(

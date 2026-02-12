@@ -23,6 +23,8 @@
 #include "Starfish.h"
 
 #include "browser/history/HistoryManager.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
 #include "core/dom/CDATASection.h"
@@ -633,6 +635,8 @@ void Document::resumeDocumentParsing()
             window(),
             [](size_t handle, void* data) {
                 Document* document = (Document*)data;
+                MicroTaskExecutionManager m(
+                    document->scriptBindingInstance()->engineInstance());
                 STARFISH_ASSERT(document->m_documentBuilder);
                 document->m_pendingDocumentParsingIdlerHandle =
                     MessageLoopInvalidID;
@@ -2513,10 +2517,9 @@ void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
     }
     m_isMutationObserverMicroTaskQueued = true;
 
-    GlobalScope* globalScope = executionContext()->globalScope();
-    globalScope->webBase()->messageLoop()->addMicroTask(
-        globalScope,
-        [](size_t handle, void* data) {
+    enqueueMicrotask(
+        scriptBindingInstance(),
+        [](void* data) {
             auto* self = static_cast<Document*>(data);
             self->m_isMutationObserverMicroTaskQueued = false;
             GCUnorderedSet<MutationObserver*> notifySet;

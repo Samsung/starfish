@@ -76,9 +76,9 @@ namespace WindowOrWorkerGlobalScope {
         param->executionContext = executionContext;
         param->callback = callback;
 
-        executionContext->webBase()->messageLoop()->addMicroTask(
-            executionContext->globalScope(),
-            [](size_t handle, void* data) {
+        enqueueMicrotask(
+            executionContext->scriptBindingInstance(),
+            [](void* data) {
                 Param* param = (Param*)data;
                 callScriptFunction(
                     param->executionContext->scriptBindingInstance(),
