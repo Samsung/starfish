@@ -63,7 +63,8 @@ void IORunnable::run()
     class Param {
     public:
         Param()
-            : client(nullptr)
+            : runnable(nullptr)
+            , client(nullptr)
             , socket(nullptr)
             , buffer(nullptr)
             , len(0)
@@ -78,6 +79,7 @@ void IORunnable::run()
             }
         }
 
+        IORunnable* runnable;
         Client* client;
         Socket* socket;
         void* buffer;
@@ -133,6 +135,7 @@ void IORunnable::run()
                         STARFISH_ASSERT(param != nullptr);
 
                         Client* client = m_clients[i];
+                        param->runnable = this;
                         param->client = client;
                         param->socket = socket;
                         param->buffer = buffer;
@@ -146,8 +149,11 @@ void IORunnable::run()
                             nullptr,
                             [](size_t, void* data) {
                                 Param* p = castTo<Param*>(data);
-                                p->client->onReceived(
-                                    p->socket, (const char*)p->buffer, p->len);
+                                if (!p->runnable->m_isStopped) {
+                                    p->client->onReceived(
+                                        p->socket, (const char*)p->buffer,
+                                        p->len);
+                                }
                                 delete p;
                             },
                             param);

@@ -72,14 +72,7 @@ public:
 
     virtual RunLoop* runLoop();
 
-    // microtask is similar with idler, but it is executed before
-    // idler(microtask has higher priority)
-    size_t addMicroTask(GlobalScope* globalScope,
-                        void (*fn)(size_t handle, void*), void* data);
-    void removeMicroTask(size_t handle);
-
     bool calledOnValidThread();
-    void invokeMicroTasksIfExist();
 
 protected:
     MessageLoop();
@@ -88,19 +81,6 @@ protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
-
-    struct MicroTask {
-        size_t m_id;
-        GlobalScope* m_globalScope;
-        void (*m_callback)(size_t handle, void*);
-        void* m_data;
-    };
-
-    void clearMicroTasks(GlobalScope* globalScope);
-
-    size_t m_microTaskCounter;
-    size_t m_microTaskIdler;
-    GCVector<MicroTask> m_microTasks;
 
     ThreadID m_currentThreadID;
 

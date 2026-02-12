@@ -38,6 +38,10 @@ public:
               String* customUserAgentString);
 
     virtual ~WebWorker();
+    virtual bool isWebWorker() const override
+    {
+        return true;
+    }
 
     void destroy();
 

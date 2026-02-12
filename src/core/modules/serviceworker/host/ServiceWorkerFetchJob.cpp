@@ -102,9 +102,9 @@ Optional<Response*> ServiceWorkerFetchJob::handleFetch(
             String::fromUTF8(header.second.data(), header.second.size()));
     }
 
-    client()->webWorker()->messageLoop()->addMicroTask(
-        client(),
-        [](size_t handle, void* data) {
+    enqueueMicrotask(
+        client()->scriptBindingInstance(),
+        [](void* data) {
             TRACE(HOST);
 
             auto p = static_cast<Param*>(data);

@@ -32,6 +32,8 @@ namespace Starfish {
 
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                                            const char* timezone)
+    : m_inDrainMicroTaskQueue(false)
+    , m_macroTaskCounter(0)
 {
 #ifdef STARFISH_TIZEN
     // add argument for CodeCache directory
@@ -69,5 +71,30 @@ void ScriptEngineInstance::dispose()
 void ScriptEngineInstance::enterIdleMode()
 {
     m_engineInstance->enterIdleMode();
+}
+
+void ScriptEngineInstance::drainMicroTaskQueue()
+{
+    if (m_inDrainMicroTaskQueue) {
+        return;
+    }
+    m_inDrainMicroTaskQueue = true;
+    auto vm = engineInstance();
+    while (vm->hasPendingJob()) {
+        auto jobResult = vm->executePendingJob();
+        if (jobResult.error) {
+            STARFISH_LOG_ERROR("Uncaught Error in JS job");
+        }
+    }
+    m_inDrainMicroTaskQueue = false;
+}
+
+MicroTaskExecutionManager::~MicroTaskExecutionManager()
+{
+    m_engine->macroTaskCounter()--;
+
+    if (m_engine->macroTaskCounter() == 0) {
+        m_engine->drainMicroTaskQueue();
+    }
 }
 } // namespace Starfish

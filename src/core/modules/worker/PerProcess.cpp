@@ -87,10 +87,8 @@ void PerProcess::destroy()
     STARFISH_ASSERT(m_threadPool);
     STARFISH_ASSERT(m_messageLoop);
 
-    TRACE(PERPROC, "Start waiting for the I/O thread stopped");
     m_ioThread->stop();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    TRACE(PERPROC, "Stop waiting");
+    m_ioThread->join();
 
     m_threadPool->destroy();
     m_messageLoop->destroy();

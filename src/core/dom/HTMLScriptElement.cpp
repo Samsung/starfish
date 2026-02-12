@@ -38,6 +38,8 @@
 #include "platform/loader/ResourceLoader.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 
 #include "rapidjson/document.h"
 
@@ -532,41 +534,6 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
     return result;
 }
 
-class ScriptExecutionScope {
-public:
-    STARFISH_MAKE_STACK_ALLOCATED()
-    ScriptExecutionScope()
-    {
-    }
-
-    ~ScriptExecutionScope()
-    {
-        if (m_started) {
-            endScope();
-        }
-    }
-
-    void startScope()
-    {
-        m_started = true;
-        s_scriptNestingLevel++;
-    }
-
-    void endScope()
-    {
-        m_started = false;
-        s_scriptNestingLevel--;
-    }
-    bool isExecutingScript()
-    {
-        return !!s_scriptNestingLevel;
-    }
-
-private:
-    static unsigned s_scriptNestingLevel;
-    bool m_started = false;
-};
-
 template <typename Encoding>
 struct JSONStringReadonlyStream {
     typedef typename Encoding::Ch Ch;
@@ -680,24 +647,13 @@ static bool processImportMap(Document* document, String* txt)
     return true;
 }
 
-unsigned ScriptExecutionScope::s_scriptNestingLevel = 0;
-
 bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 {
     if (m_isParserInserted) {
         return false;
     }
 
-    ScriptExecutionScope scope;
-    if (!scope.isExecutingScript() && inParser) {
-        executionContext()
-            ->globalScope()
-            ->webBase()
-            ->messageLoop()
-            ->invokeMicroTasksIfExist();
-    }
-
-    scope.startScope();
+    scriptBindingInstance()->engineInstance()->drainMicroTaskQueue();
 
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
@@ -769,6 +725,9 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                                                                     this);
                 ScriptProfileLogger logger;
                 evaluateString(window()->scriptBindingInstance(), script);
+                scriptBindingInstance()
+                    ->engineInstance()
+                    ->drainMicroTaskQueue();
                 m_didScriptExecuted = true;
             }
             return false;

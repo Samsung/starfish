@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
 #include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
@@ -35,6 +36,7 @@
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #if defined(STARFISH_WEBWORKER_HOST)
+#include "core/modules/worker/WebWorker.h"
 #include "core/modules/worker/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #else
@@ -70,19 +72,6 @@ public:
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
-        auto executionContext = fetchExecutionContext(relatedContext);
-        executionContext->webBase()->messageLoop()->addMicroTask(
-            executionContext->globalScope(),
-            [](size_t handle, void* data) {
-                VMInstanceRef* vm = (VMInstanceRef*)data;
-                if (vm->hasPendingJob()) {
-                    auto jobResult = vm->executePendingJob();
-                    if (jobResult.error) {
-                        STARFISH_LOG_ERROR("Uncaught Error in JS job");
-                    }
-                }
-            },
-            relatedContext->vmInstance());
     }
 
     Escargot::StringRef* makeModuleLoadErrorString(String* srcString)
@@ -584,7 +573,6 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
-
 #endif // defined(STARFISH_WEBWORKER_NOT_HOST)
 
 class EscargotStringView : public String {
@@ -995,6 +983,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                                      "call script function");
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
+        MicroTaskExecutionManager m(instance->engineInstance());
         ContextRef* ctx = instance->scriptContext();
         auto sbresult = Evaluator::execute(
             ctx,
@@ -1022,9 +1011,8 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
         } else {
             result = sbresult.result;
         }
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
-
-    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     return result;
 }
@@ -1036,6 +1024,7 @@ void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
                                      "call constructor function");
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
+        MicroTaskExecutionManager m(instance->engineInstance());
         ContextRef* ctx = instance->scriptContext();
         auto sbresult = Evaluator::execute(
             ctx,
@@ -1064,9 +1053,8 @@ void callConstructor(ScriptBindingInstance* instance, ScriptValue fn,
         } else {
             result = sbresult.result;
         }
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
-
-    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 }
 
 Optional<bool> setScriptObjectProperty(ScriptBindingInstance* instance,
@@ -1207,6 +1195,7 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                      "call script function with error");
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
+        MicroTaskExecutionManager m(instance->engineInstance());
         ContextRef* ctx = instance->scriptContext();
         auto sbresult = Evaluator::execute(
             ctx,
@@ -1235,9 +1224,8 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
         } else {
             result = sbresult.result;
         }
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
-
-    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     return result;
 }
@@ -1485,6 +1473,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         return scriptUndefined();
     }
 
+    MicroTaskExecutionManager m(instance->engineInstance());
+
     initDebuggerIfNeeds(instance);
 
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
@@ -1596,6 +1586,8 @@ GCVector<String*> moduleRequests(ScriptModule module)
 
 bool executeModule(ScriptBindingInstance* instance, ScriptModule module)
 {
+    MicroTaskExecutionManager m(instance->engineInstance());
+
     ContextRef* ctx = instance->scriptContext();
 #if defined(STARFISH_ENABLE_DEBUGGER)
     ctx->setAsAlwaysStopState();
@@ -2154,6 +2146,32 @@ void detachArrayBuffer(ScriptBindingInstance* instance,
         buffer);
 }
 
+void enqueueMicrotask(ScriptBindingInstance* instance, void (*callback)(void*),
+                      void* data)
+{
+    struct Holder : public gc {
+        void (*callback)(void*);
+        void* data;
+        Holder(void (*callback)(void*), void* data)
+            : callback(callback)
+            , data(data)
+        {
+        }
+    };
+
+    STARFISH_ASSERT(instance->engineInstance()->macroTaskCounter());
+
+    ContextRef* ctx = instance->scriptContext();
+    ctx->vmInstance()->enqueueEvaluateJob(
+        ctx,
+        [](ExecutionStateRef* state, void* data) -> ValueRef* {
+            Holder* holder = reinterpret_cast<Holder*>(data);
+            holder->callback(holder->data);
+            return ValueRef::createUndefined();
+        },
+        new Holder(callback, data));
+}
+
 Promise::Promise(ScriptBindingInstance* instance)
 {
     m_instance = instance;
@@ -2174,6 +2192,7 @@ Promise::Promise(ScriptBindingInstance* instance, ScriptValue scriptValue)
 
 void Promise::fulfill(ScriptValue v)
 {
+    MicroTaskExecutionManager m(m_instance->engineInstance());
     ContextRef* ctx = m_instance->scriptContext();
     Evaluator::execute(
         ctx,
@@ -2188,6 +2207,7 @@ void Promise::fulfill(ScriptValue v)
 
 void Promise::reject(ScriptValue v)
 {
+    MicroTaskExecutionManager m(m_instance->engineInstance());
     ContextRef* ctx = m_instance->scriptContext();
     Evaluator::execute(
         ctx,
@@ -2202,6 +2222,7 @@ void Promise::reject(ScriptValue v)
 
 ScriptValue Promise::then(ScriptValue handler)
 {
+    MicroTaskExecutionManager m(m_instance->engineInstance());
     ContextRef* ctx = m_instance->scriptContext();
     auto result = Evaluator::execute(
         ctx,
@@ -2222,6 +2243,7 @@ ScriptValue Promise::then(ScriptValue handler)
 
 ScriptValue Promise::then(ScriptValue onFulfilled, ScriptValue onRejected)
 {
+    MicroTaskExecutionManager m(m_instance->engineInstance());
     ContextRef* ctx = m_instance->scriptContext();
     auto result = Evaluator::execute(
         ctx,

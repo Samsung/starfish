@@ -143,6 +143,11 @@ public:
         return m_scriptContext;
     }
 
+    ScriptEngineInstance* engineInstance()
+    {
+        return m_engineInstance;
+    }
+
 #define STARFISH_COMMONLY_USED_SCRIPT_STRINGS(F) \
     F(prototype, Prototype)                      \
     F(constructor, Constructor)                  \
@@ -174,6 +179,7 @@ public:
 
 protected:
     Escargot::ContextRef* m_scriptContext;
+    ScriptEngineInstance* m_engineInstance;
 
 #define FOR_EACH_STARFISH_COMMONLY_USED_SCRIPT_STRINGS(_, value) \
     Escargot::AtomicStringRef* m_string##value;

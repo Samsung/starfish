@@ -74,6 +74,7 @@ class ExecutionContext;
 class EventTarget;
 class WebView;
 class ScriptBindingInstance;
+class ScriptEngineInstance;
 class Window;
 class String;
 class Promise;
@@ -334,6 +335,9 @@ ScriptArrayBufferView createTypedArray(ScriptBindingInstance* instance,
 
 void detachArrayBuffer(ScriptBindingInstance* instance,
                        ScriptArrayBuffer buffer);
+
+void enqueueMicrotask(ScriptBindingInstance* instance, void (*fn)(void*),
+                      void* data);
 
 #ifdef STARFISH_ENABLE_TEST
 void invokeTestStartFunction(ScriptBindingInstance* instance);

@@ -80,8 +80,6 @@ size_t TimerWindows::addTimer(unsigned delay, GlobalScope* globalScope,
                 auto iter = td->m_timer->m_timeoutHandler.find(td->m_id);
                 if (iter != td->m_timer->m_timeoutHandler.end()) {
                     td->m_timer->m_timeoutHandler.erase(iter);
-                    td->m_timer->m_webBase->messageLoop()
-                        ->invokeMicroTasksIfExist();
                     td->m_handler(td->m_data);
                     GC_FREE(td);
                     g_windowsTimerData.erase((size_t)timerId);

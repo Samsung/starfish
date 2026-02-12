@@ -24,6 +24,7 @@
 #include "ResizeObserverOptions.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
+#include "core/page/Window.h"
 #include "EscargotPublic.h"
 
 namespace Starfish {
@@ -75,6 +76,9 @@ void ResizeObserver::observe(Element* target, ResizeObserverOptions options)
     if (!document->hasResizeObserver(this)) {
         document->addResizeObserver(this);
     }
+
+    // trigger rendering
+    document->window()->requestAnimationFrame([](void*) {}, nullptr);
 }
 
 void ResizeObserver::unobserve(Element* target)

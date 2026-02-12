@@ -1927,9 +1927,7 @@ RenderResult WebView::rendering(bool force)
     ANNOTATE_CHANNEL_END(3001);
     m_didFirstRenderingAfterWakeup = true;
 
-    if (renderResult.didPaintingOrCompositing) {
-        updateObservation();
-    }
+    updateObservation();
 
     return renderResult;
 }

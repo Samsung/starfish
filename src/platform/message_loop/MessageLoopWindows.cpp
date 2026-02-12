@@ -69,7 +69,6 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
-                id->m_ml->invokeMicroTasksIfExist();
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {
@@ -93,7 +92,6 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE_FROM_OTHER_THREAD);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
-                id->m_ml->invokeMicroTasksIfExist();
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {
@@ -259,8 +257,6 @@ void MessageLoopWindows::removeIdlerWithNoGCRooting(size_t handle)
 void MessageLoopWindows::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
-
-    clearMicroTasks(globalScope);
 
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {

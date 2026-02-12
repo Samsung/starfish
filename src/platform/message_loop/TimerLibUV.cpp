@@ -93,8 +93,6 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
             [](uv_timer_t* handle) -> void {
                 TimeoutData* td = (TimeoutData*)handle->data;
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-                td->m_timer->m_webBase->messageLoop()
-                    ->invokeMicroTasksIfExist();
                 td->m_handler(td->m_data);
             },
             static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
@@ -106,8 +104,6 @@ size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
                 auto iter = td->m_timer->m_timeoutHandler.find(td->m_id);
                 if (iter != td->m_timer->m_timeoutHandler.end()) {
                     td->m_timer->m_timeoutHandler.erase(iter);
-                    td->m_timer->m_webBase->messageLoop()
-                        ->invokeMicroTasksIfExist();
                     td->m_handler(td->m_data);
                     GC_FREE(td);
                 }

@@ -90,8 +90,9 @@ Thread::Thread(ThreadClient* client, const char* name)
 
 void Thread::finishUnjoined()
 {
-    Locker<Mutex> l(*m_mutex);
+    m_mutex->lock();
     if (!m_threadData) {
+        m_mutex->unlock();
         return;
     }
 
@@ -111,9 +112,11 @@ void Thread::finishUnjoined()
         }
     }
 
+    m_mutex->unlock();
     void* ret;
     pthread_join(m_threadData->m_tid, &ret);
 
+    m_mutex->lock();
     if (m_threadClient) {
         m_threadClient->onThreadFinished(this);
     }
@@ -125,6 +128,7 @@ void Thread::finishUnjoined()
     m_threadData->m_messageLoop->decreaseUnjoinedThreadCount();
 #endif
     m_threadData = nullptr;
+    m_mutex->unlock();
 }
 
 void Thread::run(MessageLoop* msgLoop, StoppableThreadWorker fn, void* data)

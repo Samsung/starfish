@@ -105,12 +105,6 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
                 DO_SCRIPT_EXECUTE(HTMLScript);
                 DO_SCRIPT_EXECUTE(SVGScript);
             }
-
-            m_document->executionContext()
-                ->globalScope()
-                ->webBase()
-                ->messageLoop()
-                ->invokeMicroTasksIfExist();
         }
 
         if (!m_tokenizer.nextToken(m_input.current(), token())) {

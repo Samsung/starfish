@@ -691,10 +691,9 @@ void CustomElementRegistry::enqueueElementOnAppropriateElementQueue(
         m_isProcessingBackupElementQueue = true;
 
         // Queue a microtask to perform the following steps:
-        GlobalScope* globalScope = element->executionContext()->globalScope();
-        globalScope->webBase()->messageLoop()->addMicroTask(
-            globalScope,
-            [](size_t handle, void* data) {
+        enqueueMicrotask(
+            element->scriptBindingInstance(),
+            [](void* data) {
                 auto* self = static_cast<CustomElementRegistry*>(data);
                 // Invoke custom element reactions in reactionsStack's backup
                 // element queue.
