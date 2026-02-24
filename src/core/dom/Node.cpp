@@ -1846,7 +1846,17 @@ Node* Node::removeChild(Node* child)
 
     Frame* old = child->frame();
     if (old) {
-        child->setNeedsFrameTreeBuild();
+        if (frame() && frame()->isFrameBlockBox() &&
+            frame()->asFrameBlockBox()->hasBlockFlow() &&
+            old->parent() == frame() &&
+            frame()->style()->display() == DisplayValue::BlockDisplayValue &&
+            old->style()->display() == DisplayValue::BlockDisplayValue &&
+            !child->nextSibling()) {
+            frame()->removeChild(old);
+            setNeedsLayout();
+        } else {
+            child->setNeedsFrameTreeBuild();
+        }
     }
 
     if (document()) {

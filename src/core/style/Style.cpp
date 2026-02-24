@@ -53,6 +53,7 @@
 #include "core/dom/svg/SVGUseElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/layout/FrameBlockBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -9397,8 +9398,42 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
                         e = e->renderingParentElement();
                     }
                 } else {
-                    FrameTreeBuilder::
-                        needsFrameTreeBuildFromChildrenOfThisFrame(e->frame());
+                    bool needsToExecuteNormalPath = true;
+                    if (e->style()->display() ==
+                            DisplayValue::BlockDisplayValue &&
+                        style->display() == DisplayValue::BlockDisplayValue &&
+                        element->renderingParentElement() == e && e->frame() &&
+                        e->frame()->isFrameBlockBox() &&
+                        e->frame()->asFrameBlockBox()->hasBlockFlow() &&
+                        !e->nextSibling()) {
+                        // no split inline
+                        bool seenSplitedInlineFrame = false;
+                        for (auto c = element; c;
+                             c = c->renderingParentElement()) {
+                            if (c->frame() && c->frame()->isBlockLevel() &&
+                                c->frame()->didSpiltFrameInline()) {
+                                seenSplitedInlineFrame = true;
+                                break;
+                            }
+                        }
+
+                        if (!seenSplitedInlineFrame) {
+                            e->frame()->propagateMarkNeedsLayout();
+                            element->markNeedsFrameTreeBuild();
+                            while (e) {
+                                e->markChildNeedsFrameTreeBuild();
+                                e = e->renderingParentElement();
+                            }
+
+                            needsToExecuteNormalPath = false;
+                        }
+                    }
+
+                    if (needsToExecuteNormalPath) {
+                        FrameTreeBuilder::
+                            needsFrameTreeBuildFromChildrenOfThisFrame(
+                                e->frame());
+                    }
                 }
             }
         } else {
