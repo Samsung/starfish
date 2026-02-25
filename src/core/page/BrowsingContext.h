@@ -137,7 +137,6 @@ public:
 
     void setNeedsFullLayout();
     void setNeedsPainting();
-    void setNeedsFullPainting();
     void setNeedsComposite();
 
     bool needsFrameTreeBuild()

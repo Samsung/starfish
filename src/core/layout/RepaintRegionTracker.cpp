@@ -372,10 +372,6 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                          sc->transformMatrix())) {
                         needsRepainting = true;
                     }
-                } else {
-                    if (sc->transformMatrix() != SkMatrix::I()) {
-                        needsRepainting = true;
-                    }
                 }
             }
 
