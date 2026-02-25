@@ -1843,20 +1843,6 @@ void BrowsingContext::setNeedsFullLayout()
     }
 }
 
-void BrowsingContext::setNeedsFullPainting()
-{
-    if (document()->frame() != nullptr) {
-        FrameBox* fb = document()->frame()->asFrameBox();
-        fb->markNeedsPainting();
-        fb->iterateChildFrameBox([](FrameBox* fb) {
-            STARFISH_ASSERT(fb);
-            fb->markNeedsPainting();
-        });
-
-        setNeedsPainting();
-    }
-}
-
 void BrowsingContext::setNeedsPainting()
 {
     m_webView->setNeedsPainting();

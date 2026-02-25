@@ -2562,7 +2562,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         auto oldClipPath = oldStyle->clipPath();
         auto newClipPath = newStyle->clipPath();
 
-        if (oldClipPath->equals(newClipPath)) {
+        if (!oldClipPath->equals(newClipPath)) {
             damagedKeys[CSSStyleValuePair::KeyKind::ClipPath] = true;
             damage = static_cast<ComputedStyleDamage>(
                 ComputedStyleDamage::ComputedStyleDamageLayout |

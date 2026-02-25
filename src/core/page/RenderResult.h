@@ -72,7 +72,7 @@ struct PrevDrawnStackingContextInfo {
     float opacity;
     GraphicsBufferHolder* graphicsBufferHolder;
     LayoutRect graphicsBufferVisibleRect;
-    uint32_t additionalPixelRatio;
+    float additionalPixelRatio;
 };
 
 typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>
