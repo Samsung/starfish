@@ -120,6 +120,16 @@ EXECUTE_PROCESS(
     COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrUnicodePropertyTables.py ${ESCARGOT_ROOT}/tools/unicode_data ${OUTPUT_DIRECTORY}/escargot_generated/yarr/UnicodePatternTables.h
 )
 
+# YarrCanonicalizeUCS2.cpp
+EXECUTE_PROCESS(
+    COMMAND python3 ${ESCARGOT_ROOT}/tools/code_generators/generateYarrCanonicalizeUCS2.py ${ESCARGOT_ROOT}/tools/unicode_data/UnicodeData.txt ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUCS2.cpp
+    RESULT_VARIABLE GENERATE_RESULT
+    OUTPUT_VARIABLE GENERATE_OUTPUT
+    ERROR_VARIABLE GENERATE_ERROR
+)
+
+SET(ESCARGOT_SRC ${ESCARGOT_SRC} ${OUTPUT_DIRECTORY}/escargot_generated/yarr/YarrCanonicalizeUCS2.cpp)
+
 #######################################################
 # INCLUDE DIRS
 #######################################################
