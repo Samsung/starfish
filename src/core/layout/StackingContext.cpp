@@ -2191,6 +2191,7 @@ bool StackingContext::fillGraphicsBufferContents(
 
             LayoutRect layerClipRect = globalCtx.repaintRegion[owner()->node()];
             bool isOverlappedWithScreenClipRect =
+                !layerClipRect.isEmpty() &&
                 layerClipRect.intersects(LayoutRect(
                     (LayoutUnit)tileDataX + minX, (LayoutUnit)tileDataY + minY,
                     tileDataWidth, tileDataHeight));
