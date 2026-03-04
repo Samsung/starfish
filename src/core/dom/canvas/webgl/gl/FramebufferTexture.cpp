@@ -42,6 +42,8 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
     gl->bindFramebuffer(GL_FRAMEBUFFER, outFbo);
 
     // 2. Generate a texture and bind it
+    GLint oldTextureId = 0;
+    gl->getIntegerv(GL_TEXTURE_BINDING_2D, &oldTextureId);
     gl->genTextures(1, &outTextureId);
     gl->bindTexture(GL_TEXTURE_2D, outTextureId);
 
@@ -100,7 +102,7 @@ static bool createFrameBufferObject(GL* gl, const unsigned width,
         return false;
     }
 
-    gl->bindTexture(GL_TEXTURE_2D, 0);
+    gl->bindTexture(GL_TEXTURE_2D, oldTextureId);
     gl->bindFramebuffer(GL_FRAMEBUFFER, 0);
     gl->bindRenderbuffer(GL_RENDERBUFFER, 0);
 
