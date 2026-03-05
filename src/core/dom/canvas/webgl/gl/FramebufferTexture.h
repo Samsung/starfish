@@ -49,7 +49,7 @@ public:
     bool create(unsigned bufferWidth, unsigned bufferHeight,
                 GLuint& outTextureId) override;
 
-    bool destory() override;
+    bool destroy() override;
 
     Type type() override
     {

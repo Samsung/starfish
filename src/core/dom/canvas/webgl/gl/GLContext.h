@@ -32,7 +32,7 @@ public:
     GLContext(Renderer* renderer);
 
     bool createSharedContext();
-    bool destory();
+    bool destroy();
     bool setCurrent();
     void reset();
     bool isValid();

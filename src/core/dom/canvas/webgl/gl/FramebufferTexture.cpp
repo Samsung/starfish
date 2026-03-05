@@ -119,7 +119,7 @@ FramebufferTexture::~FramebufferTexture()
 {
     // NOTE: Add a guard to set the GL context used at creation if necessary.
     // Refs: m_framebufferTexture.reset() in WebGLRenderingContextBaseMixIn.
-    destory();
+    destroy();
 }
 
 bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
@@ -149,7 +149,7 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
     return true;
 };
 
-bool FramebufferTexture::destory()
+bool FramebufferTexture::destroy()
 {
     // Ensure no FBO is bound.
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, 0);

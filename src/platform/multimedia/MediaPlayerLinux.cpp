@@ -232,7 +232,7 @@ bool FfmpegWrapperPlayer::unprepare()
     return false;
 }
 
-void FfmpegWrapperPlayer::destory()
+void FfmpegWrapperPlayer::destroy()
 {
     STARFISH_UNIMPLEMENTED();
 }
@@ -1213,7 +1213,7 @@ void MediaPlayerLinux::dispose()
         m_nativePlayer->unsetcompleteCB();
         m_nativePlayer->unsetErrorCB();
         m_nativePlayer->unsetBufferingCB();
-        m_nativePlayer->destory();
+        m_nativePlayer->destroy();
         m_nativePlayer = nullptr;
     }
     if (m_lastDecodedVideoPacket != nullptr) {

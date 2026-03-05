@@ -65,11 +65,11 @@ bool GLContext::setCurrent()
     return m_renderer->makeCurrentWithContext(m_context);
 }
 
-bool GLContext::destory()
+bool GLContext::destroy()
 {
     if (m_context != UINTPTR_MAX) {
         if (!m_renderer->destroyContext(m_context)) {
-            STARFISH_LOG_WARN("Context is not destoryed.");
+            STARFISH_LOG_WARN("Context is not destroyed.");
             return false;
         }
         m_context = UINTPTR_MAX;
