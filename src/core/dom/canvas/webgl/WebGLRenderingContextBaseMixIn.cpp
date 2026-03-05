@@ -135,7 +135,7 @@ void WebGLRenderingContextBaseMixIn::finalize()
     if (m_context.isValid()) {
         m_context.setCurrent();
         m_framebufferTexture.reset();
-        m_context.destory();
+        m_context.destroy();
     }
     m_canvasSurface = nullptr;
 }

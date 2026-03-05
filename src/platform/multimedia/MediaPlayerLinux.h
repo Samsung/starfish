@@ -103,7 +103,7 @@ public:
     bool prepare(const std::function<void(void* data)>& preparedCallback,
                  void* data);
     bool unprepare();
-    void destory();
+    void destroy();
 
     bool setPlayPosition(
         int milliseconds, bool accurate,

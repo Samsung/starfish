@@ -118,7 +118,7 @@ void MediaPlayerTizen::disposePlayer()
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         if (m_playerDeadFlag) {
             // give dead flag for killing MSE thread first.
-            // because, when destorying we want to end threads first
+            // because, when destroying we want to end threads first
             // but, thread is ended by idler
             // so if we don't give flag this time, we wait forever for MSE
             // thread
