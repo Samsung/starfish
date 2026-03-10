@@ -1619,15 +1619,10 @@ RenderResult WebView::rendering(bool force)
                 }
 
                 canvas->translate(scrollX, scrollY);
-                if (scrollbarVisible()) {
-                    mainBrowsingContext()
-                        ->window()
-                        ->scrolling()
-                        ->paintScrollbars(
-                            mainBrowsingContext()->window()->scrolling(),
-                            canvas, mainFrame, mainFrame->appliedOverflowX(),
-                            mainFrame->appliedOverflowY());
-                }
+                mainBrowsingContext()->window()->scrolling()->paintScrollbars(
+                    mainBrowsingContext()->window()->scrolling(), canvas,
+                    mainFrame, mainFrame->appliedOverflowX(),
+                    mainFrame->appliedOverflowY());
                 canvas->restore();
                 if (m_showFps) {
                     m_frameRateCounter->drawFps(canvas);
