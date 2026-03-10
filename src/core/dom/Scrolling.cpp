@@ -510,6 +510,15 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
 #endif
 
     if (scrolling) {
+        WebView* webView = scrolling->target()
+                               ->executionContext()
+                               ->document()
+                               ->browsingContext()
+                               ->webView();
+        if (!webView->scrollbarVisible()) {
+            return;
+        }
+
         canvas->save();
         bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
                                  oy >= OverflowValue::AutoOverflow &&

@@ -753,9 +753,7 @@ Settings* WebContainerImpl::GetSettings()
             m_webView->needsDownloadWebFontsEarly());
         result->SetNeedsDownScaleImageResourceLargerThan(
             m_webView->needsDownScaleImageResourceLargerThan());
-#ifndef TIZEN_COMPAT_HEADER_5_0
         result->SetScrollbarVisible(m_webView->scrollbarVisible());
-#endif
         result->SetUseExternalPopup(m_webView->useExternalPopup());
         result->SetUseSpatialNavigation(m_webView->useSpatialNavigation());
     });
@@ -1054,9 +1052,7 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setUseHttp2(settings->UseHttp2());
             m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
-#ifndef TIZEN_COMPAT_HEADER_5_0
             m_webView->setScrollbarVisible(settings->ScrollbarVisible());
-#endif
             m_webView->setUseExternalPopup(settings->UseExternalPopup());
             m_webView->setUseSpatialNavigation(
                 settings->UseSpatialNavigation());

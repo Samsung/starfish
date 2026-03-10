@@ -286,11 +286,11 @@ void MiniBrowser::setSettings(const Settings& settings)
         lweSettings.SetNeedsDownScaleImageResourceLargerThan(
             settings.needsDownScaleImageResourceLargerThan);
     }
-#ifndef TIZEN_COMPAT_HEADER_5_0
+
     if (!settings.scrollbarVisible) {
         lweSettings.SetScrollbarVisible(settings.scrollbarVisible);
     }
-#endif
+
     if (settings.useExternalPopup) {
         lweSettings.SetUseExternalPopup(settings.useExternalPopup);
     }

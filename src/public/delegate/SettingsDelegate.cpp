@@ -115,9 +115,7 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
     UpdateSetting("needsDownloadWebFontsEarly", "False");
     UpdateSetting("useHttp2", "False");
     UpdateSetting("needsDownScaleImageResourceLargerThan", "0");
-#ifndef TIZEN_COMPAT_HEADER_5_0
     UpdateSetting("scrollbarVisible", "True");
-#endif
     UpdateSetting("useExternalPopup", "False");
     UpdateSetting("useSpatialNavigation", "False");
     UpdateSetting("showLoadFailMsg", "true");
