@@ -1172,7 +1172,7 @@ ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
     case GL_ELEMENT_ARRAY_BUFFER_BINDING: {
         GLuint target = (pname == GL_ARRAY_BUFFER_BINDING)
                             ? GL_ARRAY_BUFFER
-                            : GL_ELEMENT_ARRAY_BUFFER_BINDING;
+                            : GL_ELEMENT_ARRAY_BUFFER;
         WebGLBuffer* buffer = m_state->getBoundBuffer(target).valueOr(nullptr);
         return buffer ? buffer->scriptValue() : scriptNull();
     }
@@ -1734,7 +1734,8 @@ ScriptValue WebGLRenderingContext::getVertexAttrib(GLuint index, GLenum pname)
 
         TRACE(WEBGL, KV(index), KV(maybeBuffer.value()->glObject()));
 
-        STARFISH_ASSERT(index == maybeBuffer.value()->glObject());
+        STARFISH_ASSERT(static_cast<GLuint>(value) ==
+                        maybeBuffer.value()->glObject());
 
         return maybeBuffer.value()->scriptValue();
     }
