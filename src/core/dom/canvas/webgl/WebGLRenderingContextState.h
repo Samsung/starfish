@@ -63,14 +63,20 @@ public:
     void setBufferBoundToVertexAttributes(GLuint index,
                                           Optional<WebGLBuffer*> maybe);
 
+    void deleteVertexArrayOES(GLuint vao);
+
 private:
+    GLuint vertexArray();
+
     // Define variables
 #define V(Constructor, Type, MemberName) Type m_##MemberName;
     STATEFUL_VALUES(V);
 #undef V
 
-    GCUnorderedMap<GLuint, WebGLBuffer*> m_buffersBound;
-    GCUnorderedMap<GLuint, WebGLBuffer*> m_buffersBoundToVertexAttributes;
+    GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
+        m_buffersBound;
+    GCUnorderedMap<GLuint, std::unordered_map<GLuint, WebGLBuffer*>>
+        m_buffersBoundToVertexAttributes;
 };
 } // namespace Starfish
 
