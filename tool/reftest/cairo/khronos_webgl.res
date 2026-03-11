@@ -73,7 +73,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/get-extensi
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-half-float-with-image.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-texture-half-float-with-video.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-vertex-array-object-bufferData.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-vertex-array-object.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/oes-vertex-array-object.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-compressed-texture-atc.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-compressed-texture-pvrtc.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/extensions/webgl-compressed-texture-s3tc.html

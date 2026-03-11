@@ -509,6 +509,11 @@ public:
         m_evasGLAPI->glHint(target, mode);
     }
 
+    virtual GLboolean isBuffer(GLuint buffer) override
+    {
+        return m_evasGLAPI->glIsBuffer(buffer);
+    }
+
     virtual void lineWidth(GLfloat width) override
     {
         m_evasGLAPI->glLineWidth(width);

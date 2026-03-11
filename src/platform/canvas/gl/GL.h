@@ -172,6 +172,7 @@ public:
                                           GLenum precisionType, GLint *range,
                                           GLint *precision) = 0;
     virtual void hint(GLenum target, GLenum mode) = 0;
+    virtual GLboolean isBuffer(GLuint buffer) = 0;
     virtual void lineWidth(GLfloat width) = 0;
     virtual void linkProgram(GLuint program) = 0;
     virtual void pixelStorei(GLenum pname, GLint param) = 0;
