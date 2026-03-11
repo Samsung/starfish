@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "WebGLRenderingContextState.h"
+#include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 
 namespace Starfish {
 
@@ -31,8 +32,9 @@ WebGLRenderingContextState::WebGLRenderingContextState()
 Optional<WebGLBuffer*>
 WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 {
-    const auto& iter = m_buffersBoundToVertexAttributes.find(index);
-    if (iter == m_buffersBoundToVertexAttributes.end()) {
+    GLuint vao = vertexArray();
+    const auto& iter = m_buffersBoundToVertexAttributes[vao].find(index);
+    if (iter == m_buffersBoundToVertexAttributes[vao].end()) {
         return nullptr;
     }
 
@@ -43,17 +45,19 @@ WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 void WebGLRenderingContextState::setBufferBoundToVertexAttributes(
     GLuint index, Optional<WebGLBuffer*> maybe)
 {
+    GLuint vao = vertexArray();
     if (maybe.hasValue()) {
-        m_buffersBoundToVertexAttributes.insert_or_assign(index, maybe.value());
+        m_buffersBoundToVertexAttributes[vao][index] = maybe.value();
     } else {
-        m_buffersBoundToVertexAttributes.erase(index);
+        m_buffersBoundToVertexAttributes[vao].erase(index);
     }
 }
 
 Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 {
-    const auto& iter = m_buffersBound.find(target);
-    if (iter == m_buffersBound.end()) {
+    GLuint vao = vertexArray();
+    const auto& iter = m_buffersBound[vao].find(target);
+    if (iter == m_buffersBound[vao].end()) {
         return nullptr;
     }
 
@@ -64,11 +68,31 @@ Optional<WebGLBuffer*> WebGLRenderingContextState::getBoundBuffer(GLuint target)
 void WebGLRenderingContextState::setBoundBuffer(GLenum target,
                                                 Optional<WebGLBuffer*> maybe)
 {
+    GLuint vao = vertexArray();
     if (maybe.hasValue()) {
-        m_buffersBound.insert_or_assign(target, maybe.value());
+        m_buffersBound[vao][target] = maybe.value();
     } else {
-        m_buffersBound.erase(target);
+        m_buffersBound[vao].erase(target);
     }
+}
+
+void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
+{
+    STARFISH_ASSERT(vao != 0);
+    if (m_webGLVertexArrayObjectOES.hasValue() &&
+        m_webGLVertexArrayObjectOES.value()->glObject() == vao) {
+        m_webGLVertexArrayObjectOES = nullptr;
+    }
+    m_buffersBound.erase(vao);
+    m_buffersBoundToVertexAttributes.erase(vao);
+}
+
+GLuint WebGLRenderingContextState::vertexArray()
+{
+    if (m_webGLVertexArrayObjectOES.hasValue()) {
+        return m_webGLVertexArrayObjectOES.value()->glObject();
+    }
+    return 0;
 }
 
 } // namespace Starfish

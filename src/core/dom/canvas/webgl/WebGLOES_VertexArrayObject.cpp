@@ -74,6 +74,7 @@ void OES_vertex_array_object::deleteVertexArrayOES(
             TRACE(WEBGL, KV(vao));
             glDeleteVertexArrays(1, &vao);
             value->markDeleted();
+            m_context->getState()->deleteVertexArrayOES(vao);
         }
     }
 }
