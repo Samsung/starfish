@@ -1801,10 +1801,7 @@ bool WebGLRenderingContext::isBuffer(Optional<WebGLBuffer*> maybe)
         return false;
     }
 
-    // The generated bindings do CHECK_TYPEOF the value before calling this
-    // function, so we don't have to do any type checking. Other `isXXXX`
-    // functions do the same.
-    return true;
+    return m_gl->isBuffer(maybe.value()->glObject());
 }
 
 bool WebGLRenderingContext::isEnabled(GLenum cap)

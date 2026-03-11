@@ -517,6 +517,11 @@ public:
         glHint(target, mode);
     }
 
+    virtual GLboolean isBuffer(GLuint buffer) override
+    {
+        return glIsBuffer(buffer);
+    }
+
     virtual void lineWidth(GLfloat width) override
     {
         glLineWidth(width);
