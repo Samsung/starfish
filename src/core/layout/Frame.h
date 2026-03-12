@@ -1970,20 +1970,8 @@ public:
         return false;
     }
 
-    void propagateMarkNeedsLayout()
-    {
-        for (Frame* f = this; f; f = f->parent()) {
-            if (f->needToEstablishKindsOfFormattingContext() ||
-                f->isFrameDocument()) {
-                if (f->needsLayout()) {
-                    break;
-                }
-
-                f->markNeedsLayout();
-            }
-        }
-    }
-
+    void propagateMarkNeedsLayout(
+        Optional<ComputedStyle*> newStyle = NullOption);
     void markNeedsLayout()
     {
         m_flags.m_needsLayout = true;
