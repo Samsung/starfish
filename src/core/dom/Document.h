@@ -793,6 +793,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nodeIterators));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_body));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredSVGScriptElements));
         GC_set_bit(desc,
@@ -834,6 +835,7 @@ protected:
     bool m_onLoadFired : 1;
     bool m_isFocusRingCacheValid : 1;
     bool m_isDialogsInShowModalCacheValid : 1;
+    bool m_isMutationObserverMicroTaskQueued : 1;
 
     ExecutionContext* m_executionContext;
     Window* m_window;
@@ -862,6 +864,7 @@ protected:
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
     MediaQueryListMatcher* m_mediaQueryListMatcher;
+    Optional<Node*> m_body;
     GCVector<
         std::pair<Optional<HTMLScriptElement*>, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
@@ -888,7 +891,6 @@ protected:
     GCVector<ResizeObserver*> m_resizeObservers;
     MutationObserverOptionType m_mutationTypes;
     GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
-    bool m_isMutationObserverMicroTaskQueued;
 
     GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>
         m_svgPaintClientElements;

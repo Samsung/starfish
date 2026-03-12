@@ -126,6 +126,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
     , m_isDialogsInShowModalCacheValid(false)
+    , m_isMutationObserverMicroTaskQueued(false)
     , m_executionContext(new ExecutionContext(window, scriptBindingInstance,
                                               uri, charSet, this, true))
     , m_window(window)
@@ -155,7 +156,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_nativeGradientCacheTotalSize(0)
     , m_webFontResolveVersionForCanvas(0)
     , m_mutationTypes(MutationObserverOptionType::kNone)
-    , m_isMutationObserverMicroTaskQueued(false)
 {
     setBaseURL(fallbackBaseURL());
 
@@ -1291,10 +1291,8 @@ HTMLHeadElement* Document::head()
 
 HTMLElement* Document::body()
 {
-    Node* body = childMatchedBy(
-        this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
-    if (body) {
-        return body->asHTMLElement();
+    if (m_body) {
+        return m_body->asHTMLElement();
     }
     return nullptr;
 }
@@ -1627,6 +1625,9 @@ void Document::didNodeInserted(Node* parent, Node* newChild)
                     newChild->asElement()->atomicId(), true);
             }
         }
+    } else if (UNLIKELY(newChild->isHTMLBodyElement())) {
+        m_body = childMatchedBy(
+            this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     }
 
     updateDOMVersion();
@@ -1638,6 +1639,9 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
 
     if (UNLIKELY(oldChild->isHTMLBaseElement())) {
         processBaseElement();
+    } else if (UNLIKELY(oldChild->isHTMLBodyElement())) {
+        m_body = childMatchedBy(
+            this, [](Node* nd) -> bool { return nd->isHTMLBodyElement(); });
     }
 
     updateDOMVersion();
