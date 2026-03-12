@@ -1436,8 +1436,9 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
 
     double sx = window()->scrollX();
     double sy = window()->scrollY();
-    OverflowValue ox = document()->appliedOverflowX();
-    OverflowValue oy = document()->appliedOverflowY();
+    auto ao = document()->appliedOverflow();
+    OverflowValue ox = ao.first;
+    OverflowValue oy = ao.second;
 
     if (isVerticalWheelEvent) {
         if (oy >= OverflowValue::AutoOverflow) {
@@ -1554,8 +1555,9 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
 #else
                     double sx = window()->scrollX(false);
                     double sy = window()->scrollY(false);
-                    OverflowValue ox = document()->appliedOverflowX();
-                    OverflowValue oy = document()->appliedOverflowY();
+                    auto ao = document()->appliedOverflow();
+                    OverflowValue ox = ao.first;
+                    OverflowValue oy = ao.second;
 
                     if (e->keyValue() == KeyValue::ArrowDownKey &&
                         oy >= OverflowValue::AutoOverflow) {

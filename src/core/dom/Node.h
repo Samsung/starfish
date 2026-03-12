@@ -660,8 +660,15 @@ public:
                                                      Length rootFontSize,
                                                      Font* parentFont);
 
-    OverflowValue appliedOverflowX();
-    OverflowValue appliedOverflowY();
+    std::pair<OverflowValue, OverflowValue> appliedOverflow();
+    OverflowValue appliedOverflowX()
+    {
+        return appliedOverflow().first;
+    }
+    OverflowValue appliedOverflowY()
+    {
+        return appliedOverflow().second;
+    }
 
     Element* firstElementChild();
     Element* lastElementChild();

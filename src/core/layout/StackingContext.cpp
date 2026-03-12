@@ -449,18 +449,33 @@ bool StackingContext::needsToDrawScrollbar()
 
 bool StackingContext::inScrollActive()
 {
+    auto ao = m_owner->appliedOverflow();
+    auto ox = ao.first;
+    auto oy = ao.second;
     bool nonVisibleOverflowValueApplied =
-        m_owner->appliedOverflowX() != OverflowValue::VisibleOverflow ||
-        m_owner->appliedOverflowY() != OverflowValue::VisibleOverflow;
+        ox != OverflowValue::VisibleOverflow ||
+        oy != OverflowValue::VisibleOverflow;
     if (nonVisibleOverflowValueApplied && m_owner->node() &&
         m_owner->node()->isElement()) {
-        if (m_owner->node()->asElement()->scrollLeft(false) ||
-            m_owner->node()->asElement()->scrollTop(false)) {
+        if (m_owner->node()->asElement()->hasRareMembers() &&
+            (m_owner->node()->asElement()->rareMembers()->m_scrollLeft ||
+             m_owner->node()->asElement()->rareMembers()->m_scrollTop)) {
             return true;
         }
     }
-    if (m_owner->needsToEstablishStackingContextForScrolling()) {
-        return true;
+    if (m_owner->isFrameBlockBox()) {
+        if (ox == OverflowValue::AutoOverflow ||
+            ox == OverflowValue::ScrollOverflow) {
+            if (m_owner->asFrameBlockBox()->hasBiggerContentThanFrameWidth()) {
+                return true;
+            }
+        }
+        if (oy == OverflowValue::AutoOverflow ||
+            oy == OverflowValue::ScrollOverflow) {
+            if (m_owner->asFrameBlockBox()->hasBiggerContentThanFrameHeight()) {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -923,7 +938,11 @@ static void computeVisibleRectPedigreeWorker(
     Frame::ComputeVisibleRectContext& ctx)
 {
     if (pedigree.rend() == iter) {
-        c->owner()->computeVisibleRect(ctx);
+        if (ctx.visbleRectComputedBox.find(c->owner()) ==
+            ctx.visbleRectComputedBox.end()) {
+            ctx.visbleRectComputedBox.insert(c->owner());
+            c->owner()->computeVisibleRect(ctx);
+        }
     } else {
         Frame::ComputeVisibleRectContextFragment f(ctx, *iter);
         computeVisibleRectPedigreeWorker(c, pedigree, iter + 1, ctx);
@@ -951,7 +970,11 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
 
         computeVisibleRectPedigreeWorker(c, pedigree, pedigree.rbegin(), ctx);
     } else {
-        c->owner()->computeVisibleRect(ctx);
+        if (ctx.visbleRectComputedBox.find(c->owner()) ==
+            ctx.visbleRectComputedBox.end()) {
+            ctx.visbleRectComputedBox.insert(c->owner());
+            c->owner()->computeVisibleRect(ctx);
+        }
     }
 
     auto iter = c->childContexts().begin();

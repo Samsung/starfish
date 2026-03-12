@@ -1007,8 +1007,9 @@ bool Element::handleDefaultEvent(Event* event)
              (event->isTouchEvent() && event->type()->equals("touchmove"))) ||
             ((event->isMouseEvent() && event->type()->equals("mouseup")) ||
              (event->isTouchEvent() && event->type()->equals("touchend")));
-        auto ox = frame()->appliedOverflowX();
-        auto oy = frame()->appliedOverflowY();
+        auto ao = frame()->appliedOverflow();
+        auto ox = ao.first;
+        auto oy = ao.second;
 
         if (isDownOrMoveOrUpEvent &&
             ensureRareElementMembers()
@@ -1599,7 +1600,8 @@ void Element::scrollTo(double x, double y)
     }
 
     bool scrolled = false;
-    if (appliedOverflowX() >= OverflowValue::HiddenOverflow) {
+    auto ao = appliedOverflow();
+    if (ao.first >= OverflowValue::HiddenOverflow) {
         auto scrollMaxW = (frame()->asFrameBlockBox()->width() -
                            frame()->asFrameBlockBox()->borderWidth())
                               .toUnsigned();
@@ -1617,7 +1619,7 @@ void Element::scrollTo(double x, double y)
         }
     }
 
-    if (appliedOverflowY() >= OverflowValue::HiddenOverflow) {
+    if (ao.second >= OverflowValue::HiddenOverflow) {
         auto scrollMaxH = (frame()->asFrameBlockBox()->height() -
                            frame()->asFrameBlockBox()->borderHeight())
                               .toUnsigned();

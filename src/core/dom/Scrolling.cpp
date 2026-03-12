@@ -412,13 +412,15 @@ void Scrolling::stopFling()
 void Scrolling::markAsActive()
 {
     if (!m_target->isWindow()) {
-        Frame* frame = m_target->asElement()->frame();
-        bool hasVerticalScroll =
-            frame && frame->appliedOverflowX() >= OverflowValue::AutoOverflow;
-        bool hasHorizontalScroll =
-            frame && frame->appliedOverflowY() >= OverflowValue::AutoOverflow;
-        if (!hasVerticalScroll && !hasHorizontalScroll) {
-            return;
+        auto frame = m_target->asElement()->frame();
+        if (frame) {
+            auto ao = frame->appliedOverflow();
+            auto ox = ao.first;
+            auto oy = ao.second;
+            if (ox < OverflowValue::AutoOverflow &&
+                oy < OverflowValue::AutoOverflow) {
+                return;
+            }
         }
     }
 

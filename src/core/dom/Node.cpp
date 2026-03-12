@@ -693,7 +693,7 @@ unsigned Node::index()
     return index;
 }
 
-OverflowValue Node::appliedOverflowX()
+std::pair<OverflowValue, OverflowValue> Node::appliedOverflow()
 {
     if (isDocument()) {
         HTMLElement* htmlElement = document()->rootElement();
@@ -721,21 +721,6 @@ OverflowValue Node::appliedOverflowX()
             }
         }
 
-        return appliedOverflowX;
-    }
-
-    if (isHTMLHtmlElement()) {
-        return VisibleOverflow;
-    }
-
-    return style()->overflowX();
-}
-
-OverflowValue Node::appliedOverflowY()
-{
-    if (isDocument()) {
-        HTMLElement* htmlElement = document()->rootElement();
-        HTMLElement* bodyElement = document()->body();
         OverflowValue htmlOverflowY = VisibleOverflow;
         OverflowValue bodyOverflowY = VisibleOverflow;
         OverflowValue appliedOverflowY = AutoOverflow;
@@ -756,14 +741,14 @@ OverflowValue Node::appliedOverflowY()
             }
         }
 
-        return appliedOverflowY;
+        return std::make_pair(appliedOverflowX, appliedOverflowY);
     }
 
     if (isHTMLHtmlElement()) {
-        return VisibleOverflow;
+        return std::make_pair(VisibleOverflow, VisibleOverflow);
     }
 
-    return style()->overflowY();
+    return std::make_pair(style()->overflowX(), style()->overflowY());
 }
 
 Element* Node::firstElementChild()
