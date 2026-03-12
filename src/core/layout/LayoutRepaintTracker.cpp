@@ -223,7 +223,8 @@ static void traceRepaintRegionJob(
                     iter->second.first.setY(LayoutUnit::min());
                 }
 
-                if (currentFrameBox->isVisible()) {
+                if (currentFrameBox->isVisible() &&
+                    currentFrameBox != lastStackingContextOwner) {
                     if (!lastStackingContextOwner->stackingContext() ||
                         !lastStackingContextOwner->stackingContext()
                              ->needsGraphicsBufferReason() ||
