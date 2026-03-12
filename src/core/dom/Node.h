@@ -534,6 +534,9 @@ public:
     };
     void setNeedsStyleRecalc(
         StyleChangeReason reason = StyleChangeReason::JustNeedsRecalcSelf);
+    void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
+    void setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
+
     bool needsStyleRecalc()
     {
         return m_needsStyleRecalc;
@@ -927,9 +930,6 @@ public:
 
 private:
     void validateReplace(Node* node, Node* child);
-
-    void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
-    void setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)

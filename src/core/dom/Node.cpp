@@ -1548,7 +1548,11 @@ static void didInsertNode(Node* self, Node* child)
     if (self->isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(self, child);
         if (self->document()->doesParticipateInRendering()) {
-            self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
+            // Don't set every child to recalc with
+            // StyleChangeReason::DOMTreeChange damage If we want to implement
+            // has(..) selector, we need to implement another damage type
+            child->setSiblingsNeedsStyleRecalcIfNeeded(
+                Node::StyleChangeReason::DOMTreeChange);
             setChildrenNeedsStyleRecalc(child);
         }
     }
@@ -1872,9 +1876,16 @@ Node* Node::removeChild(Node* child)
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
 
-    setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
     if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
+    }
+
+    // Don't set every child to recalc with StyleChangeReason::DOMTreeChange
+    // damage If we want to implement has(..) selector, we need to implement
+    // another damage type
+    if (firstChild()) {
+        firstChild()->setSiblingsNeedsStyleRecalcIfNeeded(
+            Node::StyleChangeReason::DOMTreeChange);
     }
 
     Node* parent = this;
