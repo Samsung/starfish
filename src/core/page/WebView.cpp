@@ -1421,9 +1421,10 @@ RenderResult WebView::rendering(bool force)
     {
         auto rafHandlers = std::move(timer()->m_requestAnimationFrameHandler);
         if (rafHandlers.size()) {
+            MicroTaskExecutionManager microTaskExecutionManager(
+                m_scriptEngineInstance);
             INSTALL_PROFILE_TIMER(
                 "WebView::rendering::call request animation frame handlers");
-
             auto iter = rafHandlers.begin();
             while (iter != rafHandlers.end()) {
                 Timer::RequestAnimationFrameData* data = iter->second;
