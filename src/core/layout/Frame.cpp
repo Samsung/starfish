@@ -1824,6 +1824,16 @@ ComputedStyle* Frame::firstLineStyle(Frame* frame, ComputedStyle* frameStyle)
     return Frame::style();
 }
 
+std::pair<OverflowValue, OverflowValue> Frame::appliedOverflow()
+{
+    if (node()) {
+        return node()->appliedOverflow();
+    }
+
+    return std::make_pair(m_styleWhenNodeIsAnonymous->overflowX(),
+                          m_styleWhenNodeIsAnonymous->overflowY());
+}
+
 OverflowValue Frame::appliedOverflowX()
 {
     if (node()) {

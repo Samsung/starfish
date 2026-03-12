@@ -1615,6 +1615,7 @@ public:
     ComputedStyle* cachedPseudoStyle(PseudoElementType pseudo,
                                      ComputedStyle* parentStyle);
     ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
+    std::pair<OverflowValue, OverflowValue> appliedOverflow();
     OverflowValue appliedOverflowX();
     OverflowValue appliedOverflowY();
 
@@ -1925,6 +1926,7 @@ public:
         std::vector<FrameBox*> fragmentBoxStack;
         std::vector<std::tuple<LayoutRect, FrameBox*>>
             boundMaxExtentDueToOverflow;
+        std::unordered_set<FrameBox*> visbleRectComputedBox;
 
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   StackingContext* sourceStackingContext,
