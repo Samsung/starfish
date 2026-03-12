@@ -1743,8 +1743,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
         if (oldOffset || newOffset) {
             if (LengthData::damaged(
-                    oldOffset ? *oldOffset : LengthData(),
-                    newOffset ? *newOffset : LengthData(),
+                    oldOffset ? *oldOffset : LengthData(Length()),
+                    newOffset ? *newOffset : LengthData(Length()),
                     damagedKeys[CSSStyleValuePair::KeyKind::Top],
                     damagedKeys[CSSStyleValuePair::KeyKind::Right],
                     damagedKeys[CSSStyleValuePair::KeyKind::Bottom],
