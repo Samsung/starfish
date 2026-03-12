@@ -225,7 +225,7 @@ bool CSSStyleSheet::matchesMediaQueries(
 
 void CSSStyleSheet::collectRulesFromImportedSheet(
     GCVector<StyleRuleImport*>& rules,
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
+    GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
@@ -259,7 +259,7 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
 
 void CSSStyleSheet::collectStyleRules(
     GCVector<StyleRuleBase*>& rules,
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
+    GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
     ResourceURL* url, MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
@@ -389,7 +389,7 @@ void CSSStyleSheet::willAddToDocument()
     auto deviceDependentResult =
         &m_origin->styleResolver().deviceDependentMediaQueryResults();
 
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
+    GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     clearStyleRules();
     collectRulesFromImportedSheet(importRules(), webFonts,
                                   viewportDependentResult,
