@@ -1761,6 +1761,7 @@ RenderResult WebView::rendering(bool force)
     m_needsRendering = false;
     m_inRendering = false;
 
+    m_repaintRegionInRendering.clear();
     size_t totalAllocatedCanvasSurfaceSizeAfter =
         CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
 
