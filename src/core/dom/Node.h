@@ -625,7 +625,7 @@ public:
     }
 
     void propagateMarkChildNeedsFrameTreeBuild();
-    void setNeedsLayout();
+    void setNeedsLayout(Optional<ComputedStyle*> newStyle = NullOption);
     void setNeedsPainting();
     void setNeedsComposite();
 

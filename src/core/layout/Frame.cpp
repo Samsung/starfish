@@ -2058,6 +2058,35 @@ static bool isLayoutDamaged(LayoutDamager damager, Length l)
     }
 }
 
+void Frame::propagateMarkNeedsLayout(Optional<ComputedStyle*> newStyle)
+{
+    for (Frame* f = this; f; f = f->parent()) {
+        if (f->needToEstablishKindsOfFormattingContext() ||
+            f->isFrameDocument()) {
+            if (f->needsLayout()) {
+                break;
+            }
+
+            f->markNeedsLayout();
+
+            if (f->isAbsolutePositioned()) {
+                ComputedStyle* s = f->style();
+                if (newStyle) {
+                    s = newStyle.value();
+                }
+                if (s->isAbsolutePositioned()) {
+                    auto offset = s->offset();
+                    if ((!offset.left().isAuto() || !s->right().isAuto()) &&
+                        (!offset.top().isAuto() || !s->bottom().isAuto())) {
+                        break;
+                    }
+                }
+            }
+        }
+        newStyle = NullOption;
+    }
+}
+
 bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                          FrameBox* containingBox)
 {

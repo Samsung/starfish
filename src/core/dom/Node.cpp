@@ -2404,7 +2404,7 @@ void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
     }
 }
 
-void Node::setNeedsLayout()
+void Node::setNeedsLayout(Optional<ComputedStyle*> newStyle)
 {
     if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
@@ -2413,7 +2413,7 @@ void Node::setNeedsLayout()
     window()->browsingContext()->setNeedsLayout();
     Frame* frame = this->frame();
     if (frame) {
-        frame->propagateMarkNeedsLayout();
+        frame->propagateMarkNeedsLayout(newStyle);
     }
 }
 

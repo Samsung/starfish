@@ -9442,7 +9442,7 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
     }
 
     if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
-        element->setNeedsLayout();
+        element->setNeedsLayout(style);
     }
 
     if (damage &
