@@ -286,10 +286,6 @@ std::pair<int, SkMatrix> FrameSVGSVGBox::computeTranlateScaleOnPaint(
 {
     SkMatrix result = SkMatrix::I();
 
-    const auto& si = element->webView()->screenInfo();
-    float screenScale = 1.f / si.devicePixelRatio;
-    result.preScale(screenScale, screenScale);
-
     LayoutUnit svgWidth = svgSize.width();
     LayoutUnit svgHeight = svgSize.height();
 

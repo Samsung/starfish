@@ -1491,16 +1491,9 @@ public:
             float devicePixelRatio =
                 m_renderer->webView()->screenInfo().devicePixelRatio;
 
-            if ((m_flag & CanvasSurfaceFlag::PreferEGLImage) ||
-                (m_flag & CanvasSurfaceFlag::PreferUnitedTexture)) {
-                m_bufferWidth = w;
-                m_bufferHeight = h;
-            } else {
-                m_bufferWidth =
-                    std::max((size_t)1, (size_t)(w * devicePixelRatio));
-                m_bufferHeight =
-                    std::max((size_t)1, (size_t)(h * devicePixelRatio));
-            }
+            m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
+            m_bufferHeight =
+                std::max((size_t)1, (size_t)(h * devicePixelRatio));
 
             if (g_isSupportExtensionEGLImageExternal &&
                 (g_shouldUseEGLImageOnPlainSurface ||
