@@ -216,7 +216,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::createASCIIStringWithNoCopy(ua));
     userAgentStyleSheet->parseSheetIfneeds();
-    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
+    GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
                                            webFonts,
                                            userAgentStyleSheet->url());

@@ -3438,6 +3438,8 @@ public:
                                          bool isImportant);
 
 protected:
+    void recalcWebFonts();
+    void addToRuleSet(CSSStyleSheet* sheet);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void addToKeyframesRule(StyleRuleKeyframes* rule);
     void removeAllRules();
@@ -3486,6 +3488,7 @@ protected:
     bool m_hasSimplePseudoClassHostSelector;
     uint32_t m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
+    GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_webFonts;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
     MediaQueryResultList m_deviceDependentMediaQueryResults;
