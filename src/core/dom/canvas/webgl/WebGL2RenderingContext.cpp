@@ -173,6 +173,8 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
                             value);
             return maybe.value()->scriptValue();
         }
+        default:
+            break;
         }
     }
     return WebGLRenderingContext::getParameter(pname);
@@ -281,6 +283,8 @@ ScriptValue WebGL2RenderingContext::getVertexAttrib(GLuint index, GLenum pname)
 
         return maybeBuffer.value()->scriptValue();
     }
+    default:
+        break;
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
@@ -394,6 +398,8 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
         }
         return createScriptValue(static_cast<GLenum>(value));
     }
+    default:
+        break;
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
