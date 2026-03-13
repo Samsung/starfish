@@ -78,6 +78,19 @@ public:
                            WebGLRenderingContext* context, GLuint object);
     void init(ScriptBindingInstance* instance, void* domObjectPointer) override;
     bool isWebGLVertexArrayObject() const override;
+
+    bool hasEverBound()
+    {
+        return m_hasEverBound;
+    }
+
+    void setHasEverBound()
+    {
+        m_hasEverBound = true;
+    }
+
+private:
+    bool m_hasEverBound = false;
 };
 
 class WebGL2RenderingContext : public WebGLRenderingContext {
@@ -93,6 +106,8 @@ public:
 
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
 
+    ScriptValue getVertexAttrib(GLuint index, GLenum pname);
+
     // Implement WebGL2RenderingContextBase
 
     /* Programs and shaders */
@@ -105,6 +120,12 @@ public:
     GLenum clientWaitSync(WebGLSync* sync, GLbitfield flags, GLuint64 timeout);
     void waitSync(WebGLSync* sync, GLbitfield flags, GLint64 timeout);
     ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
+
+    /* Vertex Array Objects */
+    WebGLVertexArrayObject* createVertexArray();
+    void deleteVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);
+    GLboolean isVertexArray(Optional<WebGLVertexArrayObject*> vertexArray);
+    void bindVertexArray(Optional<WebGLVertexArrayObject*> array);
 
     // Implement WebGL2RenderingContextOverloads
 

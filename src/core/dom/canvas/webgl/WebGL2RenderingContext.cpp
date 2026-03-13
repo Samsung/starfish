@@ -24,7 +24,9 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/canvas/webgl/WebGLBuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
+#include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "core/util/debug/Trace.h"
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
@@ -152,6 +154,25 @@ ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
             gl()->getInteger64v(pname, &values[0]);
             return createScriptValue(values[0]);
         }
+        // WebGLVertexArrayObject
+        case GL_VERTEX_ARRAY_BINDING: {
+            GLint value = -1;
+            gl()->getIntegerv(pname, &value);
+            if (value == 0) {
+                return scriptNull();
+            }
+
+            Optional<WebGLVertexArrayObject*> maybe =
+                getState()->webGLVertexArrayObject();
+
+            if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+                return scriptNull();
+            }
+
+            STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) ==
+                            value);
+            return maybe.value()->scriptValue();
+        }
         }
     }
     return WebGLRenderingContext::getParameter(pname);
@@ -192,6 +213,74 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
         return createScriptValue(params);
     default:
         break;
+    }
+    setGLError(GL_INVALID_ENUM);
+    return scriptNull();
+}
+
+ScriptValue WebGL2RenderingContext::getVertexAttrib(GLuint index, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    switch (pname) {
+    // GLboolean
+    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+    case GL_VERTEX_ATTRIB_ARRAY_INTEGER:
+    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED: {
+        GLint value = 0;
+        gl()->getVertexAttribiv(index, pname, &value);
+        return createScriptValue(static_cast<GLboolean>(value));
+    }
+    // GLenum
+    case GL_VERTEX_ATTRIB_ARRAY_TYPE: {
+        GLint value = GL_FLOAT;
+        gl()->getVertexAttribiv(index, pname, &value);
+        return createScriptValue(static_cast<GLenum>(value));
+    }
+    // GLint
+    case GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
+    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+    case GL_VERTEX_ATTRIB_ARRAY_STRIDE: {
+        GLint value;
+        gl()->getVertexAttribiv(index, pname, &value);
+        return createScriptValue(value);
+    }
+    // One of Float32Array, Int32Array or Uint32Array (each with 4 elements)
+    case GL_CURRENT_VERTEX_ATTRIB: {
+        std::vector<float> values(4);
+        gl()->getVertexAttribfv(index, pname, &values[0]);
+        return createScriptValue(
+            createTypedArray<Escargot::Float32ArrayObjectRef>(
+                scriptBindingInstance(), values));
+    }
+    // WebGLBuffer
+    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: {
+        GLint value = 0;
+        gl()->getVertexAttribiv(index, pname, &value);
+
+        TRACE(WEBGL, KV(index), KV(value));
+
+        Optional<WebGLVertexArrayObject*> maybe =
+            getState()->webGLVertexArrayObject();
+
+        if (!maybe.hasValue()) {
+            return scriptNull(); // No mention found for this in the spec.
+        }
+
+        Optional<WebGLBuffer*> maybeBuffer =
+            getState()->getBufferBoundToVertexAttributes(index);
+
+        if (!maybeBuffer.hasValue()) {
+            return scriptNull(); // No mention found for this in the spec.
+        }
+
+        TRACE(WEBGL, KV(index), KV(maybeBuffer.value()->glObject()));
+
+        STARFISH_ASSERT(static_cast<GLuint>(value) ==
+                        maybeBuffer.value()->glObject());
+
+        return maybeBuffer.value()->scriptValue();
+    }
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
@@ -308,6 +397,93 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
+}
+
+WebGLVertexArrayObject* WebGL2RenderingContext::createVertexArray()
+{
+    ENTER_CONTEXT_SCOPE(nullptr);
+
+    GLuint vao = 0;
+    gl()->genVertexArrays(1, &vao);
+    return new WebGLVertexArrayObject(scriptBindingInstance(), this, vao);
+}
+
+void WebGL2RenderingContext::deleteVertexArray(
+    Optional<WebGLVertexArrayObject*> vertexArray)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!vertexArray.hasValue()) {
+        return;
+    }
+
+    WebGLVertexArrayObject* value = vertexArray.value();
+
+    if (value->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (value->isDeleted()) {
+        return;
+    }
+
+    GLuint vao = value->glObject();
+    TRACE(WEBGL, KV(vao));
+    gl()->deleteVertexArrays(1, &vao);
+    value->markDeleted();
+    getState()->deleteVertexArray(vao);
+}
+
+GLboolean WebGL2RenderingContext::isVertexArray(
+    Optional<WebGLVertexArrayObject*> vertexArray)
+{
+    ENTER_CONTEXT_SCOPE(false);
+
+    if (!vertexArray.hasValue()) {
+        return false;
+    }
+
+    WebGLVertexArrayObject* value = vertexArray.value();
+
+    if (value->context() != this || value->invalidated()) {
+        return false;
+    }
+
+    if (!value->hasEverBound()) {
+        return false;
+    }
+
+    return true;
+}
+
+void WebGL2RenderingContext::bindVertexArray(
+    Optional<WebGLVertexArrayObject*> array)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (!array.hasValue()) {
+        gl()->bindVertexArray(0);
+        getState()->setWebGLVertexArrayObject(nullptr);
+        return;
+    }
+
+    WebGLVertexArrayObject* value = array.value();
+
+    if (value->context() != this) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (value->isDeleted()) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+
+    TRACE(WEBGL, KV(value->glObject()));
+    gl()->bindVertexArray(value->glObject());
+    value->setHasEverBound();
+    getState()->setWebGLVertexArrayObject(value);
 }
 
 // WebGL2RenderingContextOverloads

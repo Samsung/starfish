@@ -30,6 +30,8 @@ namespace Starfish {
 class WebGLBuffer;
 
 #define STATEFUL_VALUES(V)                                             \
+    V(WebGLVertexArrayObject, Optional<WebGLVertexArrayObject*>,       \
+      webGLVertexArrayObject)                                          \
     V(WebGLVertexArrayObjectOES, Optional<WebGLVertexArrayObjectOES*>, \
       webGLVertexArrayObjectOES)                                       \
     V(WebGLFramebuffer, Optional<WebGLFramebuffer*>, webGLFramebuffer) \
@@ -63,6 +65,7 @@ public:
     void setBufferBoundToVertexAttributes(GLuint index,
                                           Optional<WebGLBuffer*> maybe);
 
+    void deleteVertexArray(GLuint vao);
     void deleteVertexArrayOES(GLuint vao);
 
 private:

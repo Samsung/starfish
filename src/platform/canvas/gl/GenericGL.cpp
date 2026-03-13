@@ -862,6 +862,16 @@ public:
 #endif
     }
 
+    void bindVertexArray(GLuint array) override
+    {
+        glBindVertexArray(array);
+    }
+
+    void deleteVertexArrays(GLsizei n, const GLuint *arrays) override
+    {
+        glDeleteVertexArrays(n, arrays);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return glGetFragDataLocation(program, name);
