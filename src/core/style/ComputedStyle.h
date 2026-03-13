@@ -4459,6 +4459,15 @@ public:
         return &m_rareComputedStyleData;
     }
 
+    Optional<OutlineData*> outline()
+    {
+        auto outline = m_rareComputedStyleData.outline();
+        if (outline) {
+            return outline;
+        }
+        return nullptr;
+    }
+
     BorderStyleValue outlineStyle()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {

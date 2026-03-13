@@ -128,5 +128,9 @@ private:
 class CanvasShadowDataList : public GCVector<CanvasShadowData> {
 public:
 };
+
+LayoutRect computeVisibleShadowRect(const LayoutRect& owner,
+                                    const CanvasShadowData& shadow);
+
 } // namespace Starfish
 #endif

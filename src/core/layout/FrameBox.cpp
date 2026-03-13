@@ -3559,28 +3559,6 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
     }
 }
 
-ALWAYS_INLINE LayoutRect computeVisibleShadowRect(
-    const LayoutRect& owner, const CanvasShadowData& shadow)
-{
-    LayoutRect ret = owner;
-    if (!shadow.inset()) {
-        float radiusOffset = 0.0f;
-        if (shadow.radius()) {
-            radiusOffset = shadow.radius();
-            radiusOffset =
-                ShadowBlur::computeKernelSizeAtStdDeviation(radiusOffset / 2);
-        }
-        float sd = shadow.spreadDistance();
-        LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
-                        owner.y() + shadow.offsetY() - radiusOffset - sd,
-                        ceil(owner.width() + sd * 2 + radiusOffset * 2),
-                        ceil(owner.height() + sd * 2 + radiusOffset * 2));
-
-        ret.unite(rect);
-    }
-    return ret;
-}
-
 LayoutRect FrameBox::frameVisibleRect()
 {
     LayoutRect out(0, 0, width(), height());
