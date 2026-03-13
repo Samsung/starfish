@@ -872,6 +872,11 @@ public:
         glDeleteVertexArrays(n, arrays);
     }
 
+    GLboolean isVertexArray(GLuint array) override
+    {
+        return glIsVertexArray(array);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return glGetFragDataLocation(program, name);

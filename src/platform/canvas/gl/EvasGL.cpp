@@ -856,6 +856,11 @@ public:
         m_evasGLAPI->glDeleteVertexArrays(n, arrays);
     }
 
+    GLboolean isVertexArray(GLuint array) override
+    {
+        return m_evasGLAPI->glIsVertexArray(array);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return m_evasGLAPI->glGetFragDataLocation(program, name);

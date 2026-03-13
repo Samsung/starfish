@@ -454,7 +454,7 @@ GLboolean WebGL2RenderingContext::isVertexArray(
         return false;
     }
 
-    return true;
+    return gl()->isVertexArray(value->glObject());
 }
 
 void WebGL2RenderingContext::bindVertexArray(
