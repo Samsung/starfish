@@ -57,6 +57,13 @@ public:
                                        cs);
     }
 
+    bool isVisible()
+    {
+        return !border().width().isZero() &&
+               !border().color().isTransparent() &&
+               border().style() != BorderStyleValue::NoneBorderStyleValue;
+    }
+
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(OutlineData));

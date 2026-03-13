@@ -38,6 +38,28 @@
 
 namespace Starfish {
 
+LayoutRect computeVisibleShadowRect(const LayoutRect& owner,
+                                    const CanvasShadowData& shadow)
+{
+    LayoutRect ret = owner;
+    if (!shadow.inset()) {
+        float radiusOffset = 0.0f;
+        if (shadow.radius()) {
+            radiusOffset = shadow.radius();
+            radiusOffset =
+                ShadowBlur::computeKernelSizeAtStdDeviation(radiusOffset / 2);
+        }
+        float sd = shadow.spreadDistance();
+        LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
+                        owner.y() + shadow.offsetY() - radiusOffset - sd,
+                        ceil(owner.width() + sd * 2 + radiusOffset * 2),
+                        ceil(owner.height() + sd * 2 + radiusOffset * 2));
+
+        ret.unite(rect);
+    }
+    return ret;
+}
+
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 #ifndef STARFISH_CANVAS_SURFACE_TILE_SIZE
 #define STARFISH_CANVAS_SURFACE_TILE_SIZE 128

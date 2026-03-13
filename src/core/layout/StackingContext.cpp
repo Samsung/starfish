@@ -417,6 +417,15 @@ bool StackingContext::needsRepaintingWhenScrolling()
         return true;
     }
 
+    if (owner()->style()->boxShadow()) {
+        return true;
+    }
+
+    auto outline = owner()->style()->outline();
+    if (outline && outline->isVisible()) {
+        return true;
+    }
+
     if (owner()->style()->backgroundLayerSize()) {
         return true;
     }
@@ -2773,15 +2782,38 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     }
                 }
 
-                if ((!owner()->style()->outlineWidth().isZero()) &&
-                    (owner()->style()->outlineStyle() !=
-                     BorderStyleValue::NoneBorderStyleValue)) {
-                    fullRect.setX(fullRect.x() - owner()->outlineThickness());
-                    fullRect.setY(fullRect.y() - owner()->outlineThickness());
-                    fullRect.setWidth(fullRect.width() +
-                                      owner()->outlineThickness() * 2);
-                    fullRect.setHeight(fullRect.height() +
-                                       owner()->outlineThickness() * 2);
+                if (needsRepaintingWhenScrolling()) {
+                    auto outline = owner()->style()->outline();
+                    if (outline && outline->isVisible()) {
+                        fullRect.setX(fullRect.x() -
+                                      owner()->outlineThickness());
+                        fullRect.setY(fullRect.y() -
+                                      owner()->outlineThickness());
+                        fullRect.setWidth(fullRect.width() +
+                                          owner()->outlineThickness() * 2);
+                        fullRect.setHeight(fullRect.height() +
+                                           owner()->outlineThickness() * 2);
+                    }
+                    if (owner()->style()->boxShadow()) {
+                        CanvasShadowDataList list =
+                            owner()
+                                ->style()
+                                ->boxShadow()
+                                ->toCanvasShadowDataList(owner());
+                        LayoutRect ownerRect = owner()->frameRect();
+                        LayoutRect shadowRect;
+                        ownerRect.setX(0);
+                        ownerRect.setY(0);
+                        for (auto shadow = list.rbegin(); shadow != list.rend();
+                             shadow++) {
+                            LayoutRect rect =
+                                computeVisibleShadowRect(ownerRect, *shadow);
+                            shadowRect.unite(rect);
+                        }
+                        fullRect.unite(Unit::Rect(
+                            shadowRect.x(), shadowRect.y(), shadowRect.width(),
+                            shadowRect.height()));
+                    }
                 }
 
                 compositor->clip(fullRect);
