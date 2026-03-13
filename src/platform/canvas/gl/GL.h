@@ -275,6 +275,7 @@ public:
     // WebGL2
     virtual void bindVertexArray(GLuint array) = 0;
     virtual void deleteVertexArrays(GLsizei n, const GLuint *arrays) = 0;
+    virtual GLboolean isVertexArray(GLuint array) = 0;
     virtual GLint getFragDataLocation(GLuint program, const GLchar *name) = 0;
     virtual GLsync fenceSync(GLenum condition, GLbitfield flags) = 0;
     virtual GLboolean isSync(GLsync sync) = 0;
