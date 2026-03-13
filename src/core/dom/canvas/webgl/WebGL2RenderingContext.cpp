@@ -488,6 +488,9 @@ void WebGL2RenderingContext::bindVertexArray(
 
     TRACE(WEBGL, KV(value->glObject()));
     gl()->bindVertexArray(value->glObject());
+    if (hasGLError()) {
+        return;
+    }
     value->setHasEverBound();
     getState()->setWebGLVertexArrayObject(value);
 }
