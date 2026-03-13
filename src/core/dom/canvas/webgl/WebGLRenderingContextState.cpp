@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "WebGLRenderingContextState.h"
+#include "core/dom/canvas/webgl/WebGL2RenderingContext.h"
 #include "core/dom/canvas/webgl/WebGLOES_VertexArrayObject.h"
 
 namespace Starfish {
@@ -76,6 +77,17 @@ void WebGLRenderingContextState::setBoundBuffer(GLenum target,
     }
 }
 
+void WebGLRenderingContextState::deleteVertexArray(GLuint vao)
+{
+    STARFISH_ASSERT(vao != 0);
+    if (m_webGLVertexArrayObject.hasValue() &&
+        m_webGLVertexArrayObject.value()->glObject() == vao) {
+        m_webGLVertexArrayObject = nullptr;
+    }
+    m_buffersBound.erase(vao);
+    m_buffersBoundToVertexAttributes.erase(vao);
+}
+
 void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
 {
     STARFISH_ASSERT(vao != 0);
@@ -89,6 +101,9 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
 
 GLuint WebGLRenderingContextState::vertexArray()
 {
+    if (m_webGLVertexArrayObject.hasValue()) {
+        return m_webGLVertexArrayObject.value()->glObject();
+    }
     if (m_webGLVertexArrayObjectOES.hasValue()) {
         return m_webGLVertexArrayObjectOES.value()->glObject();
     }

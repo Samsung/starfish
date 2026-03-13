@@ -487,10 +487,10 @@ interface WebGL2RenderingContextBase
     [Unimplemented] undefined uniformBlockBinding(WebGLProgram program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 
     /* Vertex Array Objects */
-    [Unimplemented] WebGLVertexArrayObject createVertexArray();
-    [Unimplemented] undefined deleteVertexArray(WebGLVertexArrayObject? vertexArray);
-    [WebGLHandlesContextLoss, Unimplemented] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
-    [Unimplemented] undefined bindVertexArray(WebGLVertexArrayObject? array);
+    WebGLVertexArrayObject createVertexArray();
+    undefined deleteVertexArray(WebGLVertexArrayObject? vertexArray);
+    [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
+    undefined bindVertexArray(WebGLVertexArrayObject? array);
 };
 
 // https://www.khronos.org/registry/webgl/specs/latest/2.0/#WebGL2RenderingContextOverloads
@@ -583,8 +583,8 @@ interface WebGL2RenderingContextOverloads
 
     /* Reading back pixels */
     // WebGL1:
-    [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
-                                         [AllowShared] ArrayBufferView? dstData);
+    undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
+                         [AllowShared] ArrayBufferView? dstData);
     // WebGL2:
     [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                                          GLintptr offset);

@@ -2459,4 +2459,4 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/sync/sync-webgl-speci
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/transform_feedback/transform_feedback.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/transform_feedback/two-unreferenced-varyings.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/transform_feedback/unwritten-output-defaults-to-zero.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/vertex_arrays/vertex-array-object.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/vertex_arrays/vertex-array-object.html

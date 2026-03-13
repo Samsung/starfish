@@ -846,6 +846,16 @@ public:
         m_evasGLAPI->glEvasGLImageTargetTexture2DOES(target, image);
     }
 
+    void bindVertexArray(GLuint array) override
+    {
+        m_evasGLAPI->glBindVertexArray(array);
+    }
+
+    void deleteVertexArrays(GLsizei n, const GLuint *arrays) override
+    {
+        m_evasGLAPI->glDeleteVertexArrays(n, arrays);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return m_evasGLAPI->glGetFragDataLocation(program, name);
