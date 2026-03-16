@@ -717,7 +717,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/use-program-c
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/uniformMatrix.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/uniformMatrixBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttrib.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribBadArgs.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribPointer.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/glsl/arrayOutOfBounds.html

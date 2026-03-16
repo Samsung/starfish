@@ -2398,36 +2398,40 @@ void WebGLRenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
     m_gl->vertexAttrib4f(index, x, y, z, w);
 }
 
-#define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                      \
-    void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,           \
-                                                    Float32List variant)    \
-    {                                                                       \
-        ENTER_CONTEXT_SCOPE();                                              \
-        if (variant.isFloat32ArrayValue()) {                                \
-            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue(); \
-            const size_t arrayLength = values->arrayLength();               \
-            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer()); \
-            if (arrayLength > 0) {                                          \
-                m_gl->vertexAttrib##N##fv(                                  \
-                    index, reinterpret_cast<GLfloat*>(rawBuffer));          \
-            }                                                               \
-        } else {                                                            \
-            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());            \
-            /* Due to the memory size of double and float types, the raw    \
-             * buffer returned by GCAtomicVector<double>::data() cannot be  \
-             * used directly. Reconstructs a float buffer including values  \
-             * converted from double. */                                    \
-            const GCAtomicVector<double> v =                                \
-                variant.getSequenceOfGLfloatValue();                        \
-            std::vector<GLfloat> vector;                                    \
-            vector.reserve(v.size());                                       \
-            for (const double& value : v) {                                 \
-                vector.push_back(static_cast<GLfloat>(value));              \
-            }                                                               \
-            if (!vector.empty()) {                                          \
-                m_gl->vertexAttrib##N##fv(index, vector.data());            \
-            }                                                               \
-        }                                                                   \
+#define IMPLEMENT_VERTEX_ATTRIB_NFV(N)                                        \
+    void WebGLRenderingContext::vertexAttrib##N##fv(GLuint index,             \
+                                                    Float32List variant)      \
+    {                                                                         \
+        ENTER_CONTEXT_SCOPE();                                                \
+        if (variant.isFloat32ArrayValue()) {                                  \
+            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue();   \
+            const size_t arrayLength = values->arrayLength();                 \
+            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer());   \
+            if (arrayLength < N) {                                            \
+                setGLError(GL_INVALID_VALUE);                                 \
+                return;                                                       \
+            }                                                                 \
+            m_gl->vertexAttrib##N##fv(index,                                  \
+                                      reinterpret_cast<GLfloat*>(rawBuffer)); \
+        } else {                                                              \
+            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());              \
+            /* Due to the memory size of double and float types, the raw      \
+             * buffer returned by GCAtomicVector<double>::data() cannot be    \
+             * used directly. Reconstructs a float buffer including values    \
+             * converted from double. */                                      \
+            const GCAtomicVector<double> v =                                  \
+                variant.getSequenceOfGLfloatValue();                          \
+            if (v.size() < N) {                                               \
+                setGLError(GL_INVALID_VALUE);                                 \
+                return;                                                       \
+            }                                                                 \
+            std::vector<GLfloat> vector;                                      \
+            vector.reserve(v.size());                                         \
+            for (const double& value : v) {                                   \
+                vector.push_back(static_cast<GLfloat>(value));                \
+            }                                                                 \
+            m_gl->vertexAttrib##N##fv(index, vector.data());                  \
+        }                                                                     \
     }
 
 IMPLEMENT_VERTEX_ATTRIB_NFV(1)

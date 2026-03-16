@@ -422,7 +422,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/uniform
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/uniformi.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/uniformMatrixBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/uniformMatrix.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/vertexAttribBadArgs.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/vertexAttribBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/vertexAttrib.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/vertexAttribPointerBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/more/functions/vertexAttribPointer.html
