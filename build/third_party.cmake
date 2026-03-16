@@ -479,7 +479,7 @@ ENDIF()
 #######################################################
 # LIBWEBP
 #######################################################
-IF (${USE_CUSTOM_WEBP} STREQUAL "1")
+IF (${USE_CUSTOM_WEBP} STREQUAL "1" OR ${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (WEBP_DIR ${THIRD_PARTY_ROOT}/libwebp)
     SET (WEBP_BUILD_DIR ${OUTPUT_DIRECTORY}/libwebp/)
     SET (WEBP_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libwebp/libwebp.so)

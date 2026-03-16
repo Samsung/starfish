@@ -517,7 +517,7 @@ endif()
 
 IF (${BACKEND} STREQUAL "efl_cairo_gl" OR ${BACKEND} STREQUAL "flutter" OR ${BACKEND} STREQUAL "uv_cairo_gl")
     IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
-        SET (STARFISH_LIBRARIES_BACKEND png_lwe jpeg_lwe gif_lwe z)
+        SET (STARFISH_LIBRARIES_BACKEND png_lwe jpeg_lwe gif_lwe webp_lwe z)
     ELSE()
         SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
     ENDIF()
