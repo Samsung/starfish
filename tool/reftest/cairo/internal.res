@@ -734,6 +734,7 @@ test/cairo/internal-test/svg/svg_fe_offset_01.html
 test/cairo/internal-test/svg/svg_fe_flood_01.html
 test/cairo/internal-test/svg/svg_filter_in_output_01.html
 test/cairo/internal-test/svg/svg_filter_geometry_01.html
+test/cairo/internal-test/svg/svg_filter_opacity_0.html
 test/cairo/internal-test/svg/svg_fe_morphology1.html
 test/cairo/internal-test/svg/svg_fe_turbulence1.html
 test/cairo/internal-test/svg/svg_fe_displacement_map1.html

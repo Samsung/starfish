@@ -701,6 +701,7 @@ public:
             // the ptr can be null when width or height are zero
             if (ptr) {
                 fn(ptr.value(), width, stride, height);
+                cairo_surface_mark_dirty(groupTarget);
             }
             cairo_surface_unmap_image(groupTarget, mappedSurface);
         }
