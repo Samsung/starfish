@@ -382,11 +382,32 @@ ScriptValue WebGL2RenderingContext::getVertexAttrib(GLuint index, GLenum pname)
     }
     // One of Float32Array, Int32Array or Uint32Array (each with 4 elements)
     case GL_CURRENT_VERTEX_ATTRIB: {
-        std::vector<float> values(4);
-        gl()->getVertexAttribfv(index, pname, &values[0]);
-        return createScriptValue(
-            createTypedArray<Escargot::Float32ArrayObjectRef>(
-                scriptBindingInstance(), values));
+        switch (m_currentVertexAttribType) {
+        case GL_INT: {
+            std::vector<int32_t> values(4);
+            gl()->getVertexAttribIiv(index, pname, &values[0]);
+            return createScriptValue(
+                createTypedArray<Escargot::Int32ArrayObjectRef>(
+                    scriptBindingInstance(), values));
+        }
+        case GL_UNSIGNED_INT: {
+            std::vector<uint32_t> values(4);
+            gl()->getVertexAttribIuiv(index, pname, &values[0]);
+            return createScriptValue(
+                createTypedArray<Escargot::Uint32ArrayObjectRef>(
+                    scriptBindingInstance(), values));
+        }
+        case GL_FLOAT: {
+            std::vector<float> values(4);
+            gl()->getVertexAttribfv(index, pname, &values[0]);
+            return createScriptValue(
+                createTypedArray<Escargot::Float32ArrayObjectRef>(
+                    scriptBindingInstance(), values));
+        }
+        default:
+            STARFISH_ASSERT_NOT_REACHED();
+            return scriptNull();
+        }
     }
     // WebGLBuffer
     case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: {
@@ -435,6 +456,56 @@ GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
         return -1;
     }
     return gl()->getFragDataLocation(program->glObject(), CSTR(name));
+}
+
+void WebGL2RenderingContext::vertexAttrib1f(GLuint index, GLfloat x)
+{
+    WebGLRenderingContext::vertexAttrib1f(index, x);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib2f(GLuint index, GLfloat x, GLfloat y)
+{
+    WebGLRenderingContext::vertexAttrib2f(index, x, y);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib3f(GLuint index, GLfloat x, GLfloat y,
+                                            GLfloat z)
+{
+    WebGLRenderingContext::vertexAttrib3f(index, x, y, z);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib4f(GLuint index, GLfloat x, GLfloat y,
+                                            GLfloat z, GLfloat w)
+{
+    WebGLRenderingContext::vertexAttrib4f(index, x, y, z, w);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib1fv(GLuint index, Float32List values)
+{
+    WebGLRenderingContext::vertexAttrib1fv(index, values);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib2fv(GLuint index, Float32List values)
+{
+    WebGLRenderingContext::vertexAttrib2fv(index, values);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib3fv(GLuint index, Float32List values)
+{
+    WebGLRenderingContext::vertexAttrib3fv(index, values);
+    m_currentVertexAttribType = GL_FLOAT;
+}
+
+void WebGL2RenderingContext::vertexAttrib4fv(GLuint index, Float32List values)
+{
+    WebGLRenderingContext::vertexAttrib4fv(index, values);
+    m_currentVertexAttribType = GL_FLOAT;
 }
 
 void WebGL2RenderingContext::uniform1ui(
@@ -648,6 +719,78 @@ void WebGL2RenderingContext::uniformMatrix3x4fv(
 {
     implementUniformMatrixMxNfv(3, 4, &GL::uniformMatrix3x4fv, location,
                                 transpose, data, srcOffset, srcLength);
+}
+
+void WebGL2RenderingContext::vertexAttribI4i(GLuint index, GLint x, GLint y,
+                                             GLint z, GLint w)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    gl()->vertexAttribI4i(index, x, y, z, w);
+    m_currentVertexAttribType = GL_INT;
+}
+
+void WebGL2RenderingContext::vertexAttribI4iv(GLuint index, Int32List values)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (values.isInt32ArrayValue()) {
+        const ScriptInt32Array v = values.getInt32ArrayValue();
+        const size_t dataLength = v->arrayLength();
+        if (dataLength != 4) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->vertexAttribI4iv(index,
+                               reinterpret_cast<const GLint*>(v->rawBuffer()));
+    } else if (values.isSequenceOfGLintValue()) {
+        GCAtomicVector<int32_t> v = values.getSequenceOfGLintValue();
+        const size_t dataLength = v.size();
+        if (dataLength != 4) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->vertexAttribI4iv(index, v.data());
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+    m_currentVertexAttribType = GL_INT;
+}
+
+void WebGL2RenderingContext::vertexAttribI4ui(GLuint index, GLuint x, GLuint y,
+                                              GLuint z, GLuint w)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    gl()->vertexAttribI4ui(index, x, y, z, w);
+    m_currentVertexAttribType = GL_UNSIGNED_INT;
+}
+
+void WebGL2RenderingContext::vertexAttribI4uiv(GLuint index, Uint32List values)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (values.isUint32ArrayValue()) {
+        const ScriptUint32Array v = values.getUint32ArrayValue();
+        const size_t dataLength = v->arrayLength();
+        if (dataLength != 4) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->vertexAttribI4uiv(
+            index, reinterpret_cast<const GLuint*>(v->rawBuffer()));
+    } else if (values.isSequenceOfGLuintValue()) {
+        GCAtomicVector<uint32_t> v = values.getSequenceOfGLuintValue();
+        const size_t dataLength = v.size();
+        if (dataLength != 4) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        gl()->vertexAttribI4uiv(index, v.data());
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+    m_currentVertexAttribType = GL_UNSIGNED_INT;
 }
 
 Optional<WebGLSync*> WebGL2RenderingContext::fenceSync(GLenum condition,

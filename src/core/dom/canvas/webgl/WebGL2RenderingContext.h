@@ -23,6 +23,7 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/webgl/WebGLRenderingContext.h"
+#include "platform/canvas/gl/IncludeGL.h"
 
 namespace Starfish {
 
@@ -109,6 +110,17 @@ public:
 
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
 
+    void vertexAttrib1f(GLuint index, GLfloat x);
+    void vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
+    void vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+    void vertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z,
+                        GLfloat w);
+
+    void vertexAttrib1fv(GLuint index, Float32List values);
+    void vertexAttrib2fv(GLuint index, Float32List values);
+    void vertexAttrib3fv(GLuint index, Float32List values);
+    void vertexAttrib4fv(GLuint index, Float32List values);
+
     // Implement WebGL2RenderingContextBase
 
     /* Programs and shaders */
@@ -158,6 +170,12 @@ public:
                             GLboolean transpose, Float32List data,
                             unsigned long long srcOffset = 0,
                             GLuint srcLength = 0);
+
+    /* Vertex attribs */
+    void vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
+    void vertexAttribI4iv(GLuint index, Int32List values);
+    void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
+    void vertexAttribI4uiv(GLuint index, Uint32List values);
 
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
@@ -242,6 +260,9 @@ protected:
         size_t n, void (GL::*uniformNuiv)(GLint, GLsizei, const GLuint*),
         Optional<WebGLUniformLocation*> location, Uint32List data,
         unsigned long long srcOffset, GLuint srcLength);
+
+private:
+    GLenum m_currentVertexAttribType = GL_FLOAT;
 };
 
 } // namespace Starfish

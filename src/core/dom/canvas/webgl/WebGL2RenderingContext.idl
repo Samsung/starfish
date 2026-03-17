@@ -414,10 +414,10 @@ interface WebGL2RenderingContextBase
                                  optional unsigned long long srcOffset = 0, optional GLuint srcLength = 0);
 
     /* Vertex attribs */
-    [Unimplemented] undefined vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
-    [Unimplemented] undefined vertexAttribI4iv(GLuint index, Int32List values);
-    [Unimplemented] undefined vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-    [Unimplemented] undefined vertexAttribI4uiv(GLuint index, Uint32List values);
+    undefined vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
+    undefined vertexAttribI4iv(GLuint index, Int32List values);
+    undefined vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
+    undefined vertexAttribI4uiv(GLuint index, Uint32List values);
     [Unimplemented] undefined vertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
 
     /* Writing to the drawing buffer */

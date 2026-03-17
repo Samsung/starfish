@@ -913,6 +913,39 @@ public:
         return glIsVertexArray(array);
     }
 
+    void getVertexAttribIiv(GLuint index, GLenum pname, GLint *params) override
+    {
+        glGetVertexAttribIiv(index, pname, params);
+    }
+
+    void getVertexAttribIuiv(GLuint index, GLenum pname,
+                             GLuint *params) override
+    {
+        glGetVertexAttribIuiv(index, pname, params);
+    }
+
+    void vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z,
+                         GLint w) override
+    {
+        glVertexAttribI4i(index, x, y, z, w);
+    }
+
+    void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z,
+                          GLuint w) override
+    {
+        glVertexAttribI4ui(index, x, y, z, w);
+    }
+
+    void vertexAttribI4iv(GLuint index, const GLint *v) override
+    {
+        glVertexAttribI4iv(index, v);
+    }
+
+    void vertexAttribI4uiv(GLuint index, const GLuint *v) override
+    {
+        glVertexAttribI4uiv(index, v);
+    }
+
     void getUniformuiv(GLuint program, GLint location, GLuint *params) override
     {
         glGetUniformuiv(program, location, params);
