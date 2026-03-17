@@ -897,6 +897,39 @@ public:
         return m_evasGLAPI->glIsVertexArray(array);
     }
 
+    void getVertexAttribIiv(GLuint index, GLenum pname, GLint *params) override
+    {
+        m_evasGLAPI->glGetVertexAttribIiv(index, pname, params);
+    }
+
+    void getVertexAttribIuiv(GLuint index, GLenum pname,
+                             GLuint *params) override
+    {
+        m_evasGLAPI->glGetVertexAttribIuiv(index, pname, params);
+    }
+
+    void vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z,
+                         GLint w) override
+    {
+        m_evasGLAPI->glVertexAttribI4i(index, x, y, z, w);
+    }
+
+    void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z,
+                          GLuint w) override
+    {
+        m_evasGLAPI->glVertexAttribI4ui(index, x, y, z, w);
+    }
+
+    void vertexAttribI4iv(GLuint index, const GLint *v) override
+    {
+        m_evasGLAPI->glVertexAttribI4iv(index, v);
+    }
+
+    void vertexAttribI4uiv(GLuint index, const GLuint *v) override
+    {
+        m_evasGLAPI->glVertexAttribI4uiv(index, v);
+    }
+
     void getUniformuiv(GLuint program, GLint location, GLuint *params) override
     {
         m_evasGLAPI->glGetUniformuiv(program, location, params);

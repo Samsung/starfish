@@ -294,6 +294,16 @@ public:
     virtual void bindVertexArray(GLuint array) = 0;
     virtual void deleteVertexArrays(GLsizei n, const GLuint *arrays) = 0;
     virtual GLboolean isVertexArray(GLuint array) = 0;
+    virtual void getVertexAttribIiv(GLuint index, GLenum pname,
+                                    GLint *params) = 0;
+    virtual void getVertexAttribIuiv(GLuint index, GLenum pname,
+                                     GLuint *params) = 0;
+    virtual void vertexAttribI4i(GLuint index, GLint x, GLint y, GLint z,
+                                 GLint w) = 0;
+    virtual void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z,
+                                  GLuint w) = 0;
+    virtual void vertexAttribI4iv(GLuint index, const GLint *v) = 0;
+    virtual void vertexAttribI4uiv(GLuint index, const GLuint *v) = 0;
     virtual void getUniformuiv(GLuint program, GLint location,
                                GLuint *params) = 0;
     virtual GLint getFragDataLocation(GLuint program, const GLchar *name) = 0;
