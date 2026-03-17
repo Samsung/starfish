@@ -107,7 +107,7 @@ ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
 #define ENTER_CONTEXT_SCOPE(bailoutValue, ...)       \
     ENTER_CONTEXT_SCOPE_IMPL(bailoutValue);          \
     auto onScopeLeave = OnScopeLeave::create([&]() { \
-        if (hasGLError()) {                          \
+        if (hasNewGLError()) {                       \
             TRACE(WEBGL,                             \
                   "\033[33m"                         \
                   "GL error detected."               \
@@ -193,7 +193,7 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     GLint params = 0;
     gl()->getProgramiv(program->glObject(), pname, &params);
 
-    if (hasGLError()) {
+    if (hasNewGLError()) {
         return scriptNull();
     }
 
@@ -382,7 +382,7 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
     case GL_SYNC_FLAGS: {
         GLint value;
         gl()->getSynciv(sync->glObject(), pname, 1, nullptr, &value);
-        if (hasGLError()) {
+        if (hasNewGLError()) {
             return scriptNull();
         }
         return createScriptValue(static_cast<GLbitfield>(value));
@@ -393,7 +393,7 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
     case GL_SYNC_CONDITION: {
         GLint value;
         gl()->getSynciv(sync->glObject(), pname, 1, nullptr, &value);
-        if (hasGLError()) {
+        if (hasNewGLError()) {
             return scriptNull();
         }
         return createScriptValue(static_cast<GLenum>(value));
@@ -488,7 +488,7 @@ void WebGL2RenderingContext::bindVertexArray(
 
     TRACE(WEBGL, KV(value->glObject()));
     gl()->bindVertexArray(value->glObject());
-    if (hasGLError()) {
+    if (hasNewGLError()) {
         return;
     }
     value->setHasEverBound();
