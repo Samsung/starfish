@@ -557,9 +557,16 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             }
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(parentContentWidth);
-        } else if (width.isCalc()) {
-            STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
+        } else if (width.isMaxContent()) {
+            tableWidth = maxTableWidth;
+        } else if (width.isMinContent()) {
+            tableWidth = minTableWidth;
+        } else {
+            STARFISH_UNSUPPORTED("HTMLTable property: unsupported width kind");
         }
+
+        tableWidth = widthAfterApplyingMinMaxWidths(ctx, tableWidth,
+                                                    parentContentWidth, false);
     }
 
     bool borderCollapseSeparate =
