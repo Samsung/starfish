@@ -418,7 +418,7 @@ interface WebGL2RenderingContextBase
     undefined vertexAttribI4iv(GLuint index, Int32List values);
     undefined vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
     undefined vertexAttribI4uiv(GLuint index, Uint32List values);
-    [Unimplemented] undefined vertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
+    undefined vertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
 
     /* Writing to the drawing buffer */
     [Unimplemented] undefined vertexAttribDivisor(GLuint index, GLuint divisor);

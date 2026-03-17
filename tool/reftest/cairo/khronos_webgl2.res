@@ -1491,9 +1491,9 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexA
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/deqp/functional/gles3/texturestatequery.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/deqp/functional/gles3/vertexarrayobject.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertex-attrib.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertex-attrib-i-render.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattribipointer.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattribipointer-offsets.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertex-attrib-i-render.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattribipointer.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattribipointer-offsets.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/bound-buffer-size-change-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-copying-contents.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-copying-restrictions.html

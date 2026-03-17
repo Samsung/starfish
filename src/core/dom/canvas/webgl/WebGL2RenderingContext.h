@@ -176,6 +176,8 @@ public:
     void vertexAttribI4iv(GLuint index, Int32List values);
     void vertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
     void vertexAttribI4uiv(GLuint index, Uint32List values);
+    void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
+                              GLsizei stride, GLintptr offset);
 
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
