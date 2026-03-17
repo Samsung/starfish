@@ -897,6 +897,12 @@ public:
         return m_evasGLAPI->glIsVertexArray(array);
     }
 
+    void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
+                              GLsizei stride, const void *pointer) override
+    {
+        m_evasGLAPI->glVertexAttribIPointer(index, size, type, stride, pointer);
+    }
+
     void getVertexAttribIiv(GLuint index, GLenum pname, GLint *params) override
     {
         m_evasGLAPI->glGetVertexAttribIiv(index, pname, params);

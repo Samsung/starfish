@@ -913,6 +913,12 @@ public:
         return glIsVertexArray(array);
     }
 
+    void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
+                              GLsizei stride, const void *pointer) override
+    {
+        glVertexAttribIPointer(index, size, type, stride, pointer);
+    }
+
     void getVertexAttribIiv(GLuint index, GLenum pname, GLint *params) override
     {
         glGetVertexAttribIiv(index, pname, params);
