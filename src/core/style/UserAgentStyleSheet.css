@@ -68,7 +68,7 @@
 "    display: table-cell;"
 "    font-weight: bold;"
 "    vertical-align: inherit;"
-"    text-align: center;"
+"    text-align: -internal-center;"
 "    padding: 1px;"
 "}"
 "td {"

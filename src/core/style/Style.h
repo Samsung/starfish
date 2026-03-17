@@ -240,6 +240,7 @@ enum TextAlignValue ENSURE_ENUM_UNSIGNED {
     RightTextAlignValue,
     CenterTextAlignValue,
     WebKitCenterTextAlignValue,
+    InternalCenterTextAlignValue
 };
 
 // transform-origin, background-position

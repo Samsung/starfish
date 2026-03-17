@@ -816,7 +816,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         case DisplayValue::TableColumnGroupDisplayValue:
         case DisplayValue::TableColumnDisplayValue:
         case DisplayValue::TableCellDisplayValue:
-            setTextAlign(TextAlignValue::StartTextAlignValue);
+            setTextAlign(TextAlignValue::StartTextAlignValue, false);
             break;
         default:
             break;

@@ -40,6 +40,10 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void didComputedStyleChanged(
+        ComputedStyle* oldStyle, ComputedStyle* newStyle,
+        Optional<StyleResolveContext*> ctx) override;
+
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
