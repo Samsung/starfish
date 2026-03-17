@@ -62,6 +62,24 @@ void HTMLTablePartElement::styleForPresentationAttribute(
     }
 }
 
+void HTMLTablePartElement::didComputedStyleChanged(
+    ComputedStyle* oldStyle, ComputedStyle* newStyle,
+    Optional<StyleResolveContext*> ctx)
+{
+    HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
+
+    // NOTE: We can arrange text align on ComputedStyle::arrangeStyleValues
+    // but it needs additional check "isHTMLTablePartElement"
+    // so I implement this part on here
+    if (newStyle && newStyle->orignalTextAlign() ==
+                        TextAlignValue::InternalCenterTextAlignValue) {
+        auto parent = parentElement();
+        if (parent->style()->isSpecifiedTextAlign()) {
+            newStyle->setTextAlign(parent->style()->textAlign(), false);
+        }
+    }
+}
+
 bool HTMLTablePartElement::isValidAlign(String* align)
 {
     if (align->isEmpty()) {

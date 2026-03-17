@@ -1683,6 +1683,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("center");
         case TextAlignValue::WebKitCenterTextAlignValue:
             return String::fromUTF8("-webkit-center");
+        case TextAlignValue::InternalCenterTextAlignValue:
+            return String::fromUTF8("-internal-center");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -3981,6 +3983,13 @@ void StyleResolver::applyProperty(Element* element,
              CSSStyleValuePair::ValueKind::Inherit) ||
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
             style->setTextAlign(parentStyle->textAlign());
+            if ((newCssValue.valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setIsSpecifiedTextAlign(false);
+            } else {
+                style->setIsSpecifiedTextAlign(
+                    parentStyle->isSpecifiedTextAlign());
+            }
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Initial) {
             style->setTextAlign(TextAlignValue::StartTextAlignValue);
@@ -14623,6 +14632,9 @@ bool CSSStyleValuePair::updateValueTextAlign(Document* document,
     } else if (value.equals("-webkit-center") || value.equals("-moz-center")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::WebKitCenterTextAlignValue;
+    } else if (value.equals("-internal-center")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
+        m_value.m_textAlign = TextAlignValue::InternalCenterTextAlignValue;
     } else {
         return false;
     }
