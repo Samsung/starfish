@@ -35,6 +35,7 @@ P /.circleci
 - /third_party/escargot/tools/visualize_heap_usage.py
 + /third_party/libwebsockets
 + /third_party/openssl
++ /third_party/openssl/test
 - /third_party/webrtc/src/resources
 + /third_party/webrtc/src/api/test
 + /third_party/webrtc/src/modules/remote_bitrate_estimator/test
