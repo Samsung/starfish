@@ -1230,6 +1230,12 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
             } else if (transformScaleMaxValue > maxScale) {
                 transformScaleMaxValue = maxScale;
             }
+
+            // if diff is too small..
+            if (std::abs(transformScaleMaxValue - 1) < 1.f) {
+                transformScaleMaxValue = 1;
+            }
+
             m_rareData->m_additionalPixelRatio =
                 std::max(ctx.baseAdditionalPixelRatio, transformScaleMaxValue);
             ctx.baseAdditionalPixelRatio =
@@ -1274,6 +1280,10 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                     scale = minScale;
                 } else if (scale > maxScale) {
                     scale = maxScale;
+                }
+                // if diff is too small..
+                if (std::abs(scale - 1) < 1.f) {
+                    scale = 1;
                 }
 
                 m_rareData->m_additionalPixelRatio =
