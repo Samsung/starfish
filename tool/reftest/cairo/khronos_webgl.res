@@ -5,7 +5,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-disabled-ve
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-matrix-attributes.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertex-attrib.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertexattribpointer.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertexattribpointer-offsets.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertexattribpointer-offsets.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertex-attrib-render.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-vertex-attrib-zero-issues.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/buffers/buffer-bind-test.html
