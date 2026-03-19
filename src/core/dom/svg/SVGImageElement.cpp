@@ -172,10 +172,11 @@ void SVGImageElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGImageElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 }
 
 WebOrigin* SVGImageElement::webOrigin()

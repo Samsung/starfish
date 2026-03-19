@@ -45,9 +45,11 @@ void HTMLTableCellElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTableCellElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                                        cssCustomValues);
 
     HTMLTableElement* table = tableElement();
     if (table && table->hasCellPaddingAttribute()) {

@@ -37,9 +37,11 @@ void HTMLTableColElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTableColElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                                        cssCustomValues);
 
     String* w = getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     if (!w->equals(String::emptyString)) {

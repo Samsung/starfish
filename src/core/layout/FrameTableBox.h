@@ -374,17 +374,17 @@ private:
         LayoutContext& ctx, LayoutUnit tableWidth, bool hasTableWidth,
         bool tableLayoutFixed, LayoutUnit* sumOfAutoCellPreferredWidths,
         LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
-        std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
-        std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
+        GCVector<ColSizeStruct*>* columnsAdjustedToMinWidths,
+        GCVector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfColWidths);
 
     void calCellWidthsWithPercentageWidths(
         LayoutUnit remainingWidth,
-        std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+        GCVector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfPercentageWidth);
     void calSpecifiedWidthInPixel(
         LayoutUnit remainingWidth, LayoutUnit sumOfAdjustedSpecifiedCellWidths,
-        std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+        GCVector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfFixedWidth);
 
     void collectColBoxes();

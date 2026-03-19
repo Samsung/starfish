@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTablePartElement.h"
 #include "core/style/Style.h"
+#include "core/style/StyleRule.h"
 
 namespace Starfish {
 void HTMLTablePartElement::didAttributeChanged(QualifiedName name,
@@ -39,9 +40,11 @@ void HTMLTablePartElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTablePartElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     String* valign = getAttributeOrEmpty(starfish()->staticStrings()->m_valign);
     if (isValidValign(valign)) {
@@ -59,6 +62,85 @@ void HTMLTablePartElement::styleForPresentationAttribute(
         pair.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
         pair.setValue(alignValue(align));
         cssValues.push_back(pair);
+    }
+
+    auto table = findParentTable();
+    if (table && table->style()->borderCollapse() ==
+                     BorderCollapseValue::CollapseBorderCollapseValue) {
+        if (isHTMLTHElement() || isHTMLTableCellElement()) {
+            if (parentElement()->isHTMLTableRowElement()) {
+                CSSStyleValuePair pair;
+                pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+
+                // find tag name rules..
+                auto begin = &matchedRules[0];
+                auto iter = begin;
+                auto end = matchedRules.data() + matchedRules.size();
+                Optional<size_t> lastTagNameIndex;
+                while (iter != end) {
+                    if (!iter->first->isUARule()) {
+                        if (iter->first->isSimpleTagSelector()) {
+                            if (iter->first->selectorList()[0]
+                                    .m_selector->selectorText() == name()) {
+                                lastTagNameIndex = std::distance(begin, iter);
+                            }
+                        }
+                    }
+                    iter++;
+                }
+                if (lastTagNameIndex) {
+                    CSSSelectorList sl(matchedRules[lastTagNameIndex.value()]
+                                           .first->selectorList());
+                    CSSStyleDeclaration* decl =
+                        new CSSStyleDeclaration(document());
+
+#define APPEND_BORDER_RULES(POS)                                     \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+    decl->addValuePair(pair);                                        \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+    decl->addValuePair(pair);                                        \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Color); \
+    decl->addValuePair(pair);
+
+                    APPEND_BORDER_RULES(Top)
+                    APPEND_BORDER_RULES(Bottom)
+
+                    if (!previousElementSibling()) {
+                        APPEND_BORDER_RULES(Left)
+                    }
+
+                    if (!nextElementSibling()) {
+                        APPEND_BORDER_RULES(Right)
+                    }
+#undef APPEND_BORDER_RULES
+
+                    StyleRule* rule = new StyleRule(std::move(sl), decl);
+                    matchedRules.insert(
+                        lastTagNameIndex.value() + 1,
+                        std::make_pair(rule, document()->documentURI()));
+                } else {
+#define APPEND_BORDER_RULES(POS)                                     \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+    cssValues.push_back(pair);                                       \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+    cssValues.push_back(pair);                                       \
+    pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Color); \
+    cssValues.push_back(pair);
+
+                    APPEND_BORDER_RULES(Top)
+                    APPEND_BORDER_RULES(Bottom)
+
+                    if (!previousElementSibling()) {
+                        APPEND_BORDER_RULES(Left)
+                    }
+
+                    if (!nextElementSibling()) {
+                        APPEND_BORDER_RULES(Right)
+                    }
+#undef APPEND_BORDER_RULES
+                }
+            }
+        }
     }
 }
 

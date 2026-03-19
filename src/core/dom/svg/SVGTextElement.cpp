@@ -106,10 +106,11 @@ void SVGTextElement::updateAttributeNeeded(QualifiedName name)
 }
 
 void SVGTextElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 
     StaticStrings* ss = starfish()->staticStrings();
     {

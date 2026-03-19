@@ -37,9 +37,11 @@ void HTMLTableCaptionElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTableCaptionElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     String* align = getAttributeOrEmpty(starfish()->staticStrings()->m_align);
     if (!align->equals(String::emptyString)) {

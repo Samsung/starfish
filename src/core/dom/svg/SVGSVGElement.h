@@ -42,6 +42,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsPreserveAspectRatioValue() override

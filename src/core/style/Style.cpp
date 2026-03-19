@@ -7862,7 +7862,7 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     CSSSelector::Type type, Element* element, AtomicString elementName,
     AtomicString elementId,
     const GCAtomicTightVector<AtomicString>& elementClasses,
-    MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
+    MatchedStyleRules<>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
     STARFISH_ASSERT(element != nullptr);
@@ -7999,8 +7999,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     const GCAtomicTightVector<AtomicString>& elementClasses =
         element->classNames();
 
-    const size_t matchedRulesInlineStorageSize = 32;
-    MatchedStyleRules<matchedRulesInlineStorageSize> matchedRules;
+    MatchedStyleRules<> matchedRules;
 
     if (element->hasId()) {
         auto& rules = m_ruleSet->idRules();
@@ -8048,24 +8047,12 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     auto begin = &matchedRules[0];
     auto end = matchedRules.data() + matchedRules.size();
-    auto authorSheetBegin = end;
 
     sortVector(begin, end, comparingRules);
 
-    {
-        auto iter = begin;
-        while (iter != end) {
-            if (!iter->first->isUARule()) {
-                authorSheetBegin = iter;
-                break;
-            }
-            iter++;
-        }
-    }
-
     // Gather all css custom properties
     {
-        auto iter = begin;
+        auto iter = &matchedRules[0];
         while (iter != end) {
             const auto& propertiesList =
                 iter->first->styleDeclaration()->cssCustomValues();
@@ -8104,11 +8091,18 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
+    size_t authorSheetBeginIndex = 0;
+
     // Apply ua-rules
     // We disallow ua !important rules due to performance now
     {
         auto iter = begin;
-        while (iter != authorSheetBegin) {
+        while (iter != end) {
+            if (iter->first->isUARule()) {
+                authorSheetBeginIndex = std::distance(begin, iter) + 1;
+            } else {
+                break;
+            }
             apply(element, iter->first->styleDeclaration()->m_cssValues,
                   iter->second, ret, parent, false);
             iter++;
@@ -8116,19 +8110,25 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     // Apply presentation attribute's style
-    CSSStyleValuePairVectorHolder cssValues;
-    if (element->isSVGElement()) {
-        element->styleForPresentationAttribute(cssValues, cssCustomValues());
-    } else {
-        element->styleForPresentationAttribute(cssValues);
+    {
+        CSSStyleValuePairVectorHolder cssValues;
+        element->styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues());
+        apply(element, cssValues.mutableData(),
+              element->document()->documentURI(), ret, parent, false);
     }
-    apply(element, cssValues.mutableData(), element->document()->documentURI(),
-          ret, parent, false);
+
+    // we need to re-compute values here again since "Apply presentation
+    // attribute's style part" can modify matchedRules
+    auto authorSheetBegin = &matchedRules[authorSheetBeginIndex];
+    begin = &matchedRules[0];
+    end = matchedRules.data() + matchedRules.size();
 
     // Apply non-important author-rules
     {
         auto iter = authorSheetBegin;
         while (iter != end) {
+            STARFISH_ASSERT(!iter->first->isUARule());
             apply(element, iter->first->styleDeclaration()->m_cssValues,
                   iter->second, ret, parent, false);
             iter++;
@@ -8146,6 +8146,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     {
         auto iter = authorSheetBegin;
         while (iter != end) {
+            STARFISH_ASSERT(!iter->first->isUARule());
             apply(element, iter->first->styleDeclaration()->m_cssValues,
                   iter->second, ret, parent, true);
             iter++;

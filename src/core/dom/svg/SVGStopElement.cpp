@@ -91,10 +91,11 @@ ColorStop* SVGStopElement::colorStop()
 }
 
 void SVGStopElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 
     String* stopColor = getAttributeOrVarReferencedValue(
         starfish()->staticStrings()->m_stopColor, cssCustomValues);

@@ -51,9 +51,11 @@ void* HTMLTableSectionElement::operator new(size_t size)
 }
 
 void HTMLTableSectionElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     HTMLTableElement* tableElement = findParentTable();
     if (tableElement && tableElement->groupRules()) {

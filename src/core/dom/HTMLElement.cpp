@@ -193,7 +193,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
 }
 
 void HTMLElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     if (m_hasDirAttribute) {
         CSSStyleValuePair pair;

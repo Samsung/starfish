@@ -142,9 +142,11 @@ static bool parseLegacyFontSize(String* size, int& fontSize)
 }
 
 void HTMLFontElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     if (m_hasColorAttribute) {
         CSSStyleValuePair pair;

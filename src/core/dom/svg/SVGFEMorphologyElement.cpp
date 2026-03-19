@@ -118,11 +118,11 @@ void SVGFEMorphologyElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFEMorphologyElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 SVGAnimatedString* SVGFEMorphologyElement::in()

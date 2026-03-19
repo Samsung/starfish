@@ -104,9 +104,11 @@ void HTMLTextAreaElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTextAreaElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLTextEditable::styleForPresentationAttribute(cssValues);
+    HTMLTextEditable::styleForPresentationAttribute(cssValues, matchedRules,
+                                                    cssCustomValues);
     // Width
     CSSStyleValuePair width;
     width.setKeyKind(CSSStyleValuePair::KeyKind::Width);

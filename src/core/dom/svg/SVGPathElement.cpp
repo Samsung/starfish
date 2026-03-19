@@ -722,10 +722,11 @@ void SVGPathElement::didComputedStyleChanged(ComputedStyle* oldStyle,
 }
 
 void SVGPathElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 
     String* d = getAttributeOrVarReferencedValue(
         starfish()->staticStrings()->m_d, cssCustomValues);

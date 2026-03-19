@@ -3245,7 +3245,7 @@ protected:
 
 using Declarations = GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>>;
 
-template <unsigned int InlineStorageSize>
+template <unsigned int InlineStorageSize = 32>
 using MatchedStyleRules = VectorWithInlineStorage<
     InlineStorageSize, std::pair<StyleRule*, ResourceURL*>,
     std::allocator<std::pair<StyleRule*, ResourceURL*>>>;
@@ -3396,7 +3396,7 @@ public:
         CSSSelector::Type type, Element* element, AtomicString elementName,
         AtomicString elementId,
         const GCAtomicTightVector<AtomicString>& elementClasses,
-        MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
+        MatchedStyleRules<>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
 
     const MediaQueryEvaluator& mediaQueryEvaluator();

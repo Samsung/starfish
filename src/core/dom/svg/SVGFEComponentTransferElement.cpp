@@ -75,11 +75,11 @@ void SVGFEComponentTransferElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFEComponentTransferElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 void SVGFEComponentTransferElement::didNodeInserted(Node* parent,

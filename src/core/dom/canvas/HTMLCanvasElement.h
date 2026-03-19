@@ -63,7 +63,9 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     uint32_t width();
     void setWidth(uint32_t value);

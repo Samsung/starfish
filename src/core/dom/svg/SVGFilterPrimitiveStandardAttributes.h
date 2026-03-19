@@ -49,6 +49,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);

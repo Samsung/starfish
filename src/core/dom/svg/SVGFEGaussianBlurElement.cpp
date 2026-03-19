@@ -139,11 +139,11 @@ void SVGFEGaussianBlurElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFEGaussianBlurElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 SVGAnimatedString* SVGFEGaussianBlurElement::in()

@@ -111,10 +111,11 @@ void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGMaskElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 }
 
 void SVGMaskElement::didNodeInserted(Node* parent, Node* newChild)

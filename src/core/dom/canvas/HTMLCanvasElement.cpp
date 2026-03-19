@@ -56,9 +56,11 @@ void HTMLCanvasElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLCanvasElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     // TODO: Since this patch, the width and height retrieved from the
     // attributes of the canvas element will be included in the calculation of
