@@ -194,11 +194,6 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         dontSplitGraphicsBufferCond = true;
     }
 
-    // Temp soluation.
-    if (m_additionalPixelRatio != 1) {
-        dontSplitGraphicsBufferCond = true;
-    }
-
     LayoutRect screenRect(0, 0, screenWidth, screenHeight);
     // if buffer is smaller than screen && whole content will be shown on
     // screen
@@ -1203,8 +1198,10 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                                     ->activeTransitions();
             auto iter = transitions.begin();
             while (iter != transitions.end()) {
-                findAnimationTaskRelatedWithTransformScale(
-                    *iter, transformScaleMaxValue);
+                if ((*iter)->targetElement() == m_owner->node()) {
+                    findAnimationTaskRelatedWithTransformScale(
+                        *iter, transformScaleMaxValue);
+                }
                 iter++;
             }
             auto& animations = m_owner->node()
@@ -1229,11 +1226,6 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                 transformScaleMaxValue = minScale;
             } else if (transformScaleMaxValue > maxScale) {
                 transformScaleMaxValue = maxScale;
-            }
-
-            // if diff is too small..
-            if (std::abs(transformScaleMaxValue - 1) < 1.f) {
-                transformScaleMaxValue = 1;
             }
 
             m_rareData->m_additionalPixelRatio =
@@ -1280,10 +1272,6 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                     scale = minScale;
                 } else if (scale > maxScale) {
                     scale = maxScale;
-                }
-                // if diff is too small..
-                if (std::abs(scale - 1) < 1.f) {
-                    scale = 1;
                 }
 
                 m_rareData->m_additionalPixelRatio =
