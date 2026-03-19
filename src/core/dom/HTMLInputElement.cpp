@@ -687,9 +687,11 @@ bool HTMLInputElement::ignoreLineBreaks()
 }
 
 void HTMLInputElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     if (isSizableType()) {
         auto siz = size();

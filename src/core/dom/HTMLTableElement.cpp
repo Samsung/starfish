@@ -230,9 +230,11 @@ bool getBordersFromFrameAttributeValue(String* frame, bool& border_top,
 }
 
 void HTMLTableElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     String* align = getAttributeOrEmpty(starfish()->staticStrings()->m_align);
     if (isValidAlign(align)) {

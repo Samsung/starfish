@@ -40,9 +40,11 @@ void HTMLLIElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLLIElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     String* typeString = type();
     if (typeString != String::emptyString) {

@@ -111,6 +111,24 @@ public:
         m_size++;
     }
 
+    template <typename PositionType>
+    typename std::enable_if<std::is_integral<PositionType>::value>::type insert(
+        PositionType pos, const T& val)
+    {
+        if (LIKELY(m_size < InlineStorageSize)) {
+            for (size_t i = m_size; i > pos; i--) {
+                m_inlineStorage[i] = m_inlineStorage[i - 1];
+            }
+            new (&m_inlineStorage[pos]) T(val);
+        } else if (m_size == InlineStorageSize) {
+            m_externalStorage.assign(m_inlineStorage, m_inlineStorage + m_size);
+            m_externalStorage.insert(m_externalStorage.begin() + pos, val);
+        } else {
+            m_externalStorage.insert(m_externalStorage.begin() + pos, val);
+        }
+        m_size++;
+    }
+
     void pop_back()
     {
         m_size--;

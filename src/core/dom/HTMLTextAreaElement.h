@@ -36,8 +36,10 @@ public:
     void didAttributeChanged(QualifiedName name, Optional<String*> old,
                              String* val, bool attributeCreated,
                              bool attributeRemoved) override;
-    void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
     virtual void reset() override;
     bool supportsFocus() override;
     bool isHTMLTextAreaElement() const override;

@@ -58,9 +58,11 @@ void HTMLTableRowElement::didAttributeChanged(QualifiedName name,
 }
 
 void HTMLTableRowElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLTablePartElement::styleForPresentationAttribute(cssValues);
+    HTMLTablePartElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                                        cssCustomValues);
 
     String* bgColor =
         getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);

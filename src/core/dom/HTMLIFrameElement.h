@@ -80,7 +80,9 @@ public:
     virtual void didNodeInsertedToDocumentTree() override;
     virtual void didNodeRemovedFromDocumentTree() override;
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     int tabIndex() final;
 

@@ -343,9 +343,11 @@ void HTMLIFrameElement::childBrowsingContextLoaded()
 }
 
 void HTMLIFrameElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
     size_t idx = hasAttribute(starfish()->staticStrings()->m_frameborder);
     if (idx != SIZE_MAX) {
         String* val = getAssuredAttribute(idx);

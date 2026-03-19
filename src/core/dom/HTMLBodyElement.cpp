@@ -154,9 +154,11 @@ static bool parseMarginHeightKind(String* input,
 }
 
 void HTMLBodyElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
+    Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    HTMLElement::styleForPresentationAttribute(cssValues);
+    HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                               cssCustomValues);
 
     // TODO add alink, link, vlink when :visited, :link implemented
 

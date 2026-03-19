@@ -95,7 +95,7 @@ void FrameTableBox::formingATable()
     // 1-4
     size_t xWidth = 0;
     size_t yHeight = 0;
-    std::vector<FrameTableSectionBox*> tfootSectionBoxes;
+    GCVector<FrameTableSectionBox*> tfootSectionBoxes;
     m_table->clear();
 
     // 5
@@ -391,7 +391,7 @@ void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
 
 void FrameTableBox::calSpecifiedWidthInPixel(
     LayoutUnit remainingWidth, LayoutUnit sumOfAdjustedSpecifiedCellWidths,
-    std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+    GCVector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfFixedWidth)
 {
     // calculate widths specified in pixels
@@ -507,8 +507,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     minTableWidth += borderSpacing;
     maxTableWidth = minTableWidth;
 
-    std::vector<ColSizeStruct*> cellsWithAutoWidths;
-    std::vector<ColSizeStruct*> cellsWithSpecifiedWidths;
+    GCVector<ColSizeStruct*> cellsWithAutoWidths;
+    GCVector<ColSizeStruct*> cellsWithSpecifiedWidths;
     for (auto& col : m_columnWidths) {
         if (isCellWidthAuto(col->id)) {
             cellsWithAutoWidths.push_back(col);
@@ -599,8 +599,8 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
 
     LayoutUnit sumOfAutoCellPreferredWidths = 0;
     LayoutUnit sumOfAdjustedSpecifiedCellWidths = 0;
-    std::vector<ColSizeStruct*> columnsAdjustedToMinWidths;
-    std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths;
+    GCVector<ColSizeStruct*> columnsAdjustedToMinWidths;
+    GCVector<ColSizeStruct*> columnsMayNeedToAdjustWidths;
     LayoutUnit sumOfColWidths = 0;
 
     LayoutUnit availableWidth = tableContentWidth;
@@ -854,7 +854,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                                 sumOfPercentageWidth;
 
                             double sumOfPercentage = 0;
-                            std::vector<ColSizeStruct*>
+                            GCVector<ColSizeStruct*>
                                 columnsMayNeedToAdjustWidthsAgain;
 
                             for (auto& c : columnsMayNeedToAdjustWidths) {
@@ -1107,8 +1107,8 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     LayoutContext& ctx, LayoutUnit remainingWidth, bool hasTableWidth,
     bool tableLayoutFixed, LayoutUnit* sumOfAutoCellPreferredWidths,
     LayoutUnit* sumOfAdjustedSpecifiedCellWidths,
-    std::vector<ColSizeStruct*>* columnsAdjustedToMinWidths,
-    std::vector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
+    GCVector<ColSizeStruct*>* columnsAdjustedToMinWidths,
+    GCVector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfColWidths)
 {
     LayoutUnit unused;
@@ -1218,7 +1218,7 @@ FrameTableCellBox* FrameTableBox::cellFromFirstRowOrColGroup(
 
 void FrameTableBox::calCellWidthsWithPercentageWidths(
     LayoutUnit remainingWidth,
-    std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+    GCVector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfPercentageWidth)
 {
     bool secondRunOrMore = false;

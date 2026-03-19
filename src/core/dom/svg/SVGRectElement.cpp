@@ -88,10 +88,11 @@ void* SVGRectElement::operator new(size_t size)
 }
 
 void SVGRectElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(rx, RX, cssCustomValues);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(ry, RY, cssCustomValues);

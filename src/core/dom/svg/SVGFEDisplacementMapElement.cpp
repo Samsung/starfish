@@ -145,11 +145,11 @@ void SVGFEDisplacementMapElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFEDisplacementMapElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 SVGAnimatedString* SVGFEDisplacementMapElement::in1()

@@ -67,9 +67,10 @@ void* SVGLineElement::operator new(size_t size)
 }
 
 void SVGLineElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    SVGElement::styleForPresentationAttribute(cssValues, matchedRules,
+                                              cssCustomValues);
 }
 } // namespace Starfish

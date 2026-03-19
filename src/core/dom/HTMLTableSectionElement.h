@@ -36,7 +36,9 @@ public:
     virtual bool isHTMLTableSectionElement() const override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     HTMLCollection* rows();
 

@@ -270,12 +270,8 @@ public:
     virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues)
-    {
-    }
-
-    virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
         Optional<const MutablePropertyValueList*> cssCustomValues)
     {
     }

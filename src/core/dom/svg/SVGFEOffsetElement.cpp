@@ -93,11 +93,11 @@ void SVGFEOffsetElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFEOffsetElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 SVGAnimatedString* SVGFEOffsetElement::in()

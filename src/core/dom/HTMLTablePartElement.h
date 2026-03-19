@@ -45,7 +45,9 @@ public:
         Optional<StyleResolveContext*> ctx) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     bool isValidAlign(String* align);
     TextAlignValue alignValue(String* align);

@@ -43,7 +43,9 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     // Not in HTML5
     String* bgColor();

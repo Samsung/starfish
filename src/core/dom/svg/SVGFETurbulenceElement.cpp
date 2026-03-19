@@ -160,11 +160,11 @@ void SVGFETurbulenceElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGFETurbulenceElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
     SVGFilterPrimitiveStandardAttributes::styleForPresentationAttribute(
-        cssValues, cssCustomValues);
+        cssValues, matchedRules, cssCustomValues);
 }
 
 SVGAnimatedNumber* SVGFETurbulenceElement::baseFrequencyX()

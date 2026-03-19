@@ -362,10 +362,11 @@ Optional<SVGElement*> SVGElement::viewportElement()
 }
 
 void SVGElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues,
+    CSSStyleValuePairVectorHolder& cssValues, MatchedStyleRules<>& matchedRules,
     Optional<const MutablePropertyValueList*> cssCustomValues)
 {
-    Element::styleForPresentationAttribute(cssValues);
+    Element::styleForPresentationAttribute(cssValues, matchedRules,
+                                           cssCustomValues);
 
     // execute ActiveSVG AnimationTasks
     if (m_animatedAttributes) {

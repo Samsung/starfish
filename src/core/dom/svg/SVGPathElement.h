@@ -59,6 +59,7 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
         Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     void* operator new(size_t size);

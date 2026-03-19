@@ -63,7 +63,9 @@ public:
     bool supportsFocus() override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        MatchedStyleRules<>& matchedRules,
+        Optional<const MutablePropertyValueList*> cssCustomValues) override;
 
     static String* obscurePhrase(String* phrase);
     static String* checkboxTickSymbol();
