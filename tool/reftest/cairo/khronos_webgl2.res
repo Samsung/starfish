@@ -4,7 +4,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-bindAttribL
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-disabled-vertex-attrib.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-enable-vertex-attrib.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-matrix-attributes.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertexattribpointer.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertexattribpointer.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertexattribpointer-offsets.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertex-attrib-render.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/attribs/gl-vertex-attrib-zero-issues.html
@@ -719,7 +719,7 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/programs/use-program-c
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttrib.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribBadArgs.html
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribPointer.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/functions/vertexAttribPointerBadArgs.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/glsl/arrayOutOfBounds.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance/more/glsl/uniformOutOfBounds.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/deqp/data/gles3/shaders/arrays.html
