@@ -30,6 +30,24 @@ WebGLRenderingContextState::WebGLRenderingContextState()
 {
 }
 
+std::unordered_set<GLuint> WebGLRenderingContextState::arraysEnabled()
+{
+    GLuint vao = vertexArray();
+    return m_arraysEnabled[vao];
+}
+
+void WebGLRenderingContextState::disableVertexAttribArray(GLuint index)
+{
+    GLuint vao = vertexArray();
+    m_arraysEnabled[vao].erase(index);
+}
+
+void WebGLRenderingContextState::enableVertexAttribArray(GLuint index)
+{
+    GLuint vao = vertexArray();
+    m_arraysEnabled[vao].insert(index);
+}
+
 Optional<WebGLBuffer*>
 WebGLRenderingContextState::getBufferBoundToVertexAttributes(GLuint index)
 {
@@ -95,6 +113,7 @@ void WebGLRenderingContextState::deleteVertexArrayOES(GLuint vao)
         m_webGLVertexArrayObjectOES.value()->glObject() == vao) {
         m_webGLVertexArrayObjectOES = nullptr;
     }
+    m_arraysEnabled.erase(vao);
     m_buffersBound.erase(vao);
     m_buffersBoundToVertexAttributes.erase(vao);
 }
