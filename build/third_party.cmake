@@ -307,10 +307,9 @@ ENDIF()
 ADD_SUBDIRECTORY (third_party/escargot)
 
 #######################################################
-# OpenSSL 1.1
+# OpenSSL
 #######################################################
-# Used when a target platform does not have openssl 1.1.
-# Currently, Ubuntu 16.04 and prod_tv do not have openssl 1.1.
+# Used when a target platform does not have openssl.
 IF (${HOST} STREQUAL "linux")
     SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
     SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})

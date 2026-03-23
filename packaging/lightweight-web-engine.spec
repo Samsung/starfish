@@ -238,7 +238,11 @@ BuildRequires: libjpeg-turbo-devel
 %endif
 
 %%if (0%{?tizen_version_major} >= 6)
+  %if (0%{?tizen_version_major} > 9)
+BuildRequires: pkgconfig(openssl3)
+  %else
 BuildRequires: pkgconfig(openssl1.1)
+  %endif
 %else
   %if (0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5)
     %if "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
