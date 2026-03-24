@@ -317,7 +317,11 @@ public:
 
 private:
     bool checkAttribOrUniformName(String* name);
+
+protected:
     bool isFromCurrentContext(WebGLObject* object);
+
+private:
     bool isBoundCubeMapTexture(GLenum target);
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
     bool isExtensionEnabled(const char* requestedName);

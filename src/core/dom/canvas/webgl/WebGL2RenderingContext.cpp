@@ -185,7 +185,7 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (program->context() != this) {
+    if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
@@ -297,7 +297,7 @@ GLint WebGL2RenderingContext::getFragDataLocation(WebGLProgram* program,
 {
     ENTER_CONTEXT_SCOPE(-1);
 
-    if (program->context() != this) {
+    if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
         return -1;
     }
@@ -317,7 +317,7 @@ GLboolean WebGL2RenderingContext::isSync(Optional<WebGLSync*> sync)
 {
     ENTER_CONTEXT_SCOPE(false);
 
-    if (!sync.hasValue() || sync.value()->context() != this ||
+    if (!sync.hasValue() || !isFromCurrentContext(sync.value()) ||
         sync.value()->invalidated()) {
         return false;
     }
@@ -332,7 +332,7 @@ void WebGL2RenderingContext::deleteSync(Optional<WebGLSync*> sync)
         return;
     }
     WebGLSync* value = sync.value();
-    if (value->context() != this) {
+    if (!isFromCurrentContext(value)) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
@@ -348,7 +348,7 @@ GLenum WebGL2RenderingContext::clientWaitSync(WebGLSync* sync, GLbitfield flags,
 {
     ENTER_CONTEXT_SCOPE(GL_WAIT_FAILED);
 
-    if (sync->context() != this || flags & ~GL_SYNC_FLUSH_COMMANDS_BIT ||
+    if (!isFromCurrentContext(sync) || flags & ~GL_SYNC_FLUSH_COMMANDS_BIT ||
         timeout > kMaxClientWaitTimeoutWebgl) {
         setGLError(GL_INVALID_OPERATION);
         return GL_WAIT_FAILED;
@@ -361,7 +361,7 @@ void WebGL2RenderingContext::waitSync(WebGLSync* sync, GLbitfield flags,
 {
     ENTER_CONTEXT_SCOPE();
 
-    if (sync->context() != this) {
+    if (!isFromCurrentContext(sync)) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
@@ -373,7 +373,7 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (sync->context() != this) {
+    if (!isFromCurrentContext(sync)) {
         setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
@@ -425,7 +425,7 @@ void WebGL2RenderingContext::deleteVertexArray(
 
     WebGLVertexArrayObject* value = vertexArray.value();
 
-    if (value->context() != this) {
+    if (!isFromCurrentContext(value)) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
@@ -452,7 +452,7 @@ GLboolean WebGL2RenderingContext::isVertexArray(
 
     WebGLVertexArrayObject* value = vertexArray.value();
 
-    if (value->context() != this || value->invalidated()) {
+    if (!isFromCurrentContext(value) || value->invalidated()) {
         return false;
     }
 
@@ -476,7 +476,7 @@ void WebGL2RenderingContext::bindVertexArray(
 
     WebGLVertexArrayObject* value = array.value();
 
-    if (value->context() != this) {
+    if (!isFromCurrentContext(value)) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
