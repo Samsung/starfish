@@ -1263,6 +1263,10 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                             if (reason) {
                                 printf(" buf reason? %d", (int)reason);
                             }
+                            if (ctx->additionalPixelRatio() != 1.f) {
+                                printf(" additionalPixelRatio? %f",
+                                       (float)ctx->additionalPixelRatio());
+                            }
 
                             SkMatrix m = ctx->transformMatrix();
                             if (!m.isIdentity()) {

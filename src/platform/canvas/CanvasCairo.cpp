@@ -47,7 +47,6 @@
 
 #include <vector>
 #include <SkMatrix.h>
-#include <clipper.hpp>
 #include <cairo.h>
 
 #include "core/modules/canvas/Path.h"

@@ -203,6 +203,11 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         dontSplitGraphicsBufferCond = true;
     }
 
+    // FIXME non-integer pixel ratio makes glitch between tiles
+    if (m_additionalPixelRatio != 1) {
+        dontSplitGraphicsBufferCond = true;
+    }
+
     if (dontSplitGraphicsBufferCond) {
         m_tileDataWidth = ceil(bufferWidth * m_additionalPixelRatio);
         m_horizontalTileCount = 1;
@@ -2679,6 +2684,20 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     LayoutUnit minY = visibleRect.y();
     LayoutUnit maxY = visibleRect.maxY();
 
+    auto screenMatrix = m_owner->computeScreenMatrix(true);
+    Optional<SkMatrix> scrollMatrix;
+    LayoutRect screenRect = computeScreenRect(this);
+    LayoutRect stackingContextExtent =
+        computeBoxExtent(visibleRect, screenMatrix);
+
+    if (!stackingContextExtent.intersects(screenRect)) {
+        return;
+    }
+
+    if (inScrollWithGraphicsBufferActive()) {
+        scrollMatrix = m_owner->computeScreenMatrix(false);
+    }
+
     size_t bufferWidth;
     size_t bufferHeight;
     computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth,
@@ -2847,6 +2866,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         hTileSize,
                         m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
                             coveredRowsCount);
+
+                    LayoutRect tileExtent = computeBoxExtent(
+                        LayoutRect(minX + (LayoutUnit)tileDataX,
+                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
+                                   tileDataHeight),
+                        scrollMatrix ? scrollMatrix.value() : screenMatrix);
+
+                    bool willPaintOnScreen = screenRect.intersects(tileExtent);
+                    if (!willPaintOnScreen) {
+                        tileIndex++;
+                        coveredColsCount += wTileSize;
+                        continue;
+                    }
 
                     float tx = tileDataX / additionalPixelRatio;
                     float ty = tileDataY / additionalPixelRatio;
