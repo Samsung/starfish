@@ -332,6 +332,9 @@ unsigned arrayBufferViewByteSize(ScriptArrayBufferView buffer);
 template <typename T, typename U>
 ScriptArrayBufferView createTypedArray(ScriptBindingInstance* instance,
                                        const std::vector<U>& vector);
+template <typename U>
+ScriptArrayObject createArray(ScriptBindingInstance* instance,
+                              const std::vector<U>& vector);
 
 void detachArrayBuffer(ScriptBindingInstance* instance,
                        ScriptArrayBuffer buffer);
