@@ -2170,15 +2170,61 @@ CanvasSurface* CanvasSurfaceFactory::createGL(
     return new CanvasSurfaceGL(renderer, w, h, additionalPixelRatio, flag);
 }
 
+static bool isRectangleClipPath(const ClipperLib::Paths& paths)
+{
+    if (paths.size() != 1) {
+        return false;
+    }
+
+    const auto& p = paths[0];
+    if (p.size() != 4) {
+        return false;
+    }
+
+    ClipperLib::cInt x1 = p[0].X, x2 = p[0].X;
+    ClipperLib::cInt y1 = p[0].Y, y2 = p[0].Y;
+
+    for (size_t i = 1; i < 4; i++) {
+        if (p[i].X != x1) {
+            x2 = p[i].X;
+        }
+        if (p[i].Y != y1) {
+            y2 = p[i].Y;
+        }
+    }
+
+    int xcnt = (x1 == x2) ? 1 : 2;
+    int ycnt = (y1 == y2) ? 1 : 2;
+
+    return (xcnt == 2 && ycnt == 2);
+}
+
+static Unit::Rect toRect(const ClipperLib::Paths& paths)
+{
+    STARFISH_ASSERT(isRectangleClipPath(paths));
+
+    const auto& p = paths[0];
+    ClipperLib::cInt minX = p[0].X, maxX = p[0].X;
+    ClipperLib::cInt minY = p[0].Y, maxY = p[0].Y;
+
+    for (size_t i = 1; i < 4; i++) {
+        minX = std::min(minX, p[i].X);
+        minY = std::min(minY, p[i].Y);
+        maxX = std::max(maxX, p[i].X);
+        maxY = std::max(maxY, p[i].Y);
+    }
+
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+}
+
 struct CompositorImplGLState {
     bool matrixStaysInRect;
-    bool clipPathsWasChanged;
-    bool clipPathsAreSimple; // there are only rect clip
     SkMatrix matrix;
     float opacity;
     float blurRadius;
     Unit::Color color;
-    std::shared_ptr<ClipperLib::Paths> clipPaths;
+    Unit::Rect clipRect;
+    ClipperLib::Paths clipPaths;
     BlendMode blendMode;
 };
 
@@ -2213,15 +2259,20 @@ public:
 
     void scissor(float x, float y, float width, float height)
     {
+        float maxX = x + width;
+        float maxY = y + height;
+
+        x = floor(x);
+        y = floor(y);
+        maxX = ceil(maxX);
+        maxY = ceil(maxY);
+
         if (m_screenMatrix.isIdentity()) {
-            gl()->scissor(x, (float)screenHeight() - (y + height), width,
-                          height);
+            gl()->scissor(x, (float)screenHeight() - maxY, maxX - x, maxY - y);
             return;
         }
         // TODO implement cases when m_screenMatrix is not 9, 90, 180, 270
         // degree rotate transform
-        float maxX = x + width;
-        float maxY = y + height;
 
         if (gl()->isGeneric()) {
             mapPointsByMatrix(x, y, m_screenMatrix);
@@ -2285,16 +2336,12 @@ public:
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
         auto& lastState = m_state.back();
-        lastState.clipPathsWasChanged = false;
         lastState.matrixStaysInRect = true;
-        lastState.clipPathsAreSimple = false;
         lastState.matrix = SkMatrix::I();
         lastState.opacity = 1;
         lastState.blurRadius = 0;
-        lastState.clipPaths.reset(new ClipperLib::Paths());
         lastState.blendMode = BlendMode::Normal;
-
-        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
+        lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
 
         applyDevicePixelRatio();
     }
@@ -2430,10 +2477,43 @@ public:
 
     virtual void clip(const Unit::Rect& rt) override
     {
+        auto& lastState = m_state.back();
+        // fast path
+        if (lastState.matrixStaysInRect) {
+            float dest[4][2];
+            dest[0][0] = rt.x();
+            dest[0][1] = rt.y();
+            mapPointsToLogicalScreen(dest[0][0], dest[0][1]);
+
+            dest[1][0] = rt.x();
+            dest[1][1] = rt.maxY();
+            mapPointsToLogicalScreen(dest[1][0], dest[1][1]);
+
+            dest[2][0] = rt.maxX();
+            dest[2][1] = rt.y();
+            mapPointsToLogicalScreen(dest[2][0], dest[2][1]);
+
+            dest[3][0] = rt.maxX();
+            dest[3][1] = rt.maxY();
+            mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
+
+            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
+                  maxY = dest[0][1];
+
+            for (size_t j = 1; j < 4; j++) {
+                minX = std::min(dest[j][0], minX);
+                minY = std::min(dest[j][1], minY);
+                maxX = std::max(dest[j][0], maxX);
+                maxY = std::max(dest[j][1], maxY);
+            }
+
+            lastState.clipRect.intersect(
+                Unit::Rect(minX, minY, maxX - minX, maxY - minY));
+            return;
+        }
         ClipperLib::Path path;
         SkPoint pt;
         pt = SkPoint::Make(rt.x(), rt.y());
-        auto& lastState = m_state.back();
         lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(floor(pt.x()), floor(pt.y()));
 
@@ -2448,18 +2528,7 @@ public:
         pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
         lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(floor(pt.x()), ceil(pt.y()));
-
-        if (!lastState.clipPathsWasChanged) {
-            lastState.clipPaths.reset(
-                new ClipperLib::Paths(*lastState.clipPaths.get()));
-            lastState.clipPathsWasChanged = true;
-        }
-
-        if (!lastState.matrixStaysInRect) {
-            lastState.clipPathsAreSimple = false;
-        }
-
-        lastState.clipPaths.get()->push_back(path);
+        lastState.clipPaths.push_back(path);
     }
 
     virtual void setFillColor(const Unit::Color& clr) override
@@ -2500,11 +2569,62 @@ public:
 
         auto currentColor = lastState.color;
 
-        if (lastState.clipPaths.get()->size()) {
+        if (lastState.matrixStaysInRect && lastState.clipPaths.size() == 0) {
+            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
+                  maxY = dest[0][1];
+
+            for (size_t j = 1; j < 4; j++) {
+                minX = std::min(dest[j][0], minX);
+                minY = std::min(dest[j][1], minY);
+                maxX = std::max(dest[j][0], maxX);
+                maxY = std::max(dest[j][1], maxY);
+            }
+
+            Unit::Rect drawRect = lastState.clipRect;
+            drawRect.intersect(
+                Unit::Rect(minX, minY, maxX - minX, maxY - minY));
+
+            minX = drawRect.x();
+            minY = drawRect.y();
+            maxX = drawRect.maxX();
+            maxY = drawRect.maxY();
+
+            m_compositorContext->rectProgram();
+
+            mapLogicalScreenPointsToScreen(minX, minY);
+            mapLogicalScreenPointsToScreen(maxX, maxY);
+
+            float hw = 2.f / screenWidth();
+            float hh = -2.f / screenHeight();
+            float position[] = {
+                minX * hw - 1, minY * hh + 1, // V1
+                minX * hw - 1, maxY * hh + 1, // V2
+                maxX * hw - 1, minY * hh + 1, // V3
+                maxX * hw - 1, maxY * hh + 1, // V4
+            };
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER,
+                             m_compositorContext->m_drawPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
+                             GL_DYNAMIC_DRAW);
+            gl()->vertexAttribPointer(
+                m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
+                false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+            float a = lastState.opacity;
+
+            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
+                            a * currentColor.R(), a * currentColor.G(),
+                            a * currentColor.B(), a * currentColor.A());
+
+            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            checkError(gl());
+        } else {
             ClipperLib::Paths result = computeClippath(dest);
             if (result.size()) {
-                if (lastState.matrixStaysInRect && result.size() == 1 &&
-                    result[0].size() == 4) {
+                if (lastState.matrixStaysInRect &&
+                    isRectangleClipPath(result)) {
                     m_compositorContext->rectProgram();
 
                     float minX = (float)result[0][0].X,
@@ -2614,37 +2734,6 @@ public:
                     }
                 }
             }
-        } else {
-            mapLogicalScreenPointsToScreen(dest[0][0], dest[0][1]);
-            mapLogicalScreenPointsToScreen(dest[1][0], dest[1][1]);
-            mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
-            mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
-
-            float hw = 2.f / screenWidth();
-            float hh = -2.f / screenHeight();
-            float data[] = {
-                dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
-                dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
-                dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
-                dest[3][0] * hw - 1, dest[3][1] * hh + 1  // V4
-            };
-
-            gl()->bindBuffer(GL_ARRAY_BUFFER,
-                             m_compositorContext->m_drawPosBuffer);
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, &data[0],
-                             GL_DYNAMIC_DRAW);
-            gl()->vertexAttribPointer(
-                m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
-                false, 0, 0);
-            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-            float a = lastState.opacity;
-            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
-                            a * currentColor.R(), a * currentColor.G(),
-                            a * currentColor.B(), a * currentColor.A());
-
-            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            checkError(gl());
         }
     }
 
@@ -2653,10 +2742,12 @@ public:
         drawRect(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    // returns paths & paths stays in rect
     ClipperLib::Paths computeClippath(float (&dest)[4][2])
     {
+        auto& lastState = m_state.back();
+
         ClipperLib::Clipper clipper;
+        ClipperLib::Paths result;
 
         ClipperLib::Path texture;
         texture.emplace_back(floor(dest[0][0]), floor(dest[0][1]));
@@ -2664,52 +2755,28 @@ public:
         texture.emplace_back(ceil(dest[3][0]), ceil(dest[3][1]));
         texture.emplace_back(floor(dest[1][0]), ceil(dest[1][1]));
 
-        // clipping debug code
-        /*
-        puts("dest");
-        printf("%f,%f ", dest[0][0], dest[0][1]);
-        printf("%f,%f ", dest[2][0], dest[2][1]);
-        printf("%f,%f ", dest[3][0], dest[3][1]);
-        printf("%f,%f ", dest[1][0], dest[1][1]);
-        puts("texture");
-        printf("%d,%d ", (int)texture[0].X, (int)texture[0].Y);
-        printf("%d,%d ", (int)texture[1].X, (int)texture[1].Y);
-        printf("%d,%d ", (int)texture[2].X, (int)texture[2].Y);
-        printf("%d,%d ", (int)texture[3].X, (int)texture[3].Y);
-        puts("");
-
-        puts("clipPathlog");
-        for (size_t i = 0; i < m_state.back().clipPaths.size(); i ++) {
-            printf("i=%d ", (int)i);
-
-            std::vector<float> pts;
-            for (size_t j = 0; j < m_state.back().clipPaths[i].size(); j ++) {
-                printf("%d,%d ", (int)m_state.back().clipPaths[i][j].X,
-        (int)m_state.back().clipPaths[i][j].Y);
-            }
-            puts("");
-        }
-        */
-
-        auto& lastState = m_state.back();
+        clipper.Clear();
         clipper.AddPath(texture, ClipperLib::PolyType::ptSubject, true);
-        clipper.AddPath(lastState.clipPaths.get()->at(0),
-                        ClipperLib::PolyType::ptClip, true);
 
-        ClipperLib::Paths result;
+        ClipperLib::Path clipRect;
+        clipRect.emplace_back(floor(lastState.clipRect.x()),
+                              floor(lastState.clipRect.y()));
+        clipRect.emplace_back(ceil(lastState.clipRect.maxX()),
+                              floor(lastState.clipRect.y()));
+        clipRect.emplace_back(ceil(lastState.clipRect.maxX()),
+                              ceil(lastState.clipRect.maxY()));
+        clipRect.emplace_back(floor(lastState.clipRect.x()),
+                              ceil(lastState.clipRect.maxY()));
+        clipper.AddPath(clipRect, ClipperLib::PolyType::ptClip, true);
+
         clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
 
-        for (size_t i = 1; i < lastState.clipPaths.get()->size(); i++) {
-            clipper.Clear();
-            clipper.AddPaths(result, ClipperLib::PolyType::ptSubject, true);
-            clipper.AddPath(lastState.clipPaths.get()->at(i),
-                            ClipperLib::PolyType::ptClip, true);
+        clipper.Clear();
+        clipper.AddPaths(std::move(result), ClipperLib::PolyType::ptSubject, true);
+        clipper.AddPaths(lastState.clipPaths, ClipperLib::PolyType::ptClip,
+                         true);
 
-            ClipperLib::Paths newResult;
-            clipper.Execute(ClipperLib::ClipType::ctIntersection, newResult);
-            result = newResult;
-        }
-
+        clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
         return result;
     }
 
@@ -3023,192 +3090,163 @@ public:
         dest[3][1] = dst.maxY();
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
-        if (lastState.clipPaths.get()->size()) {
-            if (lastState.clipPathsAreSimple) {
-                const ClipperLib::Paths& clipPaths = *lastState.clipPaths.get();
-                for (size_t i = 0; i < clipPaths.size(); i++) {
-                    const Unit::Rect& r1 = visibleArea;
-                    STARFISH_ASSERT(clipPaths[i].size() == 4);
+        if (lastState.clipPaths.size() == 0 && lastState.matrixStaysInRect) {
+            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
+                  maxY = dest[0][1];
 
-                    float minX = (float)clipPaths[i][0].X,
-                          minY = (float)clipPaths[i][0].Y,
-                          maxX = (float)clipPaths[i][0].X,
-                          maxY = (float)clipPaths[i][0].Y;
+            for (size_t j = 1; j < 4; j++) {
+                minX = std::min(dest[j][0], minX);
+                minY = std::min(dest[j][1], minY);
+                maxX = std::max(dest[j][0], maxX);
+                maxY = std::max(dest[j][1], maxY);
+            }
 
-                    for (size_t j = 1; j < 4; j++) {
-                        minX = std::min((float)clipPaths[i][j].X, minX);
-                        minY = std::min((float)clipPaths[i][j].Y, minY);
-                        maxX = std::max((float)clipPaths[i][j].X, maxX);
-                        maxY = std::max((float)clipPaths[i][j].Y, maxY);
+            visibleArea = Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+            visibleArea.intersect(lastState.clipRect);
+            shouldSkipTexturePainting = visibleArea.isEmpty();
+            gl()->enable(GL_SCISSOR_TEST);
+            scissor(visibleArea.x(), visibleArea.y(), visibleArea.width(),
+                    visibleArea.height());
+            scissorClippingEnabled = true;
+        } else {
+            visibleArea = Unit::Rect(0, 0, 0, 0);
+            ClipperLib::Paths result = computeClippath(dest);
+            if (result.size()) {
+                if (isRectangleClipPath(result)) {
+                    float minX = (float)result[0][0].X,
+                          minY = (float)result[0][0].Y,
+                          maxX = (float)result[0][0].X,
+                          maxY = (float)result[0][0].Y;
+
+                    for (size_t i = 1; i < 4; i++) {
+                        minX = std::min((float)result[0][i].X, minX);
+                        minY = std::min((float)result[0][i].Y, minY);
+                        maxX = std::max((float)result[0][i].X, maxX);
+                        maxY = std::max((float)result[0][i].Y, maxY);
                     }
 
-                    Unit::Rect r2(minX, minY, maxX - minX, maxY - minY);
-                    float leftX = std::max(r1.x(), r2.x());
-                    float rightX = std::min(r1.maxX(), r2.maxX());
-                    float topY = std::max(r1.y(), r2.y());
-                    float bottomY = std::min(r1.maxY(), r2.maxY());
-
-                    if (leftX < rightX && topY < bottomY) {
-                        visibleArea = Unit::Rect(leftX, topY, rightX - leftX,
-                                                 bottomY - topY);
-                    } else {
-                        // Rectangles do not overlap, or overlap has an area of
-                        // zero (edge/corner overlap)
-                        visibleArea = Unit::Rect(0, 0, 0, 0);
-                        shouldSkipTexturePainting = true;
-                        break;
-                    }
-                }
-
-                gl()->enable(GL_SCISSOR_TEST);
-                scissor(visibleArea.x(), visibleArea.y(), visibleArea.width(),
-                        visibleArea.height());
-                scissorClippingEnabled = true;
-            } else {
-                visibleArea = Unit::Rect(0, 0, 0, 0);
-                ClipperLib::Paths result = computeClippath(dest);
-                if (result.size()) {
-                    if (lastState.matrixStaysInRect && result.size() == 1 &&
-                        result[0].size() == 4) {
-                        float minX = (float)result[0][0].X,
-                              minY = (float)result[0][0].Y,
-                              maxX = (float)result[0][0].X,
-                              maxY = (float)result[0][0].Y;
-
-                        for (size_t i = 1; i < 4; i++) {
-                            minX = std::min((float)result[0][i].X, minX);
-                            minY = std::min((float)result[0][i].Y, minY);
-                            maxX = std::max((float)result[0][i].X, maxX);
-                            maxY = std::max((float)result[0][i].Y, maxY);
-                        }
-
-                        visibleArea =
-                            Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-                        gl()->enable(GL_SCISSOR_TEST);
-                        scissor(minX, minY, maxX - minX, maxY - minY);
-                        scissorClippingEnabled = true;
-                    } else {
-                        std::vector<std::vector<Point>> polygon;
-                        std::vector<Point> pointPerIndex;
-                        for (size_t i = 0; i < result.size(); i++) {
-                            polygon.push_back(std::vector<Point>());
-                            for (size_t j = 0; j < result[i].size(); j++) {
-                                polygon.back().push_back(
-                                    { (double)result[i][j].X,
-                                      (double)result[i][j].Y });
-                                pointPerIndex.push_back(
-                                    { (double)result[i][j].X,
-                                      (double)result[i][j].Y });
-                            }
-
-                            visibleArea.unite(boundingRect(result[i]));
-                        }
-
-                        float diffXDueToStencilCliping = 0;
-                        float diffYDueToStencilCliping = 0;
-                        stencilClippingEnabled = true;
-
-                        if (!g_screenStencilBufferSize) {
-                            fboStencilClipingEnabled = true;
-                            pushFBOContext(visibleArea.width(),
-                                           visibleArea.height(), true,
-                                           LayoutRect(0, 0, visibleArea.width(),
-                                                      visibleArea.height()));
-                            diffXDueToStencilCliping = -visibleArea.x();
-                            diffYDueToStencilCliping = -visibleArea.y();
-
-                            screenWidth = visibleArea.width();
-                            screenHeight = visibleArea.height();
-
-                            ctm.postTranslate(diffXDueToStencilCliping,
-                                              diffYDueToStencilCliping);
-
-                            gl()->clearColor(0, 0, 0, 0);
-                            gl()->clear(GL_COLOR_BUFFER_BIT);
-
-                            // reset screen matrix while draw fbo on screen
-                            screenMatrix.reset();
-                        }
-
-                        gl()->enable(GL_STENCIL_TEST);
-                        STARFISH_ASSERT(gl()->isEnabled(GL_STENCIL_TEST));
-                        gl()->clearStencil(0);
-                        gl()->clear(GL_STENCIL_BUFFER_BIT);
-                        gl()->colorMask(false, false, false, false);
-                        gl()->stencilFunc(GL_ALWAYS, 1, 1);
-                        gl()->stencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-                        std::vector<float> position;
-                        m_compositorContext->rectProgram();
-                        std::vector<N> indices = mapbox::earcut<N>(polygon);
-
-                        position.reserve((indices.size() / 3) * 6);
-                        for (size_t i = 0; i < indices.size(); i += 3) {
-                            float trianglePoints[6] = {
-                                (float)pointPerIndex[indices[i]][0] +
-                                    diffXDueToStencilCliping,
-                                (float)pointPerIndex[indices[i]][1] +
-                                    diffYDueToStencilCliping,
-                                (float)pointPerIndex[indices[i + 1]][0] +
-                                    diffXDueToStencilCliping,
-                                (float)pointPerIndex[indices[i + 1]][1] +
-                                    diffYDueToStencilCliping,
-                                (float)pointPerIndex[indices[i + 2]][0] +
-                                    diffXDueToStencilCliping,
-                                (float)pointPerIndex[indices[i + 2]][1] +
-                                    diffYDueToStencilCliping
-                            };
-
-                            if (!fboStencilClipingEnabled) {
-                                mapPointsByMatrix(trianglePoints[0],
-                                                  trianglePoints[1],
-                                                  screenMatrix);
-                                mapPointsByMatrix(trianglePoints[2],
-                                                  trianglePoints[3],
-                                                  screenMatrix);
-                                mapPointsByMatrix(trianglePoints[4],
-                                                  trianglePoints[5],
-                                                  screenMatrix);
-                            }
-
-                            float hw = 2.f / screenWidth;
-                            float hh = -2.f / screenHeight;
-                            position.push_back(trianglePoints[0] * hw - 1);
-                            position.push_back(trianglePoints[1] * hh + 1);
-                            position.push_back(trianglePoints[2] * hw - 1);
-                            position.push_back(trianglePoints[3] * hh + 1);
-                            position.push_back(trianglePoints[4] * hw - 1);
-                            position.push_back(trianglePoints[5] * hh + 1);
-                        }
-
-                        gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                         m_compositorContext->m_drawPosBuffer);
-                        gl()->bufferData(GL_ARRAY_BUFFER,
-                                         sizeof(float) * position.size(),
-                                         position.data(), GL_DYNAMIC_DRAW);
-                        gl()->vertexAttribPointer(
-                            m_compositorContext->m_rectShaderProgramPosition, 2,
-                            GL_FLOAT, false, 0, 0);
-                        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-                        gl()->uniform4f(
-                            m_compositorContext->m_rectShaderProgramColor,
-                            Unit::Color(255, 255, 255, 255).R(),
-                            Unit::Color(255, 255, 255, 255).G(),
-                            Unit::Color(255, 255, 255, 255).B(),
-                            Unit::Color(255, 255, 255, 255).A());
-
-                        gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
-                        checkError(gl());
-
-                        gl()->colorMask(true, true, true, true);
-                        gl()->stencilFunc(GL_EQUAL, 1, 1);
-                        gl()->stencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-                        checkError(gl());
-                    }
+                    visibleArea =
+                        Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+                    gl()->enable(GL_SCISSOR_TEST);
+                    scissor(minX, minY, maxX - minX, maxY - minY);
+                    scissorClippingEnabled = true;
                 } else {
-                    shouldSkipTexturePainting = true;
+                    std::vector<std::vector<Point>> polygon;
+                    std::vector<Point> pointPerIndex;
+                    for (size_t i = 0; i < result.size(); i++) {
+                        polygon.push_back(std::vector<Point>());
+                        for (size_t j = 0; j < result[i].size(); j++) {
+                            polygon.back().push_back(
+                                { (double)result[i][j].X,
+                                  (double)result[i][j].Y });
+                            pointPerIndex.push_back({ (double)result[i][j].X,
+                                                      (double)result[i][j].Y });
+                        }
+
+                        visibleArea.unite(boundingRect(result[i]));
+                    }
+
+                    float diffXDueToStencilCliping = 0;
+                    float diffYDueToStencilCliping = 0;
+                    stencilClippingEnabled = true;
+
+                    if (!g_screenStencilBufferSize) {
+                        fboStencilClipingEnabled = true;
+                        pushFBOContext(visibleArea.width(),
+                                       visibleArea.height(), true,
+                                       LayoutRect(0, 0, visibleArea.width(),
+                                                  visibleArea.height()));
+                        diffXDueToStencilCliping = -visibleArea.x();
+                        diffYDueToStencilCliping = -visibleArea.y();
+
+                        screenWidth = visibleArea.width();
+                        screenHeight = visibleArea.height();
+
+                        ctm.postTranslate(diffXDueToStencilCliping,
+                                          diffYDueToStencilCliping);
+
+                        gl()->clearColor(0, 0, 0, 0);
+                        gl()->clear(GL_COLOR_BUFFER_BIT);
+
+                        // reset screen matrix while draw fbo on screen
+                        screenMatrix.reset();
+                    }
+
+                    gl()->enable(GL_STENCIL_TEST);
+                    STARFISH_ASSERT(gl()->isEnabled(GL_STENCIL_TEST));
+                    gl()->clearStencil(0);
+                    gl()->clear(GL_STENCIL_BUFFER_BIT);
+                    gl()->colorMask(false, false, false, false);
+                    gl()->stencilFunc(GL_ALWAYS, 1, 1);
+                    gl()->stencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+                    std::vector<float> position;
+                    m_compositorContext->rectProgram();
+                    std::vector<N> indices = mapbox::earcut<N>(polygon);
+
+                    position.reserve((indices.size() / 3) * 6);
+                    for (size_t i = 0; i < indices.size(); i += 3) {
+                        float trianglePoints[6] = {
+                            (float)pointPerIndex[indices[i]][0] +
+                                diffXDueToStencilCliping,
+                            (float)pointPerIndex[indices[i]][1] +
+                                diffYDueToStencilCliping,
+                            (float)pointPerIndex[indices[i + 1]][0] +
+                                diffXDueToStencilCliping,
+                            (float)pointPerIndex[indices[i + 1]][1] +
+                                diffYDueToStencilCliping,
+                            (float)pointPerIndex[indices[i + 2]][0] +
+                                diffXDueToStencilCliping,
+                            (float)pointPerIndex[indices[i + 2]][1] +
+                                diffYDueToStencilCliping
+                        };
+
+                        if (!fboStencilClipingEnabled) {
+                            mapPointsByMatrix(trianglePoints[0],
+                                              trianglePoints[1], screenMatrix);
+                            mapPointsByMatrix(trianglePoints[2],
+                                              trianglePoints[3], screenMatrix);
+                            mapPointsByMatrix(trianglePoints[4],
+                                              trianglePoints[5], screenMatrix);
+                        }
+
+                        float hw = 2.f / screenWidth;
+                        float hh = -2.f / screenHeight;
+                        position.push_back(trianglePoints[0] * hw - 1);
+                        position.push_back(trianglePoints[1] * hh + 1);
+                        position.push_back(trianglePoints[2] * hw - 1);
+                        position.push_back(trianglePoints[3] * hh + 1);
+                        position.push_back(trianglePoints[4] * hw - 1);
+                        position.push_back(trianglePoints[5] * hh + 1);
+                    }
+
+                    gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                     m_compositorContext->m_drawPosBuffer);
+                    gl()->bufferData(GL_ARRAY_BUFFER,
+                                     sizeof(float) * position.size(),
+                                     position.data(), GL_DYNAMIC_DRAW);
+                    gl()->vertexAttribPointer(
+                        m_compositorContext->m_rectShaderProgramPosition, 2,
+                        GL_FLOAT, false, 0, 0);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+                    gl()->uniform4f(
+                        m_compositorContext->m_rectShaderProgramColor,
+                        Unit::Color(255, 255, 255, 255).R(),
+                        Unit::Color(255, 255, 255, 255).G(),
+                        Unit::Color(255, 255, 255, 255).B(),
+                        Unit::Color(255, 255, 255, 255).A());
+
+                    gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
+                    checkError(gl());
+
+                    gl()->colorMask(true, true, true, true);
+                    gl()->stencilFunc(GL_EQUAL, 1, 1);
+                    gl()->stencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                    checkError(gl());
                 }
+            } else {
+                shouldSkipTexturePainting = true;
             }
         }
 
@@ -3431,38 +3469,28 @@ public:
     {
         auto& lastState = m_state.back();
         lastState.matrix = SkMatrix::I();
-        if (!lastState.clipPathsWasChanged) {
-            lastState.clipPaths.reset(new ClipperLib::Paths());
-            lastState.clipPathsWasChanged = true;
-        } else {
-            lastState.clipPaths.get()->clear();
-        }
         lastState.matrixStaysInRect = true;
-        lastState.clipPathsAreSimple = true;
-
-        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
+        lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
+        lastState.clipPaths.clear();
         applyDevicePixelRatio();
     }
 
     virtual void resetClip()
     {
         auto& lastState = m_state.back();
-        if (!lastState.clipPathsWasChanged) {
-            lastState.clipPaths.reset(new ClipperLib::Paths());
-            lastState.clipPathsWasChanged = true;
-        } else {
-            lastState.clipPaths.get()->clear();
-        }
-        lastState.clipPathsAreSimple = true;
-        clip(Unit::Rect(0, 0, screenWidth(), screenHeight()));
+        lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
+        lastState.clipPaths.clear();
     }
 
     void addToPath(float x, float y)
     {
         SkPoint pt = SkPoint::Make(x, y);
         m_state.back().matrix.mapPoints(&pt, 1);
-        m_path.push_back(
-            ClipperLib::IntPoint(floor(pt.x() + 0.5f), floor(pt.y() + 0.5f)));
+        ClipperLib::IntPoint intPt(floor(pt.x() + 0.5f), floor(pt.y() + 0.5f));
+        if (m_path.size() && intPt == m_path.back()) {
+            return;
+        }
+        m_path.push_back(intPt);
     }
 
     virtual void moveTo(float x, float y) override
@@ -3506,15 +3534,7 @@ public:
     virtual void clipPath() override
     {
         auto& lastState = m_state.back();
-        if (!lastState.clipPathsWasChanged) {
-            lastState.clipPaths.reset(
-                new ClipperLib::Paths(*lastState.clipPaths.get()));
-            lastState.clipPathsWasChanged = true;
-        }
-        lastState.clipPaths.get()->push_back(m_path);
-        lastState.clipPathsAreSimple = false;
-        m_path.clear();
-        m_path.shrink_to_fit();
+        lastState.clipPaths.push_back(std::move(m_path));
     }
 
     virtual void enableBlurEffect(float blurRadius) override
