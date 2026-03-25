@@ -31,11 +31,16 @@ TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 # CLIPPER
 #######################################################
-ADD_LIBRARY (clipper SHARED ${THIRD_PARTY_ROOT}/clipper/cpp/clipper.cpp)
+FILE (GLOB CLIPPER_SRC ${THIRD_PARTY_ROOT}/clipper/cpp/*.cpp)
+ADD_LIBRARY (clipper SHARED ${CLIPPER_SRC})
 TARGET_INCLUDE_DIRECTORIES (clipper PUBLIC ${THIRD_PARTY_ROOT}/clipper/cpp/)
 TARGET_COMPILE_DEFINITIONS (clipper PUBLIC ${THIRD_PARTY_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (clipper PUBLIC ${THIRD_PARTY_CXXFLAGS})
-
+IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU" OR ${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
+    TARGET_COMPILE_OPTIONS (clipper PUBLIC ${THIRD_PARTY_CXXFLAGS} -fvisibility=hidden)
+    TARGET_LINK_LIBRARIES (clipper ${LWE_LDFLAGS} -DCLIPPER_EXPORT)
+ELSE()
+    TARGET_COMPILE_OPTIONS (clipper PUBLIC ${THIRD_PARTY_CXXFLAGS})
+ENDIF()
 
 #######################################################
 # MP4PARSE

@@ -2685,17 +2685,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     LayoutUnit maxY = visibleRect.maxY();
 
     auto screenMatrix = m_owner->computeScreenMatrix(true);
-    Optional<SkMatrix> scrollMatrix;
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect stackingContextExtent =
         computeBoxExtent(visibleRect, screenMatrix);
 
     if (!stackingContextExtent.intersects(screenRect)) {
         return;
-    }
-
-    if (inScrollWithGraphicsBufferActive()) {
-        scrollMatrix = m_owner->computeScreenMatrix(false);
     }
 
     size_t bufferWidth;
@@ -2871,7 +2866,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         LayoutRect(minX + (LayoutUnit)tileDataX,
                                    minY + (LayoutUnit)tileDataY, tileDataWidth,
                                    tileDataHeight),
-                        scrollMatrix ? scrollMatrix.value() : screenMatrix);
+                        screenMatrix);
 
                     bool willPaintOnScreen = screenRect.intersects(tileExtent);
                     if (!willPaintOnScreen) {
