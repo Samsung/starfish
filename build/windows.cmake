@@ -368,7 +368,8 @@ SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES} 
 # CLIPPER
 #######################################################
 # TODO make this shared by adding __declspec(dllexport) in third-party source
-ADD_LIBRARY (clipper STATIC ${THIRD_PARTY_ROOT}/clipper/cpp/clipper.cpp)
+FILE (GLOB CLIPPER_SRC ${THIRD_PARTY_ROOT}/clipper/cpp/*.cpp)
+ADD_LIBRARY (clipper STATIC ${CLIPPER_SRC})
 TARGET_INCLUDE_DIRECTORIES (clipper PUBLIC ${THIRD_PARTY_ROOT}/clipper/cpp/)
 TARGET_COMPILE_DEFINITIONS (clipper PRIVATE ${THIRD_PARTY_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (clipper PRIVATE ${THIRD_PARTY_CXXFLAGS})
