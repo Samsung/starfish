@@ -45,6 +45,38 @@
 #include <array>
 #include <clipper2/clipper.h>
 
+namespace std {
+template <>
+struct tuple_size<Clipper2Lib::PointD> : integral_constant<size_t, 2> {
+};
+
+template <>
+struct tuple_element<0, Clipper2Lib::PointD> {
+    typedef double type;
+};
+
+template <>
+struct tuple_element<1, Clipper2Lib::PointD> {
+    typedef double type;
+};
+
+template <std::size_t N>
+const typename std::tuple_element<N, Clipper2Lib::PointD>::type& get(
+    const Clipper2Lib::PointD& p);
+
+template <>
+inline const double& get<0>(const Clipper2Lib::PointD& p)
+{
+    return p.x;
+}
+
+template <>
+inline const double& get<1>(const Clipper2Lib::PointD& p)
+{
+    return p.y;
+}
+} // namespace std
+
 #include <earcut.hpp>
 // The number type to use for tessellation
 using Coord = double;
@@ -2655,30 +2687,28 @@ public:
                     checkError(gl());
                 } else {
                     // polygon painting
-                    std::vector<std::vector<Point>> polygon;
-                    std::vector<Point> pointPerIndex;
+                    std::vector<std::pair<size_t, size_t>> pointPerIndex;
                     for (size_t i = 0; i < result.size(); i++) {
-                        polygon.push_back(std::vector<Point>());
                         for (size_t j = 0; j < result[i].size(); j++) {
-                            polygon.back().push_back(
-                                { result[i][j].x, result[i][j].y });
-                            pointPerIndex.push_back(
-                                { result[i][j].x, result[i][j].y });
+                            pointPerIndex.push_back({ i, j });
                         }
                     }
 
                     m_compositorContext->rectProgram();
-                    std::vector<N> indices = mapbox::earcut<N>(polygon);
+                    std::vector<N> indices = mapbox::earcut<N>(result);
                     for (size_t i = 0; i < indices.size(); i += 3) {
-                        float trianglePoints[6] = {
-                            (float)pointPerIndex[indices[i]][0],
-                            (float)pointPerIndex[indices[i]][1],
-                            (float)pointPerIndex[indices[i + 1]][0],
-                            (float)pointPerIndex[indices[i + 1]][1],
-                            (float)pointPerIndex[indices[i + 2]][0],
-                            (float)pointPerIndex[indices[i + 2]][1]
-                        };
+                        const auto& p1 = pointPerIndex[indices[i]];
+                        const auto& p2 = pointPerIndex[indices[i + 1]];
+                        const auto& p3 = pointPerIndex[indices[i + 2]];
 
+                        float trianglePoints[6] = {
+                            (float)result[p1.first][p1.second].x,
+                            (float)result[p1.first][p1.second].y,
+                            (float)result[p2.first][p2.second].x,
+                            (float)result[p2.first][p2.second].y,
+                            (float)result[p3.first][p3.second].x,
+                            (float)result[p3.first][p3.second].y
+                        };
                         mapLogicalScreenPointsToScreen(trianglePoints[0],
                                                        trianglePoints[1]);
                         mapLogicalScreenPointsToScreen(trianglePoints[2],
@@ -3113,17 +3143,11 @@ public:
                     scissor(minX, minY, maxX - minX, maxY - minY);
                     scissorClippingEnabled = true;
                 } else {
-                    std::vector<std::vector<Point>> polygon;
-                    std::vector<Point> pointPerIndex;
+                    std::vector<std::pair<size_t, size_t>> pointPerIndex;
                     for (size_t i = 0; i < result.size(); i++) {
-                        polygon.push_back(std::vector<Point>());
                         for (size_t j = 0; j < result[i].size(); j++) {
-                            polygon.back().push_back(
-                                { result[i][j].x, result[i][j].y });
-                            pointPerIndex.push_back(
-                                { result[i][j].x, result[i][j].y });
+                            pointPerIndex.push_back({ i, j });
                         }
-
                         visibleArea.unite(boundingRect(result[i]));
                     }
 
@@ -3163,22 +3187,26 @@ public:
 
                     std::vector<float> position;
                     m_compositorContext->rectProgram();
-                    std::vector<N> indices = mapbox::earcut<N>(polygon);
+                    std::vector<N> indices = mapbox::earcut<N>(result);
 
                     position.reserve((indices.size() / 3) * 6);
                     for (size_t i = 0; i < indices.size(); i += 3) {
+                        const auto& p1 = pointPerIndex[indices[i]];
+                        const auto& p2 = pointPerIndex[indices[i + 1]];
+                        const auto& p3 = pointPerIndex[indices[i + 2]];
+
                         float trianglePoints[6] = {
-                            (float)pointPerIndex[indices[i]][0] +
+                            (float)result[p1.first][p1.second].x +
                                 diffXDueToStencilCliping,
-                            (float)pointPerIndex[indices[i]][1] +
+                            (float)result[p1.first][p1.second].y +
                                 diffYDueToStencilCliping,
-                            (float)pointPerIndex[indices[i + 1]][0] +
+                            (float)result[p2.first][p2.second].x +
                                 diffXDueToStencilCliping,
-                            (float)pointPerIndex[indices[i + 1]][1] +
+                            (float)result[p2.first][p2.second].y +
                                 diffYDueToStencilCliping,
-                            (float)pointPerIndex[indices[i + 2]][0] +
+                            (float)result[p3.first][p3.second].x +
                                 diffXDueToStencilCliping,
-                            (float)pointPerIndex[indices[i + 2]][1] +
+                            (float)result[p3.first][p3.second].y +
                                 diffYDueToStencilCliping
                         };
 
