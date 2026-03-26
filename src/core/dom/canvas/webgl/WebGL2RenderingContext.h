@@ -195,6 +195,20 @@ public:
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, TexImageSource source);
 
+    // WebGL2 entrypoints:
+    void uniformMatrix2fv(Optional<WebGLUniformLocation*> location,
+                          GLboolean transpose, Float32List data,
+                          unsigned long long srcOffset = 0,
+                          GLuint srcLength = 0);
+    void uniformMatrix3fv(Optional<WebGLUniformLocation*> location,
+                          GLboolean transpose, Float32List data,
+                          unsigned long long srcOffset = 0,
+                          GLuint srcLength = 0);
+    void uniformMatrix4fv(Optional<WebGLUniformLocation*> location,
+                          GLboolean transpose, Float32List data,
+                          unsigned long long srcOffset = 0,
+                          GLuint srcLength = 0);
+
     /* Reading back pixels */
     // WebGL1:
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
@@ -210,12 +224,6 @@ protected:
         size_t n, void (GL::*uniformNuiv)(GLint, GLsizei, const GLuint*),
         Optional<WebGLUniformLocation*> location, Uint32List data,
         unsigned long long srcOffset, GLuint srcLength);
-    void implementUniformMatrixMxNfv(
-        size_t m, size_t n,
-        void (GL::*uniformMatrixMxNfv)(GLint, GLsizei, GLboolean,
-                                       const GLfloat*),
-        Optional<WebGLUniformLocation*> location, GLboolean transpose,
-        Float32List data, unsigned long long srcOffset, GLuint srcLength);
 };
 
 } // namespace Starfish
