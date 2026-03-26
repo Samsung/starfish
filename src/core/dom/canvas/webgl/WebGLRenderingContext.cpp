@@ -3306,45 +3306,85 @@ void WebGLRenderingContext::uniform4fv(Optional<WebGLUniformLocation*> location,
     implementUniformNfv(4, &GL::uniform4fv, location, v, 0, 0);
 }
 
-#define IMPLEMENT_UNIFORM_NIV(N, Suffix, SrcType)                             \
-    void WebGLRenderingContext::uniform##N##Suffix(                           \
-        Optional<WebGLUniformLocation*> mayBeLocation, SrcType variant)       \
-    {                                                                         \
-        ENTER_CONTEXT_SCOPE();                                                \
-        if (!mayBeLocation) {                                                 \
-            return;                                                           \
-        }                                                                     \
-        WebGLUniformLocation* location = mayBeLocation.value();               \
-        if (!isFromCurrentProgram(location)) {                                \
-            setGLError(GL_INVALID_OPERATION);                                 \
-            return;                                                           \
-        }                                                                     \
-        if (variant.isInt32ArrayValue()) {                                    \
-            Int32ArrayObjectRef* values = variant.getInt32ArrayValue();       \
-            const size_t arrayLength = values->arrayLength();                 \
-            const uint8_t* rawBuffer = values->rawBuffer();                   \
-            if (arrayLength > 0) {                                            \
-                /* count specifies the number of matrices. */                 \
-                m_gl->uniform##N##Suffix(location->location(),                \
-                                         arrayLength / N, (GLint*)rawBuffer); \
-            }                                                                 \
-        } else {                                                              \
-            STARFISH_ASSERT(variant.isSequenceOfGLintValue());                \
-            GCAtomicVector<int32_t> vector =                                  \
-                variant.getSequenceOfGLintValue();                            \
-            if (!vector.empty()) {                                            \
-                m_gl->uniform##N##Suffix(location->location(),                \
-                                         vector.size() / N, vector.data());   \
-            }                                                                 \
-        }                                                                     \
+void WebGLRenderingContext::implementUniformNiv(
+    size_t n, void (GL::*uniformNiv)(GLint, GLsizei, const GLint*),
+    Optional<WebGLUniformLocation*> location, Int32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    ENTER_CONTEXT_SCOPE();
+    /* location is nullable. */
+    if (!location) {
+        return;
     }
+    if (!isFromCurrentProgram(location.value())) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (data.isInt32ArrayValue()) {
+        const ScriptInt32Array values = data.getInt32ArrayValue();
+        const size_t dataLength = values->arrayLength();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of sets. */
+        (gl()->*uniformNiv)(
+            location.value()->location(), srcLength / n,
+            reinterpret_cast<const GLint*>(values->rawBuffer()) + srcOffset);
+    } else if (data.isSequenceOfGLintValue()) {
+        const GCAtomicVector<int32_t> values = data.getSequenceOfGLintValue();
+        const size_t dataLength = values.size();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of sets. */
+        (gl()->*uniformNiv)(location.value()->location(), srcLength / n,
+                            values.data() + srcOffset);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+}
 
-IMPLEMENT_UNIFORM_NIV(1, iv, Int32List)
-IMPLEMENT_UNIFORM_NIV(2, iv, Int32List)
-IMPLEMENT_UNIFORM_NIV(3, iv, Int32List)
-IMPLEMENT_UNIFORM_NIV(4, iv, Int32List)
+void WebGLRenderingContext::uniform1iv(Optional<WebGLUniformLocation*> location,
+                                       Int32List v)
+{
+    implementUniformNiv(1, &GL::uniform1iv, location, v, 0, 0);
+}
 
-#undef IMPLEMENT_UNIFORM_NIV
+void WebGLRenderingContext::uniform2iv(Optional<WebGLUniformLocation*> location,
+                                       Int32List v)
+{
+    implementUniformNiv(2, &GL::uniform2iv, location, v, 0, 0);
+}
+
+void WebGLRenderingContext::uniform3iv(Optional<WebGLUniformLocation*> location,
+                                       Int32List v)
+{
+    implementUniformNiv(3, &GL::uniform3iv, location, v, 0, 0);
+}
+
+void WebGLRenderingContext::uniform4iv(Optional<WebGLUniformLocation*> location,
+                                       Int32List v)
+{
+    implementUniformNiv(4, &GL::uniform4iv, location, v, 0, 0);
+}
 
 void WebGLRenderingContext::implementUniformMatrixMxNfv(
     size_t m, size_t n,

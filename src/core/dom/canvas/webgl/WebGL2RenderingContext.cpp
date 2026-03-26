@@ -24,6 +24,7 @@
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/Float32ArrayOrSequenceOfGLfloatUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
+#include "binding/generated/Int32ArrayOrSequenceOfGLintUnion.h"
 #include "binding/generated/Uint32ArrayOrSequenceOfGLuintUnion.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
@@ -926,6 +927,38 @@ void WebGL2RenderingContext::uniform4fv(
     unsigned long long srcOffset, GLuint srcLength)
 {
     implementUniformNfv(4, &GL::uniform4fv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform1iv(
+    Optional<WebGLUniformLocation*> location, Int32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNiv(1, &GL::uniform1iv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform2iv(
+    Optional<WebGLUniformLocation*> location, Int32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNiv(2, &GL::uniform2iv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform3iv(
+    Optional<WebGLUniformLocation*> location, Int32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNiv(3, &GL::uniform3iv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform4iv(
+    Optional<WebGLUniformLocation*> location, Int32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNiv(4, &GL::uniform4iv, location, data, srcOffset,
                         srcLength);
 }
 
