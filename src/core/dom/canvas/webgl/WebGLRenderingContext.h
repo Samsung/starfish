@@ -346,6 +346,10 @@ protected:
         size_t n, void (GL::*uniformNfv)(GLint, GLsizei, const GLfloat*),
         Optional<WebGLUniformLocation*> location, Float32List data,
         unsigned long long srcOffset, GLuint srcLength);
+    void implementUniformNiv(
+        size_t n, void (GL::*uniformNiv)(GLint, GLsizei, const GLint*),
+        Optional<WebGLUniformLocation*> location, Int32List data,
+        unsigned long long srcOffset, GLuint srcLength);
     void implementUniformMatrixMxNfv(
         size_t m, size_t n,
         void (GL::*uniformMatrixMxNfv)(GLint, GLsizei, GLboolean,
