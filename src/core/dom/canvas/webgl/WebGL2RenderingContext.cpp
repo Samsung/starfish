@@ -897,6 +897,38 @@ void WebGL2RenderingContext::texSubImage2D(GLenum target, GLint level,
                                          format, type, source);
 }
 
+void WebGL2RenderingContext::uniform1fv(
+    Optional<WebGLUniformLocation*> location, Float32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNfv(1, &GL::uniform1fv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform2fv(
+    Optional<WebGLUniformLocation*> location, Float32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNfv(2, &GL::uniform2fv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform3fv(
+    Optional<WebGLUniformLocation*> location, Float32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNfv(3, &GL::uniform3fv, location, data, srcOffset,
+                        srcLength);
+}
+
+void WebGL2RenderingContext::uniform4fv(
+    Optional<WebGLUniformLocation*> location, Float32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNfv(4, &GL::uniform4fv, location, data, srcOffset,
+                        srcLength);
+}
+
 void WebGL2RenderingContext::uniformMatrix2fv(
     Optional<WebGLUniformLocation*> location, GLboolean transpose,
     Float32List data, unsigned long long srcOffset, GLuint srcLength)

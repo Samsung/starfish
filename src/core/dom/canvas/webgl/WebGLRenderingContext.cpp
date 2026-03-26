@@ -3225,51 +3225,86 @@ void WebGLRenderingContext::texSubImage2D(GLenum target, GLint level,
         });
 }
 
-#define IMPLEMENT_UNIFORM_NFV(N, Suffix, SrcType)                           \
-    void WebGLRenderingContext::uniform##N##Suffix(                         \
-        Optional<WebGLUniformLocation*> mayBeLocation, SrcType variant)     \
-    {                                                                       \
-        ENTER_CONTEXT_SCOPE();                                              \
-        if (!mayBeLocation) {                                               \
-            return;                                                         \
-        }                                                                   \
-        WebGLUniformLocation* location = mayBeLocation.value();             \
-        if (!isFromCurrentProgram(location)) {                              \
-            setGLError(GL_INVALID_OPERATION);                               \
-            return;                                                         \
-        }                                                                   \
-        if (variant.isFloat32ArrayValue()) {                                \
-            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue(); \
-            const size_t arrayLength = values->arrayLength();               \
-            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer()); \
-            if (arrayLength > 0) {                                          \
-                /* count specifies the number of matrices. */               \
-                m_gl->uniform##N##Suffix(                                   \
-                    location->location(), arrayLength / N,                  \
-                    reinterpret_cast<GLfloat*>(rawBuffer));                 \
-            }                                                               \
-        } else {                                                            \
-            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());            \
-            const GCAtomicVector<double> v =                                \
-                variant.getSequenceOfGLfloatValue();                        \
-            std::vector<GLfloat> vector;                                    \
-            vector.reserve(v.size());                                       \
-            for (const double& value : v) {                                 \
-                vector.push_back(static_cast<GLfloat>(value));              \
-            }                                                               \
-            if (!vector.empty()) {                                          \
-                m_gl->uniform##N##Suffix(location->location(),              \
-                                         vector.size() / N, vector.data()); \
-            }                                                               \
-        }                                                                   \
+void WebGLRenderingContext::implementUniformNfv(
+    size_t n, void (GL::*uniformNfv)(GLint, GLsizei, const GLfloat*),
+    Optional<WebGLUniformLocation*> location, Float32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    ENTER_CONTEXT_SCOPE();
+    /* location is nullable. */
+    if (!location.hasValue()) {
+        return;
     }
+    if (!isFromCurrentProgram(location.value())) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (data.isFloat32ArrayValue()) {
+        const ScriptFloat32Array values = data.getFloat32ArrayValue();
+        const size_t dataLength = values->arrayLength();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of sets. */
+        (gl()->*uniformNfv)(
+            location.value()->location(), srcLength / n,
+            reinterpret_cast<const GLfloat*>(values->rawBuffer()) + srcOffset);
+    } else if (data.isSequenceOfGLfloatValue()) {
+        const GCAtomicVector<double> values = data.getSequenceOfGLfloatValue();
+        const size_t dataLength = values.size();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        const std::vector<GLfloat> floats(values.begin(), values.end());
+        /* count specifies the number of sets. */
+        (gl()->*uniformNfv)(location.value()->location(), srcLength / n,
+                            floats.data() + srcOffset);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+}
 
-IMPLEMENT_UNIFORM_NFV(1, fv, Float32List)
-IMPLEMENT_UNIFORM_NFV(2, fv, Float32List)
-IMPLEMENT_UNIFORM_NFV(3, fv, Float32List)
-IMPLEMENT_UNIFORM_NFV(4, fv, Float32List)
+void WebGLRenderingContext::uniform1fv(Optional<WebGLUniformLocation*> location,
+                                       Float32List v)
+{
+    implementUniformNfv(1, &GL::uniform1fv, location, v, 0, 0);
+}
 
-#undef IMPLEMENT_UNIFORM_NFV
+void WebGLRenderingContext::uniform2fv(Optional<WebGLUniformLocation*> location,
+                                       Float32List v)
+{
+    implementUniformNfv(2, &GL::uniform2fv, location, v, 0, 0);
+}
+
+void WebGLRenderingContext::uniform3fv(Optional<WebGLUniformLocation*> location,
+                                       Float32List v)
+{
+    implementUniformNfv(3, &GL::uniform3fv, location, v, 0, 0);
+}
+
+void WebGLRenderingContext::uniform4fv(Optional<WebGLUniformLocation*> location,
+                                       Float32List v)
+{
+    implementUniformNfv(4, &GL::uniform4fv, location, v, 0, 0);
+}
 
 #define IMPLEMENT_UNIFORM_NIV(N, Suffix, SrcType)                             \
     void WebGLRenderingContext::uniform##N##Suffix(                           \

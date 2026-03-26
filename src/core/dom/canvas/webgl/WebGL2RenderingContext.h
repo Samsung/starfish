@@ -196,6 +196,15 @@ public:
                        GLenum format, GLenum type, TexImageSource source);
 
     // WebGL2 entrypoints:
+    void uniform1fv(Optional<WebGLUniformLocation*> location, Float32List data,
+                    unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform2fv(Optional<WebGLUniformLocation*> location, Float32List data,
+                    unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform3fv(Optional<WebGLUniformLocation*> location, Float32List data,
+                    unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform4fv(Optional<WebGLUniformLocation*> location, Float32List data,
+                    unsigned long long srcOffset = 0, GLuint srcLength = 0);
+
     void uniformMatrix2fv(Optional<WebGLUniformLocation*> location,
                           GLboolean transpose, Float32List data,
                           unsigned long long srcOffset = 0,

@@ -557,14 +557,14 @@ interface WebGL2RenderingContextOverloads
                                                       optional unsigned long long srcOffset = 0,
                                                       optional GLuint srcLengthOverride = 0);
 
-    [Unimplemented] undefined uniform1fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
-                                         optional GLuint srcLength = 0);
-    [Unimplemented] undefined uniform2fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
-                                         optional GLuint srcLength = 0);
-    [Unimplemented] undefined uniform3fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
-                                         optional GLuint srcLength = 0);
-    [Unimplemented] undefined uniform4fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
-                                         optional GLuint srcLength = 0);
+    undefined uniform1fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
+                         optional GLuint srcLength = 0);
+    undefined uniform2fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
+                         optional GLuint srcLength = 0);
+    undefined uniform3fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
+                         optional GLuint srcLength = 0);
+    undefined uniform4fv(WebGLUniformLocation? location, Float32List data, optional unsigned long long srcOffset = 0,
+                         optional GLuint srcLength = 0);
 
     [Unimplemented] undefined uniform1iv(WebGLUniformLocation? location, Int32List data, optional unsigned long long srcOffset = 0,
                                          optional GLuint srcLength = 0);
