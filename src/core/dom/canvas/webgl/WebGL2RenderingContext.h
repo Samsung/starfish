@@ -132,6 +132,33 @@ public:
     void uniform4uiv(Optional<WebGLUniformLocation*> location, Uint32List data,
                      unsigned long long srcOffset = 0, GLuint srcLength = 0);
 
+    void uniformMatrix3x2fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+    void uniformMatrix4x2fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+
+    void uniformMatrix2x3fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+    void uniformMatrix4x3fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+
+    void uniformMatrix2x4fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+    void uniformMatrix3x4fv(Optional<WebGLUniformLocation*> location,
+                            GLboolean transpose, Float32List data,
+                            unsigned long long srcOffset = 0,
+                            GLuint srcLength = 0);
+
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
     GLboolean isSync(Optional<WebGLSync*> sync);
@@ -183,6 +210,12 @@ protected:
         size_t n, void (GL::*uniformNuiv)(GLint, GLsizei, const GLuint*),
         Optional<WebGLUniformLocation*> location, Uint32List data,
         unsigned long long srcOffset, GLuint srcLength);
+    void implementUniformMatrixMxNfv(
+        size_t m, size_t n,
+        void (GL::*uniformMatrixMxNfv)(GLint, GLsizei, GLboolean,
+                                       const GLfloat*),
+        Optional<WebGLUniformLocation*> location, GLboolean transpose,
+        Float32List data, unsigned long long srcOffset, GLuint srcLength);
 };
 
 } // namespace Starfish
