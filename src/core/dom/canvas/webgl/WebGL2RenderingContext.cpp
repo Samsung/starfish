@@ -23,6 +23,7 @@
 #include "core/dom/canvas/webgl/WebGL2RenderingContext.h"
 #include "binding/generated/ArrayBufferOrSharedArrayBufferOrArrayBufferViewUnion.h"
 #include "binding/generated/ImageBitmapOrImageDataOrHTMLImageElementOrHTMLCanvasElementOrHTMLVideoElementUnion.h"
+#include "binding/generated/Uint32ArrayOrSequenceOfGLuintUnion.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
@@ -31,6 +32,7 @@
 #include "core/util/debug/Trace.h"
 #include "platform/canvas/gl/GL.h"
 #include "platform/canvas/gl/IncludeGL.h"
+#include <EscargotPublic.h>
 
 /* WebGL-specific enums */
 static constexpr GLenum kMAX_CLIENT_WAIT_TIMEOUT_WEBGL = 0x9247;
@@ -508,6 +510,93 @@ void WebGL2RenderingContext::uniform4ui(
     }
 
     gl()->uniform4ui(uniform->location(), v0, v1, v2, v3);
+}
+
+void WebGL2RenderingContext::implementUniformNuiv(
+    size_t n, void (GL::*uniformNuiv)(GLint, GLsizei, const GLuint*),
+    Optional<WebGLUniformLocation*> location, Uint32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    ENTER_CONTEXT_SCOPE();
+    if (!location.hasValue()) {
+        return;
+    }
+    if (!isFromCurrentProgram(location.value())) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (data.isUint32ArrayValue()) {
+        const ScriptUint32Array values = data.getUint32ArrayValue();
+        const size_t dataLength = values->arrayLength();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of sets. */
+        (gl()->*uniformNuiv)(
+            location.value()->location(), srcLength / n,
+            reinterpret_cast<const GLuint*>(values->rawBuffer()) + srcOffset);
+    } else if (data.isSequenceOfGLuintValue()) {
+        const GCAtomicVector<uint32_t> values = data.getSequenceOfGLuintValue();
+        const size_t dataLength = values.size();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < n ||
+            srcLength % n != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of sets. */
+        (gl()->*uniformNuiv)(location.value()->location(), srcLength / n,
+                             values.data() + srcOffset);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+}
+
+void WebGL2RenderingContext::uniform1uiv(
+    Optional<WebGLUniformLocation*> location, Uint32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNuiv(1, &GL::uniform1uiv, location, data, srcOffset,
+                         srcLength);
+}
+
+void WebGL2RenderingContext::uniform2uiv(
+    Optional<WebGLUniformLocation*> location, Uint32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNuiv(2, &GL::uniform2uiv, location, data, srcOffset,
+                         srcLength);
+}
+
+void WebGL2RenderingContext::uniform3uiv(
+    Optional<WebGLUniformLocation*> location, Uint32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNuiv(3, &GL::uniform3uiv, location, data, srcOffset,
+                         srcLength);
+}
+
+void WebGL2RenderingContext::uniform4uiv(
+    Optional<WebGLUniformLocation*> location, Uint32List data,
+    unsigned long long srcOffset, GLuint srcLength)
+{
+    implementUniformNuiv(4, &GL::uniform4uiv, location, data, srcOffset,
+                         srcLength);
 }
 
 Optional<WebGLSync*> WebGL2RenderingContext::fenceSync(GLenum condition,

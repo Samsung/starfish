@@ -123,6 +123,15 @@ public:
     void uniform4ui(Optional<WebGLUniformLocation*> location, GLuint v0,
                     GLuint v1, GLuint v2, GLuint v3);
 
+    void uniform1uiv(Optional<WebGLUniformLocation*> location, Uint32List data,
+                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform2uiv(Optional<WebGLUniformLocation*> location, Uint32List data,
+                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform3uiv(Optional<WebGLUniformLocation*> location, Uint32List data,
+                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
+    void uniform4uiv(Optional<WebGLUniformLocation*> location, Uint32List data,
+                     unsigned long long srcOffset = 0, GLuint srcLength = 0);
+
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
     GLboolean isSync(Optional<WebGLSync*> sync);
@@ -169,6 +178,11 @@ protected:
     Optional<ScriptValue> getUniformImpl(WebGLProgram* program,
                                          WebGLUniformLocation* location,
                                          GLenum type);
+
+    void implementUniformNuiv(
+        size_t n, void (GL::*uniformNuiv)(GLint, GLsizei, const GLuint*),
+        Optional<WebGLUniformLocation*> location, Uint32List data,
+        unsigned long long srcOffset, GLuint srcLength);
 };
 
 } // namespace Starfish
