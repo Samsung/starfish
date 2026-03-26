@@ -3311,54 +3311,88 @@ IMPLEMENT_UNIFORM_NIV(4, iv, Int32List)
 
 #undef IMPLEMENT_UNIFORM_NIV
 
-#define IMPLEMENT_UNIFORM_MATRIX_NFV(N)                                        \
-    void WebGLRenderingContext::uniformMatrix##N##fv(                          \
-        Optional<WebGLUniformLocation*> mayBeLocation, GLboolean transpose,    \
-        Float32List variant)                                                   \
-    {                                                                          \
-        ENTER_CONTEXT_SCOPE();                                                 \
-        /* location is nullable. */                                            \
-        if (!mayBeLocation) {                                                  \
-            return;                                                            \
-        }                                                                      \
-        WebGLUniformLocation* location = mayBeLocation.value();                \
-        if (!isFromCurrentProgram(location)) {                                 \
-            setGLError(GL_INVALID_OPERATION);                                  \
-            return;                                                            \
-        }                                                                      \
-        if (variant.isFloat32ArrayValue()) {                                   \
-            Float32ArrayObjectRef* values = variant.getFloat32ArrayValue();    \
-            const size_t arrayLength = values->arrayLength();                  \
-            uint8_t* rawBuffer = const_cast<uint8_t*>(values->rawBuffer());    \
-            if (arrayLength > 0) {                                             \
-                /* count specifies the number of matrices. */                  \
-                m_gl->uniformMatrix##N##fv(                                    \
-                    location->location(), arrayLength / (N * N), transpose,    \
-                    reinterpret_cast<GLfloat*>(rawBuffer));                    \
-            }                                                                  \
-        } else {                                                               \
-            STARFISH_ASSERT(variant.isSequenceOfGLfloatValue());               \
-            const GCAtomicVector<double> v =                                   \
-                variant.getSequenceOfGLfloatValue();                           \
-            std::vector<GLfloat> vector;                                       \
-            vector.reserve(v.size());                                          \
-            for (const double& value : v) {                                    \
-                vector.push_back(static_cast<GLfloat>(value));                 \
-            }                                                                  \
-            if (!vector.empty()) {                                             \
-                /* count specifies the number of matrices. */                  \
-                m_gl->uniformMatrix##N##fv(location->location(),               \
-                                           vector.size() / (N * N), transpose, \
-                                           vector.data());                     \
-            }                                                                  \
-        }                                                                      \
+void WebGLRenderingContext::implementUniformMatrixMxNfv(
+    size_t m, size_t n,
+    void (GL::*uniformMatrixMxNfv)(GLint, GLsizei, GLboolean, const GLfloat*),
+    Optional<WebGLUniformLocation*> location, GLboolean transpose,
+    Float32List data, unsigned long long srcOffset, GLuint srcLength)
+{
+    ENTER_CONTEXT_SCOPE();
+    /* location is nullable. */
+    if (!location.hasValue()) {
+        return;
     }
+    if (!isFromCurrentProgram(location.value())) {
+        setGLError(GL_INVALID_OPERATION);
+        return;
+    }
+    if (data.isFloat32ArrayValue()) {
+        const ScriptFloat32Array values = data.getFloat32ArrayValue();
+        const size_t dataLength = values->arrayLength();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < (m * n) ||
+            srcLength % (m * n) != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        /* count specifies the number of matrices. */
+        (gl()->*uniformMatrixMxNfv)(
+            location.value()->location(), srcLength / (m * n), transpose,
+            reinterpret_cast<const GLfloat*>(values->rawBuffer()) + srcOffset);
+    } else if (data.isSequenceOfGLfloatValue()) {
+        const GCAtomicVector<double> values = data.getSequenceOfGLfloatValue();
+        const size_t dataLength = values.size();
+        if (srcOffset >= dataLength) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        if (srcLength == 0) {
+            srcLength = dataLength - srcOffset;
+        }
+        if (srcLength > dataLength - srcOffset || srcLength < (m * n) ||
+            srcLength % (m * n) != 0) {
+            setGLError(GL_INVALID_VALUE);
+            return;
+        }
+        const std::vector<GLfloat> floats(values.begin(), values.end());
+        /* count specifies the number of matrices. */
+        (gl()->*uniformMatrixMxNfv)(location.value()->location(),
+                                    srcLength / (m * n), transpose,
+                                    floats.data() + srcOffset);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+}
 
-IMPLEMENT_UNIFORM_MATRIX_NFV(2)
-IMPLEMENT_UNIFORM_MATRIX_NFV(3)
-IMPLEMENT_UNIFORM_MATRIX_NFV(4)
+void WebGLRenderingContext::uniformMatrix2fv(
+    Optional<WebGLUniformLocation*> uniform, GLboolean transpose,
+    Float32List value)
+{
+    implementUniformMatrixMxNfv(2, 2, &GL::uniformMatrix2fv, uniform, transpose,
+                                value, 0, 0);
+}
 
-#undef IMPLEMENT_UNIFORM_MATRIX_NFV
+void WebGLRenderingContext::uniformMatrix3fv(
+    Optional<WebGLUniformLocation*> uniform, GLboolean transpose,
+    Float32List value)
+{
+    implementUniformMatrixMxNfv(3, 3, &GL::uniformMatrix3fv, uniform, transpose,
+                                value, 0, 0);
+}
+
+void WebGLRenderingContext::uniformMatrix4fv(
+    Optional<WebGLUniformLocation*> uniform, GLboolean transpose,
+    Float32List value)
+{
+    implementUniformMatrixMxNfv(4, 4, &GL::uniformMatrix4fv, uniform, transpose,
+                                value, 0, 0);
+}
 
 void WebGLRenderingContext::setGLError(GLenum code, const char* message)
 {
