@@ -384,10 +384,10 @@ interface WebGL2RenderingContextBase
     [WebGLHandlesContextLoss] GLint getFragDataLocation(WebGLProgram program, DOMString name);
 
     /* Uniforms */
-    [Unimplemented] undefined uniform1ui(WebGLUniformLocation? location, GLuint v0);
-    [Unimplemented] undefined uniform2ui(WebGLUniformLocation? location, GLuint v0, GLuint v1);
-    [Unimplemented] undefined uniform3ui(WebGLUniformLocation? location, GLuint v0, GLuint v1, GLuint v2);
-    [Unimplemented] undefined uniform4ui(WebGLUniformLocation? location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
+    undefined uniform1ui(WebGLUniformLocation? location, GLuint v0);
+    undefined uniform2ui(WebGLUniformLocation? location, GLuint v0, GLuint v1);
+    undefined uniform3ui(WebGLUniformLocation? location, GLuint v0, GLuint v1, GLuint v2);
+    undefined uniform4ui(WebGLUniformLocation? location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
 
     [Unimplemented] undefined uniform1uiv(WebGLUniformLocation? location, Uint32List data, optional unsigned long long srcOffset = 0,
                                           optional GLuint srcLength = 0);

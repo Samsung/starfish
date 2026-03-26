@@ -114,6 +114,15 @@ public:
     /* Programs and shaders */
     GLint getFragDataLocation(WebGLProgram* program, String* name);
 
+    /* Uniforms */
+    void uniform1ui(Optional<WebGLUniformLocation*> location, GLuint v0);
+    void uniform2ui(Optional<WebGLUniformLocation*> location, GLuint v0,
+                    GLuint v1);
+    void uniform3ui(Optional<WebGLUniformLocation*> location, GLuint v0,
+                    GLuint v1, GLuint v2);
+    void uniform4ui(Optional<WebGLUniformLocation*> location, GLuint v0,
+                    GLuint v1, GLuint v2, GLuint v3);
+
     /* Sync objects */
     Optional<WebGLSync*> fenceSync(GLenum condition, GLbitfield flags);
     GLboolean isSync(Optional<WebGLSync*> sync);

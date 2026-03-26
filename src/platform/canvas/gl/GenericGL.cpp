@@ -887,6 +887,27 @@ public:
         return glGetFragDataLocation(program, name);
     }
 
+    void uniform1ui(GLint location, GLuint v0) override
+    {
+        glUniform1ui(location, v0);
+    }
+
+    void uniform2ui(GLint location, GLuint v0, GLuint v1) override
+    {
+        glUniform2ui(location, v0, v1);
+    }
+
+    void uniform3ui(GLint location, GLuint v0, GLuint v1, GLuint v2) override
+    {
+        glUniform3ui(location, v0, v1, v2);
+    }
+
+    void uniform4ui(GLint location, GLuint v0, GLuint v1, GLuint v2,
+                    GLuint v3) override
+    {
+        glUniform4ui(location, v0, v1, v2, v3);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return glFenceSync(condition, flags);
