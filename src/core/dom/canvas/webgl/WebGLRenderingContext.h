@@ -323,7 +323,11 @@ protected:
 
 private:
     bool isBoundCubeMapTexture(GLenum target);
+
+protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
+
+private:
     bool isExtensionEnabled(const char* requestedName);
     bool isDefaultFramebufferBound();
     GLuint getCurrentFBO();
