@@ -861,6 +861,11 @@ public:
         return m_evasGLAPI->glIsVertexArray(array);
     }
 
+    void getUniformuiv(GLuint program, GLint location, GLuint *params) override
+    {
+        m_evasGLAPI->glGetUniformuiv(program, location, params);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return m_evasGLAPI->glGetFragDataLocation(program, name);

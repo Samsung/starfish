@@ -331,6 +331,14 @@ private:
     void completePendingJobs();
     void setPendingClearMask(uint32_t mask);
 
+protected:
+    GLenum getUniformType(WebGLProgram* program,
+                          WebGLUniformLocation* location);
+    Optional<ScriptValue> getUniformImpl(WebGLProgram* program,
+                                         WebGLUniformLocation* location,
+                                         GLenum type);
+
+private:
     bool m_hasPendingJobsBetweenFrames;
     uint32_t m_pendingClearMask;
 
