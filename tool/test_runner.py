@@ -137,12 +137,18 @@ def vendor_test_khronos2():
                             "tool/reftest/cairo/khronos_webgl2.res")
 
 
+def vendor_test_khronossdk():
+    run_vendor_test_khronos("test/cairo/reftest/vendor/khronos/webgl/sdk",
+                            "tool/reftest/cairo/khronos_webglsdk.res")
+
+
 def vendor_test():
     vendor_test_blink()
     vendor_test_gecko()
     vendor_test_webkit()
     vendor_test_khronos()
     vendor_test_khronos2()
+    vendor_test_khronossdk()
 
 
 def wpt_css_css21():
