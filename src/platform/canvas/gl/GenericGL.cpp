@@ -877,6 +877,11 @@ public:
         return glIsVertexArray(array);
     }
 
+    void getUniformuiv(GLuint program, GLint location, GLuint *params) override
+    {
+        glGetUniformuiv(program, location, params);
+    }
+
     GLint getFragDataLocation(GLuint program, const GLchar *name) override
     {
         return glGetFragDataLocation(program, name);

@@ -104,6 +104,9 @@ public:
 
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
 
+    ScriptValue getUniform(WebGLProgram* program,
+                           WebGLUniformLocation* location);
+
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
 
     // Implement WebGL2RenderingContextBase
@@ -152,6 +155,11 @@ public:
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type,
                     Optional<ScriptArrayBufferView> dstData);
+
+protected:
+    Optional<ScriptValue> getUniformImpl(WebGLProgram* program,
+                                         WebGLUniformLocation* location,
+                                         GLenum type);
 };
 
 } // namespace Starfish

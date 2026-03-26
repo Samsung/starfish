@@ -1647,26 +1647,187 @@ ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
     return createScriptValue(static_cast<GLenum>(params));
 }
 
+GLenum WebGLRenderingContext::getUniformType(WebGLProgram* program,
+                                             WebGLUniformLocation* location)
+{
+    ENTER_CONTEXT_SCOPE(GL_NONE);
+
+    GLint count = 0;
+    m_gl->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORMS, &count);
+    GLint maxNameLength = 0;
+    m_gl->getProgramiv(program->glObject(), GL_ACTIVE_UNIFORM_MAX_LENGTH,
+                       &maxNameLength);
+    for (GLint index = 0; index < count; index++) {
+        GLint size;
+        GLenum type;
+        GLsizei length;
+        std::vector<char> name;
+        name.resize(maxNameLength, '\0');
+        m_gl->getActiveUniform(program->glObject(), index, maxNameLength,
+                               &length, &size, &type, &name[0]);
+        if (size > 1) {
+            std::string arrayName(&name[0]);
+            if (arrayName.length() > 3 &&
+                arrayName.substr(arrayName.length() - 3, arrayName.length()) ==
+                    "[0]") {
+                arrayName = arrayName.substr(0, arrayName.length() - 3);
+            }
+            for (GLint arrayIndex = 0; arrayIndex < size; arrayIndex++) {
+                std::string elementName =
+                    arrayName + "[" + std::to_string(arrayIndex) + "]";
+                GLint uniformLocation = m_gl->getUniformLocation(
+                    program->glObject(), elementName.data());
+                if (uniformLocation == location->location()) {
+                    return type;
+                }
+            }
+        } else {
+            GLint uniformLocation =
+                m_gl->getUniformLocation(program->glObject(), &name[0]);
+            if (uniformLocation == location->location()) {
+                return type;
+            }
+        }
+    }
+    return GL_NONE;
+}
+
+Optional<ScriptValue> WebGLRenderingContext::getUniformImpl(
+    WebGLProgram* program, WebGLUniformLocation* location, GLenum type)
+{
+    ENTER_CONTEXT_SCOPE(Optional<ScriptValue>());
+
+    switch (type) {
+    case GL_BOOL: {
+        GLint value;
+        m_gl->getUniformiv(program->glObject(), location->location(), &value);
+        return createScriptValue(static_cast<bool>(value));
+    }
+    case GL_INT: {
+        GLint value;
+        m_gl->getUniformiv(program->glObject(), location->location(), &value);
+        return createScriptValue(value);
+    }
+    case GL_FLOAT: {
+        GLfloat value;
+        m_gl->getUniformfv(program->glObject(), location->location(), &value);
+        return createScriptValue(value);
+    }
+    case GL_FLOAT_VEC2: {
+        std::vector<GLfloat> values(2);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_INT_VEC2: {
+        std::vector<GLint> values(2);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     values);
+    }
+    case GL_BOOL_VEC2: {
+        std::vector<GLint> values(2);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createScriptValue(
+            createArray(scriptBindingInstance(),
+                        std::vector<bool>(values.begin(), values.end())));
+    }
+    case GL_FLOAT_VEC3: {
+        std::vector<GLfloat> values(3);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_INT_VEC3: {
+        std::vector<GLint> values(3);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     values);
+    }
+    case GL_BOOL_VEC3: {
+        std::vector<GLint> values(3);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createScriptValue(
+            createArray(scriptBindingInstance(),
+                        std::vector<bool>(values.begin(), values.end())));
+    }
+    case GL_FLOAT_VEC4: {
+        std::vector<GLfloat> values(4);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_INT_VEC4: {
+        std::vector<GLint> values(4);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Int32ArrayObjectRef>(scriptBindingInstance(),
+                                                     values);
+    }
+    case GL_BOOL_VEC4: {
+        std::vector<GLint> values(4);
+        m_gl->getUniformiv(program->glObject(), location->location(),
+                           &values[0]);
+        return createScriptValue(
+            createArray(scriptBindingInstance(),
+                        std::vector<bool>(values.begin(), values.end())));
+    }
+    case GL_FLOAT_MAT2: {
+        std::vector<GLfloat> values(4);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_FLOAT_MAT3: {
+        std::vector<GLfloat> values(9);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_FLOAT_MAT4: {
+        std::vector<GLfloat> values(16);
+        m_gl->getUniformfv(program->glObject(), location->location(),
+                           &values[0]);
+        return createTypedArray<Float32ArrayObjectRef>(scriptBindingInstance(),
+                                                       values);
+    }
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_CUBE: {
+        GLint value;
+        m_gl->getUniformiv(program->glObject(), location->location(), &value);
+        return createScriptValue(value);
+    }
+    default:
+        break;
+    }
+    return Optional<ScriptValue>();
+}
+
 ScriptValue WebGLRenderingContext::getUniform(WebGLProgram* program,
                                               WebGLUniformLocation* location)
 {
-    ENTER_CONTEXT_SCOPE(nullptr);
-
     if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
-        return nullptr;
+        return scriptNull();
     }
 
     if (location->program()->context() != this) {
         setGLError(GL_INVALID_OPERATION);
-        return nullptr;
+        return scriptNull();
     }
 
-    STARFISH_UNIMPLEMENTED(
-        "TODO: Return the uniform value at the passed location in the passed "
-        "program.");
-
-    return nullptr;
+    GLenum type = getUniformType(program, location);
+    Optional<ScriptValue> uniform = getUniformImpl(program, location, type);
+    return uniform.valueOr(scriptNull());
 }
 
 WebGLUniformLocation* WebGLRenderingContext::getUniformLocation(
