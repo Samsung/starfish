@@ -908,6 +908,30 @@ public:
         glUniform4ui(location, v0, v1, v2, v3);
     }
 
+    void uniform1uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        glUniform1uiv(location, count, value);
+    }
+
+    void uniform2uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        glUniform2uiv(location, count, value);
+    }
+
+    void uniform3uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        glUniform3uiv(location, count, value);
+    }
+
+    void uniform4uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        glUniform4uiv(location, count, value);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return glFenceSync(condition, flags);

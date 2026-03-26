@@ -285,6 +285,14 @@ public:
                             GLuint v2) = 0;
     virtual void uniform4ui(GLint location, GLuint v0, GLuint v1, GLuint v2,
                             GLuint v3) = 0;
+    virtual void uniform1uiv(GLint location, GLsizei count,
+                             const GLuint *value) = 0;
+    virtual void uniform2uiv(GLint location, GLsizei count,
+                             const GLuint *value) = 0;
+    virtual void uniform3uiv(GLint location, GLsizei count,
+                             const GLuint *value) = 0;
+    virtual void uniform4uiv(GLint location, GLsizei count,
+                             const GLuint *value) = 0;
     virtual GLsync fenceSync(GLenum condition, GLbitfield flags) = 0;
     virtual GLboolean isSync(GLsync sync) = 0;
     virtual void deleteSync(GLsync sync) = 0;

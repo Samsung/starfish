@@ -892,6 +892,30 @@ public:
         m_evasGLAPI->glUniform4ui(location, v0, v1, v2, v3);
     }
 
+    void uniform1uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        m_evasGLAPI->glUniform1uiv(location, count, value);
+    }
+
+    void uniform2uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        m_evasGLAPI->glUniform2uiv(location, count, value);
+    }
+
+    void uniform3uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        m_evasGLAPI->glUniform3uiv(location, count, value);
+    }
+
+    void uniform4uiv(GLint location, GLsizei count,
+                     const GLuint *value) override
+    {
+        m_evasGLAPI->glUniform4uiv(location, count, value);
+    }
+
     GLsync fenceSync(GLenum condition, GLbitfield flags) override
     {
         return m_evasGLAPI->glFenceSync(condition, flags);
