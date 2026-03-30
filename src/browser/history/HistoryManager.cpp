@@ -213,6 +213,10 @@ void HistoryManager::pushReplaceStateInternal(Document* document,
             currentEntry()->init(serializedState, title, newURL);
         }
     }
+    if (url) {
+        document->setDocumentURI(
+            new ResourceURL(url.value(), document->baseURI()));
+    }
 }
 
 ResourceURL* HistoryManager::resolveURL(Document* document,
