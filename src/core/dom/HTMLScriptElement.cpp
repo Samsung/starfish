@@ -505,9 +505,18 @@ static void buildScriptResourceRequest(HTMLScriptElement* element,
         res->addResourceClient(new ElementResourceClient(element, res, true));
     }
 
+    ReferrerPolicy policy;
+    auto nullable = element->getAttribute(
+        element->starfish()->staticStrings()->m_referrerpolicy);
+    if (nullable.hasValue()) {
+        policy = ReferrerURL::policyFromString(nullable.getValue());
+    } else {
+        policy = element->document()->referrerPolicy();
+    }
     RequestData* reqData = new RequestData();
     reqData->m_url = targetURL;
-    reqData->m_referrer = new ReferrerURL(element->document()->documentURI());
+    reqData->m_referrer =
+        new ReferrerURL(element->document()->documentURI(), policy);
     reqData->m_destination = RequestDestination::Script;
     reqData->m_syncLevel =
         forceSync ? RequestSyncLevel::AlwaysSync : RequestSyncLevel::NeverSync;
