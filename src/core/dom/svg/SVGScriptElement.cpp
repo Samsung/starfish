@@ -366,9 +366,11 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             }
             res->addResourceClient(new ElementResourceClient(this, res, true));
 
+            GET_EFFECTIVE_REFERRERPOLICY();
             RequestData* reqData = new RequestData();
             reqData->m_url = rurl;
-            reqData->m_referrer = new ReferrerURL(document()->documentURI());
+            reqData->m_referrer =
+                new ReferrerURL(document()->documentURI(), policy);
             reqData->m_destination = RequestDestination::Script;
             reqData->m_syncLevel = forceSync ? RequestSyncLevel::AlwaysSync
                                              : RequestSyncLevel::NeverSync;
