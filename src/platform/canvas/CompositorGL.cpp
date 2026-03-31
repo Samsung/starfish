@@ -2202,6 +2202,58 @@ CanvasSurface* CanvasSurfaceFactory::createGL(
     return new CanvasSurfaceGL(renderer, w, h, additionalPixelRatio, flag);
 }
 
+template <typename T, typename D = double>
+static Unit::Rect toRect(const T& path)
+{
+    D minX = std::get<0>(path[0]);
+    D minY = std::get<1>(path[0]);
+    D maxX = std::get<0>(path[0]);
+    D maxY = std::get<1>(path[0]);
+
+    for (size_t j = 1; j < 4; j++) {
+        minX = std::min(std::get<0>(path[j]), minX);
+        minY = std::min(std::get<1>(path[j]), minY);
+        maxX = std::max(std::get<0>(path[j]), maxX);
+        maxY = std::max(std::get<1>(path[j]), maxY);
+    }
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+}
+
+static Unit::Rect toRect(float (&path)[4][2])
+{
+    float minX = path[0][0];
+    float minY = path[0][1];
+    float maxX = path[0][0];
+    float maxY = path[0][1];
+
+    for (size_t j = 1; j < 4; j++) {
+        minX = std::min(path[j][0], minX);
+        minY = std::min(path[j][1], minY);
+        maxX = std::max(path[j][0], maxX);
+        maxY = std::max(path[j][1], maxY);
+    }
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+}
+
+static Clipper2Lib::PathD toPath(const Unit::Rect& rect)
+{
+    Clipper2Lib::PathD path;
+    path.reserve(4);
+    path.emplace_back(rect.x(), rect.y());
+    path.emplace_back(rect.maxX(), rect.y());
+    path.emplace_back(rect.maxX(), rect.maxY());
+    path.emplace_back(rect.x(), rect.maxY());
+    return path;
+}
+
+static Clipper2Lib::PathsD toPaths(const Unit::Rect& rect)
+{
+    if (rect.isEmpty()) {
+        return {};
+    }
+    return { toPath(rect) };
+}
+
 static bool isRectangleClipPath(const Clipper2Lib::PathsD& paths)
 {
     if (paths.size() != 1) {
@@ -2493,6 +2545,13 @@ public:
     virtual void clip(const Unit::Rect& rt) override
     {
         auto& lastState = m_state.back();
+        if (lastState.computedClipPaths &&
+            lastState.computedClipPaths.value().size()) {
+            lastState.clipPaths.insert(
+                lastState.clipPaths.end(),
+                lastState.computedClipPaths.value().begin(),
+                lastState.computedClipPaths.value().end());
+        }
         lastState.computedClipPaths.reset();
         // fast path
         if (lastState.matrixStaysInRect) {
@@ -2513,18 +2572,7 @@ public:
             dest[3][1] = rt.maxY();
             mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
-            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
-                  maxY = dest[0][1];
-
-            for (size_t j = 1; j < 4; j++) {
-                minX = std::min(dest[j][0], minX);
-                minY = std::min(dest[j][1], minY);
-                maxX = std::max(dest[j][0], maxX);
-                maxY = std::max(dest[j][1], maxY);
-            }
-
-            lastState.clipRect.intersect(
-                Unit::Rect(minX, minY, maxX - minX, maxY - minY));
+            lastState.clipRect.intersect(toRect(dest));
             return;
         }
         Clipper2Lib::PathD path;
@@ -2586,24 +2634,13 @@ public:
         auto currentColor = lastState.color;
 
         if (lastState.matrixStaysInRect && lastState.clipPaths.size() == 0) {
-            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
-                  maxY = dest[0][1];
-
-            for (size_t j = 1; j < 4; j++) {
-                minX = std::min(dest[j][0], minX);
-                minY = std::min(dest[j][1], minY);
-                maxX = std::max(dest[j][0], maxX);
-                maxY = std::max(dest[j][1], maxY);
-            }
-
             Unit::Rect drawRect = lastState.clipRect;
-            drawRect.intersect(
-                Unit::Rect(minX, minY, maxX - minX, maxY - minY));
+            drawRect.intersect(toRect(dest));
 
-            minX = drawRect.x();
-            minY = drawRect.y();
-            maxX = drawRect.maxX();
-            maxY = drawRect.maxY();
+            float minX = drawRect.x();
+            float minY = drawRect.y();
+            float maxX = drawRect.maxX();
+            float maxY = drawRect.maxY();
 
             m_compositorContext->rectProgram();
 
@@ -2642,18 +2679,11 @@ public:
                 if (lastState.matrixStaysInRect &&
                     isRectangleClipPath(result)) {
                     m_compositorContext->rectProgram();
-
-                    float minX = (float)result[0][0].x,
-                          minY = (float)result[0][0].y,
-                          maxX = (float)result[0][0].x,
-                          maxY = (float)result[0][0].y;
-
-                    for (size_t i = 1; i < 4; i++) {
-                        minX = std::min((float)result[0][i].x, minX);
-                        minY = std::min((float)result[0][i].y, minY);
-                        maxX = std::max((float)result[0][i].x, maxX);
-                        maxY = std::max((float)result[0][i].y, maxY);
-                    }
+                    auto drawRect = toRect(result[0]);
+                    float minX = drawRect.x();
+                    float minY = drawRect.y();
+                    float maxX = drawRect.maxX();
+                    float maxY = drawRect.maxY();
 
                     mapLogicalScreenPointsToScreen(minX, minY);
                     mapLogicalScreenPointsToScreen(maxX, maxY);
@@ -2758,24 +2788,58 @@ public:
     Clipper2Lib::PathsD computeClippath(float (&dest)[4][2])
     {
         auto& lastState = m_state.back();
+        if (lastState.matrixStaysInRect && lastState.clipPaths.size() == 0) {
+            Unit::Rect r = toRect(dest);
+            r.intersect(lastState.clipRect);
+            return toPaths(r);
+        }
+
+        if (lastState.matrixStaysInRect && lastState.clipPaths.size()) {
+            bool contains = true;
+            for (const auto& path : lastState.clipPaths) {
+                if (contains) {
+                    for (size_t i = 0; i < 4; i++) {
+                        auto r = Clipper2Lib::PointInPolygon(
+                            Clipper2Lib::PointD(dest[i][0], dest[i][1]), path);
+                        if (Clipper2Lib::PointInPolygonResult::IsOutside == r) {
+                            contains = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (contains) {
+                auto drawRect = toRect(dest);
+                drawRect.intersect(lastState.clipRect);
+                return toPaths(drawRect);
+            }
+        }
+
         if (!lastState.computedClipPaths) {
-            Clipper2Lib::PathD rectClip;
-            rectClip.reserve(4);
-            rectClip.emplace_back(lastState.clipRect.x(),
-                                  lastState.clipRect.y());
-            rectClip.emplace_back(lastState.clipRect.maxX(),
-                                  lastState.clipRect.y());
-            rectClip.emplace_back(lastState.clipRect.maxX(),
-                                  lastState.clipRect.maxY());
-            rectClip.emplace_back(lastState.clipRect.x(),
-                                  lastState.clipRect.maxY());
-            if (lastState.clipPaths.size()) {
-                lastState.computedClipPaths = Clipper2Lib::Intersect(
-                    lastState.clipPaths, { std::move(rectClip) },
-                    Clipper2Lib::FillRule::NonZero);
+            if (lastState.clipRect.isEmpty()) {
+                lastState.computedClipPaths = Clipper2Lib::PathsD();
+                lastState.clipPaths.clear();
             } else {
-                lastState.computedClipPaths =
-                    Clipper2Lib::PathsD{ std::move(rectClip) };
+                Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
+                if (lastState.clipPaths.size()) {
+                    lastState.computedClipPaths = Clipper2Lib::Intersect(
+                        lastState.clipPaths, { std::move(rectClip) },
+                        Clipper2Lib::FillRule::NonZero);
+                    lastState.clipPaths.clear();
+                    if (lastState.matrixStaysInRect &&
+                        isRectangleClipPath(
+                            lastState.computedClipPaths.value())) {
+                        lastState.clipRect =
+                            toRect(lastState.computedClipPaths.value()[0]);
+                        lastState.computedClipPaths.reset();
+                        auto rect = lastState.clipRect;
+                        rect.intersect(toRect(dest));
+                        return toPaths(rect);
+                    }
+                } else {
+                    lastState.computedClipPaths =
+                        Clipper2Lib::PathsD{ std::move(rectClip) };
+                }
             }
         }
 
@@ -3103,17 +3167,7 @@ public:
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
         if (lastState.clipPaths.size() == 0 && lastState.matrixStaysInRect) {
-            float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
-                  maxY = dest[0][1];
-
-            for (size_t j = 1; j < 4; j++) {
-                minX = std::min(dest[j][0], minX);
-                minY = std::min(dest[j][1], minY);
-                maxX = std::max(dest[j][0], maxX);
-                maxY = std::max(dest[j][1], maxY);
-            }
-
-            visibleArea = Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+            visibleArea = toRect(dest);
             visibleArea.intersect(lastState.clipRect);
             shouldSkipTexturePainting = visibleArea.isEmpty();
             gl()->enable(GL_SCISSOR_TEST);
@@ -3125,22 +3179,10 @@ public:
             auto result = computeClippath(dest);
             if (result.size()) {
                 if (isRectangleClipPath(result)) {
-                    float minX = (float)result[0][0].x,
-                          minY = (float)result[0][0].y,
-                          maxX = (float)result[0][0].x,
-                          maxY = (float)result[0][0].y;
-
-                    for (size_t i = 1; i < 4; i++) {
-                        minX = std::min((float)result[0][i].x, minX);
-                        minY = std::min((float)result[0][i].y, minY);
-                        maxX = std::max((float)result[0][i].x, maxX);
-                        maxY = std::max((float)result[0][i].y, maxY);
-                    }
-
-                    visibleArea =
-                        Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+                    visibleArea = toRect(result[0]);
                     gl()->enable(GL_SCISSOR_TEST);
-                    scissor(minX, minY, maxX - minX, maxY - minY);
+                    scissor(visibleArea.x(), visibleArea.y(),
+                            visibleArea.width(), visibleArea.height());
                     scissorClippingEnabled = true;
                 } else {
                     std::vector<std::pair<size_t, size_t>> pointPerIndex;
@@ -3261,18 +3303,7 @@ public:
 
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
-                float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
-                      maxY = dest[0][1];
-
-                for (size_t i = 1; i < 4; i++) {
-                    minX = std::min(dest[i][0], minX);
-                    minY = std::min(dest[i][1], minY);
-                    maxX = std::max(dest[i][0], maxX);
-                    maxY = std::max(dest[i][1], maxY);
-                }
-
-                Unit::Rect screenBoundingRect(minX, minY, std::abs(maxX - minX),
-                                              std::abs(maxY - minY));
+                Unit::Rect screenBoundingRect = toRect(dest);
                 if (screenBoundingRect.intersects(visibleArea)) {
                     float texPosition[8];
                     computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
@@ -3541,6 +3572,13 @@ public:
     virtual void clipPath() override
     {
         auto& lastState = m_state.back();
+        if (lastState.computedClipPaths &&
+            lastState.computedClipPaths.value().size()) {
+            lastState.clipPaths.insert(
+                lastState.clipPaths.end(),
+                lastState.computedClipPaths.value().begin(),
+                lastState.computedClipPaths.value().end());
+        }
         lastState.computedClipPaths.reset();
         lastState.clipPaths.push_back(std::move(m_path));
     }
