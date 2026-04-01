@@ -2640,29 +2640,23 @@ void StackingContext::compositeScrollbar(Compositor* compositor)
                               ->asHTMLIFrameElement()
                               ->contentDocument()
                               ->browsingContext();
-                {
-                    ComputeOverflow<Compositor, true> r(compositor, this,
-                                                        parent()->owner());
-                    compositor->translate(
-                        m_owner->borderLeft() + m_owner->paddingLeft(),
-                        m_owner->borderTop() + m_owner->paddingTop());
-                    FrameBlockBox* mainFrame =
-                        bc->document()->frame()->asFrameBlockBox();
-                    Scrolling::paintScrollbars<Compositor*>(
-                        m_owner->node()
-                            ->document()
-                            ->browsingContext()
-                            ->window()
-                            ->scrolling(),
-                        compositor, mainFrame, mainFrame->appliedOverflowX(),
-                        mainFrame->appliedOverflowY());
-                }
+                compositor->translate(
+                    m_owner->borderLeft() + m_owner->paddingLeft(),
+                    m_owner->borderTop() + m_owner->paddingTop());
+                FrameBlockBox* mainFrame =
+                    bc->document()->frame()->asFrameBlockBox();
+                Scrolling::paintScrollbars<Compositor*>(
+                    m_owner->node()
+                        ->document()
+                        ->browsingContext()
+                        ->window()
+                        ->scrolling(),
+                    compositor, mainFrame, mainFrame->appliedOverflowX(),
+                    mainFrame->appliedOverflowY());
             }
         }
     } else if (!isRootContext()) {
         if (needsToDrawScrollbar()) {
-            auto parentBox = parent() ? parent()->owner() : nullptr;
-            ComputeOverflow<Compositor, true> r(compositor, this, parentBox);
             Scrolling::paintScrollbars<Compositor*>(
                 m_owner->node()->asElement()->rareMembers()
                     ? m_owner->node()->asElement()->rareMembers()->m_scrolling
@@ -2706,14 +2700,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
 
-    ComputeOverflow<Compositor> r(compositor, this, parentBox);
-
-    // If current matrix is invalid, we could not composite StackckingContext
-    SkMatrix test;
-    if (!r.canvasOrCompositor()->currentTransformMatrix().invert(&test)) {
-        return;
-    }
-
     if (isIFrameStackingContextOwner()) {
         if (m_childContexts.size()) {
             StackingContext* childCtx = m_childContexts[0]->at(0);
@@ -2726,18 +2712,31 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             auto bgColor = bc->hasWindowBackgroundColor();
 
             if (bgColor.first || visibleRect.isEmpty()) {
-                ComputeOverflow<Compositor> r(compositor, this,
-                                              parent()->owner());
-
-                compositor->save();
-                compositor->setFillColor(bgColor.second);
-                compositor->drawRect(LayoutRect(
-                    m_owner->borderLeft() + m_owner->paddingLeft(),
-                    m_owner->borderTop() + m_owner->paddingTop(),
-                    m_owner->contentWidth(), m_owner->contentHeight()));
-                compositor->restore();
+                if (bgColor.second.a()) {
+                    ComputeOverflow<Compositor> r(compositor, this,
+                                                  parent()->owner());
+                    SkMatrix test;
+                    if (r.canvasOrCompositor()->currentTransformMatrix().invert(
+                            &test)) {
+                        compositor->save();
+                        compositor->setFillColor(bgColor.second);
+                        compositor->drawRect(LayoutRect(
+                            m_owner->borderLeft() + m_owner->paddingLeft(),
+                            m_owner->borderTop() + m_owner->paddingTop(),
+                            m_owner->contentWidth(), m_owner->contentHeight()));
+                        compositor->restore();
+                    }
+                }
             }
         }
+    }
+
+    ComputeOverflow<Compositor> r(compositor, this, parentBox);
+
+    // If current matrix is invalid, we could not composite StackckingContext
+    SkMatrix test;
+    if (!r.canvasOrCompositor()->currentTransformMatrix().invert(&test)) {
+        return;
     }
 
     auto contentSurface = owner()->contentSurface();
