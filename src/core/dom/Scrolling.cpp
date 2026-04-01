@@ -521,7 +521,6 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
             return;
         }
 
-        canvas->save();
         bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
                                  oy >= OverflowValue::AutoOverflow &&
                                  frame->height();
@@ -541,6 +540,10 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                             float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS);
             }
         }
+        if (!needsToDrawScrollbar) {
+            return;
+        }
+        canvas->save();
 
         LayoutRect rr(0, 0, 0, 0);
         if (hasVerticalScroll && needsToDrawScrollbar) {
@@ -555,7 +558,6 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                 scrollMovableArea * ((frame->height() - frame->borderHeight()) /
                                      frame->scrollHeight());
             LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS;
-            ;
             if (hasHorizontalScroll) {
                 scrollMovableArea -= scrollBarWidth;
             }
