@@ -2122,7 +2122,7 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
     m_gl->getProgramiv(program->glObject(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,
                        &maxNameLength);
 
-    std::vector<std::tuple<std::string, GLuint>> activeAttribs;
+    std::vector<std::tuple<std::string, GLuint, GLint>> activeAttribs;
     for (GLint i = 0; i < numActiveAttribs; ++i) {
         GLint size = 0;
         GLenum type = 0;
@@ -2132,17 +2132,38 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
                               &size, &type, &nameBuf[0]);
         std::string name(nameBuf.data(), length);
 
+        GLint numLocations = 1;
+        switch (type) {
+        case GL_FLOAT_MAT2:
+            numLocations = 2;
+            break;
+        case GL_FLOAT_MAT3:
+            numLocations = 3;
+            break;
+        case GL_FLOAT_MAT4:
+            numLocations = 4;
+            break;
+        default:
+            break;
+        }
+
         GLint location =
             m_gl->getAttribLocation(program->glObject(), name.c_str());
         if (location >= 0) {
-            activeAttribs.push_back(
-                std::make_tuple(name, static_cast<GLuint>(location)));
+            activeAttribs.push_back(std::make_tuple(
+                name, static_cast<GLuint>(location), numLocations));
         }
     }
 
     for (const auto& attrib : activeAttribs) {
         const std::string& name = std::get<0>(attrib);
         GLuint location = std::get<1>(attrib);
+        GLint numLocations = std::get<2>(attrib);
+
+        if (location + numLocations > static_cast<GLuint>(maxVertexAttribs)) {
+            program->setLinkFailed(true);
+            return;
+        }
 
         for (const auto& other : activeAttribs) {
             const std::string& otherName = std::get<0>(other);
@@ -2151,7 +2172,10 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
             }
 
             GLuint otherLocation = std::get<1>(other);
-            if (otherLocation == location) {
+            GLint otherNumLocations = std::get<2>(other);
+
+            if (otherLocation >= location &&
+                otherLocation < location + static_cast<GLuint>(numLocations)) {
                 program->setLinkFailed(true);
                 return;
             }
