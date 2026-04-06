@@ -1,4 +1,4 @@
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-bindAttribLocation-aliasing.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-bindAttribLocation-aliasing.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-bindAttribLocation-matrix.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-disabled-vertex-attrib.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/attribs/gl-enable-vertex-attrib.html

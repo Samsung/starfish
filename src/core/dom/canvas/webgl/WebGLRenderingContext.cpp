@@ -1479,7 +1479,12 @@ ScriptValue WebGLRenderingContext::getProgramParameter(WebGLProgram* program,
 
     switch (pname) {
     case GL_DELETE_STATUS:
+        return Escargot::ValueRef::create(static_cast<bool>(params));
     case GL_LINK_STATUS:
+        if (program->linkFailed()) {
+            return Escargot::ValueRef::create(false);
+        }
+        return Escargot::ValueRef::create(static_cast<bool>(params));
     case GL_VALIDATE_STATUS:
         return Escargot::ValueRef::create(static_cast<bool>(params));
     case GL_ATTACHED_SHADERS:
@@ -2095,6 +2100,62 @@ void WebGLRenderingContext::linkProgram(WebGLProgram* program)
             link(https://registry.khronos.org/webgl/specs/latest/1.0/#6.43).
         */
         STARFISH_UNIMPLEMENTED();
+    }
+
+    program->setLinkFailed(false);
+
+    GLint linkStatus = 0;
+    m_gl->getProgramiv(program->glObject(), GL_LINK_STATUS, &linkStatus);
+    if (linkStatus != GL_TRUE) {
+        program->setLinkFailed(true);
+        return;
+    }
+
+    GLint maxVertexAttribs = 0;
+    m_gl->getIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+
+    GLint numActiveAttribs = 0;
+    m_gl->getProgramiv(program->glObject(), GL_ACTIVE_ATTRIBUTES,
+                       &numActiveAttribs);
+
+    GLint maxNameLength = 0;
+    m_gl->getProgramiv(program->glObject(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,
+                       &maxNameLength);
+
+    std::vector<std::tuple<std::string, GLuint>> activeAttribs;
+    for (GLint i = 0; i < numActiveAttribs; ++i) {
+        GLint size = 0;
+        GLenum type = 0;
+        GLsizei length = 0;
+        std::vector<char> nameBuf(maxNameLength, '\0');
+        m_gl->getActiveAttrib(program->glObject(), i, maxNameLength, &length,
+                              &size, &type, &nameBuf[0]);
+        std::string name(nameBuf.data(), length);
+
+        GLint location =
+            m_gl->getAttribLocation(program->glObject(), name.c_str());
+        if (location >= 0) {
+            activeAttribs.push_back(
+                std::make_tuple(name, static_cast<GLuint>(location)));
+        }
+    }
+
+    for (const auto& attrib : activeAttribs) {
+        const std::string& name = std::get<0>(attrib);
+        GLuint location = std::get<1>(attrib);
+
+        for (const auto& other : activeAttribs) {
+            const std::string& otherName = std::get<0>(other);
+            if (otherName == name) {
+                continue;
+            }
+
+            GLuint otherLocation = std::get<1>(other);
+            if (otherLocation == location) {
+                program->setLinkFailed(true);
+                return;
+            }
+        }
     }
 }
 

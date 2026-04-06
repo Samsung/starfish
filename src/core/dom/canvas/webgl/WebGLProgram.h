@@ -42,8 +42,19 @@ public:
         return m_webGLShaders;
     }
 
+    void setLinkFailed(bool linkFailed)
+    {
+        m_linkFailed = linkFailed;
+    }
+
+    bool linkFailed() const
+    {
+        return m_linkFailed;
+    }
+
 private:
     GCVector<WebGLShader*> m_webGLShaders;
+    bool m_linkFailed = false;
 };
 } // namespace Starfish
 
