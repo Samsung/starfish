@@ -738,8 +738,6 @@ public:
                 gl()->getAttribLocation(m_rectShaderProgram, "aPosition");
             m_rectShaderProgramColor =
                 gl()->getUniformLocation(m_rectShaderProgram, "uColor");
-
-            gl()->enableVertexAttribArray(m_rectShaderProgramPosition);
         } else {
             if (m_lastProgram != m_rectShaderProgram) {
                 m_lastProgram = m_rectShaderProgram;
@@ -834,10 +832,6 @@ public:
                 m_texShaderProgramEGLImageExternal, "uAlpha");
 
             gl()->uniform1i(m_texShaderProgramEGLImageExternalTexture, 0);
-            gl()->enableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalPosition);
-            gl()->enableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalTexPos);
             gl()->uniform1f(m_texShaderProgramEGLImageExternalAlpha, 1);
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
@@ -913,8 +907,6 @@ public:
                 gl()->getUniformLocation(m_texShaderProgram, "uAlpha");
 
             gl()->uniform1i(m_texShaderProgramTexture, 0);
-            gl()->enableVertexAttribArray(m_texShaderProgramPosition);
-            gl()->enableVertexAttribArray(m_texShaderProgramTexPos);
             gl()->uniform1f(m_texShaderProgramAlpha, 1);
         } else {
             if (m_lastProgram != m_texShaderProgram) {
@@ -1085,8 +1077,6 @@ public:
             gl()->getUniformLocation(m_texBlurShaderProgramW, "uTextureHeight");
 
         gl()->uniform1i(m_texBlurShaderProgramWTexture, 0);
-        gl()->enableVertexAttribArray(m_texBlurShaderProgramWPosition);
-        gl()->enableVertexAttribArray(m_texShaderProgramPosition);
 
         return m_texBlurShaderProgramW;
     }
@@ -1131,10 +1121,6 @@ public:
                                      "uTextureHeight");
 
         gl()->uniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
-        gl()->enableVertexAttribArray(
-            m_texBlurShaderProgramEGLImageExternalWPosition);
-        gl()->enableVertexAttribArray(
-            m_texBlurShaderProgramEGLImageExternalWPosition);
 
         return m_texBlurShaderProgramEGLImageExternalW;
     }
@@ -1174,9 +1160,7 @@ public:
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlpha");
 
         gl()->uniform1i(m_texBlurShaderProgramHTexture, 0);
-        gl()->enableVertexAttribArray(m_texBlurShaderProgramHPosition);
         gl()->uniform1f(m_texBlurShaderProgramHAlpha, 1);
-        gl()->enableVertexAttribArray(m_texBlurShaderProgramHPosition);
 
         return m_texBlurShaderProgramH;
     }
@@ -2602,10 +2586,12 @@ public:
                 maxX * hw - 1, maxY * hh + 1, // V4
             };
 
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_rectShaderProgramPosition);
             gl()->bindBuffer(GL_ARRAY_BUFFER,
                              m_compositorContext->m_drawPosBuffer);
             gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_DYNAMIC_DRAW);
+                             GL_STREAM_DRAW);
             gl()->vertexAttribPointer(
                 m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
                 false, 0, 0);
@@ -2618,6 +2604,8 @@ public:
                             a * currentColor.B(), a * currentColor.A());
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_rectShaderProgramPosition);
             checkError(gl());
         } else {
             auto result = computeClippath(dest);
@@ -2646,7 +2634,7 @@ public:
                     gl()->bindBuffer(GL_ARRAY_BUFFER,
                                      m_compositorContext->m_drawPosBuffer);
                     gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                     position, GL_DYNAMIC_DRAW);
+                                     position, GL_STREAM_DRAW);
                     gl()->vertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
                         GL_FLOAT, false, 0, 0);
@@ -2706,7 +2694,7 @@ public:
                         gl()->bindBuffer(GL_ARRAY_BUFFER,
                                          m_compositorContext->m_drawPosBuffer);
                         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                         position, GL_DYNAMIC_DRAW);
+                                         position, GL_STREAM_DRAW);
                         gl()->vertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
                             GL_FLOAT, false, 0, 0);
@@ -2873,11 +2861,11 @@ public:
         if (cs->isFlipYNeeded()) {
             float data[] = { 0.f, 1.f, 0.f, 0.f, 1.f, 1.f, 1.f, 0.f };
             gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data,
-                             GL_DYNAMIC_DRAW);
+                             GL_STREAM_DRAW);
         } else {
             float data[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
             gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data,
-                             GL_DYNAMIC_DRAW);
+                             GL_STREAM_DRAW);
         }
         gl()->vertexAttribPointer(texPos, 2, GL_FLOAT, false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
@@ -2927,10 +2915,18 @@ public:
             }
 
             if (isEGLImage) {
+                m_compositorContext->texBlurShaderProgramEGLImageExternalW();
+                gl()->enableVertexAttribArray(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWPosition);
+                gl()->enableVertexAttribArray(
+                    m_compositorContext
+                        ->m_texShaderProgramEGLImageExternalPosition);
+
                 gl()->bindBuffer(GL_ARRAY_BUFFER,
                                  m_compositorContext->m_drawPosBuffer);
                 gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_DYNAMIC_DRAW);
+                                 GL_STREAM_DRAW);
                 gl()->vertexAttribPointer(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWPosition,
@@ -2954,10 +2950,15 @@ public:
                         ->m_texBlurShaderProgramEGLImageExternalWBlurRadius,
                     blurMainRadius, blurSubRadius);
             } else {
+                gl()->enableVertexAttribArray(
+                    m_compositorContext->m_texBlurShaderProgramWPosition);
+                gl()->enableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramPosition);
+
                 gl()->bindBuffer(GL_ARRAY_BUFFER,
                                  m_compositorContext->m_drawPosBuffer);
                 gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_DYNAMIC_DRAW);
+                                 GL_STREAM_DRAW);
                 gl()->vertexAttribPointer(
                     m_compositorContext->m_texBlurShaderProgramWPosition, 2,
                     GL_FLOAT, false, 0, 0);
@@ -2978,6 +2979,20 @@ public:
             }
             gl()->bindTexture(textureKind, textureID);
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            if (isEGLImage) {
+                gl()->disableVertexAttribArray(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWPosition);
+                gl()->disableVertexAttribArray(
+                    m_compositorContext
+                        ->m_texShaderProgramEGLImageExternalPosition);
+            } else {
+                gl()->disableVertexAttribArray(
+                    m_compositorContext->m_texBlurShaderProgramWPosition);
+                gl()->disableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramPosition);
+            }
         }
 
         GLuint fboTex = popFBOContext();
@@ -2994,10 +3009,15 @@ public:
         {
             m_compositorContext->texBlurShaderProgramH();
 
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_texBlurShaderProgramHPosition);
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramPosition);
+
             gl()->bindBuffer(GL_ARRAY_BUFFER,
                              m_compositorContext->m_drawPosBuffer);
             gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_DYNAMIC_DRAW);
+                             GL_STREAM_DRAW);
             gl()->vertexAttribPointer(
                 m_compositorContext->m_texBlurShaderProgramHPosition, 2,
                 GL_FLOAT, false, 0, 0);
@@ -3022,6 +3042,11 @@ public:
             }
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texBlurShaderProgramHPosition);
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramPosition);
 
             if (gl()->getError() == 1286) {
                 STARFISH_LOG_ERROR("drawFilteredTexture got error 1286");
@@ -3076,9 +3101,12 @@ public:
             texPos = &m_compositorContext->m_texShaderProgramTexPos;
         }
 
+        gl()->enableVertexAttribArray(*positionPos);
+        gl()->enableVertexAttribArray(*texPos);
+
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                         GL_DYNAMIC_DRAW);
+                         GL_STREAM_DRAW);
         gl()->vertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -3094,6 +3122,9 @@ public:
         if (a != 1) {
             gl()->uniform1f(*alphaPos, 1);
         }
+
+        gl()->disableVertexAttribArray(*texPos);
+        gl()->disableVertexAttribArray(*positionPos);
     }
 
     Unit::Rect boundingRect(const Clipper2Lib::PathD& path)
@@ -3309,7 +3340,7 @@ public:
                                      m_compositorContext->m_drawPosBuffer);
                     gl()->bufferData(GL_ARRAY_BUFFER,
                                      sizeof(float) * position.size(),
-                                     position.data(), GL_DYNAMIC_DRAW);
+                                     position.data(), GL_STREAM_DRAW);
                     gl()->vertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
                         GL_FLOAT, false, 0, 0);
@@ -3477,7 +3508,7 @@ public:
                 gl()->bindBuffer(GL_ARRAY_BUFFER,
                                  m_compositorContext->m_drawPosBuffer);
                 gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_DYNAMIC_DRAW);
+                                 GL_STREAM_DRAW);
                 gl()->vertexAttribPointer(
                     m_compositorContext->m_texShaderProgramPosition, 2,
                     GL_FLOAT, false, 0, 0);
