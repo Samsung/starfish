@@ -20,9 +20,7 @@ jobs:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: true
-          ref: ${{ github.event.pull_request.head.sha }}
-
+          submodules: "recursive"
       - name: container fix
         run: |
           sudo /usr/sbin/update-binfmts --disable
@@ -30,6 +28,8 @@ jobs:
           sudo systemctl enable binfmt-support.service
           sudo /usr/sbin/update-binfmts --enable
           sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/status"
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Build flutter_i586
         run: |
