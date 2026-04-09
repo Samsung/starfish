@@ -748,6 +748,20 @@ public:
         return m_rectShaderProgram;
     }
 
+    void bindTexPos(GLint texPos, bool flipY = false)
+    {
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        if (flipY) {
+            float data[] = { 0.f, 1.f, 0.f, 0.f, 1.f, 1.f, 1.f, 0.f };
+            gl()->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, data);
+        } else {
+            float data[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
+            gl()->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, data);
+        }
+        gl()->vertexAttribPointer(texPos, 2, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
     GLuint texVertexShader()
     {
         if (!m_texVertexShader) {
@@ -833,10 +847,29 @@ public:
 
             gl()->uniform1i(m_texShaderProgramEGLImageExternalTexture, 0);
             gl()->uniform1f(m_texShaderProgramEGLImageExternalAlpha, 1);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos,
+                                      2, GL_FLOAT, false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+            bindTexPos(m_texShaderProgramEGLImageExternalTexPos);
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
                 m_lastProgram = m_texShaderProgramEGLImageExternal;
                 gl()->useProgram(m_texShaderProgramEGLImageExternal);
+
+                bindTexPos(m_texShaderProgramEGLImageExternalTexPos);
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
+                gl()->vertexAttribPointer(
+                    m_texShaderProgramEGLImageExternalPosition, 2, GL_FLOAT,
+                    false, 0, 0);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                                 GL_STREAM_DRAW);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
 
@@ -908,12 +941,37 @@ public:
 
             gl()->uniform1i(m_texShaderProgramTexture, 0);
             gl()->uniform1f(m_texShaderProgramAlpha, 1);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
+                                      false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            bindTexPos(m_texShaderProgramTexPos);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
+            gl()->vertexAttribPointer(m_texShaderProgramPosition, 2, GL_FLOAT,
+                                      false, 0, 0);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
         } else {
             if (m_lastProgram != m_texShaderProgram) {
                 m_lastProgram = m_texShaderProgram;
                 gl()->useProgram(m_texShaderProgram);
+
+                bindTexPos(m_texShaderProgramTexPos);
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
+                gl()->vertexAttribPointer(m_texShaderProgramPosition, 2,
+                                          GL_FLOAT, false, 0, 0);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                                 GL_STREAM_DRAW);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
+
         return m_texShaderProgram;
     }
 
@@ -1050,6 +1108,14 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramW) {
                 m_lastProgram = m_texBlurShaderProgramW;
                 gl()->useProgram(m_texBlurShaderProgramW);
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                                 GL_STREAM_DRAW);
+                gl()->vertexAttribPointer(m_texBlurShaderProgramW, 2, GL_FLOAT,
+                                          false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                bindTexPos(m_texBlurShaderProgramW);
             }
             return m_texBlurShaderProgramW;
         }
@@ -1078,6 +1144,14 @@ public:
 
         gl()->uniform1i(m_texBlurShaderProgramWTexture, 0);
 
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                         GL_STREAM_DRAW);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramW, 2, GL_FLOAT, false,
+                                  0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        bindTexPos(m_texBlurShaderProgramW);
+
         return m_texBlurShaderProgramW;
     }
 
@@ -1087,6 +1161,15 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramEGLImageExternalW) {
                 m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
                 gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                                 GL_STREAM_DRAW);
+                gl()->vertexAttribPointer(
+                    m_texBlurShaderProgramEGLImageExternalWTexPos, 2, GL_FLOAT,
+                    false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
             }
             return m_texBlurShaderProgramEGLImageExternalW;
         }
@@ -1122,6 +1205,13 @@ public:
 
         gl()->uniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
 
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                         GL_STREAM_DRAW);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramEGLImageExternalWTexPos,
+                                  2, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
         return m_texBlurShaderProgramEGLImageExternalW;
     }
 
@@ -1131,6 +1221,14 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramH) {
                 m_lastProgram = m_texBlurShaderProgramH;
                 gl()->useProgram(m_texBlurShaderProgramH);
+
+                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                                 GL_STREAM_DRAW);
+                gl()->vertexAttribPointer(m_texBlurShaderProgramHTexPos, 2,
+                                          GL_FLOAT, false, 0, 0);
+                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                bindTexPos(m_texBlurShaderProgramHTexPos);
             }
             return m_texBlurShaderProgramH;
         }
@@ -1161,6 +1259,14 @@ public:
 
         gl()->uniform1i(m_texBlurShaderProgramHTexture, 0);
         gl()->uniform1f(m_texBlurShaderProgramHAlpha, 1);
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                         GL_STREAM_DRAW);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramHTexPos, 2, GL_FLOAT,
+                                  false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        bindTexPos(m_texBlurShaderProgramHTexPos);
 
         return m_texBlurShaderProgramH;
     }
@@ -2854,23 +2960,6 @@ public:
         return result;
     }
 
-    void bindTexPos(CanvasSurfaceGL* cs, GLint texPos)
-    {
-        gl()->bindBuffer(GL_ARRAY_BUFFER,
-                         m_compositorContext->m_texTexPosBuffer);
-        if (cs->isFlipYNeeded()) {
-            float data[] = { 0.f, 1.f, 0.f, 0.f, 1.f, 1.f, 1.f, 0.f };
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data,
-                             GL_STREAM_DRAW);
-        } else {
-            float data[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, data,
-                             GL_STREAM_DRAW);
-        }
-        gl()->vertexAttribPointer(texPos, 2, GL_FLOAT, false, 0, 0);
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
     void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
                              GLuint textureID, GLenum textureKind,
                              GLenum textureBindNumber, size_t textureWidth,
@@ -2933,10 +3022,6 @@ public:
                     2, GL_FLOAT, false, 0, 0);
                 gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
-                bindTexPos(cs,
-                           m_compositorContext
-                               ->m_texBlurShaderProgramEGLImageExternalWTexPos);
-
                 gl()->uniform1f(
                     m_compositorContext
                         ->m_texBlurShaderProgramEGLImageExternalWTextureWidth,
@@ -2963,9 +3048,6 @@ public:
                     m_compositorContext->m_texBlurShaderProgramWPosition, 2,
                     GL_FLOAT, false, 0, 0);
                 gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-                bindTexPos(cs,
-                           m_compositorContext->m_texBlurShaderProgramWTexPos);
 
                 gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramWTextureWidth,
@@ -3040,6 +3122,10 @@ public:
                 gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramHAlpha, a);
             }
+            if (UNLIKELY(cs->isFlipYNeeded())) {
+                m_compositorContext->bindTexPos(
+                    m_compositorContext->m_texBlurShaderProgramHTexPos, true);
+            }
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -3054,6 +3140,10 @@ public:
             if (a != 1) {
                 gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramHAlpha, 1);
+            }
+            if (UNLIKELY(cs->isFlipYNeeded())) {
+                m_compositorContext->bindTexPos(
+                    m_compositorContext->m_texBlurShaderProgramHTexPos, false);
             }
             checkError(gl());
         }
@@ -3105,19 +3195,24 @@ public:
         gl()->enableVertexAttribArray(*texPos);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
-        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                         GL_STREAM_DRAW);
-        gl()->vertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 0, 0);
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, position);
 
-        bindTexPos(cs, *texPos);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
         if (a != 1) {
             gl()->uniform1f(*alphaPos, a);
         }
 
+        if (UNLIKELY(cs->isFlipYNeeded())) {
+            m_compositorContext->bindTexPos(*texPos, true);
+        }
+
         gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
         checkError(gl());
+
+        if (UNLIKELY(cs->isFlipYNeeded())) {
+            m_compositorContext->bindTexPos(*texPos, false);
+        }
 
         if (a != 1) {
             gl()->uniform1f(*alphaPos, 1);
