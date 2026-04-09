@@ -274,11 +274,13 @@ static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
 static size_t g_screenStencilBufferSize = 0;
 static void checkError(GL* gl)
 {
+#if !defined(NDEBUG)
     volatile auto error = gl->getError();
     if (error != 0) {
         STARFISH_LOG_ERROR("OpenGL error.. 0x%04x", error);
         STARFISH_ASSERT_NOT_REACHED();
     }
+#endif
 }
 
 static GLuint loadShader(GL* gl, GLenum type, const GLchar* shaderSrc)
@@ -365,6 +367,7 @@ public:
     GLuint m_texFragmentShader;
     GLuint m_texShaderProgram;
     GLint m_texShaderProgramTexPos;
+    GLint m_texShaderProgramTexIdx;
     GLint m_texShaderProgramPosition;
     GLint m_texShaderProgramTexture;
     GLint m_texShaderProgramAlpha;
@@ -372,6 +375,7 @@ public:
     GLuint m_texFragmentShaderEGLImageExternal;
     GLuint m_texShaderProgramEGLImageExternal;
     GLint m_texShaderProgramEGLImageExternalTexPos;
+    GLint m_texShaderProgramEGLImageExternalTexIdx;
     GLint m_texShaderProgramEGLImageExternalPosition;
     GLint m_texShaderProgramEGLImageExternalTexture;
     GLint m_texShaderProgramEGLImageExternalAlpha;
@@ -382,6 +386,7 @@ public:
 
     GLuint m_texBlurShaderProgramW;
     GLint m_texBlurShaderProgramWTexPos;
+    GLint m_texBlurShaderProgramWTexIdx;
     GLint m_texBlurShaderProgramWPosition;
     GLint m_texBlurShaderProgramWTexture;
     GLint m_texBlurShaderProgramWBlurRadius;
@@ -389,6 +394,7 @@ public:
     GLint m_texBlurShaderProgramWTextureHeight;
     GLuint m_texBlurShaderProgramEGLImageExternalW;
     GLint m_texBlurShaderProgramEGLImageExternalWTexPos;
+    GLint m_texBlurShaderProgramEGLImageExternalWTexIdx;
     GLint m_texBlurShaderProgramEGLImageExternalWPosition;
     GLint m_texBlurShaderProgramEGLImageExternalWTexture;
     GLint m_texBlurShaderProgramEGLImageExternalWBlurRadius;
@@ -397,6 +403,7 @@ public:
 
     GLuint m_texBlurShaderProgramH;
     GLint m_texBlurShaderProgramHTexPos;
+    GLint m_texBlurShaderProgramHTexIdx;
     GLint m_texBlurShaderProgramHPosition;
     GLint m_texBlurShaderProgramHTexture;
     GLint m_texBlurShaderProgramHBlurRadius;
@@ -405,6 +412,7 @@ public:
     GLint m_texBlurShaderProgramHAlpha;
 
     GLuint m_texTexPosBuffer;
+    GLuint m_texIdxBuffer;
     GLuint m_drawPosBuffer;
 
     GLuint m_lastProgram;
@@ -427,7 +435,7 @@ public:
         m_renderer = renderer;
         clearGLProgramVariables();
 
-        m_drawPosBuffer = m_texTexPosBuffer = 0;
+        m_drawPosBuffer = m_texIdxBuffer = m_texTexPosBuffer = 0;
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         m_mainViewTexture = 0;
         m_mainViewFBO = 0;
@@ -485,6 +493,12 @@ public:
         m_texBlurShaderProgramEGLImageExternalWTexPos = 0;
         m_texBlurShaderProgramHTexPos = 0;
 
+        m_texShaderProgramTexIdx = 0;
+        m_texShaderProgramEGLImageExternalTexIdx = 0;
+        m_texBlurShaderProgramWTexIdx = 0;
+        m_texBlurShaderProgramEGLImageExternalWTexIdx = 0;
+        m_texBlurShaderProgramHTexIdx = 0;
+
         m_lastProgram = 0;
     }
 
@@ -497,6 +511,7 @@ public:
         cleanUpGLPrograms();
 
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
+        gl()->deleteBuffers(1, &m_texIdxBuffer);
         gl()->deleteBuffers(1, &m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
@@ -748,6 +763,18 @@ public:
         return m_rectShaderProgram;
     }
 
+    void bindTexIdx(GLint texIdx, bool attach)
+    {
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texIdxBuffer);
+        if (!attach) {
+            float index[4] = { 0, 1, 2, 3 };
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 4, index,
+                             GL_STATIC_DRAW);
+        }
+        gl()->vertexAttribPointer(texIdx, 1, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
     void bindTexPos(GLint texPos, bool flipY = false)
     {
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
@@ -766,12 +793,14 @@ public:
     {
         if (!m_texVertexShader) {
             GLchar texVertexSource[] = R"(
-            attribute vec2 aPosition;
+            uniform vec2 uPosition[4];
             attribute vec2 aTexPos;
+            attribute float aTexIdx;
             varying vec2 vTexPos;
             void main() {
               vTexPos = vec2(aTexPos.x, aTexPos.y);
-              gl_Position = vec4(aPosition.xy, 0.0, 1.0);
+              vec2 data = uPosition[int(aTexIdx)];
+              gl_Position = vec4(data.xy, 0.0, 1.0);
             })";
             m_texVertexShader =
                 loadShader(gl(), GL_VERTEX_SHADER, texVertexSource);
@@ -835,10 +864,12 @@ public:
             checkError(gl());
 
             m_texShaderProgramEGLImageExternalPosition =
-                gl()->getAttribLocation(m_texShaderProgramEGLImageExternal,
-                                        "aPosition");
+                gl()->getUniformLocation(m_texShaderProgramEGLImageExternal,
+                                         "uPosition");
             m_texShaderProgramEGLImageExternalTexPos = gl()->getAttribLocation(
                 m_texShaderProgramEGLImageExternal, "aTexPos");
+            m_texShaderProgramEGLImageExternalTexIdx = gl()->getAttribLocation(
+                m_texShaderProgramEGLImageExternal, "aTexIdx");
             m_texShaderProgramEGLImageExternalTexture =
                 gl()->getUniformLocation(m_texShaderProgramEGLImageExternal,
                                          "uTexture");
@@ -856,20 +887,14 @@ public:
             gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
             bindTexPos(m_texShaderProgramEGLImageExternalTexPos);
+            bindTexIdx(m_texShaderProgramEGLImageExternalTexIdx, false);
         } else {
             if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
                 m_lastProgram = m_texShaderProgramEGLImageExternal;
                 gl()->useProgram(m_texShaderProgramEGLImageExternal);
 
                 bindTexPos(m_texShaderProgramEGLImageExternalTexPos);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
-                gl()->vertexAttribPointer(
-                    m_texShaderProgramEGLImageExternalPosition, 2, GL_FLOAT,
-                    false, 0, 0);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                                 GL_STREAM_DRAW);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                bindTexIdx(m_texShaderProgramEGLImageExternalTexIdx, true);
             }
         }
 
@@ -931,9 +956,11 @@ public:
             checkError(gl());
 
             m_texShaderProgramPosition =
-                gl()->getAttribLocation(m_texShaderProgram, "aPosition");
+                gl()->getUniformLocation(m_texShaderProgram, "uPosition");
             m_texShaderProgramTexPos =
                 gl()->getAttribLocation(m_texShaderProgram, "aTexPos");
+            m_texShaderProgramTexIdx =
+                gl()->getAttribLocation(m_texShaderProgram, "aTexIdx");
             m_texShaderProgramTexture =
                 gl()->getUniformLocation(m_texShaderProgram, "uTexture");
             m_texShaderProgramAlpha =
@@ -949,26 +976,14 @@ public:
                                       false, 0, 0);
             gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
             bindTexPos(m_texShaderProgramTexPos);
-
-            gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
-            gl()->vertexAttribPointer(m_texShaderProgramPosition, 2, GL_FLOAT,
-                                      false, 0, 0);
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                             GL_STREAM_DRAW);
-            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            bindTexIdx(m_texShaderProgramTexIdx, false);
         } else {
             if (m_lastProgram != m_texShaderProgram) {
                 m_lastProgram = m_texShaderProgram;
                 gl()->useProgram(m_texShaderProgram);
 
                 bindTexPos(m_texShaderProgramTexPos);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER, m_drawPosBuffer);
-                gl()->vertexAttribPointer(m_texShaderProgramPosition, 2,
-                                          GL_FLOAT, false, 0, 0);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                                 GL_STREAM_DRAW);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                bindTexIdx(m_texShaderProgramTexIdx, true);
             }
         }
 
@@ -1108,14 +1123,8 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramW) {
                 m_lastProgram = m_texBlurShaderProgramW;
                 gl()->useProgram(m_texBlurShaderProgramW);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(m_texBlurShaderProgramW, 2, GL_FLOAT,
-                                          false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-                bindTexPos(m_texBlurShaderProgramW);
+                bindTexPos(m_texBlurShaderProgramWTexPos);
+                bindTexIdx(m_texBlurShaderProgramWTexIdx, true);
             }
             return m_texBlurShaderProgramW;
         }
@@ -1130,9 +1139,11 @@ public:
         gl()->useProgram(m_texBlurShaderProgramW);
 
         m_texBlurShaderProgramWPosition =
-            gl()->getAttribLocation(m_texBlurShaderProgramW, "aPosition");
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uPosition");
         m_texBlurShaderProgramWTexPos =
             gl()->getAttribLocation(m_texBlurShaderProgramW, "aTexPos");
+        m_texBlurShaderProgramWTexIdx =
+            gl()->getAttribLocation(m_texBlurShaderProgramW, "aTexIdx");
         m_texBlurShaderProgramWTexture =
             gl()->getUniformLocation(m_texBlurShaderProgramW, "uTexture");
         m_texBlurShaderProgramWBlurRadius =
@@ -1147,10 +1158,11 @@ public:
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
                          GL_STREAM_DRAW);
-        gl()->vertexAttribPointer(m_texBlurShaderProgramW, 2, GL_FLOAT, false,
-                                  0, 0);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramWTexPos, 2, GL_FLOAT,
+                                  false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-        bindTexPos(m_texBlurShaderProgramW);
+        bindTexPos(m_texBlurShaderProgramWTexPos);
+        bindTexIdx(m_texBlurShaderProgramWTexIdx, false);
 
         return m_texBlurShaderProgramW;
     }
@@ -1161,15 +1173,8 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramEGLImageExternalW) {
                 m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
                 gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(
-                    m_texBlurShaderProgramEGLImageExternalWTexPos, 2, GL_FLOAT,
-                    false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
                 bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
+                bindTexIdx(m_texBlurShaderProgramWTexIdx, true);
             }
             return m_texBlurShaderProgramEGLImageExternalW;
         }
@@ -1186,10 +1191,12 @@ public:
         gl()->useProgram(m_texBlurShaderProgramEGLImageExternalW);
 
         m_texBlurShaderProgramEGLImageExternalWPosition =
-            gl()->getAttribLocation(m_texBlurShaderProgramEGLImageExternalW,
-                                    "aPosition");
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uPosition");
         m_texBlurShaderProgramEGLImageExternalWTexPos = gl()->getAttribLocation(
             m_texBlurShaderProgramEGLImageExternalW, "aTexPos");
+        m_texBlurShaderProgramEGLImageExternalWTexIdx = gl()->getAttribLocation(
+            m_texBlurShaderProgramEGLImageExternalW, "aTexIdx");
         m_texBlurShaderProgramEGLImageExternalWTexture =
             gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
                                      "uTexture");
@@ -1212,6 +1219,7 @@ public:
                                   2, GL_FLOAT, false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
         bindTexPos(m_texBlurShaderProgramEGLImageExternalWTexPos);
+        bindTexIdx(m_texBlurShaderProgramEGLImageExternalWTexIdx, false);
         return m_texBlurShaderProgramEGLImageExternalW;
     }
 
@@ -1221,14 +1229,8 @@ public:
             if (m_lastProgram != m_texBlurShaderProgramH) {
                 m_lastProgram = m_texBlurShaderProgramH;
                 gl()->useProgram(m_texBlurShaderProgramH);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(m_texBlurShaderProgramHTexPos, 2,
-                                          GL_FLOAT, false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
                 bindTexPos(m_texBlurShaderProgramHTexPos);
+                bindTexIdx(m_texBlurShaderProgramHTexIdx, true);
             }
             return m_texBlurShaderProgramH;
         }
@@ -1243,9 +1245,11 @@ public:
         gl()->useProgram(m_texBlurShaderProgramH);
 
         m_texBlurShaderProgramHPosition =
-            gl()->getAttribLocation(m_texBlurShaderProgramH, "aPosition");
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uPosition");
         m_texBlurShaderProgramHTexPos =
             gl()->getAttribLocation(m_texBlurShaderProgramH, "aTexPos");
+        m_texBlurShaderProgramHTexIdx =
+            gl()->getAttribLocation(m_texBlurShaderProgramH, "aTexIdx");
         m_texBlurShaderProgramHTexture =
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uTexture");
         m_texBlurShaderProgramHBlurRadius =
@@ -1267,7 +1271,7 @@ public:
                                   false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
         bindTexPos(m_texBlurShaderProgramHTexPos);
-
+        bindTexIdx(m_texBlurShaderProgramHTexIdx, false);
         return m_texBlurShaderProgramH;
     }
 };
@@ -1388,6 +1392,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
     gl->activeTexture(GL_TEXTURE0);
 
     gl->genBuffers(1, &compositorContext->m_texTexPosBuffer);
+    gl->genBuffers(1, &compositorContext->m_texIdxBuffer);
     gl->genBuffers(1, &compositorContext->m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
@@ -2737,6 +2742,8 @@ public:
                         maxX * hw - 1, maxY * hh + 1, // V4
                     };
 
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
                     gl()->bindBuffer(GL_ARRAY_BUFFER,
                                      m_compositorContext->m_drawPosBuffer);
                     gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
@@ -2754,6 +2761,9 @@ public:
                         a * currentColor.B(), a * currentColor.A());
 
                     gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    gl()->disableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
                     checkError(gl());
                 } else {
                     // polygon painting
@@ -2797,6 +2807,8 @@ public:
                             trianglePoints[5] * hh + 1, // V3
                         };
 
+                        gl()->enableVertexAttribArray(
+                            m_compositorContext->m_rectShaderProgramPosition);
                         gl()->bindBuffer(GL_ARRAY_BUFFER,
                                          m_compositorContext->m_drawPosBuffer);
                         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
@@ -2814,6 +2826,9 @@ public:
 
                         gl()->drawArrays(GL_TRIANGLES, 0, 3);
                         checkError(gl());
+
+                        gl()->disableVertexAttribArray(
+                            m_compositorContext->m_rectShaderProgramPosition);
                     }
                 }
             }
@@ -3003,78 +3018,57 @@ public:
                 m_compositorContext->texBlurShaderProgramW();
             }
 
+            GLint* positionPos;
+            GLint* texPos;
+            GLint* texIdx;
+            GLint* width;
+            GLint* height;
+            GLint* blurRadius;
+
             if (isEGLImage) {
-                m_compositorContext->texBlurShaderProgramEGLImageExternalW();
-                gl()->enableVertexAttribArray(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWPosition);
-                gl()->enableVertexAttribArray(
-                    m_compositorContext
-                        ->m_texShaderProgramEGLImageExternalPosition);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                 m_compositorContext->m_drawPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWPosition,
-                    2, GL_FLOAT, false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-                gl()->uniform1f(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWTextureWidth,
-                    textureWidth);
-                gl()->uniform1f(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWTextureHeight,
-                    textureHeight);
-                gl()->uniform2f(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWBlurRadius,
-                    blurMainRadius, blurSubRadius);
+                texPos = &m_compositorContext
+                              ->m_texBlurShaderProgramEGLImageExternalWTexPos;
+                texIdx = &m_compositorContext
+                              ->m_texBlurShaderProgramEGLImageExternalWTexIdx;
+                positionPos =
+                    &m_compositorContext
+                         ->m_texBlurShaderProgramEGLImageExternalWPosition;
+                width =
+                    &m_compositorContext
+                         ->m_texBlurShaderProgramEGLImageExternalWTextureWidth;
+                height =
+                    &m_compositorContext
+                         ->m_texBlurShaderProgramEGLImageExternalWTextureHeight;
+                blurRadius =
+                    &m_compositorContext
+                         ->m_texBlurShaderProgramEGLImageExternalWBlurRadius;
             } else {
-                gl()->enableVertexAttribArray(
-                    m_compositorContext->m_texBlurShaderProgramWPosition);
-                gl()->enableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramPosition);
-
-                gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                 m_compositorContext->m_drawPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(
-                    m_compositorContext->m_texBlurShaderProgramWPosition, 2,
-                    GL_FLOAT, false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-                gl()->uniform1f(
-                    m_compositorContext->m_texBlurShaderProgramWTextureWidth,
-                    textureWidth);
-                gl()->uniform1f(
-                    m_compositorContext->m_texBlurShaderProgramWTextureHeight,
-                    textureHeight);
-                gl()->uniform2f(
-                    m_compositorContext->m_texBlurShaderProgramWBlurRadius,
-                    blurMainRadius, blurSubRadius);
+                texPos = &m_compositorContext->m_texBlurShaderProgramWTexPos;
+                texIdx = &m_compositorContext->m_texBlurShaderProgramWTexIdx;
+                positionPos =
+                    &m_compositorContext->m_texBlurShaderProgramWPosition;
+                width =
+                    &m_compositorContext->m_texBlurShaderProgramWTextureWidth;
+                height =
+                    &m_compositorContext->m_texBlurShaderProgramWTextureHeight;
+                blurRadius =
+                    &m_compositorContext->m_texBlurShaderProgramWBlurRadius;
             }
+
+            gl()->enableVertexAttribArray(*positionPos);
+            gl()->enableVertexAttribArray(*texIdx);
+
+            gl()->uniform2fv(*positionPos, 4, position);
+
+            gl()->uniform1f(*width, textureWidth);
+            gl()->uniform1f(*height, textureHeight);
+            gl()->uniform2f(*blurRadius, blurMainRadius, blurSubRadius);
+
             gl()->bindTexture(textureKind, textureID);
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-            if (isEGLImage) {
-                gl()->disableVertexAttribArray(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramEGLImageExternalWPosition);
-                gl()->disableVertexAttribArray(
-                    m_compositorContext
-                        ->m_texShaderProgramEGLImageExternalPosition);
-            } else {
-                gl()->disableVertexAttribArray(
-                    m_compositorContext->m_texBlurShaderProgramWPosition);
-                gl()->disableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramPosition);
-            }
+            gl()->disableVertexAttribArray(*positionPos);
+            gl()->disableVertexAttribArray(*texIdx);
         }
 
         GLuint fboTex = popFBOContext();
@@ -3092,18 +3086,13 @@ public:
             m_compositorContext->texBlurShaderProgramH();
 
             gl()->enableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHPosition);
+                m_compositorContext->m_texBlurShaderProgramHTexPos);
             gl()->enableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramPosition);
+                m_compositorContext->m_texBlurShaderProgramHTexIdx);
 
-            gl()->bindBuffer(GL_ARRAY_BUFFER,
-                             m_compositorContext->m_drawPosBuffer);
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_STREAM_DRAW);
-            gl()->vertexAttribPointer(
-                m_compositorContext->m_texBlurShaderProgramHPosition, 2,
-                GL_FLOAT, false, 0, 0);
-            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->uniform2fv(
+                m_compositorContext->m_texBlurShaderProgramHPosition, 4,
+                position);
 
             gl()->bindTexture(GL_TEXTURE_2D, fboTex);
 
@@ -3116,7 +3105,7 @@ public:
 
             gl()->uniform2f(
                 m_compositorContext->m_texBlurShaderProgramHBlurRadius,
-                -blurSubRadius, blurMainRadius);
+                blurSubRadius, blurMainRadius);
             float a = lastState.opacity;
             if (a != 1) {
                 gl()->uniform1f(
@@ -3129,14 +3118,17 @@ public:
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHPosition);
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramPosition);
-
+#if !defined(NDEBUG)
             if (gl()->getError() == 1286) {
                 STARFISH_LOG_ERROR("drawFilteredTexture got error 1286");
             }
+#endif
+
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texBlurShaderProgramHTexPos);
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texBlurShaderProgramHTexIdx);
+
             if (a != 1) {
                 gl()->uniform1f(
                     m_compositorContext->m_texBlurShaderProgramHAlpha, 1);
@@ -3176,6 +3168,7 @@ public:
         GLint* positionPos;
         GLint* alphaPos;
         GLint* texPos;
+        GLint* texIdx;
 
         float a = lastState.opacity;
         if (isEGLImage) {
@@ -3185,19 +3178,19 @@ public:
                 &m_compositorContext->m_texShaderProgramEGLImageExternalAlpha;
             texPos =
                 &m_compositorContext->m_texShaderProgramEGLImageExternalTexPos;
+            texIdx =
+                &m_compositorContext->m_texShaderProgramEGLImageExternalTexIdx;
         } else {
             positionPos = &m_compositorContext->m_texShaderProgramPosition;
             alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
             texPos = &m_compositorContext->m_texShaderProgramTexPos;
+            texIdx = &m_compositorContext->m_texShaderProgramTexIdx;
         }
 
-        gl()->enableVertexAttribArray(*positionPos);
         gl()->enableVertexAttribArray(*texPos);
+        gl()->enableVertexAttribArray(*texIdx);
 
-        gl()->bindBuffer(GL_ARRAY_BUFFER, m_compositorContext->m_drawPosBuffer);
-        gl()->bufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 8, position);
-
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->uniform2fv(*positionPos, 4, position);
 
         if (a != 1) {
             gl()->uniform1f(*alphaPos, a);
@@ -3219,7 +3212,7 @@ public:
         }
 
         gl()->disableVertexAttribArray(*texPos);
-        gl()->disableVertexAttribArray(*positionPos);
+        gl()->disableVertexAttribArray(*texIdx);
     }
 
     Unit::Rect boundingRect(const Clipper2Lib::PathD& path)
@@ -3431,6 +3424,8 @@ public:
                         position.push_back(trianglePoints[5] * hh + 1);
                     }
 
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
                     gl()->bindBuffer(GL_ARRAY_BUFFER,
                                      m_compositorContext->m_drawPosBuffer);
                     gl()->bufferData(GL_ARRAY_BUFFER,
@@ -3450,6 +3445,9 @@ public:
 
                     gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
                     checkError(gl());
+
+                    gl()->disableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
 
                     gl()->colorMask(true, true, true, true);
                     gl()->stencilFunc(GL_EQUAL, 1, 1);
@@ -3600,17 +3598,17 @@ public:
                 gl()->bindTexture(GL_TEXTURE_2D, fboTex);
                 checkError(gl());
 
-                gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                 m_compositorContext->m_drawPosBuffer);
-                gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                                 GL_STREAM_DRAW);
-                gl()->vertexAttribPointer(
-                    m_compositorContext->m_texShaderProgramPosition, 2,
-                    GL_FLOAT, false, 0, 0);
-                gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-                checkError(gl());
+                gl()->enableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramTexPos);
+                gl()->enableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramTexIdx);
+
+                gl()->uniform2fv(
+                    m_compositorContext->m_texShaderProgramPosition, 4,
+                    position);
 
                 gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+#if !defined(NDEBUG)
                 auto errChk = gl()->getError();
                 if (errChk == 1286) {
                     STARFISH_LOG_ERROR("fbo stencil clipping got error 1286");
@@ -3618,6 +3616,12 @@ public:
                     STARFISH_LOG_ERROR(
                         "fbo stencil clipping got fatal error %d", errChk);
                 }
+#endif
+
+                gl()->disableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramTexPos);
+                gl()->disableVertexAttribArray(
+                    m_compositorContext->m_texShaderProgramTexIdx);
 
                 m_compositorContext->putGenericTextureToCache(
                     fboTex, visibleArea.width(), visibleArea.height());
