@@ -575,6 +575,13 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
             rr.setY(frame->borderTop() +
                     scrollMoveRatio * (scrollMovableArea - scrollBarHeight));
         }
+        if (!rr.isEmpty()) {
+            canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f), rr);
+            canvas->drawRect(rr);
+            canvas->endOpacityLayer();
+        }
+        rr.setSize(LayoutSize());
+
         if (hasHorizontalScroll && needsToDrawScrollbar) {
             canvas->setFillColor(Unit::Color(64, 64, 64, 255));
             float scrollMoveRatio = ((float)frame->scrollLeft() /
