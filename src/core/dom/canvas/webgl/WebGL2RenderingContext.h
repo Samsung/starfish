@@ -264,6 +264,9 @@ protected:
         unsigned long long srcOffset, GLuint srcLength);
 
 private:
+    bool checkInternalFormat(GLint internalFormat, GLenum format,
+                             GLenum type) override;
+
     GLenum m_currentVertexAttribType = GL_FLOAT;
 };
 

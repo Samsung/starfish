@@ -3197,6 +3197,24 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     updateImage(&image);
 }
 
+bool WebGLRenderingContext::checkInternalFormat(GLint internalFormat,
+                                                GLenum format, GLenum type)
+{
+    if (static_cast<GLenum>(internalFormat) != format) {
+        // The format, in WebGL 1, must be the same as internalFormat. See:
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+        // WebGL 2 checks combination of internalFormat, format, and type.
+        setGLError(GL_INVALID_OPERATION,
+                   StringUtils::formatString(
+                       "The given parameters, internal format (0x%04X) and "
+                       "format (0x%04X), are not the same.",
+                       internalFormat, format)
+                       .c_str());
+        return false;
+    }
+    return true;
+}
+
 void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                        GLint internalFormat, GLsizei width,
                                        GLsizei height, GLint border,
@@ -3214,13 +3232,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (static_cast<GLenum>(internalFormat) != format) {
-        setGLError(GL_INVALID_OPERATION,
-                   StringUtils::formatString(
-                       "The given parameters, internal format (0x%0fX) and "
-                       "format (0x%04X) are not same.",
-                       internalFormat, format)
-                       .c_str());
+    if (!checkInternalFormat(internalFormat, format, type)) {
         return;
     }
 
@@ -3276,16 +3288,7 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
         return;
     }
 
-    if (static_cast<GLenum>(internalFormat) != format) {
-        // The format, in WebGL 1, must be the same as internalformat. See:
-        // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
-        // TODO: add an identifier for WebGL version and use it.
-        setGLError(GL_INVALID_OPERATION,
-                   StringUtils::formatString(
-                       "The given parameters, internal format (0x%0fX) and "
-                       "format (0x%04X) are not same.",
-                       internalFormat, format)
-                       .c_str());
+    if (!checkInternalFormat(internalFormat, format, type)) {
         return;
     }
 
