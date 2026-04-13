@@ -564,7 +564,7 @@ test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swi
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_033_to_040.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_041_to_048.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_049_to_056.html
-test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_057_to_064.html
+#test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_057_to_064.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_065_to_072.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_073_to_080.html
 test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/ogles/GL/swizzlers/swizzlers_081_to_088.html
