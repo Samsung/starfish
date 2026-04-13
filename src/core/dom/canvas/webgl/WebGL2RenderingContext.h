@@ -267,6 +267,7 @@ private:
     bool checkInternalFormat(GLint internalFormat, GLenum format,
                              GLenum type) override;
     bool isSrcDataValid(ScriptArrayBufferView srcData, GLenum type) override;
+    size_t getBytesPerPixel(GLenum format, GLenum type) override;
 
     GLenum m_currentVertexAttribType = GL_FLOAT;
 };
