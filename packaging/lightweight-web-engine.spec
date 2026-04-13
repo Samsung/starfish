@@ -450,10 +450,15 @@ a standalone executable binary for flutter.
 ##############################################
 %build
 echo "Building for: " %{rpm}
+%global gbs_root_id %(ls -di . | awk '{print $1}')
+echo "Make gbs build id from file inode({GBS-ROOT}/local/BUILD-ROOTS/scratch.{ARCH}.0/home/abuild): " %{gbs_root_id}
+
+# Define output folder
+%define out_folder out_tizen/build_%{gbs_root_id}
 
 # Setup Jinja2, ply
 %define binding_src_path binding_generator/pip_archive
-%define binding_install_path out_tizen/binding_generator_python_packages
+%define binding_install_path %{out_folder}/binding_generator_python_packages
 
 if [ ! -f "%{binding_install_path}/DONE" ]; then
  unzip -o %{binding_src_path}/Jinja2-3.1.2-py3-none-any.whl -d %{binding_install_path}
@@ -517,7 +522,7 @@ CXXFLAGS+=' -fno-lto '
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}'
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
-%define out_tizen out_tizen/unified_tv/release
+%define out_tizen %{out_folder}/unified_tv/release
 
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -550,7 +555,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %if "%{rpm}" == "prod_tv"
-%define out_tizen out_tizen/prod_tv/release
+%define out_tizen %{out_folder}/prod_tv/release
 
 # For Cairo
 %if "%{?skip_config}" == "0"
@@ -645,7 +650,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%define out_tizen out_tizen/unified_mobile/release
+%define out_tizen %{out_folder}/unified_mobile/release
 
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
@@ -680,7 +685,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%define out_tizen out_tizen/unified_wearable/release
+%define out_tizen %{out_folder}/unified_wearable/release
 
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
@@ -717,7 +722,7 @@ ninja -C %{out_tizen} starfish.executable.tpk
 %endif
 
 %if "%{rpm}" == "flutter"
-%define out_tizen out_tizen/flutter/release
+%define out_tizen %{out_folder}/flutter/release
 # For Cairo
 cmake CMakeLists.txt -B%{out_tizen} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' \
   -DTIZEN_MINOR_VERSION='%{tizen_version_minor}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' \
@@ -750,24 +755,24 @@ install -m 0644 %{out_tizen}/lightweight-web-engine-update.service %{buildroot}%
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
-cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/unified_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/unified_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "tv" && "%{?disable_shell}" == "0"
-cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+cp -fr %{out_folder}/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "prod_tv"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
-cp -fr out_tizen/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/prod_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+cp -fr %{out_folder}/prod_tv/release/lib/VERSION %{buildroot}%{_libdir}/lwe/tv
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
 strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
 %if "%{rpm}" == "prod_tv" && "%{?disable_shell}" == "0"
-cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+cp -fr %{out_folder}/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %if "%{?enable_test}" == "1"
 cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
 %endif
@@ -775,39 +780,39 @@ cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
 
 %if "%{rpm}" == "headless"
 mkdir -p %{buildroot}/%{_libdir}/lwe/headless
-cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
-cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
-cp -fr out_tizen/headless/release/lib/VERSION %{buildroot}%{_libdir}/lwe/headless
+cp -fr %{out_folder}/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
+cp -fr %{out_folder}/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
+cp -fr %{out_folder}/headless/release/lib/VERSION %{buildroot}%{_libdir}/lwe/headless
 %endif
 %if "%{rpm}" == "headless" && "%{?disable_shell}" == "0"
-cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
+cp -fr %{out_folder}/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
-cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr out_tizen/unified_mobile/release/lib/VERSION %{buildroot}%{_libdir}/lwe/mobile
+cp -fr %{out_folder}/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
+cp -fr %{out_folder}/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
+cp -fr %{out_folder}/unified_mobile/release/lib/VERSION %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile" && "%{?disable_shell}" == "0"
-cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
+cp -fr %{out_folder}/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
-cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr out_tizen/unified_wearable/release/lib/VERSION %{buildroot}%{_libdir}/lwe/wearable
+cp -fr %{out_folder}/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
+cp -fr %{out_folder}/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
+cp -fr %{out_folder}/unified_wearable/release/lib/VERSION %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable" && "%{?disable_shell}" == "0"
-cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
+cp -fr %{out_folder}/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "flutter"
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
-cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
-cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
-cp -fr out_tizen/flutter/release/lib/VERSION %{buildroot}%{_libdir}/lwe/flutter
+cp -fr %{out_folder}/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr %{out_folder}/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr %{out_folder}/flutter/release/lib/VERSION %{buildroot}%{_libdir}/lwe/flutter
 %endif
 
 # for devel files
