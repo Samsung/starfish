@@ -26,9 +26,7 @@
 #include "core/util/String.h"
 #include <unordered_map>
 
-namespace Starfish {
-
-size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
+static size_t getBytesPerPixelWebGL1(GLenum format, GLenum type)
 {
     // Format      Type                Bytes per Pixel
     // ------------------------------------------------
@@ -69,6 +67,122 @@ size_t Pixel::getBytesPerPixel(GLenum format, GLenum type)
     }
 
     STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
+    STARFISH_ASSERT_NOT_REACHED();
+    return 0;
+}
+
+struct Combination {
+    GLenum format;
+    GLenum type;
+    size_t bytesPerPixel;
+    GLint internalFormat;
+};
+
+// https://registry.khronos.org/OpenGL/specs/es/3.0/es_spec_3.0.pdf
+static const Combination combinationsWebGL2[] = {
+    // Table 3.2: Valid combinations of format, type, and sized internalformat.
+    { GL_RGBA, GL_UNSIGNED_BYTE, 4, GL_RGBA8 },
+    { GL_RGBA, GL_UNSIGNED_BYTE, 4, GL_RGB5_A1 },
+    { GL_RGBA, GL_UNSIGNED_BYTE, 4, GL_RGBA4 },
+    { GL_RGBA, GL_UNSIGNED_BYTE, 4, GL_SRGB8_ALPHA8 },
+    { GL_RGBA, GL_BYTE, 4, GL_RGBA8_SNORM },
+    { GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, 2, GL_RGBA4 },
+    { GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, 2, GL_RGB5_A1 },
+    { GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV, 4, GL_RGB10_A2 },
+    { GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV, 4, GL_RGB5_A1 },
+    { GL_RGBA, GL_HALF_FLOAT, 8, GL_RGBA16F },
+    { GL_RGBA, GL_FLOAT, 16, GL_RGBA32F },
+    { GL_RGBA, GL_FLOAT, 16, GL_RGBA16F },
+    { GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, 4, GL_RGBA8UI },
+    { GL_RGBA_INTEGER, GL_BYTE, 4, GL_RGBA8I },
+    { GL_RGBA_INTEGER, GL_UNSIGNED_SHORT, 8, GL_RGBA16UI },
+    { GL_RGBA_INTEGER, GL_SHORT, 8, GL_RGBA16I },
+    { GL_RGBA_INTEGER, GL_UNSIGNED_INT, 16, GL_RGBA32UI },
+    { GL_RGBA_INTEGER, GL_INT, 16, GL_RGBA32I },
+    { GL_RGBA_INTEGER, GL_UNSIGNED_INT_2_10_10_10_REV, 4, GL_RGB10_A2UI },
+    { GL_RGB, GL_UNSIGNED_BYTE, 3, GL_RGB8 },
+    { GL_RGB, GL_UNSIGNED_BYTE, 3, GL_RGB565 },
+    { GL_RGB, GL_UNSIGNED_BYTE, 3, GL_SRGB8 },
+    { GL_RGB, GL_BYTE, 3, GL_RGB8_SNORM },
+    { GL_RGB, GL_UNSIGNED_SHORT_5_6_5, 2, GL_RGB565 },
+    { GL_RGB, GL_UNSIGNED_INT_10F_11F_11F_REV, 4, GL_R11F_G11F_B10F },
+    { GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV, 4, GL_RGB9_E5 },
+    { GL_RGB, GL_HALF_FLOAT, 6, GL_RGB16F },
+    { GL_RGB, GL_HALF_FLOAT, 6, GL_R11F_G11F_B10F },
+    { GL_RGB, GL_HALF_FLOAT, 6, GL_RGB9_E5 },
+    { GL_RGB, GL_FLOAT, 12, GL_RGB32F },
+    { GL_RGB, GL_FLOAT, 12, GL_RGB16F },
+    { GL_RGB, GL_FLOAT, 12, GL_R11F_G11F_B10F },
+    { GL_RGB, GL_FLOAT, 12, GL_RGB9_E5 },
+    { GL_RGB_INTEGER, GL_UNSIGNED_BYTE, 3, GL_RGB8UI },
+    { GL_RGB_INTEGER, GL_BYTE, 3, GL_RGB8I },
+    { GL_RGB_INTEGER, GL_UNSIGNED_SHORT, 6, GL_RGB16UI },
+    { GL_RGB_INTEGER, GL_SHORT, 6, GL_RGB16I },
+    { GL_RGB_INTEGER, GL_UNSIGNED_INT, 12, GL_RGB32UI },
+    { GL_RGB_INTEGER, GL_INT, 12, GL_RGB32I },
+    { GL_RG, GL_UNSIGNED_BYTE, 2, GL_RG8 },
+    { GL_RG, GL_BYTE, 2, GL_RG8_SNORM },
+    { GL_RG, GL_HALF_FLOAT, 4, GL_RG16F },
+    { GL_RG, GL_FLOAT, 8, GL_RG32F },
+    { GL_RG, GL_FLOAT, 8, GL_RG16F },
+    { GL_RG_INTEGER, GL_UNSIGNED_BYTE, 2, GL_RG8UI },
+    { GL_RG_INTEGER, GL_BYTE, 2, GL_RG8I },
+    { GL_RG_INTEGER, GL_UNSIGNED_SHORT, 4, GL_RG16UI },
+    { GL_RG_INTEGER, GL_SHORT, 4, GL_RG16I },
+    { GL_RG_INTEGER, GL_UNSIGNED_INT, 8, GL_RG32UI },
+    { GL_RG_INTEGER, GL_INT, 8, GL_RG32I },
+    { GL_RED, GL_UNSIGNED_BYTE, 1, GL_R8 },
+    { GL_RED, GL_BYTE, 1, GL_R8_SNORM },
+    { GL_RED, GL_HALF_FLOAT, 2, GL_R16F },
+    { GL_RED, GL_FLOAT, 4, GL_R32F },
+    { GL_RED, GL_FLOAT, 4, GL_R16F },
+    { GL_RED_INTEGER, GL_UNSIGNED_BYTE, 1, GL_R8UI },
+    { GL_RED_INTEGER, GL_BYTE, 1, GL_R8I },
+    { GL_RED_INTEGER, GL_UNSIGNED_SHORT, 2, GL_R16UI },
+    { GL_RED_INTEGER, GL_SHORT, 2, GL_R16I },
+    { GL_RED_INTEGER, GL_UNSIGNED_INT, 4, GL_R32UI },
+    { GL_RED_INTEGER, GL_INT, 4, GL_R32I },
+    { GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, 2, GL_DEPTH_COMPONENT16 },
+    { GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4, GL_DEPTH_COMPONENT24 },
+    { GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 4, GL_DEPTH_COMPONENT16 },
+    { GL_DEPTH_COMPONENT, GL_FLOAT, 4, GL_DEPTH_COMPONENT32F },
+    { GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 4, GL_DEPTH24_STENCIL8 },
+    { GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, 8,
+      GL_DEPTH32F_STENCIL8 },
+    // Table 3.3: Valid combinations of format, type, and unsized
+    // internalformat.
+    { GL_RGBA, GL_UNSIGNED_BYTE, 4, GL_RGBA },
+    { GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, 2, GL_RGBA },
+    { GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, 2, GL_RGBA },
+    { GL_RGB, GL_UNSIGNED_BYTE, 3, GL_RGB },
+    { GL_RGB, GL_UNSIGNED_SHORT_5_6_5, 2, GL_RGB },
+    { GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, 2, GL_LUMINANCE_ALPHA },
+    { GL_LUMINANCE, GL_UNSIGNED_BYTE, 1, GL_LUMINANCE },
+    { GL_ALPHA, GL_UNSIGNED_BYTE, 1, GL_ALPHA },
+};
+
+static size_t getBytesPerPixelWebGL2(GLenum format, GLenum type)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.format == format && combination.type == type) {
+            return combination.bytesPerPixel;
+        }
+    }
+
+    STARFISH_UNIMPLEMENTED("format: 0x%04X, type: 0x%04X", format, type);
+    return 0;
+}
+
+namespace Starfish {
+
+size_t Pixel::getBytesPerPixel(GLenum format, GLenum type, int webGLVersion)
+{
+    if (webGLVersion == 1) {
+        return getBytesPerPixelWebGL1(format, type);
+    }
+    if (webGLVersion == 2) {
+        return getBytesPerPixelWebGL2(format, type);
+    }
     STARFISH_ASSERT_NOT_REACHED();
     return 0;
 }

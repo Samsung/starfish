@@ -1182,6 +1182,11 @@ bool WebGL2RenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
            (srcData->isFloat32ArrayObject() && type == GL_FLOAT);
 }
 
+size_t WebGL2RenderingContext::getBytesPerPixel(GLenum format, GLenum type)
+{
+    return Pixel::getBytesPerPixel(format, type, 2);
+}
+
 void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                                         GLint internalformat, GLsizei width,
                                         GLsizei height, GLint border,
