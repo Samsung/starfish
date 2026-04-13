@@ -360,6 +360,7 @@ protected:
 private:
     virtual bool checkInternalFormat(GLint internalFormat, GLenum format,
                                      GLenum type);
+    virtual bool isSrcDataValid(ScriptArrayBufferView srcData, GLenum type);
 
     bool m_hasPendingJobsBetweenFrames;
     uint32_t m_pendingClearMask;

@@ -2997,6 +2997,25 @@ private:
     Optional<GLenum> m_dataFormat;
 };
 
+bool WebGLRenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
+                                           GLenum type)
+{
+    if (type == GL_UNSIGNED_BYTE && (!srcData->isUint8ArrayObject() &&
+                                     !srcData->isUint8ClampedArrayObject())) {
+        // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
+        // must be supplied.
+        return false;
+    }
+    if ((type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+         type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+        !srcData->isUint16ArrayObject()) {
+        // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
+        // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
+        return false;
+    }
+    return true;
+}
+
 void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     GLenum target, GLint level, GLsizei width, GLsizei height, GLenum format,
     GLenum type, Optional<ScriptArrayBufferView> pixels,
@@ -3011,19 +3030,7 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
     if (pixels.hasValue()) {
         ArrayBufferViewRef* pixelsView = pixels.getValue();
 
-        if (type == GL_UNSIGNED_BYTE &&
-            (!pixelsView->isUint8ArrayObject() &&
-             !pixelsView->isUint8ClampedArrayObject())) {
-            // If it is UNSIGNED_BYTE, a Uint8Array or Uint8ClampedArray
-            // must be supplied.
-            setGLError(GL_INVALID_OPERATION);
-            return;
-        } else if ((type == GL_UNSIGNED_SHORT_5_6_5 ||
-                    type == GL_UNSIGNED_SHORT_4_4_4_4 ||
-                    type == GL_UNSIGNED_SHORT_5_5_5_1) &&
-                   !pixelsView->isUint16ArrayObject()) {
-            // If it is UNSIGNED_SHORT_5_6_5, UNSIGNED_SHORT_4_4_4_4, or
-            // UNSIGNED_SHORT_5_5_5_1, a Uint16Array must be supplied.
+        if (!isSrcDataValid(pixelsView, type)) {
             setGLError(GL_INVALID_OPERATION);
             return;
         }

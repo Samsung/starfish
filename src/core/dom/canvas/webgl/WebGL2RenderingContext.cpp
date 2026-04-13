@@ -1162,6 +1162,26 @@ bool WebGL2RenderingContext::checkInternalFormat(GLint internalFormat,
     return false;
 }
 
+bool WebGL2RenderingContext::isSrcDataValid(ScriptArrayBufferView srcData,
+                                            GLenum type)
+{
+    return (srcData->isInt8ArrayObject() && type == GL_BYTE) ||
+           (srcData->isUint8ArrayObject() && type == GL_UNSIGNED_BYTE) ||
+           (srcData->isUint8ClampedArrayObject() && type == GL_UNSIGNED_BYTE) ||
+           (srcData->isInt16ArrayObject() && type == GL_SHORT) ||
+           (srcData->isUint16ArrayObject() &&
+            (type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_SHORT_5_6_5 ||
+             type == GL_UNSIGNED_SHORT_5_5_5_1 ||
+             type == GL_UNSIGNED_SHORT_4_4_4_4 || type == GL_HALF_FLOAT)) ||
+           (srcData->isInt32ArrayObject() && type == GL_INT) ||
+           (srcData->isUint32ArrayObject() &&
+            (type == GL_UNSIGNED_INT || type == GL_UNSIGNED_INT_5_9_9_9_REV ||
+             type == GL_UNSIGNED_INT_2_10_10_10_REV ||
+             type == GL_UNSIGNED_INT_10F_11F_11F_REV ||
+             type == GL_UNSIGNED_INT_24_8)) ||
+           (srcData->isFloat32ArrayObject() && type == GL_FLOAT);
+}
+
 void WebGL2RenderingContext::texImage2D(GLenum target, GLint level,
                                         GLint internalformat, GLsizei width,
                                         GLsizei height, GLint border,
