@@ -3212,7 +3212,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
 bool WebGLRenderingContext::checkInternalFormat(GLint internalFormat,
                                                 GLenum format, GLenum type)
 {
-    if (static_cast<GLenum>(internalFormat) != format) {
+    if (!Pixel::isInternalFormatValid(internalFormat, format, type, 1)) {
         // The format, in WebGL 1, must be the same as internalFormat. See:
         // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
         // WebGL 2 checks combination of internalFormat, format, and type.

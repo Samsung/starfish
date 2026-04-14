@@ -26,6 +26,11 @@
 #include "core/util/String.h"
 #include <unordered_map>
 
+static bool isInternalFormatValidWebGL1(GLint internalFormat, GLenum format)
+{
+    return static_cast<GLenum>(internalFormat) == format;
+}
+
 static size_t getBytesPerPixelWebGL1(GLenum format, GLenum type)
 {
     // Format      Type                Bytes per Pixel
@@ -161,6 +166,18 @@ static const Combination combinationsWebGL2[] = {
     { GL_ALPHA, GL_UNSIGNED_BYTE, 1, GL_ALPHA },
 };
 
+static bool isInternalFormatValidWebGL2(GLint internalFormat, GLenum format,
+                                        GLenum type)
+{
+    for (const Combination& combination : combinationsWebGL2) {
+        if (combination.internalFormat == internalFormat &&
+            combination.format == format && combination.type == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static size_t getBytesPerPixelWebGL2(GLenum format, GLenum type)
 {
     for (const Combination& combination : combinationsWebGL2) {
@@ -174,6 +191,19 @@ static size_t getBytesPerPixelWebGL2(GLenum format, GLenum type)
 }
 
 namespace Starfish {
+
+bool Pixel::isInternalFormatValid(GLint internalFormat, GLenum format,
+                                  GLenum type, int webGLVersion)
+{
+    if (webGLVersion == 1) {
+        return isInternalFormatValidWebGL1(internalFormat, format);
+    }
+    if (webGLVersion == 2) {
+        return isInternalFormatValidWebGL2(internalFormat, format, type);
+    }
+    STARFISH_ASSERT_NOT_REACHED();
+    return 0;
+}
 
 size_t Pixel::getBytesPerPixel(GLenum format, GLenum type, int webGLVersion)
 {
