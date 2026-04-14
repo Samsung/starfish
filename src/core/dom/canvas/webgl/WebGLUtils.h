@@ -46,6 +46,8 @@ struct CaseInsensitiveEqual {
 
 class Pixel {
 public:
+    static bool isInternalFormatValid(GLint internalFormat, GLenum format,
+                                      GLenum type = 0, int webGLVersion = 1);
     static size_t getBytesPerPixel(GLenum format, GLenum type,
                                    int webGLVersion = 1);
     static bool isTwoBytesPerPixel(GLenum type);
