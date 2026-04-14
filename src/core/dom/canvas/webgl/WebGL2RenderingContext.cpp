@@ -122,66 +122,72 @@ ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
     });
 #endif
 
+Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(Optional<ScriptValue>());
+
+    switch (pname) {
+    // DOMString
+    case GL_SHADING_LANGUAGE_VERSION:
+        return createScriptValue(
+            createScriptASCIIString(kShadingLanguageVersion));
+    case GL_VERSION:
+        return createScriptValue(createScriptASCIIString(kVersion));
+    // GLboolean
+    case GL_RASTERIZER_DISCARD:
+    case GL_TRANSFORM_FEEDBACK_ACTIVE:
+    case GL_TRANSFORM_FEEDBACK_PAUSED: {
+        std::vector<GLboolean> values(1);
+        gl()->getBooleanv(pname, &values[0]);
+        return createScriptValue(static_cast<bool>(values[0]));
+    }
+    // GLfloat
+    case GL_MAX_TEXTURE_LOD_BIAS: {
+        std::vector<GLfloat> values(1);
+        gl()->getFloatv(pname, &values[0]);
+        return createScriptValue(values[0]);
+    }
+    // GLint64
+    case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+        return createScriptValue(kMaxClientWaitTimeoutWebgl);
+    case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+    case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+    case GL_MAX_ELEMENT_INDEX:
+    case GL_MAX_SERVER_WAIT_TIMEOUT:
+    case GL_MAX_UNIFORM_BLOCK_SIZE: {
+        std::vector<GLint64> values(1);
+        gl()->getInteger64v(pname, &values[0]);
+        return createScriptValue(values[0]);
+    }
+    // WebGLVertexArrayObject
+    case GL_VERTEX_ARRAY_BINDING: {
+        GLint value = -1;
+        gl()->getIntegerv(pname, &value);
+        if (value == 0) {
+            return scriptNull();
+        }
+
+        Optional<WebGLVertexArrayObject*> maybe =
+            getState()->webGLVertexArrayObject();
+
+        if (!maybe.hasValue() || maybe.value()->isDeleted()) {
+            return scriptNull();
+        }
+
+        STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) == value);
+        return maybe.value()->scriptValue();
+    }
+    default:
+        break;
+    }
+    return Optional<ScriptValue>();
+}
+
 ScriptValue WebGL2RenderingContext::getParameter(GLenum pname)
 {
-    {
-        ENTER_CONTEXT_SCOPE(scriptNull());
-
-        switch (pname) {
-        // DOMString
-        case GL_SHADING_LANGUAGE_VERSION:
-            return createScriptValue(
-                createScriptASCIIString(kShadingLanguageVersion));
-        case GL_VERSION:
-            return createScriptValue(createScriptASCIIString(kVersion));
-        // GLboolean
-        case GL_RASTERIZER_DISCARD:
-        case GL_TRANSFORM_FEEDBACK_ACTIVE:
-        case GL_TRANSFORM_FEEDBACK_PAUSED: {
-            std::vector<GLboolean> values(1);
-            gl()->getBooleanv(pname, &values[0]);
-            return createScriptValue(static_cast<bool>(values[0]));
-        }
-        // GLfloat
-        case GL_MAX_TEXTURE_LOD_BIAS: {
-            std::vector<GLfloat> values(1);
-            gl()->getFloatv(pname, &values[0]);
-            return createScriptValue(values[0]);
-        }
-        // GLint64
-        case kMAX_CLIENT_WAIT_TIMEOUT_WEBGL:
-            return createScriptValue(kMaxClientWaitTimeoutWebgl);
-        case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
-        case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
-        case GL_MAX_ELEMENT_INDEX:
-        case GL_MAX_SERVER_WAIT_TIMEOUT:
-        case GL_MAX_UNIFORM_BLOCK_SIZE: {
-            std::vector<GLint64> values(1);
-            gl()->getInteger64v(pname, &values[0]);
-            return createScriptValue(values[0]);
-        }
-        // WebGLVertexArrayObject
-        case GL_VERTEX_ARRAY_BINDING: {
-            GLint value = -1;
-            gl()->getIntegerv(pname, &value);
-            if (value == 0) {
-                return scriptNull();
-            }
-
-            Optional<WebGLVertexArrayObject*> maybe =
-                getState()->webGLVertexArrayObject();
-
-            if (!maybe.hasValue() || maybe.value()->isDeleted()) {
-                return scriptNull();
-            }
-
-            STARFISH_ASSERT(static_cast<GLint>(maybe.value()->glObject()) ==
-                            value);
-            return maybe.value()->scriptValue();
-        }
-        default:
-            break;
-        }
+    Optional<ScriptValue> parameter = getParameterImpl(pname);
+    if (parameter.hasValue()) {
+        return parameter.value();
     }
     return WebGLRenderingContext::getParameter(pname);
 }
