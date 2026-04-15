@@ -404,6 +404,92 @@ ScriptValue WebGL2RenderingContext::getProgramParameter(WebGLProgram* program,
     return scriptNull();
 }
 
+ScriptValue WebGL2RenderingContext::getTexParameter(GLenum target, GLenum pname)
+{
+    ENTER_CONTEXT_SCOPE(scriptNull());
+
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
+        target != GL_TEXTURE_2D_ARRAY && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return scriptNull();
+    }
+
+    if (!hasBoundTexture(target)) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
+        isExtensionEnabled("EXT_texture_filter_anisotropic")) {
+        GLfloat params = 0;
+        gl()->getTexParameterfv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(params);
+    }
+
+    switch (pname) {
+    // GLboolean
+    case GL_TEXTURE_IMMUTABLE_FORMAT: {
+        GLint params = 0;
+        gl()->getTexParameteriv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<bool>(params));
+    }
+    // GLenum
+    case GL_TEXTURE_COMPARE_FUNC:
+    case GL_TEXTURE_COMPARE_MODE:
+    case GL_TEXTURE_MAG_FILTER:
+    case GL_TEXTURE_MIN_FILTER:
+    case GL_TEXTURE_WRAP_R:
+    case GL_TEXTURE_WRAP_S:
+    case GL_TEXTURE_WRAP_T: {
+        GLint params = 0;
+        gl()->getTexParameteriv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLenum>(params));
+    }
+    // GLfloat
+    case GL_TEXTURE_MAX_LOD:
+    case GL_TEXTURE_MIN_LOD: {
+        GLfloat params = 0;
+        gl()->getTexParameterfv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(params);
+    }
+    // GLint
+    case GL_TEXTURE_BASE_LEVEL:
+    case GL_TEXTURE_MAX_LEVEL: {
+        GLint params = 0;
+        gl()->getTexParameteriv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(params);
+    }
+    // GLuint
+    case GL_TEXTURE_IMMUTABLE_LEVELS: {
+        GLint params = 0;
+        gl()->getTexParameteriv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLuint>(params));
+    }
+    default:
+        break;
+    }
+    setGLError(GL_INVALID_ENUM);
+    return scriptNull();
+}
+
 Optional<ScriptValue> WebGL2RenderingContext::getUniformImpl(
     WebGLProgram* program, WebGLUniformLocation* location, GLenum type)
 {

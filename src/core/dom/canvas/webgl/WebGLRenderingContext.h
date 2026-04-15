@@ -327,9 +327,9 @@ private:
 
 protected:
     bool isFromCurrentProgram(WebGLUniformLocation* uniform);
+    bool isExtensionEnabled(const char* requestedName);
 
 private:
-    bool isExtensionEnabled(const char* requestedName);
     bool isDefaultFramebufferBound();
     GLuint getCurrentFBO();
     GLint getCurrentProgram();
@@ -338,6 +338,8 @@ private:
     void flushDrawingCommands();
 
 protected:
+    bool hasBoundTexture(GLenum target) const;
+
     GLenum getUniformType(WebGLProgram* program,
                           WebGLUniformLocation* location);
     Optional<ScriptValue> getUniformImpl(WebGLProgram* program,
