@@ -1736,6 +1736,30 @@ String* WebGLRenderingContext::getShaderSource(WebGLShader* shader)
     return String::fromUTF8(buffer.data(), length);
 }
 
+bool WebGLRenderingContext::hasBoundTexture(GLenum target) const
+{
+    GLenum binding;
+    switch (target) {
+    case GL_TEXTURE_2D:
+        binding = GL_TEXTURE_BINDING_2D;
+        break;
+    case GL_TEXTURE_3D:
+        binding = GL_TEXTURE_BINDING_3D;
+        break;
+    case GL_TEXTURE_2D_ARRAY:
+        binding = GL_TEXTURE_BINDING_2D_ARRAY;
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        binding = GL_TEXTURE_BINDING_CUBE_MAP;
+        break;
+    default:
+        return false;
+    }
+    GLint boundTexture = 0;
+    m_gl->getIntegerv(binding, &boundTexture);
+    return boundTexture != 0;
+}
+
 ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
@@ -1745,10 +1769,18 @@ ScriptValue WebGLRenderingContext::getTexParameter(GLenum target, GLenum pname)
         return scriptNull();
     }
 
+    if (!hasBoundTexture(target)) {
+        setGLError(GL_INVALID_OPERATION);
+        return scriptNull();
+    }
+
     if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
         isExtensionEnabled("EXT_texture_filter_anisotropic")) {
         GLfloat params = 0;
         m_gl->getTexParameterfv(target, pname, &params);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
         return createScriptValue(params);
     }
 
