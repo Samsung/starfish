@@ -27,6 +27,7 @@
 
 #if defined(SHELL_ENABLE_BACKTRACE)
 #include <execinfo.h>
+#include <backtrace.h>
 #endif
 
 #include <cstring>
@@ -157,12 +158,33 @@ int Shell::runMiniBrowser(int argc, char* argv[])
 }
 
 #if defined(SHELL_ENABLE_BACKTRACE)
+static struct backtrace_state* g_backtraceState = nullptr;
+
+static void backtraceErrorCallback(void* data, const char* msg, int errnum)
+{
+    fprintf(stderr, "[bt] Error: %s (errnum: %d)\n", msg, errnum);
+}
+
+static int backtraceFullCallback(void* data, uintptr_t pc, const char* filename,
+                                 int lineno, const char* function)
+{
+    int* frameIndex = static_cast<int*>(data);
+    if (function && filename) {
+        printf("[bt] #%d %s (%s:%d)\n", *frameIndex, function, filename,
+               lineno);
+    } else if (function) {
+        printf("[bt] #%d %s (?)\n", *frameIndex, function);
+    } else if (filename) {
+        printf("[bt] #%d ?? (%s:%d)\n", *frameIndex, filename, lineno);
+    } else {
+        printf("[bt] #%d ?? ??:?\n", *frameIndex);
+    }
+    (*frameIndex)++;
+    return 0;
+}
+
 static void sigHandler(int sig, struct sigcontext ctx)
 {
-    void* trace[128];
-    char** messages = (char**)NULL;
-    int i, trace_size = 0;
-
     // `[STARFISH_TEST] Got signal` string is used by test case runner
     // don't change!
     if (sig == SIGSEGV) {
@@ -174,29 +196,20 @@ static void sigHandler(int sig, struct sigcontext ctx)
         printf("[STARFISH_TEST] Got signal %d, pid %d\n", sig, (int)getpid());
     }
 
-    trace_size = backtrace(trace, 128);
-    /* overwrite sigaction with caller's address */
-    trace[1] = (void*)ctx.rip;
-    messages = backtrace_symbols(trace, trace_size);
-    /* skip first stack frame (points here) */
     printf("[bt] Execution path:\n");
-    for (i = 1; i < trace_size; ++i) {
-        printf("[bt] #%d %s ", i, messages[i]);
 
-        char syscom[256];
-        std::string temp = messages[i];
-        auto moduleEnd = temp.find("(");
-        auto addrStart = temp.find("+");
-        auto addrEnd = temp.find(")");
-        if (moduleEnd != std::string::npos && addrStart != std::string::npos &&
-            addrEnd != std::string::npos) {
-            std::string modulePath = temp.substr(0, moduleEnd);
-            std::string addr = temp.substr(addrStart, addrEnd - addrStart);
-            sprintf(syscom, "addr2line %s -e %s", addr.c_str(),
-                    modulePath.c_str());
-            system(syscom);
-        } else {
-            printf("\n");
+    if (g_backtraceState) {
+        int frameIndex = 0;
+        backtrace_full(g_backtraceState, 0, backtraceFullCallback,
+                       backtraceErrorCallback, &frameIndex);
+    } else {
+        // Fallback to basic backtrace if state is not initialized
+        void* trace[128];
+        int trace_size = backtrace(trace, 128);
+        trace[1] = (void*)ctx.rip;
+        char** messages = backtrace_symbols(trace, trace_size);
+        for (int i = 1; i < trace_size; ++i) {
+            printf("[bt] #%d %s\n", i, messages[i]);
         }
     }
 
@@ -209,6 +222,12 @@ static void sigHandler(int sig, struct sigcontext ctx)
 
 void Shell::setBacktraceHandler()
 {
+    /* Initialize backtrace state for fast symbol resolution */
+    if (!g_backtraceState) {
+        g_backtraceState =
+            backtrace_create_state(nullptr, 1, backtraceErrorCallback, nullptr);
+    }
+
     /* Install our signal handler */
     struct sigaction sa;
 
