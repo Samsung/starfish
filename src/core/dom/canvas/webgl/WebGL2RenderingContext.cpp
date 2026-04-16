@@ -991,7 +991,7 @@ ScriptValue WebGL2RenderingContext::getActiveUniforms(
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    if (isFromCurrentContext(program)) {
+    if (!isFromCurrentContext(program)) {
         setGLError(GL_INVALID_OPERATION);
         return scriptNull();
     }
