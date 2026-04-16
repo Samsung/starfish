@@ -42,8 +42,6 @@ static bool isSystemMainThread()
     return getCurrentThreadID() == getpid();
 }
 
-// static GMainLoop* g_mainLoop = nullptr;
-
 MessageLoopGLib::MessageLoopGLib()
     : MessageLoop()
 {
@@ -366,29 +364,14 @@ void MessageLoopGLib::runOnMainThreadAsync(const std::function<void()>& functor)
 void MessageLoopGLib::init()
 {
     STARFISH_RELEASE_ASSERT(isSystemMainThread());
-    /*
-    if (!g_mainLoop) {
-        g_mainLoop = g_main_loop_new(nullptr, FALSE);
-    }
-    */
 }
 
 void MessageLoopGLib::run()
 {
-    /*
-    if (g_mainLoop) {
-        g_main_loop_run(g_mainLoop);
-    }
-    */
 }
 
 void MessageLoopGLib::stop()
 {
-    /*
-    if (g_mainLoop) {
-        g_main_loop_quit(g_mainLoop);
-    }
-    */
 }
 
 void MessageLoopGLib::runOnMainThreadSync(const std::function<void()>& functor)
