@@ -36,7 +36,7 @@ class Window;
 class Console;
 
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11) || \
-    defined(STARFISH_SHELL_EFL_HEADLESS)
+    defined(STARFISH_SHELL_EFL_HEADLESS) || defined(STARFISH_SHELL_ECORE_X)
 typedef LWE::WebContainer* LWEType;
 #elif defined(STARFISH_SHELL_EFL)
 typedef LWE::WebView* LWEType;

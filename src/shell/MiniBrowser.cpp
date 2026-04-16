@@ -367,7 +367,8 @@ bool MiniBrowser::createWindow(const InitOption& initOption)
 
 bool MiniBrowser::createLWE(const InitOption& initOption)
 {
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11) || \
+    defined(STARFISH_SHELL_ECORE_X)
     LWE::WebContainer::WebContainerArguments args{
         .width = initOption.geometry.width,
         .height = initOption.geometry.height,
@@ -460,8 +461,9 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
         printf("Exit\n");
         setenv("SHELL_DONE_FLAG", "1", 1);
     });
-
+#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     g_eventPoller.start(m_window, m_lwe);
+#endif
 #elif defined(STARFISH_SHELL_EFL)
     m_lwe = LWE::WebView::Create(
         m_window->getNativeWindowHandle(), initOption.geometry.x,

@@ -68,7 +68,7 @@ Default values are in **bold**.
   Compile Starfish for either Linux or Tizen platform
 * -DMODE=[ debug | **release** ]<br>
   Compile Starfish for either release or debug mode
-* -DBACKEND=[ **efl_cairo_gl** | uv_cairo_gl ]<br>
+* -DBACKEND=[ **efl_cairo_gl** | uv_cairo_gl | glib_cairo_gl ]<br>
   Use either cairo or cairo_gl as the backend graphics library
 * -DARCH=[ **x64** | arm ]
   Compile Starfish for either x64 or arm target
