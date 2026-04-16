@@ -224,6 +224,9 @@ MiniBrowser::MiniBrowser()
 
 MiniBrowser::~MiniBrowser()
 {
+    if (m_console) {
+        delete m_console;
+    }
     m_lwe->Blur();
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     g_eventPoller.stop();
@@ -232,10 +235,6 @@ MiniBrowser::~MiniBrowser()
 
     m_window->terminate();
     delete m_window;
-
-    if (m_console) {
-        delete m_console;
-    }
 
     LWE::LWE::Finalize();
 }

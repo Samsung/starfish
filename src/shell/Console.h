@@ -21,6 +21,8 @@
 #define __StarfishShellConsole__
 
 #include <string>
+#include <pthread.h>
+#include <atomic>
 
 namespace StarfishShell {
 
@@ -35,15 +37,18 @@ public:
 
     static Console* create(MiniBrowser* browser);
 
-    virtual ~Console() = default;
+    virtual ~Console();
     void run();
     virtual void send(Param* param) = 0;
     void write(const std::string& input);
+    void stop();
 
 protected:
     Console(MiniBrowser* browser);
 
     MiniBrowser* m_browser;
+    pthread_t m_thread;
+    std::atomic<bool> m_running{ true };
 };
 
 } // namespace StarfishShell
