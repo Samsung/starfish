@@ -23,38 +23,75 @@
 #include "MiniBrowser.h"
 
 #include <cstdio>
-#include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/select.h>
+#include <cerrno>
 
 namespace StarfishShell {
 
 Console::Console(MiniBrowser* browser)
     : m_browser(browser)
+    , m_thread(0)
 {
+}
+
+Console::~Console()
+{
+    stop();
+    if (m_thread) {
+        pthread_join(m_thread, NULL);
+    }
+}
+
+void Console::stop()
+{
+    m_running = false;
 }
 
 void Console::run()
 {
-    pthread_t t;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_create(
-        &t, &attr,
+        &m_thread, &attr,
         [](void* data) -> void* {
             char buf[1024];
             Console* console = reinterpret_cast<Console*>(data);
             sleep(1);
-            while (1) {
-                // Poll input
-                if (!std::fgets(buf, sizeof(buf), stdin)) {
+            while (console->m_running) {
+                fd_set readfds;
+                struct timeval tv;
+
+                FD_ZERO(&readfds);
+                FD_SET(STDIN_FILENO, &readfds);
+
+                tv.tv_sec = 0;
+                tv.tv_usec = 100000;
+
+                int ret = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &tv);
+
+                if (ret < 0) {
+                    if (errno == EINTR)
+                        continue;
+                    break;
+                }
+
+                if (ret == 0) {
                     continue;
                 }
 
-                Param* param = new Param;
-                param->console = console;
-                param->input = std::string(buf);
+                if (FD_ISSET(STDIN_FILENO, &readfds)) {
+                    if (!std::fgets(buf, sizeof(buf), stdin)) {
+                        continue;
+                    }
 
-                console->send(param);
+                    Param* param = new Param;
+                    param->console = console;
+                    param->input = std::string(buf);
+
+                    console->send(param);
+                }
             }
             return NULL;
         },
