@@ -69,6 +69,45 @@ ENDIF()
 
 FILE (GLOB_RECURSE STARFISH_SHELL_SRC ${STARFISH_ROOT}/src/shell/*.cpp)
 
+# backtrace
+IF(${ARCH} STREQUAL "x64" AND ${HOST} STREQUAL "linux")
+    SET(ENABLE_BACKTRACE "TRUE")
+    IF(${CMAKE_CXX_COMPILER} MATCHES "clang")
+        EXECUTE_PROCESS(
+            COMMAND bash -c "find /usr/lib/gcc /usr/local/include /usr/include -name backtrace.h | head -n 1"
+            OUTPUT_VARIABLE BACKTRACE_H_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        IF(BACKTRACE_H_PATH)
+            GET_FILENAME_COMPONENT(BACKTRACE_INC_DIR ${BACKTRACE_H_PATH} DIRECTORY)
+            SET(STARFISH_SHELL_INCLUDE_DIRS ${STARFISH_SHELL_INCLUDE_DIRS} ${BACKTRACE_INC_DIR})
+            MESSAGE(STATUS "Found libbacktrace header: ${BACKTRACE_INC_DIR}")
+
+            EXECUTE_PROCESS(
+                COMMAND bash -c "find $(dirname ${BACKTRACE_INC_DIR}) /usr/lib /usr/local/lib -name libbacktrace.a | head -n 1"
+                OUTPUT_VARIABLE BACKTRACE_LIB_PATH
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            IF(BACKTRACE_LIB_PATH)
+                GET_FILENAME_COMPONENT(BACKTRACE_LIB_DIR ${BACKTRACE_LIB_PATH} DIRECTORY)
+                LINK_DIRECTORIES(${BACKTRACE_LIB_DIR})
+                MESSAGE(STATUS "Found libbacktrace library: ${BACKTRACE_LIB_DIR}")
+            ELSE()
+                SET(ENABLE_BACKTRACE "FALSE")
+            ENDIF()
+        ELSE()
+            SET(ENABLE_BACKTRACE "FALSE")
+            MESSAGE(WARNING "libbacktrace (backtrace.h) not found. Build might fail.")
+        ENDIF()
+    ENDIF()
+    IF(${ENABLE_BACKTRACE} STREQUAL "TRUE")
+        MESSAGE(STATUS "ENABLE BACKTRACE")
+        SET (STARFISH_SHELL_DEFINES ${STARFISH_SHELL_DEFINES} -DSTARFISH_SHELL_ENABLE_BACKTRACE)
+        SET(STARFISH_SHELL_LINK_LIBRARIES ${STARFISH_SHELL_LINK_LIBRARIES} -lbacktrace)
+    ENDIF()
+ENDIF()
+
 # gtest
 IF(${ARCH} STREQUAL "x64" AND ${HOST} STREQUAL "linux")
     SET (BUILD_GMOCK OFF)
@@ -108,3 +147,7 @@ IF (${HOST} STREQUAL "linux")
         COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${TARGETNAME} ${STARFISH_ROOT}/Starfish
     )
 ENDIF()
+
+MESSAGE(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
+MESSAGE(STATUS "CXX Compiler: ${CMAKE_CXX_COMPILER}")
+MESSAGE(STATUS "Compiler ID: ${CMAKE_C_COMPILER_ID}")

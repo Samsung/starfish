@@ -34,7 +34,8 @@
 #define SHELL_X86_64
 #endif
 
-#if defined(STARFISH_ENABLE_TEST) && defined(SHELL_X86_64)
+#if defined(STARFISH_ENABLE_TEST) && defined(SHELL_X86_64) && \
+    defined(STARFISH_SHELL_ENABLE_BACKTRACE)
 #define SHELL_ENABLE_BACKTRACE
 #endif
 
