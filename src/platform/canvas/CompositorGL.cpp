@@ -2440,6 +2440,8 @@ public:
                               m.perspectiveY, m.perspectiveScale);
         setViewport();
 
+        gl()->disable(GL_CULL_FACE);
+
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
         auto& lastState = m_state.back();
