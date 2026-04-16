@@ -22,6 +22,7 @@
 #include "platform/message_loop/TimerEFL.h"
 #include "platform/message_loop/TimerLibUV.h"
 #include "platform/message_loop/TimerWindows.h"
+#include "platform/message_loop/TimerGLib.h"
 #include "core/page/WebBase.h"
 
 namespace Starfish {
@@ -34,6 +35,8 @@ Timer* Timer::create(WebBase* webBase)
     return new TimerLibUV(webBase);
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     return new TimerWindows(webBase);
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return new TimerGLib(webBase);
 #else
 #error "Unknown EventLoop back-end"
 #endif

@@ -208,6 +208,7 @@ BuildRequires: patchelf
 BuildRequires: python
 BuildRequires: python3
 BuildRequires: unzip
+BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(evas)

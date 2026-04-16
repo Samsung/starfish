@@ -22,6 +22,7 @@
 #include "platform/message_loop/MessageLoopEFL.h"
 #include "platform/message_loop/MessageLoopLibUV.h"
 #include "platform/message_loop/MessageLoopWindows.h"
+#include "platform/message_loop/MessageLoopGLib.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
@@ -38,6 +39,8 @@ MessageLoop* MessageLoop::create()
     return new MessageLoopLibUV();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     return new MessageLoopWindows();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    return new MessageLoopGLib();
 #else
 #error "Unknown EventLoop back-end"
 #endif
@@ -59,6 +62,8 @@ void MessageLoop::init()
     MessageLoopLibUV::init();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::init();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::init();
 #else
 #error "Unknown EventLoop back-end"
 #endif
@@ -72,6 +77,8 @@ void MessageLoop::run()
     MessageLoopLibUV::run();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::run();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::run();
 #else
 #error "Unknown EventLoop back-end"
 #endif
@@ -85,6 +92,8 @@ void MessageLoop::stop()
     MessageLoopLibUV::stop();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::stop();
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::stop();
 #else
 #error "Unknown EventLoop back-end"
 #endif
@@ -98,6 +107,8 @@ void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
     MessageLoopLibUV::runOnMainThreadSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::runOnMainThreadSync(functor);
+#elif defined(PORT_EVENTLOOP_BACKEND_GLIB)
+    MessageLoopGLib::runOnMainThreadSync(functor);
 #else
 #error "Unknown EventLoop back-end"
 #endif
