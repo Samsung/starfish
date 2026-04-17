@@ -367,7 +367,7 @@ bool MiniBrowser::createWindow(const InitOption& initOption)
 bool MiniBrowser::createLWE(const InitOption& initOption)
 {
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11) || \
-    defined(STARFISH_SHELL_ECORE_X)
+    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2)
     LWE::WebContainer::WebContainerArguments args{
         .width = initOption.geometry.width,
         .height = initOption.geometry.height,
