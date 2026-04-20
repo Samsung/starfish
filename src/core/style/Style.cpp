@@ -9769,9 +9769,10 @@ bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
 
         if (nSheet) {
             auto iter = std::find(m_sheets.begin(), m_sheets.end(), nSheet);
-            STARFISH_ASSERT(iter != m_sheets.end());
-            m_sheets.insert(iter, sheet);
-            return true;
+            if (iter != m_sheets.end()) {
+                m_sheets.insert(iter, sheet);
+                return true;
+            }
         }
     }
     return false;
