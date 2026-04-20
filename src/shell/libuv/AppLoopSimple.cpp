@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <memory.h>
 #include <stdio.h>
+#include <cstdint>
 
 #include <sys/time.h>
 
