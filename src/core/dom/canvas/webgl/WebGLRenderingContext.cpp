@@ -2379,7 +2379,12 @@ void WebGLRenderingContext::texParameterf(GLenum target, GLenum pname,
         return;
     }
 
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
         // If an attempt is made to call this function with no WebGLTexture
         // bound, an INVALID_OPERATION error is generated.
         setGLError(GL_INVALID_OPERATION);
@@ -2400,7 +2405,12 @@ void WebGLRenderingContext::texParameteri(GLenum target, GLenum pname,
         return;
     }
 
-    if (m_boundTextures.find(target) == m_boundTextures.end()) {
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!hasBoundTexture(target)) {
         // If an attempt is made to call this function with no WebGLTexture
         // bound, an INVALID_OPERATION error is generated.
         setGLError(GL_INVALID_OPERATION);
