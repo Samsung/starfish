@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
 
 #include "Starfish.h"
 

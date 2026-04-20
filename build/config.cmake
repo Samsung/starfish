@@ -191,7 +191,6 @@ ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
 ELSEIF (${CUSTOM} STREQUAL "headless")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_TIZEN_HEADLESS
-        -DSTARFISH_EFL_HEADLESS
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
         -DSTARFISH_ENABLE_MULTIMEDIA
@@ -217,7 +216,7 @@ ENDIF()
 IF (${BACKEND} STREQUAL "efl_cairo_gl")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_CAIRO_GL)
 ELSEIF (${BACKEND} STREQUAL "efl_headless")
-    SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_HEADLESS)
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_HEADLESS -DSTARFISH_HEADLESS)
 ELSEIF (${BACKEND} STREQUAL "flutter")
     IF (${HOST} STREQUAL "tizen")
         SET (USE_CUSTOM_WEBP "1")
@@ -233,8 +232,10 @@ ELSEIF (${BACKEND} STREQUAL "uv_cairo_gl")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_UV_CAIRO_GL)
 ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_GLIB_CAIRO_GL)
+ELSEIF (${BACKEND} STREQUAL "glib_headless")
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_GLIB_HEADLESS -DSTARFISH_HEADLESS)
 ELSE ()
-    MESSAGE (FATAL_ERROR "BACKEND is NOT SET.(ex. efl_cairo_gl, efl_headless, uv_cairo_gl, flutter, glib_cairo_gl)")
+    MESSAGE (FATAL_ERROR "BACKEND is NOT SET.(ex. efl_cairo_gl, efl_headless, uv_cairo_gl, flutter, glib_cairo_gl, glib_headless)")
 ENDIF()
 
 SET (LWE_DEFINES_BACKEND ${LWE_DEFINES_BACKEND}
@@ -473,6 +474,8 @@ ELSEIF (${BACKEND} STREQUAL "glib_cairo_gl")
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
+ELSEIF (${BACKEND} STREQUAL "glib_headless")
+    pkg_check_modules (STARFISH_BACKEND REQUIRED glib-2.0)
 ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED capi-media-player capi-media-sound-manager freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
     pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl)
