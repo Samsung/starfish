@@ -32,7 +32,6 @@
 #include "core/page/BrowsingContext.h"
 
 #include <locations.h>
-#include <Ecore.h>
 
 namespace Starfish {
 
@@ -180,12 +179,13 @@ static void stopWatchingPosition(LocationRequestInfoTizen* info)
     STARFISH_ASSERT(info != nullptr);
     location_manager_unset_position_updated_cb(info->manager);
     location_manager_stop(info->manager);
-    ecore_idler_add(
-        [](void* data) -> Eina_Bool {
+
+    info->document->webView()->messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* data) {
             location_manager_destroy((location_manager_h)data);
-            return ECORE_CALLBACK_CANCEL;
         },
-        (void*)info->manager);
+        info->manager);
 
     GCVector<LocationRequestInfoTizen*>& v =
         info->geolocation->m_pendingRequest;
@@ -285,24 +285,24 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                     (LocationRequestInfoTizen*)user_data;
                 STARFISH_ASSERT(isMainThread());
                 if (error) {
-                    ecore_idler_add(
-                        [](void* data) -> Eina_Bool {
+                    info->document->webView()->messageLoop()->addIdler(
+                        nullptr,
+                        [](size_t, void* data) {
                             location_manager_destroy((location_manager_h)data);
-                            return ECORE_CALLBACK_CANCEL;
                         },
-                        (void*)info->manager);
+                        info->manager);
 
                     handleError(error, info);
                     return;
                 }
 
                 if (!info->shouldContinueRequest) {
-                    ecore_idler_add(
-                        [](void* data) -> Eina_Bool {
+                    info->document->webView()->messageLoop()->addIdler(
+                        nullptr,
+                        [](size_t, void* data) {
                             location_manager_destroy((location_manager_h)data);
-                            return ECORE_CALLBACK_CANCEL;
                         },
-                        (void*)info->manager);
+                        info->manager);
 
                     GCVector<LocationRequestInfoTizen*>& v =
                         info->geolocation->m_pendingRequest;
@@ -344,12 +344,12 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                     },
                     info);
 
-                ecore_idler_add(
-                    [](void* data) -> Eina_Bool {
+                info->document->webView()->messageLoop()->addIdler(
+                    nullptr,
+                    [](size_t, void* data) {
                         location_manager_destroy((location_manager_h)data);
-                        return ECORE_CALLBACK_CANCEL;
                     },
-                    (void*)info->manager);
+                    info->manager);
             },
             info);
 

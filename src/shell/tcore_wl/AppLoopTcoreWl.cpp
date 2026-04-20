@@ -19,19 +19,21 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_ECORE_WL2)
+#if defined(STARFISH_SHELL_TCORE_WL)
 
 #include "AppLoop.h"
 
-#include <Ecore.h>
-#include <glib.h>
+#include <tizen_core.h>
+#include <tizen_core_wl.h>
+
+#include <cstdio>
 
 namespace StarfishShell {
 
-class AppLoopEcoreWl2 : public AppLoop {
+class AppLoopTcoreWl : public AppLoop {
 public:
-    AppLoopEcoreWl2();
-    ~AppLoopEcoreWl2();
+    AppLoopTcoreWl();
+    ~AppLoopTcoreWl();
 
     virtual void init() override;
     virtual int start(double timeoutInSec = 0) override;
@@ -39,58 +41,62 @@ public:
     virtual void deinit() override;
 
 private:
-    Ecore_Timer* m_timerID = nullptr;
+    tizen_core_source_h m_timerID = nullptr;
+    tizen_core_task_h m_task = nullptr;
 };
 
-AppLoopEcoreWl2::AppLoopEcoreWl2()
+AppLoopTcoreWl::AppLoopTcoreWl()
 {
-    ecore_init();
-    ecore_main_loop_glib_integrate();
+    tizen_core_init();
+    tizen_core_task_create("main", false, &m_task);
 }
 
-AppLoopEcoreWl2::~AppLoopEcoreWl2()
+AppLoopTcoreWl::~AppLoopTcoreWl()
 {
-    ecore_shutdown();
+    tizen_core_task_destroy(m_task);
+    tizen_core_shutdown();
 }
 
-void AppLoopEcoreWl2::init()
+void AppLoopTcoreWl::init()
 {
 }
 
-int AppLoopEcoreWl2::start(double timeoutInSec)
+int AppLoopTcoreWl::start(double timeoutInSec)
 {
-    if (timeoutInSec) {
-        m_timerID = ecore_timer_add(
-            timeoutInSec,
-            [](void* data) -> Eina_Bool {
-                AppLoopEcoreWl2* self = static_cast<AppLoopEcoreWl2*>(data);
+    if (timeoutInSec > 0) {
+        tizen_core_h core = nullptr;
+        tizen_core_task_get_tizen_core(m_task, &core);
+        tizen_core_add_timer(
+            core, timeoutInSec * 1000,
+            [](void* data) -> bool {
+                AppLoopTcoreWl* self = static_cast<AppLoopTcoreWl*>(data);
                 self->stop();
-                self->m_timerID = nullptr;
-                return ECORE_CALLBACK_DONE;
+                return false; // one-shot timer
             },
-            this);
+            this, &m_timerID);
     }
-    ecore_main_loop_begin();
+    tizen_core_task_run(m_task);
     return 0;
 }
 
-void AppLoopEcoreWl2::stop()
+void AppLoopTcoreWl::stop()
 {
     if (m_timerID) {
-        ecore_timer_freeze(m_timerID);
-        ecore_timer_del(m_timerID);
+        tizen_core_h core = nullptr;
+        tizen_core_task_get_tizen_core(m_task, &core);
+        tizen_core_remove_source(core, m_timerID);
         m_timerID = nullptr;
     }
-    ecore_main_loop_quit();
+    tizen_core_task_quit(m_task);
 }
 
-void AppLoopEcoreWl2::deinit()
+void AppLoopTcoreWl::deinit()
 {
 }
 
 std::unique_ptr<AppLoop> AppLoop::create()
 {
-    return std::unique_ptr<AppLoopEcoreWl2>(new AppLoopEcoreWl2());
+    return std::unique_ptr<AppLoopTcoreWl>(new AppLoopTcoreWl());
 }
 
 } // namespace StarfishShell

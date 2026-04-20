@@ -43,8 +43,8 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 
 #if !defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_EFL_HEADLESS) && \
-    !defined(PORT_WEBVIEW_BRIDGE_FLUTTER)
-#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
+    !defined(PORT_WEBVIEW_BRIDGE_FLUTTER) && !defined(STARFISH_GLIB_CAIRO_GL)
+#error "You can not use this player with this option"
 #endif
 
 #if !defined(STARFISH_MM_OUTPUT_WITH_GL) && !defined(STARFISH_EFL_HEADLESS)

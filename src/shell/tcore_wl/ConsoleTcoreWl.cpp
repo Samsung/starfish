@@ -19,10 +19,10 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_ECORE_WL2)
+#if defined(STARFISH_SHELL_TCORE_WL)
 #include "Console.h"
 
-#include <Ecore.h>
+#include <tizen_core.h>
 
 #include <stdio.h>
 #include <pthread.h>
@@ -30,35 +30,38 @@
 
 namespace StarfishShell {
 
-class ConsoleEcoreWl2 : public Console {
+class ConsoleTcoreWl : public Console {
 public:
-    ConsoleEcoreWl2(MiniBrowser* browser)
+    ConsoleTcoreWl(MiniBrowser* browser)
         : Console(browser)
     {
     }
 
-    ~ConsoleEcoreWl2()
+    ~ConsoleTcoreWl()
     {
     }
 
     void send(Param* param)
     {
-        ecore_thread_main_loop_begin();
-        ecore_animator_add(
-            [](void* data) -> Eina_Bool {
+        tizen_core_h core = nullptr;
+        // TODO delete source
+        tizen_core_source_h source = nullptr;
+        tizen_core_find("main", &core);
+        tizen_core_add_idle_job(
+            core,
+            [](void* data) -> bool {
                 Param* p = reinterpret_cast<Param*>(data);
                 p->console->write(p->input);
                 delete p;
-                return ECORE_CALLBACK_CANCEL;
+                return false; // one-shot idler
             },
-            param);
-        ecore_thread_main_loop_end();
+            param, &source);
     }
 };
 
 Console* Console::create(MiniBrowser* browser)
 {
-    return new ConsoleEcoreWl2(browser);
+    return new ConsoleTcoreWl(browser);
 }
 
 } // namespace StarfishShell
