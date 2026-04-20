@@ -748,7 +748,7 @@ void Element::didNodeInserted(Node* parent, Node* newChild)
 }
 void Element::didNodeRemoved(Node* parent, Node* oldChild)
 {
-    Node::didNodeInserted(parent, oldChild);
+    Node::didNodeRemoved(parent, oldChild);
 
     Optional<ShadowRoot*> shadowRoot;
     if (parent == this && (shadowRoot = internalShadowRoot())) {
