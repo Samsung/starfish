@@ -19,19 +19,20 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_EFL_HEADLESS)
+#if defined(STARFISH_SHELL_EFL_HEADLESS) || \
+    defined(STARFISH_SHELL_TCORE_HEADLESS)
 
 #include "Window.h"
 
 namespace StarfishShell {
 
-class WindowEFLHeadless final : public Window {
+class WindowHeadless final : public Window {
 public:
-    WindowEFLHeadless()
+    WindowHeadless()
     {
     }
 
-    ~WindowEFLHeadless()
+    ~WindowHeadless()
     {
     }
 
@@ -64,7 +65,7 @@ private:
 
 Window* Window::create()
 {
-    return new WindowEFLHeadless();
+    return new WindowHeadless();
 }
 
 LWE::KeyValue Window::convertKeyCode(const unsigned long key, INPUT action,

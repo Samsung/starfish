@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_TCORE_WL)
+#if defined(STARFISH_SHELL_TCORE_WL) || defined(STARFISH_SHELL_TCORE_HEADLESS)
 #include "Console.h"
 
 #include <tizen_core.h>
