@@ -27,11 +27,8 @@
 #include <media/player.h>
 
 #if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
-#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
 #ifndef EFL_BETA_API_SUPPORT
 #define EFL_BETA_API_SUPPORT
-#endif
-#include <Ecore_Wl2.h>
 #endif
 #endif
 
