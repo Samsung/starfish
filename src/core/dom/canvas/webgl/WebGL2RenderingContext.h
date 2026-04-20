@@ -117,6 +117,9 @@ public:
 
     ScriptValue getVertexAttrib(GLuint index, GLenum pname);
 
+    void texParameterf(GLenum target, GLenum pname, GLfloat param);
+    void texParameteri(GLenum target, GLenum pname, GLint param);
+
     void vertexAttrib1f(GLuint index, GLfloat x);
     void vertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
     void vertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
