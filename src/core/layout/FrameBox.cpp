@@ -1001,11 +1001,17 @@ static std::pair<bool, float> canUseFastPathOfPaintingBoxShadow(
     return std::make_pair(canUseFastPath, topLeftHorizontal);
 }
 
-static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect& src,
+static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect src,
                                           Unit::Rect& dst, float deg,
                                           NativeImageData* piece,
-                                          const DrawImageInfo& drawImageInfo)
+                                          const DrawImageInfo& drawImageInfo,
+                                          float dpr)
 {
+    src.setX(src.x() * dpr);
+    src.setY(src.y() * dpr);
+    src.setWidth(src.width() * dpr);
+    src.setHeight(src.height() * dpr);
+
     canvas->save();
     canvas->translate(dst.x(), dst.y());
     dst.setX(0);
@@ -1018,8 +1024,8 @@ static void drawBoxShadowRotatePieceImage(Canvas* canvas, Unit::Rect& src,
 }
 
 static void drawBoxShadowPieceImage(Canvas* canvas, NativeImageData* piece,
-                                    size_t pieceSize,
-                                    const Unit::Rect& imageRect)
+                                    float pieceSize,
+                                    const Unit::Rect& imageRect, float dpr)
 {
     // top-left
     Unit::Rect src;
@@ -1029,51 +1035,71 @@ static void drawBoxShadowPieceImage(Canvas* canvas, NativeImageData* piece,
     DrawImageInfo drawImageInfo = { 1.0, 1.0,
                                     BorderImageRepeatValue::StretchValue,
                                     BorderImageRepeatValue::StretchValue };
-    canvas->drawImage(piece, src, dst, drawImageInfo);
+
+    Unit::Rect scaledSrc = src;
+    scaledSrc.setX(src.x() * dpr);
+    scaledSrc.setY(src.y() * dpr);
+    scaledSrc.setWidth(src.width() * dpr);
+    scaledSrc.setHeight(src.height() * dpr);
+    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
 
     // top-left -> top-right
     src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
     dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.y(),
                      imageRect.width() - pieceSize * 2, pieceSize);
-    canvas->drawImage(piece, src, dst, drawImageInfo);
+    scaledSrc = src;
+    scaledSrc.setX(src.x() * dpr);
+    scaledSrc.setY(src.y() * dpr);
+    scaledSrc.setWidth(src.width() * dpr);
+    scaledSrc.setHeight(src.height() * dpr);
+    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
 
     // top-right
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
     dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y(), pieceSize,
                      pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 90, piece, drawImageInfo);
+    drawBoxShadowRotatePieceImage(canvas, src, dst, 90, piece, drawImageInfo,
+                                  dpr);
 
     // top-right -> bottom-right
     src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
     dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.y() + pieceSize,
                      pieceSize, imageRect.height() - pieceSize * 2);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
+    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
+                                  dpr);
 
     // bottom-right
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
     dst = Unit::Rect(imageRect.maxX() - pieceSize, imageRect.maxY() - pieceSize,
                      pieceSize, pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
+    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
+                                  dpr);
 
     // bottom-right -> bottom-left
     src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
     dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.maxY() - pieceSize,
                      imageRect.width() - pieceSize * 2, pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo);
+    drawBoxShadowRotatePieceImage(canvas, src, dst, 180, piece, drawImageInfo,
+                                  dpr);
 
     // bottom-left
     src = Unit::Rect(0, 0, pieceSize, pieceSize);
     dst = Unit::Rect(imageRect.x(), imageRect.maxY() - pieceSize, pieceSize,
                      pieceSize);
-    drawBoxShadowRotatePieceImage(canvas, src, dst, 270, piece, drawImageInfo);
+    drawBoxShadowRotatePieceImage(canvas, src, dst, 270, piece, drawImageInfo,
+                                  dpr);
 
     // bottom-left -> top-left
     src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
     dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize, pieceSize,
                      imageRect.height() - pieceSize * 2);
-    canvas->drawImage(piece, src, dst, drawImageInfo);
+    scaledSrc = src;
+    scaledSrc.setX(src.x() * dpr);
+    scaledSrc.setY(src.y() * dpr);
+    scaledSrc.setWidth(src.width() * dpr);
+    scaledSrc.setHeight(src.height() * dpr);
+    canvas->drawImage(piece, scaledSrc, dst, drawImageInfo);
 }
-
 void FrameBox::paintBoxShadows(Canvas* canvas)
 {
     STARFISH_ASSERT(canvas != nullptr);
@@ -1238,7 +1264,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         imageRect.height() - pieceSize * 2));
 
                     drawBoxShadowPieceImage(canvas, nativeImage, pieceSize,
-                                            imageRect);
+                                            imageRect,
+                                            wv->screenInfo().devicePixelRatio);
 
                     canvas->restore();
 
@@ -1448,8 +1475,9 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                         canvas->setFillRule(false);
                         canvas->fill();
 
-                        drawBoxShadowPieceImage(canvas, nativeImage, pieceSize,
-                                                pieceDrawRect);
+                        drawBoxShadowPieceImage(
+                            canvas, nativeImage, pieceSize, pieceDrawRect,
+                            wv->screenInfo().devicePixelRatio);
 
                         canvas->restore();
                         continue;
