@@ -64,3 +64,4 @@ third_party/libtuv/include/tuv__config.h
 third_party/nanomsg/dist
 out_coverage/
 kuep_net_signer.sh
+.clinerules
