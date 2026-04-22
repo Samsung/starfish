@@ -89,12 +89,20 @@ void ScriptEngineInstance::drainMicroTaskQueue()
     m_inDrainMicroTaskQueue = false;
 }
 
+void MicroTaskExecutionManager::forceInvokeDrainMicroTaskQueue()
+{
+    m_engine->drainMicroTaskQueue();
+    m_fired = true;
+}
+
 MicroTaskExecutionManager::~MicroTaskExecutionManager()
 {
-    m_engine->macroTaskCounter()--;
-
-    if (m_engine->macroTaskCounter() == 0) {
+    // drainMicroTaskQueue must be called while macroTaskCounter > 0
+    // because JS code executed during drain (e.g. Promise reactions)
+    // can call queueMicrotask(), which asserts macroTaskCounter > 0
+    if (!m_fired && m_engine->macroTaskCounter() == 1) {
         m_engine->drainMicroTaskQueue();
     }
+    m_engine->macroTaskCounter()--;
 }
 } // namespace Starfish

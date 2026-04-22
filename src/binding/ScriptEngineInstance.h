@@ -58,14 +58,18 @@ class MicroTaskExecutionManager {
 public:
     MicroTaskExecutionManager(ScriptEngineInstance* e)
         : m_engine(e)
+        , m_fired(false)
     {
         e->macroTaskCounter()++;
     }
+
+    void forceInvokeDrainMicroTaskQueue();
 
     ~MicroTaskExecutionManager();
 
 private:
     ScriptEngineInstance* m_engine;
+    bool m_fired;
 };
 
 } // namespace Starfish

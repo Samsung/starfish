@@ -662,7 +662,10 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         return false;
     }
 
-    scriptBindingInstance()->engineInstance()->drainMicroTaskQueue();
+    {
+        MicroTaskExecutionManager m(scriptBindingInstance()->engineInstance());
+        m.forceInvokeDrainMicroTaskQueue();
+    }
 
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
@@ -734,9 +737,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                                                                     this);
                 ScriptProfileLogger logger;
                 evaluateString(window()->scriptBindingInstance(), script);
-                scriptBindingInstance()
-                    ->engineInstance()
-                    ->drainMicroTaskQueue();
+                {
+                    MicroTaskExecutionManager m(
+                        scriptBindingInstance()->engineInstance());
+                    m.forceInvokeDrainMicroTaskQueue();
+                }
                 m_didScriptExecuted = true;
             }
             return false;
