@@ -80,14 +80,6 @@ StreamInfo::StreamInfo()
     , m_codec(MediaCodecUnknown)
     , m_type(StreamTypeUnknown)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("StreamInfo::~StreamInfo");
-            StreamInfo* self = (StreamInfo*)obj;
-            std::vector<uint8_t>().swap(self->m_extraData);
-        },
-        NULL, NULL, NULL);
 }
 
 static int64_t inline avGCD(int64_t a, int64_t b)

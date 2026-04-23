@@ -86,7 +86,7 @@ MediaCodec suggestAudioCodecFromString(String* name);
 MediaCodec suggestVideoCodecFromString(String* name);
 const char* mediaCodecToString(MediaCodec codec);
 
-class StreamInfo : public gc {
+class StreamInfo {
 public:
     StreamInfo();
 
