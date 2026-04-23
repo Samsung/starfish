@@ -37,15 +37,27 @@ public:
         return m_performanceResourceTiming;
     }
 
-    GCVector<PerformanceEntry*> getEntriesByType()
-    {
-        // TODO
-        STARFISH_UNIMPLEMENTED(
-            "Performance.getEntriesByType() is enabled but not yet "
-            "implemented.");
-        GCVector<PerformanceEntry*> entries;
-        return entries;
-    }
+    // Performance Timeline API
+    // https://w3c.github.io/performance-timeline/
+    GCVector<PerformanceEntry*> getEntries();
+    GCVector<PerformanceEntry*> getEntriesByType(String* entryType);
+    GCVector<PerformanceEntry*> getEntriesByName(
+        String* name, Optional<String*> entryType = Optional<String*>());
+
+    // User Timing API - mark and measure
+    void mark(String* markName);
+    void measure(String* measureName,
+                 Optional<String*> startMark = Optional<String*>(),
+                 Optional<String*> endMark = Optional<String*>());
+    void clearMarks(Optional<String*> markName = Optional<String*>());
+    void clearMeasures(Optional<String*> measureName = Optional<String*>());
+    void clearResourceTimings();
+
+    // Add entry to performance buffer
+    void addEntry(PerformanceEntry* entry);
+
+    // toJSON
+    ScriptObject toJSON();
 
     static Performance* create(ExecutionContext* executionContext)
     {
@@ -63,7 +75,9 @@ public:
 private:
     ExecutionContext* m_executionContext;
     PerformanceResourceTiming* m_performanceResourceTiming;
+    GCVector<PerformanceEntry*> m_entries;
 };
+
 } // namespace Starfish
 
 #endif

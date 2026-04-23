@@ -25,9 +25,14 @@
 
 namespace Starfish {
 
-// TODO: implement PerformanceEntry
+// https://w3c.github.io/performance-timeline/#dom-performanceentry
 class PerformanceEntry final : public ScriptWrappable {
 public:
+    // Factory method to create a PerformanceEntry
+    static PerformanceEntry* create(ExecutionContext* executionContext,
+                                    String* name, String* entryType,
+                                    double startTime, double duration);
+
     PerformanceEntry(ExecutionContext* executionContext);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;
@@ -35,8 +40,51 @@ public:
     void init(ScriptBindingInstance*, void*) override;
     bool isPerformanceEntry() const override;
 
+    // PerformanceEntry interface properties
+    String* name() const
+    {
+        return m_name;
+    }
+    String* entryType() const
+    {
+        return m_entryType;
+    }
+    double startTime() const
+    {
+        return m_startTime;
+    }
+    double duration() const
+    {
+        return m_duration;
+    }
+
+    // Setters for internal use
+    void setName(String* name)
+    {
+        m_name = name;
+    }
+    void setEntryType(String* entryType)
+    {
+        m_entryType = entryType;
+    }
+    void setStartTime(double startTime)
+    {
+        m_startTime = startTime;
+    }
+    void setDuration(double duration)
+    {
+        m_duration = duration;
+    }
+
+    // toJSON
+    ScriptObject toJSON();
+
 private:
     ExecutionContext* m_executionContext;
+    String* m_name;
+    String* m_entryType;
+    double m_startTime;
+    double m_duration;
 };
 } // namespace Starfish
 

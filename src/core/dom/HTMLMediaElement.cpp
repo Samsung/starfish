@@ -411,6 +411,7 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 
 Promise* HTMLMediaElement::play()
 {
+    STARFISH_LOG_INFO("HTMLMediaElement::play");
     // TODO If the media element is not allowed to play, return a promise
     // rejected with a "NotAllowedError" DOMException and abort these steps.
     // TODO If the media element's error attribute is not null and its code
