@@ -2655,7 +2655,7 @@ void Document::updateIntersectionObservation()
                     }
                 }
 
-                if (!foundThresholdIndex &&
+                if (!foundThresholdIndex && thresholdsSize &&
                     intersectionRatio >= thresholds[thresholdsSize - 1]) {
                     thresholdIndex = thresholdsSize - 1;
                 }
