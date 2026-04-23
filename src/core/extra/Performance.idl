@@ -4,10 +4,24 @@ typedef double DOMHighResTimeStamp;
 [Exposed=(Window,Worker)]
 interface Performance : EventTarget {
     DOMHighResTimeStamp now();
-    sequence<PerformanceEntry> getEntriesByType();
     readonly attribute DOMHighResTimeStamp timeOrigin;
     readonly attribute PerformanceResourceTiming timing;
-    // [Default] object toJSON();
+    
+    // Performance Timeline API
+    // https://w3c.github.io/performance-timeline/
+    sequence<PerformanceEntry> getEntries();
+    sequence<PerformanceEntry> getEntriesByType(DOMString entryType);
+    sequence<PerformanceEntry> getEntriesByName(DOMString name, optional DOMString entryType);
+    
+    // User Timing API
+    // https://w3c.github.io/user-timing/
+    void mark(DOMString markName);
+    void measure(DOMString measureName, optional DOMString startMark, optional DOMString endMark);
+    void clearMarks(optional DOMString markName);
+    void clearMeasures(optional DOMString measureName);
+    void clearResourceTimings();
+    
+    [Default] object toJSON();
 };
 
 // partial interface mixin WindowOrWorkerGlobalScope {

@@ -2,10 +2,10 @@
 [Exposed=(Window,Worker)]
 interface PerformanceEntry {
     [Unimplemented] readonly attribute unsigned long long id;
-    [Unimplemented] readonly attribute DOMString name;
-    [Unimplemented] readonly attribute DOMString entryType;
-    [Unimplemented] readonly attribute DOMHighResTimeStamp startTime;
-    [Unimplemented] readonly attribute DOMHighResTimeStamp duration;
+    readonly attribute DOMString name;
+    readonly attribute DOMString entryType;
+    readonly attribute DOMHighResTimeStamp startTime;
+    readonly attribute DOMHighResTimeStamp duration;
     [Unimplemented] readonly attribute unsigned long long navigationId;
-    // [Default] object toJSON();
+    [Default] object toJSON();
 };

@@ -74,33 +74,39 @@ ScriptObject DOMRectReadOnly::toJSON()
     ScriptBindingInstance* instance = scriptBindingInstance();
     ScriptObject result = createEmptyScriptObject(instance);
 
-    setScriptObjectProperty(instance, result,
-                            createScriptValue(String::createASCIIString("x")),
-                            createScriptValue(m_x));
-    setScriptObjectProperty(instance, result,
-                            createScriptValue(String::createASCIIString("y")),
-                            createScriptValue(m_y));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("x")),
+        createScriptValue(m_x));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("y")),
+        createScriptValue(m_y));
 
     setScriptObjectProperty(
-        instance, result, createScriptValue(String::createASCIIString("width")),
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("width")),
         createScriptValue(m_width));
     setScriptObjectProperty(
         instance, result,
-        createScriptValue(String::createASCIIString("height")),
+        createScriptValue(String::createASCIIStringWithNoCopy("height")),
         createScriptValue(m_height));
 
-    setScriptObjectProperty(instance, result,
-                            createScriptValue(String::createASCIIString("top")),
-                            createScriptValue(top()));
     setScriptObjectProperty(
-        instance, result, createScriptValue(String::createASCIIString("right")),
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("top")),
+        createScriptValue(top()));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("right")),
         createScriptValue(right()));
     setScriptObjectProperty(
         instance, result,
-        createScriptValue(String::createASCIIString("bottom")),
+        createScriptValue(String::createASCIIStringWithNoCopy("bottom")),
         createScriptValue(bottom()));
     setScriptObjectProperty(
-        instance, result, createScriptValue(String::createASCIIString("left")),
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("left")),
         createScriptValue(left()));
 
     return result;

@@ -21,15 +21,57 @@
 #include "PerformanceEntry.h"
 
 namespace Starfish {
+
 PerformanceEntry::PerformanceEntry(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_name(String::emptyString)
+    , m_entryType(String::emptyString)
+    , m_startTime(0.0)
+    , m_duration(0.0)
 {
+}
+
+PerformanceEntry* PerformanceEntry::create(ExecutionContext* executionContext,
+                                           String* name, String* entryType,
+                                           double startTime, double duration)
+{
+    PerformanceEntry* entry = new PerformanceEntry(executionContext);
+    entry->m_name = name;
+    entry->m_entryType = entryType;
+    entry->m_startTime = startTime;
+    entry->m_duration = duration;
+    return entry;
 }
 
 ScriptBindingInstance* PerformanceEntry::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+ScriptObject PerformanceEntry::toJSON()
+{
+    ScriptBindingInstance* instance = scriptBindingInstance();
+    ScriptObject result = createEmptyScriptObject(instance);
+
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("name")),
+        createScriptValue(m_name));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("entryType")),
+        createScriptValue(m_entryType));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("startTime")),
+        createScriptValue(m_startTime));
+    setScriptObjectProperty(
+        instance, result,
+        createScriptValue(String::createASCIIStringWithNoCopy("duration")),
+        createScriptValue(m_duration));
+
+    return result;
 }
 
 } // namespace Starfish
