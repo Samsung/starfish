@@ -205,8 +205,7 @@ void IntersectionObserver::notify()
 {
     ScriptValue callback = m_callback->scriptValue();
     if (isCallableScriptValue(callback) && m_queuedEntries.size()) {
-        ScriptValue* argv = nullptr;
-        size_t argc = 0;
+        ScriptValue argv[2];
         const auto& result = Escargot::Evaluator::execute(
             scriptBindingInstance()->scriptContext(),
             [](Escargot::ExecutionStateRef* state,
@@ -221,11 +220,10 @@ void IntersectionObserver::notify()
                 return arrayObj;
             },
             this);
-        argc = 1;
-        argv = ALLOCA(sizeof(ScriptValue) * argc, ScriptValue);
         argv[0] = result.result;
+        argv[1] = scriptValue();
         m_queuedEntries.clear();
-        callScriptFunction(scriptBindingInstance(), callback, argv, 1,
+        callScriptFunction(scriptBindingInstance(), callback, argv, 2,
                            scriptValue());
     }
 }
