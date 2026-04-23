@@ -1040,8 +1040,15 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
                 initializePacketAccessCache(client->m_detectedStream.size());
             }
             for (size_t i = 0; i < client->m_detectedStream.size(); i++) {
-                StreamInfo* info =
-                    new StreamInfo(std::move(client->m_detectedStream[i]));
+                StreamInfo* info = new (PointerFreeGC)
+                    StreamInfo(std::move(client->m_detectedStream[i]));
+                GC_REGISTER_FINALIZER_NO_ORDER(
+                    info,
+                    [](void* obj, void* cd) {
+                        StreamInfo* self = (StreamInfo*)obj;
+                        self->~StreamInfo();
+                    },
+                    NULL, NULL, NULL);
                 streamInfo.push_back(info);
             }
 
