@@ -357,11 +357,7 @@ void WindowX11::pollEvent()
 {
     Display* display = m_display;
 
-    if (!XPending(display)) {
-        return;
-    }
-
-    while (QLength(display)) {
+    while (XPending(display)) {
         XEvent event;
         XNextEvent(display, &event);
 

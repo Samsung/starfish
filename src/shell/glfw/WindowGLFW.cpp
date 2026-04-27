@@ -29,6 +29,10 @@
 #include <memory>
 #include <vector>
 
+#if defined(STARFISH_GLIB_CAIRO_GL)
+#include <glib.h>
+#endif
+
 namespace StarfishShell {
 
 class RendererDelegateGLFW : public RendererDelegate {
@@ -126,9 +130,16 @@ public:
 private:
     bool createSimpleWindow(const char* appName, int width, int height);
     void setEventHandlers();
+#if defined(STARFISH_GLIB_CAIRO_GL)
+    void setupGLibIntegration();
+    static gboolean onGLibPollEvent(gpointer data);
+#endif
 
     GLFWwindow* m_window = nullptr;
     std::unique_ptr<RendererDelegateGLFW> m_renderer;
+#if defined(STARFISH_GLIB_CAIRO_GL)
+    guint m_pollEventSourceID = 0;
+#endif
 };
 
 WindowGLFW::WindowGLFW()
@@ -168,6 +179,12 @@ bool WindowGLFW::init(const char* appName, int width, int height)
 
     m_renderer = std::unique_ptr<RendererDelegateGLFW>(
         new RendererDelegateGLFW(m_window));
+
+#if defined(STARFISH_GLIB_CAIRO_GL)
+    setupGLibIntegration();
+#else
+    m_appLoop->init();
+#endif
 
     return true;
 }
@@ -258,11 +275,36 @@ void WindowGLFW::getCursorPos(double& xpos, double& ypos)
 
 void WindowGLFW::pollEvent()
 {
+#if !defined(STARFISH_GLIB_CAIRO_GL)
     glfwPollEvents();
+#endif
 }
+
+#if defined(STARFISH_GLIB_CAIRO_GL)
+void WindowGLFW::setupGLibIntegration()
+{
+    m_appLoop->init();
+
+    // Add a GLib idle source to poll GLFW events
+    m_pollEventSourceID = g_idle_add(onGLibPollEvent, this);
+}
+
+gboolean WindowGLFW::onGLibPollEvent(gpointer data)
+{
+    WindowGLFW* self = static_cast<WindowGLFW*>(data);
+    glfwPollEvents();
+    return G_SOURCE_CONTINUE;
+}
+#endif
 
 void WindowGLFW::terminate()
 {
+#if defined(STARFISH_GLIB_CAIRO_GL)
+    if (m_pollEventSourceID) {
+        g_source_remove(m_pollEventSourceID);
+        m_pollEventSourceID = 0;
+    }
+#endif
     m_renderer = nullptr;
     glfwDestroyWindow(m_window);
 }

@@ -19,7 +19,8 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_X11) && defined(STARFISH_GLIB_CAIRO_GL)
+#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLFW)) && \
+    defined(STARFISH_GLIB_CAIRO_GL)
 
 #include "AppLoop.h"
 
