@@ -197,7 +197,8 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    g_idle_add(
+    g_idle_add_full(
+        G_PRIORITY_DEFAULT,
         [](gpointer data) -> gboolean {
             g_timeout_add(
                 0,
@@ -223,7 +224,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
                 data);
             return G_SOURCE_REMOVE;
         },
-        id);
+        id, NULL);
     return (size_t)id;
 }
 
@@ -246,7 +247,8 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    g_idle_add(
+    g_idle_add_full(
+        G_PRIORITY_DEFAULT,
         [](gpointer data) -> gboolean {
             g_timeout_add(
                 0,
@@ -274,7 +276,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
                 data);
             return G_SOURCE_REMOVE;
         },
-        id);
+        id, NULL);
     return (size_t)id;
 }
 
