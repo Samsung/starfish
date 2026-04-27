@@ -42,6 +42,92 @@
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerLinux.h"
 
+#include <dlfcn.h>
+#include <time.h>
+
+namespace {
+
+// PulseAudio Simple API loaded at runtime via dlopen so we do not have to add
+// a build-time dependency on libpulse-dev. See pulse/simple.h / pulse/sample.h.
+typedef enum {
+    PA_SAMPLE_S16LE = 3,
+} pa_sample_format_t;
+
+typedef enum {
+    PA_STREAM_PLAYBACK = 1,
+} pa_stream_direction_t;
+
+struct pa_sample_spec {
+    pa_sample_format_t format;
+    uint32_t rate;
+    uint8_t channels;
+};
+
+typedef struct pa_simple pa_simple;
+typedef struct pa_channel_map pa_channel_map;
+
+struct pa_buffer_attr {
+    uint32_t maxlength;
+    uint32_t tlength;
+    uint32_t prebuf;
+    uint32_t minreq;
+    uint32_t fragsize;
+};
+
+typedef pa_simple* (*pa_simple_new_fn)(const char*, const char*,
+                                       pa_stream_direction_t, const char*,
+                                       const char*, const pa_sample_spec*,
+                                       const pa_channel_map*,
+                                       const pa_buffer_attr*, int*);
+typedef int (*pa_simple_write_fn)(pa_simple*, const void*, size_t, int*);
+typedef int (*pa_simple_drain_fn)(pa_simple*, int*);
+typedef void (*pa_simple_free_fn)(pa_simple*);
+
+struct PulseSimpleApi {
+    pa_simple_new_fn pa_simple_new;
+    pa_simple_write_fn pa_simple_write;
+    pa_simple_drain_fn pa_simple_drain;
+    pa_simple_free_fn pa_simple_free;
+};
+
+static PulseSimpleApi* loadPulseSimple(void*& handleOut)
+{
+    static PulseSimpleApi s_api;
+    static void* s_handle = nullptr;
+    static bool s_loaded = false;
+    static bool s_failed = false;
+    if (s_failed) {
+        return nullptr;
+    }
+    if (s_loaded) {
+        handleOut = s_handle;
+        return &s_api;
+    }
+    s_handle = dlopen("libpulse-simple.so.0", RTLD_NOW | RTLD_GLOBAL);
+    if (s_handle == nullptr) {
+        s_failed = true;
+        return nullptr;
+    }
+    s_api.pa_simple_new = (pa_simple_new_fn)dlsym(s_handle, "pa_simple_new");
+    s_api.pa_simple_write =
+        (pa_simple_write_fn)dlsym(s_handle, "pa_simple_write");
+    s_api.pa_simple_drain =
+        (pa_simple_drain_fn)dlsym(s_handle, "pa_simple_drain");
+    s_api.pa_simple_free = (pa_simple_free_fn)dlsym(s_handle, "pa_simple_free");
+    if (s_api.pa_simple_new == nullptr || s_api.pa_simple_write == nullptr ||
+        s_api.pa_simple_free == nullptr) {
+        dlclose(s_handle);
+        s_handle = nullptr;
+        s_failed = true;
+        return nullptr;
+    }
+    s_loaded = true;
+    handleOut = s_handle;
+    return &s_api;
+}
+
+} // namespace
+
 namespace Starfish {
 
 #define STARFISH_VIDEO_MAX_WIDTH 1920
@@ -329,8 +415,11 @@ bool FfmpegWrapperPlayer::play()
         return false;
     }
 
-    // Start decoding thread if not already running
-    if (m_state == State::PREPARED && !m_decodingThread.joinable()) {
+    // Start decoding thread if not already running. Skip when there is no
+    // demuxer context (MSE mode) - the FFmpeg-based packet read loop has no
+    // input in that case and would crash on av_read_frame(nullptr).
+    if (m_fmtCtx != nullptr && m_state == State::PREPARED &&
+        !m_decodingThread.joinable()) {
         m_stopRequested = false;
         m_decodingThread =
             std::thread(&FfmpegWrapperPlayer::decodingThread, this);
@@ -405,12 +494,10 @@ bool FfmpegWrapperPlayer::setVolume(float volume)
 
 void FfmpegWrapperPlayer::setLooping(bool looping)
 {
-    STARFISH_UNIMPLEMENTED();
 }
 
 void FfmpegWrapperPlayer::setMemoryBuffer(void* buffer, int size)
 {
-    STARFISH_UNIMPLEMENTED();
 }
 
 player_state_e FfmpegWrapperPlayer::getState()
@@ -432,7 +519,6 @@ player_state_e FfmpegWrapperPlayer::getState()
 
 int FfmpegWrapperPlayer::getPlayPosition()
 {
-    STARFISH_UNIMPLEMENTED();
     return 0;
 }
 
@@ -608,6 +694,22 @@ public:
     MediaPlayerLinux* m_player;
 };
 
+void MediaPlayerSourceStream::initFormatExtraForAudio()
+{
+}
+
+void MediaPlayerSourceStream::initFormatExtraForVideo()
+{
+}
+
+void MediaPlayerSourceStream::createMediaFormatStreamType()
+{
+}
+
+void MediaPlayerSourceStream::releaseMediaFormatStreamType()
+{
+}
+
 MediaPlayerSourceStream::MediaPlayerSourceStream(StreamType type)
     : m_type(type)
     , m_bufferState(BUFFERSTATE_INITIAL)
@@ -618,6 +720,8 @@ MediaPlayerSourceStream::MediaPlayerSourceStream(StreamType type)
     , m_initSegmentIndex(0)
     , m_lastBufferBytes(0)
     , m_waitingDemuxer(false)
+    , m_codecCtx(nullptr)
+    , m_isAnnexB(false)
 {
     PLAYER_LOGI("MediaPlayerSourceStream::MediaPlayerSourceStream\n");
     if (m_type == StreamTypeAudio) {
@@ -631,13 +735,11 @@ MediaPlayerSourceStream::MediaPlayerSourceStream(StreamType type)
 
 bool MediaPlayerSourceStream::createMediaFormat()
 {
-    STARFISH_UNIMPLEMENTED();
-    return false;
+    return true;
 }
 
 void MediaPlayerSourceStream::releaseMediaFormat()
 {
-    STARFISH_UNIMPLEMENTED();
 }
 
 uint64_t MediaPlayerSourceStream::maxBufferSize()
@@ -734,6 +836,22 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     , m_playerDeadFlag(nullptr)
     , m_audioStream(nullptr)
     , m_videoStream(nullptr)
+    , m_swsCtx(nullptr)
+    , m_swsCtxWidth(0)
+    , m_swsCtxHeight(0)
+    , m_clockStartMs(0)
+    , m_clockOffsetSec(0)
+    , m_audioSinkLib(nullptr)
+    , m_audioSinkHandle(nullptr)
+    , m_audioSinkChannels(0)
+    , m_audioSinkRate(0)
+    , m_swrCtx(nullptr)
+    , m_swrChannels(0)
+    , m_swrRate(0)
+    , m_swrSrcFmt(-1)
+    , m_audioWriterThread(nullptr)
+    , m_audioWriterStop(false)
+    , m_audioWriteQueueBytes(0)
 {
     PLAYER_LOGI("MediaPlayerLinux::MediaPlayerLinux\n");
     STARFISH_ASSERT(element != nullptr);
@@ -883,6 +1001,16 @@ void MediaPlayerLinux::handleEnded()
 
 double MediaPlayerLinux::currentTime()
 {
+    if (isMSE()) {
+        if (playbackState() != PLAYBACK_STATE_PLAYING || m_clockStartMs == 0) {
+            return m_clockOffsetSec;
+        }
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        uint64_t nowMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        double elapsed = (nowMs - m_clockStartMs) / 1000.0;
+        return m_clockOffsetSec + elapsed;
+    }
     if (m_nativePlayer) {
         return m_nativePlayer->getPlayPosition() / 1000.0;
     }
@@ -927,8 +1055,10 @@ void MediaPlayerLinux::destroy()
 double MediaPlayerLinux::duration()
 {
     PLAYER_LOGI("MediaPlayerLinux::duration\n");
-    STARFISH_UNIMPLEMENTED();
-    return 0;
+    if (m_activeMediaSource != nullptr) {
+        return m_activeMediaSource->duration();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 static void updateTimeCallback(void* data)
@@ -945,6 +1075,13 @@ static void updateTimeCallback(void* data)
         self->handleEnded();
     } else {
         self->container()->setOfficialPlaybackPosition(self->currentTime());
+    }
+    // Drive the compositor at the timer cadence so the MSE/FFmpeg video
+    // pipeline stays animating even if the per-frame setTimeout chain or
+    // decoder-driven setNeedsComposite stalls.
+    if (self->isMSE() == true && self->container() != nullptr &&
+        self->container()->frame() != nullptr) {
+        self->container()->setNeedsComposite();
     }
 }
 
@@ -965,10 +1102,15 @@ void MediaPlayerLinux::play()
     }
     m_pendingPlay = false;
     setPlaybackState(PLAYBACK_STATE_PLAYING);
+    if (isMSE()) {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        m_clockStartMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+    }
     m_nativePlayer->play();
     m_container->executionContext()->addPointerInRootSet(this);
-    m_currentTimeUpdateTimer =
-        m_container->window()->setInterval(updateTimeCallback, 250, this);
+    m_currentTimeUpdateTimer = m_container->window()->setInterval(
+        updateTimeCallback, isMSE() ? 16 : 250, this);
 }
 
 void MediaPlayerLinux::pause()
@@ -976,6 +1118,13 @@ void MediaPlayerLinux::pause()
     PLAYER_LOGI("MediaPlayerLinux::pause\n");
     if (playbackState() != PLAYBACK_STATE_PLAYING) {
         return;
+    }
+    if (isMSE() && m_clockStartMs != 0) {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        uint64_t nowMs = (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+        m_clockOffsetSec += (nowMs - m_clockStartMs) / 1000.0;
+        m_clockStartMs = 0;
     }
     PLAYER_LOGI("pause()");
     setPlaybackState(PLAYBACK_STATE_PAUSED);
@@ -1132,38 +1281,42 @@ void MediaPlayerLinux::handlePrepared()
     char* videoCodec = nullptr;
     char* audioCodec = nullptr;
 
-    AVCodecParameters* codecpar =
-        m_nativePlayer->m_fmtCtx->streams[m_nativePlayer->m_videoStreamIndex]
-            ->codecpar;
-    const AVCodec* codec = avcodec_find_decoder(codecpar->codec_id);
-    if (codec) {
-        PLAYER_LOGI("Codec name: %s\n", codec->name);
-        PLAYER_LOGI("Codec long name: %s\n", codec->long_name);
-        PLAYER_LOGI("Width: %d\n", codecpar->width);
-        PLAYER_LOGI("Height: %d\n", codecpar->height);
+    if (isMSE() == false && m_nativePlayer->m_fmtCtx != nullptr &&
+        m_nativePlayer->m_videoStreamIndex >= 0) {
+        AVCodecParameters* codecpar =
+            m_nativePlayer->m_fmtCtx
+                ->streams[m_nativePlayer->m_videoStreamIndex]
+                ->codecpar;
+        const AVCodec* codec = avcodec_find_decoder(codecpar->codec_id);
+        if (codec) {
+            PLAYER_LOGI("Codec name: %s\n", codec->name);
+            PLAYER_LOGI("Codec long name: %s\n", codec->long_name);
+            PLAYER_LOGI("Width: %d\n", codecpar->width);
+            PLAYER_LOGI("Height: %d\n", codecpar->height);
 
-        videoCodec = const_cast<char*>(codec->name);
-    }
-
-    if (videoCodec != nullptr) {
-        m_hasVideo = true;
-        int width = codecpar->width;
-        int height = codecpar->height;
-
-        STARFISH_ASSERT(width > 0);
-        STARFISH_ASSERT(height > 0);
-
-        if ((width == 0 || height == 0) &&
-            m_lastDecodedVideoPacket == nullptr) {
-            STARFISH_LOG_INFO(
-                "player_get_video_size function tell us video has 0x0 size && "
-                "m_lastDecodedVideoPacket is not null");
-            STARFISH_LOG_INFO(
-                "assume video size from m_lastDecodedVideoPacket");
-            // TODO : Need to impl.
+            videoCodec = const_cast<char*>(codec->name);
         }
-        m_videoWidth = (unsigned long)width;
-        m_videoHeight = (unsigned long)height;
+
+        if (videoCodec != nullptr) {
+            m_hasVideo = true;
+            int width = codecpar->width;
+            int height = codecpar->height;
+
+            STARFISH_ASSERT(width > 0);
+            STARFISH_ASSERT(height > 0);
+
+            if ((width == 0 || height == 0) &&
+                m_lastDecodedVideoPacket == nullptr) {
+                STARFISH_LOG_INFO(
+                    "player_get_video_size function tell us video has 0x0 "
+                    "size && m_lastDecodedVideoPacket is not null");
+                STARFISH_LOG_INFO(
+                    "assume video size from m_lastDecodedVideoPacket");
+                // TODO : Need to impl.
+            }
+            m_videoWidth = (unsigned long)width;
+            m_videoHeight = (unsigned long)height;
+        }
     }
 
     PLAYER_LOGI("MediaPlayerLinux::prepare ok %s %s %d %d", videoCodec,
@@ -1216,10 +1369,24 @@ void MediaPlayerLinux::dispose()
         m_nativePlayer->destroy();
         m_nativePlayer = nullptr;
     }
-    if (m_lastDecodedVideoPacket != nullptr) {
-        // media_packet_destroy(m_lastDecodedVideoPacket);
-        m_lastDecodedVideoPacket = nullptr;
+    {
+        Locker<Mutex> l(*m_decodedVideoFrameMutex);
+        if (m_lastDecodedVideoPacket != nullptr) {
+            free(m_lastDecodedVideoPacket->buffer());
+            m_lastDecodedVideoPacket = nullptr;
+        }
+        for (auto& entry : m_decodedVideoQueue) {
+            if (entry.packet != nullptr) {
+                free(entry.packet->buffer());
+            }
+        }
+        m_decodedVideoQueue.clear();
     }
+    if (m_swsCtx != nullptr) {
+        sws_freeContext(m_swsCtx);
+        m_swsCtx = nullptr;
+    }
+    teardownAudioSink();
     if (m_activeMediaSource != nullptr) {
         m_activeMediaSource->removeClient(m_mseClient);
         m_activeMediaSource->detach();
@@ -1229,10 +1396,12 @@ void MediaPlayerLinux::dispose()
         m_mseClient = nullptr;
     }
     if (m_audioStream != nullptr) {
+        destroyDecoderForStream(m_audioStream);
         m_audioStream->releaseMediaFormat();
         m_audioStream = nullptr;
     }
     if (m_videoStream != nullptr) {
+        destroyDecoderForStream(m_videoStream);
         m_videoStream->releaseMediaFormat();
         m_videoStream = nullptr;
     }
@@ -1296,12 +1465,42 @@ void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
     STARFISH_ASSERT(canvas != nullptr);
     canvas->setFillColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
+    promoteVideoFrameForCurrentTime();
+
+    // If more frames remain queued, ask the message loop to recomposite
+    // when the next frame's PTS becomes due. This drives smooth playback
+    // even when no new packet has arrived (e.g. mid-burst decode).
+    uint64_t nextPtsMs = 0;
+    bool haveNext = false;
     {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);
         if (m_lastDecodedVideoPacket != nullptr) {
             m_canvasSurface->attachPlatformExternalBuffer(
                 m_lastDecodedVideoPacket);
         }
+        if (!m_decodedVideoQueue.empty()) {
+            nextPtsMs = m_decodedVideoQueue.front().ptsMs;
+            haveNext = true;
+        }
+    }
+
+    if (haveNext && playbackState() == PLAYBACK_STATE_PLAYING &&
+        m_container != nullptr && m_container->window() != nullptr) {
+        uint64_t nowMs = (uint64_t)(currentTime() * 1000.0);
+        int32_t delay = 0;
+        if (nextPtsMs > nowMs) {
+            uint64_t d = nextPtsMs - nowMs;
+            delay = d > 250 ? 250 : (int32_t)d;
+        }
+        m_container->window()->setTimeout(
+            [](void* data) {
+                MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                if (self->alive() && self->container() != nullptr &&
+                    self->container()->frame() != nullptr) {
+                    self->container()->setNeedsComposite();
+                }
+            },
+            delay, this);
     }
 }
 
@@ -1324,20 +1523,22 @@ static void* threadFillingBuffer(void* data)
                 self->currentStream(StreamTypeAudio);
             MediaPlayerSourceStream* videoStream =
                 self->currentStream(StreamTypeVideo);
+            // FFmpeg-based player must keep pulling packets from the MSE
+            // source buffer as long as the decoder isn't already 1s ahead
+            // of currentTime (lookahead gated inside fillBufferWithoutGuard).
+            // The bufferState NORMAL only means the source buffer is full
+            // enough that JS doesn't need to fetch more — it does NOT mean
+            // the decoder should stop. Skipping fillBuffer here was causing
+            // the decoded video queue to drain to empty after ~10s while
+            // audio kept playing (audio used the same path but its source
+            // buffer cycled through NEED_PACKET more often due to its
+            // smaller maxBufferSize).
             if (audioStream != nullptr &&
-                audioStream->waitingDemuxer() == false &&
-                audioStream->needPacket() == true) {
-                // (audioStream->needPacket() || state ==
-                // MediaPlayer::PLAYBACK_STATE_PLAYING)) {
-                PLAYER_LOGI("[AUDIO] Player need data");
+                audioStream->waitingDemuxer() == false) {
                 self->fillBuffer(audioStream);
             }
             if (videoStream != nullptr &&
-                videoStream->waitingDemuxer() == false &&
-                videoStream->needPacket() == true) {
-                // (videoStream->needPacket() || state ==
-                // MediaPlayer::PLAYBACK_STATE_PLAYING)) {
-                PLAYER_LOGI("[VIDEO] Player need data");
+                videoStream->waitingDemuxer() == false) {
                 self->fillBuffer(videoStream);
             }
         }
@@ -1368,23 +1569,27 @@ void MediaPlayerLinux::prepareMediaSource()
         return;
     }
 
+    // Re-entry guard: prepareMediaSource fires once per appendBuffer that
+    // produces a new active source, but the native prepare / mseThread
+    // bring-up should only run once.
+    if (m_mseThread != nullptr) {
+        return;
+    }
+
     m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
         HTMLMediaElement::HAVE_METADATA);
     openPreparingMode();
 
     if (!m_nativePlayer->prepare(preparedCallback, this)) {
-        PLAYER_LOGE("MediaPlayerLinux::player_prepare_async return error !!!");
         m_foundError = true;
         handlePrepared();
 #ifdef STARFISH_RUN_MSE_THREAD
     } else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
         if (m_playerDeadFlag == NULL) {
-            PLAYER_LOGE("ERROR: prepareMediaSource");
             handlePlayerError();
             return;
         }
-
         *m_playerDeadFlag = false;
         STARFISH_ASSERT(m_mseThread == nullptr);
         m_mseThread = new Thread(m_container->webView()->threadPool());
@@ -1392,8 +1597,6 @@ void MediaPlayerLinux::prepareMediaSource()
                          threadFillingBuffer, this);
 #endif
     }
-
-    PLAYER_LOGI("MediaPlayerLinux::prepareMediaSource end");
 }
 
 void MediaPlayerLinux::fillBuffer(MediaPlayerSourceStream* stream)
@@ -1550,7 +1753,94 @@ void MediaPlayerLinux::handlePlayerBuffer(StreamType type,
 
 void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
 {
-    STARFISH_UNIMPLEMENTED();
+    if (stream == nullptr) {
+        return;
+    }
+    SourceBuffer* sb = activeSourceBuffer(stream->type());
+    if (sb == nullptr) {
+        stream->setWaitingDemuxer(true);
+        return;
+    }
+
+    uint64_t streamIdx = activeStreamIndex(stream->type());
+    uint64_t lastDTS = stream->lastSubmittedDTS();
+    uint64_t sizeUpTo =
+        stream->maxBufferSize() * STARFISH_MSE_SUBMIT_BYTES_RATE;
+    if (sizeUpTo == 0) {
+        sizeUpTo = 256 * 1024;
+    }
+
+    // Throttle: do not let the decode pipeline race more than ~1 second
+    // ahead of the current playback clock, otherwise we eat memory storing
+    // pre-decoded RGBA frames. The check runs per packet so a single
+    // fillBuffer call cannot dump ~sizeUpTo (often >1MB / >1s of video)
+    // worth of frames in one shot.
+    uint64_t currentMs = (uint64_t)(currentTime() * 1000.0);
+    if (lastDTS > currentMs + 1000) {
+        return;
+    }
+
+    size_t submitBytes = 0;
+    while (submitBytes < sizeUpTo) {
+        currentMs = (uint64_t)(currentTime() * 1000.0);
+        if (lastDTS > currentMs + 1000) {
+            break;
+        }
+        std::pair<MediaPacket*, size_t> packet =
+            sb->findProperMediaPacket(streamIdx, lastDTS);
+        if (packet.first == nullptr) {
+            uint64_t endTime = m_activeMediaSource->duration() * 1000;
+            if (std::isinf(m_activeMediaSource->duration())) {
+                endTime = std::numeric_limits<uint64_t>::max();
+            }
+            uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
+            if ((endTime > lastDTS && (endTime - lastDTS) < 10) ||
+                (lastDTS == lastBufferedTime && endTime == lastBufferedTime)) {
+                stream->setBufferState(
+                    MediaPlayerSourceStream::BUFFERSTATE_EOS);
+                break;
+            }
+            stream->setWaitingDemuxer(true);
+            break;
+        }
+        if (packet.first->m_dts < lastDTS) {
+            // Already-consumed packet; defer to next demuxer event.
+            sb->clearPacketAccessCache();
+            stream->setWaitingDemuxer(true);
+            break;
+        }
+        if (packet.first->m_dts - lastDTS > 500) {
+            // The MSE source has a >500ms gap ahead of our submission
+            // pointer (typical when the player evicted old segments while
+            // we were paused / falling behind). Jump lastDTS forward to
+            // the next available packet, and on the video stream, also
+            // advance our wall-clock so currentTime() catches up. Without
+            // the wall-clock advance, the decode-lookahead gate prevents
+            // further decoding (lastDTS already > currentMs+1000) and the
+            // queued frames sit unpresented until wall-clock organically
+            // reaches packet.dts — manifesting as multi-second freezes
+            // every time the source buffer evicts.
+            if (stream->isVideo() && isMSE() &&
+                packet.first->m_dts > currentMs) {
+                struct timespec ts;
+                clock_gettime(CLOCK_MONOTONIC, &ts);
+                uint64_t nowMonoMs =
+                    (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+                m_clockOffsetSec = packet.first->m_dts / 1000.0;
+                m_clockStartMs = nowMonoMs;
+                currentMs = packet.first->m_dts;
+            }
+            lastDTS = packet.first->m_dts;
+        }
+        decodeAndDeliverPacket(stream, packet.first);
+        submitBytes += packet.first->m_dataSize;
+        lastDTS = packet.first->m_dts + packet.first->m_duration;
+    }
+    stream->setLastSubmittedDTS(lastDTS);
+    if (stream->bufferState() != MediaPlayerSourceStream::BUFFERSTATE_EOS) {
+        stream->setBufferState(
+            MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET);
+    }
 }
 
 void MediaPlayerLinux::setLoop(bool loop)
@@ -1576,14 +1866,518 @@ bool MediaPlayerLinux::isMSEBufferEOS()
     return isEOS;
 }
 
+bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
+                                              StreamInfo* info)
+{
+    if (stream == nullptr || info == nullptr) {
+        return false;
+    }
+
+    AVCodecID codecId = AV_CODEC_ID_NONE;
+    if (info->isCodec(MediaCodecVideoH264)) {
+        codecId = AV_CODEC_ID_H264;
+    } else if (info->isCodec(MediaCodecVideoHEVC)) {
+        codecId = AV_CODEC_ID_HEVC;
+    } else if (info->isCodec(MediaCodecVideoVP9)) {
+        codecId = AV_CODEC_ID_VP9;
+    } else if (info->isCodec(MediaCodecAudioAAC)) {
+        codecId = AV_CODEC_ID_AAC;
+    } else if (info->isCodec(MediaCodecAudioMP3)) {
+        codecId = AV_CODEC_ID_MP3;
+    } else if (info->isCodec(MediaCodecAudioVorbis)) {
+        codecId = AV_CODEC_ID_VORBIS;
+    } else {
+        return false;
+    }
+
+    const AVCodec* codec = avcodec_find_decoder(codecId);
+    if (codec == nullptr) {
+        return false;
+    }
+
+    AVCodecContext* ctx = avcodec_alloc_context3(codec);
+    if (ctx == nullptr) {
+        return false;
+    }
+
+    if (info->isVideo()) {
+        ctx->width = info->videoWidth();
+        ctx->height = info->videoHeight();
+        // For H.264 in CMAF/MP4 the parsed packets are AVCC length-prefixed
+        // with extradata containing avcC; we keep them in that form. WebM/VP9
+        // and Annex-B sources would set isAnnexB true.
+        if (codecId == AV_CODEC_ID_H264 && !info->m_extraData.empty() &&
+            info->m_extraData[0] == 0x01) {
+            stream->setIsAnnexB(false);
+        } else {
+            stream->setIsAnnexB(true);
+        }
+    } else {
+        ctx->sample_rate = info->audioSampleRate();
+        AVChannelLayout layout;
+        av_channel_layout_default(&layout, info->audioChannels());
+        av_channel_layout_copy(&ctx->ch_layout, &layout);
+        av_channel_layout_uninit(&layout);
+    }
+
+    if (!info->m_extraData.empty()) {
+        ctx->extradata_size = info->m_extraData.size();
+        ctx->extradata = (uint8_t*)av_mallocz(ctx->extradata_size +
+                                              AV_INPUT_BUFFER_PADDING_SIZE);
+        if (ctx->extradata == nullptr) {
+            avcodec_free_context(&ctx);
+            return false;
+        }
+        memcpy(ctx->extradata, info->m_extraData.data(), ctx->extradata_size);
+    }
+
+    if (avcodec_open2(ctx, codec, nullptr) < 0) {
+        avcodec_free_context(&ctx);
+        return false;
+    }
+
+    destroyDecoderForStream(stream);
+    stream->setCodecContext(ctx);
+    return true;
+}
+
+void MediaPlayerLinux::destroyDecoderForStream(MediaPlayerSourceStream* stream)
+{
+    if (stream == nullptr) {
+        return;
+    }
+    AVCodecContext* ctx = stream->codecContext();
+    if (ctx != nullptr) {
+        avcodec_free_context(&ctx);
+        stream->setCodecContext(nullptr);
+    }
+}
+
+void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
+{
+    if (frame == nullptr || frame->width <= 0 || frame->height <= 0) {
+        return;
+    }
+    int width = frame->width;
+    int height = frame->height;
+    int stride = width * 4;
+
+    if (m_swsCtx == nullptr || m_swsCtxWidth != width ||
+        m_swsCtxHeight != height) {
+        if (m_swsCtx != nullptr) {
+            sws_freeContext(m_swsCtx);
+        }
+        m_swsCtxWidth = width;
+        m_swsCtxHeight = height;
+        m_swsCtx = sws_getContext(width, height, (AVPixelFormat)frame->format,
+                                  width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR,
+                                  nullptr, nullptr, nullptr);
+        if (m_swsCtx == nullptr) {
+            STARFISH_LOG_INFO(
+                "MediaPlayerLinux::publishDecodedFrame sws_getContext failed");
+            return;
+        }
+    }
+
+    uint8_t* buffer = (uint8_t*)malloc(stride * height);
+    if (buffer == nullptr) {
+        return;
+    }
+    uint8_t* dest[4] = { buffer, nullptr, nullptr, nullptr };
+    int destLinesize[4] = { stride, 0, 0, 0 };
+    sws_scale(m_swsCtx, frame->data, frame->linesize, 0, height, dest,
+              destLinesize);
+
+    LinuxMediaPacket* mediaPacket = new LinuxMediaPacket(width, height, stride);
+    mediaPacket->setBuffer(buffer);
+
+    int64_t pts = frame->best_effort_timestamp;
+    if (pts == AV_NOPTS_VALUE) {
+        pts = frame->pts;
+    }
+    uint64_t ptsMs = (pts == AV_NOPTS_VALUE || pts < 0) ? 0 : (uint64_t)pts;
+
+    {
+        Locker<Mutex> l(*m_decodedVideoFrameMutex);
+        DecodedVideoFrame entry;
+        entry.ptsMs = ptsMs;
+        entry.packet = mediaPacket;
+        m_decodedVideoQueue.push_back(entry);
+    }
+
+    if (m_container != nullptr && m_container->isHTMLVideoElement()) {
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
+        msgLoop->addIdlerWithNoGCRootingInOtherThread(
+            m_container->window(),
+            [](size_t, void* data) {
+                MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                if (self->alive() && self->container() != nullptr &&
+                    self->container()->frame() != nullptr) {
+                    self->container()->setNeedsComposite();
+                }
+            },
+            this);
+    }
+}
+
+void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
+{
+    uint64_t nowMs = (uint64_t)(currentTime() * 1000.0);
+
+    Locker<Mutex> l(*m_decodedVideoFrameMutex);
+    if (m_decodedVideoQueue.empty()) {
+        return;
+    }
+
+    LinuxMediaPacket* picked = nullptr;
+    while (!m_decodedVideoQueue.empty()) {
+        DecodedVideoFrame& head = m_decodedVideoQueue.front();
+        // Future frame: stop here and present whatever we already picked.
+        if (head.ptsMs > nowMs) {
+            break;
+        }
+        if (picked != nullptr) {
+            free(picked->buffer());
+        }
+        picked = head.packet;
+        m_decodedVideoQueue.pop_front();
+    }
+
+    // If we have nothing displayed yet, force-present the head so the
+    // <video> element shows the first decoded frame even before play()
+    // (poster / first-frame behavior). Once playback starts, currentTime
+    // advances and the PTS-gated path takes over.
+    if (picked == nullptr && m_lastDecodedVideoPacket == nullptr &&
+        !m_decodedVideoQueue.empty()) {
+        picked = m_decodedVideoQueue.front().packet;
+        m_decodedVideoQueue.pop_front();
+    }
+
+    if (picked != nullptr) {
+        if (m_lastDecodedVideoPacket != nullptr) {
+            free(m_lastDecodedVideoPacket->buffer());
+        }
+        m_lastDecodedVideoPacket = picked;
+    }
+}
+
+void MediaPlayerLinux::ensureAudioSink(int channels, int sampleRate)
+{
+    if (channels <= 0 || sampleRate <= 0) {
+        return;
+    }
+    if (m_audioSinkHandle != nullptr && m_audioSinkChannels == channels &&
+        m_audioSinkRate == sampleRate) {
+        return;
+    }
+    if (m_audioSinkHandle != nullptr) {
+        teardownAudioSink();
+    }
+
+    void* handle = nullptr;
+    PulseSimpleApi* api = loadPulseSimple(handle);
+    if (api == nullptr) {
+        return;
+    }
+    m_audioSinkLib = handle;
+
+    pa_sample_spec spec;
+    spec.format = PA_SAMPLE_S16LE;
+    spec.rate = (uint32_t)sampleRate;
+    spec.channels = (uint8_t)(channels > 8 ? 8 : channels);
+
+    int err = 0;
+    // Use PulseAudio defaults (large server-side buffer). Backpressure is
+    // absorbed by the dedicated writer thread, not by the MSE driver.
+    pa_simple* s =
+        api->pa_simple_new(nullptr, "Starfish", PA_STREAM_PLAYBACK, nullptr,
+                           "media", &spec, nullptr, nullptr, &err);
+    if (s == nullptr) {
+        STARFISH_LOG_INFO(
+            "MediaPlayerLinux::ensureAudioSink pa_simple_new failed (%d)", err);
+        return;
+    }
+    m_audioSinkHandle = s;
+    m_audioSinkChannels = (int)spec.channels;
+    m_audioSinkRate = sampleRate;
+
+    m_audioWriterStop = false;
+    m_audioWriteQueueBytes = 0;
+    m_audioWriterThread = new std::thread([this]() {
+        void* h = nullptr;
+        PulseSimpleApi* api = loadPulseSimple(h);
+        if (api == nullptr) {
+            return;
+        }
+        while (true) {
+            std::pair<uint8_t*, size_t> item(nullptr, 0);
+            {
+                std::unique_lock<std::mutex> lk(m_audioWriteMutex);
+                m_audioWriteCv.wait(lk, [this]() {
+                    return m_audioWriterStop || !m_audioWriteQueue.empty();
+                });
+                if (m_audioWriteQueue.empty()) {
+                    if (m_audioWriterStop) {
+                        return;
+                    }
+                    continue;
+                }
+                item = m_audioWriteQueue.front();
+                m_audioWriteQueue.pop_front();
+                if (m_audioWriteQueueBytes >= item.second) {
+                    m_audioWriteQueueBytes -= item.second;
+                } else {
+                    m_audioWriteQueueBytes = 0;
+                }
+            }
+            if (m_audioSinkHandle != nullptr && item.first != nullptr) {
+                int err = 0;
+                api->pa_simple_write((pa_simple*)m_audioSinkHandle, item.first,
+                                     item.second, &err);
+            }
+            if (item.first != nullptr) {
+                av_free(item.first);
+            }
+        }
+    });
+}
+
+void MediaPlayerLinux::teardownAudioSink()
+{
+    if (m_audioWriterThread != nullptr) {
+        {
+            std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+            m_audioWriterStop = true;
+        }
+        m_audioWriteCv.notify_all();
+        m_audioWriterThread->join();
+        delete m_audioWriterThread;
+        m_audioWriterThread = nullptr;
+    }
+    {
+        std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+        for (auto& it : m_audioWriteQueue) {
+            if (it.first != nullptr) {
+                av_free(it.first);
+            }
+        }
+        m_audioWriteQueue.clear();
+        m_audioWriteQueueBytes = 0;
+        m_audioWriterStop = false;
+    }
+
+    if (m_audioSinkHandle != nullptr && m_audioSinkLib != nullptr) {
+        void* handle = nullptr;
+        PulseSimpleApi* api = loadPulseSimple(handle);
+        if (api != nullptr) {
+            api->pa_simple_free((pa_simple*)m_audioSinkHandle);
+        }
+    }
+    m_audioSinkHandle = nullptr;
+    m_audioSinkLib = nullptr;
+    m_audioSinkChannels = 0;
+    m_audioSinkRate = 0;
+
+    if (m_swrCtx != nullptr) {
+        swr_free(&m_swrCtx);
+        m_swrCtx = nullptr;
+    }
+    m_swrChannels = 0;
+    m_swrRate = 0;
+    m_swrSrcFmt = -1;
+}
+
+void MediaPlayerLinux::publishDecodedAudioFrame(AVFrame* frame)
+{
+    if (frame == nullptr || frame->nb_samples <= 0) {
+        return;
+    }
+    int channels = frame->ch_layout.nb_channels;
+    int sampleRate = frame->sample_rate;
+    int srcFmt = frame->format;
+    if (channels <= 0 || sampleRate <= 0) {
+        return;
+    }
+
+    ensureAudioSink(channels, sampleRate);
+    if (m_audioSinkHandle == nullptr) {
+        return;
+    }
+
+    if (m_swrCtx == nullptr || m_swrChannels != channels ||
+        m_swrRate != sampleRate || m_swrSrcFmt != srcFmt) {
+        if (m_swrCtx != nullptr) {
+            swr_free(&m_swrCtx);
+            m_swrCtx = nullptr;
+        }
+        SwrContext* swr = nullptr;
+        int rc = swr_alloc_set_opts2(
+            &swr, &frame->ch_layout, AV_SAMPLE_FMT_S16, sampleRate,
+            &frame->ch_layout, (AVSampleFormat)srcFmt, sampleRate, 0, nullptr);
+        if (rc < 0 || swr == nullptr) {
+            STARFISH_LOG_INFO(
+                "MediaPlayerLinux::publishDecodedAudioFrame "
+                "swr_alloc_set_opts2 failed (%d)",
+                rc);
+            return;
+        }
+        if (swr_init(swr) < 0) {
+            swr_free(&swr);
+            return;
+        }
+        m_swrCtx = swr;
+        m_swrChannels = channels;
+        m_swrRate = sampleRate;
+        m_swrSrcFmt = srcFmt;
+    }
+
+    int outSamples = frame->nb_samples;
+    int bytesPerSample = 2; // S16
+    int outBufSize = outSamples * channels * bytesPerSample;
+    uint8_t* outBuf = (uint8_t*)av_malloc((size_t)outBufSize);
+    if (outBuf == nullptr) {
+        return;
+    }
+    uint8_t* outPlanes[1] = { outBuf };
+    int converted =
+        swr_convert(m_swrCtx, outPlanes, outSamples,
+                    (const uint8_t**)frame->extended_data, frame->nb_samples);
+    if (converted <= 0) {
+        av_free(outBuf);
+        return;
+    }
+
+    size_t writeBytes = (size_t)(converted * channels * bytesPerSample);
+    {
+        std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+        // Cap pending audio at ~5 seconds worth (sampleRate * channels * 2 *
+        // 5). Guards against runaway memory if the writer thread can't keep
+        // up; in steady state the queue stays small.
+        size_t maxBytes = (size_t)sampleRate * (size_t)channels * 2u * 5u;
+        if (m_audioWriteQueueBytes + writeBytes > maxBytes &&
+            !m_audioWriteQueue.empty()) {
+            auto& victim = m_audioWriteQueue.front();
+            if (victim.first != nullptr) {
+                av_free(victim.first);
+            }
+            if (m_audioWriteQueueBytes >= victim.second) {
+                m_audioWriteQueueBytes -= victim.second;
+            } else {
+                m_audioWriteQueueBytes = 0;
+            }
+            m_audioWriteQueue.pop_front();
+        }
+        m_audioWriteQueue.push_back(std::make_pair(outBuf, writeBytes));
+        m_audioWriteQueueBytes += writeBytes;
+    }
+    m_audioWriteCv.notify_one();
+}
+
+void MediaPlayerLinux::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
+                                              MediaPacket* packet)
+{
+    if (stream == nullptr || packet == nullptr ||
+        stream->codecContext() == nullptr) {
+        return;
+    }
+    AVCodecContext* ctx = stream->codecContext();
+
+    AVPacket* avPkt = av_packet_alloc();
+    if (avPkt == nullptr) {
+        return;
+    }
+    avPkt->data = packet->m_data;
+    avPkt->size = (int)packet->m_dataSize;
+    avPkt->pts = (int64_t)packet->m_pts;
+    avPkt->dts = (int64_t)packet->m_dts;
+    avPkt->duration = (int64_t)packet->m_duration;
+    if (packet->m_hasIdr) {
+        avPkt->flags |= AV_PKT_FLAG_KEY;
+    }
+
+    int ret = avcodec_send_packet(ctx, avPkt);
+    av_packet_free(&avPkt);
+    if (ret < 0) {
+        return;
+    }
+
+    while (true) {
+        AVFrame* frame = av_frame_alloc();
+        if (frame == nullptr) {
+            break;
+        }
+        ret = avcodec_receive_frame(ctx, frame);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            av_frame_free(&frame);
+            break;
+        }
+        if (ret < 0) {
+            av_frame_free(&frame);
+            break;
+        }
+        if (stream->isVideo()) {
+            publishDecodedFrame(frame);
+        } else if (stream->isAudio()) {
+            publishDecodedAudioFrame(frame);
+        }
+        av_frame_free(&frame);
+    }
+}
+
 void MediaPlayerLinux::initVideoStreamInfo(size_t initSegmentIndex)
 {
-    STARFISH_UNIMPLEMENTED();
+    SourceBuffer* sb = m_activeMediaSource->activeVideoSourceBuffer();
+    if (sb == nullptr) {
+        return;
+    }
+
+    StreamInfo* info = sb->streamInfo(
+        initSegmentIndex, m_activeMediaSource->activeVideoStreamIndex());
+    if (info == nullptr) {
+        return;
+    }
+
+    m_videoStream = new MediaPlayerSourceStream(StreamTypeVideo);
+    if (m_container != nullptr) {
+        m_videoStream->setLastSubmittedDTS(
+            m_container->defaultPlaybackStartPosition() * 1000);
+    }
+
+    m_videoWidth = info->videoWidth();
+    m_videoHeight = info->videoHeight();
+    m_hasVideo = true;
+    m_videoStream->setMaxBufferSize(
+        (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5);
+    m_videoStream->setInitSegmentIndex(initSegmentIndex);
+    m_videoStream->setBufferState(
+        MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET);
+
+    createDecoderForStream(m_videoStream, info);
 }
 
 void MediaPlayerLinux::initAudioStreamInfo(size_t initSegmentIndex)
 {
-    STARFISH_UNIMPLEMENTED();
+    SourceBuffer* sb = m_activeMediaSource->activeAudioSourceBuffer();
+    if (sb == nullptr) {
+        return;
+    }
+
+    StreamInfo* info = sb->streamInfo(
+        initSegmentIndex, m_activeMediaSource->activeAudioStreamIndex());
+    if (info == nullptr) {
+        return;
+    }
+
+    m_audioStream = new MediaPlayerSourceStream(StreamTypeAudio);
+    if (m_container != nullptr) {
+        m_audioStream->setLastSubmittedDTS(
+            m_container->defaultPlaybackStartPosition() * 1000);
+    }
+    m_audioStream->setInitSegmentIndex(initSegmentIndex);
+    m_audioStream->setBufferState(
+        MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET);
+
+    createDecoderForStream(m_audioStream, info);
 }
 
 void MediaPlayerLinux::updateStreamInfo(MediaPlayerSourceStream* stream,
@@ -1593,8 +2387,7 @@ void MediaPlayerLinux::updateStreamInfo(MediaPlayerSourceStream* stream,
     if (stream->isVideo() == true) {
         updateVideoStreamInfo(stream, pastInitIndex, newInitIndex);
     } else {
-        // TODO audio
-        STARFISH_UNIMPLEMENTED();
+        updateAudioStreamInfo(stream, pastInitIndex, newInitIndex);
     }
 }
 
@@ -1602,7 +2395,40 @@ void MediaPlayerLinux::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
-    STARFISH_UNIMPLEMENTED();
+    SourceBuffer* sb = m_activeMediaSource->activeVideoSourceBuffer();
+    if (sb == nullptr) {
+        return;
+    }
+    StreamInfo* info = sb->streamInfo(
+        newInitIndex, m_activeMediaSource->activeVideoStreamIndex());
+    if (info == nullptr) {
+        return;
+    }
+    m_videoWidth = info->videoWidth();
+    m_videoHeight = info->videoHeight();
+    stream->setMaxBufferSize((m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 /
+                             8 * 5);
+    createDecoderForStream(stream, info);
+    PLAYER_LOGI("MediaPlayerLinux::updateVideoStreamInfo %dx%d",
+                (int)m_videoWidth, (int)m_videoHeight);
+}
+
+void MediaPlayerLinux::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
+                                             size_t pastInitIndex,
+                                             size_t newInitIndex)
+{
+    SourceBuffer* sb = m_activeMediaSource->activeAudioSourceBuffer();
+    if (sb == nullptr) {
+        return;
+    }
+    StreamInfo* info = sb->streamInfo(
+        newInitIndex, m_activeMediaSource->activeAudioStreamIndex());
+    if (info == nullptr) {
+        return;
+    }
+    createDecoderForStream(stream, info);
+    PLAYER_LOGI("MediaPlayerLinux::updateAudioStreamInfo channels=%d rate=%d",
+                (int)info->audioChannels(), (int)info->audioSampleRate());
 }
 
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)

@@ -135,6 +135,20 @@ public:
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
 
+    void setBinaryRequestBody(const char* data, size_t size)
+    {
+        m_binaryBody.assign(data, size);
+        m_hasBinaryBody = true;
+    }
+    bool hasBinaryRequestBody() const
+    {
+        return m_hasBinaryBody;
+    }
+    const std::string& binaryRequestBody() const
+    {
+        return m_binaryBody;
+    }
+
     void setTimeout(uint32_t ms)
     {
         m_timeout = ms;
@@ -452,6 +466,8 @@ protected:
     String* m_contentLanguage;
     std::string m_lastLocation;
     std::string m_lastEffectiveURL;
+    std::string m_binaryBody;
+    bool m_hasBinaryBody{ false };
 
     GCVector<size_t> m_requstedIdlers;
 

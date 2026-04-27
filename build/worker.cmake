@@ -194,6 +194,7 @@ FILE (GLOB STARFISH_WORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/EventTargetCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/XMLHttpRequestCustomBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/RequestInitBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
     ${STARFISH_BINDING_GENERATED_DIR}/ArrayBufferViewOrArrayBufferBinding.cpp

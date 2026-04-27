@@ -462,11 +462,19 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
     nwd->httpTransaction->setUseHttp2(m_orgProxy->webBase()->useHttp2());
-    nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
-        m_orgProxy->url()->urlString()->toUTF8NonGCString(),
-        m_orgProxy->url()->host()->toUTF8NonGCString(),
-        m_orgProxy->method()->toUTF8NonGCString(), headers,
-        std::move(body->toUTF8NonGCString()), includeCredentials));
+    {
+        std::string entityBody;
+        if (m_orgProxy->hasBinaryRequestBody()) {
+            entityBody = m_orgProxy->binaryRequestBody();
+        } else {
+            entityBody = body->toUTF8NonGCString();
+        }
+        nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
+            m_orgProxy->url()->urlString()->toUTF8NonGCString(),
+            m_orgProxy->url()->host()->toUTF8NonGCString(),
+            m_orgProxy->method()->toUTF8NonGCString(), headers,
+            std::move(entityBody), includeCredentials));
+    }
     nwd->httpTransaction->httpRequest().setUnsafeRequestHeaderNames(
         unsafeHeaders);
     nwd->httpTransaction->setTimeout(

@@ -30,10 +30,17 @@
 
 #include "platform/multimedia/MediaPlayer.h"
 
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <thread>
+#include <utility>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/frame.h>
+#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
 
@@ -43,6 +50,7 @@ class CanvasSurface;
 class MediaSource;
 class MediaPlayerLinuxMediaSourceClient;
 class Mutex;
+struct MediaPacket;
 
 typedef enum {
     PLAYER_STATE_NONE,    /**< Player is not created */
@@ -232,6 +240,23 @@ public:
     uint64_t lastBufferBytes();
     void setLastBufferBytes(size_t value);
 
+    AVCodecContext* codecContext()
+    {
+        return m_codecCtx;
+    }
+    void setCodecContext(AVCodecContext* ctx)
+    {
+        m_codecCtx = ctx;
+    }
+    bool isAnnexB()
+    {
+        return m_isAnnexB;
+    }
+    void setIsAnnexB(bool flag)
+    {
+        m_isAnnexB = flag;
+    }
+
 protected:
     StreamType m_type;
     volatile BufferState m_bufferState;
@@ -248,6 +273,8 @@ protected:
     volatile size_t m_initSegmentIndex;
     volatile size_t m_lastBufferBytes;
     volatile bool m_waitingDemuxer;
+    AVCodecContext* m_codecCtx;
+    bool m_isAnnexB;
 };
 
 class MediaPlayerLinux : public MediaPlayer {
@@ -334,6 +361,52 @@ public:
 
     void initVideoStreamInfo(size_t initSegmentIndex = 0);
     void initAudioStreamInfo(size_t initSegmentIndex = 0);
+
+    bool createDecoderForStream(MediaPlayerSourceStream* stream,
+                                StreamInfo* info);
+    void destroyDecoderForStream(MediaPlayerSourceStream* stream);
+    void decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
+                                MediaPacket* packet);
+    void publishDecodedFrame(AVFrame* frame);
+    void publishDecodedAudioFrame(AVFrame* frame);
+    void promoteVideoFrameForCurrentTime();
+    void ensureAudioSink(int channels, int sampleRate);
+    void teardownAudioSink();
+
+    struct DecodedVideoFrame {
+        uint64_t ptsMs;
+        LinuxMediaPacket* packet;
+    };
+    std::deque<DecodedVideoFrame> m_decodedVideoQueue;
+
+    SwsContext* m_swsCtx;
+    int m_swsCtxWidth;
+    int m_swsCtxHeight;
+
+    // Wall-clock based playhead tracking for the MSE path. The FFmpeg
+    // packet-feed loop has no native player to query for position, so we
+    // approximate currentTime() with monotonic clock + offset.
+    uint64_t m_clockStartMs;
+    double m_clockOffsetSec;
+
+    void* m_audioSinkLib;
+    void* m_audioSinkHandle;
+    int m_audioSinkChannels;
+    int m_audioSinkRate;
+    SwrContext* m_swrCtx;
+    int m_swrChannels;
+    int m_swrRate;
+    int m_swrSrcFmt;
+
+    // Decouple PulseAudio writes from the MSE driver thread: pa_simple_write
+    // is blocking, and calling it from the decode loop also stalls video
+    // decoding. The writer thread drains the queue and absorbs that block.
+    std::deque<std::pair<uint8_t*, size_t>> m_audioWriteQueue;
+    std::mutex m_audioWriteMutex;
+    std::condition_variable m_audioWriteCv;
+    std::thread* m_audioWriterThread;
+    volatile bool m_audioWriterStop;
+    size_t m_audioWriteQueueBytes;
 
     static void seekedCallback(void* data)
     {
