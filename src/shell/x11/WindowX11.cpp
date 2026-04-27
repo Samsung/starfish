@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_X11) && defined(STARFISH_GLIB_CAIRO_GL)
 
 #include "Window.h"
 
@@ -87,9 +87,9 @@ bool createEGLDisplay(EGLDisplay& display, EGLConfig& config)
             EGL_ALPHA_SIZE,
             8,
             EGL_DEPTH_SIZE,
-            16,
+            0,
             EGL_STENCIL_SIZE,
-            8,
+            0,
             EGL_SAMPLES,
             0,
             EGL_RENDERABLE_TYPE,
@@ -321,7 +321,7 @@ bool WindowX11::init(const char* appName, int width, int height)
     XStoreName(display, window, appName);
 
     // Set window manager protocols to handle window deletion events
-    wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", false);
+    wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", true);
     XSetWMProtocols(display, window, &wmDeleteWindow, 1);
 
     XMoveWindow(display, window, 0, 0);
@@ -336,6 +336,8 @@ bool WindowX11::init(const char* appName, int width, int height)
     if (!m_renderer->initialize(m_window)) {
         return false;
     }
+
+    m_appLoop->init();
 
     return true;
 }
@@ -427,9 +429,12 @@ void WindowX11::pollEvent()
         case ClientMessage: {
             if (event.xclient.data.l[0] ==
                 static_cast<long>(m_wmDeleteWindow)) {
+                printf(
+                    "[WindowX11] Window close button pressed, stopping...\n");
                 if (m_exitEventHandler) {
                     m_exitEventHandler();
                 }
+                m_appLoop->stop();
             }
         } break;
 
