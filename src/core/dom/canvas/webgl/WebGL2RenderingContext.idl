@@ -594,13 +594,9 @@ interface WebGL2RenderingContextOverloads
 };
 
 // https://www.khronos.org/registry/webgl/specs/latest/2.0/#WebGL2RenderingContext
-[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker)]
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), GenerateInitAndIs]
 interface WebGL2RenderingContext
 {
-    // FIXME: The spec says no member here. In this case, the binding generator
-    // doesn't generate 'void WebGL2RenderingContext::init(...)', and so on. So
-    // we add the following dummy line for now.
-    [Unimplemented] readonly attribute HTMLCanvasElement canvas;
 };
 
 // includes -> implements

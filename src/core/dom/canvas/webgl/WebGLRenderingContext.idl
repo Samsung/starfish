@@ -1,11 +1,8 @@
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContext
 
-[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker)]
-interface WebGLRenderingContext {
-  // FIXME: The spec says no member here. In this case, the binding generator
-  // doesn't generate 'void WebGLRenderingContext::init(...)', and so on. So
-  // we add the following dummy line for now.
-  [Unimplemented] readonly attribute HTMLCanvasElement canvas;
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), GenerateInitAndIs]
+interface WebGLRenderingContext
+{
 };
 
 // includes -> implements

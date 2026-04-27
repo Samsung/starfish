@@ -1,5 +1,5 @@
 // https://registry.khronos.org/webgl/specs/latest/1.0/#5.10
 
-[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker)]
-interface WebGLUniformLocation : WebGLObject {
+[STARFISH_ENABLE_WEBGL, Exposed=(Window,Worker), GenerateInitAndIs]
+interface WebGLUniformLocation {
 };
