@@ -48,6 +48,11 @@ public:
         return m_macroTaskCounter;
     }
 
+    bool inDrainMicroTaskQueue()
+    {
+        return m_inDrainMicroTaskQueue;
+    }
+
 protected:
     bool m_inDrainMicroTaskQueue;
     size_t m_macroTaskCounter;
