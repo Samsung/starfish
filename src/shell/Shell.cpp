@@ -30,6 +30,11 @@
 #include <backtrace.h>
 #endif
 
+#undef SHELL_ENABLE_GOOGLE_PERF
+#if defined(SHELL_ENABLE_GOOGLE_PERF)
+#include <gperftools/profiler.h>
+#endif
+
 #include <cstring>
 #include <memory>
 #include <pthread.h>
@@ -118,6 +123,10 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     setBacktraceHandler();
 #endif
 
+#if defined(SHELL_ENABLE_GOOGLE_PERF)
+    ProfilerStart("gperf_result");
+#endif
+
     MiniBrowser::EnvironmentValues env;
     MiniBrowser::InitOption init;
     MiniBrowser::Settings settings;
@@ -153,6 +162,10 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     if (ret != 0) {
         return ret;
     }
+
+#if defined(SHELL_ENABLE_GOOGLE_PERF)
+    ProfilerStop();
+#endif
 
     return getExitCode();
 }

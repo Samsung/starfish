@@ -27,7 +27,7 @@ SET (STARFISH_SHELL_INCLUDE_DIRS
     ${STARFISH_ROOT}/src/shell/
 )
 
-IF(${SHELL} STREQUAL "efl_headless" )
+IF(${SHELL} STREQUAL "efl_headless")
     SET(STARFISH_SHELL_LIBRARIES ecore)
 ELSEIF (${SHELL} STREQUAL "efl")
     SET(STARFISH_SHELL_LIBRARIES elementary evas ecore)
@@ -39,6 +39,11 @@ ELSEIF (${SHELL} STREQUAL "tcore_wl")
     SET(STARFISH_SHELL_LIBRARIES tizen-core tizen-core-wl glib-2.0 wayland-client)
 ELSEIF (${SHELL} STREQUAL "tcore_headless")
     SET(STARFISH_SHELL_LIBRARIES tizen-core)
+ELSEIF (${SHELL} STREQUAL "x11")
+    SET(STARFISH_SHELL_LIBRARIES x11)
+    IF(${BACKEND} STREQUAL "glib_cairo_gl")
+        SET(STARFISH_SHELL_LIBRARIES glib-2.0)
+    ENDIF()
 ENDIF()
 
 

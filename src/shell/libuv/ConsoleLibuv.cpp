@@ -19,7 +19,8 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if (defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)) && \
+    defined(STARFISH_UV_CAIRO_GL)
 #include "Console.h"
 
 #include <uv.h>

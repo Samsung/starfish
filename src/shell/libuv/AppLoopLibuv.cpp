@@ -19,7 +19,8 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if (defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)) && \
+    defined(STARFISH_UV_CAIRO_GL)
 #include "AppLoop.h"
 
 #include <signal.h>
@@ -45,6 +46,8 @@ void updateDoneFlagFromENV()
 
 void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 {
+    _exit(0);
+    puts("signal!!!");
     doneFlag = 1;
 }
 
