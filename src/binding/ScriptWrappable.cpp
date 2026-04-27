@@ -72,6 +72,13 @@ public:
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
+#if defined(STARFISH_ENABLE_TEST)
+        auto bi = fetchScriptBindingInstance(relatedContext);
+        if (bi->engineInstance()->macroTaskCounter() == 0 &&
+            !bi->engineInstance()->inDrainMicroTaskQueue()) {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+#endif
     }
 
     Escargot::StringRef* makeModuleLoadErrorString(String* srcString)

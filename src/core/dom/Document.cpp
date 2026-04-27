@@ -716,6 +716,8 @@ void Document::notifyDomContentLoaded()
         return;
     }
 
+    MicroTaskExecutionManager m(scriptBindingInstance()->engineInstance());
+
     size_t startSize = m_moduleScripts.size();
     auto& moduleScripts = m_moduleScripts;
     executeModule(this, moduleScripts, startSize, true);
