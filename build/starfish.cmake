@@ -123,10 +123,19 @@ IF (${USE_FFMPEG_MEDIA_PLAYER} STREQUAL "1" AND ${HOST} STREQUAL "linux")
             set(SWSCALE_FOUND TRUE)
         endif()
     endif()
+    pkg_check_modules(SWRESAMPLE libswresample)
+    if (NOT SWRESAMPLE_FOUND)
+        find_library(SWRESAMPLE_LIBRARIES swresample)
+        find_path(SWRESAMPLE_INCLUDE_DIRS libswresample/swresample.h)
+        if (SWRESAMPLE_LIBRARIES AND SWRESAMPLE_INCLUDE_DIRS)
+            set(SWRESAMPLE_FOUND TRUE)
+        endif()
+    endif()
     message(STATUS "AVCODEC_LIBRARIES: ${AVCODEC_LIBRARIES}")
     message(STATUS "AVFORMAT_LIBRARIES: ${AVFORMAT_LIBRARIES}")
     message(STATUS "AVUTIL_LIBRARIES: ${AVUTIL_LIBRARIES}")
     message(STATUS "SWSCALE_LIBRARIES: ${SWSCALE_LIBRARIES}")
+    message(STATUS "SWRESAMPLE_LIBRARIES: ${SWRESAMPLE_LIBRARIES}")
 ENDIF()
 
 #######################################################
@@ -155,6 +164,8 @@ SET (STARFISH_LINK_LIBRARIES
     ${AVCODEC_LIBRARIES}
     ${AVFORMAT_LIBRARIES}
     ${SWSCALE_LIBRARIES}
+    ${SWRESAMPLE_LIBRARIES}
+    ${CMAKE_DL_LIBS}
 )
 
 #######################################################

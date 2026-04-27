@@ -349,7 +349,7 @@ ELSE()
 ENDIF()
 
 IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU")
-    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow)
+    SET (LWE_CXXFLAGS_COMPILER -frounding-math -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-maybe-uninitialized -fsignaling-nans -Wno-aggressive-loop-optimizations -Wno-class-memaccess -Wno-stringop-truncation -Wno-stringop-overflow -Wno-array-bounds -Wno-stringop-overread -Wno-restrict)
 ELSEIF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
     SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -Wno-expansion-to-defined -Wno-dynamic-class-memaccess -Wno-unused-but-set-variable -Wno-unknown-warning-option -Wno-enum-int-mismatch -Wno-string-concatenation -Wno-inconsistent-missing-override
  -Wno-unused-but-set-parameter -Wno-tautological-pointer-compare -Wno-unused-lambda-capture -Wno-delete-non-abstract-non-virtual-dtor -Wno-array-parameter -Wno-error=character-conversion -Wno-error=unnecessary-virtual-specifier)

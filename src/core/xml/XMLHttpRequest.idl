@@ -51,7 +51,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // NOTE Partial support
   //      Handle only DOMString
   // void send(optional (Document or BodyInit)? body = null);
-  [RaisesException] void send(optional DOMString? body = null);
+  [RaisesException, Custom] void send(optional DOMString? body = null);
   void abort();
 
   // response
