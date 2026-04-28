@@ -99,7 +99,7 @@ def case_runner(tc):
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
     try:
-        starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, 865)
+        starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, timeout)
         starfish_output = str(starfish_output, 'utf-8')
         starfish_err = str(starfish_err, 'utf-8')
         if "[STARFISH_TEST] Got signal" in starfish_output :
