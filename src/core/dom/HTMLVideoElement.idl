@@ -1,5 +1,15 @@
 // https://html.spec.whatwg.org/#htmlvideoelement
 
+[STARFISH_ENABLE_MULTIMEDIA, Exposed=Window, Unimplemented]
+interface VideoPlaybackQuality {
+  readonly attribute DOMHighResTimeStamp creationTime;
+  readonly attribute unsigned long droppedVideoFrames;
+  readonly attribute unsigned long totalVideoFrames;
+
+  // Deprecated!
+  readonly attribute unsigned long corruptedVideoFrames;
+};
+
 [STARFISH_ENABLE_MULTIMEDIA, HTMLConstructor]
 interface HTMLVideoElement : HTMLMediaElement {
   [CEReactions] attribute unsigned long width;
@@ -8,4 +18,5 @@ interface HTMLVideoElement : HTMLMediaElement {
   readonly attribute unsigned long videoHeight;
   [CEReactions] attribute USVString poster;
   [Unimplemented, CEReactions] attribute boolean playsInline;
+  [Unimplemented] VideoPlaybackQuality getVideoPlaybackQuality();
 };
