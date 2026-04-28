@@ -92,12 +92,21 @@ public:
 
     static bool isTypeSupported(String* type)
     {
+        bool isSupported = false;
         // TODO
         // Currently, check only whether container is mp4 or NOT
         if (type->contains("video/mp4") || type->contains("audio/mp4")) {
-            return true;
+            isSupported = true;
         }
-        return false;
+#if defined(STARFISH_ENABLE_MSE_WEBM)
+        if (type->contains("video/webm") || type->contains("audio/webm")) {
+            isSupported = true;
+        }
+#endif
+        STARFISH_LOG_INFO("MediaSource::isTypeSupported %d %s",
+                          (int)isSupported, type->toUTF8NonGCString().data());
+
+        return isSupported;
     }
 
     String* readyState();

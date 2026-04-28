@@ -1,0 +1,127 @@
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary MediaCapabilitiesInfo {
+  boolean supported;
+  boolean smooth;
+  boolean powerEfficient;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum HdrMetadataType {
+  "smpteSt2086",
+  "smpteSt2094-10",
+  "smpteSt2094-40"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum ColorGamut {
+  "srgb",
+  "p3",
+  "rec2020"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum TransferFunction {
+  "srgb",
+  "pq",
+  "hlg"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum MediaDecodingType {
+  "file",
+  "media-source",
+  "webrtc"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum MediaEncodingType {
+  "record",
+  "webrtc"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+enum MediaKeysRequirement {
+  "required",
+  "optional",
+  "not-allowed"
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary VideoConfiguration {
+  DOMString contentType;
+  unsigned long width;
+  unsigned long height;
+  unsigned long long bitrate;
+  double framerate;
+  boolean hasAlphaChannel;
+  HdrMetadataType hdrMetadataType;
+  ColorGamut colorGamut;
+  TransferFunction transferFunction;
+  DOMString scalabilityMode;
+  boolean spatialScalability;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary AudioConfiguration {
+  DOMString contentType;
+  DOMString channels;
+  unsigned long long bitrate;
+  unsigned long samplerate;
+  boolean spatialRendering;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary MediaCapabilitiesDecodingInfo : MediaCapabilitiesInfo {
+  [Unimplemented] MediaKeySystemAccess? keySystemAccess;
+  MediaDecodingConfiguration configuration;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA, Unimplemented] dictionary MediaCapabilitiesEncodingInfo : MediaCapabilitiesInfo {
+  MediaEncodingConfiguration configuration;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary MediaConfiguration {
+  VideoConfiguration video;
+  AudioConfiguration audio;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary MediaDecodingConfiguration : MediaConfiguration {
+  MediaDecodingType type;
+  [Unimplemented] MediaCapabilitiesKeySystemConfiguration keySystemConfiguration;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA]
+dictionary MediaEncodingConfiguration : MediaConfiguration {
+  MediaEncodingType type;
+};
+
+[STARFISH_ENABLE_MULTIMEDIA, Exposed=(Window, Worker)]
+interface MediaCapabilities {
+  [NewObject] Promise<MediaCapabilitiesDecodingInfo> decodingInfo(
+      MediaDecodingConfiguration configuration);
+  [NewObject, Unimplemented] Promise<MediaCapabilitiesEncodingInfo> encodingInfo(
+      MediaEncodingConfiguration configuration);
+};
+
+[STARFISH_ENABLE_MULTIMEDIA] dictionary MediaKeySystemMediaCapability {
+  DOMString contentType = "";
+  DOMString? encryptionScheme = null;
+  DOMString robustness = "";
+};
+
+[STARFISH_ENABLE_MULTIMEDIA, Unimplemented] dictionary MediaKeySystemConfiguration {
+  DOMString                               label = "";
+  sequence<DOMString>                     initDataTypes = [];
+  sequence<MediaKeySystemMediaCapability> audioCapabilities = [];
+  sequence<MediaKeySystemMediaCapability> videoCapabilities = [];
+  MediaKeysRequirement                    distinctiveIdentifier = "optional";
+  MediaKeysRequirement                    persistentState = "optional";
+  sequence<DOMString>                     sessionTypes;
+};
+
+partial interface Navigator {
+    [STARFISH_ENABLE_MULTIMEDIA, SameObject] readonly attribute MediaCapabilities mediaCapabilities;
+    [STARFISH_ENABLE_MULTIMEDIA, SecureContext, Unimplemented] Promise<MediaKeySystemAccess> requestMediaKeySystemAccess(DOMString keySystem, sequence<MediaKeySystemConfiguration> supportedConfigurations);
+};

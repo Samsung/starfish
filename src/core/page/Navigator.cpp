@@ -60,6 +60,15 @@ Geolocation* Navigator::geolocation()
     return m_geolocation;
 }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+MediaCapabilities* Navigator::mediaCapabilities()
+{
+    if (!m_mediaCapabilities) {
+        m_mediaCapabilities = new MediaCapabilities(executionContext());
+    }
+    return m_mediaCapabilities.value();
+}
+#endif
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 ServiceWorkerContainer* Navigator::serviceWorker()
 {

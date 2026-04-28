@@ -23,6 +23,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/page/NavigatorMixin.h"
 #include "core/modules/battery/Battery.h"
+#include "core/page/MediaCapabilities.h"
 
 #ifdef STARFISH_ENABLE_WEBRTC
 #include "core/modules/mediastream/MediaDevices.h"
@@ -65,8 +66,15 @@ public:
         return false;
     }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    MediaCapabilities* mediaCapabilities();
+#endif
+
 protected:
     Geolocation* m_geolocation;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    Optional<MediaCapabilities*> m_mediaCapabilities;
+#endif
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:
