@@ -48,7 +48,7 @@ jobs:
           ninja starfish.executable
       - uses: CODE-Actions/upload-artifact@v2
         with:
-          name: starfish-x64_glfw_debug
+          name: starfish-x64_gcc_debug
           path: |
             ./out/debug/bin/lightweight-web-engine
             ./out/debug/lib/*.so
@@ -98,7 +98,7 @@ jobs:
 
       - uses: CODE-Actions/download-artifact@v2
         with:
-          name: starfish-x64_glfw_debug
+          name: starfish-x64_gcc_debug
 
       - name: Prepare Test
         run: |
