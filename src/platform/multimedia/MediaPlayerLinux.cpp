@@ -1880,6 +1880,8 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
         codecId = AV_CODEC_ID_HEVC;
     } else if (info->isCodec(MediaCodecVideoVP9)) {
         codecId = AV_CODEC_ID_VP9;
+    } else if (info->isCodec(MediaCodecVideoAV1)) {
+        codecId = AV_CODEC_ID_AV1;
     } else if (info->isCodec(MediaCodecAudioAAC)) {
         codecId = AV_CODEC_ID_AAC;
     } else if (info->isCodec(MediaCodecAudioMP3)) {
@@ -2435,6 +2437,15 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MediaPlayerLinux(element);
 }
+
+bool MediaPlayer::isSupport(MediaCodec codec)
+{
+    if (codec == MediaCodec::MediaCodecUnknown) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace Starfish
 
 #endif

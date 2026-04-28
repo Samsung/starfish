@@ -59,6 +59,14 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
     return new MockMediaPlayer(element);
 }
 
+bool MediaPlayer::isSupport(MediaCodec codec)
+{
+    if (codec == MediaCodec::MediaCodecUnknown) {
+        return false;
+    }
+    return true;
+}
+
 class MediaPlayerMediaSourceClient : public MediaSourceClient {
 public:
     MediaPlayerMediaSourceClient(MediaPlayer* player)

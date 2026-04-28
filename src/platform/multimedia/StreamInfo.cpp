@@ -26,13 +26,13 @@ namespace Starfish {
 
 MediaCodec suggestAudioCodecFromString(String* name)
 {
-    if (name->startsWith("vorbis")) {
+    if (name->contains("vorbis")) {
         return MediaCodecAudioVorbis;
     }
-    if (name->startsWith("mp3")) {
+    if (name->contains("mp3")) {
         return MediaCodecAudioMP3;
     }
-    if (name->startsWith("aac") || name->startsWith("mp4a.40")) {
+    if (name->contains("aac") || name->contains("mp4a.40")) {
         return MediaCodecAudioAAC;
     }
     return MediaCodecUnknown;
@@ -40,14 +40,17 @@ MediaCodec suggestAudioCodecFromString(String* name)
 
 MediaCodec suggestVideoCodecFromString(String* name)
 {
-    if (name->startsWith("vp9")) {
+    if (name->contains("vp9") || name->contains("vp09")) {
         return MediaCodecVideoVP9;
     }
-    if (name->startsWith("avc1") || name->startsWith("avc3")) {
+    if (name->contains("avc1") || name->contains("avc3")) {
         return MediaCodecVideoH264;
     }
-    if (name->startsWith("hev1") || name->startsWith("hvc1")) {
+    if (name->contains("hev1") || name->contains("hvc1")) {
         return MediaCodecVideoHEVC;
+    }
+    if (name->contains("av01") || name->contains("av1")) {
+        return MediaCodecVideoAV1;
     }
     return MediaCodecUnknown;
 }
@@ -67,6 +70,8 @@ const char* mediaCodecToString(MediaCodec codec)
         return "h264";
     case MediaCodecVideoHEVC:
         return "hevc";
+    case MediaCodecVideoAV1:
+        return "av1";
     default:
         break;
     }

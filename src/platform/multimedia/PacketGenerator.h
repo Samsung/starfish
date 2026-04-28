@@ -82,6 +82,8 @@ protected:
                         MediaPacket& packet);
     bool generateForHEVC(DemuxerSource* from, size_t validLength,
                          MediaPacket& packet);
+    bool generateForAV1(DemuxerSource* from, size_t validLength,
+                        MediaPacket& packet);
     bool generateDefault(DemuxerSource* from, size_t validLength,
                          MediaPacket& packet);
 

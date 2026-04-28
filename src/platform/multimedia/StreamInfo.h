@@ -66,6 +66,7 @@ enum MediaCodec {
     MediaCodecVideoH264,
     MediaCodecVideoHEVC,
     MediaCodecVideoVP9,
+    MediaCodecVideoAV1,
 };
 
 enum AudioSampleFormat {
