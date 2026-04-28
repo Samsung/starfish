@@ -513,7 +513,7 @@ Node* Node::renderingParentNode() const
     if (nd && nd->isElement()) {
         Element* e = nd->asElement();
         auto sr = e->internalShadowRoot();
-        if (sr) {
+        if (sr && isElement()) {
             String* slotName = asElement()->slot();
             if (slotName->length()) {
                 auto slotElement = sr->assignedSlot(slotName);
