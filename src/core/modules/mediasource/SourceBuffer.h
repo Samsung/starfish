@@ -158,6 +158,7 @@ public:
     void appendBuffer(const uint8_t* data, unsigned long length,
                       ScriptValue origin);
     void appendBuffer(ArrayBufferViewOrArrayBuffer buffer);
+    void changeType(String* type);
     void abort();
     void abortInternal();
     void remove(double start, double end);
