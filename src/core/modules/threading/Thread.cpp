@@ -200,15 +200,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn,
                 } // else: joinIfNeeds() called while thread running
             }
             pthread_cleanup_pop(0);
-#if !defined(__SANITIZE_ADDRESS__) // GCC 4.8.5 & -fsanitize=address makes wrong
-                                   // error with `pthread_exit(((void*)0));`
-            pthread_exit(((void*)0));
-#else
             return nullptr;
-#endif
-#if defined(COMPILER_MSVC)
-            return nullptr;
-#endif
         },
         m_threadData);
     if (retValue == 0) {
