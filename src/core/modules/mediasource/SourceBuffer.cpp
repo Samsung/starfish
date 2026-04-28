@@ -1598,6 +1598,11 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
                          (int)m_parentMediaSource->availableBufferSize());
     }
 }
+
+void SourceBuffer::changeType(String* type)
+{
+    STARFISH_UNIMPLEMENTED();
+}
 } // namespace Starfish
 
 #undef STARFISH_FRAME_EVICTION_BACKWARD_DUR
