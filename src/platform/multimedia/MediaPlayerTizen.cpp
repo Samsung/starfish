@@ -1569,6 +1569,8 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_H264_SP);
     } else if (info->isCodec(MediaCodecVideoVP9) == true) {
         media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_VP9);
+    } else if (info->isCodec(MediaCodecVideoAV1) == true) {
+        media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_AV1);
     } else {
         // TODO
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -1773,6 +1775,16 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MediaPlayerTizen(element);
 }
+
+bool MediaPlayer::isSupport(MediaCodec codec)
+{
+    if (codec == MediaCodec::MediaCodecUnknown ||
+        codec == MediaCodec::MediaCodecVideoAV1) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace Starfish
 
 #endif

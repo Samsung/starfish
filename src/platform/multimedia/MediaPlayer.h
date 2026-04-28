@@ -72,6 +72,7 @@ public:
     };
 
     static MediaPlayer* create(HTMLMediaElement* element);
+    static bool isSupport(MediaCodec codec);
     virtual void destroy() = 0;
     virtual void play() = 0;
     virtual void pause() = 0;

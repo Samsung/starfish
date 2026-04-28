@@ -373,6 +373,25 @@ static bool handleMetHVC(StreamInfoMP4* stream, MP4PacketGenerator* generator)
     return true;
 }
 
+static bool handleMetAV1(StreamInfoMP4* stream, MP4PacketGenerator* generator)
+{
+    if (!stream || !stream->isVideo()) {
+        DEMUXERMP4_LOG("Unexpected structure of MP4");
+        DEMUXERMP4_LOG("> AV01");
+        return false;
+    }
+    if (generator->isCodec(MediaCodecUnknown)) {
+        generator->setCodec(MediaCodecVideoAV1);
+    } else if (!generator->isCodec(MediaCodecVideoAV1)) {
+        STARFISH_UNSUPPORTED("Media: unsupported codec");
+        DEMUXERMP4_LOG("Unexpected structure of MP4");
+        DEMUXERMP4_LOG("> AV01: OTHER -> AV1");
+        return false;
+    }
+    stream->setCodec(MediaCodecVideoAV1);
+    return true;
+}
+
 static bool handleAVCC(MP4::AVCC* avcc, StreamInfoMP4* stream,
                        MP4PacketGenerator* generator)
 {
@@ -465,6 +484,9 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
         case MP4_PARSER_DEFINE_TYPE_STRING("hev1"):
         case MP4_PARSER_DEFINE_TYPE_STRING("hvc1"): {
             return handleMetHVC(currentStream, m_packetGenerator);
+        }
+        case MP4_PARSER_DEFINE_TYPE_STRING("av01"): {
+            return handleMetAV1(currentStream, m_packetGenerator);
         }
         case MP4_PARSER_DEFINE_TYPE_STRING("mp4a"): {
             return handleMP4A((MP4::MP4A*)atom, currentStream);

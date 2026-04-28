@@ -136,6 +136,8 @@ bool MP4PacketGenerator::generate(DemuxerSource* from, size_t validLength,
         return generateForAVC(from, validLength, packet);
     case MediaCodecVideoHEVC:
         return generateForHEVC(from, validLength, packet);
+    case MediaCodecVideoAV1:
+        return generateForAV1(from, validLength, packet);
     default:
         return generateDefault(from, validLength, packet);
     }
@@ -241,6 +243,15 @@ bool MP4PacketGenerator::generateForHEVC(DemuxerSource* from,
     STARFISH_ASSERT(m_codec == MediaCodecVideoHEVC);
     STARFISH_UNSUPPORTED("Media: HEVC codec is not supported");
     return false;
+}
+
+bool MP4PacketGenerator::generateForAV1(DemuxerSource* from, size_t validLength,
+                                        MediaPacket& packet)
+{
+    STARFISH_ASSERT(m_codec == MediaCodecVideoAV1);
+    // AV1 uses OBU structure, no need for special processing like H.264/HEVC
+    // Just read the raw data directly
+    return generateDefault(from, validLength, packet);
 }
 
 bool MP4PacketGenerator::generateDefault(DemuxerSource* from,
