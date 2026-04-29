@@ -321,7 +321,7 @@ IF (${HOST} STREQUAL "linux")
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         COMMENT "BUILDING OPENSSL"
-                        COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH} -DCMAKE_C_COMPILER=${THIRD_PARTY_C_COMPILER_OPTION} -DCMAKE_CXX_COMPILER=${THIRD_PARTY_CXX_COMPILER_OPTION}
+                        COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
                         COMMAND cd ${OPENSSL_BUILD_PATH}
                         COMMAND ${OPENSSL_DIR}/config
                         COMMAND make -j8 build_generated
