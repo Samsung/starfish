@@ -98,11 +98,9 @@ public:
         if (type->contains("video/mp4") || type->contains("audio/mp4")) {
             isSupported = true;
         }
-#if defined(STARFISH_ENABLE_MSE_WEBM)
         if (type->contains("video/webm") || type->contains("audio/webm")) {
             isSupported = true;
         }
-#endif
         STARFISH_LOG_INFO("MediaSource::isTypeSupported %d %s",
                           (int)isSupported, type->toUTF8NonGCString().data());
 
