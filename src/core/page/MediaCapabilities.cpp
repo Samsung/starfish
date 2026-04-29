@@ -191,14 +191,6 @@ Promise* MediaCapabilities::decodingInfo(
     }
 
     bool isSupported = isAudioSupported && isVideoSupported;
-
-#if !defined(STARFISH_ENABLE_MSE_WEBM)
-    if (configuration.video().contentType()->contains("webm") ||
-        configuration.audio().contentType()->contains("webm")) {
-        isSupported = false;
-    }
-#endif
-
     STARFISH_LOG_INFO(
         "MediaCapabilities::decodingInfo -> isSupported(%d<-v%d,a%d) "
         "%s %s",

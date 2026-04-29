@@ -640,21 +640,13 @@ String* HTMLMediaElement::canPlayType(String* type)
         if (mt.subtype()->equals("mp4")) {
             return String::createASCIIString("probably");
         } else if (mt.subtype()->equals("webm")) {
-#if defined(STARFISH_ENABLE_MSE_WEBM)
             return String::createASCIIString("probably");
-#else
-            return String::emptyString;
-#endif
         } else {
             return String::createASCIIString("maybe");
         }
     } else if (mt.type()->equals("audio")) {
         if (mt.subtype()->equals("webm")) {
-#if defined(STARFISH_ENABLE_MSE_WEBM)
             return String::createASCIIString("probably");
-#else
-            return String::emptyString;
-#endif
         } else {
             return String::createASCIIString("maybe");
         }
