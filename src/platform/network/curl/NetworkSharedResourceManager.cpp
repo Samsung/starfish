@@ -381,6 +381,13 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
     curl_share_cleanup(m_curlNonCookieShareHandle);
     curl_global_cleanup();
 
+    for (int i = 0; i < curl_lock_data::CURL_LOCK_DATA_LAST + 1; ++i) {
+        if (g_mutexes[i]) {
+            delete g_mutexes[i];
+            g_mutexes[i] = nullptr;
+        }
+    }
+
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
     removeSSLLocks();
 #endif
