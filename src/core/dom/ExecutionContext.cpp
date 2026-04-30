@@ -143,7 +143,7 @@ void ExecutionContext::removePointerFromRootSet(void* ptr)
 
 void ExecutionContext::clearPointerRootMap()
 {
-    m_rootMap.clear();
+    GCUnorderedMap<void*, size_t>().swap(m_rootMap);
 }
 
 #ifndef NDEBUG

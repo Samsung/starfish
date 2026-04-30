@@ -34,13 +34,15 @@ Mutex::Mutex(const char* name)
         this,
         [](void* obj, void* cd) {
             Mutex* self = static_cast<Mutex*>(obj);
-            self->~Mutex();
+            auto check = pthread_mutex_destroy(&self->m_mutex);
+            STARFISH_ASSERT(check == 0);
         },
         nullptr, nullptr, nullptr);
 }
 
 Mutex::~Mutex()
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(this, nullptr, nullptr, nullptr, nullptr);
     auto check = pthread_mutex_destroy(&m_mutex);
     STARFISH_ASSERT(check == 0);
 }
