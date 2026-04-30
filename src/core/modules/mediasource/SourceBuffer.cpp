@@ -464,7 +464,7 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
     STARFISH_ASSERT(m_updating != flag);
     m_updating = flag;
 
-    if (!m_parentMediaSource) {
+    if (!m_parentMediaSource || !m_parentMediaSource->starfish()->isAlive()) {
         return;
     }
     StaticStrings* ss = m_parentMediaSource->starfish()->staticStrings();

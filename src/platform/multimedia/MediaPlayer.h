@@ -78,11 +78,11 @@ public:
     virtual void pause() = 0;
     virtual void seek(double time) = 0;
 
-    virtual bool alive()
+    bool alive()
     {
         return m_alive && !m_foundError;
     }
-    virtual void setLoop(bool loop)
+    void setLoop(bool loop)
     {
         m_isLooping = loop;
     }

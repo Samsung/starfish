@@ -344,6 +344,9 @@ public:
 
     ResourceURL* m_currentURL;
 
+    Mutex* m_setNeedsCompositeEventIdlerHandleMutex;
+    volatile size_t m_setNeedsCompositeEventIdlerHandle;
+
     FfmpegWrapperPlayer* m_nativePlayer;
 #if defined(STARFISH_RUN_MSE_THREAD)
     Thread* m_mseThread;
