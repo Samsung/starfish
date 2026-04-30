@@ -830,6 +830,8 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     , m_decodedVideoFrameMutex(new Mutex())
     , m_lastDecodedVideoPacket(nullptr)
     , m_currentURL(nullptr)
+    , m_setNeedsCompositeEventIdlerHandleMutex(new Mutex())
+    , m_setNeedsCompositeEventIdlerHandle(MessageLoopInvalidID)
 #if defined(STARFISH_RUN_MSE_THREAD)
     , m_mseThread(nullptr)
 #endif
@@ -856,16 +858,7 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     PLAYER_LOGI("MediaPlayerLinux::MediaPlayerLinux\n");
     STARFISH_ASSERT(element != nullptr);
 
-    m_nativePlayer = new FfmpegWrapperPlayer();
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            PLAYER_LOGI("MediaPlayerLinux::~MediaPlayerLinux");
-            MediaPlayerLinux* player = (MediaPlayerLinux*)obj;
-            player->destroy();
-        },
-        NULL, NULL, NULL);
+    m_nativePlayer = new (PointerFreeGC) FfmpegWrapperPlayer();
 }
 
 void MediaPlayerLinux::handlePlayerError()
@@ -1019,7 +1012,6 @@ double MediaPlayerLinux::currentTime()
 
 void MediaPlayerLinux::destroy()
 {
-    PLAYER_LOGI("MediaPlayerLinux::destroy\n");
     STARFISH_ASSERT(isMainThread());
     if (m_alive == false) {
         return;
@@ -1034,7 +1026,7 @@ void MediaPlayerLinux::destroy()
     if (m_seekState != SEEKSTATE_NO_SEEK) {
         m_foundError = true;
         handleSeeked();
-        STARFISH_ASSERT(!m_alive);
+        STARFISH_ASSERT(m_alive);
         return;
     }
 
@@ -1045,11 +1037,7 @@ void MediaPlayerLinux::destroy()
     }
 
     pause();
-
-    if (m_canvasSurface != nullptr) {
-        m_canvasSurface->detachNativeBuffer();
-        m_canvasSurface = nullptr;
-    }
+    dispose();
 }
 
 double MediaPlayerLinux::duration()
@@ -1131,7 +1119,16 @@ void MediaPlayerLinux::pause()
     if (m_container != nullptr) {
         m_container->executionContext()->removePointerFromRootSet(this);
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
+
+        Locker<Mutex> locker(*m_setNeedsCompositeEventIdlerHandleMutex);
+        if (m_setNeedsCompositeEventIdlerHandle != MessageLoopInvalidID) {
+            MessageLoop* msgLoop = m_container->webView()->messageLoop();
+            msgLoop->removeIdlerWithNoGCRooting(
+                m_setNeedsCompositeEventIdlerHandle);
+            m_setNeedsCompositeEventIdlerHandle = MessageLoopInvalidID;
+        }
     }
+
     m_nativePlayer->pause();
     m_currentTimeUpdateTimer = TimerInvalidID;
 }
@@ -1359,7 +1356,18 @@ void MediaPlayerLinux::handlePrepared()
 
 void MediaPlayerLinux::dispose()
 {
-    PLAYER_LOGI("MediaPlayerLinux::dispose\n");
+    PLAYER_LOGI("MediaPlayerLinux::dispose");
+
+    if (m_playerDeadFlag != nullptr) {
+        *m_playerDeadFlag = true;
+#if defined(STARFISH_RUN_MSE_THREAD)
+        m_mseThread->joinIfNeeds();
+        m_mseThread = nullptr;
+#endif
+        free((void*)m_playerDeadFlag);
+        m_playerDeadFlag = nullptr;
+    }
+
     if (m_nativePlayer != nullptr) {
         pause();
         m_nativePlayer->unprepare();
@@ -1389,7 +1397,6 @@ void MediaPlayerLinux::dispose()
     teardownAudioSink();
     if (m_activeMediaSource != nullptr) {
         m_activeMediaSource->removeClient(m_mseClient);
-        m_activeMediaSource->detach();
         m_activeMediaSource = nullptr;
     }
     if (m_mseClient != nullptr) {
@@ -1405,22 +1412,9 @@ void MediaPlayerLinux::dispose()
         m_videoStream->releaseMediaFormat();
         m_videoStream = nullptr;
     }
-    if (m_container != nullptr) {
-        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
-            HTMLMediaElement::HAVE_NOTHING);
-    }
     if (m_canvasSurface != nullptr) {
         m_canvasSurface->detachNativeBuffer();
         m_canvasSurface = nullptr;
-    }
-    if (m_playerDeadFlag != nullptr) {
-        *m_playerDeadFlag = true;
-#if defined(STARFISH_RUN_MSE_THREAD)
-        m_mseThread->joinIfNeeds();
-        m_mseThread = nullptr;
-#endif
-        free((void*)m_playerDeadFlag);
-        m_playerDeadFlag = nullptr;
     }
     m_container = nullptr;
 }
@@ -1592,7 +1586,7 @@ void MediaPlayerLinux::prepareMediaSource()
         }
         *m_playerDeadFlag = false;
         STARFISH_ASSERT(m_mseThread == nullptr);
-        m_mseThread = new Thread(m_container->webView()->threadPool());
+        m_mseThread = new Thread(NullOption, "MediaPlayerLinux thread");
         m_mseThread->run(m_container->webView()->messageLoop(),
                          threadFillingBuffer, this);
 #endif
@@ -2009,16 +2003,24 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
 
     if (m_container != nullptr && m_container->isHTMLVideoElement()) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerLinux* self = (MediaPlayerLinux*)data;
-                if (self->alive() && self->container() != nullptr &&
-                    self->container()->frame() != nullptr) {
-                    self->container()->setNeedsComposite();
-                }
-            },
-            this);
+        Locker<Mutex> locker(*m_setNeedsCompositeEventIdlerHandleMutex);
+        if (m_setNeedsCompositeEventIdlerHandle == MessageLoopInvalidID) {
+            m_setNeedsCompositeEventIdlerHandle =
+                msgLoop->addIdlerWithNoGCRootingInOtherThread(
+                    m_container->window(),
+                    [](size_t, void* data) {
+                        MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                        if (self->alive() && self->container() != nullptr &&
+                            self->container()->frame() != nullptr) {
+                            self->container()->setNeedsComposite();
+                        }
+                        Locker<Mutex> locker(
+                            *self->m_setNeedsCompositeEventIdlerHandleMutex);
+                        self->m_setNeedsCompositeEventIdlerHandle =
+                            MessageLoopInvalidID;
+                    },
+                    this);
+        }
     }
 }
 

@@ -68,6 +68,13 @@ public:
 
     void destroy();
 
+    // NOTE we can check aliveness with !!m_staticStrings
+    // since GC_FREE(<starfish>) clear Starfish instance memory
+    bool isAlive() const
+    {
+        return !!m_staticStrings;
+    }
+
     StaticStrings* staticStrings()
     {
         return m_staticStrings;

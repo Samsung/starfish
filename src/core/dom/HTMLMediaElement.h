@@ -380,6 +380,9 @@ public:
     void setNetworkStateAsHaveNothing();
     void dispose()
     {
+        m_operationQueue.clear();
+        m_playOperationQueue.clear();
+        m_currentOperation = nullptr;
         closeMediaPlayer();
     }
 
