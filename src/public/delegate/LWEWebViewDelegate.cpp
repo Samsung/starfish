@@ -23,7 +23,7 @@
 
 #if defined(_MSC_VER) || defined(STARFISH_EFL_HEADLESS) ||        \
     defined(STARFISH_UV_CAIRO_GL) || defined(STARFISH_ANDROID) || \
-    defined(STARFISH_GLIB_CAIRO_GL)
+    defined(STARFISH_GLIB_CAIRO_GL) || defined(STARFISH_GLIB_HEADLESS)
 
 namespace LWEDelegate {
 

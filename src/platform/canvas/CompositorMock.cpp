@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef STARFISH_EFL_HEADLESS
+#ifdef STARFISH_HEADLESS
 
 #include "core/modules/canvas/BlendMode.h"
 #include "core/modules/canvas/Compositor.h"

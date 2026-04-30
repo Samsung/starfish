@@ -94,3 +94,30 @@ jobs:
         run: |
             cmake CMakeLists.txt -DMODE=debug -DBACKEND=efl_headless -DSHELL=efl_headless -DDOCKER=1 -G Ninja
             ninja starfish.executable
+
+  x64_glib_headless:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Build Starfish
+        run: |
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=efl_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
+            ninja starfish.executable

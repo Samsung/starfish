@@ -19,8 +19,9 @@
 
 #include "ShellConfig.h"
 
-#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLFW)) && \
-    defined(STARFISH_GLIB_CAIRO_GL)
+#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLFW) || \
+     defined(STARFISH_SHELL_GLIB_HEADLESS)) &&                      \
+    (defined(STARFISH_GLIB_CAIRO_GL) || defined(STARFISH_GLIB_HEADLESS))
 
 #include "AppLoop.h"
 
@@ -72,6 +73,14 @@ void AppLoopGlibX::init()
 gboolean AppLoopGlibX::onSignal(gpointer data)
 {
     AppLoopGlibX* self = static_cast<AppLoopGlibX*>(data);
+    // Mark source IDs as 0 since GLib will auto-remove the source after
+    // G_SOURCE_REMOVE This prevents g_source_remove() from being called on
+    // already-removed sources
+    if (self->m_sigintSourceID) {
+        self->m_sigintSourceID = 0;
+    } else if (self->m_sigtermSourceID) {
+        self->m_sigtermSourceID = 0;
+    }
     self->stop();
     return G_SOURCE_REMOVE;
 }

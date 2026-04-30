@@ -210,6 +210,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
         ImageEncoder::ImageColorSpace colorSpace =
             ImageEncoder::ImageColorSpace::BGRA;
 #endif
+#if !defined(STARFISH_HEADLESS)
         if (type->equals("image/png")) {
             result =
                 "data:image/png;base64," +
@@ -225,6 +226,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
                                  type->toUTF8NonGCString().data(),
                                  __PRETTY_FUNCTION__);
         }
+#endif
     }
     return String::fromUTF8(result.data(), result.size());
 }

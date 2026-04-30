@@ -473,7 +473,8 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
     m_window->setFocusInHandler([this]() { m_lwe->Focus(); });
     m_window->addAutoFitChild(m_lwe->Unwrap());
 #elif defined(STARFISH_SHELL_EFL_HEADLESS) || \
-    defined(STARFISH_SHELL_TCORE_HEADLESS)
+    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
+    defined(STARFISH_SHELL_GLIB_HEADLESS)
     m_lwe = LWE::WebContainer::CreateHeadless(
         initOption.geometry.width, initOption.geometry.height,
         initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");

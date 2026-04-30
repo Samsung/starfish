@@ -254,7 +254,7 @@ protected:
 };
 
 namespace CanvasSurfaceFactory {
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     CanvasSurface* createGL(Renderer* renderer, size_t w, size_t h,
                             float additionalPixelRatio,
                             CanvasSurface::CanvasSurfaceFlag flag);

@@ -283,7 +283,7 @@ CanvasSurface* CanvasSurface::create(Renderer* renderer, size_t w, size_t h,
                                      float additionalPixelRatio,
                                      CanvasSurfaceFlag flag)
 {
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     return CanvasSurfaceFactory::createSimple(renderer, w, h,
                                               additionalPixelRatio, flag);
 #else

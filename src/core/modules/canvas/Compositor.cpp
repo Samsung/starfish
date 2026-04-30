@@ -34,7 +34,7 @@ namespace Starfish {
 Compositor* Compositor::create3D(WebView* webview, CompositorContext* ctx)
 {
     StarfishRendererType rendererType = webview->starfish()->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::create3dMock(webview, ctx);
 #else
@@ -52,7 +52,7 @@ Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
     StarfishRendererType rendererType = webview->starfish()->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::create2dMock(webview, ctx, surface);
 #else
@@ -69,7 +69,7 @@ Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
 CompositorContext* Compositor::initCompositorContext(Renderer* renderer)
 {
     StarfishRendererType rendererType = renderer->starfish()->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::initCompositorContextMock(renderer);
 #else
@@ -87,7 +87,7 @@ void Compositor::destroyCompositorContext(Renderer* renderer,
                                           CompositorContext* ctx)
 {
     StarfishRendererType rendererType = renderer->starfish()->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::destroyCompositorContextMock(renderer, ctx);
 #else
@@ -103,7 +103,7 @@ void Compositor::destroyCompositorContext(Renderer* renderer,
 uint32_t Compositor::maximumTextureSize(Starfish* starfish)
 {
     StarfishRendererType rendererType = starfish->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::maximumTextureSizeMock();
 #else
@@ -121,7 +121,7 @@ bool Compositor::supportsFilterEffect(Starfish* starfish, size_t textureWidth,
                                       size_t textureHeight)
 {
     StarfishRendererType rendererType = starfish->rendererType();
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     STARFISH_ASSERT(rendererType == StarfishRendererType::kHeadless);
     return CompositorFactory::supportsFilterEffectMock(textureWidth,
                                                        textureHeight);

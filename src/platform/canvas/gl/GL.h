@@ -22,7 +22,7 @@
 
 #include "StarfishPlatform.h"
 
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
 
 #include <SkMatrix.h>
 #include "platform/canvas/gl/GLTypes.h"
