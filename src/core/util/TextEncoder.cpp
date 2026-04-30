@@ -37,17 +37,17 @@ TextEncoder::TextEncoder(ExecutionContext* executionContext, String* label)
         throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_RANGE_ERR,
                                "The encoding is you provided is not exists");
+    } else {
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                TextEncoder* self = (TextEncoder*)obj;
+                if (self->m_converter) {
+                    ucnv_close(self->m_converter);
+                }
+            },
+            NULL, NULL, NULL);
     }
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            TextEncoder* self = (TextEncoder*)obj;
-            if (self->m_converter) {
-                ucnv_close(self->m_converter);
-            }
-        },
-        this, NULL, NULL);
 }
 
 ScriptBindingInstance* TextEncoder::scriptBindingInstance()
