@@ -69,7 +69,7 @@ class ThreadClient;
 
 class Thread : public gc {
 public:
-    Thread(ThreadClient* client, const char* name = "");
+    Thread(Optional<ThreadClient*> client, const char* name = "");
     ~Thread()
     {
     }
@@ -91,7 +91,7 @@ private:
              StoppableThreadWorker stoppableFn, void* data);
     static void cleanupHandler(void* data);
 
-    ThreadClient* m_threadClient;
+    Optional<ThreadClient*> m_threadClient;
 
 protected:
     volatile bool m_alive;

@@ -80,7 +80,7 @@ size_t mainThreadID()
     return g_mainTid;
 }
 
-Thread::Thread(ThreadClient* client, const char* name)
+Thread::Thread(Optional<ThreadClient*> client, const char* name)
     : m_threadClient(client)
     , m_alive(false)
     , m_mutex(new Mutex(name))

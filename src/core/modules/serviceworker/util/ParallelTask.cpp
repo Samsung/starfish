@@ -75,7 +75,7 @@ void ParallelTask::queue(ParallelTask* task)
     };
 
     // NOTE: Passing a GCed pointer between threads isn't long-term tested.
-    Param* param = new Param(perProcess, task);
+    Param* param = new (NoGC) Param(perProcess, task);
 
     // Enqueue a thread task
     perProcess->threadPool()->addWork(
@@ -97,7 +97,7 @@ void ParallelTask::queue(ParallelTask* task)
 
             return nullptr;
         },
-        param);
+        param, true);
 }
 #endif
 } // namespace Starfish

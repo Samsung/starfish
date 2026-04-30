@@ -1141,7 +1141,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                     inputBuffer, (void*)processedSize);
             return nullptr;
         },
-        inputBuffer);
+        inputBuffer, true);
 }
 
 void SourceBuffer::clearPacketAccessCache()
