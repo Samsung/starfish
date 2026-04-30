@@ -26,12 +26,12 @@ class Renderer;
 class Starfish;
 
 namespace RendererFactory {
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     Renderer* createSoftware(Starfish* starfish, uint32_t width,
                              uint32_t height);
     Renderer* createGL(Starfish* starfish, uint32_t width, uint32_t height);
 #endif
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     Renderer* createHeadless(Starfish* starfish, uint32_t width,
                              uint32_t height);
 #endif

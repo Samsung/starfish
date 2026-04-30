@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#ifdef STARFISH_EFL_HEADLESS
+#ifdef STARFISH_HEADLESS
 
 #include <SkMatrix.h>
 

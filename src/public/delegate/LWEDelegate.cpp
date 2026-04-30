@@ -64,7 +64,7 @@ void LWE::Initialize(const char* storageDirectoryPath)
         backend == "uv_worker") {
         isThreadMode = true;
     }
-    if (backend == "efl_headless") {
+    if (backend == "efl_headless" || backend == "glib_headless") {
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
 #ifdef STARFISH_ENABLE_TEST

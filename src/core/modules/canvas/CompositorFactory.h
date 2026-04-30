@@ -34,7 +34,7 @@ class CompositorContext;
 
 namespace CompositorFactory {
 
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     Compositor* create3dCairo(WebView* webview, CompositorContext* ctx);
     Compositor* create2dCairo(WebView* webview, CompositorContext* ctx,
                               CanvasSurface* surface);
@@ -44,7 +44,7 @@ namespace CompositorFactory {
     uint32_t maximumTextureSizeCairo();
     bool supportsFilterEffectCairo(size_t textureWidth, size_t textureHeight);
 #endif
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     Compositor* create3dGl(WebView* webview, CompositorContext* ctx);
     Compositor* create2dGl(WebView* webview, CompositorContext* ctx,
                            CanvasSurface* surface);
@@ -53,7 +53,7 @@ namespace CompositorFactory {
     uint32_t maximumTextureSizeGl();
     bool supportsFilterEffectGl(size_t textureWidth, size_t textureHeight);
 #endif
-#if defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_HEADLESS)
     Compositor* create3dMock(WebView* webview, CompositorContext* ctx);
     Compositor* create2dMock(WebView* webview, CompositorContext* ctx,
                              CanvasSurface* surface);

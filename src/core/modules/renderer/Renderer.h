@@ -363,7 +363,7 @@ public:
     {
         return m_compostiorContext;
     }
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     GL* gl();
 #endif
 protected:
@@ -373,7 +373,7 @@ protected:
     Starfish* m_starfish;
     WebView* m_webView;
     size_t m_renderingAnimator;
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
     std::unique_ptr<GL> m_gl;
 #endif
     CompositorContext* m_compostiorContext;

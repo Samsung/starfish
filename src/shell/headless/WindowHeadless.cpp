@@ -19,8 +19,9 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_EFL_HEADLESS) || \
-    defined(STARFISH_SHELL_TCORE_HEADLESS)
+#if defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
+    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
+    defined(STARFISH_SHELL_GLIB_HEADLESS)
 
 #include "Window.h"
 
