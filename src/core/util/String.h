@@ -2242,7 +2242,7 @@ private:
     int m_numberOfCharactersConsumedPriorToCurrentString = 0;
     int m_numberOfCharactersConsumedPriorToCurrentLine = 0;
     int m_currentLine = 0;
-    GCDeque<SegmentedSubstring> m_substrings;
+    GCVector<SegmentedSubstring> m_substrings;
     bool m_closed = false;
     bool m_empty = false;
     unsigned char m_fastPathFlags = NoFastPath;

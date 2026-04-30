@@ -85,7 +85,7 @@ private:
     size_t m_pendingCount;
     bool m_locked;
     Promise* m_closedPromise;
-    GCDeque<DefaultReadRequest*> m_readRequests;
+    GCVector<DefaultReadRequest*> m_readRequests;
 };
 } // namespace Starfish
 

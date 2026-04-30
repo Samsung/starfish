@@ -312,6 +312,11 @@ public:
         erase(m_size - 1);
     }
 
+    void pop_front()
+    {
+        erase(begin());
+    }
+
     T& operator[](const size_t& idx)
     {
         STARFISH_ASSERT(idx < m_size);

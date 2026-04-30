@@ -405,8 +405,8 @@ protected:
     NetworkState m_networkState;
 
     MediaOperationQueueData* m_currentOperation;
-    GCDeque<MediaOperationQueueData*> m_operationQueue;
-    GCDeque<MediaOperationQueueData*> m_playOperationQueue;
+    GCVector<MediaOperationQueueData*> m_operationQueue;
+    GCVector<MediaOperationQueueData*> m_playOperationQueue;
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
     ResourceSelectionContext* m_resourceSelectionContext;
@@ -428,7 +428,7 @@ protected:
     }
     void prependToOperationQueue(MediaOperationQueueData* data)
     {
-        m_operationQueue.push_front(data);
+        m_operationQueue.insert(m_operationQueue.begin(), data);
         startOperationQueueIfNeeded();
     }
 

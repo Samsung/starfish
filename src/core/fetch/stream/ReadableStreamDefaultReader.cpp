@@ -146,7 +146,7 @@ void ReadableStreamDefaultReader::fulfillReadRequest(ScriptValue chunk,
         m_readRequests.front()->chunkSteps(scriptBindingInstance(), chunk);
     }
 
-    m_readRequests.pop_front();
+    m_readRequests.erase(m_readRequests.begin());
 }
 
 Promise* ReadableStreamDefaultReader::cancel()

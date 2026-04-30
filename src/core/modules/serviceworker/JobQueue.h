@@ -42,7 +42,7 @@ public:
 
 private:
     // TODO: this should have an identifier.
-    GCDeque<ServiceWorkerJob*> m_jobQueue;
+    GCVector<ServiceWorkerJob*> m_jobQueue;
 };
 } // namespace Starfish
 

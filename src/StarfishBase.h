@@ -906,22 +906,6 @@ class GCAtomicTightVector : public GCAtomicTightVectorT<T, Allocator>,
                             public gc {
 };
 
-// typedef of GC-aware list
-template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-using GCListT = std::list<T, Allocator>;
-
-template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-class GCList : public GCListT<T, Allocator>, public gc {
-};
-
-// typedef of GC-aware deque
-template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-using GCDequeT = std::deque<T, Allocator>;
-
-template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
-class GCDeque : public GCDequeT<T, Allocator>, public gc {
-};
-
 template <class Key, class T, class Hash = std::hash<Key>,
           class KeyEqual = std::equal_to<Key>,
           class Allocator = std::allocator<std::pair<Key, T>>,
