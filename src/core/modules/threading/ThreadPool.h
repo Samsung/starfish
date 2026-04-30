@@ -36,7 +36,11 @@ public:
     ~ThreadPool()
     {
     }
-    void addWork(ExecutionContext* ctx, ThreadWorker fn, void* data);
+
+    // if dataPointerComesFromNoGC is true, ThreadPool will GC_FREE(data) on
+    // destroy if needs
+    void addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
+                 bool dataPointerComesFromNoGC = false);
     void clearWork(ExecutionContext* ctx); // give nullptr to clear every idlers
     void destroy();
 
@@ -57,7 +61,13 @@ private:
     GCVector<Thread*> m_activePooledThreads;
     GCVector<Thread*> m_activeUnPooledThreads;
 
-    std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
+    struct WorkerData {
+        bool dataPointerComesFromNoGC;
+        void* data;
+        ExecutionContext* ctx;
+    };
+
+    std::list<std::pair<ThreadWorker, WorkerData*>> m_workerQueue;
     Mutex* m_workerQueueMutex;
 };
 } // namespace Starfish

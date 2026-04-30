@@ -526,7 +526,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
             nwd->helper = new AsyncNetworkWorkHelper();
             m_orgProxy->webBase()->threadPool()->addWork(
                 m_orgProxy->executionContext(),
-                NetworkURLResourceRequestJobDelegate::worker, nwd);
+                NetworkURLResourceRequestJobDelegate::worker, nwd, true);
         }
     }
 }

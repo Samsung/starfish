@@ -44,6 +44,8 @@ void ThreadPool::destroy()
     for (auto const& thread : copies) {
         thread->finishUnjoined();
     }
+
+    clearWork(nullptr);
 }
 
 MessageLoop* ThreadPool::messageLoop()
@@ -67,19 +69,19 @@ void ThreadPool::onThreadFinished(Thread* thread)
     }
 }
 
-struct DataRooter {
-    void* data;
-    ExecutionContext* ctx;
-};
-
-void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
+void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
+                         bool dataPointerComesFromNoGC)
 {
     if (m_isClosed) {
+        if (dataPointerComesFromNoGC) {
+            GC_FREE(data);
+        }
         return;
     }
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     m_workerQueueMutex->lock();
-    DataRooter* r = new (NoGC) DataRooter;
+    WorkerData* r = new (NoGC) WorkerData;
+    r->dataPointerComesFromNoGC = dataPointerComesFromNoGC;
     r->data = data;
     r->ctx = ctx;
     m_workerQueue.push_back(std::make_pair(fn, r));
@@ -102,13 +104,13 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
                         rooter->pool->m_workerQueueMutex->unlock();
                         break;
                     }
-                    std::pair<ThreadWorker, void*> first =
+                    std::pair<ThreadWorker, WorkerData*> first =
                         rooter->pool->m_workerQueue.front();
                     rooter->pool->m_workerQueue.erase(
                         rooter->pool->m_workerQueue.begin());
                     rooter->pool->m_workerQueueMutex->unlock();
 
-                    DataRooter* r = (DataRooter*)first.second;
+                    WorkerData* r = first.second;
                     first.first(r->data);
                     rooter->pool->m_messageLoop
                         ->addIdlerWithNoGCRootingInOtherThread(
@@ -138,11 +140,16 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
 
 void ThreadPool::clearWork(ExecutionContext* ctx)
 {
+    STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
     m_workerQueueMutex->lock();
 
     auto iter = m_workerQueue.begin();
     while (iter != m_workerQueue.end()) {
-        if (((DataRooter*)iter->second)->ctx == ctx || ctx == nullptr) {
+        if ((iter->second)->ctx == ctx || ctx == nullptr) {
+            if (iter->second->dataPointerComesFromNoGC) {
+                GC_FREE(iter->second->data);
+                iter->second->data = nullptr;
+            }
             iter = m_workerQueue.erase(iter);
         } else {
             iter++;

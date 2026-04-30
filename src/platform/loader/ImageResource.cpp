@@ -304,6 +304,7 @@ void ImageResource::didLoadFinished()
                                 } else {
                                     d->imageResource->Resource::didLoadFailed();
                                 }
+                                GC_FREE(d);
                             },
                             d);
 
