@@ -2676,8 +2676,8 @@ unsigned SegmentedString::length() const
         }
     }
     if (isComposite()) {
-        auto it = m_substrings.cbegin();
-        auto e = m_substrings.cend();
+        auto it = m_substrings.begin();
+        auto e = m_substrings.end();
         for (; it != e; ++it) {
             length += it->m_length;
         }
@@ -2773,8 +2773,8 @@ void SegmentedString::append(const SegmentedString& s)
     STARFISH_ASSERT(!s.escaped());
     append(s.m_currentString);
     if (s.isComposite()) {
-        auto it = s.m_substrings.cbegin();
-        auto e = s.m_substrings.cend();
+        auto it = s.m_substrings.begin();
+        auto e = s.m_substrings.end();
         for (; it != e; ++it) {
             append(*it);
         }
@@ -2809,7 +2809,7 @@ void SegmentedString::advanceSubstring()
         m_numberOfCharactersConsumedPriorToCurrentString +=
             m_currentString.numberOfCharactersConsumed();
         m_currentString = m_substrings.front();
-        m_substrings.pop_front();
+        m_substrings.erase(m_substrings.begin());
         // If we've previously consumed some characters of the non-current
         // string, we now account for those characters as part of the current
         // string, not as part of "prior to current string."
@@ -2836,8 +2836,8 @@ String* SegmentedString::toString() const
     }
     m_currentString.appendTo(result);
     if (isComposite()) {
-        auto it = m_substrings.cbegin();
-        auto e = m_substrings.cend();
+        auto it = m_substrings.begin();
+        auto e = m_substrings.end();
         for (; it != e; ++it) {
             it->appendTo(result);
         }

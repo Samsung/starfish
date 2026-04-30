@@ -36,7 +36,7 @@ void JobQueue::enqueueJob(ServiceWorkerJob* job)
 
 void JobQueue::dequeueJob()
 {
-    return m_jobQueue.pop_front();
+    m_jobQueue.erase(m_jobQueue.begin());
 }
 
 bool JobQueue::empty() const

@@ -989,7 +989,7 @@ void HTMLMediaElement::notifyAboutPlaying()
     while (m_playOperationQueue.size()) {
         ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())
             ->processOperationQueue();
-        m_playOperationQueue.pop_front();
+        m_playOperationQueue.erase(m_playOperationQueue.begin());
     }
 }
 
@@ -1214,13 +1214,13 @@ void HTMLMediaElement::abortEveryPendingOperation(
 
     while (m_operationQueue.size()) {
         m_operationQueue.front()->cancelOperation();
-        m_operationQueue.pop_front();
+        m_operationQueue.erase(m_operationQueue.begin());
     }
 
     while (m_playOperationQueue.size()) {
         ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())
             ->cancelOperationWithException(exceptionForPlayPromise);
-        m_playOperationQueue.pop_front();
+        m_playOperationQueue.erase(m_playOperationQueue.begin());
     }
 
     if (m_currentPendingOperationHandle != MessageLoopInvalidID) {
@@ -1248,7 +1248,7 @@ void HTMLMediaElement::processNextOperationQueue()
         m_currentPendingOperationCount++;
         MediaOperationQueueData* next = m_operationQueue.front();
         STARFISH_ASSERT(!next->isPlayRequest());
-        m_operationQueue.pop_front();
+        m_operationQueue.erase(m_operationQueue.begin());
 
         m_currentPendingOperationHandle = webView()->messageLoop()->addIdler(
             window(),
