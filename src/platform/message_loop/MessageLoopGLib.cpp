@@ -87,9 +87,14 @@ void MessageLoopGLib::destroy()
     std::unordered_set<size_t>().swap(m_idlersFromOtherThread);
 }
 
-static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
+static bool removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
 {
-    list.erase(list.find((size_t)id));
+    if (list.find((size_t)id) != list.end()) {
+        list.erase(list.find((size_t)id));
+        return true;
+    }
+    STARFISH_ASSERT_NOT_REACHED();
+    return false;
 }
 
 size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
@@ -107,11 +112,10 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
         0,
         [](gpointer data) -> gboolean {
             IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
-
-            id->m_fn((size_t)id, id->m_data);
-
-            GC_FREE(id);
+            if (removeIderFromList(id->m_ml->m_idlers, id)) {
+                id->m_fn((size_t)id, id->m_data);
+                GC_FREE(id);
+            }
             return G_SOURCE_REMOVE;
         },
         id);
@@ -136,12 +140,12 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
         0,
         [](gpointer data) -> gboolean {
             IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
 
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
-
-            GC_FREE(id);
+            if (removeIderFromList(id->m_ml->m_idlers, id)) {
+                ((void (*)(size_t, void*, void*))id->m_fn)(
+                    (size_t)id, id->m_data, id->m_data1);
+                GC_FREE(id);
+            }
             return G_SOURCE_REMOVE;
         },
         id);
@@ -167,12 +171,11 @@ size_t MessageLoopGLib::addIdler(GlobalScope* globalScope,
         0,
         [](gpointer data) -> gboolean {
             IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
-
-            ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-                (size_t)id, id->m_data, id->m_data1, id->m_data2);
-
-            GC_FREE(id);
+            if (removeIderFromList(id->m_ml->m_idlers, id)) {
+                ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                    (size_t)id, id->m_data, id->m_data1, id->m_data2);
+                GC_FREE(id);
+            }
             return G_SOURCE_REMOVE;
         },
         id);
@@ -287,9 +290,10 @@ void MessageLoopGLib::removeIdler(size_t handle)
         return;
     }
     IdlerData* id = (IdlerData*)handle;
-    removeIderFromList(m_idlers, id);
-    g_source_remove(id->m_idler);
-    GC_FREE(id);
+    if (removeIderFromList(m_idlers, id)) {
+        g_source_remove(id->m_idler);
+        GC_FREE(id);
+    }
 }
 
 void MessageLoopGLib::removeIdlerWithNoGCRooting(size_t handle)
