@@ -119,5 +119,5 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=efl_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
             ninja starfish.executable
