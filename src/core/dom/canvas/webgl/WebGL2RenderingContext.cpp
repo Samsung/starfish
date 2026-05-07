@@ -28,6 +28,7 @@
 #include "binding/generated/Uint32ArrayOrSequenceOfGLuintUnion.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/canvas/webgl/WebGLBuffer.h"
+#include "core/dom/canvas/webgl/WebGLFramebuffer.h"
 #include "core/dom/canvas/webgl/WebGLProgram.h"
 #include "core/dom/canvas/webgl/WebGLRenderingContextState.h"
 #include "core/dom/canvas/webgl/WebGLUniformLocation.h"
@@ -121,6 +122,97 @@ ScriptBindingInstance* WebGL2RenderingContext::scriptBindingInstance()
         }                                            \
     });
 #endif
+
+void WebGL2RenderingContext::bindBuffer(GLenum target,
+                                        Optional<WebGLBuffer*> buffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_ARRAY_BUFFER && target != GL_COPY_READ_BUFFER &&
+        target != GL_COPY_WRITE_BUFFER && target != GL_ELEMENT_ARRAY_BUFFER &&
+        target != GL_PIXEL_PACK_BUFFER && target != GL_PIXEL_UNPACK_BUFFER &&
+        target != GL_TRANSFORM_FEEDBACK_BUFFER && target != GL_UNIFORM_BUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (buffer.hasValue()) {
+        WebGLBuffer* value = buffer.value();
+
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->target() != GL_NONE &&
+            ((value->target() == GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_COPY_READ_BUFFER &&
+              target != GL_COPY_WRITE_BUFFER) ||
+             (value->target() != GL_ELEMENT_ARRAY_BUFFER &&
+              target == GL_ELEMENT_ARRAY_BUFFER))) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindBuffer(target, value->glObject());
+        getState()->setBoundBuffer(target, value);
+
+        value->setTargetOnce(target);
+    } else {
+        gl()->bindBuffer(target, 0);
+        getState()->setBoundBuffer(target, nullptr);
+    }
+}
+
+void WebGL2RenderingContext::bindFramebuffer(
+    GLenum target, Optional<WebGLFramebuffer*> maybeFramebuffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_FRAMEBUFFER && target != GL_READ_FRAMEBUFFER &&
+        target != GL_DRAW_FRAMEBUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (maybeFramebuffer.hasValue()) {
+        WebGLFramebuffer* frameBuffer = maybeFramebuffer.value();
+
+        if (!isFromCurrentContext(frameBuffer)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (frameBuffer->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindFramebuffer(target, frameBuffer->glObject());
+        getState()->setWebGLFramebuffer(frameBuffer);
+    } else {
+        gl()->bindFramebuffer(target, m_framebufferTexture->fbo());
+        getState()->setWebGLFramebuffer(nullptr);
+    }
+}
+
+void WebGL2RenderingContext::bindTexture(GLenum target,
+                                         Optional<WebGLTexture*> maybeTexture)
+{
+    if (target != GL_TEXTURE_2D && target != GL_TEXTURE_3D &&
+        target != GL_TEXTURE_2D_ARRAY && target != GL_TEXTURE_CUBE_MAP) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    WebGLRenderingContext::bindTexture(target, maybeTexture);
+}
 
 Optional<ScriptValue> WebGL2RenderingContext::getParameterImpl(GLenum pname)
 {
