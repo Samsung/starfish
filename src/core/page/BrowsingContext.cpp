@@ -1169,9 +1169,14 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         return false;
     }
     // Handle event inside iframe
+    bool clickableEvent = (kind == TouchEventKind::TouchEventEnd) &&
+                          targetNode && m_activeNodeTarget &&
+                          (targetNode == m_activeNodeTarget ||
+                           targetNode->isDescendantOf(m_activeNodeTarget));
     double newX = targetX;
     double newY = targetY;
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
+        clickableEvent = false;
         handleActiveAndFocus((MouseEventKind)kind, targetNode, targetX,
                              targetY);
 
@@ -1182,11 +1187,6 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             return true;
         }
     }
-
-    bool clickableEvent = (kind == TouchEventKind::TouchEventEnd) &&
-                          targetNode && m_activeNodeTarget &&
-                          (targetNode == m_activeNodeTarget ||
-                           targetNode->isDescendantOf(m_activeNodeTarget));
 
     bool returnValue = false;
     // Dispatch events
@@ -1284,6 +1284,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 
     // Handle event inside iframe
     if (isInnerIFrameEvent(targetNode, newX, newY)) {
+        clickableEvent = false;
         handleActiveAndFocus(kind, targetNode, targetX, targetY);
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                     targetY);

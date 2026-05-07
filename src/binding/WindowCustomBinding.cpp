@@ -57,17 +57,19 @@ void customExit(int returnCode)
         return;
     }
 
-    // TODO enable this every port
-    // --hide-window + EFL window is not working correctly
-    // because EFL throws error
-    if (getenv("BACKEND") &&
-        std::string(getenv("BACKEND")).find("efl") == std::string::npos) {
+    int prevExitCode = 0;
+    if (getenv("EXIT_CODE")) {
+        prevExitCode = std::atoi(getenv("EXIT_CODE"));
+    }
+
+    if (prevExitCode == 0) {
         std::string exitCode = std::to_string(returnCode);
         setenv("EXIT_CODE", exitCode.c_str(), 1);
-        raise(SIGINT);
-    } else {
-        exit(returnCode);
     }
+    if (returnCode) {
+        starfishRecordTestFailure();
+    }
+    raise(SIGINT);
 }
 #endif
 
@@ -673,6 +675,7 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
         puts("[FAIL]");
         STARFISH_LOG_ERROR("[FAIL]");
         customExit(1);
+        return scriptUndefined();
     }
 
     puts("[PASS]");
