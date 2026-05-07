@@ -1052,6 +1052,12 @@ public:
         glGetSynciv(sync, pname, bufSize, length, values);
     }
 
+    void getBufferParameteri64v(GLenum target, GLenum pname,
+                                GLint64 *params) override
+    {
+        glGetBufferParameteri64v(target, pname, params);
+    }
+
     GenericGL(Renderer *renderer)
     {
         m_eglGetCurrentDisplayProc =
