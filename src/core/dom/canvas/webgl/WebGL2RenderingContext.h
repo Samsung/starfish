@@ -105,6 +105,7 @@ public:
     void bindFramebuffer(GLenum target, Optional<WebGLFramebuffer*> buffer);
     void bindTexture(GLenum target, Optional<WebGLTexture*> texture);
 
+    ScriptValue getBufferParameter(GLenum target, GLenum pname);
     ScriptValue getParameter(GLenum pname);
 
     ScriptValue getProgramParameter(WebGLProgram* program, GLenum pname);
@@ -126,6 +127,14 @@ public:
     void vertexAttrib4fv(GLuint index, Float32List values);
 
     // Implement WebGL2RenderingContextBase
+
+    /* Buffer objects */
+    void copyBufferSubData(GLenum readTarget, GLenum writeTarget,
+                           GLintptr readOffset, GLintptr writeOffset,
+                           GLsizeiptr size);
+    void getBufferSubData(GLenum target, GLintptr srcByteOffset,
+                          ScriptArrayBufferView dstBuffer,
+                          unsigned long long dstOffset = 0, GLuint length = 0);
 
     /* Programs and shaders */
     GLint getFragDataLocation(WebGLProgram* program, String* name);
@@ -210,6 +219,13 @@ public:
                     GLenum usage);
     void bufferSubData(GLenum target, GLintptr dstByteOffset,
                        AllowSharedBufferSource srcData);
+
+    // WebGL2:
+    void bufferData(GLenum target, ScriptArrayBufferView srcData, GLenum usage,
+                    unsigned long long srcOffset, GLuint length = 0);
+    void bufferSubData(GLenum target, GLintptr dstByteOffset,
+                       ScriptArrayBufferView srcData,
+                       unsigned long long srcOffset, GLuint length = 0);
 
     // WebGL1 legacy entrypoints:
     void texImage2D(GLenum target, GLint level, GLint internalformat,

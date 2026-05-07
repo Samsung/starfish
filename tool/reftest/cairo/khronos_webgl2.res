@@ -1496,11 +1496,11 @@ test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattr
 test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/attribs/gl-vertexattribipointer-offsets.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/bound-buffer-size-change-test.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-copying-contents.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-copying-restrictions.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-data-and-buffer-sub-data-sub-source.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-copying-restrictions.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-data-and-buffer-sub-data-sub-source.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-type-restrictions.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/buffer-overflow-test.html
-# test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/get-buffer-sub-data.html
+test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/get-buffer-sub-data.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/one-large-uniform-buffer.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/buffers/uniform-buffers.html
 # test/cairo/reftest/vendor/khronos/webgl/2.0.0/conformance2/context/constants-and-properties-2.html

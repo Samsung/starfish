@@ -1078,17 +1078,35 @@ ScriptValue WebGLRenderingContext::getBufferParameter(GLenum target,
 {
     ENTER_CONTEXT_SCOPE(scriptNull());
 
-    GLint value = -1;
-    m_gl->getBufferParameteriv(target, pname, &value);
-
-    if (hasNewGLError()) {
-        // GL_INVALID_ENUM is generated in glGetBufferParameteriv if target or
-        // pname is not an accepted value.
+    if (target != GL_ARRAY_BUFFER && target != GL_ELEMENT_ARRAY_BUFFER) {
+        setGLError(GL_INVALID_ENUM);
         return scriptNull();
     }
 
-    return ValueRef::create(
-        pname == GL_BUFFER_SIZE ? value : static_cast<GLenum>(value));
+    switch (pname) {
+    // GLint
+    case GL_BUFFER_SIZE: {
+        GLint value;
+        gl()->getBufferParameteriv(target, pname, &value);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(value);
+    }
+    // GLenum
+    case GL_BUFFER_USAGE: {
+        GLint value;
+        gl()->getBufferParameteriv(target, pname, &value);
+        if (hasNewGLError()) {
+            return scriptNull();
+        }
+        return createScriptValue(static_cast<GLenum>(value));
+    }
+    default:
+        break;
+    }
+    setGLError(GL_INVALID_ENUM);
+    return scriptNull();
 }
 
 ScriptValue WebGLRenderingContext::getParameter(GLenum pname)
