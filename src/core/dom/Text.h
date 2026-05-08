@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+class HTMLSlotElement;
+
 class Text : public CharacterData {
 public:
     Text(Document* document, String* data)
@@ -51,6 +53,9 @@ public:
     Text* splitText(unsigned long offset);
 
     String* wholeText();
+
+    /* Slottable interface */
+    Optional<HTMLSlotElement*> assignedSlot();
 
     /* Other methods (not in DOM API) */
     Node* mergeWithTextSiblings();

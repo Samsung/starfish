@@ -858,6 +858,7 @@ test/cairo/internal-test/shadowdom/shadowdom2.html
 test/cairo/internal-test/shadowdom/shadowdom3.html
 test/cairo/internal-test/shadowdom/shadowdom4.html
 test/cairo/internal-test/shadowdom/shadowdom5.html
+test/cairo/internal-test/shadowdom/slot_text.html
 test/cairo/internal-test/shadowdom/template-innerhtml.html
 test/cairo/internal-test/shadowdom/shadowdom-svg-use.html
 #test/cairo/internal-test/web-animation/element_animate_01.html // please update this test after add an AnimationPlaybackEvent.

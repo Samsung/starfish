@@ -7,3 +7,5 @@ interface Text : CharacterData {
   [RaisesException, NewObject] Text splitText(unsigned long offset);
   readonly attribute DOMString wholeText;
 };
+
+Text implements Slottable;
