@@ -47,8 +47,8 @@ public:
         : m_target(nullptr)
         , m_clientX(clientX)
         , m_clientY(clientY)
-        , m_screenX(clientX)
-        , m_screenY(clientY)
+        , m_screenX(screenX)
+        , m_screenY(screenY)
         , m_timeStamp(timeStamp)
     {
     }
