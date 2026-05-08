@@ -5,6 +5,7 @@ lightweight Web engine (LWE).
 
 ## Table of Contents
 
+- [Verification & Build-Conditional Surface](#verification--build-conditional-surface)
 - [HTML](#html)
 - [DOM](#dom)
 - [Events](#events)
@@ -26,6 +27,78 @@ lightweight Web engine (LWE).
     - [Web Speech APIs](#web-speech-apis)
     - [WebRTC](#webrtc)
     - [WebAudio](#webaudio)
+    - [WebSocket](#websocket)
+
+## Verification & Build-Conditional Surface
+
+This spec is a **manually curated** description of the engine's web surface. The numbers and the implementation drift over time, so the entries below were last cross-checked against the live `src/` tree using the procedure described here. If you change a feature, re-run the verifiers and update the table you touched.
+
+### Sources of truth
+
+The implementation contains three machine-readable surfaces; the spec must be consistent with all of them:
+
+| Source | What it covers | How to consult |
+|--------|----------------|----------------|
+| `src/**/*.idl` (~417 files) | Interface/method/attribute exposure to JS, plus `[Unimplemented]`, `[NoInterfaceObject]`, `[STARFISH_ENABLE_*]` extended attributes. | `find src -name '*.idl'`, then `grep` for the interface name. |
+| `src/core/style/Style.h` `FOR_EACH_STYLE_ATTRIBUTE_*` macros + `Style.cpp:applyProperty` | Exhaustive list of CSS properties and the values each property actually accepts. | `grep -n FOR_EACH_STYLE_ATTRIBUTE_ src/core/style/Style.h` |
+| `src/core/dom/HTMLDocument.cpp` `createHTMLElement` switch | Every HTML tag the parser maps to a dedicated `HTMLxxxElement` subclass (vs. generic `HTMLElement` / `HTMLUnknownElement`). | `grep -n DEFINE_KNOWN_ELEMENT\|m_.*TagName src/core/dom/HTMLDocument.cpp` |
+
+Two derived references summarize the above:
+
+- `docs/lwe_compat/{idl_interfaces,html_dom,css_features,javascript_engine}.md` — human-readable extraction.
+- `tool/lwe_compat/whitelist.json` — machine-readable index used by the static checker.
+
+When this spec disagrees with those files, **the IDL/source wins**. Update the spec, not the code.
+
+### Verification tooling
+
+Two tools live under `tool/lwe_compat/` and are wired into the LWE webapp guide:
+
+```sh
+# 1. Static check — grep-based scan that flags identifiers/HTML tags/CSS props
+#    not in whitelist.json. Fast, false-positive-prone for dynamic identifiers.
+tool/lwe_compat/check_static.py path/to/page-or-dir
+
+# 2. Runtime check — boots ./Starfish on the page and inspects console output
+#    for JS errors and engine warnings ("Unsupported css property: X",
+#    "invalid (or unsupported) element", "UNIMPLEMENTED:", ...).
+tool/lwe_compat/check_runtime.sh path/to/index.html --timeout=10
+```
+
+Exit codes are documented in `tool/lwe_compat/README.md`. The runtime check requires a built `./Starfish` (the symlink at the repo root, or `STARFISH_BIN=...`).
+
+### Procedure used to verify this spec
+
+The current revision of this document was audited by four parallel passes (HTML / DOM / CSS / Events+misc), each combining IDL/source inspection with runtime probes:
+
+1. **Inventory diff.** For each section, list claimed identifiers; intersect with `whitelist.json` and the relevant IDL files. Anything in the spec but not in IDL becomes a **stale** candidate; anything in IDL but not in the spec becomes a **missing** candidate.
+2. **Member-level spot checks.** For ~10 frequently-used interfaces (`Document`, `Element`, `Node`, `Window`, `Storage`, `XMLHttpRequest`, `CanvasRenderingContext2D`, `History`, `EventTarget`, `HTMLElement`), pick 2-3 attributes/methods claimed in the spec and verify directly against the IDL file (look for `[Unimplemented]`).
+3. **Runtime probes.** Generate small probe HTMLs that emit `console.log('[PROBE]', name, value)` lines for the suspect identifier(s). Run `tool/lwe_compat/check_runtime.sh --timeout=5` on each and grep the output. Use the *engine's own warning logs* as ground truth: `Unsupported css property: <name>` from `Style.cpp:updateValue*` flags a CSS property that the parser accepts but the resolver no-ops; `[Unimplemented]` IDL attributes return `undefined` at runtime.
+4. **Build-flag bucket.** Anything that probes "absent" gets cross-checked against extended attributes like `[STARFISH_ENABLE_WEBRTC]` in the IDL — if found, the entry is *build-conditional*, not stale, and gets a build-flag note rather than a deletion.
+
+Probe artifacts from the latest audit run live under `/tmp/lwe_audit_{html,dom,css,misc}/` (regenerated each run; do not commit).
+
+### Build-conditional flags table
+
+The compile-time flags that gate large chunks of this spec, with their default values on the `HOST=linux` `BACKEND=efl_cairo_gl` release build (the one shown at the top of `README.md`):
+
+| Spec section | CMake flag (or `STARFISH_ENABLE_*` macro) | Default | Effect when off |
+|--------------|-------------------------------------------|---------|-----------------|
+| HTML (`<canvas>`, `CanvasRenderingContext2D`) | `STARFISH_ENABLE_CANVAS` | on | `<canvas>` parses but `getContext('2d')` returns null. |
+| HTML (`<video>`, `<audio>`, `<source>`, `<track>`) | `STARFISH_ENABLE_MULTIMEDIA` | on (extra build deps for ffmpeg path) | Tags fall back to `HTMLUnknownElement`. |
+| WebGL (`WebGL*` interfaces) | `WEBGL=1` | on | `getContext('webgl')` returns null. |
+| Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. |
+| IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
+| WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` | on (`ARCH=x64`; also implied by `WEBRTC=1`) | `AudioContext` etc. undefined. |
+| WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (`ARCH=x64`) | `WebSocket` undefined. |
+| Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on (`ARCH=x64`) | `SpeechSynthesis*` undefined. |
+| Battery Status | `STARFISH_ENABLE_BATTERY_STATUS` | off (Tizen wearable only) | `BatteryManager`, `navigator.getBattery` undefined. |
+| Web Device API (`window.tizen`) | `HOST=tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. |
+| ffmpeg media player | `USE_FFMPEG_MEDIA_PLAYER=1` | off | `<video>`/`<audio>` use the platform-default media path. |
+| CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | varies | Aliases not parsed; use unprefixed forms. |
+
+When you read a row in the tables below, assume the corresponding flag in this table is on unless the row's "Note" column says otherwise.
 
 ## Encoding Scheme
 All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
@@ -67,9 +140,10 @@ explicitly specified.
 |  [div](https://www.w3.org/TR/html5/grouping-content.html#the-div-element)  |  |  |  |
 |  [span](https://www.w3.org/TR/html5/text-level-semantics.html#the-span-element)  |  |  |  |
 |  [br](https://www.w3.org/TR/html5/text-level-semantics.html#the-br-element)  |  |  |  |
-|  [image](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | Supported images are of type .png, .jpg, and .bmp |
+|  [img](https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element)  | src | &lt;URL&gt; | Supported images are of type .png, .jpg, and .bmp. The legacy `<image>` tag is auto-rewritten to `<img>` by the HTML5 parser. |
 |  | height | pixels |  |
 |  | width | pixels |  |
+|  | alt | &lt;string&gt; | Alternative text for the image. |
 |  [script](https://www.w3.org/TR/html5/scripting-1.html#the-script-element)  | src | &lt;URL&gt; |  |
 |  | type | text/javascript |  |
 |  | charset | UTF-8 | Only UTF-8 is supported |
@@ -118,11 +192,80 @@ explicitly specified.
 |  [legend](https://www.w3.org/TR/html5/forms.html#the-legend-elementT) |  |  |  |
 |  [DOCTYPE](https://www.w3.org/TR/html5/syntax.html#the-doctype)  |  | html | The DOCTYPE declaration must be the first tag in your HTML document. The lightweight web engine supports HTML5 only. Other versions of HTMLs and HTML modes (such as quirks mode) are not supported.|
 
+### Additional supported tags (audit additions)
+
+The HTML parser and DOM expose the following tags as well; they were missing from the table above. Verified by runtime probe (each tag returns its dedicated `HTMLxxxElement` constructor at runtime).
+
+| HTML Tag | Attribute | Allowed Value | Note |
+|----------|-----------|---------------|------|
+|  [ol](https://www.w3.org/TR/html5/grouping-content.html#the-ol-element) | start, reversed, type |  |  |
+|  [hr](https://www.w3.org/TR/html5/grouping-content.html#the-hr-element) |  |  |  |
+|  [title](https://www.w3.org/TR/html5/document-metadata.html#the-title-element) |  |  |  |
+|  [iframe](https://www.w3.org/TR/html5/embedded-content-0.html#the-iframe-element) | src | &lt;URL&gt; | Cross-origin access follows the rules in [Cross-origin script API access](#cross-origin-script-api-accesssection). |
+|  | width, height | pixels |  |
+|  [dialog](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-dialog-element) | open | open | The HTMLDialogElement is exposed and the `open` attribute reflects, but `showModal()` modal stacking is partial. |
+|  [col](https://www.w3.org/TR/html5/tabular-data.html#the-col-element) | span | number |  |
+|  [param](https://www.w3.org/TR/html5/embedded-content-0.html#the-param-element) | name, value | &lt;string&gt; | Companion to `<object>`. |
+|  [form](https://www.w3.org/TR/html5/forms.html#the-form-element) | action | &lt;URL&gt; |  |
+|  | method | get &#124; post |  |
+|  [input](https://www.w3.org/TR/html5/forms.html#the-input-element) | type | text &#124; password &#124; checkbox &#124; radio &#124; submit &#124; reset &#124; button &#124; hidden &#124; file &#124; number &#124; range &#124; email &#124; url &#124; date &#124; time | The exact set of types depends on platform input widget support; layout falls back to text for unsupported types. |
+|  | name, value, placeholder | &lt;string&gt; |  |
+|  | disabled, readonly, checked, required | boolean attribute |  |
+|  [button](https://www.w3.org/TR/html5/forms.html#the-button-element) | type | submit &#124; reset &#124; button |  |
+|  | disabled | disabled |  |
+|  [select](https://www.w3.org/TR/html5/forms.html#the-select-element) | multiple, disabled |  |  |
+|  | size | number |  |
+|  [option](https://www.w3.org/TR/html5/forms.html#the-option-element) | value | &lt;string&gt; |  |
+|  | selected | selected |  |
+|  [optgroup](https://www.w3.org/TR/html5/forms.html#the-optgroup-element) | label | &lt;string&gt; |  |
+|  [textarea](https://www.w3.org/TR/html5/forms.html#the-textarea-element) | rows, cols | number |  |
+|  | placeholder | &lt;string&gt; |  |
+|  | disabled, readonly |  |  |
+|  [label](https://www.w3.org/TR/html5/forms.html#the-label-element) | for | id reference |  |
+|  [output](https://www.w3.org/TR/html5/forms.html#the-output-element) | for | id reference |  |
+|  [data](https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-data-element) | value | &lt;string&gt; | HTMLDataElement is exposed. |
+|  [q](https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-q-element) | cite | &lt;URL&gt; | Maps to HTMLQuoteElement (shared with `<blockquote>`). |
+|  [blockquote](https://html.spec.whatwg.org/multipage/grouping-content.html#the-blockquote-element) | cite | &lt;URL&gt; | Maps to HTMLQuoteElement. |
+|  [ins](https://html.spec.whatwg.org/multipage/edits.html#the-ins-element) | cite, datetime | &lt;URL&gt;, &lt;string&gt; | Maps to HTMLModElement (shared with `<del>`). |
+|  [del](https://html.spec.whatwg.org/multipage/edits.html#the-del-element) | cite, datetime | &lt;URL&gt;, &lt;string&gt; | Maps to HTMLModElement. |
+|  [map](https://html.spec.whatwg.org/multipage/image-maps.html#the-map-element) | name | &lt;string&gt; | Maps to HTMLMapElement; image-map hit-testing is layout-only. |
+|  [area](https://html.spec.whatwg.org/multipage/image-maps.html#the-area-element) | href, alt, coords, shape | | Maps to HTMLAreaElement; companion to `<map>`. |
+|  [template](https://html.spec.whatwg.org/multipage/scripting.html#the-template-element) |  |  | Maps to HTMLTemplateElement. The `content` DocumentFragment is exposed; element does not render its children. |
+|  [slot](https://html.spec.whatwg.org/multipage/scripting.html#the-slot-element) | name | &lt;string&gt; | Maps to HTMLSlotElement, but Shadow DOM is not supported, so slotting has no effect. See the stub-only callout under [DOM](#dom). |
+|  [track](https://html.spec.whatwg.org/multipage/media.html#the-track-element) | kind, src, srclang, label, default |  | Maps to HTMLTrackElement. **Build flag:** `STARFISH_ENABLE_MULTIMEDIA`. |
+
+> **Tags accepted but exposed as generic `HTMLElement` (no element-specific DOM API):** `center`, `i`, `s`, `dfn`, `b`, `u`, `mark`, `strong`, `cite`, `em`, `var`, `address`, `article`, `aside`, `details`, `footer`, `header`, `hgroup`, `main`, `nav`, `section`, `summary`, `code`, `dt`, `dd`. (Exact list: search `DEFINE_KNOWN_ELEMENT` in `src/core/dom/HTMLDocument.cpp`.) Layout follows HTML5 defaults; element-specific behaviors (e.g. the `<details>` toggle, `<summary>` activation) are NOT implemented — falling back to a closed `<details>` content region rendering all children. Any other custom or HTML5 tag the parser doesn't recognize (`figure`, `time`, `picture`, `kbd`, `small`, `wbr`, `ruby`, …) becomes `HTMLUnknownElement` — they parse and lay out as inline boxes but expose no element-specific DOM members.
+
+> **Build flags:** `<canvas>` is conditional on `STARFISH_ENABLE_CANVAS`. `<video>`, `<audio>`, `<source>`, `<track>` are conditional on `STARFISH_ENABLE_MULTIMEDIA`. With those flags off, the elements fall through to `HTMLUnknownElement`.
+
+> **SVG:** All `<svg>` and SVG child elements (`<circle>`, `<rect>`, `<path>`, `<g>`, …) are accepted by the parser and IDL interfaces (`SVGSVGElement`, `SVGRectElement`, …) are exposed, but rendering is **not implemented** for embedded webapps. Treat SVG as out-of-scope and use `<canvas>` 2D drawing or PNG icons instead — this matches the policy in [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.
+
 ## DOM
 
 This section describes the complete list of supported DOM interfaces by LWE.
 Please note that only the attributes and methods mentioned explicitly in this
 section are supported.
+
+> **See also:** core event interfaces (`Event`, `MouseEvent`, `KeyboardEvent`, `CustomEvent`, …) are listed in the [Events](#events) section. `XMLHttpRequest`, `Blob`/`File`/`FileReader`/`FormData`, `EventSource`, `Headers`/`Request`/`Response`/`URL`/`URLSearchParams`/`TextEncoder`/`TextDecoder` live under [Additional Supported APIs](#additional-supported-apis). Don't conclude an interface is missing just because it is absent from this DOM table.
+
+> **Build-conditional interfaces.** The following classes of IDL interfaces are only exposed when their build flag is on; when off, the constructor is `undefined` at runtime:
+> - `RTC*`, `MediaStream`, `MediaStreamTrack`, `MediaDevices` — `WEBRTC=1` (`STARFISH_ENABLE_WEBRTC`)
+> - `AudioContext`, `BaseAudioContext`, `AudioBuffer*`, `AudioNode*` — `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`)
+> - `WebSocket` — `STARFISH_ENABLE_WEBSOCKET` (default on for `ARCH=x64`)
+> - `WebGL*`, `EXT_*`, `OES_*`, `WEBGL_*` — `WEBGL=1`
+> - `Worker`, `WorkerGlobalScope`, `DedicatedWorkerGlobalScope` — `WORKER=1`
+> - `SharedWorker`, `SharedWorkerGlobalScope` — `SHARED_WORKER=1`
+> - `ServiceWorker`, `ServiceWorkerRegistration`, `Notification`, `PushManager`, `Cache`, `caches`, `FetchEvent`, `ExtendableEvent` — `SERVICE_WORKER=1`
+> - `IDBFactory`, `IDBDatabase`, `IDBObjectStore`, … — `IDB=1`
+> - `SpeechSynthesis`, `SpeechSynthesisUtterance`, `SpeechSynthesisVoice`, `SpeechSynthesisEvent` — `STARFISH_ENABLE_TTS` (default on for `ARCH=x64`)
+> - `BatteryManager`, `navigator.getBattery()` — `STARFISH_ENABLE_BATTERY_STATUS` (Tizen wearable only)
+>
+> The default `HOST=linux` / `EFL` release build documented at the top of `README.md` ships with `WEBRTC=0`, `WORKER=0`, `SHARED_WORKER=0`, `SERVICE_WORKER=0`, `IDB=0`, `WEBGL=1`, plus TTS/WebAudio/WebSocket on. Other shells/hosts can differ. When in doubt, run a runtime probe (see [Verification & Build-Conditional Surface](#verification--build-conditional-surface)).
+
+> **Interfaces present but stub-only — DO NOT USE.** The following interfaces have IDL exposure (so `typeof X === 'function'`) but their callbacks/observation logic is not wired up; the LWE webapp guide forbids them. Listed here for completeness so authors don't conclude the engine "supports" them based on bare existence:
+> `MutationObserver`, `MutationRecord`, `IntersectionObserver`, `IntersectionObserverEntry`, `ResizeObserver`, `ResizeObserverEntry`, `ResizeObserverSize`, `PerformanceObserver`, `CustomElementRegistry`, `ShadowRoot`, `Slottable`, plus the entire `SVG*` family. See [LWE_WEBAPP_GUIDE.md §2](LWE_WEBAPP_GUIDE.md) for alternatives.
+
+> **Frequently used core interfaces also exposed but not row-by-row documented below** (treat as confirmed at the interface level; rely on the WHATWG/W3C spec for member details): `DocumentFragment`, `DOMImplementation`, `DOMTokenList` (`Element.classList`/`relList`), `DOMStringMap` (`HTMLElement.dataset`), `HTMLCollection`, `Range`, `NodeFilter`, `NodeIterator`, `TreeWalker`, `MessageEvent`, `HashChangeEvent`, `PopStateEvent`, `Performance`, `PerformanceEntry`, `Storage`, `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder`, `Crypto`, `HTMLDialogElement`, `HTMLObjectElement`, `HTMLOutputElement`, `HTMLTitleElement`, `HTMLUnknownElement`. Methods on these mostly follow the standard; if you depend on a non-standard behavior, run a runtime probe.
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
@@ -230,8 +373,11 @@ section are supported.
 |  | method | void insertData(unsigned long offset, DOMString data) | Insert data |
 |  | method | void deleteData(unsigned long offset, unsigned long count) | Replace data to empty string |
 |  | method | void replaceData(unsigned long offset, unsigned long count, DOMString data) | Replace data |
-| [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | The childNodes interface contains methods that are particular to Node objects that can have a parent. |
-|  | method | void remove() | Removes this childNodes from the children list of its parent. |
+| [ChildNode](https://dom.spec.whatwg.org/#childnode) | interface | ChildNode | Mixin implemented by `Element`, `CharacterData`, and `DocumentType`. |
+|  | method | void remove() | Removes the node from its parent's children list. |
+|  | method | void before((Node or DOMString)... nodes) | Inserts *nodes* in the parent just before this node, replacing strings with Text nodes. |
+|  | method | void after((Node or DOMString)... nodes) | Inserts *nodes* in the parent just after this node. |
+|  | method | void replaceWith((Node or DOMString)... nodes) | Replaces this node in its parent with *nodes*. |
 | [Comment](https://dom.spec.whatwg.org/#interface-comment) | interface | Comment | The Comment interface represents textual notations within markup; although it is generally not visually shown, such comments are available to be read in the source view |
 | | constructor | Comment(optional DOMString data = "") | Returns a Comment object with the parameter as its textual content. |
 | [CSSRule](https://drafts.csswg.org/cssom/#the-cssrule-interface) | interface | CSSRule | The CSSRule interface represents an abstract, base CSS style rule. Each distinct CSS style rule type is represented by a distinct interface that inherits from this interface. |
@@ -300,13 +446,17 @@ section are supported.
 | | attribute | length | Returns the number of CSSRule objects represented by the collection. |
 | [Document](https://www.w3.org/TR/dom/#interface-document) | interface | Document | Also refer to Document [1](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface), [2](https://www.w3.org/TR/dom/#interface-nonelementparentnode) and [3](https://www.w3.org/TR/dom/#parentnode)   |
 |  | attribute | documentURI | Returns document's URL. |
+|  | attribute | URL | Returns document's URL (legacy alias of `documentURI`). |
+|  | attribute | domain | Gets/sets the document's effective domain. (Sets only — same-origin checks are not enforced in LWE.) |
 |  | attribute | referrer | Returns the URL of the Document from which the user navigated to this one, unless it was blocked or there was no such document, in which case it returns the empty string. |
 |  | attribute | origin | Returns document's origin. |
 |  | attribute | compatMode | Returns the string "CSS1Compat". |
 |  | attribute | charset | Returns document's encoding type ""UTF8"". |
+|  | attribute | inputEncoding | Returns document's encoding (alias of `characterSet`; legacy). |
 |  | attribute | characterSet | Returns document's encoding type ""UTF8"". |
 |  | attribute | contentType | Returns document's content type. |
 |  | attribute | doctype | Returns the doctype or null if there is none. |
+|  | attribute | implementation | Returns the DOMImplementation object associated with the document. |
 |  | attribute | documentElement | Returns the document element. |
 |  | attribute | title | Returns the title of document. |
 |  | attribute | dir | Returns the dir attribute of html element. |
@@ -332,16 +482,24 @@ section are supported.
 |  | method | void writeln(text...) | Adds the given string(s) to the Document's input stream, followed by a newline character |
 |  | method | Node importNode(Node node, optional boolean deep = false) | Creates a new copy of the specified Node or DocumentFragment from another document. |
 |  | method | Node adoptNode(Node node) | Moves node from another document and returns it. |
+|  | method | Event createEvent(DOMString type) | Returns a new Event object whose type is `type` (e.g. `"Event"`, `"CustomEvent"`). |
+|  | method | Range createRange() | Returns a new live `Range` whose start and end are `(this, 0)`. |
+|  | method | NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional any filter = null) | Returns a new `NodeIterator` rooted at `root`. **Iteration is not actually wired up — `nextNode()` returns null immediately.** Use `createTreeWalker` instead. |
+|  | method | TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional any filter = null) | Returns a new `TreeWalker` rooted at `root`. Fully functional. |
+|  | method | boolean hasFocus() | Returns whether the document has focus. |
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
 |  | attribute | images | Returns an HTMLCollection rooted at the Document node, whose filter matches only img elements |
 |  | attribute | forms | Returns an HTMLCollection rooted at the Document node, whose filter matches only form elements |
 |  | attribute | scripts | Returns an HTMLCollection rooted at the Document node, whose filter matches only script elements |
+|  | attribute | links | Returns an HTMLCollection of all `a` and `area` elements with an `href` attribute. |
+|  | attribute | anchors | Returns an HTMLCollection of all `a` elements with a `name` attribute. |
 |  | attribute | defaultView | Returns this Document's browsing context's WindowProxy object, if this Document has an associated browsing context, or null otherwise |
 |  | attribute | activeElement | Returns the currently focused element. |
 |  | attribute | designMode | Returns "on" if the document is editable, and "off" if it isn't. Can be set, to change the document's current state. This focuses the document and resets the selection in that document. |
 |  | attribute | cookie | Represents the cookies of the resource identified by the document's URL. |
+|  | misc | **Unsupported in LWE** (`[Unimplemented]` in IDL — these return `undefined` at runtime) | `lastModified`, `embeds`, `plugins`, `applets`, `all`, `elementsFromPoint`, `caretPositionFromPoint`, `execCommand`, `queryCommandEnabled`, `queryCommandIndeterm`, `queryCommandState`, `queryCommandSupported`, `queryCommandValue`. Use `elementFromPoint` for the topmost element only. |
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
 | | attribute | scrollingElement | Returns a reference to the Element that scrolls the document. |
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
@@ -349,6 +507,7 @@ section are supported.
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |
 | Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
+| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | A minimal node container; siblings inserted into the live tree via `appendChild` are moved out of the fragment. The `DocumentFragment()` constructor is **not** implemented — calling `new DocumentFragment()` throws `TypeError: Illegal constructor`; use `document.createDocumentFragment()` instead. Implements `NonElementParentNode` + `ParentNode` (so `getElementById`, `children`, `firstElementChild`, `lastElementChild`, `childElementCount`, `prepend`, `append`, `querySelector`, `querySelectorAll`). |
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
 |  | attribute | publicId | Return the context object’s public ID. |
@@ -392,10 +551,7 @@ section are supported.
 |  | attribute | y | Return the y coordinate value of the object it was invoked on. |
 |  | attribute | z | Return the z coordinate value of the object it was invoked on. |
 |  | attribute | w | Return the w perspective value of the object it was invoked on. |
-|  | dictionary | DOMPointInit::x | Initializes an DOMPoint object with x. |
-|  | dictionary | DOMPointInit::y | Initializes an DOMPoint object with y. |
-|  | dictionary | DOMPointInit::z | Initializes an DOMPoint object with z. |
-|  | dictionary | DOMPointInit::w | Initializes an DOMPoint object with w. |
+| [DOMPointInit](https://drafts.fxtf.org/geometry/#dictdef-dompointinit) | dictionary | DOMPointInit | Members `x`, `y`, `z`, `w` (all `unrestricted double`) used to initialize a `DOMPoint`/`DOMPointReadOnly`. |
 |  [DOMPointReadOnly](https://drafts.fxtf.org/geometry/#dompointreadonly)  |  attribute  |  x  |  Return  x coordinate value of the object  |
 |    |  attribute  |  y  |  Return y coordinate value of the object  |
 |    |  attribute  |  z  |  Return z coordinate value of the object  |
@@ -466,8 +622,15 @@ section are supported.
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
 |  | method | HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) | Returns a HTMLCollection of all descendant elements whose namespace is namespace and local name is localName. |
 |  | method | HTMLCollection getElementsByClassName(DOMString classNames) | Returns the list of elements with class names classNames for the context object. |
-|| method | insertAdjacentElement |t inserts the node into the tree in the position given by the position argument |
-|| method | insertAdjacentText | inserts the node into the tree in the position given by the position argument |
+|  | method | Node? insertAdjacentElement(DOMString where, Element element) | Inserts *element* into the tree at the position given by *where* (`beforebegin`/`afterbegin`/`beforeend`/`afterend`). |
+|  | method | void insertAdjacentText(DOMString where, DOMString data) | Inserts a Text node at the position given by *where*. |
+|  | attribute | slot | Reflects the `slot` content attribute. |
+|  | method | boolean toggleAttribute(DOMString qualifiedName, optional boolean force) | Toggles the named attribute; with `force` set, conditionally adds or removes it. Returns the new presence state. |
+|  | method | ShadowRoot attachShadow(ShadowRootInit init) | Creates a shadow root for the element. Only `{mode:"open"\|"closed"}` is recognized; advanced fields are ignored. **Note: Shadow DOM is not used by LWE webapps; see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.** |
+|  | attribute | shadowRoot | Returns the open shadow root attached via `attachShadow({mode:"open"})`, or `null`. |
+|  | method | void setPointerCapture(long pointerId) | Stub: bound but currently a no-op (logs `UNIMPLEMENTED`). |
+|  | method | void releasePointerCapture(long pointerId) | Stub: bound but currently a no-op. |
+|  | method | boolean hasPointerCapture(long pointerId) | Stub: always returns `false`. |
 | [Element](https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface) | attribute | innerHTML | Return a fragment of HTML or XML that represents the element's contents.|
 || attribute | outerHTML | Return a fragment of HTML or XML that represents the element|
 || method | insertAdjacentHTML | Parses the given string text as HTML or XML and inserts the resulting nodes into the tree in the position given by the position argument |
@@ -483,6 +646,10 @@ section are supported.
 |  | attribute | scrollHeight | returns either the height in pixels of the content of an element or the height of the element itself, whichever is greater |
 |  | method | scrollIntoView | scrolls the element on which it's called into the visible area of the browser window. |
 |  | method | scrollIntoView(bool alignToTop) | scrolls the element on which it's called into the visible area of the browser window. |
+|  | method | scrollIntoView(ScrollIntoViewOptions options) | Accepts `{block, inline}` (`start`/`center`/`end`/`nearest`). |
+|  | method | scroll(x, y) / scroll(ScrollToOptions) | Scrolls the element's scrolling box. |
+|  | method | scrollTo(x, y) / scrollTo(ScrollToOptions) | Same as `scroll`. |
+|  | method | scrollBy(x, y) / scrollBy(ScrollToOptions) | Scrolls the element's scrolling box by the given delta. |
 | [EventTarget](https://dom.spec.whatwg.org/#interface-eventtarget) | interface | EventTarget | Represents the target to which an event is dispatched when something has occurred. |
 | | method | void addEventListener(DOMString type, EventListener? callback, optional boolean capture=false) | Adds the specified EventListener-compatible object to the list of event listeners for the specified event type on the EventTarget on which it's called. (NOTE: The lightweight web engine only supports boolean type for third argument) |
 | | method | void removeEventListener(DOMString type, EventListener? callback, optional boolean captures=false) | Removes from the EventTarget an event listener previously registered with EventTarget.addEventListener(). (NOTE: The lightweight web engine only supports boolean type for third argument) |
@@ -547,7 +714,11 @@ section are supported.
 |  | attribute | width | Reflects the width HTML attribute. |
 |  | attribute | height | Reflects the height HTML attribute. |
 |  | method | getContext | Returns a drawing context on the canvas, or null if the context identifier is not supported. |
-|  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
+| [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection) | interface | HTMLCollection | A live, ordered collection of `Element` objects. Returned by `getElementsByTagName(NS)`, `getElementsByClassName`, and HTML form/`tbody`/`select` accessors. |
+|  | attribute | length | Returns the number of elements in the collection. |
+|  | method | Element? namedItem(DOMString name) | Returns the first element whose `id` or (for HTML form-associated elements) `name` matches. Named property access (`coll['someId']`) is equivalent. |
+|  | iterable | iterable&lt;Node&gt; | Supports `for..of`, `forEach`. |
+|  [HTMLCollection — legacy entry](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  (duplicate row preserved for legacy spec compatibility) |
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
 | [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |
 | [HTMLDocument](https://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-26809268) | interface | HTMLDocument | An HTMLDocument is the root of the HTML hierarchy and holds the entire content. |
@@ -555,7 +726,14 @@ section are supported.
 |  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
 |  | attribute | title | Reflects the "title" content attribute of HTMLElement. |
 |  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
-|  | attribute | nonce | Reflects the cryptographic number used by Content Security Policy. It's supported only on `HTMLScriptElement` and `HTMLStyleElement`. |
+|  | attribute | hidden | Reflects the `hidden` boolean content attribute. |
+|  | attribute | innerText | Like `textContent`, but observes CSS `display:none`/`white-space` rules. Writable. |
+|  | attribute | dataset | Returns a `DOMStringMap` for `data-*` attributes (kebab-case → camelCase). |
+|  | mixin | ElementContentEditable | Provides `contentEditable`/`isContentEditable`. |
+|  | mixin | ElementCSSInlineStyle | Provides `style` (`CSSStyleDeclaration`). |
+|  | mixin | ElementAnimation | Provides `animate()`; `getAnimations()` is unimplemented. |
+|  | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — return `undefined`) | `translate`, `accessKey`, `accessKeyLabel`, `draggable`, `contextMenu`, `spellcheck`, `forceSpellCheck`, `nonce`, `autofocus`. |
+|  | misc | **Not exposed at all** | `requestFullscreen`, `popover`/`togglePopover`/`showPopover`/`hidePopover`, `outerText`, `inert`, `enterKeyHint`, `inputMode`. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
 |  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
@@ -681,7 +859,7 @@ section are supported.
 |  | constant | HAVE_FUTURE_DATA = 3 |  |
 |  | constant | HAVE_ENOUGH_DATA = 4 |  |
 |  | attribute | readyState | Returns a unsigned short (enumeration) indicating the readiness state of the media. |
-|  | attribute | seeking | Returns a TimeRanges object that contains the time ranges that the user is able to seek to, if any. |
+|  | attribute | seeking | Returns true if the media element is currently seeking. |
 |  | attribute | currentTime | Is a double indicating the current playback time in seconds. Setting this value seeks the media to the new time. |
 |  | attribute | duration | Returns a double indicating the length of the media in seconds, or 0 if no media data is available. |
 |  | attribute | paused | Returns a Boolean that indicates whether the media element is paused. |
@@ -692,8 +870,8 @@ section are supported.
 |  | attribute | loop | Is a Boolean that reflects the loop HTML attribute, which indicates whether the media element should start over when it reaches the end. |
 |  | method | Promise\<void\> play() | Begins playback of the media. |
 |  | method | void pause() | Pauses the media playback. |
-|  | attribute | constrols | Is a Boolean that reflects the controls HTML attribute, indicating whether user interface items for controlling the resource should be displayed. |
-|  | attribute | constrolsList | Returns a DOMTokenList that helps the user agent select what controls to show on the media element whenever the user agent shows its own set of controls. |
+|  | attribute | controls | Is a Boolean that reflects the controls HTML attribute, indicating whether user interface items for controlling the resource should be displayed. |
+|  | attribute | controlsList | Returns a DOMTokenList that helps the user agent select what controls to show on the media element whenever the user agent shows its own set of controls. |
 |  | attribute | volume | Is a double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest). |
 |  | attribute | muted | Is a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise. |
 |  | attribute | textTracks | Returns the list of TextTrack objects contained in the element. |
@@ -906,22 +1084,26 @@ section are supported.
 |  | constant | DOCUMENT_TYPE_NODE | Node is a doctype. |
 |  | constant | DOCUMENT_FRAGMENT_NODE | Node is a DocumentFragment node. |
 |  | constant | NOTATION_NODE | Node is a notation node |
-|  | attribute | nodeType | Returns the node type |
-|  | attribute | nodeName | Retuns the node name |
+|  | attribute | nodeType | Returns the node type. |
+|  | attribute | nodeName | Returns the node name. |
+|  | attribute | baseURI | Returns the document base URL (resolved against `<base href>` if present). |
+|  | attribute | isConnected | Returns true if the node is in the document tree. |
 |  | attribute | ownerDocument | Returns the node document. Returns null for documents. |
-|  | attribute | Node getRootNode(optional GetRootNodeOptions options) | Returns the context object's root, which optionally includes the shadow root if it is available. |
+|  | method | Node getRootNode(optional GetRootNodeOptions options) | Returns the context object's root. The `composed` option is accepted but LWE has no Shadow DOM, so it has no observable effect. |
 |  | attribute | parentNode | Returns the parent. |
-|  | attribute | parentElement | Returns the parent element. |
+|  | attribute | parentElement | Returns the parent element, or null if the parent is not an Element. |
 |  | method | boolean hasChildNodes() | Returns whether node has children. |
-|  | attribute | childNodes | Returns the children. |
+|  | attribute | childNodes | Returns a live `NodeList` of the children. |
 |  | attribute | firstChild | Returns the first child. |
-|  | attribute | Node cloneNode(optional boolean deep = false) | Returns a copy of node. If deep is true, the copy also includes the node’s descendants. |
+|  | attribute | lastChild | Returns the last child. |
 |  | attribute | previousSibling | Returns the previous sibling. |
 |  | attribute | nextSibling | Returns the next sibling. |
-|  | attribute | nodeValue | Gets and sets Attr, Text, ProcessingInstruction, Comment depending on the context object: |
-|  | attribute | textContent | Gets and sets DocumentFragment, Element, Attr, Text, ProcessingInstruction, Comment switching on context object |
-|  | method | normalize | Removes empty exclusive Text nodes and concatenates the data of remaining contiguous exclusive Text nodes into the first of their nodes. |
-|  | method | boolean isEqualNode(Node? otherNode) | Returns whether node and otherNode have the same properties. |
+|  | attribute | nodeValue | Gets/sets the value for `Attr`/`Text`/`ProcessingInstruction`/`Comment`; null for other node types. |
+|  | attribute | textContent | Gets/sets the textual content of `DocumentFragment`/`Element`/`Attr`/`Text`/`ProcessingInstruction`/`Comment`; null for `Document`/`DocumentType`. |
+|  | method | void normalize() | Removes empty exclusive `Text` nodes and concatenates contiguous text. |
+|  | method | Node cloneNode(optional boolean deep = false) | Returns a copy of node. If `deep` is true, the copy also includes the node's descendants. |
+|  | method | boolean isEqualNode(Node? otherNode) | Returns whether node and otherNode have equal properties. |
+|  | method | boolean isSameNode(Node? otherNode) | Historical alias for `===` reference equality. |
 |  | constant | DOCUMENT_POSITION_DISCONNECTED = 0x01; | Set when node and other are not in the same tree. |
 |  | constant | DOCUMENT_POSITION_PRECEDING = 0x02; | Set when other is preceding node. |
 |  | constant | DOCUMENT_POSITION_FOLLOWING = 0x04; | Set when other is following node. |
@@ -934,14 +1116,14 @@ section are supported.
 |  | method | Node appendChild(Node node) | Returns the result of appending node to context object. |
 |  | method | Node replaceChild(Node node, Node child) | Returns the result of replacing child with node within context object. |
 |  | method | Node removeChild(Node child) | Returns the result of pre-removing child from context object. |
-|  | attribute | lastChild | Returns the last child |
-|  | method | lookupNamespaceURI | |
-|  | method | isDefaultNamespace,  | |
-|  | method | lookupPrefix | |
-| [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A NodeList object is a collection of nodes. |
-|  | method | Node? item(unsigned long index) | Returns the node with index index from the collection. The nodes are sorted in tree order. |
+|  | method | DOMString? lookupPrefix(DOMString? namespace) | Returns the prefix associated with the given namespace, or null. |
+|  | method | DOMString? lookupNamespaceURI(DOMString? prefix) | Returns the namespace URI associated with the given prefix (HTML elements default to `http://www.w3.org/1999/xhtml`). |
+|  | method | boolean isDefaultNamespace(DOMString? namespace) | Returns whether the given namespace is the default namespace at the context node. |
+| [GetRootNodeOptions](https://dom.spec.whatwg.org/#dictdef-getrootnodeoptions) | dictionary | GetRootNodeOptions | `{ boolean composed = false }`. The `composed` flag is a no-op in LWE because Shadow DOM is not implemented. |
+| [NodeList](https://dom.spec.whatwg.org/#nodelist) | interface | NodeList | A `NodeList` object is a collection of nodes. Live for `Node.childNodes`; static for `querySelectorAll`. |
 |  | attribute | length | Returns the number of nodes in the collection. |
-|  | iterable&lt;Node&gt; |  |  |
+|  | method | Node? item(unsigned long index) | Returns the node at the given tree-ordered index, or null. Indexed access (`list[i]`) is equivalent. |
+|  | iterable | iterable&lt;Node&gt; | Supports `for..of`, `forEach`, `entries`, `keys`, `values`. |
 | [NonDocumentTypeChildNode](https://dom.spec.whatwg.org/#nondocumenttypechildnode) | interface | NonDocumentTypeChildNode | The NonDocumentTypeChildNode interface contains methods that are particular to Node Object that can have a sibling. |
 |  | attribute | previousElementSibling | Returns the Element immediately prior to this node in its parent's children list, or null if there is no Element in the list prior to this node. |
 |  | attribute | nextElementSibling | Returns the Element immediately following this node in its parent's children list, or null if there is no Element in the list following this node. |
@@ -955,7 +1137,30 @@ section are supported.
 |  | method | void append((Node or DOMString)... nodes) | Inserts nodes after the last child of node, while replacing strings in nodes with equivalent Text nodes. |
 |  | method | Element? querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | NodeList querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
-| [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
+|  | misc | replaceChildren | **Not implemented** in LWE. Calling `el.replaceChildren(...)` raises `TypeError`. Use `el.innerHTML = ''` followed by `append(...)` instead. |
+| [Slottable](https://dom.spec.whatwg.org/#slotable) | interface | Slottable | Mixin implemented by `Element` and `Text`. |
+|  | attribute | assignedSlot | Returns the assigned `<slot>` element, or `null`. |
+| [ElementAnimation](https://www.w3.org/TR/web-animations-1/#extensions-to-the-element-interface) | interface | ElementAnimation | Mixin on `Element`. |
+|  | method | Animation animate(sequence&lt;any&gt;? keyframes, optional KeyframeAnimationOptions options) | Creates and starts an animation; returns an `Animation` object. |
+|  | method | sequence&lt;Animation&gt; getAnimations() | **Not implemented** (returns `undefined`). |
+| [Range](https://dom.spec.whatwg.org/#interface-range) | interface | Range | Represents a contiguous range of content. Constructor: `new Range()` (range starts collapsed at `(document, 0)`). Also returned by `document.createRange()`. |
+|  | attribute | startContainer / startOffset / endContainer / endOffset | Boundary points of the range. |
+|  | attribute | collapsed | True iff start === end. |
+|  | attribute | commonAncestorContainer | Deepest node containing both endpoints. |
+|  | constant | START_TO_START / START_TO_END / END_TO_END / END_TO_START | Selectors for `compareBoundaryPoints` (0/1/2/3). |
+|  | method | setStart / setEnd / setStartBefore / setStartAfter / setEndBefore / setEndAfter / collapse / selectNode / selectNodeContents / compareBoundaryPoints / isPointInRange / comparePoint / intersectsNode / deleteContents / extractContents / insertNode / surroundContents / cloneRange / detach | Standard `Range` operations — all implemented. |
+|  | method | DOMRectList getClientRects() / DOMRect getBoundingClientRect() | (CSSOM-View) Per-fragment client rects. |
+|  | stringifier |  | Returns the textual content of the range. |
+|  | misc | **Not implemented** | `cloneContents`, `createContextualFragment`, `expand` are `[Unimplemented]` and raise `TypeError` on call. |
+| [NodeIterator](https://dom.spec.whatwg.org/#interface-nodeiterator) | interface | NodeIterator | **Use `TreeWalker` instead.** The interface and `createNodeIterator` factory are exposed and configuration attributes (`root`, `referenceNode`, `pointerBeforeReferenceNode`, `whatToShow`, `filter`) report correct values, but `nextNode()` returns null immediately on the first call. Iteration is not actually wired up. |
+| [TreeWalker](https://dom.spec.whatwg.org/#interface-treewalker) | interface | TreeWalker | Created via `document.createTreeWalker(root, whatToShow=SHOW_ALL, filter=null)`. Fully functional — supports custom `acceptNode` filter callbacks (callable or `{acceptNode}` object). |
+|  | attribute | root / whatToShow / filter / currentNode | Configuration; `currentNode` is writable. |
+|  | method | parentNode / firstChild / lastChild / previousSibling / nextSibling / previousNode / nextNode | Standard traversal that respects `whatToShow` and `filter`. |
+| [NodeFilter](https://dom.spec.whatwg.org/#interface-nodefilter) | callback interface | NodeFilter | Pass either a function `(node)=>FILTER_*` or an object `{acceptNode(node){…}}` to `TreeWalker`. |
+|  | constant | FILTER_ACCEPT (1) / FILTER_REJECT (2) / FILTER_SKIP (3) |  |
+|  | constant | SHOW_ALL (0xFFFFFFFF) / SHOW_ELEMENT (0x1) / SHOW_TEXT (0x4) / SHOW_COMMENT (0x80) / SHOW_PROCESSING_INSTRUCTION (0x40) / SHOW_DOCUMENT (0x100) / SHOW_DOCUMENT_TYPE (0x200) / SHOW_DOCUMENT_FRAGMENT (0x400) | |
+|  | constant | SHOW_ATTRIBUTE / SHOW_CDATA_SECTION / SHOW_ENTITY_REFERENCE / SHOW_ENTITY / SHOW_NOTATION | Historical — present for spec parity, no nodes of these types are produced by HTML parsing. |
+| [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object's associated Document. |
 |  | method | Text splitText(unsigned long offset) | Breaks the node into two nodes at a specified offset. |
 |  | attribute | wholeText | Returns the combined data of all direct Text node siblings. |
 | [TextTrack](https://html.spec.whatwg.org/#texttrack)  | interface | TextTrack |  |
@@ -1003,8 +1208,9 @@ section are supported.
 |  | method | void forward() | Goes to the next page in session history, the same action as when the user clicks the browser's Forward button; this is equivalent to history.go(1). |
 |  | method | void pushState(any data, DOMString title, optional DOMString? url = null) | Pushes the given data onto the session history stack with the specified title and, if provided, URL. |
 |  | method | void replaceState(any data, DOMString title, optional DOMString? url = null) | Updates the most recent entry on the history stack to have the specified data, title, and, if provided, URL |
+|  | misc | Not implemented | `scrollRestoration` is in `History.idl` with `[Unimplemented]` and returns `undefined`. |
 |  [Location](https://html.spec.whatwg.org/multipage/browsers.html#location) | interface | Location | Represents the location (URL) of the object it is linked to. |
-|    |  attribute  |  href  |  Return Location object's url  |
+|    |  misc  |  Not implemented  |  `ancestorOrigins` is in `Location.idl` with `[Unimplemented]` and returns `undefined`. |
 |    |  attribute  |  protocol  |  Return  Location object's url's scheme, followed by ":".  |
 |    |  attribute  |  href  |  Return this Location object's url, serialized.  |
 |    |  attribute  |  origin  | Return the serialization of this Location object's url's origin.  |
@@ -1041,7 +1247,7 @@ section are supported.
 |    |  method  |  void appendBuffer(BufferSource data)  |  Appends the segment data in an BufferSource to the source buffer |
 |    |  method  |  void remove(double start, unrestricted double end)  |  Removes media for a specific time range  |
 | [SourceBufferList](https://w3c.github.io/media-source/#sourcebufferlist) | interface | SourceBufferList | Represents a simple container list for multiple SourceBuffer objects. |
-|    | length |  Return number of SourceBuffer objects in the list.  |
+|    | attribute | length |  Return number of SourceBuffer objects in the list.  |
 |    |  method  |  SourceBuffer[unsigned long index]  |  Return SourceBuffer object with index  |
 | [StyleSheet](https://drafts.csswg.org/cssom/#the-stylesheet-interface) | interface | StyleSheet | The StyleSheet interface represents an abstract, base style sheet. |
 | | attribute | type | Specifies the style sheet language for this style sheet. |
@@ -1065,11 +1271,11 @@ section are supported.
 | | attribute | clientX | The horizontal coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
 | | attribute | clientY | The vertical coordinate of point relative to the viewport in pixels, excluding any scroll offset. |
 | [TouchInit](https://w3c.github.io/touch-events/#idl-def-touchinit) | dictionary | TouchInit | Dictionary that is used to create TouchInit. |
-| | attrbitue | target | Initializes the target attribute of the Touch object |
-| | attrbitue | screenX | Initializes the screenX attribute of the Touch object |
-| | attrbitue | screenY | Initializes the screenY attribute of the Touch object |
-| | attrbitue | clientX | Initializes the clientX attribute of the Touch object |
-| | attrbitue | clientY | Initializes the clientY attribute of the Touch object |
+| | attribute | target | Initializes the target attribute of the Touch object |
+| | attribute | screenX | Initializes the screenX attribute of the Touch object |
+| | attribute | screenY | Initializes the screenY attribute of the Touch object |
+| | attribute | clientX | Initializes the clientX attribute of the Touch object |
+| | attribute | clientY | Initializes the clientY attribute of the Touch object |
 | [TouchList](https://w3c.github.io/touch-events/#idl-def-touchlist) | interface | TouchList | Defines a list of individual points of contact for a touch event. |
 | | attribute | length | Returns the number of Touch objects in the list |
 | [Window](https://html.spec.whatwg.org/#the-window-object) | interface | Window | The Window has an associated Document, which is a Document object. |
@@ -1084,8 +1290,13 @@ section are supported.
 |  | attribute | navigator | Return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
 |  | attribute | frames | Return Window object's browsing context's WindowProxy object. |
 |  | attribute | length | Return the number of document-tree child browsing contexts of this Window object. |
+|  | attribute | self | Returns window. (Per HTML spec equivalent to `window` and `frames`.) |
+|  | attribute | customElements | Returns the [CustomElementRegistry](https://html.spec.whatwg.org/multipage/custom-elements.html#customelementregistry) for this Window. **Custom Elements are unsupported in LWE webapps**; see LWE_WEBAPP_GUIDE.md. |
+|  | method | void alert(optional DOMString message = "") | Displays a modal dialog with the given message. LWE prints the message via TTS instead of opening a real dialog. |
+|  | method | void focus() / void blur() | Callable but a no-op (logs `Unsupported Window function: focus/blur`). |
 |  | method | postMessage(message, targetOrigin, transfer) | Posts a message to the given window. |
-| [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | enum | ScrollBehvior | "auto", "instant", "smooth" |
+|  | misc | **Unsupported in LWE** (`[Unimplemented]` in `Window.idl`) | `close`, `closed`, `stop`, `open(url, target, features)`, `opener`, `confirm`, `prompt`, `print`, `status`, `applicationCache`, `external`, `locationbar`/`menubar`/`personalbar`/`scrollbars`/`statusbar`/`toolbar` (BarProp), `captureEvents`/`releaseEvents`, `moveTo`/`moveBy`/`resizeTo`/`resizeBy`, `outerWidth`/`outerHeight`, `screenX`/`screenY`. `getSelection`, `requestIdleCallback`/`cancelIdleCallback`, `screenLeft`/`screenTop` are not in IDL at all. |
+| [Window](https://www.w3.org/TR/cssom-view-1/#extensions-to-the-window-interface) | enum | ScrollBehavior | "auto", "instant", "smooth" |
 |  | attribute | innerWidth | Return the viewport width including the size of a rendered scroll bar (if any), or zero if there is no viewport.  |
 |  | attribute | innerHeight | Return the viewport height including the size of a rendered scroll bar (if any), or zero if there is no viewport. |
 |  | attribute | scrollX | property of the Window interface returns the number of pixels that the document is currently scrolled horizontally |
@@ -1096,17 +1307,29 @@ section are supported.
 |  | method | scroll(x, y) | Scrolls the window to a particular place in the document. |
 |  | method | scrollTo(optional ScrollToOptions) | Scrolls the window to a particular place in the document. |
 |  | method | scrollTo(x, y) | Scrolls the window to a particular place in the document. |
+|  | method | scrollBy(optional ScrollToOptions) | Scrolls the window by the given delta. |
+|  | method | scrollBy(x, y) | Scrolls the window by the given delta. |
 | [Window](https://www.w3.org/TR/animation-timing/#Window-interface-extensions) | method | unsigned long requestAnimationFrame(FrameRequestCallback callback) | Used to signal to the user agent that a script-based animation needs to be resampled. |
 | | method | void cancelAnimationFrame(unsigned long handle) | Used to cancel a previously made request to schedule an animation frame update. |
-| | callback | FrameRequestCallback = void (DOMHighResTimeStamp time) | |
+| | callback | FrameRequestCallback | `void (DOMHighResTimeStamp time)` — invoked once before the next repaint with the current high-resolution timestamp. |
 | [Window](https://drafts.csswg.org/cssom/#extensions-to-the-window-interface) | method | CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt) | Gives the values of all the CSS properties of an element after applying the active stylesheets and resolving any basic computation those values may contain. |
 | [Window](https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface) | method | MediaQueryList matchMedia(CSSOMString query) | Returns a new MediaQueryList object representing the parsed results of the specified media query string. |
 | | attribute | screen | Returns a reference to the screen object associated with the window. |
 | | attribute | devicePixelRatio | Returns the ratio between physical pixels and device independent pixels in the current display. |
-| [WindowOrWorkerGlobalScope](https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope) | interface mixin | WindowOrWorkerGlobalScope |  |
+| [WindowOrWorkerGlobalScope](https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope) | interface mixin | WindowOrWorkerGlobalScope | Mixin shared between `Window` and worker globals. `[NoInterfaceObject]`. |
+|  | method | DOMString btoa(DOMString data) | Returns the base64 encoding of `data`. |
+|  | method | DOMString atob(DOMString data) | Decodes a base64 string. Throws `InvalidCharacterError` on invalid input. |
+|  | method | undefined queueMicrotask(VoidFunction callback) | Queues `callback` to run as a microtask. |
+|  | method | any structuredClone(any value, optional StructuredSerializeOptions options) | Deep-clones `value` using the structured-clone algorithm. |
+|  | misc | `origin` is in IDL with `[Unimplemented]` and returns `undefined`. Timers (`setTimeout`/`setInterval`/`clearTimeout`/`clearInterval`) are listed under `WindowTimers` and reach through this mixin. |  |
 |  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |
 |  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
+| [Screen](https://drafts.csswg.org/cssom-view/#the-screen-interface) | interface | Screen | Returned by `window.screen`. |
+|  | attribute | width / height | Output device dimensions in CSS pixels. |
+|  | attribute | availWidth / availHeight | Available output dimensions. On LWE these equal `width`/`height`. |
+|  | attribute | colorDepth / pixelDepth | Color/pixel depth in bits. LWE returns 24. |
+|  | misc | Not exposed: `orientation`, `availLeft`, `availTop`, `onchange`. The Screen Orientation API is unavailable. | |
 |  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |
 |    | attribute | behavior | Initializes the behavior attribute of the ScrollOptions object |
 |  [ScrollToOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolltooptions) | dictionary | ScrollToOptions |  |
@@ -1163,7 +1386,7 @@ supported.
 | | method | void stopPropagation() | When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object. |
 | | method | void stopImmediatePropagation() | Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects. |
 | | method | void preventDefault() | If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled. |
-| | dictionary | EventInit::bubles = false | Initializes an Event object with bubbles. |
+| | dictionary | EventInit::bubbles = false | Initializes an Event object with bubbles. |
 | | dictionary | EventInit::cancelable = false | Initializes an Event object with cancelable. |
 | [CustomEvent](https://www.w3.org/TR/dom/#interface-customevent) | interface | CustomEvent | Events using the CustomEvent interface can be used to carry custom data. |
 | | constructor | CustomEvent(DOMString type, optional CustomEventInit eventInitDict) | Create a new CustomEvent. |
@@ -1183,6 +1406,7 @@ supported.
 | | attribute | onended | Fired when playback has stopped because the end of the media resource was reached. |
 | | attribute | onerror | Fired when the error event is raised. |
 | | attribute | onfocus | Fired when the focus event is raised. |
+| | attribute | oninput | Fired at controls when the user changes the value, before the change is committed. |
 | | attribute | onkeydown | Fired when the keydown event is raised. |
 | | attribute | onkeypress | Fired when the keypress event is raised. |
 | | attribute | onkeyup | Fired when the keyup event is raised. |
@@ -1190,13 +1414,26 @@ supported.
 | | attribute | onloadeddata | Fired when the user agent can render the media data at the current playback position for the first time. |
 | | attribute | onloadedmetadata | Fired when the user agent has just determined the duration and dimensions of the media resource and the text tracks are ready. |
 | | attribute | onloadstart | Fired when the user agent begins looking for media data, as part of the resource selection algorithm. |
+| | attribute | onmousedown | Fired when a mouse button is pressed over the element. |
+| | attribute | onmousemove | Fired when the pointer moves over the element. |
+| | attribute | onmouseup | Fired when a mouse button is released over the element. |
+| | attribute | onmouseenter | Fired when the pointer enters the element (does not bubble). |
+| | attribute | onmouseleave | Fired when the pointer leaves the element (does not bubble). |
+| | attribute | onmouseout | Fired when the pointer exits the element. |
 | | attribute | onmouseover | Fired when the mouseover event is raised. |
+| | attribute | onpointerdown | Fired when a pointer becomes active over the element. (Other `onpointer*` handlers are listed in the **Unsupported** row below.) |
+| | attribute | onpointermove | Fired when a pointer changes coordinates. |
+| | attribute | onpointerup | Fired when a pointer is no longer active. |
+| | attribute | onscroll | Fired when the document view or an element has scrolled. |
+| | attribute | onsubmit | Fired at a `<form>` when it is submitted. |
 | | attribute | onpause | Fired when the element has been paused. |
 | | attribute | onplay | Fired when the element is no longer paused. Fired after the play() method has returned, or when the autoplay attribute has caused playback to begin. |
 | | attribute | onplaying | Fired when playback is ready to start after having been paused or delayed due to lack of media data. |
 | | attribute | onprogress | Fired when the user agent is fetching media data. |
 | | attribute | onratechange | Fired when either the defaultPlaybackRate or the playbackRate attribute has just been updated. |
 | | attribute | onresize | Fired at the Window when the viewport is resized. |
+| | misc | **Multimedia-gated handlers** (only fire when `STARFISH_ENABLE_MULTIMEDIA` is on) | `oncanplay`, `oncanplaythrough`, `ondurationchange`, `onemptied`, `onended`, `onloadeddata`, `onloadedmetadata`, `onpause`, `onplay`, `onplaying`, `onratechange`, `onseeked`, `onseeking`, `onstalled`, `onsuspend`, `ontimeupdate`, `onvolumechange`, `onwaiting`. Without the flag, the handler attribute still parses but the event never fires. |
+| | misc | **Unsupported in LWE** (IDL `[Unimplemented]` — assigning to the handler succeeds, but the event never fires) | `onauxclick`, `oncancel`, `onclose`, `oncontextmenu`, `oncuechange`, `ondblclick`, `ondrag`/`ondragend`/`ondragenter`/`ondragexit`/`ondragleave`/`ondragover`/`ondragstart`/`ondrop`, `oninvalid`, `onloadend`, `onwheel`, `onreset`, `onselect`, `onshow`, `ontoggle`, `onpointerover`/`onpointerenter`/`onpointercancel`/`onpointerout`/`onpointerleave`/`ongotpointercapture`/`onlostpointercapture`/`onpointerrawupdate`. **Drag-and-drop and the wheel event are unsupported on LWE.** |
 | [InputEvent](https://w3c.github.io/input-events/#interface-InputEvent) | interface | InputEvent | The InputEvent interface represents an event notifying of editable content change. |
 | | attribute | data | Returns a DOMString with the inserted characters. |
 | [MouseEvent](https://w3c.github.io/uievents/#idl-mouseevent) | interface | MouseEvent |  |
@@ -1242,17 +1479,17 @@ supported.
 | | attribute | view | The view attribute identifies the Window from which the event was generated |
 | | attribute | detail | Specifies some detail information about the Event, depending on the type of event. |
 | [UIEventInit](https://w3c.github.io/uievents/#dictdef-uieventinit) | dictionary | UIEventInit | Dictionary that is used to create UIEvent. |
-| | attrbitue | view | Should be initialized to the Window object of the global environment in which this event will be dispatched |
-| | attrbitue | detail | This value is initialized to a number that is application-specific. |
+| | attribute | view | Should be initialized to the Window object of the global environment in which this event will be dispatched |
+| | attribute | detail | This value is initialized to a number that is application-specific. |
 | [CompositionEvent](https://w3c.github.io/uievents/#events-compositionevents) | interface | CompositionEvent | Composition Events provide a means for inputing text in a supplementary or alternate manner than by Keyboard Events, in order to allow the use of characters that might not be commonly available on keyboard. |
 | | attribute | data | data holds the value of the characters generated by an input method.  |
 | [CompositionEventInit](https://w3c.github.io/uievents/#idl-compositioneventinit) | dictionary | CompositionEventInit | Dictionary that is used to create CompositionEvent. |
-| | attrbitue | data | Initializes the data attribute of the CompositionEvent object to the characters generated by the IME composition. |
+| | attribute | data | Initializes the data attribute of the CompositionEvent object to the characters generated by the IME composition. |
 | [EventModifierInit](https://w3c.github.io/uievents/#dictdef-eventmodifierinit) | dictionary | EventModifierInit | The MouseEvent and KeyboardEvent interfaces share a set of keyboard modifier attributes. EventModifierInit enables authors to initialize keyboard modifier attributes of the MouseEvent and KeyboardEvent interfaces. |
-| | attrribute | ctrlKey | true if the Control key modifier is to be considered active, false otherwise |
-| | attrribute | shiftKey | true if the Shift key modifier is to be considered active, false otherwise. |
-| | attrribute | altKey | true if the Alt (alternative) (or Option) key modifier is to be considered active, false otherwise. |
-| | attrribute | metaKey | true if the Meta key modifier is to be considered active, false otherwise. |
+| | attribute | ctrlKey | true if the Control key modifier is to be considered active, false otherwise |
+| | attribute | shiftKey | true if the Shift key modifier is to be considered active, false otherwise. |
+| | attribute | altKey | true if the Alt (alternative) (or Option) key modifier is to be considered active, false otherwise. |
+| | attribute | metaKey | true if the Meta key modifier is to be considered active, false otherwise. |
 | [TouchEvent](https://w3c.github.io/touch-events/#touchevent-interface) | interface | TouchEvent | Defines the touchstart, touchend, touchmove, and touchcancel event types. |
 | | attribute | touches | A list of Touch objects for every point of contact currently touching the surface. |
 | [MessageEvent](https://html.spec.whatwg.org/multipage/comms.html#messageevent) | interface | MessageEvent |Messages in server-sent events, Web sockets, cross-document messaging, channel messaging, and broadcast channels use the MessageEvent interface for their message events. |
@@ -1270,7 +1507,9 @@ supported.
 | [WindowEventHandlers](https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers) | partial<br>interface | WindowEventHandlers | WindowEventHandlers are the event handlers common to several interfaces like Window, or HTMLBodyElement and  HTMLFrameSetElement. Each of these interfaces can implement additional specific event handlers. |
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
+| | attribute | onhashchange | Fired at the `Window` when the fragment identifier of the URL changes. (Gated by `STARFISH_WEBWORKER_NOT_HOST` — only on the host page, not in workers.) |
 | | attribute | onunload | Fired at the Window object when the page is going away. |
+| | misc | **Unsupported in LWE** (`[Unimplemented]` — never fire) | `onafterprint`, `onbeforeprint`, `onbeforeunload`, `onlanguagechange`, `onoffline`, `ononline`, `onpagehide`, `onpageshow`, `onpopstate`, `onrejectionhandled`, `onstorage`, `onunhandledrejection`. |
 | [SecurityPolicyViolationEventInit](https://www.w3.org/TR/CSP2/#securitypolicyviolationeventinit-interface) | dictionary | SecurityPolicyViolationEventInit | Dictionary that is used to create SecurityPolicyViolationEvent. |
 | | attribute | blockedURI | Returns the requested URL of the resource that was prevented from loading. |
 | | attribute | violatedDirective | Returns the policy directive that was violated. |
@@ -1282,6 +1521,16 @@ supported.
 | [AnimationEventInit](https://drafts.csswg.org/css-animations/#events) | dictionary  | AnimationEventInit | Dictionary that is used to create AnimationEvent. |
 | | attribute | animationName | Returns the value it was initialized to. |
 | | attribute | elapsedTime | Returns the value it was initialized to. |
+| [TransitionEvent](https://drafts.csswg.org/css-transitions/#interface-transitionevent) | interface | TransitionEvent | Fired when a CSS transition completes (`transitionend`) or is cancelled (`transitioncancel`). Constructor `new TransitionEvent(type, init)` is supported. |
+| | attribute | propertyName | The name of the CSS property the transition is associated with. |
+| | attribute | elapsedTime | Time, in seconds, the transition had been running at the time the event fired (`transition-delay` is not counted). |
+| | attribute | pseudoElement | The pseudo-element on which the transition ran (e.g. `"::before"`); empty string if not on a pseudo-element. **`[Unimplemented]` in `TransitionEventInit`** — read as the default empty string. |
+| [ErrorEvent](https://html.spec.whatwg.org/multipage/webappapis.html#the-errorevent-interface) | interface | ErrorEvent | Fired at the global object when an uncaught script error or rejected promise occurs. Constructor `new ErrorEvent(type, init)` is supported. See also the audit row in the Events appendix below for `document.createEvent('ErrorEvent')` caveat. |
+| | attribute | message, filename, lineno, colno, error | The error description, source URL, line/column, and the optional `Error` instance, all round-tripped through the constructor. |
+| [CloseEvent](https://html.spec.whatwg.org/multipage/web-sockets.html#the-closeevent-interface) | interface | CloseEvent | Fired at a `WebSocket` when the connection closes. Constructor `new CloseEvent(type, init)` is supported. |
+| | attribute | wasClean | Whether the connection was cleanly closed. |
+| | attribute | code | The WebSocket connection close code. |
+| | attribute | reason | The WebSocket connection close reason string. |
 
 ## Obsolete
 
@@ -1318,21 +1567,21 @@ section are supported.
 | [Border](https://www.w3.org/TR/css3-border/) | border | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | The border can either be a predefined style (solid line) or it can be an image. In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, dashed, inset, and outset. (Also check Border Properties) |
 | | border-bottom | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt; | Sets all the bottom border properties (shorthand). | |
 | | border-bottom-color | &lt;color&gt; &#124; transparent | Sets the color of the bottom border. | |
-| | border-bottom-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the bottom border. | |
+| | border-bottom-style | none &#124; hidden &#124; solid &#124; dashed &#124; dotted &#124; double &#124; inset &#124; outset &#124; groove &#124; ridge | Sets the style of the bottom border. | |
 | | border-bottom-width | medium &#124; thin &#124; thick &#124; &lt;length&gt; | Sets the width of the bottom border. | |
 | | border-color | &lt;border-color&gt;{1,4} | Sets the color of the four borders (shorthand). | |
 | | border-left | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt; | Sets all the left border properties (shorthand). | |
 | | border-left-color | &lt;color&gt; &#124; transparent | Sets the color of the left border. | |
-| | border-left-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the left border. | |
+| | border-left-style | none &#124; hidden &#124; solid &#124; dashed &#124; dotted &#124; double &#124; inset &#124; outset &#124; groove &#124; ridge | Sets the style of the left border. | |
 | | border-left-width | medium &#124; thin &#124; thick &#124; &lt;length&gt; | Sets the width of the left border. | |
 | | border-right | &lt;border-width&gt;   &lt;border-style&gt;   &lt;border-color&gt;	| Sets all the right border properties (shorthand). | |
 | | border-right-color | &lt;color&gt; &#124; transparent | Sets the color of the right border. | |
-| | border-right-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the right border. | |
-| | border-right-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the left border. | |
+| | border-right-style | none &#124; hidden &#124; solid &#124; dashed &#124; dotted &#124; double &#124; inset &#124; outset &#124; groove &#124; ridge | Sets the style of the right border. | |
+| | border-right-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the right border. | |
 | | border-style | &lt;border-style&gt;{1,4} | Sets the style of the four borders (shorthand). | |
 | | border-top | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt;	| Sets all the top border properties (shorthand). | |
 | | border-top-color | &lt;color&gt; &#124; transparent | Sets the color of the top border. | |
-| | border-top-style | none &#124; solid &#124; dashed &#124; inset &#124; outset | Sets the style of the top border. | |
+| | border-top-style | none &#124; hidden &#124; solid &#124; dashed &#124; dotted &#124; double &#124; inset &#124; outset &#124; groove &#124; ridge | Sets the style of the top border. | |
 | | border-top-width | medium &#124; thin &#124; thick &#124; &lt;length&gt;	| Sets the width of the top border. | |
 | | border-width | &lt;border-width&gt; | Sets the width of the four borders (shorthand). | |
 | | border-image | &lt;border-image-source&gt; &#124;&#124; &lt;border-image-slice&gt; [/ &lt;border-image-width&gt; &#124; / &lt;border-image-width&gt;? / &lt;border-image-outset&gt;]? &#124;&#124; &lt;border-image-repeat&gt; | Lets you draw an image in place of an element's border-style. | |
@@ -1343,13 +1592,17 @@ section are supported.
 | | border-image-repeat | [ stretch &#124; repeat &#124; round &#124; space ]	| Defines how the edge regions of a source image are adjusted to fit the dimensions of an element's border image. | |
 | | border-radius | &lt;length-percentage&gt;{1,4} [ / &lt;length-percentage&gt;{1,4} ]?	| define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
 | | border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius | &lt;length-percentage&gt;{1,2} | define the radii of a quarter ellipse that defines the shape of the corner of the outer border edge | |
+| [Logical Borders](https://drafts.csswg.org/css-logical-1/#border-properties) | border-block-start, border-block-end, border-inline-start, border-inline-end | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Logical-direction shorthands; resolve against `writing-mode`. (Style.h FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND.) | |
+| | border-block-start-color, border-block-end-color, border-inline-start-color, border-inline-end-color | &lt;color&gt; &#124; transparent | Logical-direction border colors. | |
+| | border-block-start-style, border-block-end-style, border-inline-start-style, border-inline-end-style | none &#124; hidden &#124; solid &#124; dashed &#124; dotted &#124; double &#124; inset &#124; outset &#124; groove &#124; ridge | Logical-direction border styles. | |
+| | border-block-start-width, border-block-end-width, border-inline-start-width, border-inline-end-width | medium &#124; thin &#124; thick &#124; &lt;length&gt; | Logical-direction border widths. | |
 | [Outline](https://www.w3.org/TR/css-ui-3/) | outline | &lt;border-width&gt; &lt;border-style&gt; &lt;border-color&gt; | Sets all the border properties (shorthand). | In the former case, various properties define the style (&lt;border-style&gt;), color (&lt;border-color&gt;), and thickness (&lt;border-width&gt;) of the border. &lt;border-width&gt; may take one of the following values: thin, medium, thick, and &lt;length&gt;. &lt;border-color&gt; may take one of the following values: &lt;color&gt;, and transparent. &lt;border-style&gt; may take one of the following values: none, solid, inset, and outset. (Also check Border Properties) |
 | | outline-color | &lt;border-color&gt; | Sets the color of the outline |
-| | outline-style | &lt;border-style&gt; | Sets the style of the outline | |
+| | outline-style | &lt;border-style&gt; &#124; auto | Sets the style of the outline. Shares `updateValueUnitBorderStyle` with `border-style`, so the same 10 keywords parse. **`auto` is accepted but mapped to `solid`** (the engine has no UA-specific focus-outline style). | |
 | | outline-width | &lt;border-width&gt; | Sets the width of the outline | |
 | | outline-offset | &lt;length&gt; | Sets the offset of the outline | |
 | | resize | none | Specifies whether or not an element is resizable by the user, and if so, along which axis/axes. | Development status: experimental |
-| [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | inline &#124; block &#124; inline-block &#124; table &#124; inline-table &#124; table-row-group &#124; table-header-group &#124; table-footer-group &#124; table-row &#124; table-column-group &#124; table-column &#124; table-cell &#124; table-caption &#124; flex &#124; inline-flex &#124; grid &#124; inline-grid &#124; none | The display property specifies the type of box used for an HTML element (Also check Visibility) |  |
+| [Display](https://www.w3.org/TR/CSS2/visuren.html#display-prop) | display | inline &#124; block &#124; inline-block &#124; table &#124; inline-table &#124; table-row-group &#124; table-header-group &#124; table-footer-group &#124; table-row &#124; table-column-group &#124; table-column &#124; table-cell &#124; table-caption &#124; flex &#124; inline-flex &#124; grid &#124; inline-grid &#124; list-item &#124; inline-list-item &#124; none | The display property specifies the type of box used for an HTML element (also check [Visibility](#visibility) and the runtime caveats appendix below). `-webkit-box`/`-webkit-inline-box` are also accepted under `STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX`. **`contents`, `flow-root`, `run-in`, `ruby*`, and multi-token L3 syntax (`block flex`) are silently dropped** — see the audit-additions table below. |  |
 | [Position](https://www.w3.org/TR/CSS2/visuren.html#positioning-scheme) | position | static &#124; absolute &#124; relative &#124; fixed | The position property specifies the type of positioning method used for an element. | Each element in the document tree generates zero or more boxes according to the box model. The layout of these boxes is governed by box dimensions, type, positioning scheme, relationships between in the document tree and external information. \*CSS direction property only accepts "ltr" as a value. To support right-to-left text, the dir attribute in an HTML element should be used, e.g., &lt;html dir="rtl"&gt; (Also check Layers, Direction, Visual Formatting Model, and Visual Effects) |
 | | top | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the top edge of an element to a unit above/below the top edge of its nearest positioned ancestor. | |
 | | right | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the right edge of an element to a unit above/below the right edge of its nearest positioned ancestor. | |
@@ -1357,18 +1610,22 @@ section are supported.
 | | left | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the left edge of an element to a unit above/below the left edge of its nearest positioned ancestor. | |
 | [Floats](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#floats) | float | left &#124; right &#124; none | Specifies whether a box should float to the left, right, or not at all. | |
 | | clear | none &#124; left &#124; right &#124; both | Indicates which sides of an element's box(es) may not be adjacent to an earlier floating box. | |
-| [Flex](https://www.w3.org/TR/css-flexbox-1/) | flex-direction | row &#124; row-reverse &#124; column &#124; column-reverse | Specifies how flex items are placed in the flex container, by setting the direction of the flex container’s main axis. | |
-| | flex-wrap | nowrap &#124; wrap &#124; wrap-reverse | Controls whether the flex container is single-line or multi-line, and the direction of the cross-axis, which determines the direction new lines are stacked in. | |
-| | flex-flow | &lt;flex-direction&gt; &#124; &lt;flex-wrap&gt; | Is a shorthand for setting the flex-direction and flex-wrap properties, which together define the flex container’s main and cross axes. | |
-| | order | &lt;integer&gt; | Controls the order in which children of a flex container appear within the flex container, by assigning them to ordinal groups. | |
-| | flex | none &#124; [ &lt;flex-grow&gt; &lt;flex-shrink&gt;? &#124;&#124; &lt;flex-basis&gt; ] | Specifies the components of a flexible length: the flex grow factor and flex shrink factor, and the flex basis. | |
-| | flex-grow | &lt;number&gt; | Sets the flex grow factor to the provided <number>. Negative numbers are invalid. | |
-| | flex-shrink | &lt;number&gt; | Sets the flex shrink factor to the provided <number>. Negative numbers are invalid. | |
-| | flex-basis | content &#124; &lt;'width'&gt; | Sets the flex basis. It accepts the same values as the width and height property, plus content. | |
-| | justify-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around | Aligns flex items along the main axis of the current line of the flex container. | |
-| | align-items | flex-start &#124; flex-end &#124; center &#124; baseline &#124; stretch | Aligns flex items along the cross axis of the current line of the flex container. | |
-| | align-self | flex-start &#124; flex-end &#124; center &#124; baseline &#124; stretch | Does the same as align-itmes, but it overwrites align-items when specified on flex-item. | |
-| | align-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns a flex container’s lines within the flex container when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis. | |
+| [Flex](https://www.w3.org/TR/css-flexbox-1/) | flex-direction | row &#124; row-reverse &#124; column &#124; column-reverse | Specifies how flex items are placed in the flex container, by setting the direction of the flex container’s main axis. | All four values implemented. |
+| | flex-wrap | nowrap &#124; wrap &#124; wrap-reverse | Controls whether the flex container is single-line or multi-line, and the direction of the cross-axis. | All three values implemented. |
+| | flex-flow | &lt;flex-direction&gt; &#124;&#124; &lt;flex-wrap&gt; | Shorthand for `flex-direction` and `flex-wrap`. | Single-component (e.g. `flex-flow: wrap`) and two-component forms accepted. |
+| | order | &lt;integer&gt; | Controls visual order of flex items via ordinal groups. | Negative integers accepted. |
+| | flex | none &#124; [ &lt;flex-grow&gt; &lt;flex-shrink&gt;? &#124;&#124; &lt;flex-basis&gt; ] | Shorthand for `flex-grow` / `flex-shrink` / `flex-basis`. | Keywords `auto`, `none`, `initial` accepted; numeric flex-basis without unit (e.g. `flex: 1`) becomes `0%` per spec. |
+| | flex-grow | &lt;number&gt; | Flex grow factor. | Non-negative numbers honored; negative values clamped to `0`; non-numeric tokens (`abc`) parse as `0`. |
+| | flex-shrink | &lt;number&gt; | Flex shrink factor. | Non-negative numbers honored; negative values rejected (computed value falls back to `1`). |
+| | flex-basis | content &#124; &lt;'width'&gt; | Flex basis (`auto`, `content`, `<length>`, `<percentage>`). | All listed values accepted; negative lengths rejected. |
+| | justify-content | normal &#124; flex-start &#124; flex-end &#124; start &#124; end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns flex items along the main axis. | **NOT supported**: `space-evenly` (parses to `normal`), `left`, `right` (parse to `normal`). At layout time `start` is treated as `flex-start`, `stretch`/`normal` behave like `flex-start`. |
+| | align-items | normal &#124; flex-start &#124; flex-end &#124; start &#124; end &#124; center &#124; baseline &#124; stretch | Aligns flex items along the cross axis. | **NOT supported**: `first baseline`, `last baseline`, `self-start`, `self-end` (all parse to `stretch`). `normal` parses to `stretch`. |
+| | align-self | auto &#124; flex-start &#124; flex-end &#124; start &#124; end &#124; center &#124; baseline &#124; stretch | Per-item override of `align-items`. | Same value subset as `align-items`; `auto` resolves to inherited `stretch`. |
+| | align-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns flex container’s lines along the cross axis. | **NOT supported**: `space-evenly`, `start`, `end`, `normal`, `baseline`/`first baseline`/`last baseline` (all parse to `stretch`). |
+| | row-gap | normal &#124; &lt;length-percentage&gt; | Cross-axis (row-flex) / main-axis (column-flex) line gap. | **PARSED but layout treats as 0** in flex containers; only `column-gap` value is honored as the inline-axis gap regardless of `flex-direction`. Cross-axis gap between wrapped lines is therefore not implemented. Percentage values not accepted (computed `none`). |
+| | column-gap | normal &#124; &lt;length-percentage&gt; | Inline-axis gap. | Used for inline gaps in row-flex and (incorrectly) for cross-axis gap in column-flex. Percentage values rejected (computed `none`). |
+| | gap | &lt;'row-gap'&gt; &lt;'column-gap'&gt;? | Shorthand for `row-gap` and `column-gap`. | Shorthand parses single value into both longhands but the `row-gap` longhand is silently dropped at layout; two-value form (`gap: 10px 20px`) effectively only the second value (`column-gap`) is applied; `calc()` not accepted. |
+| | justify-items / justify-self / place-items / place-content / place-self | — | CSS Box Alignment shorthands. | **NOT supported** — properties unknown to engine; `getComputedStyle` returns `undefined`. |
 | [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid columns. | '%' unit, line names, and minmax functions are not supported. |
 | | grid-template-rows | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid rows. | '%' unit, line names, and minmax functions are not supported. |
 | | grid-column-gap | &lt;number&gt; | This property sets the size of the gap between an element's columns. | '%' unit is not supported. |
@@ -1382,46 +1639,48 @@ section are supported.
 | | grid-column | &lt;number&gt; | This property is a shorthand property for grid-column-start and grid-column-end. | Negative numbers and line names are not supported. |
 | | grid-template-areas | &lt;string&gt;+ | This property specifies named grid areas. | |
 | [Layered presentation](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#layers) | z-index | auto &#124; &lt;integer&gt; | Specifies the stack order of an element. | |
-| [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr | Specifies the text direction/writing direction. | Development status: experimental |
-| | unicode-bidi | normal &#124; embed | This property together with the direction property relates to the handling of bidirectional text in a document. | Development status: experimental |
-| [Width, height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#q10.0) | width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the width of an element. | |
-| | min-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the minimum width of an element. | |
-| | max-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none | Sets the maximum width of an element. | |
-| | height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the height of an element. | |
-| | min-height | 	&lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | sets the minimum height of an element. | |
-| | max-height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none | Sets the maximum height of an element. | |
+| [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr &#124; rtl | Specifies the text direction. **Both `ltr` and `rtl` PARSE**, but layout/selectors honor only `ltr` (the `:dir(rtl)` selector parses but never matches). For RTL content prefer the HTML attribute `<html dir="rtl">`, which is honored by the line-break/bidi pipeline. | Development status: experimental |
+| | unicode-bidi | normal &#124; embed &#124; isolate | Together with `direction`, controls handling of bidirectional text. **`bidi-override`, `isolate-override`, `plaintext` are NOT recognized.** | Development status: experimental |
+| [Width, height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#q10.0) | width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the width of an element. The intrinsic-sizing keywords (`available`/`min-content`/`max-content`/`fit-content`) parse and are honored by layout. **Standard CSS3 `fit-content(<length>)` function form is NOT recognized** — only the bare keyword. **Quirks-mode unitless lengths** (`width: 100`) are accepted only when the document has no DOCTYPE (`document.compatMode === "BackCompat"`). | |
+| | min-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the minimum width of an element. | |
+| | max-width | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the maximum width of an element. | |
+| | height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the height of an element. | |
+| | min-height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the minimum height of an element. | |
+| | max-height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the maximum height of an element. | |
 | [Box Model](https://www.w3.org/TR/css-ui-3/#box-model) | box-sizing | content-box &#124; border-box | Tells the padding and border is included to actual width&#124;height of an element's box. | |
 | [Line height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#line-height) | line-height | normal &#124; &lt;number&gt; &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the line height. | |
 | | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the vertical alignment of an element. | |
 | [Overflow](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#overflow) | overflow | visible &#124; hidden &#124; auto &#124; scroll | Specifies what happens if content overflows an element's box. | |
 | [Visibility](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#visibility) | visibility | visible &#124; hidden &#124; collapse | Specifies whether or not an element should be visible | |
-| [Generated content](https://www.w3.org/TR/2011/REC-CSS2-20110607/generate.html#content) | content | normal &#124; none &#124; [ &lt;string&gt; &#124; &lt;counter&gt; &#124; attr(&lt;identifier&gt;) ]+ | This property is used with the :before and :after pseudo-elements to generate content in a document. | |
-| [Color](https://www.w3.org/TR/css3-color/) | color | &lt;color&gt; | Sets the color of text. HSL color value is not supported | CSS uses color-related properties and values to color the text, backgrounds, borders, and other parts of elements in a document. |
+| [Generated content](https://www.w3.org/TR/2011/REC-CSS2-20110607/generate.html#content) | content | normal &#124; none &#124; [ &lt;string&gt; &#124; counter(&lt;name&gt; [, &lt;style&gt;]) &#124; counters(&lt;name&gt;, &lt;sep&gt; [, &lt;style&gt;]) &#124; attr(&lt;identifier&gt;) &#124; url(...) &#124; open-quote &#124; close-quote &#124; no-open-quote &#124; no-close-quote ]+ | Used with `::before`/`::after` to generate content. **Both `counter()` and `counters()` are parsed**; quote tokens (`open-quote`/`close-quote`/`no-open-quote`/`no-close-quote`) parse but are typically rendered as no-op since the engine has no built-in quote-pair table for `quotes` property (which itself is unsupported). The `<image>` form is `url()` only — `image-set()`, gradients, `linear-gradient()` as content are NOT parsed. | |
+| [Color](https://www.w3.org/TR/css3-color/) | color | &lt;color&gt; | Sets the color of text. Supported color formats: hex (`#rgb`, `#rrggbb`, with optional alpha), `rgb()`/`rgba()`, `hsl()`/`hsla()`, named colors, `transparent`, `currentColor`. Modern color spaces (`lab()`, `lch()`, `hwb()`, `color()`) are NOT supported. | CSS uses color-related properties and values to color the text, backgrounds, borders, and other parts of elements in a document. |
 | | opacity | alpha value (0.0 ~ 1.0) | Sets the opacity level for an element | |
-| [Background](https://www.w3.org/TR/css3-background) | background | [&lt;bg-layer&gt;]* &lt;final-bg-layter&gt; | A shorthand property for setting all the background properties in one declaration | The background property sets all the background properties. (Also check Background) |
-| | background-color | &lt;color&gt; &#124; transparent | Specifies the background color of an element. | |
-| | background-image | &lt;uri&gt; &#124; none | Specifies one or more background images for an element. Multiple layering is not supported. | |
-| | background-position | [ [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; left &#124; center &#124; right ] [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; center &#124; bottom ]? ] &#124; [ [ left &#124; center &#124; right ] &#124;&#124; [ top &#124; center &#124; bottom ] ] | Sets the initial position for each defined background image, relative to the background position layer defined by background-origin. | |
-| | background-position-x | [ center &#124; [ left &#124; right ]? &lt;length-percentage&gt; ] | Sets the initial horizontal position, relative to the background position layer defined by background-origin for each defined background image. | |
-| | background-position-y | [ center &#124; [ left &#124; right ]? &lt;length-percentage&gt; ] | Sets the initial vertical position, relative to the background position layer defined by background-origin for each defined background image. | |
-| | background-repeat | repeat &#124; repeat-x &#124; repeat-y &#124; no-repeat | Sets how a background image will be repeated | |
-| | background-size	| &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; cover &#124; contain | Specifies the size of the background image(s). | |
-| | background-attachment	| &lt;attachment&gt; [, &lt;attachment&gt; ]* | If background images are specified, this property specifies whether they are fixed with regard to the viewport (‘fixed’) or scroll along with the element (‘scroll’) or its contents (‘local’).  | &lt;attachment&gt; = scroll &#124; fixed &#124; local |
-| | background-origin	| &lt;box&gt; [, &lt;box&gt; ]*  | For elements rendered as a single box, specifies the background positioning area. For elements rendered as multiple boxes (e.g., inline boxes on several lines, boxes on several pages), specifies which boxes ‘box-decoration-break’ [CSS3-BREAK] operates on to determine the background positioning area(s).  | |
-| | background-clip	| &lt;box&gt; [, &lt;box&gt; ]*  | Determines the background painting area, which determines the area within which the background is painted.  | &lt;box&gt; = border-box &#124; padding-box &#124; content-box |
+| [Background](https://www.w3.org/TR/css3-background) | background | [&lt;bg-layer&gt;]* &lt;final-bg-layer&gt; | Shorthand for the longhands listed below. Multiple comma-separated layers ARE accepted (e.g. `background: red url(a.png) no-repeat, linear-gradient(red,blue)`). The `background-blend-mode` longhand is NOT part of this shorthand and is unsupported (see below). | |
+| | background-color | &lt;color&gt; &#124; transparent | Specifies the background color. Same color formats as `color` (hex, named, `rgb()`/`rgba()`, `hsl()`/`hsla()`, `transparent`, `currentColor`). | |
+| | background-image | [ &lt;url&gt; &#124; &lt;gradient&gt; &#124; none ]# | Comma-separated list of background-image layers IS supported (`backgroundLayerSize()` reflects layer count). Accepted gradient functions are `linear-gradient(...)` and `radial-gradient(...)` only. **`conic-gradient`, `repeating-linear-gradient`, `repeating-radial-gradient` are silently parsed as `none`** with no warning. | All other longhands (`background-position-{x,y}`, `background-size`, `background-repeat-{x,y}`, `background-attachment`, `background-clip`, `background-origin`) only return non-initial values from `getComputedStyle()` when at least one image layer is set. |
+| | background-position | &lt;bg-position&gt; [, &lt;bg-position&gt;]* where &lt;bg-position&gt; = [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; left &#124; center &#124; right ] [ &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; center &#124; bottom ]? | 1- and 2-value forms supported. **The CSS-3 4-value form `left 10px top 20px` is parsed without error but the side keywords are dropped — only the two length/percentage components survive (computed: `10px 20px`).** | |
+| | background-position-x | [ center &#124; left &#124; right &#124; &lt;length-percentage&gt; ] | Single token only. | |
+| | background-position-y | [ center &#124; top &#124; bottom &#124; &lt;length-percentage&gt; ] | Single token only. | |
+| | background-repeat | `repeat` &#124; `no-repeat` &#124; `repeat-x` &#124; `repeat-y` | Shorthand expands to `background-repeat-x`/`-y`. The shorthand accepts the `repeat-x`/`repeat-y` keywords (mapped to asymmetric pairs); the longhands accept only `repeat`/`no-repeat`. Two-value form (`repeat no-repeat`) supported. **`space` and `round` are NOT recognized** — `updateValueUnitRepeatStyle` rejects them and the entire declaration is dropped. (The `RepeatStyleValue` enum has a `// TODO: space, round` comment.) | |
+| | background-size | [ &lt;length-percentage&gt; &#124; auto ]{1,2} &#124; cover &#124; contain | 1- and 2-value forms supported; comma-separated layer list supported. | |
+| | background-attachment | scroll &#124; fixed &#124; local [, ... ]* | All three keywords parse and round-trip through `getComputedStyle`. Layout/paint behavior of `fixed`/`local` (e.g. viewport-fixed painting) is **not** verified by this audit; treat as best-effort. | |
+| | background-origin | &lt;box&gt; [, &lt;box&gt;]* where &lt;box&gt; = border-box &#124; padding-box &#124; content-box | All three values supported. | |
+| | background-clip | &lt;box&gt; [, &lt;box&gt;]* where &lt;box&gt; = border-box &#124; padding-box &#124; content-box | `border-box`, `padding-box`, `content-box` supported. **`background-clip: text` is silently dropped to `border-box`** with no warning. | |
+| | background-blend-mode | — | **Not supported.** Logged at parse time as `Unsupported css property: background-blend-mode`. Use `mix-blend-mode` on the element if a single blend is acceptable. | |
 | [Font](https://www.w3.org/TR/CSS2/fonts.html) | font-style | normal &#124; italic &#124; oblique | Specifies the font style for text. | A font provides a resource containing the visual representation of characters. |
-| | font-family | font-family CSS property specifies a prioritized list of one or more font family names and/or generic family names for the selected element | |
-| | font-weight | normal &#124; bold &#124; bolder &#124; lighter &#124; 100 &#124; 200 &#124; 300 &#124; 400 &#124; 500 &#124; 600 &#124; 700 &#124; 800 &#124; 900 | Specifies the weight of a font. | |
+| | font-family | &lt;family-name&gt;# &#124; &lt;generic-family&gt; | Comma-separated prioritized list of font family names and/or generic family keywords (`serif`, `sans-serif`, `monospace`, `cursive`, `fantasy`). Quoted family names with spaces are accepted. | |
+| | font-weight | normal &#124; bold &#124; bolder &#124; lighter &#124; 100 &#124; 200 &#124; 300 &#124; 400 &#124; 500 &#124; 600 &#124; 700 &#124; 800 &#124; 900 | Specifies the weight of a font. **Variable-font numeric values like `font-weight: 350` are not supported** — only the listed multiples of 100. | |
 | | font-kerning | auto &#124; normal &#124; none | Specifies kerning mode of a font. | |
 | | font-size | &lt;absolute-size&gt; &#124; &lt;relative-size&gt; &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Specifies the font size of text. | Possible values of an &lt;absolute-size&gt; keyword: [ xx-small &#124; x-small &#124; small &#124; medium &#124; large &#124; x-large &#124; xx-large ] <br> Possible values of an &lt;relative-size&gt; keyword: [ larger &#124; smaller] |
+| | font | [&lt;font-style&gt;? &lt;font-weight&gt;?] &lt;font-size&gt; [/ &lt;line-height&gt;]? &lt;font-family&gt; | Shorthand. **`font-stretch`, `font-variant` are NOT consumed by the shorthand parser.** System fonts (`caption`/`icon`/`menu`/...) are NOT recognized. | |
 | [Text](https://www.w3.org/TR/CSS2/text.html) | text-indent | &lt;length&gt; &#124; &lt;percentage&gt; | Specifies the indentation of the first line of text in a block container.  |
-| | text-align | left &#124; right &#124; center | Specifies the horizontal alignment of text in an element | This CSS3 module defines properties for text manipulation and specifies their processing model. It covers line breaking, justification and alignment, white space handling, and text transformation. |
+| | text-align | left &#124; right &#124; center &#124; start &#124; end &#124; -webkit-center &#124; -moz-center | Specifies the horizontal alignment of text in an element. **`justify` is NOT supported.** This CSS3 module defines properties for text manipulation. |
 | | text-decoration | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
 | | text-decoration-line | none &#124; [ underline &#124;&#124; line-through ] | Specifies the decoration added to the text | |
-| | text-decoration-style | solid | Sets the style of the lines specified by text-decoration-line. The style applies to all lines that are specified; there is no way to define different styles for each of the lines defined by text-decoration-line. | |
+| | text-decoration-style | solid | Sets the style of the lines specified by text-decoration-line. **Only `solid` actually applies at runtime** — `double`, `dotted`, `dashed`, `wavy` are parsed but `updateValueTextDecorationStyle` returns `false` for each (the declaration is rejected and the value is dropped). | |
 | | text-decoration-color | &lt;color&gt; |  The text-decoration-color CSS property sets the color of the decorative additions to text that are specified by text-decoration-line.  | |
 | | text-shadow | none &#124; [ &lt;length&gt;{2,3} && &lt;color&gt;? ]# | Adds shadows to text. It accepts a comma-separated list of shadows to be applied to the text and any of its decorations. Each shadow is described by some combination of X and Y offsets from the element, blur radius, and color. | |
-| | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase &#124; initial &#124; inherit | Appears in all-uppercase or all-lowercase, or with each word capitalized. | |
+| | text-transform | none &#124; capitalize &#124; uppercase &#124; lowercase | Appears in all-uppercase or all-lowercase, or with each word capitalized. (CSS-wide keywords like `initial`, `inherit`, `unset` work via the cascade — they are not specific to this property.) **`full-width`, `full-size-kana`, `math-auto` are NOT supported.** | |
 | | white-space | normal &#124; pre &#124; nowrap &#124; pre-wrap &#124; pre-line | Describes how whitespace inside the element is handled. | |
 | | word-spacing | normal &#124; length &#124; initial &#124; inherit | Specifies the spacing behavior between tags and words. | |
 | | line-break | auto &#124; normal &#124; loose &#124; strict | Specifies how (or if) to break lines when working with punctuation and symbols. This only affects text in Chinese, Japanese, or Korean (CJK). | At present, loose and strict behaves the same as normal. |
@@ -1432,11 +1691,13 @@ section are supported.
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
 | | empty-cells | show &#124; hide | Hide border and background on empty cells in a table. | |
-| [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; matrix &#124; translate &#124; translateX &#124; translateY &#124; scale &#124; scaleX &#124; scaleY &#124; rotate &#124; skew &#124; skewX &#124; skewY | Applies a 2D transformation to an element. | The transform property applies a 2D transformation to an element. This property allows you to rotate, scale, move and skew. A transformable element is an element whose layout is governed by the CSS box model which is either a block-level or atomic inline-level element. |
+| [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; &lt;transform-function&gt;+ | Applies a transformation to an element. **Recognized 2D functions:** `matrix(a,b,c,d,e,f)`, `translate(tx [, ty])`, `translateX(tx)`, `translateY(ty)`, `scale(sx [, sy])`, `scaleX(sx)`, `scaleY(sy)`, `rotate(<angle>)`, `skew(<angle> [, <angle>])`, `skewX(<angle>)`, `skewY(<angle>)`. **Recognized 3D functions:** `matrix3d(<16 numbers>)`, `translate3d(tx, ty, tz)`, `translateZ(tz)`, `scale3d(sx, sy, sz)`, `scaleZ(sz)`, `rotate3d(x, y, z, <angle>)`, `perspective(<length>)`. **`rotateX()`, `rotateY()`, `rotateZ()` are NOT recognized** — use `rotate3d(1,0,0,θ)`, `rotate3d(0,1,0,θ)`, `rotate3d(0,0,1,θ)` instead. **Bug:** `getComputedStyle(el).transform` always returns `"none"` regardless of the actual transform — see "Angles" in the units audit. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
 | [User Interface](https://www.w3.org/TR/css-ui-4/) | user-select | none &#124; auto  | The user-select property enables authors to specify which elements in the document can be selected by the user and how. |  |
 | | caret-color | auto &#124; transparent &#124; currentColor &#124; &lt;color&gt; | The caret-color CSS property sets the color of the insertion caret. | |
-| [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc | refer to spec | Allows mathematical expressions with addition (+), subtraction (-), multiplication (*), and division (/) to be used as component values.  | At present, length, time, and anlge are supported. |
+| [Functional Notations](https://www.w3.org/TR/css3-values/#functional-notations) | calc / min / max / clamp | refer to spec | Mathematical expressions with `+`, `-`, `*`, `/`, plus `min()`, `max()`, `clamp()`. | Supported on length, time, and angle (and inside `var()` substitution). Confirmed by `tool/lwe_compat`-style runtime probe (see "CSS units & functional notations" section below). |
+| | var(--name, fallback) | `var(--x [, fallback])` | CSS Custom Properties + `var()` substitution. Nested fallbacks (`var(--a, var(--b, 19px))`) are honored. | Implemented in `src/core/style/CSSVariableSyntaxTreeBuilder.cpp`; combines with `calc()` (e.g. `calc(var(--w) * 2 + 3px)`). |
+| | env(name [, fallback]) | — | **NOT supported.** The whole declaration containing `env(...)` is dropped at parse time — even when a literal fallback is supplied. There is no implementation of env() / safe-area-inset-* / titlebar-area-* in `src/core/style/`. | Use a static value or feed the inset via `--my-safe-area: 20px;` at runtime instead of `env(safe-area-inset-top)`. |
 | [Media Queries - Media Types](https://www.w3.org/TR/css3-mediaqueries/) | all &#124; screen | all &#124; screen | Describes media types supported by lightweight web engine. | ‘all’ means suitable for all supported devices. |
 | [Media Queries - Media Features](https://www.w3.org/TR/css3-mediaqueries/#media1) | width | &lt;length&gt; | Describes the width of the targeted display area of the output device. | |
 | | height | &lt;length&gt; | Describes the height of the targeted display area of the output device. | |
@@ -1461,14 +1722,13 @@ section are supported.
 | [Media Queries - Media Features](https://drafts.csswg.org/mediaqueries-5/) | scripting | none &#124; enabled | The 'scripting' media feature is used to query whether scripting languages, such as JavaScript, are supported on the current document. | |
 | [Media Queries - Media Features](https://w3c.github.io/manifest/#the-display-mode-media-feature) | display-mode | browser | The 'display-mode' media feature represents the display mode of the web application. |  |
 | [List](https://www.w3.org/TR/CSS2/generate.html#lists) | list-style | &lt;list-style-type&gt; &#124; &lt;list-style-position&gt; &#124; &lt;list-style-image&gt; | Shorthand | |
-| | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element | |
+| | list-style-type | &lt;counter-style&gt; &#124; &lt;string&gt; &#124; none | Specifies the appearance of a list item element. **The CSS parser accepts any custom-identifier** (no validation against a known counter-style list); rendered marker support is limited to the keywords used by `<ul>`/`<ol type=...>`: `disc`, `decimal`, `lower-alpha`, `upper-alpha`, `lower-roman`, `upper-roman`. Other CSS counter styles (`circle`, `square`, `decimal-leading-zero`, `armenian`, `georgian`, `cjk-ideographic`, `katakana`, …) parse without error but the marker glyph fall-back is undefined. String values (`list-style-type: "→ "`) parse and store but the renderer ignores the string in favor of a default bullet. | |
 | | list-style-position | inside  &#124; outside | Specifies the position of the marker box in the principal block box. | |
 | | list-style-image | &lt;url&gt; &#124; none | Specifies an image to be used as the list item marker. | Development status: experimental |
 | | counter-increment | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Increases or decreases the value of a CSS counter by a given value. |
 | | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 | [Box-shadow](https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow) | box-shadow | none &#124; &lt;shadow&gt;# | Attaches one or more drop-shadows to the box. The property accepts either the none value, which indicates no shadows, or a comma-separated list of shadows, ordered front to back. | &lt;shadow&gt; = inset? && &lt;length&gt;{2,4} && &lt;color&gt;? |
 | [Will Change](https://drafts.csswg.org/css-will-change/#will-change) | will-change | scroll-position &#124; contents &#124; &lt;custom-ident&gt; | Provide a way for authors to hint browsers about the kind of changes to be expected on an element, so that the browser can set up appropriate optimizations ahead of time before the element is actually changed. | |
-| | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 | [Animation](https://drafts.csswg.org/css-animations/) | animation-name | none &#124; &lt;keyframes-name&gt;# | Defines a list of animations that apply. Each name is used to select the keyframe at-rule that provides the property values for the animation. | |
 | | animation-duration | &lt;time&gt;# | Specifies the length of time that an animation takes to complete one cycle. | |
 | | animation-timing-function | &lt;easing-function&gt;# | Describes how the animation will progress between each pair of keyframes. | |
@@ -1476,7 +1736,88 @@ section are supported.
 | | animation-direction | &lt;single-animation-direction&gt;# | Defines whether or not the animation should play in reverse on some or all cycles. | |
 | | animation-play-state | &lt;single-animation-play-state&gt;# | Defines whether the animation is running or paused. | |
 | | animation-delay | &lt;time&gt;# | Defines when the animation will start. | |
+| | animation-fill-mode | none &#124; forwards &#124; backwards &#124; both | Defines what styles apply to the animation outside its execution time (before it starts and after it ends). | |
 | | animation | &lt;single-animation&gt;# | This shorthand property defines a comma-separated list of animation definitions. | |
+| [Transition](https://drafts.csswg.org/css-transitions/) | transition | &lt;single-transition&gt;# | Shorthand for `transition-property` / `transition-duration` / `transition-timing-function` / `transition-delay`. | |
+| | transition-property | none &#124; &lt;single-transition-property&gt;# | The CSS properties to which a transition is applied. | |
+| | transition-duration | &lt;time&gt;# | Length of time a transition takes to complete. | |
+| | transition-timing-function | &lt;easing-function&gt;# | The easing function used during the transition. | |
+| | transition-delay | &lt;time&gt;# | Delay before the transition starts. | |
+
+The following properties are also implemented but were missing from earlier revisions of this spec; they are confirmed by the runtime CSS audit (no `Unsupported css property:` warning):
+
+| Category | Property | Allowed Value | Description | Note |
+|----------|----------|---------------|-------------|------|
+| Box Model     | gap, row-gap, column-gap | &lt;length-percentage&gt; | Modern aliases for grid-gap / grid-row-gap / grid-column-gap; also active in flexbox. | |
+| Box Model     | inset | [ &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto ]{1,4} | Logical shorthand for top / right / bottom / left. | |
+| Box Model     | margin-block, margin-block-start, margin-block-end, margin-inline, margin-inline-start, margin-inline-end | &lt;length-percentage&gt; &#124; auto | Logical-property forms of `margin-*` (parser-recognized; resolved against `direction`/`writing-mode`). | |
+| Box Model     | padding-block, padding-inline, padding-block-start, padding-block-end, padding-inline-start, padding-inline-end | &lt;length-percentage&gt; | Logical-property forms of `padding-*`. | |
+| Background    | background-repeat-y | repeat &#124; no-repeat | Y-axis longhand of `background-repeat`. (`background-repeat-x` is the X-axis longhand.) **`space`/`round` not recognized; `repeat-x`/`repeat-y` keywords are valid for the shorthand only.** | |
+| Text          | text-underline-position | auto &#124; under | Sets the position of the underline created by `text-decoration-line: underline`. `from-font`, `left`, `right` not recognized. | |
+| Layout        | grid-area | &lt;grid-line&gt;{1,4} | Shorthand for `grid-row-start` / `grid-column-start` / `grid-row-end` / `grid-column-end`. | |
+| Layout        | grid-template | &lt;grid-template-rows&gt; / &lt;grid-template-columns&gt; | Shorthand combining `grid-template-rows`, `grid-template-columns`, and `grid-template-areas`. | |
+| Overflow      | overflow-x, overflow-y | visible &#124; hidden &#124; auto &#124; scroll | Single-axis variants of `overflow`. | |
+| Text          | letter-spacing | normal &#124; &lt;length&gt; | Specifies the spacing between adjacent text characters. | |
+| Text          | text-overflow | clip &#124; ellipsis | Specifies how overflowed inline-axis text is signalled. Requires `overflow:hidden` and `white-space:nowrap`. | |
+| UI            | pointer-events | auto &#124; none &#124; visible &#124; visiblepainted &#124; visiblefill &#124; visiblestroke &#124; painted &#124; fill &#124; stroke &#124; all | Whether the element can be the target of pointer events. **All 10 SVG-style values parse and round-trip via `getComputedStyle`, but hit-testing currently does NOT consult the computed value** — see the runtime caveat below. | |
+| UI            | appearance | auto &#124; none | Reset native form-control rendering. | |
+| UI            | image-rendering | auto &#124; crisp-edges &#124; pixelated | Hint for image scaling algorithm. | |
+| Replaced Content | object-fit | fill &#124; contain &#124; cover &#124; none &#124; scale-down | How a replaced element's content is fitted to its box. | |
+| Replaced Content | object-position | &lt;position&gt; | Position of replaced content within its box. | |
+| Filter        | filter | none &#124; &lt;filter-function-list&gt; | Applies a graphical filter. **Recognized function names** (`CSSFilterFunction.cpp:31`): `blur()`, `drop-shadow()`, `hue-rotate()`, `brightness()`, `contrast()`, `grayscale()`, `invert()`, `opacity()`, `saturate()`, **`sephia()`** (note: typo — the standard name `sepia()` is NOT recognized; the engine looks for `sephia` only), and `url(#filter-id)` for SVG filter references. **Only `blur()` and the SVG `url(...)` reference actually render**; the others parse but have no visible effect. | |
+| Compositing   | mix-blend-mode | &lt;blend-mode&gt; | Defines blending of the element with its backdrop. | |
+| Clipping (legacy) | clip | auto &#124; rect(&lt;top&gt;, &lt;right&gt;, &lt;bottom&gt;, &lt;left&gt;) | The deprecated CSS 2.1 `clip` property is parsed (`updateValueClip` accepts `auto` or `rect(...)` with comma- or space-separated values). Modern code should use `clip-path` (limited to `url(#id)`, see below). | |
+| Clipping      | clip-path | none &#124; url(#id) | Clips the element to a path. **Only `url(...)` form is accepted by `updateValueClipPath`** — `inset()`, `circle()`, `ellipse()`, `polygon()`, `path()`, `shape()` basic-shape functions are silently rejected. The audit row in the runtime caveats below is the source of truth (earlier docs claiming basic-shape support were incorrect). | |
+| Mask          | mask, mask-image, mask-size, mask-position, mask-repeat, mask-type | see CSS Masking 1 | Apply a mask to the element. **`mask-image` accepts only `url(...)` and gradient values**; the `none` keyword is parsed but logged as `Unsupported css property: mask-image with 6` and has no effect. **Per-axis longhands `mask-position-x`/`-y` and `mask-repeat-x`/`-y` are NOT in the parser trie** even though `Style.h` declares them — only the shorthand forms parse. **`mask-mode`, `mask-composite`, `mask-clip`, `mask-origin`, `mask-border` and its longhands are NOT in the parser trie** — they cannot be tuned independently. | |
+| Decoration    | box-decoration-break | slice &#124; clone | Slice/clone box decorations across line/page breaks. | |
+| List / Text   | line-clamp / -webkit-line-clamp | none &#124; &lt;integer&gt; | Limits text content of a block container to the specified number of lines. Behaves like `-webkit-line-clamp`; requires `display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden`. **Unprefixed `line-clamp` and unprefixed `box-orient` are NOT in the parser trie** — only `-webkit-line-clamp` and `-webkit-box-orient` (gated by `STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX` / `…_BOX_PREFIX` respectively) work. | |
+
+> **Note on `cursor`:** The `cursor` property is parsed (and applied via the user-agent stylesheet's `cursor: default;` rule) but the value resolver is currently a stub — no actual cursor styling is rendered. Every page load logs `Unsupported css property: cursor` once.
+
+### CSS Scrolling / Overflow (audit results)
+
+Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.cpp::updateValueOverflowX/Y`, `src/core/dom/Element.cpp` (programmatic scroll APIs), and runtime probes (`getComputedStyle` + `scrollTo`/`scrollIntoView` round-trip). Probe page: `/tmp/lwe_audit_iter50/scroll_overflow_probes.html`.
+
+**Supported overflow keywords.** `overflow`, `overflow-x`, `overflow-y` accept `visible`, `hidden`, `auto`, `scroll`. Per-axis values round-trip through inline style and `getComputedStyle`. When one axis is set to `visible` while the other is non-`visible`, the non-`visible` axis correctly remaps the `visible` axis to `auto` at computed-style time (per CSS Overflow 3 §3).
+
+**`overflow: clip` is unsupported.** A single-value `overflow: clip` declaration is silently rewritten to `hidden` at the parser; the inline style stores the empty string and `getComputedStyle` returns `"hidden"`. No warning is logged for this rewrite (unlike the other unsupported scroll properties below). `overflow-clip-margin` is fully unsupported — the declaration is dropped and `Unsupported css property: overflow-clip-margin` is logged.
+
+**Two-value `overflow` shorthand is unsupported.** `overflow: hidden auto` (separate `overflow-x` / `overflow-y`) parses but only the first keyword is consumed; both axes end up with the first value. Author code that needs different per-axis behaviour must use the longhand `overflow-x` / `overflow-y` properties explicitly.
+
+**Scroll module CSS properties are entirely unsupported.** Each of the following parses-fail at `CSSStyleDeclaration::operator()(129)` with `Unsupported css property: <name>`; the inline-style string is empty after assignment and `getComputedStyle` returns the empty string:
+
+- `overflow-anchor` (`auto`/`none`)
+- `overflow-clip-margin`
+- `scroll-behavior` (`auto`/`smooth`)
+- `scroll-snap-type`, `scroll-snap-align`, `scroll-snap-stop`
+- `scroll-padding`, `scroll-padding-{top,right,bottom,left,block,inline}`
+- `scroll-margin`, `scroll-margin-{top,right,bottom,left,block,inline}`
+- `scrollbar-width` (`auto`/`thin`/`none`), `scrollbar-color`, `scrollbar-gutter`
+- `overscroll-behavior`, `overscroll-behavior-x`, `overscroll-behavior-y`
+
+**Programmatic scrolling — APIs work, `behavior:'smooth'` is instant.** `Element.scrollTop`, `scrollLeft`, `scrollWidth`, `scrollHeight` are reflected. `Element.scroll(...)`, `scrollTo(...)`, `scrollBy(...)`, `scrollIntoView(...)` accept both numeric and `ScrollOptions`/`ScrollIntoViewOptions` dictionary forms (`behavior`, `block`, `inline`, `top`, `left`). The `Window` equivalents (`scroll`, `scrollTo`, `scrollBy`) likewise work. **However** `behavior: 'smooth'` is treated as `'instant'` — the scroll position jumps to the target on the same tick (verified by reading `scrollTop` immediately after the call). The `ScrollBehavior::Smooth` enum exists in `src/core/page/ScrollOptions.h` but no animator is wired up in `Element.cpp` / `Window.cpp`. Web apps that require visible easing must implement their own `requestAnimationFrame` loop on `scrollTop`.
+
+**`scroll` event fires.** Both `addEventListener('scroll', ...)` on the scrolling element and on `window` are dispatched after `scrollTo`/`scrollBy`/`scrollIntoView`/manual user scroll. The probe records 6 `scroll` events for 6 programmatic scroll calls.
+
+### CSS units & functional notations (audit results)
+
+Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/core/style/CSSParser.h::parseNonNamedColor`, and runtime probes (`getComputedStyle` + style-rule round-trip). Probe pages: `/tmp/lwe_audit_iter28/css_units_probes{,2,3}.html`.
+
+**Length / size units.** Supported: `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `vmin`, `vmax`, `%`, `fr` (grid-tracks only). NOT supported: `q`/`Q` (quarter-millimeter) — the trie has no entry for `q`, so the entire declaration is silently dropped (the rule serializes back as empty). New viewport units `svw`/`lvw`/`dvw`/`svh`/… and container units (`cqw`, `cqi`, `cqb`, …) are likewise absent.
+
+**Angles.** Parsing accepts `deg`, `rad`, `turn`, `grad` (`CSSStyleLookupTrie` returns the right `UnitType`). However, `getComputedStyle(el).transform` always returns `"none"` regardless of the rotate angle — i.e. the layout side does not synthesize the matrix at computed-style read time. The underlying rule is preserved (visible via `cssRules[i].cssText`), and rendering uses it; only the JS-visible computed value is missing.
+
+**Times.** `s` and `ms` are supported on `transition-duration`/`animation-duration` and round-trip correctly; `calc(<time>)` works.
+
+**Resolution.** `dpi`, `dpcm`, `dppx` are all recognized inside `@media (min-resolution: …)`. Confirmed: `96dpi`, `37dpcm`, `1dppx` each match an `@media` branch on a 1× display.
+
+**`calc()` / `min()` / `max()` / `clamp()`.** All four function names are accepted (`Style.cpp::updateValueUnitCalc`). Mixed-unit `calc(50% - 10px)` resolves correctly; nested `calc(calc(10px+5px)*2)` resolves to 30px; `calc(var(--len) * 2 + 3px)` resolves correctly through `var()` substitution.
+
+**`var()`.** Custom properties + fallback work, including nested fallback (`var(--a, var(--b, 19px))`). Combination with `calc()` works. The LWE_WEBAPP_GUIDE wording "partial — cascade may be inconsistent" still applies for complex cascade scenarios but the primary substitution path is reliable.
+
+**`env()`.** **Completely unimplemented.** `env(safe-area-inset-top)` is stripped during parsing — the rule body is left empty (`#x { }`). The literal fallback (`env(safe-area-inset-top, 11px)`) is also discarded; the engine does *not* fall back to it. There is no `env()` token consumer anywhere in `src/core/style/`. Webapps must avoid `env()` entirely and inline the safe-area inset (e.g. via a CSS Custom Property the host app injects).
+
+**Color formats.** `parseNonNamedColor` only recognizes `rgb()`, `rgba()`, `hsl()`, `hsla()` (modern slash/space syntax `rgb(R G B / A)` works) and hex literals `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`. Named colors (incl. `rebeccapurple`), `transparent`, and `currentColor` work. `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, and `color-mix()` all parse-fail and the property falls back to its initial value (`rgb(0,0,0)`); the rule body retains the unparsable text but the value is unused.
 
 ## Obsolete CSS
 
@@ -1515,6 +1856,7 @@ This section describes the complete list of supported selectors by LWE.
 | | | [att=val] | [lang=en] | Selects all elements with lang="en" |
 | | | [att~=val] | [title~=flower] | Selects all elements with a title attribute containing the word "flower" |
 | | | [att&#124;=val] | [lang&#124;=en] | Selects all elements with a lang attribute value starting with "en" |
+| | Case-insensitive attribute flag | [att=val i] | input[type="email" i] | The `i` flag forces case-insensitive matching (CSS Selectors Level 4). Supported by `getAttributeFlags`. **`s` flag (force case-sensitive in HTML)** is NOT supported. |
 | | Substring matching attribute selectors | [att^=val] | a[href^="https"] | Selects every \<a\> element whose href attribute value begins with "https" |
 | | | [att$=val] | a[href$=".pdf"] | Selects every \<a\> element whose href attribute value ends with ".pdf" |
 | | | [att*=val] | a[href*="w3schools"] | Selects every \<a\> element whose href attribute value contains the substring "w3schools" |
@@ -1543,6 +1885,9 @@ This section describes the complete list of supported selectors by LWE.
 | | ':first-of-type' pseudo-class | :first-of-type | p:first-of-type | Selects every \<p\> element that is the first \<p\> element of its parent |
 | | ':last-of-type' pseudo-class | :last-of-type | p:last-of-type | Selects every \<p\> element that is the last \<p\> element of its parent |
 | | ':only-of-type' pseudo-class | :only-of-type | p:only-of-type | Selects every \<p\> element that is the only \<p\> element of its parent |
+| [Reference selectors](https://www.w3.org/TR/selectors-4/#scoping) | ':scope' pseudo-class | :scope | :scope > .child | Matches the scoping root (`Element.querySelector(...)` call site, otherwise `documentElement`). |
+| [Custom-element pseudo-classes](https://drafts.csswg.org/selectors-4/#custom-pseudo) | ':defined' pseudo-class | :defined | a:defined | Matches any element the parser maps to a known `HTMLxxxElement` (everything except `HTMLUnknownElement`). LWE has no Custom Elements registry, so this is effectively "is the tag in the parser's known list?". |
+| [Shadow DOM pseudo-classes](https://drafts.csswg.org/css-scoping/#host-selector) | ':host' / ':host()' pseudo-classes | :host, :host(...) | :host(.themed) | Implemented at the matcher level but Shadow DOM is forbidden in LWE webapps; treat as inert (see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md)). |
 | [Combinators](https://www.w3.org/TR/selectors/#combinators) | Descendant combinator ( ) | selector1 selector2 | div p | Selects all \<p\> elements inside \<div\> elements |
 | | Child combinator (>) | selector1 > selector2 | div > p | Selects all \<p\> elements that are immediate children of a \<div\> element |
 | | Next-sibling combinator (+) | selector1 + selector2 | div + p | Selects all \<p\> elements that are placed immediately after \<div\> elements |
@@ -1551,6 +1896,70 @@ This section describes the complete list of supported selectors by LWE.
 | | The ::first-letter pseudo-element | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
 | [Tree-Abiding Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#treelike) | Generated Content Pseudo-elements: '::before' | ::before | p::before | Insert something before the content of each \<p\> element |
 | | Generated Content Pseudo-elements: '::after' | ::after | p::after | Insert something after the content of each \<p\> element |
+
+### Selector caveats (audit results)
+
+The following selectors are **parsed without error but do not actually match anything** at style time (the runtime emits `Style.cpp: checkPseudoClass: Unsupported css pseudo-element: <N>`). They appear as identifiers in the whitelist but should NOT be relied on:
+
+`:any-link`, `:focus-visible`, `:focus-within`, `:in-range`, `:out-of-range`, `:indeterminate`, `:invalid`, `:valid`, `:optional`, `:required`, `:read-only`, `:read-write`, `:target-within`, `:visited`. Use `:focus` instead of `:focus-visible`/`:focus-within`; for form-validation states, query the underlying state in JS.
+
+The following selectors raise `SyntaxError` at parse time and **must not be used**:
+
+`:has(...)`, `:is(...)`, `:where(...)`. Rewrite using a regular descendant or compound selector.
+
+`:scope` is supported and matches `:root` in document context.
+`:dir(ltr)` matches; `:dir(rtl)` parses but never matches because LWE has only LTR direction infrastructure.
+Shadow-DOM-related selectors (`:host`, `:host(...)`, `:defined`) are present in the implementation but Shadow DOM itself is forbidden in LWE webapps (see [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md)).
+
+### @-rules
+
+The CSS section above does not enumerate at-rules. Implementation status:
+
+| @-rule | Status |
+|--------|--------|
+| `@import` | Supported. Forms: `@import url("a.css");`, `@import url("a.css") <media-query>;`. **The CSS Cascade 5 `supports(<condition>)` clause** (`@import url(...) supports(<cond>) <media-query>;`) is **NOT specifically parsed** — the `supports(...)` function tokens are consumed as media query text and the import is loaded unconditionally. |
+| `@media` | Supported. |
+| `@font-face` | Supported (descriptors `unicode-range` and `font-display` are NOT). |
+| `@keyframes` | Supported. **`@-webkit-keyframes` is NOT recognized** — only the unprefixed `@keyframes` token is in `CSSParser::parseAtRule`. (Earlier docs claiming the prefixed form worked were incorrect.) |
+| `@supports` | Parsed via `parseSupportsRule`. Condition evaluation works for the basic `<feature> := (prop: value)` form (a declaration is "supported" iff `parseDeclaration` produces non-empty `cssText`), and the boolean operators `and` / `or` / `not` plus parenthesized groups are honored (`m_supportOperand`/`m_supportOperator` stacks). **However:** the JS-side `CSS.supports(prop, value)` returns `false` for many valid declarations (already documented under CSS Houdini), so do not assume @supports and `CSS.supports()` agree. The general-enclosed `<supports-feature>` fallback (function syntax: `selector(...)`, `font-tech(...)`, `font-format(...)`) is recognized as the catch-all but does not check actual support. |
+| `@namespace` | Parsed (stored as `StyleRuleNamespace`). XML namespace selectors are not commonly used in HTML stylesheets. |
+| `@charset` | Parsed at the top of a stylesheet only; affects byte-level decoding (must be the very first rule, no whitespace before). |
+| `@counter-style` | **Recognized as an at-rule by the dispatcher**, but `parseCounterStyleRule` is a `// TODO` stub returning `nullptr` — the rule is silently dropped. |
+| `@page` | **Not parsed** — falls through `addUnknownAtRule()`. No rendering effect (LWE has no print pipeline). |
+| `@layer`, `@container`, `@scope`, `@viewport`, `@document`, `@font-feature-values`, `@color-profile`, `@property`, `@view-transition`, `@position-try`, `@starting-style`, `@nest` | **Not supported.** Silently skipped by the parser (`addUnknownAtRule()`). |
+
+### @media query features (audit additions)
+
+`window.matchMedia(query)` and `<style>@media (...) { ... }</style>` use the same evaluator. Recognized features (parser table at `src/core/style/CSSParser.h:1598`):
+
+`width`, `height`, `aspect-ratio`, `orientation`, `resolution`, `device-width`, `device-height`, `device-aspect-ratio`, `color`, `color-index`, `monochrome`, `grid`, `hover`, `any-hover`, `pointer`, `any-pointer`, `update`, `display-mode`, `overflow-block`, `overflow-inline`, `scan`, `scripting` (all support the `min-`/`max-` form where applicable).
+
+| Feature | Status |
+|---------|--------|
+| `(min-width: ...)` / `(max-width: ...)`, similarly for height/resolution/aspect-ratio | **Implemented**, viewport-driven. |
+| `(orientation: landscape\|portrait)` | Implemented. |
+| `(resolution: ...dppx\|dpi\|dpcm)`, `(min-resolution: 96dpi)` | Implemented (uses `devicePixelRatio`). |
+| `(scripting: enabled)` | Implemented (returns `enabled`/`none` based on script-engine presence; `initial-only` not modelled). |
+| `(grid: 0)` | Implemented (always `0` — bitmap UA). |
+| `(hover: hover)`, `(any-hover: hover)` | **Hard-coded** to `hover` regardless of device. `(hover: none)` always false. |
+| `(pointer: fine)`, `(any-pointer: fine)` | **Hard-coded** to `fine`. `(pointer: coarse)`/`(pointer: none)` always false — touch-only TVs cannot be detected. |
+| `(update: fast)` | **Hard-coded** to `fast`. |
+| `(overflow-block: scroll)`, `(overflow-inline: scroll)` | **Hard-coded** to `scroll`. |
+| `(display-mode: browser)` | **Hard-coded** to `browser`. PWA modes (`fullscreen`/`standalone`/`minimal-ui`) not detectable. |
+| **NOT recognized** (parser drops the entire `@media` block; `matchMedia` returns `false` for every value): | `prefers-color-scheme`, `prefers-reduced-motion`, `prefers-reduced-data`, `prefers-reduced-transparency`, `prefers-contrast`, `forced-colors`, `device-pixel-ratio`, `-webkit-device-pixel-ratio`, `dynamic-range`, `video-dynamic-range`, `inverted-colors`, `nav-controls`, `color-gamut`, `environment-blending`. |
+
+> **Footgun:** since the missing `prefers-*` features are silently dropped, `if (matchMedia('(prefers-reduced-motion: no-preference)').matches)` returns `false` on LWE — feature-detection patterns that gate behavior on the spec-default sentinel will silently disable themselves. Either (a) treat `matches === false` as "no preference / proceed" instead of "user opted out," or (b) feature-detect via something else.
+
+### CSS units & functional notations (audit additions)
+
+| Category | Supported | Not supported |
+|----------|-----------|---------------|
+| Length | `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `vmin`, `vmax`, `%`, `fr` (grid only) | `q`/`Q`, container-relative units (`cqw`/`cqi`/`cqb`/...), small/large/dynamic viewport units (`svw`/`lvw`/`dvw`/`svh`/...) |
+| Angle | `deg`, `rad`, `turn`, `grad` (parsed; rules retained) | — but `getComputedStyle.transform` always returns `"none"` (the computed-style serializer is missing for transforms; rendering still works) |
+| Time | `s`, `ms` | — |
+| Resolution | `dpi`, `dpcm`, `dppx` (work in `@media`) | — |
+| Functional | `calc()`, `min()`, `max()`, `clamp()` (mixed units, nested, with `var()`); `var(--x, fallback)` including nested fallback | **`env(...)` is parser-rejected** — the entire declaration is dropped at parse time; the fallback value is **NOT** honored. |
+| Color | hex 3/4/6/8, `rgb()`, `rgba()`, `rgb(R G B / A)` modern syntax, `hsl()`, `hsla()`, named colors (incl. `rebeccapurple`), `transparent`, `currentColor` | `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, `color()`, `color-mix()` — all silently fall back to `rgb(0,0,0)`. |
 
 ## Cross-origin script API accessSection
 
@@ -1562,7 +1971,6 @@ The following cross-origin access to these properties is allowed:
 | Interface | Type | Name | Description |
 |-----------|------|------|-------------|
 | Window | method | focus | |
-| | method | focus | |
 | | method | blur | |
 | | method | postMessage | |
 | | attribute | frames | read only |
@@ -1608,7 +2016,7 @@ The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header 
 | [sameorigin]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 | [allow-from uri]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 
-Note : The above things is partially supported because Starfish does not support [Fetch](https://fetch.spec.whatwg.org/)
+Note: CORS handling is wired through the network stack and runs for `XMLHttpRequest` and the (partial) `fetch()` implementation. The `fetch()` global is exposed but parts of the Fetch spec (streaming response bodies, `Request.body.getReader()`) remain incomplete; for production paths prefer `XMLHttpRequest`.
 
 ### Content Security Policy
 
@@ -1649,7 +2057,8 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
-| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | enum        | XMLHttpRequestResponseType  | "", "text", "arraybuffer", "document", "blob", "json"|
+| [XMLHttpRequestResponseType](https://xhr.spec.whatwg.org/#enumdef-xmlhttprequestresponsetype) | enum | XMLHttpRequestResponseType | "", "arraybuffer", "blob", "document", "json", "text" |
+| [XMLHttpRequestEventTarget](https://xhr.spec.whatwg.org/#xmlhttprequesteventtarget) | interface mixin | XMLHttpRequestEventTarget | The event-target mixin shared by `XMLHttpRequest` and `XMLHttpRequestUpload`. |
 | | attribute	| onloadstart	| Function called when the request starts. Usage: onloadstart: function() {} |
 | | attribute	| onprogress	| Function called when transmitting data. Usage: onprogress: function() {} |
 | | attribute	| onabort	| Function called when the request has been aborted. For instance, by invoking the abort() method. Usage: onabort: function() {} |
@@ -1658,7 +2067,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | attribute	| ontimeout	| Function called when the author specified timeout has passed before the request completed. Usage: ontimeout: function() {} |
 | | attribute	| onloadend	| Function called when the request has completed (either in success or failure). Usage: onloadend: function() {} |
 | [XMLHttpRequest](https://xhr.spec.whatwg.org/#xmlhttprequest) | constructor | XMLHttpRequest() |  |
-| | attribute    | onReadyStateChange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
+| | attribute    | onreadystatechange | The readyState attribute changes value, except when it changes to UNSENT. Usage: onreadystatechange: function() {} |
 | | attribute	| timeout	| Can be set to a time in milliseconds.Terminates fetching after the given time (in milliseconds) has passed. If the fetching has not completed after the time passed and the synchronous flag is unset, a timeout event will be dispatched. |
 | | attribute	| status	| Returns 0 if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status code.|
 | | attribute	| statusText	| Returns empty string if the state is UNSENT or OPENED, or error flag is set. Otherwise returns the HTTP status text.|
@@ -1674,6 +2083,9 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | method    | ByteString getAllResponseHeaders()    | Returns a string that contains all response headers. |
 | | method    | ByteString? getResponseHeader(ByteString name)    | Return the combined value given name and response’s header list. |
 | | method    | overrideMimeType()    | overrideMimeType(mime) specifies a MIME type other than the one provided by the server to be used instead when interpreting the data being transferred in a request.|
+| | attribute | withCredentials | If `true`, cross-origin requests carry credentials (cookies, HTTP auth). Defaults to `false`. |
+| | attribute | responseXML | Returns the response as a `Document` when `responseType` is `""` or `"document"`. |
+| | attribute | responseURL | **Not implemented** — always returns the empty string. |
 
 
 \* The readyState code are as follows.
@@ -1693,6 +2105,7 @@ The EventSource interface is used to receive server-sent events. It connects to 
 |----------------------|--------|---------------------------|-------------|
 | [EventSource](https://html.spec.whatwg.org/multipage/comms.html#the-eventsource-interface) | constructor | EventSource() |  |
 | | attribute | url | A DOMString representing the URL of the source. |
+| | attribute | withCredentials | Boolean indicating whether the EventSource was instantiated with CORS credentials set. Pass `{withCredentials: true}` in the constructor's `EventSourceInit` to enable. |
 | | attribute	| readyState	| A number representing the state of the connection. Possible values are CONNECTING (0), OPEN (1), or CLOSED (2). |
 | | attribute | onopen    | An EventHandler called when an open event is received, that is when the connection was just opened. |
 | | attribute | onmessage | An EventHandler called when a message event is received, that is when a message is coming from the source. |
@@ -1718,9 +2131,17 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 | |	attribute |	size    | Returns the size of the byte sequence in number of bytes |
 | |	attribute |	type	| The ASCII-encoded string in lower case representing the media type of the Blob |
 | |	method	| Blob slice([Clamp] optional long long start = 0, [Clamp] optional long long end = size, optional DOMString contentType = "")	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
+| |	method	| Promise<USVString> text() | Returns a promise resolving with the blob's contents decoded as UTF-8. |
+| |	method	| Promise<ArrayBuffer> arrayBuffer() | Returns a promise resolving with the blob's contents as an `ArrayBuffer`. |
 | |	typedef | (BufferSource or Blob or DOMString) BlobPart | |
+| [File](https://w3c.github.io/FileAPI/#dfn-file)            | interface | File           | `File` extends `Blob` with `name` and `lastModified` attributes. Exposed as a constructable global (`new File(parts, name, options)`). |
+| [FileReader](https://w3c.github.io/FileAPI/#APIASynch)     | interface | FileReader     | Asynchronous reader over `Blob`/`File`. Standard `readAsText`/`readAsArrayBuffer`/`readAsDataURL` plus `result`/`onload`/`onerror` are exposed. |
+| [FormData](https://xhr.spec.whatwg.org/#interface-formdata) | interface | FormData       | Constructable; supports `append`/`delete`/`get`/`getAll`/`has`/`set`. Accepted as the body of `XMLHttpRequest.send()` and `fetch()`. |
 
 ### BatteryManager
+
+> **Build flag:** `BatteryManager` is gated by `STARFISH_ENABLE_BATTERY_STATUS` (set only on the `CUSTOM=unified_wearable` Tizen wearable variant). The default Linux/x64/EFL build does NOT define it; `BatteryManager` and `navigator.getBattery()` are `undefined` at runtime. Verified by `Battery.idl` extended attributes and runtime probe.
+
 Extensions to the Navigator Object: The navigator is extended by the following attributes and methods.
 
 | Interface            | Type   | Name                      | Description |
@@ -1735,20 +2156,26 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | Interface            | Type   | Name                      | Description |
 |----------------------|--------|---------------------------|-------------|
 | [Navigator](https://html.spec.whatwg.org/#the-navigator-object)	| interface	| Navigator	| The navigator attribute of the Window interface must return an instance of the Navigator interface, which represents the identity and state of the user agent (the client), and allows Web pages to register themselves as potential protocol and content handlers |
-| |	attribute	| geolocation	| Return geolocation interface |
-| |	attribute	| cookieEnabled	| Return true if the user agent attempts to handle cookies according to the cookie specification |
-| |	attribute	| language	| Return a string representing the language version as defined in BCP 47 |
+| |	attribute	| geolocation	| Return geolocation interface. |
+| |	attribute	| cookieEnabled	| Return true if the user agent attempts to handle cookies according to the cookie specification. |
+| |	attribute	| language	| Return a string representing the language version as defined in BCP 47 (e.g. `ko_KR`). |
+| |	attribute	| onLine	| Returns whether the user agent considers itself to be online. LWE always returns `true`. |
+| |	method	| boolean javaEnabled() | Always returns `false` (Java applets are not supported). |
+| |	misc	| **Unsupported in LWE** (`[Unimplemented]`) | `productSub`, `languages`, `plugins`, `mimeTypes`. |
+| |	misc	| **Not exposed at all** | `mediaDevices`, `clipboard`, `share`, `permissions`, `bluetooth`, `usb`, `xr`, `maxTouchPoints`, `hardwareConcurrency`, `deviceMemory`, `connection`, `userAgentData`, `serviceWorker` (build-conditional under `STARFISH_ENABLE_SERVICE_WORKER`), `getBattery`/`battery` (Tizen wearable only). |
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
 | | attribute | appCodeName | Returns the string "Mozilla". |
 | | attribute | appName | Returns the string "Netscape". |
-| | attribute | appVersion | Returns the string "Mozilla/5.0 (like Firefox, Gecko) Starfish/0.1.0". |
+| | attribute | appVersion | Returns a string like "Mozilla/5.0 (like Gecko/54.0 Firefox/54.0) Starfish/<engine version>". |
 | | attribute | platform | Returns either the empty string or a string representing the platform on which the MWE is executing. |
 | | attribute | product | Returns the string "Gecko". |
-| | attribute | userAgent | Returns the string "Mozilla/5.0 (like Firefox, Gecko) Starfish/0.1.0". |
+| | attribute | userAgent | Returns a string like "Mozilla/5.0 (like Gecko/54.0 Firefox/54.0) Starfish/<engine version>". |
 | | attribute | vendor | Returns the string "Samsung Electronics Co., Ltd.". |
 | | attribute | vendorSub | Returns the empty string. |
-| [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | |
+| [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | The interface itself is `[NoInterfaceObject]` — `Geolocation`/`Coordinates`/`Geoposition`/`PositionError` are NOT exposed as constructable globals; they are reachable only via `navigator.geolocation` and the callback parameters. |
 | | method   | void getCurrentPosition(PositionCallback successCallback, optional PositionErrorCallback errorCallback, optional PositionOptions options)	| Parameters are in following formats:<br>`successCallback`: `function(position) {}`<br>`errorCallback`: `function (positionError) {}`<br>`options`: `PositionOptions` |
+| | method   | long watchPosition(PositionCallback successCallback, optional PositionErrorCallback errorCallback, optional PositionOptions options) | Returns a watch id that can be passed to `clearWatch()` to stop receiving position updates. |
+| | method   | void clearWatch(long watchId) | Cancels an ongoing `watchPosition()` call. |
 | | callback | PositionCallback = void (Position position) | |
 | | callback | PositionErrorCallback = void (PositionError positionError) | |
 | [Coordinates](https://dev.w3.org/geo/api/spec-source.html#coordinates_interface) | attribute | latitude | The latitude attribute is a geographic coordinate specified in decimal degrees. |
@@ -1776,8 +2203,931 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | POSITION_UNAVAILABLE | The position of the device could not be determined. | 2 |
 | TIMEOUT | The length of time specified by the timeout property has elapsed before successfully acquiring a new Position object. | 3 |
 
+### Fetch API
+
+`fetch`, `Headers`, `Request`, `Response`, and the `Body` mixin are exposed. Verified by IDL `src/core/fetch/*.idl` and runtime probes.
+
+| Interface | Status |
+|-----------|--------|
+| `fetch(input, optional RequestInit)` | Returns `Promise<Response>`. |
+| `Headers` | Full WHATWG surface: constructor (seq-of-seq or string-record), `get`/`set`/`append`/`delete`/`has`/`forEach`/`entries`/`keys`/`values`/`for..of`. |
+| `Request` | Constructor + `clone()`; properties `method`, `url`, `headers`, `mode`, `credentials`, `cache`, `redirect`, `referrer`, `referrerPolicy`, `destination`, `integrity`, `body`. **`Request.signal` is `undefined` (`[Unimplemented]`)** — `RequestInit.signal` is silently ignored. |
+| `Response` | Constructor; instance methods `text()`, `json()`, `arrayBuffer()`, `blob()`, `formData()`, `clone()`. Static `Response.error()`, `Response.redirect(url, status)`. **`Response.json` static is NOT exposed.** |
+| `Body` mixin | `body` (`ReadableStream`), `bodyUsed`, plus the consumers above. **`BodyInit` does not accept `FormData` or `URLSearchParams`** — only `Blob`/`BufferSource`/`USVString`/`ReadableStream`. |
+| **Not exposed** | `AbortController`, `AbortSignal`. There is no way to cancel an in-flight `fetch()` from JS. |
+
+### URL & URLSearchParams
+
+| Interface | Status |
+|-----------|--------|
+| `URL` | Full WHATWG getter/setter surface (`href`, `protocol`, `host`, `hostname`, `port`, `pathname`, `search`, `hash`, `origin`, `username`, `password`, `searchParams`). `URL.createObjectURL`/`URL.revokeObjectURL` exposed. |
+|  | **`new URL("invalid")` does NOT throw** — silently returns `about:blank`. WHATWG-compliant browsers throw `TypeError`. |
+|  | **Not exposed:** `URL.canParse`, `URL.parse` (static), `URL.toJSON` (instance — `[Unimplemented]`, calling throws). |
+| `URLSearchParams` | `append`/`delete`/`get`/`getAll`/`has`/`set`/`sort`/`toString`/iterable/`entries`/`keys`/`values`. |
+|  | **Constructor accepts only `string` or `sequence<sequence<USVString>>`.** `new URLSearchParams({a:1, b:2})` (record/object form) silently produces an empty params object. |
+|  | **`size` attribute is NOT exposed.** Use `Array.from(usp).length`. |
+
+### Encoding (TextEncoder / TextDecoder)
+
+| Interface | Status |
+|-----------|--------|
+| `TextEncoder` | Constructor + `encode(string)` → `Uint8Array`. |
+|  | **`encodeInto` is `[Unimplemented]`** — `undefined`. |
+|  | Does NOT throw on non-`utf-8` constructor labels; output is always UTF-8 regardless. |
+| `TextDecoder` | Constructor accepts label + `{fatal, ignoreBOM}`. `decode(buffer, {stream})` works. |
+|  | Supported labels include `utf-8`, `utf-16`, `latin1`, `iso-8859-1`. `fatal:true` correctly throws on bad sequences. |
+
+### Streams
+
+| Interface | Status |
+|-----------|--------|
+| `ReadableStream` | Constructor with `{start({enqueue, close})}` works. `cancel`, `getReader`, `locked` work. |
+|  | **`ReadableStream.tee`, `pipeTo`, `pipeThrough`, `ReadableStream.from` are `[Unimplemented]` / not exposed.** |
+| `ReadableStreamDefaultReader` | `read()`, `cancel()`, `releaseLock()`, `closed` exposed. The pull/enqueue path observed at runtime is **unreliable**: enqueued chunks do not always drain via `read()` in this build. **Prefer one-shot decoders (`response.text()`, `.arrayBuffer()`, `.blob()`) over streaming consumption.** |
+| **Not exposed** | `WritableStream`, `TransformStream`, `ByteLengthQueuingStrategy`, `CountQueuingStrategy`, `ReadableStreamBYOBReader`. Globals are `undefined`. |
+| **Blob** | `Blob.stream()` is NOT exposed. Use `await blob.text()` / `.arrayBuffer()`. |
+
+### CSP (Content Security Policy)
+
+CSP is enforced by `src/core/csp/`. The directive parser in `ContentSecurityPolicyDirectiveList.cpp` recognizes only this set:
+
+| Recognized & enforced | Silently ignored |
+|-----------------------|------------------|
+| `base-uri`, `child-src`, `connect-src`, `default-src`, `form-action`, `frame-src` (deprecated → use `child-src`), `img-src`, `media-src`, `script-src`, `style-src` | `font-src`, `object-src`, `worker-src`, `manifest-src`, `prefetch-src`, `frame-ancestors`, `report-uri`, `report-to`, `require-trusted-types-for`, `trusted-types`, `upgrade-insecure-requests`, `block-all-mixed-content`, `sandbox` |
+
+Apps relying on the right-hand list get **no protection** — the directive is parsed but no enforcement code path looks at it. The `securitypolicyviolation` event fires correctly on `document` for the recognized set, but the dispatched `SecurityPolicyViolationEvent` only populates `blockedURI` and `violatedDirective`; the other 8 attributes (`documentURI`, `referrer`, `effectiveDirective`, `originalPolicy`, `sourceFile`, `statusCode`, `lineNumber`, `columnNumber`) are `[Unimplemented]` and read back as `undefined`.
+
+### WebGL
+
+> **Build flag:** WebGL is gated by `-DWEBGL=1` (also requires `BACKEND=*_cairo_gl`). Headless backends without GL return `null` from `canvas.getContext('webgl')`. The default Linux/EFL release build ships with `WEBGL=1`.
+
+| Interface | Notes |
+|-----------|-------|
+| `WebGLRenderingContext` | Full WebGL 1.0 surface (~190 methods) per [Khronos WebGL 1.0 spec](https://registry.khronos.org/webgl/specs/latest/1.0/). Obtain via `canvas.getContext('webgl')` or `'experimental-webgl'`. |
+| `WebGL2RenderingContext` | WebGL 2.0 surface; obtain via `canvas.getContext('webgl2')`. Includes `WebGLQuery`, `WebGLSampler`, `WebGLSync`, `WebGLTransformFeedback`, `WebGLVertexArrayObject`. |
+| Object handles | `WebGLBuffer`, `WebGLFramebuffer`, `WebGLRenderbuffer`, `WebGLTexture`, `WebGLProgram`, `WebGLShader`. |
+| Value types | `WebGLActiveInfo`, `WebGLShaderPrecisionFormat`, `WebGLUniformLocation`, `WebGLContextAttributes`. |
+| **Not exposed** | `WebGLContextEvent` typed event (use a generic `Event` listener for `webglcontextlost`/`webglcontextrestored`). |
+
+**Extensions exposed via `getExtension(name)`** (subject to the underlying GL driver advertising the matching `GL_*` token; on Mesa llvmpipe / SwiftShader none may be advertised):
+
+`OES_texture_float`, `OES_texture_half_float`, `OES_texture_float_linear`, `OES_standard_derivatives`, `OES_vertex_array_object`, `WEBGL_depth_texture`, `EXT_blend_minmax`, `EXT_texture_filter_anisotropic`.
+
+**Common extensions NOT implemented** (will return `null`): `WEBGL_lose_context`, `WEBGL_debug_renderer_info`, `WEBGL_compressed_texture_*` (s3tc/etc1/astc/pvrtc), `OES_element_index_uint`, `EXT_color_buffer_float`, `ANGLE_instanced_arrays`, `OES_texture_half_float_linear`, `EXT_sRGB`, `KHR_parallel_shader_compile`.
+
+### Performance
+
+| Member | Status |
+|--------|--------|
+| `performance.now()`, `performance.timeOrigin` | Implemented. |
+| `performance.mark(name)`, `performance.measure(name, start, end)`, `performance.clearMarks()`, `performance.clearMeasures()`, `performance.clearResourceTimings()`, `performance.toJSON()` | Implemented. |
+| `performance.getEntries()`, `getEntriesByType()`, `getEntriesByName()` | Implemented. |
+| `performance.timing` | **Quirk: typed as `PerformanceResourceTiming` in IDL (not the spec's `PerformanceTiming`).** 11 timestamp attributes work; `connectStart/End`, `domLoading`, `domInteractive`, `domComplete`, `redirectStart/End`, `unloadEventStart/End` are `[Unimplemented]` — read back as `undefined`. |
+| `performance.navigation` | **Not exposed** (`undefined`). |
+| `performance.memory` | **Not exposed** (Chrome-specific). |
+| **Not exposed**: `PerformanceMark`, `PerformanceMeasure`, `PerformanceObserver`, `PerformanceNavigationTiming`, `PerformancePaintTiming`, `PerformanceLongTaskTiming`, `PerformanceServerTiming`, `PerformanceEventTiming` | Constructors are `undefined`. |
+
+### Crypto
+
+| Member | Status |
+|--------|--------|
+| `crypto.getRandomValues(typedArray)` | Implemented. |
+| `crypto.randomUUID()` | **`[Unimplemented]`** — `undefined`. |
+| `crypto.subtle` | **`[Unimplemented]`** — `undefined`. **The entire WebCrypto algorithm surface is missing**: `encrypt`, `decrypt`, `sign`, `verify`, `digest`, `generateKey`, `deriveKey`, `deriveBits`, `importKey`, `exportKey`, `wrapKey`, `unwrapKey` are all unavailable. |
+| **Not exposed** | `SubtleCrypto`, `CryptoKey`, `CryptoKeyPair` constructors. Apps needing SHA-256, AES, HMAC, ECDSA, etc. must ship a JS polyfill. |
+
+### Forms — runtime caveats (audit additions)
+
+The HTML form-control IDLs in `src/core/dom/HTMLFormElement.idl`, `HTMLInputElement.idl`, etc. expose far less than the spec implies. Listing the **unimplemented surface** so authors don't reach for it:
+
+| Surface | Status |
+|---------|--------|
+| Constraint validation API on every form control (`validity`, `validationMessage`, `willValidate`, `checkValidity()`, `reportValidity()`, `setCustomValidity()`) | **All `[Unimplemented]`.** Reading returns `undefined`; calling the methods raises `TypeError: Callee is not a function object`. There is no working `:invalid` runtime state, no `ValidityState` constructor, and no `RadioNodeList`. |
+| `HTMLInputElement` selection/range/step API (`select()`, `setSelectionRange()`, `setRangeText()`, `selectionStart/End/Direction`, `stepUp()`, `stepDown()`, `valueAsDate`, `valueAsNumber`) | All `[Unimplemented]`. Calling throws. |
+| `HTMLInputElement` other attrs (`accept`, `alt`, `autocomplete`, `dirName`, `formNoValidate`, `pattern`, `readOnly` (works on textarea, NOT input), `inputMode`, `height`, `width`, `src`, `useMap`, `align`, `indeterminate`, `files`, `list`) | `[Unimplemented]` — `undefined`. |
+| `HTMLTextAreaElement` selection/wrap (`wrap`, `select()`, `selectionStart/End/Direction`, `setRangeText()`, `setSelectionRange()`, `inputMode`) | `[Unimplemented]`. |
+| `HTMLOptGroupElement.label` | `[Unimplemented]` — `<optgroup label="X">` does not surface `label` via JS. |
+| `HTMLFieldSetElement.elements` | `[Unimplemented]` — `undefined`. |
+| `HTMLOutputElement.type` | Returns `""` (spec says `"output"`). |
+| **Interfaces not exposed at all** | `HTMLDataListElement`, `HTMLProgressElement`, `HTMLMeterElement` — the corresponding `<datalist>`/`<progress>`/`<meter>` tags fall through to `HTMLUnknownElement`. `<input list>` autocomplete UI does not work. `RadioNodeList` is not exposed — `form.elements.namedItem('radio')` returns only the first matching radio. |
+| `FormData` iteration | **`fd.entries`, `keys`, `values`, `forEach`, `[Symbol.iterator]` are all `undefined`** (IDL `iterable<>` is commented out). `for..of fd`, `Array.from(fd)`, `[...fd]` will throw or yield nothing. |
+| `FormData` Blob/File overloads | `append(name, Blob, filename)` / `set(name, Blob, filename)` are not exposed; `FormDataEntryValue` is `USVString` only. |
+
+### Selection API and editing — not available (audit additions)
+
+The W3C Selection API and `document.execCommand` editing pipeline are entirely absent. There is no in-engine way to read, programmatically modify, or observe the user's selection. Authors who need a "selection" must implement it themselves using `Range` plus their own visual highlighting (e.g. wrap with `<span class="hl">`).
+
+| Surface | Status |
+|---------|--------|
+| `Selection` interface | **Not exposed.** `typeof Selection === "undefined"`; no constructor and no prototype. |
+| `window.getSelection()` / `document.getSelection()` | **Not in IDL.** Both are `undefined`; calling raises `TypeError: Callee is not a function object`. |
+| `document.execCommand` and `queryCommand{Enabled,Indeterm,State,Supported,Value}` | **`[Unimplemented]`** in `Document.idl` — `undefined` at runtime (also noted in the Document table above). No editing-host pipeline exists; setting `contenteditable=true` and `document.designMode = "on"` produces no effect. |
+| `document.onselectionchange` / `onselectstart` / `Element.onselectstart` | Not in IDL — `undefined`. The `selectionchange` and `selectstart` events are never dispatched. |
+| `<input>` / `<textarea>` selection API (`select()`, `setSelectionRange()`, `setRangeText()`, `selectionStart/End/Direction`) | All `[Unimplemented]` (also covered in §Forms). Methods throw `TypeError`; attribute reads return `undefined`. **However, `selectionStart`/`selectionEnd`/`selectionDirection` are writable as plain expando properties** because the IDL `[Unimplemented]` setter does not throw — assignments succeed but have no effect on the rendered widget. Do not rely on this. |
+| Caret/IME hooks (`getComposition`, `caretPositionFromPoint`) | `caretPositionFromPoint` is `[Unimplemented]`. There is no public caret-position API. |
+
+**Recommended pattern.** For text-search-and-highlight or "click-to-mark" UIs, build on `Range` directly:
+
+```js
+function highlight(range, cls) {
+  // surroundContents only works when the range does not split a non-Text node.
+  // For a robust implementation walk the range with a TreeWalker and wrap each
+  // contained Text node individually.
+  const span = document.createElement('span');
+  span.className = cls;
+  range.surroundContents(span);
+}
+```
+
+### Range edge cases (audit additions)
+
+The Range table above (rows around line 1137) is correct at the interface level, but the runtime has these caveats authors should know:
+
+| Edge case | Observed behavior |
+|-----------|-------------------|
+| `range.toString()` when start and end live in **different Text nodes** with intermediate descendant Text nodes | **Buggy: trailing endNode text is appended twice.** Example: with `<p>Hello <b>brave</b> world of <span>LWE</span></p>` and a Range from `(p.firstChild, 0)` to `(span.firstChild, 3)`, `toString()` returns `"Hello brave world of LWELWE"` instead of `"Hello brave world of LWE"`. Source: `src/core/dom/Range.cpp` `Range::toString()` — the descendant-walk loop already visits the end text node before the explicit "endNode prefix" append at the bottom of the function. Workaround: extract text by walking nodes manually with a `TreeWalker`. |
+| `range.surroundContents(newParent)` whose endpoints span a non-Text node boundary | Throws `InvalidNodeTypeError` (the spec's "Invalid State" condition). The exception name LWE uses is **`InvalidNodeTypeError`** rather than the spec's `InvalidStateError`; check `e.name` against both if you must distinguish. |
+| `range.surroundContents(newParent)` on a **collapsed** range | Succeeds and produces an empty wrapper element at the collapse point (e.g. `<mark></mark>`). This matches the spec's "wrap nothing" semantics but is rarely useful. |
+| `range.collapse()` (no argument) | Collapses to **end** (`toStart` defaults to `false` per IDL). Matches the spec. `collapse(true)` collapses to start, `collapse(false)` to end. Both leave `collapsed === true` and equal start/end offsets. |
+| `range.cloneContents()` | **`[Unimplemented]`** — `undefined`; calling throws `TypeError`. Use `extractContents()` and re-insert the original content if you need a copy. |
+| `range.createContextualFragment(html)` | **`[Unimplemented]`** — `undefined`; calling throws `TypeError`. Use a temporary element with `innerHTML = …` and adopt its children instead. |
+| `range.expand(unit)` | **`[Unimplemented]`** (non-standard WebKit-ism). Not available. |
+| `range.getClientRects()` / `getBoundingClientRect()` | Implemented and return per-fragment rects. Verified across multi-line text. |
+
+### Canvas 2D — additional details (audit additions)
+
+The existing canvas mixin tables are incomplete. Adding the missing pieces:
+
+| Mixin / Interface | Members |
+|-------------------|---------|
+| `CanvasCompositing` | `globalAlpha` (0.0–1.0, default 1.0), `globalCompositeOperation` (default `"source-over"`; accepts the full Porter-Duff set **and** the CSS blend-mode names). |
+| `CanvasFilters` | **`filter` is `[Unimplemented]`** — `undefined` at runtime. CSS filter strings on the 2D context have no effect; use the CSS `filter` property on the parent. |
+| `CanvasUserInterface` | All four members `[Unimplemented]`: `drawFocusIfNeeded(Element)`, `drawFocusIfNeeded(Path2D, Element)`, `scrollPathIntoView()`, `scrollPathIntoView(Path2D)`. |
+| `CanvasTransform` | Adds `getTransform()` (returns a fresh `DOMMatrix`) and the `setTransform(DOMMatrix2DInit)` overload. |
+| `Path2D` | Constructible: `new Path2D()` and `new Path2D(Path2D)`. Includes the full `CanvasPath` mixin. **`new Path2D(DOMString)` (SVG path-string overload) is not implemented** — engine logs a warning and returns an empty path. **`Path2D.addPath` is `[Unimplemented]`.** |
+| `ImageBitmapRenderingContext` | Obtained via `canvas.getContext("bitmaprenderer")`. The context object exists but `transferFromImageBitmap` is `[Unimplemented]`, so the context cannot display anything. |
+| `HTMLCanvasElement` extras | `toDataURL(type='image/png', quality)` works (PNG verified). **`toBlob(callback)` and `transferControlToOffscreen()` are `[Unimplemented]`.** `OffscreenCanvas` is NOT exposed. |
+| `TextMetrics` | Only `width` is functional. **All 11 extended baseline metrics** (`actualBoundingBoxLeft/Right/Ascent/Descent`, `fontBoundingBoxAscent/Descent`, `emHeightAscent/Descent`, `hangingBaseline`, `alphabeticBaseline`, `ideographicBaseline`) are `[Unimplemented]` — read as `undefined`. |
+| `ImageData` | Constructor overloads `new ImageData(sw, sh)` and `new ImageData(Uint8ClampedArray, sw, optional sh)` are exposed. **`colorSpace` is not exposed**; pixel data is always sRGB. |
+| `ImageBitmap` | `close()` is implemented (releases the bitmap). |
+| Additional enum values | `CanvasTextBaseline` accepts `"ideographic"` (in addition to the values listed earlier). `ImageSmoothingQuality` enum: `"low"|"medium"|"high"`. `CanvasFillRule`: `"nonzero"|"evenodd"`. |
+
+### CSS Layout — Flexbox / Grid / Position runtime caveats (audit additions)
+
+#### Flexbox
+
+| Property | Supported | Not supported / silent fallback |
+|----------|-----------|---------------------------------|
+| `flex-direction` | `row`, `row-reverse`, `column`, `column-reverse` | invalid → `row` |
+| `flex-wrap` | `nowrap`, `wrap`, `wrap-reverse` | — |
+| `flex-flow` | `<dir>`, `<wrap>`, `<dir> <wrap>`, `<wrap>` alone | comma-separated forms |
+| `flex` shorthand | `auto`/`none`/`initial`/`<n>`/`<g> <s> <b>` | — |
+| `flex-grow`/`shrink`/`basis` | non-negative numbers / lengths / % / `auto` / `content` | negative values silently coerced to initial |
+| `justify-content` | `flex-start`, `flex-end`, `start`, `end`, `center`, `space-between`, `space-around`, `stretch`, `normal` | **`space-evenly`, `left`, `right`** parse to `normal` (unsupported). At layout, `start`/`stretch`/`normal` all behave as `flex-start`. |
+| `align-items` / `align-self` | `flex-start`, `flex-end`, `start`, `end`, `center`, `baseline`, `stretch` | **`first baseline`, `last baseline`, `self-start`, `self-end`, `normal`** silently coerced to `stretch` |
+| `align-content` | `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `stretch` | **`space-evenly`, `start`, `end`, `normal`, baseline variants** coerced to `stretch` |
+| `gap` / `row-gap` / `column-gap` | `<length>` | **`row-gap` is parsed but layout ignores it** (cross-axis gap between wrapped flex lines does not apply). Percentages rejected. `gap: 10px` (one value) does NOT propagate to row-gap; only `column-gap` is set. Always use longhand `row-gap`/`column-gap` separately. |
+| `order` | integer (incl. negative) | — |
+| `place-items` / `place-content` / `place-self` / `justify-items` / `justify-self` | — | **NOT recognized** by the trie — declarations dropped with `Unsupported css property`. |
+
+#### Grid
+
+| Property | Supported | Not supported / partial |
+|----------|-----------|--------------------------|
+| `display: grid` / `inline-grid` | both | — |
+| `grid-template-rows` / `grid-template-columns` | `<length>` (px/em/%/vw/...), `<fr>`, `auto`, `min-content`, `max-content`, `minmax(min, max)`, `repeat(<int>, …)`, `repeat(auto-fill, …)`, `repeat(auto-fit, …)` | **`fit-content(<length>)`, line-name brackets `[name]`, `subgrid`** are not recognized — entire declaration is dropped. (Spec.md previously incorrectly claimed `%` is unsupported and `minmax` is unsupported.) |
+| `grid-template-areas` | string syntax | — |
+| `grid-template` (shorthand) | parses but the value setter has **no case** for it — sub-properties are not actually expanded. | **Avoid in production**; use the three sub-properties separately. |
+| `grid-auto-flow` / `grid-auto-rows` / `grid-auto-columns` | — | **NOT recognized.** Auto-placement always uses default `row` flow with `auto` track sizes. |
+| `grid-row-start/end`, `grid-column-start/end` | `auto`, `<integer>`, `<custom-ident>` (named lines), `span <integer>`, `span <custom-ident>` | Negative integers parse but layout effect (counting from end) is not guaranteed — prefer positive. The serialized `*-end` may come back empty in some shorthand expansions (cosmetic bug). |
+| `grid-row` / `grid-column` (shorthand) | `<start> / <end>` | — |
+| `grid-area` | `<name>` or `<line>{1,4}` | — |
+| `gap` / `grid-gap` (single value) | layout uses the value | **Bug:** `getComputedStyle(el).rowGap` returns empty (only `column-gap` is stored). Always use `row-gap` / `column-gap` longhands. |
+| `justify-content` (grid) | `normal`, `start`, `center`, `end`, `stretch` | Other values (`space-between`/`space-around`/`space-evenly`/`flex-start`/`flex-end`/`left`/`right`) parse but log `unsupported justify-content value in grid` at layout — **no visual effect**. |
+| `align-content` (grid) | parsed, **never applied** (`GridFormattingContext` has no `applyAlignContent`). | Use `align-items`/`align-self` per-item to position rows. |
+| `align-items` / `align-self` (grid) | `start`, `center`, `end`, `stretch` | Other values emit `STARFISH_UNSUPPORTED` at layout. |
+| `justify-items` / `justify-self` / `place-items` / `place-content` / `place-self` | — | **NOT recognized.** |
+
+#### Position / Float / Inset
+
+| Property | Supported | Not supported / fallback |
+|----------|-----------|---------------------------|
+| `position` | `static`, `relative`, `absolute`, `fixed` | **`sticky` is silently treated as `static`** (no console warning). |
+| `top` / `right` / `bottom` / `left` | `<length>`, `<percentage>`, `auto` | — |
+| `inset` (shorthand) | 1–4 values (CSS-standard) | — |
+| `inset-block-start/end`, `inset-inline-start/end` | — | **NOT supported** (`Unsupported css property` warning). |
+| `float` | `none`, `left`, `right` | **`inline-start` / `inline-end` silently fall back to `none`** (no warning). |
+| `clear` | `none`, `left`, `right`, `both` | **`inline-start` / `inline-end` silently fall back to `none`** (no warning). |
+| `z-index` | `auto`, `<integer>` (incl. negative) | — |
+
+> **Containing block & stacking context rules (audit-confirmed):** only an ancestor with `position != static` **OR** with `transform != none` establishes a containing block for absolutely-positioned descendants. **`will-change`, `filter`, `contain`, `perspective` do NOT establish a containing block in LWE.** Stacking contexts are created only by `position` + `z-index` (other than `auto`); `opacity < 1`, `transform`, `will-change`, `filter`, `mix-blend-mode`, and `isolation` do NOT create stacking contexts.
+
+### CSS `display` and `visibility` — runtime caveats (audit additions)
+
+| `display` value | Status |
+|-----------------|--------|
+| `block`, `inline`, `inline-block`, `none`, `flex`, `inline-flex`, `grid`, `inline-grid`, `table`, `inline-table`, `table-row`, `table-row-group`, `table-header-group`, `table-footer-group`, `table-cell`, `table-column`, `table-column-group`, `table-caption`, `list-item`, **`inline-list-item`** | Supported. (`list-item` and `inline-list-item` were missing from Spec.md.) |
+| `-webkit-box`, `-webkit-inline-box` | Supported when `STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX` is set (default for Linux/Android/Windows hosts; off on Tizen wearable builds). Primary use case is `-webkit-line-clamp`. |
+| `-webkit-flex`, `-webkit-inline-flex` | Aliases under `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX` (already documented in Obsolete CSS). |
+| `contents` | **NOT supported** — silently dropped. The element keeps a real box. Don't use for box-tree elision. |
+| `flow-root` | **NOT supported** — silently dropped. Float-clearing BFC creation does NOT happen. Use a float-clearing wrapper instead. |
+| `run-in` | **NOT supported** — silently dropped. |
+| `ruby`, `ruby-base`, `ruby-text`, `ruby-base-container`, `ruby-text-container` | **NOT supported** — silently dropped. |
+| Multi-token CSS Display L3 syntax (`block flex`, `inline flow-root`, `flow-root list-item`, …) | **NOT supported.** The parser's `tokens.size() != 1` guard rejects all multi-token forms — declaration silently dropped (no `Unsupported css property` warning). |
+
+> **Footgun:** rejected `display` values produce **no console warning**. Authors that try `display: contents` or `display: flow-root` and rely on `getComputedStyle.display` for feature detection will see the property fall back silently to its initial value (`inline`/`block`). Verify visually or by checking layout (e.g., `offsetWidth` on a child).
+
+| `visibility` value | Status |
+|--------------------|--------|
+| `visible`, `hidden` | Supported. |
+| `collapse` | Parses; on non-table elements **computes to `hidden`** (per spec). On `<tr>`/`<tbody>` it parses but **does NOT actually collapse the row** — the row is hidden in place, height unchanged. Use `display: none` to actually remove rows. |
+
+### CSS @keyframes / animations — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `@keyframes` selectors (`from`, `to`, `0%`, `25%`, `50%`, `75%`, `100%`, comma list `0%, 100%`) | OK. |
+| `animation-name` / `-duration` / `-timing-function` / `-delay` / `-iteration-count` / `-play-state: paused` | OK. (`paused` correctly halts progression.) |
+| `animation-direction: alternate` / `alternate-reverse` | **Buggy:** end-of-cycle value is incorrect (animations end stuck near a middle frame instead of returning to the cycle endpoint). |
+| `animation-iteration-count: 3` (or any finite > 1) | Cycles run, but intermediate samples may be skipped — not all iterations are observable. |
+| `animation-fill-mode: forwards` | OK. |
+| `animation-fill-mode: backwards` / `both` | **Bug:** the `backwards` phase (during `delay`) renders the *current* value instead of the keyframe-`from` value. |
+| `animation-duration: 0s` | **Buggy:** the `to` value is NOT applied; animation stays at `from`. |
+| `addEventListener('animationstart' / 'animationend' / 'animationcancel')` | Fire correctly. `animationName` and `elapsedTime` populated. |
+| `addEventListener('animationiteration')` | **Never fires.** The `KeyFramesAnimationEventType` enum has no `AnimationIteration` value, and `m_animationiteration` static string does not exist. The dispatch site (`AnimationExecutor.cpp:589`) is gated on `isSVGAnimation`, so non-SVG keyframe animations cannot fire iteration events. |
+| Multi-name `animation-name: a, b` with `animation-duration: 100ms, 100ms` | **Broken** — start events do not fire. |
+| `getComputedStyle(el).animationName` | Includes literal quotes around the name. Non-standard. |
+| `getComputedStyle(el).animationIterationCount: inf` | Should be `infinite` per spec. |
+
+**Timing-function value parsing** (`Style.cpp::updateValueUnitTransitionTimingFunction` / `updateValueUnitAnimationTimingFunction`):
+
+| Token | Status |
+|-------|--------|
+| `ease`, `linear`, `ease-in`, `ease-out`, `ease-in-out`, `step-start`, `step-end` | All seven keywords supported. |
+| `cubic-bezier(x1, y1, x2, y2)` | Supported. **`x1` and `x2` must be in `[0, 1]`** (`y1`/`y2` may be any number); out-of-range x rejects the whole declaration. |
+| `steps(<integer>, start \| end)` | Supported. `<integer>` must be > 0; the second argument defaults to `end`. |
+| `steps(<n>, jump-start \| jump-end \| jump-none \| jump-both)` | **NOT recognized** — only `start`/`end` accepted as the 2nd arg. |
+| `linear(<linear-stop-list>)` (CSS Easing 2) | **NOT recognized.** |
+
+**`animation-direction`**: `normal`, `reverse`, `alternate`, `alternate-reverse` all parse. (At runtime, `alternate`/`alternate-reverse` end-of-cycle is buggy — see the table above.)
+
+**`animation-fill-mode`**: `none`, `forwards`, `backwards`, `both` all parse.
+
+**`animation-play-state`**: `running`, `paused`. Both work.
+
+**`animation-iteration-count`**: any positive `<number>` or `infinite`. **`getComputedStyle(...).animationIterationCount` returns `inf` instead of the spec-required `infinite`** (already noted above).
+
+> 🔥 **Critical crashes:**
+> - **`@keyframes empty {}`** (empty body) → SIGSEGV when an animation referencing it starts.
+> - **Animating an unsupported property** (e.g. `background` shorthand, `box-shadow`, `filter`, `font-weight`, `letter-spacing`, `clip-path`) crashes the engine in debug builds (`AnimatedValue.cpp:328` `STARFISH_UNIMPLEMENTED` → abort).
+>
+> **Safe-to-animate property whitelist** (verified via `AnimatedValue::create` switch): `color`, `background-color`, `border-*-color`, `caret-color`, `outline-color`, `text-decoration-color`, `width` / `min-width` / `max-width`, `height` / `min-height` / `max-height`, `margin-*`, `padding-*`, `border-*-width`, `left` / `right` / `top` / `bottom`, `font-size`, `background-position-x/y`, `background-size`, `opacity`, `transform`, `transform-origin`. **Anything else may abort the engine.**
+
+### CSS pseudo-classes — runtime caveats (audit additions)
+
+The pseudo-class enum lives in `src/StaticStrings.h:244-308`; the matcher is `StyleResolver::checkPseudoClass` (`Style.cpp:8504-8778`). Anything that hits `default:` logs `Unsupported css pseudo-element: <id>` and returns `false`.
+
+| Pseudo | Status |
+|--------|--------|
+| `:hover`, `:active`, `:focus`, `:target`, `:link`, `:checked`, `:disabled`, `:enabled`, `:placeholder-shown`, `:root`, `:empty`, `:first-child`, `:last-child`, `:only-child`, `:nth-child(...)`, `:nth-last-child(...)`, `:first-of-type`, `:last-of-type`, `:only-of-type`, `:nth-of-type(...)`, `:nth-last-of-type(...)`, `:scope`, `:lang(...)`, `:dir(ltr|rtl)`, `:defined`, `:host`, `:host(...)` | Implemented. |
+| `:not(<single simple>)` | Works **only with one argument**. `:not(.a, .b)` triggers `STARFISH_ASSERT` (`Style.cpp:8685`). |
+| **Parses but never matches** (silent — always returns `false`; entry exists in the `STARFISH_ENUM_PSEUDO_SELECTORS` list at `src/StaticStrings.h:244` but no `case` in `checkPseudoClass`) | `:focus-visible`, `:focus-within`, `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range`, `:read-only`, `:read-write`, `:default`, `:indeterminate`, `:any-link`, `:local-link`, `:visited`, `:target-within`, `:fullscreen`, `:blank`, `:current`, `:drop`, `:future`, `:past`, `:paused`, `:playing`, `:user-invalid`. |
+| **Hard `SyntaxError`** (entire selector dropped at parse) | `:is(...)`, `:where(...)`, `:has(...)`, `:popover-open`, `:modal`, `:nth-child(An+B of <selector>)`. Forgiving-selector-list rules don't apply — these break the whole stylesheet rule. |
+| `:scope` | Matches `documentElement` even outside `querySelector(...)` calling context (non-spec). |
+
+### CSS pseudo-elements — runtime caveats (audit additions)
+
+LWE supports exactly **4** pseudo-elements for *style application*: `::before`, `::after`, `::first-line`, `::first-letter`. The `PseudoElementType` enum (`Style.h:3285-3297`) only has slots for those four (plus internal `FirstLineInherited`).
+
+| Pseudo | Status |
+|--------|--------|
+| `::before`, `::after` | OK. `content: "string"`, `content: counter()`, `content: attr(x)`, `content: url()`, `content: ""` all work. |
+| `::first-line`, `::first-letter` | OK at render time. |
+| `::placeholder` | **NOT implemented** — logs `Unsupported css pseudo-element: 60`. (Whitelist may erroneously list it as supported.) |
+| `::selection` | **NOT implemented** — logs `Unsupported css pseudo-element: 52`. **`tool/lwe_compat/whitelist.json` lists `::selection` as supported but the engine rejects it** — fix needed. |
+| `::marker` | **NOT implemented**. |
+| `::backdrop` | **NOT implemented** (and `<dialog>.showModal()` is also out of scope). |
+| `::file-selector-button`, `::target-text`, `::part(...)`, `::slotted(...)`, `::-webkit-*` | **Token not even in the parser enum** — silently dropped at parse time (no warning). |
+| `::cue`, `::spelling-error`, `::grammar-error` | **NOT implemented** (logged warning). |
+| `getComputedStyle(el, '::pseudo')` | **🐛 Always returns the host's computed style, even for the 4 implemented pseudos.** The Window binding ignores the second argument. Authors that probe pseudo support via CSSOM will get false negatives. |
+
+### CSS Custom Properties (`--*` / `var()`) — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `--name: value` declarations + cascade override + inheritance | OK. |
+| `var(--name)` and `var(--name, fallback)` (incl. nested fallback) | OK. |
+| `calc(var(--n) * 1px)` and other type coercion through `calc()` | OK. |
+| `var()` inside shorthand declarations (`background: var(--bg)`, `font: var(--fs) sans-serif`, `transition: opacity var(--dur)`) | OK. |
+| `var()` resolving to a `linear-gradient(...)` for `background-image` | OK. |
+| `el.style.setProperty('--x', v)` / `getPropertyValue('--x')` / `removeProperty('--x')` | OK. |
+| `getComputedStyle(child).getPropertyValue('--x')` (inheritance) | OK. |
+| Direct self-cycle `--self: var(--self)` | Guarded — falls back to initial. |
+| **Indirect cycle `--a: var(--b); --b: var(--a)`** | **🔥 Hangs / SIGSEGV** during `getComputedStyle`. The cycle guard at `CSSVariableSyntaxTreeBuilder.cpp:354-365` only checks one-step self-reference, not multi-step cycles. |
+| `el.style.cssText` for declarations containing only custom properties | **Returns empty string** (`generateCSSText` does not iterate `m_cssCustomValues`). |
+| `setProperty('--x', v, 'important')` + `getPropertyPriority('--x')` | **`!important` is silently dropped** — `setCustomProperty` has no priority parameter. `getPropertyPriority('--x')` always returns `""`. |
+| `@property { ... }` at-rule | **Not parsed** — silently dropped. |
+| `CSS.registerProperty(...)` | **Not exposed** — `undefined`. No typed custom properties. |
+
+### Tables — runtime caveats (audit additions)
+
+| Property/Construct | Status |
+|--------------------|--------|
+| `<table>` with `border-collapse`, `border-spacing` (single length), `table-layout`, `caption-side: top|bottom`, `empty-cells`, `vertical-align` on `<td>` | All work. `display: table | table-row | table-cell | table-row-group | table-caption` on non-table elements works (anonymous box wrapping). |
+| `border-spacing: <h> <v>` (two-value form) | **🔥 SIGSEGV** — `getComputedStyle().borderSpacing` reads uninitialized `m_multiValue` (`ComputedStyleCSSStyleDeclaration.cpp:1750`). Use a single length only. |
+| `caption-side: left | right` | **NOT supported** — silently dropped (the value list at parser-side has only `top`/`bottom`). |
+| `<caption>` without an explicit CSS `width` | Hits `STARFISH_UNIMPLEMENTED` (`FrameTableBox.cpp:1336`); in debug this floods logs every layout pass and may abort. **Always set `width` on `<caption>`.** |
+| `table-layout: fixed` with inline `<td width=>` | Does NOT actually constrain column widths — falls back to `auto` layout. If you need fixed table layout, use `<col>` with explicit widths. |
+
+### Multi-column — runtime caveats (audit additions)
+
+`column-count`, `column-width`, `columns` (shorthand), `column-rule[-style|-width|-color]`, `column-span`, `column-fill`, `break-before`/`-after`/`-inside` are **entirely unsupported** — none of these properties are in the parser's lookup trie, and there is no `FrameMultiColumnBox` / fragmentation engine. Each declaration logs `Unsupported css property:` and is dropped.
+
+`column-gap` IS recognized but only as the **unified flex/grid `gap` property** — it has no effect on a non-flex/non-grid container. To emulate columns, use `display: grid; grid-template-columns: repeat(N, 1fr); gap: <length>`.
+
+### Page / Print / Break — runtime caveats (audit additions)
+
+LWE has **zero** support for CSS Paged Media:
+
+| Construct | Status |
+|-----------|--------|
+| `@page` at-rule (incl. `:first`/`:left`/`:right`) | **Not parsed** — entire rule silently dropped from `cssRules`. No `CSSPageRule` IDL. |
+| `page-break-before` / `page-break-after` / `page-break-inside` | **Unsupported** — `Unsupported css property` warning, dropped. |
+| `break-before` / `break-after` / `break-inside` (modern) | **Unsupported.** |
+| `orphans`, `widows` | **Unsupported.** |
+| `page` (shorthand) | **Unsupported.** |
+| `@media print` | The engine's `MediaQueryEvaluator` is permanently `"screen"` (`Style.cpp:10271-10277`). `matchMedia('print').matches === false` always. **Rules inside `@media print` are statically unreachable.** |
+| `window.print()` | **Not exposed** (`undefined`). No print pipeline of any kind. |
+
+### Containment / will-change / @container — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `will-change` | Parses. **Tokens `transform` and `opacity` DO create a stacking context AND set `m_needsGraphicsBuffer`** (`Frame.cpp:1598-1610`) — earlier docs that called this a no-op were wrong. Other tokens (`scroll-position`, `contents`, custom-ident) are stored but inert. **Bug:** `getPropertyValue('will-change')` returns empty string for `auto` (should be `"auto"`). **Bug:** `CSS.supports('will-change', 'transform')` returns `false` despite the property being supported. |
+| `contain` (any value: `none`/`layout`/`paint`/`size`/`style`/`content`/`strict`/`inline-size`/`block-size`) | **NOT recognized** — declaration silently dropped. No layout/paint isolation available. |
+| `content-visibility: visible / hidden / auto` | **NOT recognized.** `content-visibility: hidden` does NOT hide the subtree. Use `display: none`. |
+| `contain-intrinsic-size` | **NOT recognized.** Cannot reserve space for skipped subtrees. |
+| `container-type` / `container-name` / `container` (shorthand) | **NOT recognized.** |
+| `@container` at-rule | **Not parsed** — entire rule silently discarded. **Container Queries do not work at all.** Use `@media` (viewport) + JS `resize` polling for width-based logic. |
+| `@starting-style` at-rule | **Not parsed** — silently discarded. Workaround: set the starting value, force layout (`offsetHeight`), then change to the end value, OR use double `requestAnimationFrame`. |
+
+### CSS-wide keywords / `all` shorthand — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `all: initial` / `inherit` / `unset` / `revert` (the CSS Cascade `all` shorthand) | **Never applies.** `Style.cpp::updateValueAll` is a TODO stub that returns `false` for every input — declarations like `all: unset` are silently dropped. |
+| Per-property `<prop>: initial` | Works at the cascade level — the property reverts to its initial value. |
+| Per-property `<prop>: inherit` | Works for inheritable properties (and at the cascade level for non-inheritable). |
+| Per-property `<prop>: unset` / `revert` / `revert-layer` | Behavior is partial — `unset` is interpreted as either `initial` or `inherit` per spec for known properties, but `revert` and `revert-layer` are NOT understood by `applyProperty` and may fall back silently. |
+
+### CSS Houdini — runtime caveats (audit additions)
+
+CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade is exposed.
+
+| Surface | Status |
+|---------|--------|
+| `CSS.registerProperty(...)`, `CSS.paintWorklet`, `CSS.layoutWorklet`, `CSS.animationWorklet`, `Worklet`, `PaintWorkletGlobalScope`, `CSSPaintCallback` | **All `undefined`.** No worklets, no Properties & Values API. |
+| `paint(<name>)` CSS function | Silently dropped — `background-image: paint(...)` resolves to `none`. |
+| `el.attributeStyleMap`, `el.computedStyleMap()`, `StylePropertyMap`, `StylePropertyMapReadOnly` | **All absent** — use `el.style.*` and `getComputedStyle(el).*`. |
+| `CSSStyleValue`, `CSSKeywordValue`, `CSSUnitValue`, `CSSNumericValue` constructors | Exposed as cosmetic stubs. `value`/`unit` round-trip; **arithmetic methods (`add`/`sub`/`mul`/`div`/`min`/`max`/`equals`/`to`/`toSum`/`type`) are commented out** in IDL — `undefined` at runtime. |
+| `CSSImageValue`, `CSSTransformValue`, `CSSMathValue`, `CSSURLImageValue` | **NOT exposed.** |
+| `CSSStyleValue.parse(prop, cssText)` | **🔥 Crashes the engine** — generated binding asserts `result != nullptr` and the C++ stub returns `nullptr` (`CSSStyleValue.cpp:53`); SIGABRT on call. **Do NOT call.** |
+| `CSSStyleValue.parseAll(...)` | Returns empty array (safe). |
+| `CSS.escape(ident)` | **`undefined`** (declared `[Unimplemented]`). Use a polyfill or manual `\` escaping. |
+| `CSS.supports(prop, value)` / `CSS.supports(condition)` | Function exists but **returns `false` for valid declarations** including `color: red`, `display: grid`, `aspect-ratio: 1`, `--x: 1`, all gradient functions including the working `linear-gradient`. **Treat negative results as inconclusive** — feature-detect via setting an inline value and reading `getComputedStyle` instead. |
+
+### CSS Image functions — runtime caveats (audit additions)
+
+Of the function set in CSS Images L4, only `linear-gradient(...)` and `radial-gradient(...)` work. Everything else silently resolves the entire declaration to `none` (no warning, no comma-list fallback).
+
+| Function | Status |
+|----------|--------|
+| `linear-gradient`, `radial-gradient` | OK. |
+| `conic-gradient`, `repeating-linear-gradient`, `repeating-radial-gradient` | **Silently → `none`.** |
+| `image-set(...)` (CSS3 url-quoted form, CSS4 bare-string form, with `type(...)`) | **Silently → `none`.** No DPR-based image picker — use a single `url()` (typically @2x) or branch via `@media (min-resolution: 2dppx)`. |
+| `cross-fade(...)` | **Silently → `none`.** Use a layered overlay with separate `<img>` + opacity transitions. |
+| `element(#id)` | **Silently → `none`.** No live source painter. |
+| `image(...)` (with directional / fallback color) | **Silently → `none`.** |
+| `paint(<name>)` | **Silently → `none`** (Paint Worklet absent). |
+| `border-image-source` | **Only `url(...)` works** — even gradients are rejected at apply-time (`STARFISH_UNSUPPORTED("css property: gradient")`). |
+
+> **Trap:** an unsupported function in a comma-list of background-images fails the **entire** declaration. `background-image: image-set(...), url('fallback.png')` produces `none`, not the fallback. Put fallbacks in a separate earlier rule (cascade) instead.
+
+### Gradient syntax detail — runtime caveats (audit additions)
+
+`linear-gradient(...)` and `radial-gradient(...)` are the only gradient functions parsed. Within them:
+
+| Syntax | Status |
+|--------|--------|
+| `linear-gradient(<angle>, c1, c2, ...)` (e.g. `45deg`, `0.25turn`) | OK. Negative angles allowed. |
+| `linear-gradient(to <side-or-corner>, ...)` (`to top`, `to bottom right`, …) | OK. The four sides + four corner combinations parse. |
+| `linear-gradient(c1, c2)` (no angle/side ⇒ default `to bottom`) | OK. |
+| `radial-gradient(<shape> <size> at <position>, ...)` | OK. Shapes: `circle`, `ellipse`. Sizes: `closest-side`, `closest-corner`, `farthest-side`, `farthest-corner` (default), explicit length(s). |
+| `radial-gradient(at <position>, ...)` (no shape/size) | OK. |
+| Color-stop position (`red 50%`, `blue 200px`) | OK. |
+| **Color hint** between two stops (`red, 30%, blue`) — single bare percentage between two color stops | Parser accepts the syntax but the **interpolation hint behavior is approximate**; treat as a smoothing nudge only. |
+| **Multi-position color stop** (`red 0% 25%`, two positions on one stop) | **NOT supported** — only the first position is parsed, the second is dropped silently. |
+| Modern color spaces in stops (`linear-gradient(in oklch, ...)`) | **NOT supported** — `in <colorspace>` clause is not recognized; the `in` token aborts gradient parsing. |
+| `conic-gradient(...)`, `repeating-linear-gradient(...)`, `repeating-radial-gradient(...)` | **Silently → `none`** (already documented). |
+
+### Writing-mode + isolation — runtime caveats (audit additions)
+
+| Property | Status |
+|----------|--------|
+| `writing-mode` (`horizontal-tb`/`vertical-rl`/`vertical-lr`/`sideways-rl`/`sideways-lr`) | **NOT recognized** by the parser — only the legacy `direction: ltr/rtl` controls bidi. Vertical text layout is unavailable. |
+| `text-orientation` | **NOT recognized** (already documented under text properties). |
+| `isolation` (`auto`/`isolate`) | **NOT recognized** — no CSS-driven stacking-context isolation. Use `position` + `z-index` instead. |
+| `image-orientation` | **NOT recognized** (already documented). |
+| `background-blend-mode` | **NOT recognized** (already documented in main background row). |
+
+### 3D transform context — runtime caveats (audit additions)
+
+3D transform functions (`matrix3d`, `translate3d`, `translateZ`, `scale3d`, `scaleZ`, `rotate3d`, `perspective`) parse via the `transform` property (already documented in the main table). However, the CSS properties that establish or control the 3D rendering context are **not** in the parser trie:
+
+| Property | Status |
+|----------|--------|
+| `perspective` (as a CSS property, e.g. `perspective: 800px`) | NOT recognized as a property — only as a `transform: perspective(...)` function. Without the property, an ancestor cannot establish a 3D viewing distance for descendants. |
+| `perspective-origin` | NOT recognized. |
+| `backface-visibility` (`visible`/`hidden`) | NOT recognized — back faces of `rotate3d`-flipped elements cannot be hidden by CSS; manage via JS or pre-rendered alternatives. |
+| `transform-style` (`flat`/`preserve-3d`) | NOT recognized — children of 3D-transformed elements flatten by default and there is no way to opt into a single 3D rendering context. |
+| `transform-box` (`view-box`/`fill-box`/`stroke-box`/`border-box`) | NOT recognized — uses the spec-default reference box only. |
+
+> **Practical guidance:** treat all 3D transforms as best-effort 2D-projection cosmetic effects. Cards that flip/spin in 3D will work for simple single-element rotations but cascading 3D layouts (parent perspective, preserved-3d nested children, hidden back faces) are not available.
+
+### Logical sizing properties — runtime caveats (audit additions)
+
+The logical-direction sizing properties from CSS Logical Properties 1 are **not** in the parser trie:
+
+| Property | Status |
+|----------|--------|
+| `inline-size`, `block-size` | NOT recognized — use `width`/`height` directly. |
+| `min-inline-size`, `min-block-size`, `max-inline-size`, `max-block-size` | NOT recognized. |
+| `inset-block`, `inset-inline`, `inset-block-start`, `inset-block-end`, `inset-inline-start`, `inset-inline-end` | NOT recognized. **Note:** physical `inset` shorthand IS supported (already documented in the add-on table above). |
+| `padding-block-start`/`-end`, `padding-inline-start`/`-end`, `padding-block`, `padding-inline` | **Recognized** (already in main + add-on tables). |
+| `margin-block-start`/`-end`, `margin-inline-start`/`-end`, `margin-block`, `margin-inline` | **Recognized**. |
+| `border-block-start`/`-end`, `border-inline-start`/`-end` (incl. `-color`/`-style`/`-width`) | **Recognized**. |
+| `border-start-start-radius`, `border-start-end-radius`, `border-end-start-radius`, `border-end-end-radius` | NOT recognized. Use the four physical radius properties. |
+
+> **Practical guidance:** physical longhands cover the typical needs. The audit-added logical entries are mostly margin/padding/border shorthands; modern `inline-size`/`block-size` and `inset-*-*` longhands are absent.
+
+### CSS Text 4 wrapping — modern surface absent (audit additions)
+
+The CSS Text Module Level 4 wrapping/whitespace shorthands are unavailable. Stick to `white-space` + `word-break` + `overflow-wrap`/`word-wrap`.
+
+| Construct | Status |
+|-----------|--------|
+| `white-space-collapse` (longhand) | NOT recognized — only the legacy combined `white-space` property parses. |
+| `white-space: break-spaces` | NOT recognized — only `normal`/`nowrap`/`pre`/`pre-wrap`/`pre-line` parse. |
+| `text-wrap` (`wrap`/`nowrap`/`balance`/`pretty`/`stable`) | NOT recognized. |
+| `text-wrap-mode`, `text-wrap-style` | NOT recognized. |
+| `wrap-before`, `wrap-after`, `wrap-inside` | NOT recognized. |
+| `line-clamp` (unprefixed) | NOT recognized — use `-webkit-line-clamp` (already documented). |
+| `text-spacing` | NOT recognized. |
+
+### Text properties — modern surface gaps (audit additions)
+
+| Property | Status |
+|----------|--------|
+| `quotes` | NOT recognized — `<q>`/`<blockquote>` use UA defaults; cannot customize quote characters. |
+| `text-emphasis`, `text-emphasis-color`, `text-emphasis-position`, `text-emphasis-style` | NOT recognized. East-Asian emphasis marks unsupported. |
+| `text-justify` | NOT recognized. |
+| `text-align-last` | NOT recognized. |
+| `text-orientation` (`mixed`/`upright`/`sideways`) | NOT recognized. |
+| `text-combine-upright`, `text-spacing-trim`, `text-autospace` | NOT recognized. |
+| `hanging-punctuation` | NOT recognized. |
+| `text-decoration-thickness`, `text-underline-offset` | NOT recognized — only `text-decoration-line/style/color` and `text-underline-position` parse. |
+| `text-emphasis-skip`, `text-skip-ink` | NOT recognized. |
+
+### Aspect-ratio + intrinsic sizing — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `aspect-ratio: <ratio>` (CSS Sizing 4 box property, e.g. `aspect-ratio: 16 / 9`) | **NOT recognized.** No entry in `CSSStyleLookupTrie`. The `aspect-ratio` token IS a recognized `@media` feature, but the box-level property is silently dropped — declarations log `Unsupported css property: aspect-ratio` and produce no constraint. |
+| `aspect-ratio: auto <ratio>` (the two-value form preserving intrinsic ratio fallback) | **NOT recognized.** |
+| Implicit aspect ratio from `<img width=H height=W>` | Honored by layout (intrinsic ratio used during image load placeholder phase), but only via the HTML attributes, not via CSS. |
+| `width: min-content`/`max-content`/`fit-content`/`available` | Parsed (already documented in main width/height table); honored by layout. **`fit-content(<length>)` function form is NOT recognized** — only the bare keyword. |
+| `contain-intrinsic-size` | NOT recognized (already documented under containment). |
+
+### Object-fit / Object-position / Image rendering — runtime caveats (audit additions)
+
+| Property | Status |
+|----------|--------|
+| `object-fit` (`fill`/`contain`/`cover`/`none`/`scale-down`) | **Apply to `<img>` ONLY.** `<video>`, `<canvas>`, `<object>`, `<iframe>`, SVG-as-replaced ignore the property — `computeObjectFit()` is invoked only from `FrameReplacedImage.cpp`. Workaround: wrap the element in `overflow:hidden` and size the inner element manually. |
+| `object-position` (1/2/4-token forms, keywords/`%`/length) | Same constraint — `<img>` only. |
+| `image-rendering` | Only **`auto`**, **`crisp-edges`**, **`pixelated`** parse. **`smooth`, `high-quality`, `optimizeSpeed`, `optimizeQuality`, `-webkit-optimize-contrast`** are silently rejected at value parse. |
+| `image-orientation` | **NOT in the CSS trie at all** — every value silently dropped (incl. `from-image`, `none`, angles, `<angle> flip`). EXIF auto-rotation is NOT honored on `<img>`. (`ImageBitmapOptions.imageOrientation` for `createImageBitmap()` is a separate API and is supported with `none`/`flipY`.) |
+
+### Line clamp — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: <n>; overflow: hidden` | **Works** (gated by `STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX`). |
+| `-webkit-line-clamp: none` | Disables clamp. |
+| Unprefixed `line-clamp: <n>` (CSS Overflow 4) | **NOT in the parser trie** — entire declaration dropped with `Unsupported css property: line-clamp` warning. Use `-webkit-line-clamp` only. |
+| `-webkit-line-clamp` on a non-`-webkit-box` ancestor / inline / replaced / fixed-height items | Silently no-op (no clamp, no warning). |
+| `-webkit-line-clamp` with `direction: rtl` | **Silently skipped** — `FrameFlexibleBox.cpp:1643` excludes RTL. |
+| `getComputedStyle(el).webkitLineClamp` | **Always `undefined`** (bug — `ComputedStyleCSSStyleDeclaration.cpp:918-922` builds the value but never calls `addValuePair`). JS introspection unreliable until fixed. |
+
+### SVG presentation properties — runtime caveats (audit additions)
+
+The following CSS properties are recognized by the parser (entries exist in `CSSStyleLookupTrie` and `Style.h:FOR_EACH_STYLE_ATTRIBUTE_BASIC`) and have full `updateValue*` implementations. They are **valid CSS** at the cascade and computed-style level and round-trip through `getComputedStyle`. However, **LWE does not paint SVG embedded in HTML for webapps** ([LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2), so these properties have no visible effect on the kinds of pages LWE webapps ship.
+
+| Property | Parsed values | Note |
+|----------|--------------|------|
+| `fill` | `<color>` &#124; `none` &#124; `url(#id)` | Already listed for `<canvas>`, but as a CSS property targets SVG `<path>`/`<circle>`/etc. |
+| `fill-opacity`, `fill-rule` | `<number>` (0–1); `nonzero` &#124; `evenodd` | |
+| `stroke`, `stroke-opacity`, `stroke-width` | `<color>`/`url(#id)`; `<number>`; `<length>` | |
+| `stroke-linecap`, `stroke-linejoin`, `stroke-miterlimit` | `butt`/`round`/`square`; `miter`/`round`/`bevel`; `<number>` | |
+| `stroke-dasharray`, `stroke-dashoffset` | `<dasharray>`; `<length>` | |
+| `stop-color`, `stop-opacity` | `<color>`; `<number>` | For SVG `<stop>`. |
+
+> **Practical guidance:** treat these as no-ops in webapp CSS and prefer `<canvas>` 2D drawing for vector visuals.
+
+### CSS Shapes — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| `shape-outside`, `shape-margin`, `shape-image-threshold` | **NOT in the trie at all** — silently dropped. No layout integration; floats wrap with rectangular margin boxes only. Computed-style getters return `undefined`. |
+| `clip-path: url(#id)` | Parses, **but applied only on SVG elements** (`SVGElement::clipPathElement` is the sole consumer). On HTML boxes the value is parsed but never used during paint. |
+| `clip-path: inset() / circle() / ellipse() / polygon() / path() / shape()` | **Silently rejected by `updateValueClipPath`** (which accepts only `url(...)`). `getComputedStyle().clipPath` returns `url("")`. Earlier audit (Iter 41) was incorrect — basic-shape clip-paths do NOT work on HTML elements. |
+
+### CSS Anchor Positioning + View Transitions — runtime caveats (audit additions)
+
+**Both feature sets are ENTIRELY unsupported.**
+
+| Surface | Status |
+|---------|--------|
+| `anchor-name`, `position-anchor`, `inset-area`, `position-try-options`, `position-try-fallbacks`, `position-visibility` | All NOT recognized — `Unsupported css property` warnings, declarations dropped. |
+| `top: anchor(--name bottom)`, `left: anchor(--name right, fallback)` | Parser doesn't know `anchor()` function; the property may store a partial length and produce **meaningless layout** (target ends near anchor's wrong edge with no fallback applied). |
+| `@position-try` at-rule | Not parsed. |
+| `view-transition-name` | NOT recognized. |
+| `@view-transition` at-rule | Silently dropped from `cssRules`. |
+| `::view-transition`, `::view-transition-group`, `::view-transition-image-pair`, `::view-transition-old`, `::view-transition-new` | **Not in pseudo-element enum** — silently dropped. |
+| `document.startViewTransition(callback)` | **`undefined`** — not even a stub. |
+
+### Modern color functions — runtime caveats (audit additions)
+
+The color parser (`CSSPropertyParser::parseNonNamedColor`) recognizes only legacy notations: `#hex` (3/4/6/8), `rgb()`/`rgba()`, `hsl()`/`hsla()`, named colors, `transparent`, `currentColor`. Everything else is **silently dropped at parse time** — the entire declaration is rejected (the resulting fallback is the *initial* value of the property, NOT `rgb(0,0,0)` as previously stated).
+
+| Function | Status |
+|----------|--------|
+| `hwb(H W% B% [/A])` | **NOT supported** — declaration dropped. |
+| `lab(...)`, `lch(...)`, `oklab(...)`, `oklch(...)` | **NOT supported.** |
+| `color(<colorspace> ...)` (all spaces incl. `srgb`, `display-p3`, `rec2020`) | **NOT supported.** |
+| `color-mix(in <space>, c1, c2)` | **NOT supported.** |
+| `color-contrast(...)` | **NOT supported.** |
+| Relative color syntax `rgb(from red r g b)` etc. | **NOT supported.** |
+| `light-dark(c1, c2)` | **NOT supported** (use a hard-coded color or branch in JS). |
+| System colors (`AccentColor`, `Canvas`, `CanvasText`, `LinkText`, `VisitedText`, `ButtonFace`, `ButtonText`, etc.) | **NOT in the named-color table** — silently dropped. |
+
+> No `Unsupported css ...` warning fires for unknown color *values* (the warning only fires for unknown *property names*). Authors get no diagnostic; the only signal is that the property reverts to its initial value.
+
+### CSS Math functions — runtime caveats (audit additions)
+
+| Function | Status |
+|----------|--------|
+| `calc(...)`, nested `calc()`, `calc(var(--x) * 2)` | OK. |
+| `min(a, b)` / `max(a, b)` | **Hard-capped at exactly 2 arguments.** `min(a, b, c)` → declaration rejected (silent — falls back to initial). |
+| `clamp(a, b, c)` | OK (exactly 3 args required). |
+| `round()`, `mod()`, `rem()` | **NOT recognized** at top level — declarations rejected. |
+| `abs()`, `sign()` at top level | **NOT recognized.** |
+| `pow()`, `sqrt()`, `hypot()`, `log()`, `exp()`, `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` at top level | **NOT recognized.** |
+| **Inside `calc(...)` context** the parser silently swallows unknown function names, treating them as parenthesized sub-expressions. **This produces wrong numeric results without any error.** Examples observed: |
+| `calc(sqrt(16) * 10px)` | Returns `160px` (treats `sqrt(16)` as `16` — no real sqrt). |
+| `calc(sign(-5) * 50px)` | Returns `-250px` (treats as `-5*50` — no real sign). |
+| `calc(log(2.718) * 10px)` | Returns `27.0312px` (treats as `2.718 * 10` — no real log). |
+| `calc(sin(45deg) * 1deg)` | Treats `sin(...)` as the inner angle; produces garbage matrix. |
+| Constants `pi`, `e`, `infinity`, `-infinity`, `NaN` | **NOT supported** anywhere — declaration rejected. |
+| `calc()` inside `rgb()`/`hsl()` channels | **NOT supported** — `rgb(calc(255/2), 0, 0)` resolves to `rgba(0, 0, 0, 0)`. (Note: `var()` inside `rgb()` channels DOES work.) |
+
+> ⚠️ **The silent-success failure mode is the worst trap.** The engine accepts `sqrt`/`pow`/`sin`/`abs` syntax inside `calc()` and returns numerically wrong values — no warning, no error. Static lint is the only practical guard.
+
+### Font properties — modern surface absent (audit additions)
+
+The following font-related CSS properties are **not in the parser trie** at all (`CSSStyleLookupTrie.cpp` has no entry; declarations log `Unsupported css property: <name>` and are dropped). All variable-font / OpenType / locale-extension surfaces are unavailable:
+
+| Property / descriptor | Status |
+|-----------------------|--------|
+| `font-stretch` (`condensed`/`expanded`/`<percentage>`) | NOT recognized. |
+| `font-variant` (and `font-variant-caps`/`-numeric`/`-ligatures`/`-east-asian`) | NOT recognized. |
+| `font-feature-settings` (`"liga"`, `"dlig"`, …) | NOT recognized. |
+| `font-variation-settings` (`"wght"`, `"wdth"`, …) | NOT recognized — variable-font axis tuning is unavailable. |
+| `font-size-adjust` | NOT recognized. |
+| `font-synthesis` (`weight`/`style`/`small-caps`/`none`) | NOT recognized — the engine cannot opt out of synthesizing missing weights/italics. |
+| `font-optical-sizing` | NOT recognized. |
+| `font-language-override` | NOT recognized. |
+| `font-palette`, `@font-palette-values` | NOT recognized. |
+| `@font-face` `unicode-range` descriptor | NOT recognized — entire `unicode-range:` declaration inside `@font-face` is silently dropped, so all glyphs from a face apply unconditionally. |
+| `@font-face` `font-display` descriptor | NOT recognized — there is no FOIT/FOUT control. |
+| `@font-face` `font-stretch`/`font-variant`/`font-feature-settings`/`font-variation-settings` descriptors | NOT recognized. |
+| Generic family keywords | `serif`, `sans-serif`, `monospace`, `cursive`, `fantasy` parse. **`system-ui`, `ui-serif`, `ui-sans-serif`, `ui-monospace`, `ui-rounded`, `emoji`, `math`, `fangsong`** are NOT recognized as keywords; they fall back to family-name lookup which usually fails. |
+
+> **Practical guidance:** authors targeting LWE should not assume any modern OpenType feature/variation control is available. Pre-pick a fixed family + weight stack and ship a separate `@font-face` per weight/style if needed.
+
+### Form-control styling — runtime caveats (audit additions)
+
+| Property/Pseudo | Status |
+|-----------------|--------|
+| `appearance: auto`, `appearance: none` | Supported, only on `FrameInputBox` (text inputs/buttons) — suppresses background/border/content paint. |
+| `appearance: button / checkbox / radio / menulist / textfield / slider-horizontal / progress-bar / scrollbar* / etc.` | **Silently rejected** — declaration dropped, computed falls back to `auto`. |
+| `-webkit-appearance` / `-moz-appearance` | **NOT recognized** — full declaration dropped with `Unsupported css property` warning. |
+| `accent-color`, `color-scheme`, `forced-color-adjust` | **NOT recognized** — silently dropped. No way to tint native form widgets or signal dark-mode preference. |
+| `:placeholder-shown` (pseudo-class) | **WORKS** — both `Element.matches()` and selector matching work (correction to earlier audit). |
+| `::placeholder` (pseudo-element) | **NOT supported** — `checkPseudoElement` lacks the case (logs `Unsupported css pseudo-element: 60`). Style placeholder color via `:placeholder-shown { color: ... }` on the input itself. |
+| Native `<input type=checkbox/radio>` chrome | LWE has no native checkbox/radio painter; `appearance: none` does NOT change the box dimensions. |
+
+### Scroll-driven animations — runtime caveats (audit additions)
+
+**Entirely absent** in LWE — both CSS surface and JS surface.
+
+| Surface | Status |
+|---------|--------|
+| `animation-timeline`, `scroll-timeline`, `scroll-timeline-name`, `scroll-timeline-axis`, `view-timeline`, `view-timeline-name`, `view-timeline-axis`, `view-timeline-inset`, `animation-range`, `animation-range-start`, `animation-range-end`, `timeline-scope` | **NOT recognized** — declarations rejected with `Unsupported css property`. |
+| `ScrollTimeline`, `ViewTimeline`, `AnimationTimeline`, `DocumentTimeline` constructors | **All `undefined`.** `new ScrollTimeline(...)` throws `ReferenceError`. |
+| `document.timeline` | **`undefined`.** |
+| `CSS.supports(...)` for any timeline property | Returns `false`. |
+| **Workaround** | Drive via `scroll` event + `requestAnimationFrame` + manual `transform` updates. |
+
+### CSS Nesting (`&` selector) — runtime caveats (audit additions)
+
+**Entirely unsupported.** No `&` selector handler in `CSSParser::getSimpleSelector` (falls into `m_failedParsing = true`). No nested-rule entry in `parseStyleRule`. No `@nest` at-rule branch. `CSSStyleRule.cssRules` getter doesn't exist.
+
+| Form | Status |
+|------|--------|
+| `.parent { & .child { … } }` (Level 1 with `&`) | **Inner rule silently dropped.** Outer declarations *before* the inner block survive; outer declarations after may be lost. |
+| `.parent { .child { … } }` (relaxed form, no `&`) | **🔥 Dangerous: can wipe the entire parent rule's body** — `.a { .b { color: red } }` ends up with an empty body for `.a` (CSSOM `cssText === ""`). Looks like "CSS just didn't load." |
+| `.btn { &:hover { … } }`, `.btn { &.primary { … } }`, `.foo { & + & { … } }` | All silently dropped. |
+| `.box { & @media (min-width:100px) { … } }` (nested `@media`) | Inner block rejected; nested at-rule not recognized. |
+| `@nest .child & { … }` (legacy form) | `@nest` treated as unknown at-rule, swallowed (and may swallow following rules). |
+| Multi-level nesting (`.a { .b { .c { … } } }`) | Entire outer rule emptied. |
+| **Workaround** | Use a build-time preprocessor (PostCSS-nesting / Sass / Lightning CSS) to flatten nested rules to plain CSS before shipping to LWE. |
+
+### UI properties — runtime caveats (audit additions)
+
+| Property | Status |
+|----------|--------|
+| `cursor` | **No-op** — `updateValueCursor` is `STARFISH_UNSUPPORTED` returning `true`; declarations are accepted but never applied. UA stylesheet sets `cursor: default;` once. (See dedicated note in earlier sections.) |
+| `user-select` | Only **`auto`** and **`none`** parse. `text` / `all` / `contain` are rejected at parse time (the C++ assigns the enum then returns `false`, so the value is dropped). UA wildcard `* { user-select: none }` makes the practical default `none`. |
+| `-webkit-user-select` | **NOT recognized.** |
+| `user-modify` | **NOT recognized.** |
+| `resize` | Only **`none`** parses. `both` / `horizontal` / `vertical` / `block` / `inline` are rejected. **No resize-grip painter exists** anyway — even if accepted, no widget would render. |
+| `pointer-events` | All 10 values (`auto`/`none`/`visiblePainted`/`visibleFill`/`visibleStroke`/`visible`/`painted`/`fill`/`stroke`/`all`) parse and round-trip via `getComputedStyle`. **However:** the value is NOT consulted in hit-testing — `core/event/`, `core/page/` never read `pointerEventsValue()`. **`pointer-events: none` does NOT block click delivery** for arbitrary elements in this build. (Anchor disabled-state may behave differently via UA pseudo-class logic.) |
+| `touch-action` | **NOT recognized.** |
+| `caret-color: <color> / transparent` | Parses and stores. Visually relevant only when LWE paints a caret (limited). |
+| `caret-color: currentcolor` | **🐛 Bug** — apply path copies the *parent*'s `caret-color` rather than the element's own resolved `color` (`Style.cpp:7634`). Use a literal color instead. |
+| `caret-shape` | **NOT recognized.** |
+| `accent-color` | **NOT recognized.** |
+
+### Cascade & specificity — runtime caveats (audit additions)
+
+| Construct | Status |
+|-----------|--------|
+| Standard 3-tuple specificity (ID × 0x10000 + class/attr/pseudo-class × 0x100 + tag/pseudo-element × 1) | Implemented per `Style.cpp::specificityForOneSelector`. |
+| `:host` specificity | **Returns `0`** (not the spec-required pseudo-class weight). Mostly moot since Shadow DOM is forbidden. |
+| `:not(...)` specificity | Equals the highest specificity of its argument (matches spec) — but the engine only accepts a single simple selector inside `:not()`. |
+| `:where(...)` (zero-specificity wrapper) | Selector itself parse-fails (`SyntaxError`), so the specificity-zero behavior is moot. |
+| `:is(...)`, `:has(...)` | Parse-fail. |
+| `<style>` element vs inline `style=""` | Inline declarations win against same-specificity rules per spec. **`!important` from `<style>` elements correctly overrides inline non-important.** |
+| `!important` on a normal property | Honored (`setFlagImportant(true)` on the value pair). |
+| `!important` on a CSS custom property (`--x: 1 !important;`) | **Silently dropped** — `setCustomProperty` has no priority parameter; `getPropertyPriority('--x')` always returns `""`. (Already noted under Custom Properties.) |
+| Computed-style `unset` reduction | **Partial.** `unset` is applied as either `inherit` or `initial` per the property's inheritance attribute by `applyProperty`. |
+| Computed-style `revert` / `revert-layer` reduction | **Not implemented** — falls through `applyProperty`'s `default:` and may behave like `unset`. |
+| `@import` cascade ordering | `@import` rules are parsed and inlined; resulting cascade is in source order. **Cyclic `@import` detection is partial** — a stylesheet that imports itself triggers an infinite-load attempt that is bounded by the network layer's redirect/depth limit. |
+
+### CSSOM — additional details (audit additions)
+
+| Interface | Detail |
+|-----------|--------|
+| `CSSStyleDeclaration` | Adds `removeProperty(name)`, `getPropertyPriority(name)`, indexed getter (`style[i]` returns property name), camelCase named getter/setter (`style.color = ...`). CSS custom properties (`--*`) are supported via `setProperty`/`getPropertyValue`. |
+|  | **Quirk:** `getComputedStyle()` returns a writable `CSSStyleDeclaration` (not frozen), `length === 0`, mutations don't throw. Iterate via known property names with `getPropertyValue("…")` instead of indexed `length`. |
+| `CSSRule` | The `cssText` setter is **silently ignored** despite being writable in IDL. |
+| `CSSStyleSheet` | **`new CSSStyleSheet()` throws `TypeError`** — Constructable Stylesheets and `document.adoptedStyleSheets` are not implemented. `rules === cssRules` (legacy alias is the same live list). `insertRule` throws `SyntaxError` on bad text and `IndexSizeError` on out-of-range index; `deleteRule` throws `IndexSizeError` on out-of-range. |
+| `CSSFontFaceRule` | The `style` accessor **crashes the engine in debug builds** (`Assertion 'isCSSStyleRule()' failed.`). Treat `CSSFontFaceRule.style` as unsupported. |
+| `CSSPageRule`, `CSSCounterStyleRule`, `CSSNamespaceRule` | The CSSRule-type constants exist but the parser does not produce rules of these types. |
+| `MediaList` | `mediaText` is also a stringifier (`String(ml)` serializes). Indexed getter `ml[i]` works. `deleteMedium(name)` throws `NotFoundError` if the medium isn't in the list. |
+| `MediaQueryList` | Inherits `EventTarget` (`addEventListener('change', ...)` works). **The engine does NOT auto-dispatch `change` on viewport changes** — listeners only fire if app code calls `dispatchEvent` manually. `matchMedia(invalidQuery)` returns `MediaQueryList` with `media === "not all"`; does not throw. |
+| `StyleSheet` | `href` returns empty string `""` for inline `<style>` sheets (IDL nullable; engine never returns `null`). |
+| Loader | `<link rel=stylesheet href="data:text/css,...">` is **not loaded** — `link.sheet` is `null`. `@import url("data:text/css,...")` does not produce a `CSSImportRule`. |
+| `CSS` namespace | `CSS.supports(...)` is implemented. **`CSS.escape` is NOT implemented** — `undefined`. |
+| CSS Typed OM | `CSSStyleValue`, `CSSKeywordValue`, `CSSUnitValue`, `CSSNumericValue` constructors exposed but the API surface is essentially empty (most operations are commented out in IDL). Treat as experimental — do not use in webapps. |
+
+### HTML head & embedded elements — runtime caveats (audit additions)
+
+| Element | Detail |
+|---------|--------|
+| `HTMLLinkElement` | Adds `sheet` (via `LinkStyle` mixin — `null` until stylesheet load completes; only resolved for `rel="stylesheet"`). **`[Unimplemented]` (read as `undefined`):** `as`, `integrity`, `sizes`, `disabled`, `imageSrcset`, `imageSizes`, `scope`, `workerType`, `useCache`. Subresource Integrity is not enforced. |
+| `HTMLStyleElement` | Adds `nonce`, `sheet`. **`disabled` is reflected but does NOT detach the stylesheet from the cascade** — toggle by removing the element instead. |
+| `HTMLScriptElement` | Adds `async`, `defer`, `nonce`. **`[Unimplemented]`:** `integrity`. **Not in IDL at all:** `referrerPolicy`, lowercase `script.nomodule` alias (only camelCase `noModule` works). LWE does not implement `type="module"` / import maps. |
+| `HTMLMetaElement` | Adds row to DOM table. Implemented: `name`, `content`, `httpEquiv`. **Not in IDL at all:** `charset`, `scheme`, `media` — read as `undefined`. The `<meta charset>` content attribute IS honored by the parser (read it via `meta.getAttribute('charset')`), and `<meta http-equiv="content-security-policy">` and `="content-type"` are honored; other pragmas (`refresh`, `default-style`, `x-ua-compatible`) are inert. |
+| `HTMLAnchorElement` | Implements full `HTMLHyperlinkElementUtils` (URL accessors and setters). **`[Unimplemented]`:** `download`, `ping`. Default click handler ignores `download`, `ping`, and `rel="noopener\|noreferrer"` semantics. |
+| `HTMLAreaElement` | Same hyperlink-utils surface plus `coords`, `shape`, `noHref`. **`[Unimplemented]`:** `alt`, `download`, `ping`. |
+| `HTMLImageElement` | Adds `naturalWidth`, `naturalHeight`, `complete`, `referrerPolicy`, `useMap`, `name`. **`[Unimplemented]`:** `alt`, `srcset`, `sizes`, `isMap`, `currentSrc`, `lowsrc`. **Not in IDL at all:** `loading`, `decoding`, `fetchPriority`, `decode()` Promise method. **Bug:** setting `el.crossOrigin` to any value other than `"use-credentials"` rewrites the DOM attribute to `"anonymous"`. **Bug:** intrinsic-aspect width/height fallback uses integer division. |
+| `<picture>` | **NOT supported by the parser.** `<picture>` is rejected with `HTMLDocument: invalid (or unsupported) element: picture`; element falls through to `HTMLUnknownElement`. Source-set selection unavailable. |
+| `HTMLIFrameElement` | Adds `srcdoc` (works; serialized to a `data:` URL internally). **`[Unimplemented]`:** `sandbox`, `allow`, `allowFullscreen`, `loading`, `csp`, `align`, `frameBorder`, `longDesc`, `marginHeight`, `marginWidth`, `getSVGDocument()`. **The `frameborder` HTML attribute IS honored by layout** but cannot be read/written via JS property. **Bugs:** `contentWindow` always throws `SecurityError` (even same-origin file:// → file://); `contentDocument` does NOT enforce same-origin (cross-origin `data:` child docs are readable). |
+| `HTMLObjectElement` | **Only legacy reflectors implemented**: `align`, `archive`, `code`, `declare`, `standby`, `codeBase`, `codeType`, `border`. **All modern surface `[Unimplemented]`:** `data`, `type`, `name`, `typeMustMatch`, `useMap`, `width`, `height`, `form`, `contentDocument`, `contentWindow`, validation API. `<object>` renders as a sized blank box; resource loading happens only on `STARFISH_ENABLE_AVPLAY` builds via `type="application/avplayer"`. |
+| `<embed>`, `<frame>`, `<frameset>` | **NOT registered with `HTMLDocument::createHTMLElement`** — all three become `HTMLUnknownElement`. The constructors `HTMLFrameElement` / `HTMLFrameSetElement` exist but `new` throws `"Illegal constructor"`; no `HTMLEmbedElement` IDL exists at all. Treat the entire frame-family as unsupported. |
+
+### Console & error handling — runtime caveats (audit additions)
+
+The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` X-macro at `src/core/extra/Console.h` fixes the method set:
+
+| Status | Methods |
+|--------|---------|
+| **Supported** | `log`, `info`, `warn`, `error`, `debug`, `assert(cond, ...)` (warn-level on false; never throws), `group`, `groupCollapsed`, `groupEnd`, `time(label)`, `timeLog(label, ...)`, `timeEnd(label)`. |
+| **Not supported (TypeError on call)** | `trace`, `dir`, `dirxml`, `table`, `count`, `countReset`, `clear`, `profile`, `profileEnd`, `timeStamp`. Feature-detect with `typeof console.X === 'function'` before calling. |
+
+`console.log` does **NOT** support `%s`/`%d`/`%o` formatter substitution (the spec's "Formatter" algorithm is not implemented); arguments are stringified individually and joined with spaces.
+
+| Surface | Detail |
+|---------|--------|
+| `ErrorEvent` constructor | Fully implemented. `new ErrorEvent('error', {message, filename, lineno, colno, error})` round-trips all five fields, including `error` as an `Error` instance. |
+| `document.createEvent('ErrorEvent')` | **Broken** — returns a plain `Event` (logs `STARFISH_UNSUPPORTED`). Use `new ErrorEvent(...)` instead. |
+| `window.onerror` (attribute-style) | Receives 5 args: `(message, source, lineno, colno, error)`. `error` is the original thrown value. Spec-compliant. |
+| `addEventListener('error', fn)` | Receives a single `ErrorEvent` argument. Spec-compliant. |
+| `unhandledrejection` / `rejectionhandled` events | **Not implemented.** `PromiseRejectionEvent` constructor not exposed (`undefined`). `Promise.reject(...)` with no `.catch` is silently dropped — there is no `HostPromiseRejectionTracker` wiring. Always attach a `.catch` to top-level promise chains in LWE webapps. |
+
+### Pointer / Keyboard / Touch / Drag events — runtime caveats (audit additions)
+
+| Event interface | Detail |
+|-----------------|--------|
+| `KeyboardEvent` | Implements `key`, `code`, `keyCode`, `charCode`, `which` (via UIEvent), `ctrlKey`, `shiftKey`, `altKey`, `metaKey`, `repeat`, plus `DOM_KEY_LOCATION_*` constants. **`[Unimplemented]`:** `location`, `isComposing`, `getModifierState(key)` — read as `undefined`. The C++ already stores `location`/`isComposing`; the IDL annotation is stale. |
+| `MouseEvent` | Adds `pageX`/`pageY` (read 0 on synthetic events because `MouseEventInit` does not surface them). **`[Unimplemented]`:** `offsetX`, `offsetY`, `movementX`, `movementY`, `x`, `y`, `layerX`, `layerY`, `getModifierState(key)`. **Bug:** `new MouseEvent('click', {altKey:true})` does NOT copy modifier keys from the init dict. |
+| `PointerEvent` | Exposed; inherits MouseEvent. Implements only `pointerId`, `pointerType` on the prototype. **`[Unimplemented]`:** `width`, `height`, `pressure`, `tangentialPressure`, `tiltX`, `tiltY`, `twist`, `altitudeAngle`, `azimuthAngle`, `isPrimary`, `getCoalescedEvents()`, `getPredictedEvents()`. **Bug:** `new PointerEvent` ctor ignores `pointerId`/`pointerType` from init dict. **Bug:** `document.createEvent('PointerEvent')` throws "operation is not supported"; use `new PointerEvent(...)`. |
+| `WheelEvent` | **Does NOT exist in LWE** — `WheelEvent === undefined`. `el.onwheel` accepts assignment but never fires. |
+| `TouchEvent` / `Touch` / `TouchList` | All three constructors exposed (`typeof === 'function'`), but **`new TouchEvent(...)` throws `Illegal constructor`** — there is no JS-side way to construct/dispatch a TouchEvent. Real touch events fire only on touchscreen-capable shells (not on glfw/EFL desktop). `Touch` is constructible (`target`, `screenX/Y`, `clientX/Y` only); `TouchEvent.touches` is on the prototype but `targetTouches`/`changedTouches`/modifier flags are not. |
+| `DragEvent` / `DataTransfer` / `DataTransferItem` / `DataTransferItemList` | **All four are absent** — no IDL, no C++. Globals are `undefined`. `HTMLElement.draggable` is `[Unimplemented]` — reflector returns `undefined`. All `ondrag*` handler slots accept assignment but never fire. |
+| `InputEvent` | Constructible. Implements `data`, **`inputType`** (Spec.md previously didn't list this). **`[Unimplemented]`:** `dataTransfer`, `isComposing`, `getTargetRanges()`. |
+| `CompositionEvent` | Constructible. Implements `data` only. **Not in IDL:** `locale`. `initCompositionEvent()` is `[Unimplemented]`. |
+
+### Animation / Transition events — runtime caveats (audit additions)
+
+| Surface | Status |
+|---------|--------|
+| `AnimationEvent` constructor | Works; `animationName`, `elapsedTime` round-trip. **`pseudoElement` is `[Unimplemented]`** — read as `undefined`. |
+| `TransitionEvent` constructor | Works; `propertyName`, `elapsedTime`, `pseudoElement` round-trip. (Spec.md previously had no TransitionEvent row.) |
+| `document.createEvent('AnimationEvent')` / `createEvent('TransitionEvent')` | **Broken** — both silently return a plain `Event` (logs `STARFISH_UNSUPPORTED`). Use `new AnimationEvent(...)` / `new TransitionEvent(...)` instead. |
+| `addEventListener('animationstart' / 'animationend')` | Fires correctly. `event.animationName` and `event.elapsedTime` are populated. |
+| `addEventListener('animationiteration')` | **NEVER fires.** No dispatch site for iteration boundaries; even animations with `animation-iteration-count: 3` do not emit this event. |
+| `addEventListener('animationcancel')` | Implemented. |
+| `addEventListener('transitionstart' / 'transitionend')` | Fires correctly. **Bug:** `event.elapsedTime` is always `0` for transition events (the C++ `fireTransition*Event` paths never call `init.setElapsedTime()`). |
+| `addEventListener('transitionrun')` | **NEVER fires.** LWE collapses `transitionrun` into `transitionstart` (fired immediately on creation, regardless of `transition-delay`). |
+| `addEventListener('transitioncancel')` | Implemented. |
+| On-handler attributes (`onanimationstart`/`end`/`iteration`/`cancel`, `ontransitionstart`/`end`/`run`/`cancel`) | **None exist** as IDL attributes. Use `addEventListener` for all animation/transition events. |
+| `getComputedStyle(el).opacity` during a running keyframe animation | Returns the **declared** value, not the interpolated value. The render output animates correctly but `getComputedStyle` is not animation-aware. |
+
+### Web Animations API — runtime caveats (audit additions)
+
+| Surface | Status |
+|---------|--------|
+| `Element.animate(keyframes, options)` | Works fire-and-forget — drives a CSS-animation pipeline. Returns an `Animation` instance (a thin `EventTarget` wrapper, no live link to the running animation). |
+| `Animation` instance members | **All `[Unimplemented]`** — `id`, `effect`, `timeline`, `startTime`, `currentTime`, `playbackRate`, `playState`, `pending`, `ready`, `finished`, `replaceState`, `play()`, `pause()`, `cancel()`, `finish()`, `reverse()`, `updatePlaybackRate()`, `commitStyles()`, `persist()`. Reads return `undefined`; writes are silently kept as JS expandos with **no effect on the running animation**. |
+| `Animation` event handlers | No `finish`/`cancel`/`remove` events are ever dispatched. Listeners attached via `addEventListener` never fire. |
+| `new Animation()` | Throws `TypeError: Illegal constructor`. |
+| `Element.getAnimations()` / `Document.getAnimations()` | **`undefined`** on the receivers — calling **throws `TypeError`** (not just returns undefined). |
+| `document.timeline` | `undefined`. |
+| `KeyframeEffect`, `AnimationEffect`, `AnimationTimeline`, `DocumentTimeline`, `AnimationPlaybackEvent` | **All `undefined`** — no IDL, no constructor exposed. |
+| **Recommended LWE pattern** | Use `el.animate(...)` for one-shot effects, or define CSS `@keyframes` and toggle the `animation` shorthand. For controllable animation, drive via `requestAnimationFrame` + inline-style writes. |
+
+### SVG family — runtime caveats (audit additions)
+
+64 `SVG*.idl` files exist under `src/core/dom/svg/`; 45 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it).
+
+**However** the methods authors typically expect are missing:
+
+| Surface | Status |
+|---------|--------|
+| `getBBox()`, `getCTM()`, `getScreenCTM()`, `getTotalLength()`, `getPointAtLength()`, `pathLength` | **Not on the prototype at all** — not even `[Unimplemented]`. Calling throws `TypeError`. |
+| `SVGPoint`, `SVGRect`, `SVGMatrix` | **Not exposed** as constructable globals. |
+| `SVGGraphicsElement`, `SVGGeometryElement` | **Not exposed** — every SVG element inherits directly from `SVGElement` without the SVG2 graphics-element layer. |
+| `SVGSVGElement.createSVGRect()` / `createSVGPoint()` / `createSVGMatrix()` | Throw `TypeError` (`[Unimplemented]`). `createSVGLength()`, `createSVGNumber()`, `createSVGAngle()`, `createSVGTransform()` work. |
+| `<foreignObject>` | Falls through to the generic `SVGElement` base (no `SVGForeignObjectElement` class). |
+
+Treat SVG as out-of-scope for LWE webapps per [LWE_WEBAPP_GUIDE.md](LWE_WEBAPP_GUIDE.md) §2.
+
+### ECMAScript engine (Escargot) — additional details (audit additions)
+
+The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verified surface (against `./Starfish` glfw debug build):
+
+**Language level — ES2024 + most ES2025 supported.** Operators (`?.`, `??`, `??=`/`||=`/`&&=`, `**`, `1_000_000`), classes (public/private fields, private methods, static initialization blocks, accessor pairs), async (`async`/`await`, `async function*`, `for await`), generators, regex flags (`g i m s u y d v` + named groups + lookbehind + `\p{…}`).
+
+**Known gaps:**
+
+| Feature | Status |
+|---------|--------|
+| Decorators | **Syntax error** (Stage-3 not landed in Escargot). |
+| `Temporal` | **`undefined`** (Escargot built without `ESCARGOT_TEMPORAL`). |
+| `ShadowRealm` | **`undefined`** (Escargot built without `ESCARGOT_SHADOWREALM`). |
+| `Array.prototype.group` | **Not implemented** (replaced by `Object.groupBy`/`Map.groupBy` which both work). |
+| `<script type="module">` and dynamic `import()` | **Not wired into LWE.** Author code as classic scripts only. Top-level `await` is therefore unavailable (it requires modules). |
+
+**Built-ins verified present:** `BigInt`, `BigInt64Array`, `BigUint64Array`, `WeakRef`, `FinalizationRegistry`, `Atomics`, `SharedArrayBuffer`, `Proxy`, `Reflect`, `Symbol` (incl. `iterator`/`asyncIterator`/`hasInstance`), `globalThis`, `structuredClone`, `queueMicrotask`, `Iterator` (with helpers). `Promise.allSettled`/`any`/`finally`/`try`/`withResolvers`. Array `at`/`flat`/`flatMap`/`findLast`/`findLastIndex`/`toSorted`/`toReversed`/`toSpliced`/`with`. `Object.groupBy`, `Map.groupBy`, `Object.fromEntries`/`hasOwn`. `Set.prototype.union`/`intersection`/`difference`/`isSubsetOf`. `Math.f16round`, `Math.sumPrecise`. `WebAssembly` is exposed as `object` in the default build (despite some docs saying `ESCARGOT_WASM=OFF`).
+
+### Media — additional details (audit additions)
+
+| Interface | Detail |
+|-----------|--------|
+| `HTMLMediaElement` | Adds: `error` (readonly `MediaError?`), `defaultPlaybackRate`, `playbackRate`. **`volume` setter throws `IndexSizeError` outside `[0, 1]`.** |
+|  | Build-conditional: `srcObject` is `[STARFISH_ENABLE_WEBRTC]` — only exposed when `WEBRTC=1`. |
+|  | **`[Unimplemented]`:** `fastSeek`, `getStartDate`, `defaultMuted`, `audioTracks`, `videoTracks`. |
+|  | Note: `canPlayType` returns a static answer (`"probably"`/`"maybe"`/`""`); when built with `STARFISH_USE_MOCK_MEDIAPLAYER` (the default Linux non-ffmpeg path), it still returns `"probably"` for mp4 even though no real decoding occurs. |
+| `HTMLVideoElement` | Adds: `poster`. **`[Unimplemented]`:** `playsInline`, `getVideoPlaybackQuality()`. `VideoPlaybackQuality` interface not exposed. |
+| `HTMLAudioElement` | Named constructor `new Audio(optional src)` exposed. |
+| `HTMLSourceElement` | **`[Unimplemented]`:** `srcset`, `sizes`, `media` — `<picture>`-style source selection is not supported. |
+| `MediaError` | Spec.md previously omitted this. Constants: `MEDIA_ERR_ABORTED`(1), `MEDIA_ERR_NETWORK`(2), `MEDIA_ERR_DECODE`(3), `MEDIA_ERR_SRC_NOT_SUPPORTED`(4). Attributes: `code`, `message`. **Direct construction (`new MediaError()`) is allowed but yields `code=0`/`message=""` (the C++ getters log `UNIMPLEMENTED`).** Only `videoEl.error` returns a meaningful instance. |
+| `TextTrackCue` | **Cannot be constructed directly** — `new TextTrackCue(...)` throws `TypeError: Illegal constructor`. Use `new VTTCue(startTime, endTime, text)` instead. `pauseOnExit` is `[Unimplemented]`. |
+| `TextTrackCueList.getCueById` | `[Unimplemented]`. |
+| `TextTrackList` | `onchange`/`onaddtrack`/`onremovetrack` are `[Unimplemented]`. |
+| `TimeRanges` | Cannot be constructed directly (no `Constructor` extended attribute — `new TimeRanges()` throws `Illegal constructor`). Obtain via `videoEl.buffered`/`played`/`seekable`. |
+| `MediaSource` | Adds: static `MediaSource.isTypeSupported(type)`, `addSourceBuffer(type)`, `removeSourceBuffer(buffer)`. `onsourceopen`/`onsourceended`/`onsourceclose`, `setLiveSeekableRange`/`clearLiveSeekableRange` are `[Unimplemented]`. |
+| `SourceBuffer` | Adds: `timestampOffset` (R/W, throws on bad input), `abort()`, `changeType(type)`. `audioTracks`/`videoTracks` are `[Unimplemented]`. |
+
+### JavaScript engine — Intl & locale (audit additions)
+
+The JS engine is **Escargot** built with `-DESCARGOT_LIBICU_SUPPORT=ON` (the LWE default). On the verified Linux/x64/EFL release build the full ES2020+ `Intl` namespace is present and locale-aware prototype methods on `String`/`Date`/`Number`/`Array`/`BigInt` work. None of this is gated by a Starfish IDL or a `STARFISH_*` macro — it is purely a property of how Escargot was compiled. Webapps may rely on it on stock LWE builds; if a downstream variant ships Escargot with `LIBICU_SUPPORT=OFF`, every API in the table below disappears or degrades to a "C" locale.
+
+| `Intl` member | Status on stock LWE | Verified call (probe `/tmp/lwe_audit_iter21/intl_probes.html`) |
+|---------------|---------------------|-----------------------------------------------------------------|
+| `Intl` (namespace object) | `typeof Intl === 'object'` | — |
+| `Intl.Collator` | constructor exposed | `new Intl.Collator('ko').compare('가','나')` → `-1` |
+| `Intl.DateTimeFormat` | constructor exposed | `new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric'}).format(new Date(0))` → `1970년 1월 1일` |
+| `Intl.NumberFormat` | constructor exposed; `style:'currency'` works | `new Intl.NumberFormat('ko-KR').format(1234567)` → `1,234,567`; `... 'en-US',{style:'currency',currency:'USD'}` → `$1,234.56` |
+| `Intl.PluralRules` | constructor exposed | `.select(1)` → `'one'`, `.select(2)` → `'other'` |
+| `Intl.RelativeTimeFormat` | constructor exposed | `new Intl.RelativeTimeFormat('en').format(-1,'day')` → `'1 day ago'` |
+| `Intl.ListFormat` | constructor exposed | `new Intl.ListFormat('en').format(['a','b','c'])` → `'a, b, and c'` |
+| `Intl.Locale` | constructor exposed | `new Intl.Locale('ko-KR').toString()` → `'ko-KR'` |
+| `Intl.Segmenter` | constructor exposed; iterator + `Symbol.iterator` works | first word of `'Hello world'` → `'Hello'` |
+| `Intl.DisplayNames` | constructor exposed | `new Intl.DisplayNames(['en'],{type:'region'}).of('KR')` → `'South Korea'` |
+| `Intl.DurationFormat` | **constructor exposed** (Stage-4 / ES2025; bonus on top of Spec.md's old Intl coverage) | — |
+| `Intl.getCanonicalLocales` | function exposed | `Intl.getCanonicalLocales(['EN-us','Ko-kr'])` → `['en-US','ko-KR']` |
+| `Intl.supportedValuesOf` | function exposed | `Intl.supportedValuesOf('calendar').slice(0,5)` → `['buddhist','chinese','coptic','dangi','ethioaa']` |
+
+`docs/lwe_compat/javascript_engine.md` line 46 currently advertises only `Collator`/`DateTimeFormat`/`NumberFormat`/`PluralRules`. That list is **outdated** — it reflects pre-2021 Escargot; the current build also exposes `RelativeTimeFormat`, `ListFormat`, `Locale`, `Segmenter`, `DisplayNames`, `DurationFormat`, `getCanonicalLocales`, and `supportedValuesOf`.
+
+**Locale-aware prototype methods** — all `function`, all spec-conformant on the verified build:
+
+| Method | Verified result |
+|--------|------------------|
+| `String.prototype.localeCompare(target [, locales [, options]])` | `'a'.localeCompare('b')` → `-1`; `'한'.localeCompare('가','ko')` → `1`; `'a'.localeCompare('A',undefined,{sensitivity:'base'})` → `0` |
+| `Date.prototype.toLocaleString(locales, options)` | `(new Date(0)).toLocaleString('en-US')` → `1/1/1970, 9:00:00 AM` (TZ-dependent — the host TZ leaks through; tests should freeze TZ) |
+| `Date.prototype.toLocaleDateString` / `toLocaleTimeString` | working |
+| `Number.prototype.toLocaleString(locales, options)` | `(1234567).toLocaleString('ko-KR')` → `'1,234,567'`; `(1234.5).toLocaleString('en-US',{style:'currency',currency:'USD'})` → `'$1,234.50'` |
+| `Array.prototype.toLocaleString` | working — but **note**: separator is the locale's number-group separator joined with `,`, not the locale list separator. `[1000,2000,3000].toLocaleString('en-US')` returns `'1,000,2,000,3,000'` (per ES spec — ES `Array.prototype.toLocaleString` does not use `Intl.ListFormat`). For human-friendly lists use `Intl.ListFormat` explicitly. |
+| `BigInt.prototype.toLocaleString` | working: `(123456789012345678901234567890n).toLocaleString('en-US')` → `'123,456,789,012,345,678,901,234,567,890'` |
+
+> **Caveat — TZ data:** `Date.prototype.toLocaleString` uses the host's IANA TZ via libICU; on a TV/STB without a configured TZ the output may differ from a desktop dev box.
+
+> **Caveat — locale data weight:** the full ICU data file (`icudt*.dat`) is ~10 MB and is linked into Escargot. Wearable/`SMALL_CONFIG` Escargot builds may strip locale data; if you ship LWE with `-DESCARGOT_SMALL_CONFIG=ON` re-run the iter21 probe before relying on any of the above.
+
+> **Static-checker false-positive (verifier bug):** `tool/lwe_compat/check_static.py` currently lists `Intl` and `BigInt` in `KNOWN_GLOBAL_INTERFACES` while neither is in `idl_interfaces` (they are ECMAScript globals, not WebIDL), so any code that mentions either is reported as `js.unknown-global`. Tracked as a verifier bug — Intl/BigInt are *supported*, the whitelist scheme just doesn't model ES globals separately yet. Until fixed, suppress with `// lwe-compat: js-ok` in offending lines or pre-strip them from probe sources.
+
+### Inspector / Debugger / Profiler / Memory APIs — runtime caveats (audit additions)
+
+**Bottom line:** LWE has no DevTools-style introspection surface available to JavaScript. The C++ `Inspector` class (`src/core/inspector/Inspector.{h,cpp}`) is a build-conditional **out-of-process console-message bridge** (nanomsg pair socket on `ws://0.0.0.0:23888`) — *not* a Chrome DevTools Protocol implementation, *not* attached to a JS interface, and *not* a heap/CPU profiler. Web pages cannot detect it, drive it, or observe a debugger. JS-side memory introspection (`performance.memory`, `measureUserAgentSpecificMemory`, `console.profile`, etc.) is entirely absent. Verified against `/tmp/lwe_audit_iter26/inspector_probes.html` on the glfw debug build.
+
+| Surface | Status (verified) |
+|---------|-------------------|
+| `Inspector`, `Debugger`, `Profiler` JS globals | **All `undefined`.** No IDL exists; the C++ `Starfish::Inspector` class is not exposed to script. |
+| `console.profile`, `console.profileEnd`, `console.timeStamp` | **`undefined`.** Not in the `CONSOLE_APIS` X-macro. |
+| `console.count`, `countReset`, `trace`, `dir`, `dirxml`, `table`, `clear`, `context` | **`undefined`** (re-confirming iter14 — there is no profiler-flavored console method either). |
+| `performance.memory` (Chrome `MemoryInfo`) | **`undefined`.** Already documented in §Performance; re-confirmed. |
+| `performance.measureUserAgentSpecificMemory()` | **`undefined`.** No IDL, no C++. |
+| `performance.navigation` | **`undefined`** (iter25 / §Performance). |
+| `PerformanceObserver`, `PerformanceObserverEntryList` | **`undefined`** — long-tasks / paint-timing observation impossible. |
+| `ReportingObserver`, `Report`, `ReportBody`, `DeprecationReport`, `InterventionReport` | **`undefined`.** No Reporting API. |
+| `navigator.sendBeacon(url, data)` | **`undefined`.** No CrashReporting/beaconing path; use `fetch(url, {keepalive:true})` instead — but note `keepalive` itself is not validated by LWE (see Fetch caveats). |
+| `globalThis.gc()`, `Memory`, `MemoryInfo` constructors | **`undefined`.** Escargot is built without a `--expose-gc` style hook, and BDWGC is not surfaced to JS. |
+| `__DevToolsHost`, `InspectorFrontendHost`, `InspectorBackend`, `CDP` | **`undefined`.** No DevTools/CDP runtime polyfills. |
+| `debugger;` statement | **No-op** when built with default `-DENABLE_DEBUGGER=0`. Does not throw, does not pause; control flow continues. With `-DENABLE_DEBUGGER=1`, the statement enters Escargot's debugger protocol — see below. |
+| `performance.mark()` / `performance.measure()` / `getEntriesByType('measure')` | **Working** (iter14/§Performance). Verified: `mark a; mark b; measure m,a,b` returns one entry with non-zero `duration`. This is the only timing-instrumentation primitive available; build dashboards on top of `getEntries()`, not on a debugger. |
+
+**Build-time debugger (Escargot, not Inspector):**
+
+LWE exposes Escargot's JS debugger protocol via `cmake -DENABLE_DEBUGGER=1` (defines `STARFISH_ENABLE_DEBUGGER`; see `build/config.cmake:322`). When enabled:
+- `LWEWebView::RegisterDebuggerShouldInitHandler(cb)` and `RegisterDebuggerShouldContinueWaitingHandler(cb)` (declared in `inc/LWEWebView.h:379`/`:866`) let the host decide per-URL whether to start the debug server and whether to keep waiting for a client to attach.
+- The protocol is the one consumed by [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension); CLAUDE.md documents the binding.
+- It is a **JS-source debugger** (breakpoints, step, eval), **not** a DOM/CSS/Network inspector. There is no equivalent of CDP `DOM.*`, `CSS.*`, `Network.*`, `HeapProfiler.*`, or `Profiler.*` domains.
+- The default LWE/Starfish builds (including the `glfw debug` build documented in `memory/project_glfw_debug_build.md`) ship with `ENABLE_DEBUGGER=0`. Webapps must not feature-detect a debugger from JS — the only observable signal is that `debugger;` is a no-op.
+
+**Build-time `STARFISH_ENABLE_INSPECTOR` (not the same thing):**
+
+`STARFISH_ENABLE_INSPECTOR` (auto-on for x64, see `build/config.cmake:97`) compiles in `Starfish::Inspector`, but the class is **only instantiated if a host calls `WebView::setupInspector(port=23888)`** — and no public `LWE*` API calls it. The shipped `LWEWebContainer` / `LWEWebView` never invoke `setupInspector`, so on every default build the class is dead code at runtime. When wired up (custom shell), it accepts JSON commands `{"command":"ping"|"eval", "content":"…"}` over a nanomsg `NN_PAIR` socket and replays `console.{log,info,warn,error,debug}` content as `{"command":"console-…"}` JSON frames; this is what `src/core/extra/Console.cpp` guards on `STARFISH_ENABLE_INSPECTOR`. Treat it as a remote-console feed, not an inspector.
+
+**`StarfishGCMemoryLogger` log spam:**
+
+`src/public/delegate/LWEDelegate.cpp:52` registers `StarfishGCMemoryLogger` as a `RECLAIM_END` listener on `Escargot::Memory`. This emits `LWEDelegate.cpp: StarfishGCMemoryLogger(54) > Done GC: HeapSize: [<used MB>, <heap MB>]` to stderr (via `STARFISH_LOG_INFO`) on **every** BDWGC sweep, regardless of build flags or `-DMODE`. There is no JS, public-API, or env-var off-switch in the engine source — the listener is unconditionally added in `LWE::Initialize` after a defensive `removeGCEventListener`. Embedders who want quiet stderr must filter the prefix downstream. The output is the only memory-usage signal a host can observe without a debugger, and matches BDWGC's `GC_get_memory_use()` (live) and `GC_get_heap_size()` (committed).
+
+**Authoring guidance for LWE webapps:**
+
+- Do not write code that reads `performance.memory.usedJSHeapSize` / `…jsHeapSizeLimit`. There is no fallback — guard with `if (performance && performance.memory) { … }`.
+- For perf timing, stick to `performance.now()` + `performance.mark()` / `performance.measure()`. They are the only primitives that exist.
+- For "is a debugger attached?" feature detection: there is no reliable signal. Apps that gate behavior on devtools presence should treat LWE as "always production".
+- `console.profile()`, `console.timeStamp()`, `console.count()` calls **throw `TypeError: Callee is not a function object`** (per iter14 §Console). Feature-detect with `typeof console.profile === 'function'`.
+- The static checker (`tool/lwe_compat/check_static.py`) and runtime checker (`tool/lwe_compat/check_runtime.sh`) do not flag inspector-namespace identifiers — `whitelist.json` does not include `Inspector`/`Debugger`/`Profiler` IDLs (because none exist), so callers that reference them will be caught only by the generic `js.unknown-global` rule.
+
 ## Web Device API
 The following describes Web device APIs supported by lightweight web engine. Supported interfaces and methods are generally the same as the interfaces and methods supported by Tizen API, respectively. If there are exceptions, they are explicitly mentioned below.
+
+> **Build flag:** the Web Device API (`window.tizen`) is exposed only when `HOST=tizen` and the `TIZEN_DEVICE_API` macro is defined. On `HOST=linux`/`HOST=windows`/`HOST=android` builds `window.tizen` is `undefined`.
 
 | API            | Description | Note |
 |----------------|-------------|------|
@@ -1786,6 +3136,14 @@ The following describes Web device APIs supported by lightweight web engine. Sup
 
 ## Accessible Rich Internet Applications (WAI-ARIA)
 The following describes WAI-ARIA supported by lightweight web engine. Please, see [here](https://www.w3.org/TR/wai-aria/) for more information about WAI-ARIA.
+
+> **Audit note:** ARIA support is **parser-level only**. The four attributes below round-trip via `getAttribute`/`setAttribute` and feed the engine's TTS accessible-name algorithm (`src/core/modules/tts/TextAlternativeHelper.cpp`). LWE does **NOT** implement:
+> - The `role` attribute as a semantic role — `<div role="button">` does not affect tab-focus, click-as-Enter, or any layout/event behavior.
+> - The `ARIAMixin` IDL accessors (`Element.role`, `Element.ariaLabel`, `Element.ariaPressed`, …, ~45 properties). `el.role = 'checkbox'` is silently kept as a JS expando, not a reflected attribute. **Always use `setAttribute('role', ...)` / `setAttribute('aria-*', ...)`.**
+> - `Element.attachInternals()` / `ElementInternals` (Custom Elements ARIA semantics).
+> - Any accessibility tree exposure to JavaScript or DevTools.
+>
+> Other `aria-*` attributes (`aria-pressed`, `aria-expanded`, `aria-valuenow`, etc.) are stored as plain string attributes; author scripts must read them with `getAttribute` and act on them manually.
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -1831,6 +3189,8 @@ The following describes Web Speech APIs supported by lightweight web engine. Ple
 ## WebRTC
 The following describes WebRTC APIs supported by lightweight web engine. Please, see [WebRTC Spec](https://w3c.github.io/webrtc-pc/) for more information.
 The WebRTC support is in an early stage.
+
+> **Build flag:** WebRTC is gated by `-DWEBRTC=1` (which also turns on `STARFISH_ENABLE_WEBRTC`/`STARFISH_ENABLE_WEBAUDIO`/`STARFISH_ENABLE_WEBSOCKET`/`STARFISH_ENABLE_MULTIMEDIA`). The default Linux/EFL release build ships with `-DWEBRTC=0`, so `RTCPeerConnection`, `MediaStream`, `MediaStreamTrack`, `navigator.mediaDevices`, and the rest of the interfaces in this section are absent at runtime. Verified by IDL inspection (`[STARFISH_ENABLE_WEBRTC]` extended attributes) and runtime probe in [Verification & Build-Conditional Surface](#verification--build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -1946,6 +3306,8 @@ The WebRTC support is in an early stage.
 The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
 The WebAudio support is in an early stage.
 
+> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `ARCH=x64`; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Verification & Build-Conditional Surface](#verification--build-conditional-surface).
+
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
 | [BaseAudioContext](https://webaudio.github.io/web-audio-api/#BaseAudioContext) | interface | BaseAudioContext | | |
@@ -1993,13 +3355,15 @@ The WebAudio support is in an early stage.
 The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.
 The Websocket is limitedly supported.
 
+> **Build flag:** WebSocket is gated by `STARFISH_ENABLE_WEBSOCKET` (turned on automatically for `ARCH=x64` and whenever `WEBRTC=1`). Builds without it will not expose the `WebSocket` global. See the [Verification & Build-Conditional Surface](#verification--build-conditional-surface) section.
+
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
 | [WebSocket](https://html.spec.whatwg.org/multipage/web-sockets.html) | interface | WebSocket | | |
-| | constructor | constructor (USVString url, optional (DOMString or sequence<DOMString>) protocols = []); | | |
+| | constructor | constructor (USVString url, optional DOMString protocols); | LWE accepts a single subprotocol string only; the WHATWG `sequence<DOMString>` form is **not** parsed by `WebSocket.idl`. Pass a comma-separated string if you need to advertise multiple protocols (or wrap and call repeatedly). |
 | | attribute | readonly USVString url | Returns the URL that was used to establish the WebSocket connection. | |
-| | value | "CONNECTING " | The connection has not yet been established. |
-| | value | "OPEN " | The WebSocket connection is established and communication is possible. |
+| | value | "CONNECTING" | The connection has not yet been established. |
+| | value | "OPEN" | The WebSocket connection is established and communication is possible. |
 | | value | "CLOSING" | The connection is going through the closing handshake, or the close() method has been invoked. |
 | | value | "CLOSED" | The connection has been closed or could not be opened. |
 | | attribute | unsigned short readyState | Returns the state of the WebSocket object's connection. It can have the values described below. | |
@@ -2013,4 +3377,38 @@ The Websocket is limitedly supported.
 | | method | send(USVString data); | Transmits string data using the WebSocket connection. | |
 | | method | send(Blob data); | Transmits Blob data using the WebSocket connection. | |
 | | method | send(ArrayBuffer data); | Transmits ArrayBuffer data using the WebSocket connection. | |
+
+### Final cleanup — remaining surfaces (audit additions)
+
+A final pass of runtime probes (see also [Verification & Build-Conditional Surface](#verification--build-conditional-surface)) on a default-flagged build (`HOST=linux SHELL=glfw BACKEND=uv_cairo_gl WEBGL=1`, all other features off) confirmed the following gaps. None are tracked elsewhere in this document at the API-shape level.
+
+**Not exposed as globals (constructor / namespace returns `undefined`):**
+
+| API | Notes / alternative in LWE |
+|---|---|
+| `BroadcastChannel` | Not implemented. For same-origin tab-to-tab signalling, LWE webapps run as a single document context anyway; use direct in-page events. |
+| `URLPattern` | Not implemented. Use manual `URL` parsing + `RegExp` against `pathname`/`search`. |
+| `CompressionStream` / `DecompressionStream` | Not implemented. No built-in gzip/deflate in JS; bundle a JS-side library (e.g. `pako`) if compression is required, or rely on HTTP `Content-Encoding`. |
+| `FileSystem`, `FileSystemHandle`, `FileSystemFileHandle`, `FileSystemDirectoryHandle`, `FileSystemWritableFileStream` | Modern File System Access API not implemented. |
+| `window.showOpenFilePicker` / `showSaveFilePicker` / `showDirectoryPicker` | Not implemented. Use `<input type="file">` with `change` for read access (subject to `FileReader`/`Blob`, which are supported). |
+| `window.requestFileSystem` / `webkitRequestFileSystem` | Legacy FileSystem API not implemented. |
+| `navigator.storage` | StorageManager (quota / persist) not exposed; the build flag block at the top of this section already lists the related quota-estimate gap. |
+| `Notification`, `PushManager`, `PushSubscription` | Listed under SERVICE_WORKER build-flag deps; in default build they are absent. |
+| `Cache`, `CacheStorage`, `caches` | Listed under SERVICE_WORKER build-flag deps; absent in default build. |
+
+**Per-interface gaps (interface exists, specific member missing):**
+
+| Interface.member | Status | Notes |
+|---|---|---|
+| `Event.prototype.composedPath()` | Declared `[Unimplemented]` in `src/core/dom/Event.idl` | Returns `undefined`/throws on call. There is no Shadow DOM, so the only reachable path is the document tree; iterate `event.target.parentNode`/`.parentElement` if needed. |
+| `Event.prototype.composed` (attribute) | Supported (read-only, default `false`) | Useful as a no-op flag for code that copies events; no Shadow-DOM observable effect. |
+| `HTMLFormElement.prototype.requestSubmit()` | Not exposed | Use `form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))` followed by `form.submit()` if the dispatch wasn't cancelled, or wire your own click handler on a `<button type="submit">`. |
+| `Node.prototype.getRootNode()` | Supported (returns `Document`) | The `composed` option is accepted but has no observable effect (no Shadow DOM). |
+
+**Confirmed working (called out because they're often assumed missing on embedded engines):**
+
+- `MessageChannel` / `MessagePort` — constructible; `port1.postMessage` is callable. Already documented in the DOM table.
+- `fetch()` — returns a thenable (`Promise`). The Promise integration with Web APIs is the standard one supplied by Escargot's microtask queue.
+- `Event.prototype.stopImmediatePropagation()` — present.
+- `<input>.autocomplete` — DOM property reflects the attribute and round-trips values like `"name"`, `"email"`, `"off"`. The visual effect (browser-managed autofill UI) does not exist in LWE; the attribute is purely informational for any host-side autofill bridge.
 | | method | send(ArrayBufferView data); | Transmits ArrayBufferView data using the WebSocket connection. | | |
