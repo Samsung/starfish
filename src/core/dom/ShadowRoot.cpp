@@ -102,6 +102,11 @@ void ShadowRoot::assignSlot()
 
 void ShadowRoot::connectSlotWithSlottables()
 {
+    // Assigns host's children to slots based on slot attribute or default slot.
+    // Elements with slot="name" go to matching named slot; others go to default
+    // slot. Text nodes always go to default slot (empty string key).
+
+    // Clear existing assignments
     for (auto iter : m_namedSlotElements) {
         for (auto n : iter.second->m_assignedNodes) {
             n->setIsSlotted(false);
@@ -109,16 +114,25 @@ void ShadowRoot::connectSlotWithSlottables()
         iter.second->m_assignedNodes.clear();
     }
 
+    // Traverse host children and assign to appropriate slots
     Node* node = host()->firstChild();
     while (node) {
         if (node->isElement()) {
             auto slotName = node->asElement()->slot();
-            if (slotName->length()) {
-                auto iter = m_namedSlotElements.find(slotName);
-                if (iter != m_namedSlotElements.end()) {
-                    iter->second->m_assignedNodes.push_back(node);
-                    node->setIsSlotted(true);
-                }
+            // Named slot: element has slot attribute
+            // Default slot: element has no slot attribute
+            auto iter = m_namedSlotElements.find(
+                slotName->length() ? slotName : String::emptyString);
+            if (iter != m_namedSlotElements.end()) {
+                iter->second->m_assignedNodes.push_back(node);
+                node->setIsSlotted(true);
+            }
+        } else if (node->isText()) {
+            // Text nodes always assigned to default slot
+            auto iter = m_namedSlotElements.find(String::emptyString);
+            if (iter != m_namedSlotElements.end()) {
+                iter->second->m_assignedNodes.push_back(node);
+                node->setIsSlotted(true);
             }
         }
         node = node->nextSibling();

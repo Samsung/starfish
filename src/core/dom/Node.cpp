@@ -508,22 +508,35 @@ Node* Node::getRootNode(GetRootNodeOptions options)
 
 Node* Node::renderingParentNode() const
 {
+    // Returns the parent node in rendering tree, considering shadow DOM slot
+    // assignment. If parent has shadow root and this node is assigned to a
+    // slot, returns slot's parent.
+
     auto nd = parentNode();
 
+    // Handle shadow DOM: find assigned slot if parent has shadow root
     if (nd && nd->isElement()) {
         Element* e = nd->asElement();
         auto sr = e->internalShadowRoot();
-        if (sr && isElement()) {
-            String* slotName = asElement()->slot();
-            if (slotName->length()) {
-                auto slotElement = sr->assignedSlot(slotName);
-                if (slotElement) {
-                    return slotElement->renderingParentNode();
-                }
+        if (sr) {
+            Optional<HTMLSlotElement*> slotElement;
+            if (isElement()) {
+                // Element with slot attribute -> named slot, otherwise ->
+                // default slot
+                String* slotName = asElement()->slot();
+                slotElement = sr->assignedSlot(
+                    slotName->length() ? slotName : String::emptyString);
+            } else if (isText()) {
+                // Text nodes always go to default slot
+                slotElement = sr->assignedSlot(String::emptyString);
+            }
+            if (slotElement.hasValue() && slotElement.value()) {
+                return slotElement.value()->renderingParentNode();
             }
         }
     }
 
+    // Shadow root boundary: return host element
     if (UNLIKELY(nd && nd->isShadowRoot())) {
         return nd->asShadowRoot()->host();
     }

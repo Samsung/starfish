@@ -414,39 +414,80 @@ public:
 
     Optional<Node*> next()
     {
-        if (m_slotAssignedNodesIndex != SIZE_MAX) {
-            if (m_slotAssignedNodesIndex < m_slotAssignedNodes.size()) {
-                Node* c = m_slotAssignedNodes[m_slotAssignedNodesIndex];
-                m_slotAssignedNodesIndex++;
-                STARFISH_ASSERT(!c->isHTMLSlotElement());
-                return c;
+        // Returns next sibling in rendering tree, flattening slot content.
+        // Slot elements are transparent: their assigned nodes are returned
+        // instead.
+        while (true) {
+            // Case A: Currently iterating through a slot's assigned nodes
+            // (m_slotAssignedNodesIndex is valid index, not SIZE_MAX)
+            if (m_slotAssignedNodesIndex != SIZE_MAX) {
+                if (m_slotAssignedNodesIndex < m_slotAssignedNodes.size()) {
+                    // Return next assigned node from slot
+                    Node* c = m_slotAssignedNodes[m_slotAssignedNodesIndex];
+                    m_slotAssignedNodesIndex++;
+                    STARFISH_ASSERT(!c->isHTMLSlotElement());
+                    return c;
+                }
+                // Exhausted all assigned nodes for this slot
+                // Reset and move to slot's next sibling
+                m_slotAssignedNodesIndex = SIZE_MAX;
+                m_slotAssignedNodes.clear();
+
+                STARFISH_ASSERT(m_currentNode);
+                updateNode(m_currentNode->nextSibling());
+                continue;
             }
-            m_currentNode = m_currentNode->nextSibling();
+
+            // Case B: Normal node iteration (not inside slot's assigned nodes)
+            Optional<Node*> c = m_currentNode;
+            if (m_currentNode) {
+                // Advance to next sibling for subsequent calls
+                updateNode(m_currentNode->nextSibling());
+            }
+            // If current node is a slot, updateNode() prepared its assigned
+            // nodes. Skip returning the slot itself - continue to get actual
+            // content.
+            if (c.hasValue() && c.value() && c.value()->isHTMLSlotElement()) {
+                continue;
+            }
+            STARFISH_ASSERT(!c || !c->isHTMLSlotElement());
+            return c;
         }
-        Optional<Node*> c = m_currentNode;
-        if (m_currentNode) {
-            updateNode(m_currentNode->nextSibling());
-        }
-        STARFISH_ASSERT(!c || !c->isHTMLSlotElement());
-        return c;
     }
 
 private:
     void updateNode(Node* node)
     {
+        // Update the iterator state to point to the given node.
+        // For slot elements, we collect their assigned nodes and iterate
+        // through those instead of the slot element itself, since slots are
+        // "transparent" in the rendering tree - they don't render
+        // themselves, only their assigned content.
+
         while (node) {
+            // Case 1: Non-slot node - use it directly
             if (LIKELY(!node->isHTMLSlotElement())) {
                 m_slotAssignedNodes.clear();
                 m_slotAssignedNodesIndex = SIZE_MAX;
                 m_currentNode = node;
                 return;
             }
+
+            // Case 2: Slot element - collect assigned nodes to iterate
+            // through Slots are transparent in rendering: we return their
+            // assigned content, not the slot element itself.
             m_slotAssignedNodesIndex = 0;
             m_currentNode = node;
+
+            // Get flattened assigned nodes (includes nested slot content)
             AssignedNodesOptions opt;
             opt.setFlatten(true);
             m_slotAssignedNodes = node->asHTMLSlotElement()->assignedNodes(
                 Optional<AssignedNodesOptions>(opt));
+
+            // If no assigned nodes from the slot's assignedNodes(),
+            // collect rendering children directly (e.g., slot's fallback
+            // content)
             if (!m_slotAssignedNodes.size()) {
                 RenderingSiblingIterator iter = node->firstRenderingChild();
                 while (true) {
@@ -458,13 +499,17 @@ private:
                 }
             }
 
+            // If we found assigned nodes, return and let next() iterate
+            // through them
             if (m_slotAssignedNodes.size()) {
                 return;
             } else {
+                // Empty slot with no content - skip to next sibling
                 node = node->nextSibling();
             }
         }
 
+        // No more nodes - reset to end state
         m_slotAssignedNodes.clear();
         m_slotAssignedNodesIndex = SIZE_MAX;
         m_currentNode = nullptr;

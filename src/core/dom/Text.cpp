@@ -20,7 +20,10 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/Element.h"
 #include "core/dom/Text.h"
+#include "core/dom/ShadowRoot.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 
@@ -102,6 +105,18 @@ String* Text::wholeText()
                   [&](Node* n) { str = str->concat(n->asText()->data()); });
 
     return str;
+}
+
+Optional<HTMLSlotElement*> Text::assignedSlot()
+{
+    Optional<ShadowRoot*> shadowRoot;
+    if (parentElement() &&
+        (shadowRoot = parentElement()->internalShadowRoot())) {
+        // Text nodes are always assigned to default slot (empty name)
+        return shadowRoot->assignedSlot(String::emptyString);
+    }
+
+    return nullptr;
 }
 
 Node* Text::mergeWithTextSiblings()
