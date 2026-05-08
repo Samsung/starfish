@@ -413,10 +413,6 @@ bool StackingContext::needsRepaintingWhenScrolling()
         return true;
     }
 
-    if (owner()->hasFrameBorderRadius()) {
-        return true;
-    }
-
     if (owner()->style()->boxShadow()) {
         return true;
     }
@@ -2684,7 +2680,16 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         computeBoxExtent(visibleRect, screenMatrix);
 
     if (!stackingContextExtent.intersects(screenRect)) {
-        return;
+        bool needsCompositeAnyWay = false;
+        if (inScrollWithGraphicsBufferActive()) {
+            auto clr = owner()->style()->backgroundColor();
+            if (!clr.isTransparent()) {
+                needsCompositeAnyWay = true;
+            }
+        }
+        if (!needsCompositeAnyWay) {
+            return;
+        }
     }
 
     size_t bufferWidth;

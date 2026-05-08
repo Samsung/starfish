@@ -555,6 +555,12 @@ public:
                     clipBorderRadiusIfNeeds(frameBox);
                 }
 
+                if (childStackingContext->owner() == frameBox &&
+                    childStackingContext->inScrollActive() &&
+                    !childStackingContext->needsRepaintingWhenScrolling()) {
+                    clipBorderRadiusIfNeeds(frameBox);
+                }
+
                 if (style->isAbsolutePositioned()) {
                     applyStyleClip(style);
                 }
