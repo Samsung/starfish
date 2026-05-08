@@ -2654,6 +2654,7 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt) override
     {
+        INSTALL_PROFILE_TIMER("CompositorGL::drawRect");
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         auto& lastState = m_state.back();
@@ -2874,6 +2875,7 @@ public:
             }
         }
 
+        INSTALL_PROFILE_TIMER("CompositorGL::computeClippath(complex)");
         if (!lastState.computedAbbreviatedClipPaths) {
             if (lastState.clipRect.isEmpty()) {
                 lastState.computedAbbreviatedClipPaths = Clipper2Lib::PathsD();
@@ -2881,11 +2883,16 @@ public:
             } else {
                 Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
                 if (lastState.abbreviatedClipPaths.size()) {
+                    Clipper2Lib::PathsD computedAbbreviatedClipPaths = {
+                        rectClip
+                    };
+                    for (auto& p : lastState.abbreviatedClipPaths) {
+                        computedAbbreviatedClipPaths = Clipper2Lib::Intersect(
+                            computedAbbreviatedClipPaths, { std::move(p) },
+                            Clipper2Lib::FillRule::NonZero, 1);
+                    }
                     lastState.computedAbbreviatedClipPaths =
-                        Clipper2Lib::Intersect(lastState.abbreviatedClipPaths,
-                                               { std::move(rectClip) },
-                                               Clipper2Lib::FillRule::NonZero,
-                                               1);
+                        std::move(computedAbbreviatedClipPaths);
                     lastState.abbreviatedClipPaths.clear();
                     if (lastState.matrixStaysInRect &&
                         isRectangleClipPath(
@@ -2917,10 +2924,12 @@ public:
             Clipper2Lib::FillRule::NonZero, 1);
 
         if (result.size() && !isRectangleClipPath(result)) {
-            INSTALL_PROFILE_TIMER("CompositorGL::computeClippath(complex)");
+            INSTALL_PROFILE_TIMER(
+                "CompositorGL::computeClippath(complex inner)");
             if (!lastState.computedPathCommands) {
-                // build complex path first
-                Clipper2Lib::PathsD paths;
+                Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
+                Clipper2Lib::PathsD computedPathCommands = { std::move(
+                    rectClip) };
                 for (const auto& pathCommand : lastState.pathCommands) {
                     Clipper2Lib::PathD path;
                     for (const auto& command : pathCommand) {
@@ -2956,22 +2965,24 @@ public:
                                       command.y);
                         }
                     }
-                    paths.push_back(std::move(path));
+                    computedPathCommands = Clipper2Lib::Intersect(
+                        computedPathCommands, { std::move(path) },
+                        Clipper2Lib::FillRule::NonZero);
                 }
-                Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
+
                 lastState.computedPathCommands =
-                    Clipper2Lib::Intersect(paths, { std::move(rectClip) },
-                                           Clipper2Lib::FillRule::NonZero);
-                subject.reserve(4);
-                subject.emplace_back(dest[0][0], dest[0][1]);
-                subject.emplace_back(dest[2][0], dest[2][1]);
-                subject.emplace_back(dest[3][0], dest[3][1]);
-                subject.emplace_back(dest[1][0], dest[1][1]);
-                result = Clipper2Lib::Intersect(
-                    { std::move(subject) },
-                    lastState.computedPathCommands.value(),
-                    Clipper2Lib::FillRule::NonZero);
+                    std::move(computedPathCommands);
             }
+            // use computed cache
+            subject.reserve(4);
+            subject.emplace_back(dest[0][0], dest[0][1]);
+            subject.emplace_back(dest[2][0], dest[2][1]);
+            subject.emplace_back(dest[3][0], dest[3][1]);
+            subject.emplace_back(dest[1][0], dest[1][1]);
+
+            result = Clipper2Lib::Intersect(
+                { std::move(subject) }, lastState.computedPathCommands.value(),
+                Clipper2Lib::FillRule::NonZero);
         }
 
         return result;
