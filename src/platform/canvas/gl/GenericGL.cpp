@@ -913,6 +913,17 @@ public:
         return glIsVertexArray(array);
     }
 
+    void bindBufferRange(GLenum target, GLuint index, GLuint buffer,
+                         GLintptr offset, GLsizeiptr size) override
+    {
+        glBindBufferRange(target, index, buffer, offset, size);
+    }
+
+    void bindBufferBase(GLenum target, GLuint index, GLuint buffer) override
+    {
+        glBindBufferBase(target, index, buffer);
+    }
+
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {
