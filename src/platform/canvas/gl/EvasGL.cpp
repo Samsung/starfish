@@ -897,6 +897,17 @@ public:
         return m_evasGLAPI->glIsVertexArray(array);
     }
 
+    void bindBufferRange(GLenum target, GLuint index, GLuint buffer,
+                         GLintptr offset, GLsizeiptr size) override
+    {
+        m_evasGLAPI->glBindBufferRange(target, index, buffer, offset, size);
+    }
+
+    void bindBufferBase(GLenum target, GLuint index, GLuint buffer) override
+    {
+        m_evasGLAPI->glBindBufferBase(target, index, buffer);
+    }
+
     void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                               GLsizei stride, const void *pointer) override
     {

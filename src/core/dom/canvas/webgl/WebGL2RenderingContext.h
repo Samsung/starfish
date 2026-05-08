@@ -201,6 +201,11 @@ public:
     ScriptValue getSyncParameter(WebGLSync* sync, GLenum pname);
 
     /* Uniform Buffer Objects and Transform Feedback Buffers */
+    void bindBufferBase(GLenum target, GLuint index,
+                        Optional<WebGLBuffer*> buffer);
+    void bindBufferRange(GLenum target, GLuint index,
+                         Optional<WebGLBuffer*> buffer, GLintptr offset,
+                         GLsizeiptr size);
     ScriptValue getActiveUniforms(WebGLProgram* program,
                                   GCAtomicVector<GLuint> uniformIndices,
                                   GLenum pname);

@@ -294,6 +294,9 @@ public:
     virtual void bindVertexArray(GLuint array) = 0;
     virtual void deleteVertexArrays(GLsizei n, const GLuint *arrays) = 0;
     virtual GLboolean isVertexArray(GLuint array) = 0;
+    virtual void bindBufferRange(GLenum target, GLuint index, GLuint buffer,
+                                 GLintptr offset, GLsizeiptr size) = 0;
+    virtual void bindBufferBase(GLenum target, GLuint index, GLuint buffer) = 0;
     virtual void vertexAttribIPointer(GLuint index, GLint size, GLenum type,
                                       GLsizei stride, const void *pointer) = 0;
     virtual void getVertexAttribIiv(GLuint index, GLenum pname,

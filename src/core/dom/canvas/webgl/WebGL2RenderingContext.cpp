@@ -161,11 +161,17 @@ void WebGL2RenderingContext::bindBuffer(GLenum target,
         }
 
         gl()->bindBuffer(target, value->glObject());
+        if (hasNewGLError()) {
+            return;
+        }
         getState()->setBoundBuffer(target, value);
 
         value->setTargetOnce(target);
     } else {
         gl()->bindBuffer(target, 0);
+        if (hasNewGLError()) {
+            return;
+        }
         getState()->setBoundBuffer(target, nullptr);
     }
 }
@@ -1210,6 +1216,107 @@ ScriptValue WebGL2RenderingContext::getSyncParameter(WebGLSync* sync,
     }
     setGLError(GL_INVALID_ENUM);
     return scriptNull();
+}
+
+void WebGL2RenderingContext::bindBufferBase(GLenum target, GLuint index,
+                                            Optional<WebGLBuffer*> buffer)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TRANSFORM_FEEDBACK_BUFFER && target != GL_UNIFORM_BUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (buffer.hasValue()) {
+        WebGLBuffer* value = buffer.value();
+
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->target() != GL_NONE &&
+            ((value->target() == GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_COPY_READ_BUFFER &&
+              target != GL_COPY_WRITE_BUFFER) ||
+             (value->target() != GL_ELEMENT_ARRAY_BUFFER &&
+              target == GL_ELEMENT_ARRAY_BUFFER))) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindBufferBase(target, index, value->glObject());
+        if (hasNewGLError()) {
+            return;
+        }
+        getState()->setBoundBuffer(target, value);
+
+        value->setTargetOnce(target);
+    } else {
+        gl()->bindBufferBase(target, index, 0);
+        if (hasNewGLError()) {
+            return;
+        }
+        getState()->setBoundBuffer(target, nullptr);
+    }
+}
+
+void WebGL2RenderingContext::bindBufferRange(GLenum target, GLuint index,
+                                             Optional<WebGLBuffer*> buffer,
+                                             GLintptr offset, GLsizeiptr size)
+{
+    ENTER_CONTEXT_SCOPE();
+
+    if (target != GL_TRANSFORM_FEEDBACK_BUFFER && target != GL_UNIFORM_BUFFER) {
+        setGLError(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (buffer.hasValue()) {
+        WebGLBuffer* value = buffer.value();
+
+        if (!isFromCurrentContext(value)) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->isDeleted()) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (value->target() != GL_NONE &&
+            ((value->target() == GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_ELEMENT_ARRAY_BUFFER &&
+              target != GL_COPY_READ_BUFFER &&
+              target != GL_COPY_WRITE_BUFFER) ||
+             (value->target() != GL_ELEMENT_ARRAY_BUFFER &&
+              target == GL_ELEMENT_ARRAY_BUFFER))) {
+            setGLError(GL_INVALID_OPERATION);
+            return;
+        }
+
+        gl()->bindBufferRange(target, index, value->glObject(), offset, size);
+        if (hasNewGLError()) {
+            return;
+        }
+        getState()->setBoundBuffer(target, value);
+
+        value->setTargetOnce(target);
+    } else {
+        gl()->bindBufferRange(target, index, 0, offset, size);
+        if (hasNewGLError()) {
+            return;
+        }
+        getState()->setBoundBuffer(target, nullptr);
+    }
 }
 
 ScriptValue WebGL2RenderingContext::getActiveUniforms(
