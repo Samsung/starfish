@@ -1149,6 +1149,8 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     Node* targetNode = nullptr;
     double targetX = 0;
     double targetY = 0;
+    double targetScreenX = 0;
+    double targetScreenY = 0;
     for (size_t i = 0; i < count; i++) {
         TouchData& touchData = touches[i];
         Node* node = hitTest(touchData.clientX(), touchData.clientY());
@@ -1157,6 +1159,8 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             targetNode = node;
             targetX = touchData.clientX();
             targetY = touchData.clientY();
+            targetScreenX = touchData.screenX();
+            targetScreenY = touchData.screenY();
         }
         if (checkRelease &&
             ((std::abs(m_touchDownPoint.x() - touchData.clientX()) > 30) ||
@@ -1180,7 +1184,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         handleActiveAndFocus((MouseEventKind)kind, targetNode, targetX,
                              targetY);
 
-        TouchData newData(newX, newY);
+        TouchData newData(newX, newY, targetScreenX, targetScreenY);
         if (targetNode->asHTMLIFrameElement()
                 ->browsingContext()
                 ->dispatchTouchEvent(kind, &newData, 1)) {
@@ -1220,6 +1224,8 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             MouseData clickData(MouseButtonValue::LeftButton,
                                 MouseButtonsValue::LeftButtonDown, targetX,
                                 targetY, 1);
+            clickData.setScreenX(targetScreenX);
+            clickData.setScreenY(targetScreenY);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEventByUA(t, click);
         }
@@ -1289,7 +1295,8 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                     targetY);
 
-        MouseData newData(data.button(), data.buttons(), newX, newY, 0);
+        MouseData newData(data.button(), data.buttons(), newX, newY,
+                          data.screenX(), data.screenY(), 0);
         if (targetNode->asHTMLIFrameElement()
                 ->browsingContext()
                 ->dispatchMouseEvent(kind, newData)) {
