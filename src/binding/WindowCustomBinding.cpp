@@ -40,6 +40,12 @@
 using namespace Escargot;
 
 #ifdef STARFISH_ENABLE_TEST
+#include <png.h>
+#include <fstream>
+#include <vector>
+#endif
+
+#ifdef STARFISH_ENABLE_TEST
 extern int32_t g_renderingCount;
 static bool g_gotFailure = false;
 void starfishRecordTestFailure()
@@ -773,6 +779,428 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     pclose(fp);
     return scriptUndefined();
 }
+
+// Helper function to read PNG file and get pixel data
+static bool readPNGPixelData(const std::string& filePath,
+                             std::vector<uint8_t>& pixelData, uint32_t& width,
+                             uint32_t& height)
+{
+    FILE* fp = fopen(filePath.c_str(), "rb");
+    if (!fp) {
+        STARFISH_LOG_ERROR("Failed to open PNG file: %s", filePath.c_str());
+        return false;
+    }
+
+    // Check PNG signature
+    unsigned char header[8];
+    if (fread(header, 1, 8, fp) != 8) {
+        fclose(fp);
+        return false;
+    }
+    if (png_sig_cmp(header, 0, 8)) {
+        STARFISH_LOG_ERROR("File is not a valid PNG: %s", filePath.c_str());
+        fclose(fp);
+        return false;
+    }
+
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr,
+                                             nullptr, nullptr);
+    if (!png) {
+        fclose(fp);
+        return false;
+    }
+
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        png_destroy_read_struct(&png, nullptr, nullptr);
+        fclose(fp);
+        return false;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        fclose(fp);
+        return false;
+    }
+
+    png_init_io(png, fp);
+    png_set_sig_bytes(png, 8);
+    png_read_info(png, info);
+
+    width = png_get_image_width(png, info);
+    height = png_get_image_height(png, info);
+    png_byte colorType = png_get_color_type(png, info);
+    png_byte bitDepth = png_get_bit_depth(png, info);
+
+    // Convert to RGBA format
+    if (bitDepth == 16) {
+        png_set_strip_16(png);
+    }
+    if (colorType == PNG_COLOR_TYPE_PALETTE) {
+        png_set_palette_to_rgb(png);
+    }
+    if (colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8) {
+        png_set_expand_gray_1_2_4_to_8(png);
+    }
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+        png_set_tRNS_to_alpha(png);
+    }
+    if (colorType == PNG_COLOR_TYPE_RGB || colorType == PNG_COLOR_TYPE_GRAY ||
+        colorType == PNG_COLOR_TYPE_PALETTE) {
+        png_set_filler(png, 0xff, PNG_FILLER_AFTER);
+    }
+    if (colorType == PNG_COLOR_TYPE_GRAY ||
+        colorType == PNG_COLOR_TYPE_GRAY_ALPHA) {
+        png_set_gray_to_rgb(png);
+    }
+
+    png_read_update_info(png, info);
+
+    uint32_t rowbytes = png_get_rowbytes(png, info);
+    pixelData.resize(rowbytes * height);
+
+    std::vector<png_bytep> rowPointers(height);
+    for (uint32_t i = 0; i < height; i++) {
+        rowPointers[i] = &pixelData[i * rowbytes];
+    }
+
+    png_read_image(png, rowPointers.data());
+    png_read_end(png, nullptr);
+
+    png_destroy_read_struct(&png, &info, nullptr);
+    fclose(fp);
+
+    return true;
+}
+
+// getPixelColor(pngPath, x, y) -> returns {r, g, b, a}
+static ValueRef* getPixelColorFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    if (argc < 3) {
+        STARFISH_LOG_ERROR("getPixelColor requires 3 arguments: path, x, y");
+        return scriptNull();
+    }
+
+    // Get file path
+    UTF8StringDataNonGCStd basePath =
+        window->document()->documentURI()->baseURI()->toUTF8NonGCString();
+    basePath = basePath.substr(strlen("file://"));
+
+    std::string filePath =
+        basePath + argv[0]->toString(state)->toStdUTF8String().data();
+
+    // Get x, y coordinates
+    int32_t x = argv[1]->toInt32(state);
+    int32_t y = argv[2]->toInt32(state);
+
+    // Read PNG file
+    std::vector<uint8_t> pixelData;
+    uint32_t width, height;
+
+    if (!readPNGPixelData(filePath, pixelData, width, height)) {
+        STARFISH_LOG_ERROR("Failed to read PNG file: %s", filePath.c_str());
+        return scriptNull();
+    }
+
+    // Check bounds
+    if (x < 0 || x >= (int32_t)width || y < 0 || y >= (int32_t)height) {
+        STARFISH_LOG_ERROR(
+            "Coordinates out of bounds: (%d, %d), image size: (%u, %u)", x, y,
+            width, height);
+        return scriptNull();
+    }
+
+    // Get pixel color (BGRA format in memory)
+    uint32_t rowbytes = width * 4;
+    uint8_t* pixel = &pixelData[y * rowbytes + x * 4];
+
+    // Create result object with r, g, b, a
+    ObjectRef* result = ObjectRef::create(state);
+#ifdef PORT_PIXEL_ORDER_RGBA
+    result->set(state, ValueRef::create(StringRef::createFromASCII("r")),
+                ValueRef::create((int)pixel[0]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("g")),
+                ValueRef::create((int)pixel[1]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("b")),
+                ValueRef::create((int)pixel[2]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("a")),
+                ValueRef::create((int)pixel[3]));
+#else
+    // BGRA format
+    result->set(state, ValueRef::create(StringRef::createFromASCII("r")),
+                ValueRef::create((int)pixel[2]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("g")),
+                ValueRef::create((int)pixel[1]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("b")),
+                ValueRef::create((int)pixel[0]));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("a")),
+                ValueRef::create((int)pixel[3]));
+#endif
+
+    return ValueRef::create(result);
+}
+
+// checkPixelColor(pngPath, x, y, r, g, b, a, tolerance) -> returns true/false
+// tolerance is optional, default is 0
+static ValueRef* checkPixelColorFunction(ExecutionStateRef* state,
+                                         ValueRef* thisValue, size_t argc,
+                                         ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    if (argc < 6) {
+        STARFISH_LOG_ERROR(
+            "checkPixelColor requires at least 6 arguments: path, x, y, r, g, "
+            "b");
+        return ValueRef::create(false);
+    }
+
+    // Get file path
+    UTF8StringDataNonGCStd basePath =
+        window->document()->documentURI()->baseURI()->toUTF8NonGCString();
+    basePath = basePath.substr(strlen("file://"));
+
+    std::string filePath =
+        basePath + argv[0]->toString(state)->toStdUTF8String().data();
+
+    // Get x, y coordinates
+    int32_t x = argv[1]->toInt32(state);
+    int32_t y = argv[2]->toInt32(state);
+
+    // Get expected color values
+    int32_t expectedR = argv[3]->toInt32(state);
+    int32_t expectedG = argv[4]->toInt32(state);
+    int32_t expectedB = argv[5]->toInt32(state);
+    int32_t expectedA = (argc > 6) ? argv[6]->toInt32(state) : 255;
+    int32_t tolerance = (argc > 7) ? argv[7]->toInt32(state) : 0;
+
+    // Read PNG file
+    std::vector<uint8_t> pixelData;
+    uint32_t width, height;
+
+    if (!readPNGPixelData(filePath, pixelData, width, height)) {
+        STARFISH_LOG_ERROR("Failed to read PNG file: %s", filePath.c_str());
+        return ValueRef::create(false);
+    }
+
+    // Check bounds
+    if (x < 0 || x >= (int32_t)width || y < 0 || y >= (int32_t)height) {
+        STARFISH_LOG_ERROR(
+            "Coordinates out of bounds: (%d, %d), image size: (%u, %u)", x, y,
+            width, height);
+        return ValueRef::create(false);
+    }
+
+    // Get pixel color
+    uint32_t rowbytes = width * 4;
+    uint8_t* pixel = &pixelData[y * rowbytes + x * 4];
+
+    int32_t actualR, actualG, actualB, actualA;
+#ifdef PORT_PIXEL_ORDER_RGBA
+    actualR = pixel[0];
+    actualG = pixel[1];
+    actualB = pixel[2];
+    actualA = pixel[3];
+#else
+    // BGRA format
+    actualR = pixel[2];
+    actualG = pixel[1];
+    actualB = pixel[0];
+    actualA = pixel[3];
+#endif
+
+    // Compare with tolerance
+    auto inRange = [tolerance](int32_t actual, int32_t expected) -> bool {
+        return actual >= (expected - tolerance) &&
+               actual <= (expected + tolerance);
+    };
+
+    bool match = inRange(actualR, expectedR) && inRange(actualG, expectedG) &&
+                 inRange(actualB, expectedB) && inRange(actualA, expectedA);
+
+    if (!match) {
+        STARFISH_LOG_INFO(
+            "Pixel color mismatch at (%d, %d): expected rgba(%d,%d,%d,%d), got "
+            "rgba(%d,%d,%d,%d)",
+            x, y, expectedR, expectedG, expectedB, expectedA, actualR, actualG,
+            actualB, actualA);
+    }
+
+    return ValueRef::create(match);
+}
+
+// checkPixelColors(pngPath, coordinatesArray, tolerance) -> returns true/false
+// coordinatesArray is an array of {x, y, r, g, b, a} objects
+static ValueRef* checkPixelColorsFunction(ExecutionStateRef* state,
+                                          ValueRef* thisValue, size_t argc,
+                                          ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    if (argc < 2) {
+        STARFISH_LOG_ERROR(
+            "checkPixelColors requires at least 2 arguments: path, "
+            "coordinatesArray");
+        return ValueRef::create(false);
+    }
+
+    // Get file path
+    UTF8StringDataNonGCStd basePath =
+        window->document()->documentURI()->baseURI()->toUTF8NonGCString();
+    basePath = basePath.substr(strlen("file://"));
+
+    std::string filePath =
+        basePath + argv[0]->toString(state)->toStdUTF8String().data();
+
+    // Get tolerance (optional)
+    int32_t tolerance = (argc > 2) ? argv[2]->toInt32(state) : 0;
+
+    // Read PNG file once
+    std::vector<uint8_t> pixelData;
+    uint32_t width, height;
+
+    if (!readPNGPixelData(filePath, pixelData, width, height)) {
+        STARFISH_LOG_ERROR("Failed to read PNG file: %s", filePath.c_str());
+        return ValueRef::create(false);
+    }
+
+    // Get coordinates array
+    if (!argv[1]->isObject() || !argv[1]->asObject()->isArrayObject()) {
+        STARFISH_LOG_ERROR("Second argument must be an array");
+        return ValueRef::create(false);
+    }
+
+    ObjectRef* coordsArray = argv[1]->asObject();
+    int32_t arrayLength =
+        coordsArray
+            ->get(state, ValueRef::create(StringRef::createFromASCII("length")))
+            ->toInt32(state);
+
+    uint32_t rowbytes = width * 4;
+
+    for (int32_t i = 0; i < arrayLength; i++) {
+        ValueRef* item = coordsArray->get(state, ValueRef::create(i));
+        if (!item->isObject()) {
+            STARFISH_LOG_ERROR("Invalid coordinate object at index %d", i);
+            return ValueRef::create(false);
+        }
+
+        ObjectRef* coordObj = item->asObject();
+        int32_t x =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("x")))
+                ->toInt32(state);
+        int32_t y =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("y")))
+                ->toInt32(state);
+        int32_t expectedR =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("r")))
+                ->toInt32(state);
+        int32_t expectedG =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("g")))
+                ->toInt32(state);
+        int32_t expectedB =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("b")))
+                ->toInt32(state);
+        int32_t expectedA =
+            coordObj
+                ->get(state, ValueRef::create(StringRef::createFromASCII("a")))
+                ->toInt32(state);
+
+        // Check bounds
+        if (x < 0 || x >= (int32_t)width || y < 0 || y >= (int32_t)height) {
+            STARFISH_LOG_ERROR(
+                "Coordinates out of bounds at index %d: (%d, %d), image size: "
+                "(%u, %u)",
+                i, x, y, width, height);
+            return ValueRef::create(false);
+        }
+
+        // Get pixel color
+        uint8_t* pixel = &pixelData[y * rowbytes + x * 4];
+
+        int32_t actualR, actualG, actualB, actualA;
+#ifdef PORT_PIXEL_ORDER_RGBA
+        actualR = pixel[0];
+        actualG = pixel[1];
+        actualB = pixel[2];
+        actualA = pixel[3];
+#else
+        actualR = pixel[2];
+        actualG = pixel[1];
+        actualB = pixel[0];
+        actualA = pixel[3];
+#endif
+
+        // Compare with tolerance
+        auto inRange = [tolerance](int32_t actual, int32_t expected) -> bool {
+            return actual >= (expected - tolerance) &&
+                   actual <= (expected + tolerance);
+        };
+
+        bool match = inRange(actualR, expectedR) &&
+                     inRange(actualG, expectedG) &&
+                     inRange(actualB, expectedB) && inRange(actualA, expectedA);
+
+        if (!match) {
+            STARFISH_LOG_INFO(
+                "Pixel color mismatch at index %d (%d, %d): expected "
+                "rgba(%d,%d,%d,%d), got rgba(%d,%d,%d,%d)",
+                i, x, y, expectedR, expectedG, expectedB, expectedA, actualR,
+                actualG, actualB, actualA);
+            return ValueRef::create(false);
+        }
+    }
+
+    return ValueRef::create(true);
+}
+
+// getImageSize(pngPath) -> returns {width, height}
+static ValueRef* getImageSizeFunction(ExecutionStateRef* state,
+                                      ValueRef* thisValue, size_t argc,
+                                      ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    if (argc < 1) {
+        STARFISH_LOG_ERROR("getImageSize requires 1 argument: path");
+        return scriptNull();
+    }
+
+    // Get file path
+    UTF8StringDataNonGCStd basePath =
+        window->document()->documentURI()->baseURI()->toUTF8NonGCString();
+    basePath = basePath.substr(strlen("file://"));
+
+    std::string filePath =
+        basePath + argv[0]->toString(state)->toStdUTF8String().data();
+
+    // Read PNG file
+    std::vector<uint8_t> pixelData;
+    uint32_t width, height;
+
+    if (!readPNGPixelData(filePath, pixelData, width, height)) {
+        STARFISH_LOG_ERROR("Failed to read PNG file: %s", filePath.c_str());
+        return scriptNull();
+    }
+
+    // Create result object
+    ObjectRef* result = ObjectRef::create(state);
+    result->set(state, ValueRef::create(StringRef::createFromASCII("width")),
+                ValueRef::create((int)width));
+    result->set(state, ValueRef::create(StringRef::createFromASCII("height")),
+                ValueRef::create((int)height));
+
+    return ValueRef::create(result);
+}
 #endif
 
 void Window::postInit(ScriptBindingInstance* instance)
@@ -814,6 +1242,11 @@ void Window::postInit(ScriptBindingInstance* instance)
             DEFINE_TEST_FUNCTION(testEnd, 0);
             DEFINE_TEST_FUNCTION(testImgDiff, 2);
             DEFINE_TEST_FUNCTION(wptTestEnd, 0);
+            // PNG pixel color check functions
+            DEFINE_TEST_FUNCTION(getPixelColor, 3);
+            DEFINE_TEST_FUNCTION(checkPixelColor, 8);
+            DEFINE_TEST_FUNCTION(checkPixelColors, 3);
+            DEFINE_TEST_FUNCTION(getImageSize, 1);
 
 #endif
 
