@@ -363,6 +363,12 @@ public:
     GLint m_rectShaderProgramPosition;
     GLint m_rectShaderProgramColor;
 
+    GLuint m_rectSimpleVertexShader;
+    GLuint m_rectSimpleShaderProgram;
+    GLint m_rectSimpleShaderProgramPosition;
+    GLint m_rectSimpleShaderProgramColor;
+    GLint m_rectSimpleShaderProgramTexIdx;
+
     GLuint m_texVertexShader;
     GLuint m_texFragmentShader;
     GLuint m_texShaderProgram;
@@ -413,7 +419,6 @@ public:
 
     GLuint m_texTexPosBuffer;
     GLuint m_texIdxBuffer;
-    GLuint m_drawPosBuffer;
 
     GLuint m_lastProgram;
 
@@ -435,7 +440,7 @@ public:
         m_renderer = renderer;
         clearGLProgramVariables();
 
-        m_drawPosBuffer = m_texIdxBuffer = m_texTexPosBuffer = 0;
+        m_texIdxBuffer = m_texTexPosBuffer = 0;
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         m_mainViewTexture = 0;
         m_mainViewFBO = 0;
@@ -454,6 +459,10 @@ public:
             m_texShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
         m_rectShaderProgramColor = 0;
+        m_rectSimpleVertexShader = m_rectSimpleShaderProgram = 0;
+        m_rectSimpleShaderProgramPosition = 0;
+        m_rectSimpleShaderProgramColor = 0;
+        m_rectSimpleShaderProgramTexIdx = 0;
         m_texShaderProgramPosition = 0;
         m_texShaderProgramTexture = 0;
         m_texShaderProgramAlpha = 0;
@@ -512,7 +521,6 @@ public:
 
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
         gl()->deleteBuffers(1, &m_texIdxBuffer);
-        gl()->deleteBuffers(1, &m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         if (m_mainViewRBO) {
@@ -574,6 +582,17 @@ public:
             gl()->detachShader(m_rectShaderProgram, m_rectFragmentShader);
             gl()->deleteProgram(m_rectShaderProgram);
             gl()->deleteShader(m_rectVertexShader);
+        }
+
+        if (m_rectSimpleShaderProgram) {
+            gl()->detachShader(m_rectSimpleShaderProgram,
+                               m_rectSimpleVertexShader);
+            gl()->detachShader(m_rectSimpleShaderProgram, m_rectFragmentShader);
+            gl()->deleteProgram(m_rectSimpleShaderProgram);
+            gl()->deleteShader(m_rectSimpleVertexShader);
+        }
+
+        if (m_rectFragmentShader) {
             gl()->deleteShader(m_rectFragmentShader);
         }
 
@@ -694,6 +713,40 @@ public:
         cleanUpGLPrograms();
     }
 
+    void ensureRectFragmentShader()
+    {
+        if (m_rectFragmentShader) {
+            return;
+        }
+        const GLchar* rectFragmentSource =
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
+            "uniform vec4 uColor;\n"
+            "void main(void)\n"
+            "{\n"
+            "  gl_FragColor = uColor;\n"
+            "}";
+
+        if (g_needsRGBShuffle) {
+            rectFragmentSource =
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform vec4 uColor;\n"
+                "void main(void)\n"
+                "{\n"
+                "  gl_FragColor.r = uColor[2];\n"
+                "  gl_FragColor.g = uColor[1];\n"
+                "  gl_FragColor.b = uColor[0];\n"
+                "  gl_FragColor.a = uColor[3];\n"
+                "}";
+        }
+        m_rectFragmentShader =
+            loadShader(gl(), GL_FRAGMENT_SHADER, rectFragmentSource);
+        checkError(gl());
+    }
+
     GLuint rectProgram()
     {
         if (!m_rectShaderProgram) {
@@ -703,37 +756,11 @@ public:
                 "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
                 "}";
 
-            const GLchar* rectFragmentSource =
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform vec4 uColor;\n"
-                "void main(void)\n"
-                "{\n"
-                "  gl_FragColor = uColor;\n"
-                "}";
-
-            if (g_needsRGBShuffle) {
-                rectFragmentSource =
-                    "#ifdef GL_ES\n"
-                    "  precision mediump float;\n"
-                    "#endif\n"
-                    "uniform vec4 uColor;\n"
-                    "void main(void)\n"
-                    "{\n"
-                    "  gl_FragColor.r = uColor[2];\n"
-                    "  gl_FragColor.g = uColor[1];\n"
-                    "  gl_FragColor.b = uColor[0];\n"
-                    "  gl_FragColor.a = uColor[3];\n"
-                    "}";
-            }
-
             m_rectVertexShader =
                 loadShader(gl(), GL_VERTEX_SHADER, rectVertexSource);
             checkError(gl());
-            m_rectFragmentShader =
-                loadShader(gl(), GL_FRAGMENT_SHADER, rectFragmentSource);
-            checkError(gl());
+
+            ensureRectFragmentShader();
 
             m_rectShaderProgram = gl()->createProgram();
             checkError(gl());
@@ -761,6 +788,58 @@ public:
         }
 
         return m_rectShaderProgram;
+    }
+
+    GLuint rectSimpleProgram()
+    {
+        if (!m_rectSimpleShaderProgram) {
+            GLchar rectSimpleVertexSource[] =
+                "uniform vec2 uPosition[4];\n"
+                "attribute float aTexIdx;\n"
+                "void main() {\n"
+                "  vec2 data = uPosition[int(aTexIdx)];\n"
+                "  gl_Position = vec4(data.xy, 0.0, 1.0);\n"
+                "}";
+
+            m_rectSimpleVertexShader =
+                loadShader(gl(), GL_VERTEX_SHADER, rectSimpleVertexSource);
+            checkError(gl());
+
+            ensureRectFragmentShader();
+
+            m_rectSimpleShaderProgram = gl()->createProgram();
+            checkError(gl());
+
+            gl()->attachShader(m_rectSimpleShaderProgram,
+                               m_rectSimpleVertexShader);
+            checkError(gl());
+            gl()->attachShader(m_rectSimpleShaderProgram, m_rectFragmentShader);
+            checkError(gl());
+
+            gl()->linkProgram(m_rectSimpleShaderProgram);
+            checkError(gl());
+
+            m_lastProgram = m_rectSimpleShaderProgram;
+            gl()->useProgram(m_rectSimpleShaderProgram);
+
+            m_rectSimpleShaderProgramPosition = gl()->getUniformLocation(
+                m_rectSimpleShaderProgram, "uPosition");
+            m_rectSimpleShaderProgramColor =
+                gl()->getUniformLocation(m_rectSimpleShaderProgram, "uColor");
+            m_rectSimpleShaderProgramTexIdx =
+                gl()->getAttribLocation(m_rectSimpleShaderProgram, "aTexIdx");
+
+            bindTexIdx(m_rectSimpleShaderProgramTexIdx, false);
+        } else {
+            if (m_lastProgram != m_rectSimpleShaderProgram) {
+                m_lastProgram = m_rectSimpleShaderProgram;
+                gl()->useProgram(m_rectSimpleShaderProgram);
+
+                bindTexIdx(m_rectSimpleShaderProgramTexIdx, true);
+            }
+        }
+
+        return m_rectSimpleShaderProgram;
     }
 
     void bindTexIdx(GLint texIdx, bool attach)
@@ -1393,7 +1472,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 
     gl->genBuffers(1, &compositorContext->m_texTexPosBuffer);
     gl->genBuffers(1, &compositorContext->m_texIdxBuffer);
-    gl->genBuffers(1, &compositorContext->m_drawPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     gl->genFramebuffers(1, &compositorContext->m_mainViewFBO);
@@ -2678,6 +2756,7 @@ public:
 
         if (lastState.matrixStaysInRect &&
             lastState.abbreviatedClipPaths.size() == 0) {
+            m_compositorContext->rectSimpleProgram();
             Unit::Rect drawRect = lastState.clipRect;
             drawRect.intersect(toRect(dest));
 
@@ -2686,47 +2765,36 @@ public:
             float maxX = drawRect.maxX();
             float maxY = drawRect.maxY();
 
-            m_compositorContext->rectProgram();
-
             mapLogicalScreenPointsToScreen(minX, minY);
             mapLogicalScreenPointsToScreen(maxX, maxY);
 
             float hw = 2.f / screenWidth();
             float hh = -2.f / screenHeight();
-            float position[] = {
-                minX * hw - 1, minY * hh + 1, // V1
-                minX * hw - 1, maxY * hh + 1, // V2
-                maxX * hw - 1, minY * hh + 1, // V3
-                maxX * hw - 1, maxY * hh + 1, // V4
+            float position[8] = {
+                minX * hw - 1, minY * hh + 1, minX * hw - 1, maxY * hh + 1,
+                maxX * hw - 1, minY * hh + 1, maxX * hw - 1, maxY * hh + 1,
             };
 
-            gl()->enableVertexAttribArray(
-                m_compositorContext->m_rectShaderProgramPosition);
-            gl()->bindBuffer(GL_ARRAY_BUFFER,
-                             m_compositorContext->m_drawPosBuffer);
-            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, position,
-                             GL_STREAM_DRAW);
-            gl()->vertexAttribPointer(
-                m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
-                false, 0, 0);
-            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            gl()->uniform2fv(
+                m_compositorContext->m_rectSimpleShaderProgramPosition, 4,
+                position);
 
             float a = lastState.opacity;
-
-            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
+            gl()->uniform4f(m_compositorContext->m_rectSimpleShaderProgramColor,
                             a * currentColor.R(), a * currentColor.G(),
                             a * currentColor.B(), a * currentColor.A());
 
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_rectSimpleShaderProgramTexIdx);
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_rectShaderProgramPosition);
             checkError(gl());
         } else {
             auto result = computeClippath(dest);
             if (result.size()) {
                 if (lastState.matrixStaysInRect &&
                     isRectangleClipPath(result)) {
-                    m_compositorContext->rectProgram();
+                    m_compositorContext->rectSimpleProgram();
+
                     auto drawRect = toRect(result[0]);
                     float minX = drawRect.x();
                     float minY = drawRect.y();
@@ -2745,28 +2813,19 @@ public:
                         maxX * hw - 1, maxY * hh + 1, // V4
                     };
 
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                     m_compositorContext->m_drawPosBuffer);
-                    gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                     position, GL_STREAM_DRAW);
-                    gl()->vertexAttribPointer(
-                        m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, 0);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                    gl()->uniform2fv(
+                        m_compositorContext->m_rectSimpleShaderProgramPosition,
+                        4, position);
 
                     float a = lastState.opacity;
-
                     gl()->uniform4f(
-                        m_compositorContext->m_rectShaderProgramColor,
+                        m_compositorContext->m_rectSimpleShaderProgramColor,
                         a * currentColor.R(), a * currentColor.G(),
                         a * currentColor.B(), a * currentColor.A());
 
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectSimpleShaderProgramTexIdx);
                     gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-                    gl()->disableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
                     checkError(gl());
                 } else {
                     std::vector<std::pair<size_t, size_t>> pointPerIndex;
@@ -2782,6 +2841,7 @@ public:
                     std::vector<float> position;
                     position.reserve((indices.size() / 3) * 6);
 
+                    size_t triangleCount = 0;
                     for (size_t i = 0; i < indices.size(); i += 3) {
                         const auto& p1 = pointPerIndex[indices[i]];
                         const auto& p2 = pointPerIndex[indices[i + 1]];
@@ -2810,19 +2870,15 @@ public:
                         position.push_back(trianglePoints[3] * hh + 1);
                         position.push_back(trianglePoints[4] * hw - 1);
                         position.push_back(trianglePoints[5] * hh + 1);
+                        triangleCount += 3;
                     }
 
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                     m_compositorContext->m_drawPosBuffer);
-                    gl()->bufferData(GL_ARRAY_BUFFER,
-                                     sizeof(float) * position.size(),
-                                     position.data(), GL_STREAM_DRAW);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
                     gl()->vertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, 0);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                        GL_FLOAT, false, 0, position.data());
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
 
                     float a = lastState.opacity;
                     gl()->uniform4f(
@@ -2830,9 +2886,11 @@ public:
                         a * currentColor.R(), a * currentColor.G(),
                         a * currentColor.B(), a * currentColor.A());
 
-                    gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
-                    checkError(gl());
+                    gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
 
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+                    checkError(gl());
                     gl()->disableVertexAttribArray(
                         m_compositorContext->m_rectShaderProgramPosition);
                 }
@@ -3400,6 +3458,7 @@ public:
                     std::vector<N> indices = mapbox::earcut<N>(result);
 
                     position.reserve((indices.size() / 3) * 6);
+                    size_t triangleCount = 0;
                     for (size_t i = 0; i < indices.size(); i += 3) {
                         const auto& p1 = pointPerIndex[indices[i]];
                         const auto& p2 = pointPerIndex[indices[i + 1]];
@@ -3437,19 +3496,15 @@ public:
                         position.push_back(trianglePoints[3] * hh + 1);
                         position.push_back(trianglePoints[4] * hw - 1);
                         position.push_back(trianglePoints[5] * hh + 1);
+                        triangleCount += 3;
                     }
 
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                     m_compositorContext->m_drawPosBuffer);
-                    gl()->bufferData(GL_ARRAY_BUFFER,
-                                     sizeof(float) * position.size(),
-                                     position.data(), GL_STREAM_DRAW);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
                     gl()->vertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, 0);
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+                        GL_FLOAT, false, 0, position.data());
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
 
                     gl()->uniform4f(
                         m_compositorContext->m_rectShaderProgramColor,
@@ -3458,7 +3513,7 @@ public:
                         Unit::Color(255, 255, 255, 255).B(),
                         Unit::Color(255, 255, 255, 255).A());
 
-                    gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
+                    gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
                     checkError(gl());
 
                     gl()->disableVertexAttribArray(
