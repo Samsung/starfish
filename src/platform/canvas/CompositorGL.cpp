@@ -340,6 +340,118 @@ inline static GLenum textureFormat()
     return kind;
 }
 
+template <typename T, typename D = double>
+static Unit::Rect toRect(const T& path)
+{
+    D minX = std::get<0>(path[0]);
+    D minY = std::get<1>(path[0]);
+    D maxX = std::get<0>(path[0]);
+    D maxY = std::get<1>(path[0]);
+
+    for (size_t j = 1; j < 4; j++) {
+        minX = std::min(std::get<0>(path[j]), minX);
+        minY = std::min(std::get<1>(path[j]), minY);
+        maxX = std::max(std::get<0>(path[j]), maxX);
+        maxY = std::max(std::get<1>(path[j]), maxY);
+    }
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+}
+
+static Unit::Rect toRect(float (&path)[4][2])
+{
+    float minX = path[0][0];
+    float minY = path[0][1];
+    float maxX = path[0][0];
+    float maxY = path[0][1];
+
+    for (size_t j = 1; j < 4; j++) {
+        minX = std::min(path[j][0], minX);
+        minY = std::min(path[j][1], minY);
+        maxX = std::max(path[j][0], maxX);
+        maxY = std::max(path[j][1], maxY);
+    }
+    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+}
+
+static Clipper2Lib::PathD toPath(const Unit::Rect& rect)
+{
+    Clipper2Lib::PathD path;
+    path.reserve(4);
+    path.emplace_back(rect.x(), rect.y());
+    path.emplace_back(rect.maxX(), rect.y());
+    path.emplace_back(rect.maxX(), rect.maxY());
+    path.emplace_back(rect.x(), rect.maxY());
+    return path;
+}
+
+static Clipper2Lib::PathsD toPaths(const Unit::Rect& rect)
+{
+    if (rect.isEmpty()) {
+        return {};
+    }
+    return { toPath(rect) };
+}
+
+static bool isRectangleClipPath(const Clipper2Lib::PathsD& paths)
+{
+    if (paths.size() != 1) {
+        return false;
+    }
+
+    const auto& p = paths[0];
+    if (p.size() != 4) {
+        return false;
+    }
+
+    auto x1 = p[0].x, x2 = p[0].x;
+    auto y1 = p[0].y, y2 = p[0].y;
+
+    for (size_t i = 1; i < 4; i++) {
+        if (p[i].x != x1) {
+            x2 = p[i].x;
+        }
+        if (p[i].y != y1) {
+            y2 = p[i].y;
+        }
+    }
+
+    int xcnt = (x1 == x2) ? 1 : 2;
+    int ycnt = (y1 == y2) ? 1 : 2;
+
+    return (xcnt == 2 && ycnt == 2);
+}
+
+struct CompositorImplGLState {
+    bool matrixStaysInRect;
+    SkMatrix matrix;
+    float opacity;
+    float blurRadius;
+    Unit::Color color;
+    Unit::Rect clipRect;
+
+    Clipper2Lib::PathsD abbreviatedClipPaths;
+
+    struct PathCommand {
+        enum class Command { MoveTo, LineTo, ArcNegative };
+        Command command;
+        float x;
+        float y;
+        float data[3];
+        SkMatrix matrix;
+
+        bool operator==(const PathCommand& src) const
+        {
+            return command == src.command && x == src.x && y == src.y &&
+                   data[0] == src.data[0] && data[1] == src.data[1] &&
+                   data[2] == src.data[2] && matrix == src.matrix;
+        }
+    };
+    std::vector<std::vector<PathCommand>> pathCommands;
+    Optional<Clipper2Lib::PathsD> computedPathCommands;
+
+    BlendMode blendMode;
+};
+
 struct CanvasSurfaceTextureInfo {
     struct CanvasSurfaceTextureInfoFragment {
         size_t textureID;
@@ -423,6 +535,54 @@ public:
     GLuint m_lastProgram;
 
     std::vector<std::tuple<size_t, size_t, GLuint>> m_cachedTextures;
+
+    struct ClipPathCacheKey {
+        Unit::Rect clipRect;
+        size_t pathCommandsHash;
+        std::vector<std::vector<CompositorImplGLState::PathCommand>>
+            pathCommands;
+    };
+
+    struct ClipPathCacheKeyHash {
+        size_t operator()(const ClipPathCacheKey& key) const
+        {
+            size_t h1 = std::hash<double>{}(key.clipRect.x());
+            size_t h2 = std::hash<double>{}(key.clipRect.y());
+            size_t h3 = std::hash<double>{}(key.clipRect.width());
+            size_t h4 = std::hash<double>{}(key.clipRect.height());
+            return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3) ^
+                   (key.pathCommandsHash << 4);
+        }
+    };
+
+    static size_t hashPathCommand(const CompositorImplGLState::PathCommand& cmd)
+    {
+        size_t h = std::hash<int>{}(static_cast<int>(cmd.command));
+        h ^= std::hash<float>{}(cmd.x) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        h ^= std::hash<float>{}(cmd.y) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        for (int i = 0; i < 3; i++) {
+            h ^= std::hash<float>{}(cmd.data[i]) + 0x9e3779b9 + (h << 6) +
+                 (h >> 2);
+        }
+        return h;
+    }
+
+    static size_t hashPathCommands(
+        const std::vector<std::vector<CompositorImplGLState::PathCommand>>&
+            pathCommands)
+    {
+        size_t h = 0;
+        for (const auto& pathCmds : pathCommands) {
+            for (const auto& cmd : pathCmds) {
+                h ^= hashPathCommand(cmd) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            }
+        }
+        return h;
+    }
+
+    std::vector<
+        std::unique_ptr<std::pair<ClipPathCacheKey, Clipper2Lib::PathsD>>>
+        m_clipPathCache;
 
     Renderer* m_renderer;
 
@@ -2307,112 +2467,6 @@ CanvasSurface* CanvasSurfaceFactory::createGL(
     return new CanvasSurfaceGL(renderer, w, h, additionalPixelRatio, flag);
 }
 
-template <typename T, typename D = double>
-static Unit::Rect toRect(const T& path)
-{
-    D minX = std::get<0>(path[0]);
-    D minY = std::get<1>(path[0]);
-    D maxX = std::get<0>(path[0]);
-    D maxY = std::get<1>(path[0]);
-
-    for (size_t j = 1; j < 4; j++) {
-        minX = std::min(std::get<0>(path[j]), minX);
-        minY = std::min(std::get<1>(path[j]), minY);
-        maxX = std::max(std::get<0>(path[j]), maxX);
-        maxY = std::max(std::get<1>(path[j]), maxY);
-    }
-    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-}
-
-static Unit::Rect toRect(float (&path)[4][2])
-{
-    float minX = path[0][0];
-    float minY = path[0][1];
-    float maxX = path[0][0];
-    float maxY = path[0][1];
-
-    for (size_t j = 1; j < 4; j++) {
-        minX = std::min(path[j][0], minX);
-        minY = std::min(path[j][1], minY);
-        maxX = std::max(path[j][0], maxX);
-        maxY = std::max(path[j][1], maxY);
-    }
-    return Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-}
-
-static Clipper2Lib::PathD toPath(const Unit::Rect& rect)
-{
-    Clipper2Lib::PathD path;
-    path.reserve(4);
-    path.emplace_back(rect.x(), rect.y());
-    path.emplace_back(rect.maxX(), rect.y());
-    path.emplace_back(rect.maxX(), rect.maxY());
-    path.emplace_back(rect.x(), rect.maxY());
-    return path;
-}
-
-static Clipper2Lib::PathsD toPaths(const Unit::Rect& rect)
-{
-    if (rect.isEmpty()) {
-        return {};
-    }
-    return { toPath(rect) };
-}
-
-static bool isRectangleClipPath(const Clipper2Lib::PathsD& paths)
-{
-    if (paths.size() != 1) {
-        return false;
-    }
-
-    const auto& p = paths[0];
-    if (p.size() != 4) {
-        return false;
-    }
-
-    auto x1 = p[0].x, x2 = p[0].x;
-    auto y1 = p[0].y, y2 = p[0].y;
-
-    for (size_t i = 1; i < 4; i++) {
-        if (p[i].x != x1) {
-            x2 = p[i].x;
-        }
-        if (p[i].y != y1) {
-            y2 = p[i].y;
-        }
-    }
-
-    int xcnt = (x1 == x2) ? 1 : 2;
-    int ycnt = (y1 == y2) ? 1 : 2;
-
-    return (xcnt == 2 && ycnt == 2);
-}
-
-struct CompositorImplGLState {
-    bool matrixStaysInRect;
-    SkMatrix matrix;
-    float opacity;
-    float blurRadius;
-    Unit::Color color;
-    Unit::Rect clipRect;
-
-    Clipper2Lib::PathsD abbreviatedClipPaths;
-    Optional<Clipper2Lib::PathsD> computedAbbreviatedClipPaths;
-
-    struct PathCommand {
-        enum class Command { MoveTo, LineTo, ArcNegative };
-        Command command;
-        float x;
-        float y;
-        float data[3];
-        SkMatrix matrix;
-    };
-    std::vector<std::vector<PathCommand>> pathCommands;
-    Optional<Clipper2Lib::PathsD> computedPathCommands;
-
-    BlendMode blendMode;
-};
-
 class CompositorImplGL : public Compositor {
 public:
     GL* gl()
@@ -2665,14 +2719,6 @@ public:
     virtual void clip(const Unit::Rect& rt) override
     {
         auto& lastState = m_state.back();
-        if (lastState.computedAbbreviatedClipPaths &&
-            lastState.computedAbbreviatedClipPaths.value().size()) {
-            lastState.abbreviatedClipPaths.insert(
-                lastState.abbreviatedClipPaths.end(),
-                lastState.computedAbbreviatedClipPaths.value().begin(),
-                lastState.computedAbbreviatedClipPaths.value().end());
-        }
-        lastState.computedAbbreviatedClipPaths.reset();
         // fast path
         if (lastState.matrixStaysInRect) {
             float dest[4][2];
@@ -2936,62 +2982,32 @@ public:
         }
 
         INSTALL_PROFILE_TIMER("CompositorGL::computeClippath(complex)");
-        if (!lastState.computedAbbreviatedClipPaths) {
-            if (lastState.clipRect.isEmpty()) {
-                lastState.computedAbbreviatedClipPaths = Clipper2Lib::PathsD();
-                lastState.abbreviatedClipPaths.clear();
-            } else {
-                Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
-                if (lastState.abbreviatedClipPaths.size()) {
-                    Clipper2Lib::PathsD computedAbbreviatedClipPaths = {
-                        rectClip
-                    };
-                    for (auto& p : lastState.abbreviatedClipPaths) {
-                        computedAbbreviatedClipPaths = Clipper2Lib::Intersect(
-                            computedAbbreviatedClipPaths, { std::move(p) },
-                            Clipper2Lib::FillRule::NonZero, 1);
+        if (!lastState.computedPathCommands) {
+            auto hash =
+                CompositorContextGL::hashPathCommands(lastState.pathCommands);
+            for (auto it = m_compositorContext->m_clipPathCache.begin();
+                 it != m_compositorContext->m_clipPathCache.end(); ++it) {
+                if ((*it)->first.clipRect == lastState.clipRect &&
+                    (*it)->first.pathCommandsHash == hash &&
+                    (*it)->first.pathCommands == lastState.pathCommands) {
+                    lastState.computedPathCommands = (*it)->second;
+                    if (it != m_compositorContext->m_clipPathCache.begin()) {
+                        auto entry = std::move(*it);
+                        m_compositorContext->m_clipPathCache.erase(it);
+                        m_compositorContext->m_clipPathCache.insert(
+                            m_compositorContext->m_clipPathCache.begin(),
+                            std::move(entry));
                     }
-                    lastState.computedAbbreviatedClipPaths =
-                        std::move(computedAbbreviatedClipPaths);
-                    lastState.abbreviatedClipPaths.clear();
-                    if (lastState.matrixStaysInRect &&
-                        isRectangleClipPath(
-                            lastState.computedAbbreviatedClipPaths.value())) {
-                        lastState.clipRect = toRect(
-                            lastState.computedAbbreviatedClipPaths.value()[0]);
-                        lastState.computedAbbreviatedClipPaths.reset();
-                        auto rect = lastState.clipRect;
-                        rect.intersect(toRect(dest));
-                        return toPaths(rect);
-                    }
-                } else {
-                    lastState.computedAbbreviatedClipPaths =
-                        Clipper2Lib::PathsD{ std::move(rectClip) };
+                    break;
                 }
             }
-        }
-
-        Clipper2Lib::PathD subject;
-        subject.reserve(4);
-        subject.emplace_back(dest[0][0], dest[0][1]);
-        subject.emplace_back(dest[2][0], dest[2][1]);
-        subject.emplace_back(dest[3][0], dest[3][1]);
-        subject.emplace_back(dest[1][0], dest[1][1]);
-
-        auto result = Clipper2Lib::Intersect(
-            { std::move(subject) },
-            lastState.computedAbbreviatedClipPaths.value(),
-            Clipper2Lib::FillRule::NonZero, 1);
-
-        if (result.size() && !isRectangleClipPath(result)) {
-            INSTALL_PROFILE_TIMER(
-                "CompositorGL::computeClippath(complex inner)");
             if (!lastState.computedPathCommands) {
                 Clipper2Lib::PathD rectClip = toPath(lastState.clipRect);
                 Clipper2Lib::PathsD computedPathCommands = { std::move(
                     rectClip) };
                 for (const auto& pathCommand : lastState.pathCommands) {
                     Clipper2Lib::PathD path;
+                    size_t estimatedSize = pathCommand.size();
                     for (const auto& command : pathCommand) {
                         if (command.command ==
                             CompositorImplGLState::PathCommand::Command::
@@ -3008,12 +3024,47 @@ public:
                                 }
                             }
 
-                            float divCount = std::abs(radius * angleDiff) *
-                                             command.matrix.getScaleX() *
-                                             command.matrix.getScaleY();
-                            size_t c = divCount;
+                            float scale = command.matrix.getScaleX() *
+                                          command.matrix.getScaleY();
+                            float arcLength =
+                                std::abs(radius * angleDiff * scale);
+                            size_t c =
+                                std::min(static_cast<size_t>(arcLength / 2.0f),
+                                         static_cast<size_t>(64));
+                            c = std::max(c, static_cast<size_t>(4));
+                            estimatedSize += c;
+                        }
+                    }
+                    path.reserve(estimatedSize);
+
+                    for (const auto& command : pathCommand) {
+                        if (command.command ==
+                            CompositorImplGLState::PathCommand::Command::
+                                ArcNegative) {
+                            float radius = command.data[0];
+                            float angle1 = command.data[1];
+                            float angle2 = command.data[2];
+                            float angleDiff = angle2 - angle1;
+                            if (std::abs(angleDiff) >= M_PI * 2) {
+                                angleDiff = -M_PI * 2;
+                            } else {
+                                while (angleDiff > 0.0f) {
+                                    angleDiff -= M_PI * 2;
+                                }
+                            }
+
+                            float scale = command.matrix.getScaleX() *
+                                          command.matrix.getScaleY();
+                            float arcLength =
+                                std::abs(radius * angleDiff * scale);
+                            size_t c =
+                                std::min(static_cast<size_t>(arcLength / 2.0f),
+                                         static_cast<size_t>(64));
+                            c = std::max(c, static_cast<size_t>(4));
+                            float step = 1.0f / static_cast<float>(c);
                             for (size_t i = 0; i <= c; i++) {
-                                float a = angle1 + angleDiff * (i / divCount);
+                                float t = i * step;
+                                float a = angle1 + angleDiff * t;
                                 float dx = cos(a);
                                 float dy = sin(a);
                                 float x = command.x + dx * radius;
@@ -3030,22 +3081,37 @@ public:
                         Clipper2Lib::FillRule::NonZero);
                 }
 
+                if (m_compositorContext->m_clipPathCache.size() >= 16) {
+                    m_compositorContext->m_clipPathCache.pop_back();
+                }
+                m_compositorContext->m_clipPathCache.insert(
+                    m_compositorContext->m_clipPathCache.begin(),
+                    std::unique_ptr<
+                        std::pair<CompositorContextGL::ClipPathCacheKey,
+                                  Clipper2Lib::PathsD>>(
+                        std::move(
+                            new std::pair<CompositorContextGL::ClipPathCacheKey,
+                                          Clipper2Lib::PathsD>(
+                                std::move(std::make_pair(
+                                    CompositorContextGL::ClipPathCacheKey{
+                                        lastState.clipRect, hash,
+                                        lastState.pathCommands },
+                                    computedPathCommands))))));
                 lastState.computedPathCommands =
                     std::move(computedPathCommands);
             }
-            // use computed cache
-            subject.reserve(4);
-            subject.emplace_back(dest[0][0], dest[0][1]);
-            subject.emplace_back(dest[2][0], dest[2][1]);
-            subject.emplace_back(dest[3][0], dest[3][1]);
-            subject.emplace_back(dest[1][0], dest[1][1]);
-
-            result = Clipper2Lib::Intersect(
-                { std::move(subject) }, lastState.computedPathCommands.value(),
-                Clipper2Lib::FillRule::NonZero);
         }
+        // use computed cache
+        Clipper2Lib::PathD subject;
+        subject.reserve(4);
+        subject.emplace_back(dest[0][0], dest[0][1]);
+        subject.emplace_back(dest[2][0], dest[2][1]);
+        subject.emplace_back(dest[3][0], dest[3][1]);
+        subject.emplace_back(dest[1][0], dest[1][1]);
 
-        return result;
+        return Clipper2Lib::Intersect({ std::move(subject) },
+                                      lastState.computedPathCommands.value(),
+                                      Clipper2Lib::FillRule::NonZero);
     }
 
     void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
@@ -3747,7 +3813,6 @@ public:
         lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
         lastState.abbreviatedClipPaths.clear();
         lastState.pathCommands.clear();
-        lastState.computedAbbreviatedClipPaths.reset();
         applyDevicePixelRatio();
     }
 
@@ -3757,7 +3822,6 @@ public:
         lastState.clipRect = Unit::Rect(0, 0, screenWidth(), screenHeight());
         lastState.abbreviatedClipPaths.clear();
         lastState.pathCommands.clear();
-        lastState.computedAbbreviatedClipPaths.reset();
     }
 
     static void addToPath(Clipper2Lib::PathD& path, const SkMatrix& matrix,
@@ -3775,7 +3839,7 @@ public:
             { CompositorImplGLState::PathCommand::Command::MoveTo,
               x,
               y,
-              {},
+              { 0, 0, 0 },
               m_state.back().matrix });
     }
 
@@ -3786,7 +3850,7 @@ public:
             { CompositorImplGLState::PathCommand::Command::LineTo,
               x,
               y,
-              {},
+              { 0, 0, 0 },
               m_state.back().matrix });
     }
 
@@ -3809,14 +3873,17 @@ public:
             }
         }
 
-        float divCount = std::abs(radius * angleDiff) *
-                         m_state.back().matrix.getScaleX() *
-                         m_state.back().matrix.getScaleY();
-        divCount = std::ceil(std::sqrt(divCount) / 4.f);
-        size_t c = divCount;
+        float scale = m_state.back().matrix.getScaleX() *
+                      m_state.back().matrix.getScaleY();
+        float arcLength = std::abs(radius * angleDiff * scale);
+        size_t c = std::min(static_cast<size_t>(arcLength / 2.0f),
+                            static_cast<size_t>(8));
+        c = std::max(c, static_cast<size_t>(2));
         m_abbreviatedPath.reserve(m_abbreviatedPath.size() + c + 1);
+        float step = 1.0f / static_cast<float>(c);
         for (size_t i = 0; i <= c; i++) {
-            float a = angle1 + angleDiff * (i / divCount);
+            float t = i * step;
+            float a = angle1 + angleDiff * t;
             float dx = cos(a);
             float dy = sin(a);
             float x = cx + dx * radius;
@@ -3827,18 +3894,11 @@ public:
     virtual void clipPath() override
     {
         auto& lastState = m_state.back();
-        if (lastState.computedAbbreviatedClipPaths &&
-            lastState.computedAbbreviatedClipPaths.value().size()) {
-            lastState.abbreviatedClipPaths.insert(
-                lastState.abbreviatedClipPaths.end(),
-                lastState.computedAbbreviatedClipPaths.value().begin(),
-                lastState.computedAbbreviatedClipPaths.value().end());
-        }
-        lastState.computedAbbreviatedClipPaths.reset();
         if (m_abbreviatedPath.size()) {
             lastState.abbreviatedClipPaths.push_back(
                 std::move(m_abbreviatedPath));
             lastState.pathCommands.push_back(std::move(m_pathCommands));
+            lastState.computedPathCommands = Optional<Clipper2Lib::PathsD>();
         }
     }
 
