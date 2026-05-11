@@ -2769,7 +2769,6 @@ public:
                         m_compositorContext->m_rectShaderProgramPosition);
                     checkError(gl());
                 } else {
-                    // polygon painting
                     std::vector<std::pair<size_t, size_t>> pointPerIndex;
                     for (size_t i = 0; i < result.size(); i++) {
                         for (size_t j = 0; j < result[i].size(); j++) {
@@ -2779,6 +2778,10 @@ public:
 
                     m_compositorContext->rectProgram();
                     std::vector<N> indices = mapbox::earcut<N>(result);
+
+                    std::vector<float> position;
+                    position.reserve((indices.size() / 3) * 6);
+
                     for (size_t i = 0; i < indices.size(); i += 3) {
                         const auto& p1 = pointPerIndex[indices[i]];
                         const auto& p2 = pointPerIndex[indices[i + 1]];
@@ -2801,38 +2804,37 @@ public:
 
                         float hw = 2.f / screenWidth();
                         float hh = -2.f / screenHeight();
-                        float position[] = {
-                            trianglePoints[0] * hw - 1,
-                            trianglePoints[1] * hh + 1, // V1
-                            trianglePoints[2] * hw - 1,
-                            trianglePoints[3] * hh + 1, // V2
-                            trianglePoints[4] * hw - 1,
-                            trianglePoints[5] * hh + 1, // V3
-                        };
-
-                        gl()->enableVertexAttribArray(
-                            m_compositorContext->m_rectShaderProgramPosition);
-                        gl()->bindBuffer(GL_ARRAY_BUFFER,
-                                         m_compositorContext->m_drawPosBuffer);
-                        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8,
-                                         position, GL_STREAM_DRAW);
-                        gl()->vertexAttribPointer(
-                            m_compositorContext->m_rectShaderProgramPosition, 2,
-                            GL_FLOAT, false, 0, 0);
-                        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-                        float a = lastState.opacity;
-                        gl()->uniform4f(
-                            m_compositorContext->m_rectShaderProgramColor,
-                            a * currentColor.R(), a * currentColor.G(),
-                            a * currentColor.B(), a * currentColor.A());
-
-                        gl()->drawArrays(GL_TRIANGLES, 0, 3);
-                        checkError(gl());
-
-                        gl()->disableVertexAttribArray(
-                            m_compositorContext->m_rectShaderProgramPosition);
+                        position.push_back(trianglePoints[0] * hw - 1);
+                        position.push_back(trianglePoints[1] * hh + 1);
+                        position.push_back(trianglePoints[2] * hw - 1);
+                        position.push_back(trianglePoints[3] * hh + 1);
+                        position.push_back(trianglePoints[4] * hw - 1);
+                        position.push_back(trianglePoints[5] * hh + 1);
                     }
+
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER,
+                                     m_compositorContext->m_drawPosBuffer);
+                    gl()->bufferData(GL_ARRAY_BUFFER,
+                                     sizeof(float) * position.size(),
+                                     position.data(), GL_STREAM_DRAW);
+                    gl()->vertexAttribPointer(
+                        m_compositorContext->m_rectShaderProgramPosition, 2,
+                        GL_FLOAT, false, 0, 0);
+                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+                    float a = lastState.opacity;
+                    gl()->uniform4f(
+                        m_compositorContext->m_rectShaderProgramColor,
+                        a * currentColor.R(), a * currentColor.G(),
+                        a * currentColor.B(), a * currentColor.A());
+
+                    gl()->drawArrays(GL_TRIANGLES, 0, 3 * indices.size());
+                    checkError(gl());
+
+                    gl()->disableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramPosition);
                 }
             }
         }
