@@ -45,6 +45,10 @@
 #include <array>
 #include <clipper2/clipper.h>
 
+#if defined(STARFISH_ENABLE_TEST)
+#include <dlfcn.h>
+#endif
+
 namespace std {
 template <>
 struct tuple_size<Clipper2Lib::PointD> : integral_constant<size_t, 2> {
@@ -1524,6 +1528,41 @@ void CompositorFactory::destroyCompositorContextGl(Renderer* renderer,
     }
 }
 
+#if defined(STARFISH_ENABLE_TEST)
+typedef void (*GLDEBUGPROC)(GLenum source, GLenum type, GLuint id,
+                            GLenum severity, GLsizei length,
+                            const GLchar* message, const void* userParam);
+typedef void (*PFNGLDEBUGMESSAGECALLBACKPROC)(GLDEBUGPROC callback,
+                                              const void* userParam);
+
+void debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                   GLsizei length, const GLchar* message, const void* userParam)
+{
+    STARFISH_LOG_ERROR("GL Debug: %s", message);
+}
+
+void setupDebugCallback(GL* gl)
+{
+    PFNGLDEBUGMESSAGECALLBACKPROC glDebugMessageCallback =
+        (PFNGLDEBUGMESSAGECALLBACKPROC)dlsym(RTLD_DEFAULT,
+                                             "glDebugMessageCallback");
+
+    if (glDebugMessageCallback) {
+#ifndef GL_DEBUG_OUTPUT
+#define GL_DEBUG_OUTPUT 0x92E0
+#endif
+#ifndef GL_DEBUG_OUTPUT_SYNCHRONOUS
+#define GL_DEBUG_OUTPUT_SYNCHRONOUS 0x8242
+#endif
+        gl->enable(GL_DEBUG_OUTPUT);
+        gl->enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(debugCallback, NULL);
+    } else {
+        STARFISH_LOG_ERROR("glDebugMessageCallback not supported");
+    }
+}
+#endif
+
 CompositorContext* CompositorFactory::initCompositorContextGl(
     Renderer* renderer)
 {
@@ -1539,6 +1578,10 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         STARFISH_RELEASE_ASSERT(CanvasSurface::g_canvasSurfaceTileSize <=
                                 g_maxTextureSize);
         STARFISH_RELEASE_ASSERT(MIN_MAX_TEXTURE_SIZE <= siz);
+
+#if defined(STARFISH_ENABLE_TEST)
+        setupDebugCallback(gl);
+#endif
 
         siz = 0;
         gl->getIntegerv(GL_STENCIL_BITS, &siz);
