@@ -121,15 +121,20 @@ static const size_t s_mediaPlayerAudioMinThreshold = 80;
 
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
 {
+    // Use PLAYER_LOGE (always-on) so the actual native error enum surfaces
+    // alongside the RETURN_WHEN_PLAYER_ERROR breadcrumb. Without this, the
+    // call site logs "ERROR: player_set_media_stream_info" but the reason
+    // (NOT_SUPPORTED_AUDIO_CODEC vs INVALID_PARAMETER vs INVALID_STATE)
+    // stays hidden.
     switch (errorCode) {
 #define F(errorenum)                   \
     case errorenum:                    \
-        PLAYER_LOGI("%s", #errorenum); \
+        PLAYER_LOGE("%s", #errorenum); \
         return;
         PLAYER_ERROR_LIST(F)
 #undef F
     default:
-        PLAYER_LOGI("Unknown error");
+        PLAYER_LOGE("Unknown player error (%d)", errorCode);
         return;
     }
 }
@@ -431,6 +436,9 @@ void MediaPlayerTizen::handlePlayerError()
         return;
     }
 
+    PLAYER_LOGE(
+        "MediaPlayerTizen::handlePlayerError (inPrepare=%d seekState=%d)",
+        (int)m_inPrepare, (int)m_seekState);
     m_foundError = true;
     if (m_inPrepare == true) {
         handlePrepared();
@@ -880,6 +888,15 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
                 // Note: In MSE case, ignore defaultPlaybackPosition
                 m_container->setDefaultPlaybackStartPosition(0);
             }
+            // Marks the entry into the "waiting for JS appendBuffer to
+            // produce an init segment" window. prepareMediaSource (with its
+            // own PLAYER_LOGE breadcrumbs) only fires after that. If this
+            // line appears with no subsequent prepareMediaSource log before
+            // closeMediaPlayer / handlePlayerError, the failure is JS not
+            // appending, not the native player.
+            STARFISH_LOG_INFO(
+                "MediaPlayerTizen::prepare: attached MSE blob; waiting for "
+                "first appendBuffer");
             processNextOperationQueueInContainer();
             return;
         } else {
@@ -1174,6 +1191,11 @@ static void* threadFillingBuffer(void* data)
 
 void MediaPlayerTizen::prepareMediaSource()
 {
+    // Visible entry log: prepareMediaSource only fires once init segment
+    // parsing produces a StreamInfo on a SourceBuffer. Pairing this with
+    // the "attached MSE blob" log in prepare() shows whether JS reached
+    // appendBuffer at all.
+    STARFISH_LOG_INFO("MediaPlayerTizen::prepareMediaSource entry");
     PLAYER_LOGI("MediaPlayerTizen::prepareMediaSource");
     initAudioStreamInfo();
     if (m_foundError == true) {
@@ -1186,6 +1208,13 @@ void MediaPlayerTizen::prepareMediaSource()
     }
 #endif
     if (m_audioStream == nullptr && m_videoStream == nullptr) {
+        // Neither audio nor video stream could be initialized. Without this
+        // breadcrumb the early-return is silent and looks identical to a
+        // never-fired activeSourceComputed in the device log.
+        PLAYER_LOGE(
+            "MediaPlayerTizen::prepareMediaSource: both audio and video "
+            "streams are null after init — bailing without notifying "
+            "HAVE_METADATA");
         return;
     }
 
@@ -1447,8 +1476,8 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             stream->setWaitingDemuxer(true);
             break;
         }
-        if (packet.first->m_dts < lastDTS ||
-            packet.first->m_dts - lastDTS > 500) {
+        if (packet.first->m_dts < lastDTS) {
+            // Already-consumed packet; defer to next demuxer event.
             sb->clearPacketAccessCache();
             DEBUG_STREAMBUFFER_LOG(
                 "fillBuffer waiting demuxer[2] - requested(%lld) but "
@@ -1456,6 +1485,28 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
                 (long long int)lastDTS, (long long int)packet.first->m_dts);
             stream->setWaitingDemuxer(true);
             break;
+        }
+        if (packet.first->m_dts - lastDTS > 500) {
+            // The MSE source has a >500ms gap ahead of our submission
+            // pointer (typical when the player evicted old segments while
+            // we were paused, or at a Cluster boundary in WebM where
+            // packet duration estimates undershoot the real cluster span).
+            // Jump lastDTS forward so we keep submitting instead of stalling
+            // forever.
+            //
+            // Unlike MediaPlayerLinux::fillBufferWithoutGuard (which also
+            // advances m_clockOffsetSec/m_clockStartMs on this skip — see
+            // MediaPlayerLinux.cpp around the matching `>500` block), Tizen
+            // intentionally has no host-side clock fixup here. currentTime()
+            // on Tizen is a thin wrapper over player_get_play_position()
+            // (see MediaPlayerTizen.h::currentTime), so the native player
+            // drives wall-clock organically as it decodes/presents the
+            // pushed frames; there is no soft clock for the host to
+            // advance.
+            DEBUG_STREAMBUFFER_LOG(
+                "fillBuffer skip-ahead: requested(%lld) jumped to (%lld)",
+                (long long int)lastDTS, (long long int)packet.first->m_dts);
+            lastDTS = packet.first->m_dts;
         }
 
         if (packet.second != currentInitIndex) {
@@ -1557,6 +1608,9 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
             m_container->defaultPlaybackStartPosition() * 1000);
     }
     if (m_videoStream->createMediaFormat() == false) {
+        PLAYER_LOGE(
+            "MediaPlayerTizen::initVideoStreamInfo: "
+            "MediaPlayerSourceStream::createMediaFormat failed");
         handlePlayerError();
         return;
     }
@@ -1570,7 +1624,20 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     } else if (info->isCodec(MediaCodecVideoVP9) == true) {
         media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_VP9);
     } else if (info->isCodec(MediaCodecVideoAV1) == true) {
-        media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_AV1);
+        // DemuxerWebM emits MediaCodecVideoAV1 for V_AV1 tracks so that
+        // ffmpeg-backed builds (MediaPlayerLinux + libavcodec) can play
+        // AV1. The Tizen native player on this build does not support
+        // AV1 — see MediaPlayer::isSupport above. MSE isTypeSupported
+        // only checks the container, so a page that bypasses
+        // MediaCapabilities can still feed AV1 here. Fail loudly rather
+        // than letting MEDIA_FORMAT_AV1 reach the native player and
+        // produce an opaque error during prepare/start. Re-enabling AV1
+        // requires both flipping isSupport and reinstating the
+        // media_format_set_video_mime(MEDIA_FORMAT_AV1) call here.
+        PLAYER_LOGE(
+            "MediaPlayerTizen: AV1 video is not supported on this build");
+        handlePlayerError();
+        return;
     } else {
         // TODO
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -1584,6 +1651,12 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         (m_videoWidth * m_videoHeight * 30 * 2 * 7) / 100 / 8 * 5);
 
     setMediaFormatExtraForVideo(mediaFormat, info);
+    // Visible summary of the video stream config we're handing the native
+    // player. Matches the Audio init dump and lets us pin codec/extradata
+    // when player_set_media_stream_info(VIDEO) gets rejected.
+    PLAYER_LOGE("Video init: codec=%s size=%dx%d extradata=%d",
+                info->codecString(), info->videoWidth(), info->videoHeight(),
+                (int)info->m_extraData.size());
     PLAYER_LOGI("Video Info-----------------------------");
     PLAYER_LOGI("> codec     : %s", info->codecString());
     PLAYER_LOGI("> size      : %dx%d", info->videoWidth(), info->videoHeight());
@@ -1639,6 +1712,9 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
             m_container->defaultPlaybackStartPosition() * 1000);
     }
     if (m_audioStream->createMediaFormat() == false) {
+        PLAYER_LOGE(
+            "MediaPlayerTizen::initAudioStreamInfo: "
+            "MediaPlayerSourceStream::createMediaFormat failed");
         handlePlayerError();
         return;
     }
@@ -1650,12 +1726,23 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
 
     if (info->isCodec(MediaCodecAudioAAC) == true) {
         media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_AAC);
+    } else if (info->isCodec(MediaCodecAudioMP3) == true) {
+        media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_MP3);
     } else if (info->isCodec(MediaCodecAudioVorbis) == true) {
         media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_VORBIS);
+    } else if (info->isCodec(MediaCodecAudioOpus) == true) {
+        media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_OPUS);
     } else {
-        // TODO
-        media_format_set_audio_mime(mediaFormat, MEDIA_FORMAT_MP3);
-        STARFISH_UNSUPPORTED("Media: unsupported audio codec");
+        // STARFISH_UNSUPPORTED is only a LOG_WARN — falling through to
+        // media_format_set_audio_channel / set_audio_samplerate with a
+        // misset MP3 mime would silently corrupt the stream and surface
+        // later as an opaque native-player decode error. Match the video
+        // path's failure mode (lines around the AV1 branch / line 1582):
+        // log explicitly and abort init through handlePlayerError.
+        PLAYER_LOGE("MediaPlayerTizen: unsupported audio codec '%s'",
+                    info->codecString());
+        handlePlayerError();
+        return;
     }
 
     media_format_set_audio_channel(mediaFormat, (int)info->audioChannels());
@@ -1664,6 +1751,13 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     // media_format_set_audio_avg_bps(m_audioFormat, audioCodecCtx->bit_rate);
 
     setMediaFormatExtraForAudio(mediaFormat, info);
+    // Visible summary of what we're about to feed the native player. When
+    // player_set_media_stream_info below fails, this is the only place that
+    // captures *what* we tried — codec/channel/rate/extradata mismatches
+    // are the most common rejection reasons on Tizen TV.
+    PLAYER_LOGE("Audio init: codec=%s channels=%d sample_rate=%d extradata=%d",
+                info->codecString(), (int)info->audioChannels(),
+                (int)info->audioSampleRate(), (int)info->m_extraData.size());
     PLAYER_LOGI("Audio Info-----------------------------");
     PLAYER_LOGI("> codec     : %s", info->codecString());
     PLAYER_LOGI("> channels  : %d", (int)info->audioChannels());
@@ -1780,6 +1874,28 @@ bool MediaPlayer::isSupport(MediaCodec codec)
 {
     if (codec == MediaCodec::MediaCodecUnknown ||
         codec == MediaCodec::MediaCodecVideoAV1) {
+        return false;
+    }
+    if (codec == MediaCodec::MediaCodecAudioOpus ||
+        codec == MediaCodec::MediaCodecVideoVP9) {
+        // The Tizen TV native player returns PLAYER_ERROR_CLASS | 0x31
+        // (a TV-specific "format/codec not accepted" code outside the
+        // public player_error_e enum) from player_set_media_stream_info
+        // for both:
+        //   - MEDIA_FORMAT_OPUS (codec=opus, 48 kHz, stereo, 19-byte OpusHead)
+        //   - MEDIA_FORMAT_VP9  (codec=vp9 from WebM init segment)
+        // The two failures showed up sequentially: disabling Opus
+        // made YouTube switch to AAC and the next attempt failed on
+        // the video side with the identical error. This device
+        // decodes only AVC1/H.264 + AAC reliably.
+        //
+        // Returning false here also propagates through
+        // MediaSource::isTypeSupported (codecs= now consults
+        // MediaPlayer::isSupport) and MediaCapabilities.decodingInfo,
+        // so YouTube/MSE falls back to video/mp4 codecs=avc1 +
+        // audio/mp4 codecs=mp4a.40.2.
+        //
+        // Linux uses MediaPlayerLinux (ffmpeg) and is unaffected.
         return false;
     }
     return true;

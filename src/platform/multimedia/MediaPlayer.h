@@ -37,11 +37,16 @@
         "[PLAYER_LOG|%ld] "   \
         "" STR,               \
         syscall(SYS_gettid), ##__VA_ARGS__);
-#define PLAYER_LOGE(...) PLAYER_LOGI(__VA_ARGS__)
 #else
 #define PLAYER_LOGI(...)
-#define PLAYER_LOGE(...)
 #endif
+
+// PLAYER_LOGE is always on (independent of STARFISH_MEDIAPLAYER_DEBUG).
+// Error paths are rare; without this, production triage of media-pipeline
+// failures (e.g. silent handlePlayerError → MediaSource::detach on Tizen)
+// has no breadcrumbs in the device log.
+#define PLAYER_LOGE(STR, ...) \
+    STARFISH_LOG_ERROR("[PLAYER_LOG] " STR, ##__VA_ARGS__);
 
 namespace Starfish {
 
