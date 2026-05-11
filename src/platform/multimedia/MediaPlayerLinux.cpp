@@ -211,11 +211,27 @@ static void printMediaFormatError(int errorCode)
 }
 
 FfmpegWrapperPlayer::FfmpegWrapperPlayer()
-    : m_stopRequested(false)
+    : m_url(nullptr)
+    , m_fmtCtx(nullptr)
+    , m_codecCtx(nullptr)
+    , m_videoStreamIndex(-1)
+    , m_framedecodedCallbackData(nullptr)
+    , m_completeCallbackData(nullptr)
+    , m_errorCallbackData(nullptr)
+    , m_bufferingCallbackData(nullptr)
+    , m_stopRequested(false)
     , m_state(State::STOPPED)
     , m_muted(false)
     , m_volume(1.0f)
 {
+    // Allocated via `new (PointerFreeGC)` (GC_MALLOC_ATOMIC), which is
+    // allowed to hand back non-zeroed memory — especially when the GC
+    // recycles a slot freed by a prior MediaPlayerLinux destroy/dispose
+    // cycle. Without these explicit initializers, `m_url` carried stale
+    // pointer bits from the previous owner, `if (m_url)` was true in
+    // prepare(), and the YouTube MSE path crashed in
+    // String::toUTF8NonGCString on the second load() (release build:
+    // SEGV at ResourceURL::urlString() returning a junk String*).
 }
 
 FfmpegWrapperPlayer::~FfmpegWrapperPlayer()
@@ -1813,7 +1829,10 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             // further decoding (lastDTS already > currentMs+1000) and the
             // queued frames sit unpresented until wall-clock organically
             // reaches packet.dts — manifesting as multi-second freezes
-            // every time the source buffer evicts.
+            // every time the source buffer evicts. (MediaPlayerTizen does
+            // the lastDTS jump but not the clock fixup — its currentTime()
+            // reads from player_get_play_position() so there is no soft
+            // clock to advance.)
             if (stream->isVideo() && isMSE() &&
                 packet.first->m_dts > currentMs) {
                 struct timespec ts;
@@ -1882,17 +1901,31 @@ bool MediaPlayerLinux::createDecoderForStream(MediaPlayerSourceStream* stream,
         codecId = AV_CODEC_ID_MP3;
     } else if (info->isCodec(MediaCodecAudioVorbis)) {
         codecId = AV_CODEC_ID_VORBIS;
+    } else if (info->isCodec(MediaCodecAudioOpus)) {
+        codecId = AV_CODEC_ID_OPUS;
     } else {
+        STARFISH_LOG_INFO(
+            "MediaPlayerLinux::createDecoderForStream: no AVCodecID "
+            "mapping for codec '%s'",
+            info->codecString());
         return false;
     }
 
     const AVCodec* codec = avcodec_find_decoder(codecId);
     if (codec == nullptr) {
+        STARFISH_LOG_INFO(
+            "MediaPlayerLinux::createDecoderForStream: libavcodec lacks a "
+            "decoder for '%s' (AVCodecID=%d) — build without that decoder?",
+            info->codecString(), (int)codecId);
         return false;
     }
 
     AVCodecContext* ctx = avcodec_alloc_context3(codec);
     if (ctx == nullptr) {
+        STARFISH_LOG_INFO(
+            "MediaPlayerLinux::createDecoderForStream: "
+            "avcodec_alloc_context3 returned null for '%s'",
+            info->codecString());
         return false;
     }
 

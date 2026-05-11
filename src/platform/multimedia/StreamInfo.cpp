@@ -29,6 +29,9 @@ MediaCodec suggestAudioCodecFromString(String* name)
     if (name->contains("vorbis")) {
         return MediaCodecAudioVorbis;
     }
+    if (name->contains("opus")) {
+        return MediaCodecAudioOpus;
+    }
     if (name->contains("mp3")) {
         return MediaCodecAudioMP3;
     }
@@ -60,6 +63,8 @@ const char* mediaCodecToString(MediaCodec codec)
     switch (codec) {
     case MediaCodecAudioVorbis:
         return "vorbis";
+    case MediaCodecAudioOpus:
+        return "opus";
     case MediaCodecAudioAAC:
         return "aac";
     case MediaCodecAudioMP3:

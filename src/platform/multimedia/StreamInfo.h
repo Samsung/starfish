@@ -62,6 +62,7 @@ enum MediaCodec {
     MediaCodecAudioAAC,
     MediaCodecAudioMP3,
     MediaCodecAudioVorbis,
+    MediaCodecAudioOpus,
     // Video
     MediaCodecVideoH264,
     MediaCodecVideoHEVC,

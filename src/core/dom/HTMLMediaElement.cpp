@@ -208,6 +208,13 @@ void HTMLMediaElement::didNodeRemovedFromDocumentTree()
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
 void HTMLMediaElement::load()
 {
+    // Logged unconditionally (not under MEDIA_ELEMENT_LOG) because load() is
+    // the spec-mandated entry for any src reset / video.load() / new resource
+    // selection, and is the JS-side path that ends in closeMediaPlayer() →
+    // MediaPlayerTizen::dispose() → MediaSource::detach(). Without this
+    // breadcrumb, JS-triggered teardowns look identical to player errors.
+    STARFISH_LOG_INFO("HTMLMediaElement::load() networkState=%d",
+                      networkState());
     MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::load()");
     // While the delaying-the-load-event flag is true, the element must delay
     // the load event of its document.
@@ -304,6 +311,11 @@ void HTMLMediaElement::load()
 void HTMLMediaElement::closeMediaPlayer()
 {
     if (m_mediaPlayer) {
+        // Surfaces the single chokepoint where every JS-side reset path
+        // (load(), src change, resourceSelection) tears down the player
+        // and detaches any attached MediaSource.
+        STARFISH_LOG_INFO(
+            "HTMLMediaElement::closeMediaPlayer() destroying player");
         m_mediaPlayer->destroy();
         m_mediaPlayer = nullptr;
 

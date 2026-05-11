@@ -29,8 +29,48 @@
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/StreamInfo.h"
 
 namespace Starfish {
+
+bool MediaSource::isTypeSupported(String* type)
+{
+    bool isSupported = false;
+    // Container check: only mp4 and webm are supported byte-stream formats.
+    if (type->contains("video/mp4") || type->contains("audio/mp4")) {
+        isSupported = true;
+    }
+    if (type->contains("video/webm") || type->contains("audio/webm")) {
+        isSupported = true;
+    }
+
+    // Codec check: if the MIME has a codecs= parameter, validate the codec
+    // against the platform's MediaPlayer::isSupport. Without this, Tizen
+    // returned "supported" for audio/webm;codecs=opus and YouTube picked
+    // Opus — which then failed at player_set_media_stream_info with a
+    // TV-specific error code (0xFE6C0031) and tore down MediaSource.
+    // MediaCapabilities.decodingInfo already does the codec check; this
+    // brings isTypeSupported in line so JS sees the same answer through
+    // either API.
+    if (isSupported && type->contains("codecs")) {
+        if (type->contains("audio/")) {
+            MediaCodec codec = suggestAudioCodecFromString(type);
+            if (codec != MediaCodecUnknown && !MediaPlayer::isSupport(codec)) {
+                isSupported = false;
+            }
+        } else if (type->contains("video/")) {
+            MediaCodec codec = suggestVideoCodecFromString(type);
+            if (codec != MediaCodecUnknown && !MediaPlayer::isSupport(codec)) {
+                isSupported = false;
+            }
+        }
+    }
+
+    STARFISH_LOG_INFO("MediaSource::isTypeSupported %d %s", (int)isSupported,
+                      type->toUTF8NonGCString().data());
+    return isSupported;
+}
 
 MediaSource::MediaSource(Document* document)
     : EventTarget()

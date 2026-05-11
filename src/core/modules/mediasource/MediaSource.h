@@ -90,22 +90,12 @@ public:
     void endOfStream(EndOfStreamError error);
     void endOfStreamInternal(EndOfStreamError error);
 
-    static bool isTypeSupported(String* type)
-    {
-        bool isSupported = false;
-        // TODO
-        // Currently, check only whether container is mp4 or NOT
-        if (type->contains("video/mp4") || type->contains("audio/mp4")) {
-            isSupported = true;
-        }
-        if (type->contains("video/webm") || type->contains("audio/webm")) {
-            isSupported = true;
-        }
-        STARFISH_LOG_INFO("MediaSource::isTypeSupported %d %s",
-                          (int)isSupported, type->toUTF8NonGCString().data());
-
-        return isSupported;
-    }
+    // Defined in MediaSource.cpp so the codec-level platform check
+    // (MediaPlayer::isSupport) can be applied when a codecs= parameter is
+    // present — pure container-level support is not enough to keep
+    // YouTube/MSE off codecs the native player will reject at
+    // player_set_media_stream_info time (e.g. Opus on Tizen TV).
+    static bool isTypeSupported(String* type);
 
     String* readyState();
     ReadyState readyStateValue();

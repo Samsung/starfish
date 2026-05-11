@@ -32,6 +32,10 @@
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/DemuxerSource.h"
 
+#include <cstring>
+#include <map>
+#include <set>
+
 #include "../third_party/webm/mkvparser.hpp"
 
 class MkvReaderAdapter : public mkvparser::IMkvReader {
@@ -148,6 +152,7 @@ public:
     {
         m_isStreamFinded = false;
         m_headerSegment = nullptr;
+        m_timeCodeScaleNs = 1000000; // WebM default: 1ms
 
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
@@ -156,6 +161,29 @@ public:
                 delete ((DemuxerWebM*)obj)->m_headerSegment;
             },
             NULL, NULL, NULL);
+    }
+
+    uint64_t timeCodeToMs(long long tc) const
+    {
+        // Default WebM scale is 1ms — short-circuit to avoid 64x64 multiply.
+        if (m_timeCodeScaleNs == 1000000) {
+            return tc < 0 ? 0 : (uint64_t)tc;
+        }
+        if (tc < 0) {
+            return 0;
+        }
+        return ((uint64_t)tc * (uint64_t)m_timeCodeScaleNs) / 1000000ULL;
+    }
+
+    uint64_t defaultDurationMsForTrack(long long trackNum) const
+    {
+        auto it = m_trackDefaultDurationsMs.find(trackNum);
+        if (it != m_trackDefaultDurationsMs.end() && it->second > 0) {
+            return it->second;
+        }
+        // No DefaultDuration on the track; pick a sane fallback. 33ms ≈ 30fps
+        // for video and is a reasonable upper bound for audio frame durations.
+        return 33;
     }
 
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint)
@@ -196,9 +224,10 @@ public:
             return false;
         }
 
-        // const long long timeCodeScale = pSegmentInfo->GetTimeCodeScale();
-        // const long long duration_ns = pSegmentInfo->GetDuration();
-        // const double duration_sec = double(duration_ns) / 1000000000;
+        const long long timeCodeScale = pSegmentInfo->GetTimeCodeScale();
+        if (timeCodeScale > 0) {
+            m_timeCodeScaleNs = (uint64_t)timeCodeScale;
+        }
 
         const mkvparser::Tracks* pTracks = pSegment->GetTracks();
 
@@ -212,6 +241,18 @@ public:
             const long trackType = pTrack->GetType();
             const long trackNumber = pTrack->GetNumber();
 
+            const char* codecId = pTrack->GetCodecId();
+            size_t codecPrivateSize = 0;
+            const unsigned char* codecPrivate =
+                pTrack->GetCodecPrivate(codecPrivateSize);
+
+            const unsigned long long defaultDurationNs =
+                pTrack->GetDefaultDuration();
+            const uint64_t trackDefaultDurationMs =
+                defaultDurationNs > 0
+                    ? (uint64_t)(defaultDurationNs / 1000000ULL)
+                    : 0;
+
             if (trackType == mkvparser::Track::kVideo) {
                 const mkvparser::VideoTrack* const pVideoTrack =
                     static_cast<const mkvparser::VideoTrack*>(pTrack);
@@ -220,33 +261,124 @@ public:
                 const long long height = pVideoTrack->GetHeight();
                 const double rate = pVideoTrack->GetFrameRate();
 
+                MediaCodec codec = MediaCodecUnknown;
+                if (codecId) {
+                    if (!strcmp(codecId, "V_VP9")) {
+                        codec = MediaCodecVideoVP9;
+                    } else if (!strcmp(codecId, "V_AV1")) {
+                        codec = MediaCodecVideoAV1;
+                    }
+                }
+                if (codec == MediaCodecUnknown) {
+                    // Default to VP9 — prior behavior, and the most common WebM
+                    // video codec served by MSE producers like YouTube. Log
+                    // so that an unrecognized codecId surfaces in failure
+                    // triage instead of dead-routing to the wrong decoder.
+                    STARFISH_LOG_INFO(
+                        "DemuxerWebM: unknown video codecId '%s' on track "
+                        "%ld, defaulting to VP9",
+                        codecId ? codecId : "(null)", trackNumber);
+                    codec = MediaCodecVideoVP9;
+                }
+
+                // Cache duration: prefer DefaultDuration, else derive from
+                // FrameRate, else 33ms (≈30fps) — see
+                // defaultDurationMsForTrack.
+                uint64_t durationMs = trackDefaultDurationMs;
+                if (durationMs == 0) {
+                    if (rate > 0) {
+                        durationMs = (uint64_t)(1000.0 / rate + 0.5);
+                    }
+                    if (durationMs == 0) {
+                        durationMs = 33;
+                    }
+                }
+                m_trackDefaultDurationsMs[trackNumber] = durationMs;
+
                 StreamInfo info;
                 info.setType(StreamTypeVideo);
                 info.setStreamIndex(trackNum - 1);
-                // TODO read codec
-                info.setCodec(MediaCodecVideoVP9);
+                info.setCodec(codec);
                 info.setVideoWidth(width);
                 info.setVideoHeight(height);
+                if (rate > 0) {
+                    info.setVideoFramerate(
+                        Framerate::createFromLL((int64_t)(rate * 1000), 1000));
+                    info.setVideoHasFramerate(true);
+                }
+                if (codecPrivate && codecPrivateSize > 0) {
+                    info.m_extraData.assign(codecPrivate,
+                                            codecPrivate + codecPrivateSize);
+                }
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectStream(info);
                 }
+                m_emitTrackNumbers.insert((long long)trackNumber);
             } else if (trackType == mkvparser::Track::kAudio) {
                 const mkvparser::AudioTrack* const pAudioTrack =
                     static_cast<const mkvparser::AudioTrack*>(pTrack);
 
                 const long long channels = pAudioTrack->GetChannels();
-                const long long bitDepth = pAudioTrack->GetBitDepth();
                 const double sampleRate = pAudioTrack->GetSamplingRate();
-                const long long codecDelay = pAudioTrack->GetCodecDelay();
-                const long long seekPreRoll = pAudioTrack->GetSeekPreRoll();
+
+                MediaCodec codec = MediaCodecUnknown;
+                if (codecId) {
+                    if (!strcmp(codecId, "A_OPUS")) {
+                        codec = MediaCodecAudioOpus;
+                    } else if (!strcmp(codecId, "A_VORBIS")) {
+                        codec = MediaCodecAudioVorbis;
+                    } else if (!strcmp(codecId, "A_AAC")) {
+                        codec = MediaCodecAudioAAC;
+                    } else if (!strcmp(codecId, "A_MPEG/L3")) {
+                        codec = MediaCodecAudioMP3;
+                    }
+                }
+                if (codec == MediaCodecUnknown) {
+                    // Fall back to Vorbis to preserve historical behavior.
+                    // Log so that an unrecognized codecId surfaces in failure
+                    // triage instead of silently routing to the wrong decoder.
+                    STARFISH_LOG_INFO(
+                        "DemuxerWebM: unknown audio codecId '%s' on track "
+                        "%ld, defaulting to Vorbis",
+                        codecId ? codecId : "(null)", trackNumber);
+                    codec = MediaCodecAudioVorbis;
+                }
+
+                // Cache duration: prefer DefaultDuration, else codec-aware
+                // estimate. Opus uses fixed 20ms frames in YouTube/WebRTC
+                // encodings; AAC and MP3 derive from sample-count / rate.
+                // Vorbis frame size is variable so we use a 21ms ballpark
+                // close to AAC. See defaultDurationMsForTrack.
+                uint64_t durationMs = trackDefaultDurationMs;
+                if (durationMs == 0) {
+                    if (codec == MediaCodecAudioOpus) {
+                        durationMs = 20;
+                    } else if (codec == MediaCodecAudioAAC && sampleRate > 0) {
+                        durationMs =
+                            (uint64_t)(1024.0 * 1000.0 / sampleRate + 0.5);
+                    } else if (codec == MediaCodecAudioMP3 && sampleRate > 0) {
+                        durationMs =
+                            (uint64_t)(1152.0 * 1000.0 / sampleRate + 0.5);
+                    } else {
+                        durationMs = 21;
+                    }
+                }
+                m_trackDefaultDurationsMs[trackNumber] = durationMs;
+
                 StreamInfo info;
                 info.setType(StreamTypeAudio);
                 info.setStreamIndex(trackNum - 1);
-                // TODO read codec
-                info.setCodec(MediaCodecAudioVorbis);
+                info.setCodec(codec);
+                info.setAudioChannels((uint16_t)channels);
+                info.setAudioSampleRate((uint32_t)sampleRate);
+                if (codecPrivate && codecPrivateSize > 0) {
+                    info.m_extraData.assign(codecPrivate,
+                                            codecPrivate + codecPrivateSize);
+                }
                 for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                     m_demuxerClients[j]->onDetectStream(info);
                 }
+                m_emitTrackNumbers.insert((long long)trackNumber);
             }
 
             if (pTrack == NULL) {
@@ -336,30 +468,56 @@ public:
                 const long long trackNum = pBlock->GetTrackNumber();
                 const size_t tn = static_cast<size_t>(trackNum);
 
+                if (m_emitTrackNumbers.find(trackNum) ==
+                    m_emitTrackNumbers.end()) {
+                    // Subtitle / metadata / other auxiliary track — share
+                    // the Cluster with video/audio but must not be
+                    // forwarded as MediaPackets to SourceBuffer.
+                    long status2 = pCluster->GetNext(pBlockEntry, pBlockEntry);
+                    if (status2 < 0) {
+                        delete segment;
+                        source->onSeek(
+                            lastConsumedSyntheticEnd -
+                                (long long)WrappedSegmentReader::kHeaderLen,
+                            DemuxerSource::SeekWhenceSet);
+                        return true;
+                    }
+                    continue;
+                }
+
                 const int frameCount = pBlock->GetFrameCount();
-                // GetTime() and GetDiscardPadding() walk into Segment::GetInfo
-                // which is NULL on our per-call synthetic Segment. We only
-                // need GetTimeCode() (cluster-relative) for packet PTS.
+                // GetTime() walks Segment::GetInfo which is NULL on our
+                // per-call synthetic Segment, so we use GetTimeCode() and
+                // apply the TimeCodeScale captured during findStreamInfo.
+                const long long blockTc = pBlock->GetTimeCode(pCluster);
+                const uint64_t blockPtsMs = timeCodeToMs(blockTc);
+                const uint64_t trackDurationMs =
+                    defaultDurationMsForTrack(trackNum);
 
                 for (int i = 0; i < frameCount; ++i) {
                     const mkvparser::Block::Frame& theFrame =
                         pBlock->GetFrame(i);
                     const long size = theFrame.len;
 
-                    uint64_t pts = pBlock->GetTimeCode(pCluster);
-                    uint8_t* dataPtr = (unsigned char*)malloc((size_t)size);
+                    // SourceBuffer::clearAll frees packet bodies with
+                    // delete[] (see SourceBuffer.cpp around the
+                    // m_packets[j]->m_data delete[] line); allocate with
+                    // new uint8_t[] to match — malloc()/delete[] would
+                    // be undefined behavior. The MP4 path already uses
+                    // new uint8_t[] (MP4PacketGenerator.cpp).
+                    uint8_t* dataPtr = new uint8_t[(size_t)size];
                     theFrame.Read(&src, dataPtr);
 
                     MediaPacket packet;
                     packet.m_data = dataPtr;
                     packet.m_dataSize = size;
-                    // TimeCode units are cluster TimeCodeScale ticks; in WebM
-                    // the default scale is 1ms. WebM has no DTS reordering for
-                    // a single Cluster, so DTS == PTS.
-                    packet.m_pts = pts;
-                    packet.m_dts = pts;
-                    // TODO : find duration.
-                    packet.m_duration = 33; // temp soluation
+                    // For laced blocks, frames within the block share the
+                    // block's timecode and advance by trackDurationMs each.
+                    packet.m_pts = blockPtsMs + (uint64_t)i * trackDurationMs;
+                    // WebM has no DTS reordering within a Cluster, so
+                    // DTS == PTS.
+                    packet.m_dts = packet.m_pts;
+                    packet.m_duration = (size_t)trackDurationMs;
                     packet.m_hasIdr = pBlock->IsKey();
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j++) {
@@ -369,7 +527,10 @@ public:
                             break;
                         }
                     }
-                    free(dataPtr);
+                    // Match new uint8_t[] above; previous free() was paired
+                    // with the prior malloc(). delete[] on nullptr is a
+                    // no-op when ownership transferred to a client.
+                    delete[] dataPtr;
                 }
 
                 status = pCluster->GetNext(pBlockEntry, pBlockEntry);
@@ -431,6 +592,13 @@ public:
 
     mkvparser::Segment* m_headerSegment;
     bool m_isStreamFinded;
+    uint64_t m_timeCodeScaleNs;
+    std::map<long long, uint64_t> m_trackDefaultDurationsMs;
+    // Track numbers that resolved to a video/audio StreamInfo during
+    // findStreamInfo. Subtitle, metadata, and other auxiliary tracks
+    // share Clusters with video/audio in WebM but must not be forwarded
+    // to SourceBuffer as MediaPackets.
+    std::set<long long> m_emitTrackNumbers;
 };
 
 Demuxer* Demuxer::createWebMDemuxer()
