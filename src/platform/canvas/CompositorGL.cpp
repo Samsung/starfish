@@ -34,10 +34,6 @@
 #include "core/modules/canvas/CompositorFactory.h"
 #include "core/dom/canvas/webgl/gl/SurfaceCreationScope.h"
 
-#if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
-#include <cairo.h>
-#endif
-
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
 #include "platform/multimedia/MediaPlayerLinux.h"
 #endif
@@ -93,6 +89,14 @@ using Point = std::array<Coord, 2>;
 
 #include "platform/canvas/gl/IncludeGL.h"
 #include "platform/canvas/gl/GL.h"
+
+#if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
+#include <cairo.h>
+namespace Starfish {
+void dumpTextureToPNG(GL* gl, GLuint textureId, int width, int height,
+                      const char* path, GLenum textureTarget = GL_TEXTURE_2D);
+}
+#endif
 
 #if defined(STARFISH_ANDROID)
 static void logEglError(const char* name) noexcept
@@ -270,12 +274,12 @@ static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_needsRGBShuffle = true;
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
+static bool g_isSupportStandardDerivatives = false;
 
 #ifndef MIN_MAX_TEXTURE_SIZE
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
-static size_t g_screenStencilBufferSize = 0;
 static void checkError(GL* gl)
 {
 #if !defined(NDEBUG)
@@ -473,17 +477,26 @@ struct CanvasSurfaceTextureInfo {
 
 class CompositorContextGL : public CompositorContext {
 public:
+    GLuint m_polygonVertexShader;
+    GLuint m_polygonShaderProgram;
+    GLint m_polygonShaderProgramPosition;
+    GLint m_polygonShaderProgramColor;
+
+    // Anti-aliased line shader for polygon outlines
+    GLuint m_lineVertexShader;
+    GLuint m_lineFragmentShader;
+    GLuint m_lineShaderProgram;
+    GLint m_lineShaderProgramPosition;
+    GLint m_lineShaderProgramColor;
+    GLint m_lineShaderProgramEdgeDistance;
+    GLint m_lineShaderProgramLineWidth;
+
     GLuint m_rectVertexShader;
-    GLuint m_rectFragmentShader;
+    GLuint m_pixelFragmentShader;
     GLuint m_rectShaderProgram;
     GLint m_rectShaderProgramPosition;
     GLint m_rectShaderProgramColor;
-
-    GLuint m_rectSimpleVertexShader;
-    GLuint m_rectSimpleShaderProgram;
-    GLint m_rectSimpleShaderProgramPosition;
-    GLint m_rectSimpleShaderProgramColor;
-    GLint m_rectSimpleShaderProgramTexIdx;
+    GLint m_rectShaderProgramTexIdx;
 
     GLuint m_texVertexShader;
     GLuint m_texFragmentShader;
@@ -514,6 +527,7 @@ public:
     GLint m_texBlurShaderProgramWBlurRadius;
     GLint m_texBlurShaderProgramWTextureWidth;
     GLint m_texBlurShaderProgramWTextureHeight;
+    GLint m_texBlurShaderProgramWAlphaMask;
     GLuint m_texBlurShaderProgramEGLImageExternalW;
     GLint m_texBlurShaderProgramEGLImageExternalWTexPos;
     GLint m_texBlurShaderProgramEGLImageExternalWTexIdx;
@@ -522,6 +536,7 @@ public:
     GLint m_texBlurShaderProgramEGLImageExternalWBlurRadius;
     GLint m_texBlurShaderProgramEGLImageExternalWTextureWidth;
     GLint m_texBlurShaderProgramEGLImageExternalWTextureHeight;
+    GLint m_texBlurShaderProgramEGLImageExternalWAlphaMask;
 
     GLuint m_texBlurShaderProgramH;
     GLint m_texBlurShaderProgramHTexPos;
@@ -532,6 +547,7 @@ public:
     GLint m_texBlurShaderProgramHTextureWidth;
     GLint m_texBlurShaderProgramHTextureHeight;
     GLint m_texBlurShaderProgramHAlpha;
+    GLint m_texBlurShaderProgramHAlphaMask;
 
     GLuint m_texTexPosBuffer;
     GLuint m_texIdxBuffer;
@@ -619,14 +635,20 @@ public:
 
     void clearGLProgramVariables()
     {
-        m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
-            m_texShaderProgram = 0;
+        m_polygonVertexShader = m_polygonShaderProgram = m_texShaderProgram = 0;
+        m_polygonShaderProgramPosition = 0;
+        m_polygonShaderProgramColor = 0;
+
+        // Anti-aliased line shader
+        m_lineVertexShader = m_lineFragmentShader = m_lineShaderProgram = 0;
+        m_lineShaderProgramPosition = 0;
+        m_lineShaderProgramColor = 0;
+        m_lineShaderProgramEdgeDistance = 0;
+        m_lineShaderProgramLineWidth = 0;
+        m_rectVertexShader = m_pixelFragmentShader = m_rectShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
         m_rectShaderProgramColor = 0;
-        m_rectSimpleVertexShader = m_rectSimpleShaderProgram = 0;
-        m_rectSimpleShaderProgramPosition = 0;
-        m_rectSimpleShaderProgramColor = 0;
-        m_rectSimpleShaderProgramTexIdx = 0;
+        m_rectShaderProgramTexIdx = 0;
         m_texShaderProgramPosition = 0;
         m_texShaderProgramTexture = 0;
         m_texShaderProgramAlpha = 0;
@@ -646,12 +668,14 @@ public:
         m_texBlurShaderProgramWBlurRadius = 0;
         m_texBlurShaderProgramWTextureWidth = 0;
         m_texBlurShaderProgramWTextureHeight = 0;
+        m_texBlurShaderProgramWAlphaMask = 0;
 
         m_texBlurShaderProgramEGLImageExternalWPosition = 0;
         m_texBlurShaderProgramEGLImageExternalWTexture = 0;
         m_texBlurShaderProgramEGLImageExternalWBlurRadius = 0;
         m_texBlurShaderProgramEGLImageExternalWTextureWidth = 0;
         m_texBlurShaderProgramEGLImageExternalWTextureHeight = 0;
+        m_texBlurShaderProgramEGLImageExternalWAlphaMask = 0;
 
         m_texBlurShaderProgramHPosition = 0;
         m_texBlurShaderProgramHTexture = 0;
@@ -659,6 +683,7 @@ public:
         m_texBlurShaderProgramHTextureWidth = 0;
         m_texBlurShaderProgramHTextureHeight = 0;
         m_texBlurShaderProgramHAlpha = 0;
+        m_texBlurShaderProgramHAlphaMask = 0;
 
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
@@ -741,23 +766,22 @@ public:
             gl()->deleteShader(m_texFragmentBlurShaderEGLImageExternalW);
         }
 
+        if (m_polygonShaderProgram) {
+            gl()->detachShader(m_polygonShaderProgram, m_polygonVertexShader);
+            gl()->detachShader(m_polygonShaderProgram, m_pixelFragmentShader);
+            gl()->deleteProgram(m_polygonShaderProgram);
+            gl()->deleteShader(m_polygonVertexShader);
+        }
+
         if (m_rectShaderProgram) {
             gl()->detachShader(m_rectShaderProgram, m_rectVertexShader);
-            gl()->detachShader(m_rectShaderProgram, m_rectFragmentShader);
+            gl()->detachShader(m_rectShaderProgram, m_pixelFragmentShader);
             gl()->deleteProgram(m_rectShaderProgram);
             gl()->deleteShader(m_rectVertexShader);
         }
 
-        if (m_rectSimpleShaderProgram) {
-            gl()->detachShader(m_rectSimpleShaderProgram,
-                               m_rectSimpleVertexShader);
-            gl()->detachShader(m_rectSimpleShaderProgram, m_rectFragmentShader);
-            gl()->deleteProgram(m_rectSimpleShaderProgram);
-            gl()->deleteShader(m_rectSimpleVertexShader);
-        }
-
-        if (m_rectFragmentShader) {
-            gl()->deleteShader(m_rectFragmentShader);
+        if (m_pixelFragmentShader) {
+            gl()->deleteShader(m_pixelFragmentShader);
         }
 
         if (m_texShaderProgramEGLImageExternal) {
@@ -877,12 +901,12 @@ public:
         cleanUpGLPrograms();
     }
 
-    void ensureRectFragmentShader()
+    void ensurePixelFragmentShader()
     {
-        if (m_rectFragmentShader) {
+        if (m_pixelFragmentShader) {
             return;
         }
-        const GLchar* rectFragmentSource =
+        const GLchar* pixelFragmentSource =
             "#ifdef GL_ES\n"
             "  precision mediump float;\n"
             "#endif\n"
@@ -893,7 +917,7 @@ public:
             "}";
 
         if (g_needsRGBShuffle) {
-            rectFragmentSource =
+            pixelFragmentSource =
                 "#ifdef GL_ES\n"
                 "  precision mediump float;\n"
                 "#endif\n"
@@ -906,32 +930,184 @@ public:
                 "  gl_FragColor.a = uColor[3];\n"
                 "}";
         }
-        m_rectFragmentShader =
-            loadShader(gl(), GL_FRAGMENT_SHADER, rectFragmentSource);
+        m_pixelFragmentShader =
+            loadShader(gl(), GL_FRAGMENT_SHADER, pixelFragmentSource);
         checkError(gl());
+    }
+
+    GLuint polygonProgram()
+    {
+        if (!m_polygonShaderProgram) {
+            GLchar polygonVertexSource[] =
+                "attribute vec2 aPosition;\n"
+                "void main() {\n"
+                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
+                "}";
+
+            m_polygonVertexShader =
+                loadShader(gl(), GL_VERTEX_SHADER, polygonVertexSource);
+            checkError(gl());
+
+            ensurePixelFragmentShader();
+
+            m_polygonShaderProgram = gl()->createProgram();
+            checkError(gl());
+
+            gl()->attachShader(m_polygonShaderProgram, m_polygonVertexShader);
+            checkError(gl());
+            gl()->attachShader(m_polygonShaderProgram, m_pixelFragmentShader);
+            checkError(gl());
+
+            gl()->linkProgram(m_polygonShaderProgram);
+            checkError(gl());
+
+            m_lastProgram = m_polygonShaderProgram;
+            gl()->useProgram(m_polygonShaderProgram);
+
+            m_polygonShaderProgramPosition =
+                gl()->getAttribLocation(m_polygonShaderProgram, "aPosition");
+            m_polygonShaderProgramColor =
+                gl()->getUniformLocation(m_polygonShaderProgram, "uColor");
+        } else {
+            if (m_lastProgram != m_polygonShaderProgram) {
+                m_lastProgram = m_polygonShaderProgram;
+                gl()->useProgram(m_polygonShaderProgram);
+            }
+        }
+
+        return m_polygonShaderProgram;
+    }
+
+    // Anti-aliased line shader for polygon outlines
+    GLuint lineProgram()
+    {
+        if (!m_lineShaderProgram) {
+            // Vertex shader with edge distance for anti-aliased lines
+            GLchar lineVertexSource[] =
+                "attribute vec2 aPosition;\n"
+                "attribute float aEdgeDistance;\n"
+                "varying float vEdgeDistance;\n"
+                "void main() {\n"
+                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
+                "  vEdgeDistance = aEdgeDistance;\n"
+                "}";
+
+            m_lineVertexShader =
+                loadShader(gl(), GL_VERTEX_SHADER, lineVertexSource);
+            checkError(gl());
+
+            // Fragment shader with anti-aliasing using fwidth()
+            // vEdgeDistance: 0 = center, negative = left edge, positive = right
+            // edge Smooth falloff on both sides for softer anti-aliasing
+            const GLchar* lineFragmentSource =
+                "#ifdef GL_ES\n"
+                "  #extension GL_OES_standard_derivatives : enable\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform vec4 uColor;\n"
+                "uniform float uLineWidth;\n"
+                "varying float vEdgeDistance;\n"
+                "void main(void)\n"
+                "{\n"
+                "#ifdef GL_OES_standard_derivatives\n"
+                "  float halfWidth = uLineWidth * 0.5;\n"
+                "  float dist = abs(vEdgeDistance - halfWidth);\n"
+                "  float fw = fwidth(vEdgeDistance);\n"
+                "  float edgeAlpha = 1.0 - smoothstep(halfWidth - fw * 0.5, "
+                "halfWidth, dist);\n"
+                "#else\n"
+                "  float edgeAlpha = 1.0;\n"
+                "#endif\n"
+                "  gl_FragColor = uColor * edgeAlpha;\n"
+                "}";
+
+            if (g_needsRGBShuffle) {
+                lineFragmentSource =
+                    "#ifdef GL_ES\n"
+                    "  #extension GL_OES_standard_derivatives : enable\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform vec4 uColor;\n"
+                    "uniform float uLineWidth;\n"
+                    "varying float vEdgeDistance;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "#ifdef GL_OES_standard_derivatives\n"
+                    "  float halfWidth = uLineWidth * 0.5;\n"
+                    "  float dist = abs(vEdgeDistance - halfWidth);\n"
+                    "  float fw = fwidth(vEdgeDistance);\n"
+                    "  float edgeAlpha = 1.0 - smoothstep(halfWidth - fw * "
+                    "0.5, "
+                    "halfWidth, dist);\n"
+                    "#else\n"
+                    "  float edgeAlpha = 1.0;\n"
+                    "#endif\n"
+                    "  gl_FragColor.r = uColor[2] * edgeAlpha;\n"
+                    "  gl_FragColor.g = uColor[1] * edgeAlpha;\n"
+                    "  gl_FragColor.b = uColor[0] * edgeAlpha;\n"
+                    "  gl_FragColor.a = uColor[3] * edgeAlpha;\n"
+                    "}";
+            }
+
+            m_lineFragmentShader =
+                loadShader(gl(), GL_FRAGMENT_SHADER, lineFragmentSource);
+            checkError(gl());
+
+            m_lineShaderProgram = gl()->createProgram();
+            checkError(gl());
+
+            gl()->attachShader(m_lineShaderProgram, m_lineVertexShader);
+            checkError(gl());
+            gl()->attachShader(m_lineShaderProgram, m_lineFragmentShader);
+            checkError(gl());
+
+            gl()->linkProgram(m_lineShaderProgram);
+            checkError(gl());
+
+            m_lastProgram = m_lineShaderProgram;
+            gl()->useProgram(m_lineShaderProgram);
+
+            m_lineShaderProgramPosition =
+                gl()->getAttribLocation(m_lineShaderProgram, "aPosition");
+            m_lineShaderProgramColor =
+                gl()->getUniformLocation(m_lineShaderProgram, "uColor");
+            m_lineShaderProgramEdgeDistance =
+                gl()->getAttribLocation(m_lineShaderProgram, "aEdgeDistance");
+            m_lineShaderProgramLineWidth =
+                gl()->getUniformLocation(m_lineShaderProgram, "uLineWidth");
+        } else {
+            if (m_lastProgram != m_lineShaderProgram) {
+                m_lastProgram = m_lineShaderProgram;
+                gl()->useProgram(m_lineShaderProgram);
+            }
+        }
+
+        return m_lineShaderProgram;
     }
 
     GLuint rectProgram()
     {
         if (!m_rectShaderProgram) {
             GLchar rectVertexSource[] =
-                "attribute vec2 aPosition;\n"
+                "uniform vec2 uPosition[4];\n"
+                "attribute float aTexIdx;\n"
                 "void main() {\n"
-                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
+                "  vec2 data = uPosition[int(aTexIdx)];\n"
+                "  gl_Position = vec4(data.xy, 0.0, 1.0);\n"
                 "}";
 
             m_rectVertexShader =
                 loadShader(gl(), GL_VERTEX_SHADER, rectVertexSource);
             checkError(gl());
 
-            ensureRectFragmentShader();
+            ensurePixelFragmentShader();
 
             m_rectShaderProgram = gl()->createProgram();
             checkError(gl());
 
             gl()->attachShader(m_rectShaderProgram, m_rectVertexShader);
             checkError(gl());
-            gl()->attachShader(m_rectShaderProgram, m_rectFragmentShader);
+            gl()->attachShader(m_rectShaderProgram, m_pixelFragmentShader);
             checkError(gl());
 
             gl()->linkProgram(m_rectShaderProgram);
@@ -941,69 +1117,23 @@ public:
             gl()->useProgram(m_rectShaderProgram);
 
             m_rectShaderProgramPosition =
-                gl()->getAttribLocation(m_rectShaderProgram, "aPosition");
+                gl()->getUniformLocation(m_rectShaderProgram, "uPosition");
             m_rectShaderProgramColor =
                 gl()->getUniformLocation(m_rectShaderProgram, "uColor");
+            m_rectShaderProgramTexIdx =
+                gl()->getAttribLocation(m_rectShaderProgram, "aTexIdx");
+
+            bindTexIdx(m_rectShaderProgramTexIdx, false);
         } else {
             if (m_lastProgram != m_rectShaderProgram) {
                 m_lastProgram = m_rectShaderProgram;
                 gl()->useProgram(m_rectShaderProgram);
+
+                bindTexIdx(m_rectShaderProgramTexIdx, true);
             }
         }
 
         return m_rectShaderProgram;
-    }
-
-    GLuint rectSimpleProgram()
-    {
-        if (!m_rectSimpleShaderProgram) {
-            GLchar rectSimpleVertexSource[] =
-                "uniform vec2 uPosition[4];\n"
-                "attribute float aTexIdx;\n"
-                "void main() {\n"
-                "  vec2 data = uPosition[int(aTexIdx)];\n"
-                "  gl_Position = vec4(data.xy, 0.0, 1.0);\n"
-                "}";
-
-            m_rectSimpleVertexShader =
-                loadShader(gl(), GL_VERTEX_SHADER, rectSimpleVertexSource);
-            checkError(gl());
-
-            ensureRectFragmentShader();
-
-            m_rectSimpleShaderProgram = gl()->createProgram();
-            checkError(gl());
-
-            gl()->attachShader(m_rectSimpleShaderProgram,
-                               m_rectSimpleVertexShader);
-            checkError(gl());
-            gl()->attachShader(m_rectSimpleShaderProgram, m_rectFragmentShader);
-            checkError(gl());
-
-            gl()->linkProgram(m_rectSimpleShaderProgram);
-            checkError(gl());
-
-            m_lastProgram = m_rectSimpleShaderProgram;
-            gl()->useProgram(m_rectSimpleShaderProgram);
-
-            m_rectSimpleShaderProgramPosition = gl()->getUniformLocation(
-                m_rectSimpleShaderProgram, "uPosition");
-            m_rectSimpleShaderProgramColor =
-                gl()->getUniformLocation(m_rectSimpleShaderProgram, "uColor");
-            m_rectSimpleShaderProgramTexIdx =
-                gl()->getAttribLocation(m_rectSimpleShaderProgram, "aTexIdx");
-
-            bindTexIdx(m_rectSimpleShaderProgramTexIdx, false);
-        } else {
-            if (m_lastProgram != m_rectSimpleShaderProgram) {
-                m_lastProgram = m_rectSimpleShaderProgram;
-                gl()->useProgram(m_rectSimpleShaderProgram);
-
-                bindTexIdx(m_rectSimpleShaderProgramTexIdx, true);
-            }
-        }
-
-        return m_rectSimpleShaderProgram;
     }
 
     void bindTexIdx(GLint texIdx, bool attach)
@@ -1064,7 +1194,8 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
+                "  gl_FragColor = texColor * uAlpha;\n"
                 "}";
             if (g_needsRGBShuffle) {
                 texFragmentSourceEGLImageExternal =
@@ -1077,7 +1208,8 @@ public:
                     "uniform float uAlpha;\n"
                     "void main(void)\n"
                     "{\n"
-                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+                    "  texData = texData * uAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
                     "  gl_FragColor.g = texData[1];\n"
                     "  gl_FragColor.b = texData[0];\n"
@@ -1159,7 +1291,8 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
+                "  gl_FragColor = texColor * uAlpha;\n"
                 "}";
             if (g_needsRGBShuffle) {
                 texFragmentSource =
@@ -1171,7 +1304,8 @@ public:
                     "uniform float uAlpha;\n"
                     "void main(void)\n"
                     "{\n"
-                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+                    "  texData = texData * uAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
                     "  gl_FragColor.g = texData[1];\n"
                     "  gl_FragColor.b = texData[0];\n"
@@ -1283,6 +1417,7 @@ public:
         } else {
             ss << "uniform sampler2D uTexture;\n";
         }
+        ss << "uniform sampler2D uAlphaMask;\n";
 
         ss << "uniform float uTextureWidth;\n";
         ss << "uniform float uTextureHeight;\n";
@@ -1315,7 +1450,8 @@ public:
         }
 
         if (addColorAlign) {
-            ss << "  gl_FragColor = total * uAlpha;\n";
+            ss << "  float maskAlpha = texture2D(uAlphaMask, vTexPos).a;\n";
+            ss << "  gl_FragColor = total * uAlpha * maskAlpha;\n";
         } else {
             ss << "  gl_FragColor = total;\n";
         }
@@ -1395,8 +1531,11 @@ public:
             gl()->getUniformLocation(m_texBlurShaderProgramW, "uTextureWidth");
         m_texBlurShaderProgramWTextureHeight =
             gl()->getUniformLocation(m_texBlurShaderProgramW, "uTextureHeight");
+        m_texBlurShaderProgramWAlphaMask =
+            gl()->getUniformLocation(m_texBlurShaderProgramW, "uAlphaMask");
 
         gl()->uniform1i(m_texBlurShaderProgramWTexture, 0);
+        gl()->uniform1i(m_texBlurShaderProgramWAlphaMask, 1);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
@@ -1452,8 +1591,12 @@ public:
         m_texBlurShaderProgramEGLImageExternalWTextureHeight =
             gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
                                      "uTextureHeight");
+        m_texBlurShaderProgramEGLImageExternalWAlphaMask =
+            gl()->getUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                     "uAlphaMask");
 
         gl()->uniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
+        gl()->uniform1i(m_texBlurShaderProgramEGLImageExternalWAlphaMask, 1);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
         gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
@@ -1503,8 +1646,11 @@ public:
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uTextureHeight");
         m_texBlurShaderProgramHAlpha =
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlpha");
+        m_texBlurShaderProgramHAlphaMask =
+            gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlphaMask");
 
         gl()->uniform1i(m_texBlurShaderProgramHTexture, 0);
+        gl()->uniform1i(m_texBlurShaderProgramHAlphaMask, 1);
         gl()->uniform1f(m_texBlurShaderProgramHAlpha, 1);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
@@ -1583,11 +1729,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         setupDebugCallback(gl);
 #endif
 
-        siz = 0;
-        gl->getIntegerv(GL_STENCIL_BITS, &siz);
-        STARFISH_LOG_INFO("screenStencilBufferSize %d", siz);
-        g_screenStencilBufferSize = siz;
-
         bool isOpenGLES3 = true;
         int major;
         gl->getIntegerv(GL_MAJOR_VERSION, &major);
@@ -1616,6 +1757,8 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
                 strstr(ex, "GL_EXT_texture_format_BGRA8888") != nullptr;
             g_isSupportTextureSwizzle =
                 strstr(ex, "GL_ARB_texture_swizzle") != nullptr;
+            g_isSupportStandardDerivatives =
+                strstr(ex, "GL_OES_standard_derivatives") != nullptr;
         } else {
             STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...");
         }
@@ -1647,6 +1790,10 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         if (g_isSupportTextureSwizzle) {
             STARFISH_LOG_INFO("support Texture Swizzle!");
             g_isSupportBGRATexture = false;
+        }
+
+        if (g_isSupportStandardDerivatives) {
+            STARFISH_LOG_INFO("support GL_OES_standard_derivatives!");
         }
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
@@ -2674,6 +2821,8 @@ public:
         GLenum equation = GL_FUNC_ADD;
 
         switch (blendMode) {
+        case BlendMode::Normal:
+            break;
         case BlendMode::Multiply:
             srcFactor = GL_DST_COLOR;
             dstFactor = GL_ZERO;
@@ -2845,7 +2994,7 @@ public:
 
         if (lastState.matrixStaysInRect &&
             lastState.abbreviatedClipPaths.size() == 0) {
-            m_compositorContext->rectSimpleProgram();
+            m_compositorContext->rectProgram();
             Unit::Rect drawRect = lastState.clipRect;
             drawRect.intersect(toRect(dest));
 
@@ -2864,17 +3013,16 @@ public:
                 maxX * hw - 1, minY * hh + 1, maxX * hw - 1, maxY * hh + 1,
             };
 
-            gl()->uniform2fv(
-                m_compositorContext->m_rectSimpleShaderProgramPosition, 4,
-                position);
+            gl()->uniform2fv(m_compositorContext->m_rectShaderProgramPosition,
+                             4, position);
 
             float a = lastState.opacity;
-            gl()->uniform4f(m_compositorContext->m_rectSimpleShaderProgramColor,
+            gl()->uniform4f(m_compositorContext->m_rectShaderProgramColor,
                             a * currentColor.R(), a * currentColor.G(),
                             a * currentColor.B(), a * currentColor.A());
 
             gl()->enableVertexAttribArray(
-                m_compositorContext->m_rectSimpleShaderProgramTexIdx);
+                m_compositorContext->m_rectShaderProgramTexIdx);
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError(gl());
         } else {
@@ -2882,7 +3030,7 @@ public:
             if (result.size()) {
                 if (lastState.matrixStaysInRect &&
                     isRectangleClipPath(result)) {
-                    m_compositorContext->rectSimpleProgram();
+                    m_compositorContext->rectProgram();
 
                     auto drawRect = toRect(result[0]);
                     float minX = drawRect.x();
@@ -2903,71 +3051,8 @@ public:
                     };
 
                     gl()->uniform2fv(
-                        m_compositorContext->m_rectSimpleShaderProgramPosition,
-                        4, position);
-
-                    float a = lastState.opacity;
-                    gl()->uniform4f(
-                        m_compositorContext->m_rectSimpleShaderProgramColor,
-                        a * currentColor.R(), a * currentColor.G(),
-                        a * currentColor.B(), a * currentColor.A());
-
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectSimpleShaderProgramTexIdx);
-                    gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                    checkError(gl());
-                } else {
-                    std::vector<std::pair<size_t, size_t>> pointPerIndex;
-                    for (size_t i = 0; i < result.size(); i++) {
-                        for (size_t j = 0; j < result[i].size(); j++) {
-                            pointPerIndex.push_back({ i, j });
-                        }
-                    }
-
-                    m_compositorContext->rectProgram();
-                    std::vector<N> indices = mapbox::earcut<N>(result);
-
-                    std::vector<float> position;
-                    position.reserve((indices.size() / 3) * 6);
-
-                    size_t triangleCount = 0;
-                    for (size_t i = 0; i < indices.size(); i += 3) {
-                        const auto& p1 = pointPerIndex[indices[i]];
-                        const auto& p2 = pointPerIndex[indices[i + 1]];
-                        const auto& p3 = pointPerIndex[indices[i + 2]];
-
-                        float trianglePoints[6] = {
-                            (float)result[p1.first][p1.second].x,
-                            (float)result[p1.first][p1.second].y,
-                            (float)result[p2.first][p2.second].x,
-                            (float)result[p2.first][p2.second].y,
-                            (float)result[p3.first][p3.second].x,
-                            (float)result[p3.first][p3.second].y
-                        };
-                        mapLogicalScreenPointsToScreen(trianglePoints[0],
-                                                       trianglePoints[1]);
-                        mapLogicalScreenPointsToScreen(trianglePoints[2],
-                                                       trianglePoints[3]);
-                        mapLogicalScreenPointsToScreen(trianglePoints[4],
-                                                       trianglePoints[5]);
-
-                        float hw = 2.f / screenWidth();
-                        float hh = -2.f / screenHeight();
-                        position.push_back(trianglePoints[0] * hw - 1);
-                        position.push_back(trianglePoints[1] * hh + 1);
-                        position.push_back(trianglePoints[2] * hw - 1);
-                        position.push_back(trianglePoints[3] * hh + 1);
-                        position.push_back(trianglePoints[4] * hw - 1);
-                        position.push_back(trianglePoints[5] * hh + 1);
-                        triangleCount += 3;
-                    }
-
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-                    gl()->vertexAttribPointer(
-                        m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, position.data());
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
+                        m_compositorContext->m_rectShaderProgramPosition, 4,
+                        position);
 
                     float a = lastState.opacity;
                     gl()->uniform4f(
@@ -2975,16 +3060,264 @@ public:
                         a * currentColor.R(), a * currentColor.G(),
                         a * currentColor.B(), a * currentColor.A());
 
-                    gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
-
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
+                    gl()->enableVertexAttribArray(
+                        m_compositorContext->m_rectShaderProgramTexIdx);
+                    gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
                     checkError(gl());
-                    gl()->disableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
+                } else {
+                    drawTessellatedPolygon(result, currentColor,
+                                           lastState.opacity, true);
                 }
             }
         }
+    }
+
+    void drawTessellatedPolygon(const Clipper2Lib::PathsD& paths,
+                                const Unit::Color& color, float opacity,
+                                bool drawOutline,
+                                const SkMatrix* customScreenMatrix = nullptr,
+                                size_t customScreenWidth = 0,
+                                size_t customScreenHeight = 0)
+    {
+        m_compositorContext->polygonProgram();
+        std::vector<N> indices = mapbox::earcut<N>(paths);
+
+        std::vector<float> position;
+        position.reserve((indices.size() / 3) * 6);
+
+        std::vector<size_t> cumulativeSizes(paths.size() + 1);
+        cumulativeSizes[0] = 0;
+        for (size_t j = 0; j < paths.size(); j++) {
+            cumulativeSizes[j + 1] = cumulativeSizes[j] + paths[j].size();
+        }
+
+        // Use custom parameters if provided, otherwise use defaults
+        const SkMatrix& screenMatrix =
+            customScreenMatrix ? *customScreenMatrix : m_screenMatrix;
+        size_t sw = customScreenWidth ? customScreenWidth : screenWidth();
+        size_t sh = customScreenHeight ? customScreenHeight : screenHeight();
+
+        size_t triangleCount = 0;
+        for (size_t i = 0; i < indices.size(); i += 3) {
+            size_t idx0 = indices[i];
+            size_t idx1 = indices[i + 1];
+            size_t idx2 = indices[i + 2];
+
+            auto it0 = std::upper_bound(cumulativeSizes.begin(),
+                                        cumulativeSizes.end(), idx0);
+            size_t pathIdx0 = std::distance(cumulativeSizes.begin(), it0) - 1;
+            size_t pointIdx0 = idx0 - cumulativeSizes[pathIdx0];
+
+            auto it1 = std::upper_bound(cumulativeSizes.begin(),
+                                        cumulativeSizes.end(), idx1);
+            size_t pathIdx1 = std::distance(cumulativeSizes.begin(), it1) - 1;
+            size_t pointIdx1 = idx1 - cumulativeSizes[pathIdx1];
+
+            auto it2 = std::upper_bound(cumulativeSizes.begin(),
+                                        cumulativeSizes.end(), idx2);
+            size_t pathIdx2 = std::distance(cumulativeSizes.begin(), it2) - 1;
+            size_t pointIdx2 = idx2 - cumulativeSizes[pathIdx2];
+
+            float trianglePoints[6] = { (float)paths[pathIdx0][pointIdx0].x,
+                                        (float)paths[pathIdx0][pointIdx0].y,
+                                        (float)paths[pathIdx1][pointIdx1].x,
+                                        (float)paths[pathIdx1][pointIdx1].y,
+                                        (float)paths[pathIdx2][pointIdx2].x,
+                                        (float)paths[pathIdx2][pointIdx2].y };
+
+            // Map points using the appropriate screen matrix
+            float x, y;
+            x = trianglePoints[0];
+            y = trianglePoints[1];
+            mapPointsByMatrix(x, y, screenMatrix);
+            trianglePoints[0] = x;
+            trianglePoints[1] = y;
+
+            x = trianglePoints[2];
+            y = trianglePoints[3];
+            mapPointsByMatrix(x, y, screenMatrix);
+            trianglePoints[2] = x;
+            trianglePoints[3] = y;
+
+            x = trianglePoints[4];
+            y = trianglePoints[5];
+            mapPointsByMatrix(x, y, screenMatrix);
+            trianglePoints[4] = x;
+            trianglePoints[5] = y;
+
+            float hw = 2.f / sw;
+            float hh = -2.f / sh;
+            position.push_back(trianglePoints[0] * hw - 1);
+            position.push_back(trianglePoints[1] * hh + 1);
+            position.push_back(trianglePoints[2] * hw - 1);
+            position.push_back(trianglePoints[3] * hh + 1);
+            position.push_back(trianglePoints[4] * hw - 1);
+            position.push_back(trianglePoints[5] * hh + 1);
+            triangleCount += 3;
+        }
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        gl()->vertexAttribPointer(
+            m_compositorContext->m_polygonShaderProgramPosition, 2, GL_FLOAT,
+            false, 0, position.data());
+        gl()->enableVertexAttribArray(
+            m_compositorContext->m_polygonShaderProgramPosition);
+
+        gl()->uniform4f(m_compositorContext->m_polygonShaderProgramColor,
+                        opacity * color.R(), opacity * color.G(),
+                        opacity * color.B(), opacity * color.A());
+
+        gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+        checkError(gl());
+        gl()->disableVertexAttribArray(
+            m_compositorContext->m_polygonShaderProgramPosition);
+
+        if (drawOutline && g_isSupportStandardDerivatives) {
+            drawPolygonOutlineAA(paths, color, opacity, customScreenMatrix,
+                                 customScreenWidth, customScreenHeight);
+        }
+    }
+
+    // Draw anti-aliased lines along polygon outline edges
+    void drawPolygonOutlineAA(const Clipper2Lib::PathsD& paths,
+                              const Unit::Color& color, float opacity,
+                              const SkMatrix* customScreenMatrix = nullptr,
+                              size_t customScreenWidth = 0,
+                              size_t customScreenHeight = 0)
+    {
+        m_compositorContext->lineProgram();
+
+        std::vector<float> position;
+        std::vector<float> edgeDistances;
+
+        // Line thickness in pixels (for anti-aliasing)
+        float lineWidth = 1.0f;
+
+        // Use custom parameters if provided, otherwise use defaults
+        const SkMatrix& screenMatrix =
+            customScreenMatrix ? *customScreenMatrix : m_screenMatrix;
+        size_t sw = customScreenWidth ? customScreenWidth : screenWidth();
+        size_t sh = customScreenHeight ? customScreenHeight : screenHeight();
+
+        for (const auto& path : paths) {
+            if (path.size() < 2)
+                continue;
+
+            for (size_t i = 0; i < path.size(); i++) {
+                size_t nextIdx = (i + 1) % path.size();
+
+                float x1 = (float)path[i].x;
+                float y1 = (float)path[i].y;
+                float x2 = (float)path[nextIdx].x;
+                float y2 = (float)path[nextIdx].y;
+
+                // Map points using the appropriate screen matrix
+                mapPointsByMatrix(x1, y1, screenMatrix);
+                mapPointsByMatrix(x2, y2, screenMatrix);
+
+                // Calculate line direction
+                float dx = x2 - x1;
+                float dy = y2 - y1;
+                float len = sqrt(dx * dx + dy * dy);
+                if (len < 0.001f)
+                    continue;
+
+                // Normalize direction
+                dx /= len;
+                dy /= len;
+
+                // Calculate normal (perpendicular) vector
+                float nx = -dy;
+                float ny = dx;
+
+                // Extend line endpoints to cover corners
+                float extend = lineWidth * 0.5f;
+                float ex1 = x1 - dx * extend;
+                float ey1 = y1 - dy * extend;
+                float ex2 = x2 + dx * extend;
+                float ey2 = y2 + dy * extend;
+
+                float halfWidth = lineWidth * 0.5f;
+
+                float hw = 2.f / sw;
+                float hh = -2.f / sh;
+
+                float v0x = (ex1 - nx * halfWidth) * hw - 1;
+                float v0y = (ey1 - ny * halfWidth) * hh + 1;
+                float v1x = (ex1 + nx * halfWidth) * hw - 1;
+                float v1y = (ey1 + ny * halfWidth) * hh + 1;
+                float v2x = (ex2 - nx * halfWidth) * hw - 1;
+                float v2y = (ey2 - ny * halfWidth) * hh + 1;
+                float v3x = (ex2 + nx * halfWidth) * hw - 1;
+                float v3y = (ey2 + ny * halfWidth) * hh + 1;
+
+                // Triangle 1: v0, v1, v2
+                position.push_back(v0x);
+                position.push_back(v0y);
+                edgeDistances.push_back(0.0f);
+
+                position.push_back(v1x);
+                position.push_back(v1y);
+                edgeDistances.push_back(lineWidth);
+
+                position.push_back(v2x);
+                position.push_back(v2y);
+                edgeDistances.push_back(0.0f);
+
+                // Triangle 2: v1, v3, v2
+                position.push_back(v1x);
+                position.push_back(v1y);
+                edgeDistances.push_back(lineWidth);
+
+                position.push_back(v3x);
+                position.push_back(v3y);
+                edgeDistances.push_back(lineWidth);
+
+                position.push_back(v2x);
+                position.push_back(v2y);
+                edgeDistances.push_back(0.0f);
+            }
+        }
+
+        if (position.empty())
+            return;
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Position attribute
+        gl()->vertexAttribPointer(
+            m_compositorContext->m_lineShaderProgramPosition, 2, GL_FLOAT,
+            false, 0, position.data());
+        gl()->enableVertexAttribArray(
+            m_compositorContext->m_lineShaderProgramPosition);
+
+        // Edge distance attribute
+        gl()->vertexAttribPointer(
+            m_compositorContext->m_lineShaderProgramEdgeDistance, 1, GL_FLOAT,
+            false, 0, edgeDistances.data());
+        gl()->enableVertexAttribArray(
+            m_compositorContext->m_lineShaderProgramEdgeDistance);
+
+        // Set color
+        gl()->uniform4f(m_compositorContext->m_lineShaderProgramColor,
+                        opacity * color.R(), opacity * color.G(),
+                        opacity * color.B(), opacity * color.A());
+
+        // Set line width uniform
+        gl()->uniform1f(m_compositorContext->m_lineShaderProgramLineWidth,
+                        lineWidth);
+
+        // Draw
+        gl()->drawArrays(GL_TRIANGLES, 0, position.size() / 2);
+
+        checkError(gl());
+        gl()->disableVertexAttribArray(
+            m_compositorContext->m_lineShaderProgramPosition);
+        gl()->disableVertexAttribArray(
+            m_compositorContext->m_lineShaderProgramEdgeDistance);
     }
 
     virtual void drawRect(const LayoutRect& rt) override
@@ -3168,12 +3501,8 @@ public:
         pushFBOContext(textureWidth, textureHeight, false,
                        LayoutRect(0, 0, textureWidth, textureHeight));
 
-        bool isStencilEnabled = gl()->isEnabled(GL_STENCIL_TEST);
         bool isScissorEnabled = gl()->isEnabled(GL_SCISSOR_TEST);
 
-        if (isStencilEnabled) {
-            gl()->disable(GL_STENCIL_TEST);
-        }
         if (isScissorEnabled) {
             gl()->disable(GL_SCISSOR_TEST);
         }
@@ -3246,7 +3575,9 @@ public:
             gl()->uniform1f(*height, textureHeight);
             gl()->uniform2f(*blurRadius, blurMainRadius, blurSubRadius);
 
+            gl()->activeTexture(GL_TEXTURE0);
             gl()->bindTexture(textureKind, textureID);
+
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
             gl()->disableVertexAttribArray(*positionPos);
@@ -3256,9 +3587,6 @@ public:
         GLuint fboTex = popFBOContext();
         checkError(gl());
 
-        if (isStencilEnabled) {
-            gl()->enable(GL_STENCIL_TEST);
-        }
         if (isScissorEnabled) {
             gl()->enable(GL_SCISSOR_TEST);
         }
@@ -3276,6 +3604,7 @@ public:
                 m_compositorContext->m_texBlurShaderProgramHPosition, 4,
                 position);
 
+            gl()->activeTexture(GL_TEXTURE0);
             gl()->bindTexture(GL_TEXTURE_2D, fboTex);
 
             gl()->uniform1f(
@@ -3345,6 +3674,7 @@ public:
             m_compositorContext->texShaderProgram();
         }
 
+        gl()->activeTexture(GL_TEXTURE0);
         gl()->bindTexture(textureKind, textureID);
 
         GLint* positionPos;
@@ -3471,12 +3801,13 @@ public:
 
         auto& lastState = m_state.back();
 
-        bool stencilClippingEnabled = false;
         bool scissorClippingEnabled = false;
+        bool alphaTextureClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
-        bool fboStencilClipingEnabled = false;
         Unit::Rect visibleArea =
             Unit::Rect(0, 0, screenWidth(), screenHeight());
+        float diffXDueToAlphaTextureCliping = 0;
+        float diffYDueToAlphaTextureCliping = 0;
 
         SkMatrix ctm = lastState.matrix;
         SkMatrix screenMatrix = m_screenMatrix;
@@ -3520,118 +3851,51 @@ public:
                             visibleArea.width(), visibleArea.height());
                     scissorClippingEnabled = true;
                 } else {
-                    std::vector<std::pair<size_t, size_t>> pointPerIndex;
                     for (size_t i = 0; i < result.size(); i++) {
-                        for (size_t j = 0; j < result[i].size(); j++) {
-                            pointPerIndex.push_back({ i, j });
-                        }
                         visibleArea.unite(boundingRect(result[i]));
                     }
 
-                    float diffXDueToStencilCliping = 0;
-                    float diffYDueToStencilCliping = 0;
-                    stencilClippingEnabled = true;
+                    diffXDueToAlphaTextureCliping = -visibleArea.x();
+                    diffYDueToAlphaTextureCliping = -visibleArea.y();
+                    alphaTextureClippingEnabled = true;
 
-                    if (!g_screenStencilBufferSize) {
-                        fboStencilClipingEnabled = true;
-                        pushFBOContext(visibleArea.width(),
-                                       visibleArea.height(), true,
-                                       LayoutRect(0, 0, visibleArea.width(),
-                                                  visibleArea.height()));
-                        diffXDueToStencilCliping = -visibleArea.x();
-                        diffYDueToStencilCliping = -visibleArea.y();
+                    pushFBOContext(visibleArea.width(), visibleArea.height(),
+                                   false,
+                                   LayoutRect(0, 0, visibleArea.width(),
+                                              visibleArea.height()));
 
-                        screenWidth = visibleArea.width();
-                        screenHeight = visibleArea.height();
+                    screenWidth = visibleArea.width();
+                    screenHeight = visibleArea.height();
 
-                        ctm.postTranslate(diffXDueToStencilCliping,
-                                          diffYDueToStencilCliping);
+                    ctm.postTranslate(diffXDueToAlphaTextureCliping,
+                                      diffYDueToAlphaTextureCliping);
 
-                        gl()->clearColor(0, 0, 0, 0);
-                        gl()->clear(GL_COLOR_BUFFER_BIT);
+                    visibleArea.setX(0);
+                    visibleArea.setY(0);
 
-                        // reset screen matrix while draw fbo on screen
-                        screenMatrix.reset();
-                    }
+                    gl()->clearColor(0, 0, 0, 0);
+                    gl()->clear(GL_COLOR_BUFFER_BIT);
 
-                    gl()->enable(GL_STENCIL_TEST);
-                    STARFISH_ASSERT(gl()->isEnabled(GL_STENCIL_TEST));
-                    gl()->clearStencil(0);
-                    gl()->clear(GL_STENCIL_BUFFER_BIT);
-                    gl()->colorMask(false, false, false, false);
-                    gl()->stencilFunc(GL_ALWAYS, 1, 1);
-                    gl()->stencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+                    // reset screen matrix while draw fbo on screen
+                    screenMatrix.reset();
 
-                    std::vector<float> position;
-                    m_compositorContext->rectProgram();
-                    std::vector<N> indices = mapbox::earcut<N>(result);
-
-                    position.reserve((indices.size() / 3) * 6);
-                    size_t triangleCount = 0;
-                    for (size_t i = 0; i < indices.size(); i += 3) {
-                        const auto& p1 = pointPerIndex[indices[i]];
-                        const auto& p2 = pointPerIndex[indices[i + 1]];
-                        const auto& p3 = pointPerIndex[indices[i + 2]];
-
-                        float trianglePoints[6] = {
-                            (float)result[p1.first][p1.second].x +
-                                diffXDueToStencilCliping,
-                            (float)result[p1.first][p1.second].y +
-                                diffYDueToStencilCliping,
-                            (float)result[p2.first][p2.second].x +
-                                diffXDueToStencilCliping,
-                            (float)result[p2.first][p2.second].y +
-                                diffYDueToStencilCliping,
-                            (float)result[p3.first][p3.second].x +
-                                diffXDueToStencilCliping,
-                            (float)result[p3.first][p3.second].y +
-                                diffYDueToStencilCliping
-                        };
-
-                        if (!fboStencilClipingEnabled) {
-                            mapPointsByMatrix(trianglePoints[0],
-                                              trianglePoints[1], screenMatrix);
-                            mapPointsByMatrix(trianglePoints[2],
-                                              trianglePoints[3], screenMatrix);
-                            mapPointsByMatrix(trianglePoints[4],
-                                              trianglePoints[5], screenMatrix);
+                    // Draw clipping polygon with white color to create
+                    // alpha mask Using drawTessellatedPolygon for
+                    // anti-aliased edges
+                    for (auto& path : result) {
+                        for (auto& pt : path) {
+                            pt.x += diffXDueToAlphaTextureCliping;
+                            pt.y += diffYDueToAlphaTextureCliping;
                         }
-
-                        float hw = 2.f / screenWidth;
-                        float hh = -2.f / screenHeight;
-                        position.push_back(trianglePoints[0] * hw - 1);
-                        position.push_back(trianglePoints[1] * hh + 1);
-                        position.push_back(trianglePoints[2] * hw - 1);
-                        position.push_back(trianglePoints[3] * hh + 1);
-                        position.push_back(trianglePoints[4] * hw - 1);
-                        position.push_back(trianglePoints[5] * hh + 1);
-                        triangleCount += 3;
                     }
+                    drawTessellatedPolygon(
+                        result, Unit::Color(255, 255, 255, 255), 1.0f, true,
+                        &screenMatrix, screenWidth, screenHeight);
 
-                    gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-                    gl()->vertexAttribPointer(
-                        m_compositorContext->m_rectShaderProgramPosition, 2,
-                        GL_FLOAT, false, 0, position.data());
-                    gl()->enableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
-
-                    gl()->uniform4f(
-                        m_compositorContext->m_rectShaderProgramColor,
-                        Unit::Color(255, 255, 255, 255).R(),
-                        Unit::Color(255, 255, 255, 255).G(),
-                        Unit::Color(255, 255, 255, 255).B(),
-                        Unit::Color(255, 255, 255, 255).A());
-
-                    gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
-                    checkError(gl());
-
-                    gl()->disableVertexAttribArray(
-                        m_compositorContext->m_rectShaderProgramPosition);
-
-                    gl()->colorMask(true, true, true, true);
-                    gl()->stencilFunc(GL_EQUAL, 1, 1);
-                    gl()->stencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-                    checkError(gl());
+                    // Set blending to use alpha mask: result = src *
+                    // dst_alpha
+                    gl()->blendFunc(GL_DST_ALPHA, GL_ZERO);
+                    gl()->blendEquation(GL_FUNC_ADD);
                 }
             } else {
                 shouldSkipTexturePainting = true;
@@ -3681,22 +3945,22 @@ public:
                             SkPoint pt;
                             pt = SkPoint::Make(newDst.x(), newDst.y());
 
-                            lastState.matrix.mapPoints(&pt, 1);
+                            ctm.mapPoints(&pt, 1);
                             newDest[0][0] = pt.x();
                             newDest[0][1] = pt.y();
 
                             pt = SkPoint::Make(newDst.x(), newDst.maxY());
-                            lastState.matrix.mapPoints(&pt, 1);
+                            ctm.mapPoints(&pt, 1);
                             newDest[1][0] = pt.x();
                             newDest[1][1] = pt.y();
 
                             pt = SkPoint::Make(newDst.maxX(), newDst.y());
-                            lastState.matrix.mapPoints(&pt, 1);
+                            ctm.mapPoints(&pt, 1);
                             newDest[2][0] = pt.x();
                             newDest[2][1] = pt.y();
 
                             pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
-                            lastState.matrix.mapPoints(&pt, 1);
+                            ctm.mapPoints(&pt, 1);
                             newDest[3][0] = pt.x();
                             newDest[3][1] = pt.y();
 
@@ -3734,77 +3998,94 @@ public:
             }
         }
 
-        if (stencilClippingEnabled) {
-            gl()->disable(GL_STENCIL_TEST);
-            if (fboStencilClipingEnabled) {
-                GLuint fboTex = popFBOContext();
+        if (alphaTextureClippingEnabled) {
+            // Restore blend mode before drawing FBO texture to screen
+            updateBlendMode();
 
-                m_compositorContext->texShaderProgram();
+            GLuint fboTex = popFBOContext();
 
-                float dest[4][2]; // order is LB, LT, RB, RT
-                dest[0][0] = visibleArea.x();
-                dest[0][1] = visibleArea.maxY();
-                dest[1][0] = visibleArea.x();
-                dest[1][1] = visibleArea.y();
-                dest[2][0] = visibleArea.maxX();
-                dest[2][1] = visibleArea.maxY();
-                dest[3][0] = visibleArea.maxX();
-                dest[3][1] = visibleArea.y();
+            m_compositorContext->texShaderProgram();
 
-                screenMatrix = m_screenMatrix;
+            float dest[4][2]; // order is LB, LT, RB, RT
+            dest[0][0] = visibleArea.x() - diffXDueToAlphaTextureCliping;
+            dest[0][1] = visibleArea.maxY() - diffYDueToAlphaTextureCliping;
+            dest[1][0] = visibleArea.x() - diffXDueToAlphaTextureCliping;
+            dest[1][1] = visibleArea.y() - diffYDueToAlphaTextureCliping;
+            dest[2][0] = visibleArea.maxX() - diffXDueToAlphaTextureCliping;
+            dest[2][1] = visibleArea.maxY() - diffYDueToAlphaTextureCliping;
+            dest[3][0] = visibleArea.maxX() - diffXDueToAlphaTextureCliping;
+            dest[3][1] = visibleArea.y() - diffYDueToAlphaTextureCliping;
 
-                mapPointsByMatrix(dest[0][0], dest[0][1], screenMatrix);
-                mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
-                mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
-                mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
+            screenMatrix = m_screenMatrix;
 
-                float hw = 2.f / this->screenWidth();
-                float hh = -2.f / this->screenHeight();
+            mapPointsByMatrix(dest[0][0], dest[0][1], screenMatrix);
+            mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
+            mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
+            mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
 
-                float position[8];
-                position[0] = dest[0][0] * hw - 1;
-                position[1] = dest[0][1] * hh + 1;
+            float hw = 2.f / this->screenWidth();
+            float hh = -2.f / this->screenHeight();
 
-                position[2] = dest[1][0] * hw - 1;
-                position[3] = dest[1][1] * hh + 1;
+            float position[8];
+            position[0] = dest[0][0] * hw - 1;
+            position[1] = dest[0][1] * hh + 1;
 
-                position[4] = dest[2][0] * hw - 1;
-                position[5] = dest[2][1] * hh + 1;
+            position[2] = dest[1][0] * hw - 1;
+            position[3] = dest[1][1] * hh + 1;
 
-                position[6] = dest[3][0] * hw - 1;
-                position[7] = dest[3][1] * hh + 1;
+            position[4] = dest[2][0] * hw - 1;
+            position[5] = dest[2][1] * hh + 1;
 
-                gl()->bindTexture(GL_TEXTURE_2D, fboTex);
-                checkError(gl());
+            position[6] = dest[3][0] * hw - 1;
+            position[7] = dest[3][1] * hh + 1;
 
-                gl()->enableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramTexPos);
-                gl()->enableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramTexIdx);
+            // Alpha mask position: map screen coordinates to FBO texture
+            // coordinates The FBO covers visibleArea, so we need to map screen
+            // position to [0,1] range relative to visibleArea
+            float alphaMaskPosition[8];
 
-                gl()->uniform2fv(
-                    m_compositorContext->m_texShaderProgramPosition, 4,
-                    position);
+            // Map visibleArea corners to FBO NDC coordinates
+            // The FBO texture coordinates should match vTexPos from bindTexPos
+            // (flipY=false) vTexPos order: (0,0), (0,1), (1,0), (1,1) for LB,
+            // LT, RB, RT NDC (-1,-1) maps to texture coord (0,0), NDC (1,1)
+            // maps to texture coord (1,1) So we need to map each corner
+            // correctly: LB (aTexIdx=0): vTexPos=(0,0) -> NDC (-1,-1) LT
+            // (aTexIdx=1): vTexPos=(0,1) -> NDC (-1,1) RB (aTexIdx=2):
+            // vTexPos=(1,0) -> NDC (1,-1) RT (aTexIdx=3): vTexPos=(1,1) -> NDC
+            // (1,1)
+            alphaMaskPosition[0] = -1.0f; // LB -> NDC (-1, -1)
+            alphaMaskPosition[1] = -1.0f;
 
-                gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-#if !defined(NDEBUG)
-                auto errChk = gl()->getError();
-                if (errChk == 1286) {
-                    STARFISH_LOG_ERROR("fbo stencil clipping got error 1286");
-                } else if (errChk) {
-                    STARFISH_LOG_ERROR(
-                        "fbo stencil clipping got fatal error %d", errChk);
-                }
-#endif
+            alphaMaskPosition[2] = -1.0f; // LT -> NDC (-1, 1)
+            alphaMaskPosition[3] = 1.0f;
 
-                gl()->disableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramTexPos);
-                gl()->disableVertexAttribArray(
-                    m_compositorContext->m_texShaderProgramTexIdx);
+            alphaMaskPosition[4] = 1.0f; // RB -> NDC (1, -1)
+            alphaMaskPosition[5] = -1.0f;
 
-                m_compositorContext->putGenericTextureToCache(
-                    fboTex, visibleArea.width(), visibleArea.height());
-            }
+            alphaMaskPosition[6] = 1.0f; // RT -> NDC (1, 1)
+            alphaMaskPosition[7] = 1.0f;
+
+            gl()->activeTexture(GL_TEXTURE0);
+            gl()->bindTexture(GL_TEXTURE_2D, fboTex);
+            checkError(gl());
+
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramTexPos);
+            gl()->enableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramTexIdx);
+
+            gl()->uniform2fv(m_compositorContext->m_texShaderProgramPosition, 4,
+                             position);
+
+            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramTexPos);
+            gl()->disableVertexAttribArray(
+                m_compositorContext->m_texShaderProgramTexIdx);
+
+            m_compositorContext->putGenericTextureToCache(
+                fboTex, visibleArea.width(), visibleArea.height());
         }
         if (scissorClippingEnabled) {
             gl()->disable(GL_SCISSOR_TEST);
@@ -4119,6 +4400,110 @@ bool CompositorFactory::supportsFilterEffectGl(size_t textureWidth,
 
 #if defined(STARFISH_ENABLE_TEST)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
+
+// Dump OpenGL texture to PNG file for debugging
+// This function reads texture data using FBO and saves it as PNG
+// Parameters:
+//   gl - GL interface pointer
+//   textureId - OpenGL texture ID to dump
+//   width - texture width
+//   height - texture height
+//   path - output PNG file path
+//   textureTarget - GL_TEXTURE_2D or GL_TEXTURE_EXTERNAL_OES (default:
+//   GL_TEXTURE_2D)
+void dumpTextureToPNG(GL* gl, GLuint textureId, int width, int height,
+                      const char* path, GLenum textureTarget)
+{
+    if (!gl || !textureId || !path || width <= 0 || height <= 0) {
+        STARFISH_LOG_ERROR("dumpTextureToPNG: Invalid parameters");
+        return;
+    }
+
+    STARFISH_LOG_DEBUG("dumpTextureToPNG: textureId=%u, size=%dx%d, path=%s",
+                       textureId, width, height, path);
+
+    // Save current FBO and texture bindings
+    GLint oldFBO = 0;
+    GLint oldTexture = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexture);
+
+    // Create FBO for reading texture
+    GLuint fbo = 0;
+    gl->genFramebuffers(1, &fbo);
+    gl->bindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Attach texture to FBO
+    gl->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                             textureTarget, textureId, 0);
+
+    // Check framebuffer status
+    GLenum status = gl->checkFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        STARFISH_LOG_ERROR(
+            "dumpTextureToPNG: Framebuffer not complete, status=0x%x", status);
+        gl->bindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+        gl->deleteFramebuffers(1, &fbo);
+        return;
+    }
+
+    // Wait for all GL operations to complete
+    gl->finish();
+
+    // Allocate buffer for texture data
+    int rowLength = width * 4;
+    int dataLength = rowLength * height;
+    uint8_t* buffer = new uint8_t[dataLength];
+
+    // Set pixel alignment
+    gl->pixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    gl->pixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    // Read pixels from texture
+    gl->readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+
+    // Convert RGBA to BGRA for PNG (cairo format)
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            uint8_t* pixel = &buffer[rowLength * y + x * 4];
+            std::swap(pixel[0], pixel[2]); // swap R and B
+        }
+    }
+
+    // Flip vertically (OpenGL has origin at bottom-left, PNG at top-left)
+    for (int y = 0; y < height / 2; y++) {
+        uint32_t* row1 = (uint32_t*)&buffer[rowLength * y];
+        uint32_t* row2 = (uint32_t*)&buffer[rowLength * (height - y - 1)];
+        for (int x = 0; x < width; x++) {
+            std::swap(row1[x], row2[x]);
+        }
+    }
+
+    // Write to PNG file using cairo
+    cairo_surface_t* surface = cairo_image_surface_create_for_data(
+        buffer, CAIRO_FORMAT_ARGB32, width, height, rowLength);
+    cairo_status_t result = cairo_surface_write_to_png(surface, path);
+    cairo_surface_destroy(surface);
+
+    if (result != CAIRO_STATUS_SUCCESS) {
+        STARFISH_LOG_ERROR("dumpTextureToPNG: Failed to write PNG: %s",
+                           cairo_status_to_string(result));
+    } else {
+        STARFISH_LOG_DEBUG("dumpTextureToPNG: Successfully saved to %s", path);
+    }
+
+    // Cleanup
+    delete[] buffer;
+    gl->bindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+    gl->deleteFramebuffers(1, &fbo);
+
+    // Note: We don't restore texture binding for GL_TEXTURE_EXTERNAL_OES
+    // since we only saved GL_TEXTURE_BINDING_2D
+    if (textureTarget == GL_TEXTURE_2D) {
+        gl->bindTexture(GL_TEXTURE_2D, oldTexture);
+    }
+}
+
 void screenShotImpl(Renderer* renderer, const char* path,
                     std::function<void()> callback)
 {
