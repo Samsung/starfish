@@ -37,6 +37,8 @@
 #include "core/style/MediaList.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/StyleRule.h"
+#include "binding/generated/ElementOrProcessingInstructionUnion.h"
+#include "binding/generated/MediaListOrDOMStringUnion.h"
 
 namespace Starfish {
 
@@ -80,6 +82,45 @@ static Node* findRootOfStyleSheet(Node* origin)
     }
 }
 
+// Constructor for constructable stylesheets
+CSSStyleSheet::CSSStyleSheet(ExecutionContext* executionContext,
+                             const CSSStyleSheetInit& options)
+    : StyleSheet(executionContext)
+    , m_sourceString(String::emptyString)
+    , m_origin(nullptr)
+    , m_root(nullptr)
+    , m_ownerRule(nullptr)
+    , m_ruleList(nullptr)
+    , m_mediaQuerySet(nullptr)
+    , m_mediaWrapper(nullptr)
+    , m_disabled(options.disabled())
+{
+    // Parse media option if provided
+    const MediaListOrDOMString& media = options.media();
+    if (media.isDOMStringValue()) {
+        String* mediaString = media.getDOMStringValue();
+        if (mediaString && !mediaString->isEmpty()) {
+            // Parse media string using CSSParser
+            CSSParser parser(nullptr);
+            parser.makeToken(mediaString);
+            m_mediaQuerySet = parser.parseMediaQuery();
+        }
+    } else if (media.isMediaListValue()) {
+        // If MediaList is provided, use its MediaQuerySet
+        m_mediaQuerySet = MediaQuerySet::create((Node*)nullptr);
+        MediaList* mediaList = media.getMediaListValue();
+        if (mediaList && mediaList->mediaQuerySet()) {
+            // Copy the media queries from the provided MediaList
+            for (size_t i = 0;
+                 i < mediaList->mediaQuerySet()->queryVector().size(); i++) {
+                m_mediaQuerySet->addMediaQuery(
+                    mediaList->mediaQuerySet()->queryVector()[i]);
+            }
+        }
+    }
+}
+
+// Constructor for stylesheets from style/link elements
 CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     : StyleSheet(origin->executionContext())
     , m_sourceString(str)
@@ -91,11 +132,6 @@ CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
     , m_mediaWrapper(nullptr)
     , m_disabled(false)
 {
-}
-
-ScriptBindingInstance* CSSStyleSheet::scriptBindingInstance()
-{
-    return origin()->scriptBindingInstance();
 }
 
 void CSSStyleSheet::addRule(StyleRuleBase* rule)
@@ -418,6 +454,10 @@ String* CSSStyleSheet::href() const
 
 String* CSSStyleSheet::title() const
 {
+    // For constructable stylesheets, m_origin is nullptr
+    if (!m_origin) {
+        return String::emptyString;
+    }
     if (m_origin->isElement()) {
         auto title = m_origin->asElement()->getAttribute(
             m_origin->starfish()->staticStrings()->m_title);
@@ -426,6 +466,22 @@ String* CSSStyleSheet::title() const
         }
     }
     return String::emptyString;
+}
+
+Optional<ElementOrProcessingInstruction> CSSStyleSheet::ownerNode() const
+{
+    if (!m_origin) {
+        return Optional<ElementOrProcessingInstruction>();
+    }
+    if (m_origin->isElement()) {
+        return ElementOrProcessingInstruction::createElement(
+            m_origin->asElement());
+    }
+    if (m_origin->isProcessingInstruction()) {
+        return ElementOrProcessingInstruction::createProcessingInstruction(
+            m_origin->asProcessingInstruction());
+    }
+    return Optional<ElementOrProcessingInstruction>();
 }
 
 void CSSStyleSheet::setMediaQuerySet(MediaQuerySet* mediaQuerySet)
@@ -439,12 +495,13 @@ void CSSStyleSheet::setMediaQuerySet(MediaQuerySet* mediaQuerySet)
 
 MediaList* CSSStyleSheet::media()
 {
+    // For constructable stylesheets, create an empty MediaList if needed
     if (!m_mediaQuerySet) {
-        return nullptr;
+        m_mediaQuerySet = MediaQuerySet::create(m_origin);
     }
 
     if (!m_mediaWrapper) {
-        m_mediaWrapper = new MediaList(m_mediaQuerySet);
+        m_mediaWrapper = new MediaList(m_executionContext, m_mediaQuerySet);
     }
 
     return m_mediaWrapper;

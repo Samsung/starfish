@@ -42,6 +42,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaList.h"
 #include "core/style/MediaQuery.h"
 #include "core/style/MediaQuerySet.h"
@@ -50,15 +51,17 @@
 
 namespace Starfish {
 
-MediaList::MediaList(MediaQuerySet* mediaQuerySet)
+MediaList::MediaList(ExecutionContext* executionContext,
+                     MediaQuerySet* mediaQuerySet)
     : ScriptWrappable(this)
+    , m_executionContext(executionContext)
     , m_mediaQuerySet(mediaQuerySet)
 {
 }
 
 ScriptBindingInstance* MediaList::scriptBindingInstance()
 {
-    return m_mediaQuerySet->document()->scriptBindingInstance();
+    return m_executionContext->scriptBindingInstance();
 }
 
 MediaQuerySet* MediaList::mediaQuerySet() const
