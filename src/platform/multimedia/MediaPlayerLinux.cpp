@@ -1262,6 +1262,7 @@ void MediaPlayerLinux::prepare(ResourceURL* url)
         PLAYER_LOGE("MediaPlayerLinux::player_prepare_async return error !!!");
         m_foundError = true;
         handlePrepared();
+        return;
     }
     setNativePlayerDisplayModeWithGL();
 }
