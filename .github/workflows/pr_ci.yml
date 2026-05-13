@@ -36,13 +36,20 @@ jobs:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: false
           ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Update submodules with proxy
+        run: |
+            export https_proxy=http://10.112.1.184:8080
+            export http_proxy=http://10.112.1.184:8080
+            git config --global http.sslVerify false
+            git config --global --add safe.directory /__w/starfish/starfish
+            git submodule update --init --recursive
 
       - name: Add safe directory
         run: |
               mkdir -p /__w/starfish/lwe_rel_tmp
-              git config --global --add safe.directory /__w/starfish/starfish
               git config --global --add safe.directory /__w/starfish/lwe_rel_tmp
 
       - name: Reset Submodule
@@ -68,7 +75,7 @@ jobs:
     secrets: inherit
 
   x64_test_clang:
-    needs: [ squash_thirdparty ]
+    needs: [ x64_test ]
     uses: ./.github/workflows/x64_test_clang.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
