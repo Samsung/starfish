@@ -284,6 +284,35 @@ static constexpr bool s_sepArray[] = {
     false, true,  false, false, false, false, false
 };
 
+// SVG arc commands encode large-arc-flag and sweep-flag as single
+// characters ('0' or '1') that may directly abut the next number with no
+// separator (e.g. "a9 9 0 110 18" == flags 1,1 then x=0 y=18). Use this
+// helper instead of lex() for those two positions; ordinary number lexing
+// would greedily swallow the flags into a multi-digit token.
+static PathToken lexArcFlag(const StringBufferAccessData& bad, size_t& pos)
+{
+    while (pos < bad.length) {
+        auto ch = bad.charAt(pos);
+        if (UNLIKELY(ch >
+                     static_cast<char32_t>(std::numeric_limits<char>::max()))) {
+            pos = SIZE_MAX;
+            return PathToken();
+        }
+        char c = static_cast<char>(ch);
+        if (String::isASCIISpace(c) || c == ',') {
+            pos++;
+            continue;
+        }
+        break;
+    }
+    if (pos >= bad.length) {
+        return PathToken();
+    }
+    PathToken token(pos, pos + 1);
+    pos++;
+    return token;
+}
+
 static PathToken lex(const StringBufferAccessData& bad, size_t& pos)
 {
     PathToken newToken;
@@ -429,7 +458,10 @@ void SVGPathElement::parsePath(String* d, Path* path)
     }
 
         for (size_t i = 0; i < bad.length;) {
-            auto token = lex(bad, i);
+            bool readingArcFlag =
+                (paintMode == 'a' || paintMode == 'A') &&
+                (mode == Mode::WaitCoordsY2 || mode == Mode::WaitCoordsX3);
+            auto token = readingArcFlag ? lexArcFlag(bad, i) : lex(bad, i);
             if (UNLIKELY(token.length() == 0)) {
                 // parse error
                 if (i == SIZE_MAX) {
@@ -438,11 +470,12 @@ void SVGPathElement::parsePath(String* d, Path* path)
                 return;
             }
 
-            if (token.equals(bad, ',')) {
+            if (!readingArcFlag && token.equals(bad, ',')) {
                 continue;
             }
 
-            if (token.equals(bad, '-') && (mode != Mode::WaitCommand)) {
+            if (!readingArcFlag && token.equals(bad, '-') &&
+                (mode != Mode::WaitCommand)) {
                 if (gotMinus) {
                     // error
                     break;
