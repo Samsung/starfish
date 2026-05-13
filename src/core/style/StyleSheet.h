@@ -26,6 +26,7 @@ namespace Starfish {
 
 class MediaList;
 class ExecutionContext;
+class ElementOrProcessingInstruction;
 
 class StyleSheet : public ScriptWrappable {
 public:
@@ -34,7 +35,7 @@ public:
     /* DOM APIs */
     virtual String* type() const = 0;
     virtual String* href() const = 0;
-    virtual Node* ownerNode() const = 0;
+    virtual Optional<ElementOrProcessingInstruction> ownerNode() const = 0;
     virtual StyleSheet* parentStyleSheet() const
     {
         return nullptr;
@@ -46,7 +47,7 @@ public:
 
 protected:
     StyleSheet(ExecutionContext* executionContext);
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ExecutionContext* m_executionContext;
 };
 
 } /* namespace Starfish */

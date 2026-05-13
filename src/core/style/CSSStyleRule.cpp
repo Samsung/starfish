@@ -309,7 +309,9 @@ MediaList* CSSMediaRule::media()
         return nullptr;
     }
     if (!m_mediaWrapper) {
-        m_mediaWrapper = new MediaList(mediaQuerySet());
+        m_mediaWrapper = new MediaList(
+            scriptBindingInstance()->ownerDocument()->executionContext(),
+            mediaQuerySet());
     }
     return m_mediaWrapper;
 }
@@ -354,7 +356,9 @@ String* CSSImportRule::href() const
 MediaList* CSSImportRule::media()
 {
     if (!m_mediaWrapper) {
-        m_mediaWrapper = new MediaList(m_importRule->mediaQuerySet());
+        m_mediaWrapper = new MediaList(
+            scriptBindingInstance()->ownerDocument()->executionContext(),
+            m_importRule->mediaQuerySet());
     }
     return m_mediaWrapper;
 }

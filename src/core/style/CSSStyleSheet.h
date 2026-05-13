@@ -22,6 +22,7 @@
 
 #include "core/style/StyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
+#include "core/style/CSSStyleSheetInit.h"
 
 namespace Starfish {
 
@@ -103,11 +104,15 @@ private:
 
 class CSSStyleSheet : public StyleSheet {
 public:
+    // Constructor for constructable stylesheets
+    CSSStyleSheet(ExecutionContext* executionContext,
+                  const CSSStyleSheetInit& options = {});
+
+    // Constructor for stylesheets from style/link elements
     CSSStyleSheet(Node* origin, String* str);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCSSStyleSheet() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     void addRule(StyleRuleBase* rule);
 
@@ -198,10 +203,7 @@ public:
 
     String* title() const override;
 
-    Node* ownerNode() const override
-    {
-        return m_origin;
-    }
+    Optional<ElementOrProcessingInstruction> ownerNode() const override;
 
     unsigned length() const;
     CSSRule* item(unsigned index);

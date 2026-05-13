@@ -25,12 +25,12 @@ namespace Starfish {
 
 StyleSheet::StyleSheet(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_executionContext(executionContext)
 {
 }
 
 ScriptBindingInstance* StyleSheet::scriptBindingInstance()
 {
-    return m_scriptBindingInstance;
+    return m_executionContext->scriptBindingInstance();
 }
 } // namespace Starfish

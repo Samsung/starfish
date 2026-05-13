@@ -44,6 +44,7 @@
 namespace Starfish {
 
 class MediaQuerySet;
+class ExecutionContext;
 class MediaList : public ScriptWrappable {
 public:
     virtual void init(ScriptBindingInstance* instance,
@@ -51,8 +52,7 @@ public:
     virtual bool isMediaList() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    MediaList(MediaQuerySet* mediaQuerySet);
-
+    MediaList(ExecutionContext* executionContext, MediaQuerySet* mediaQuerySet);
     String* mediaText() const;
     void setMediaText(String* text);
 
@@ -66,6 +66,7 @@ public:
     void modifyStyleSheet();
 
 protected:
+    ExecutionContext* m_executionContext;
     MediaQuerySet* m_mediaQuerySet;
 };
 } // namespace Starfish
