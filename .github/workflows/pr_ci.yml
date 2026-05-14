@@ -75,7 +75,7 @@ jobs:
     secrets: inherit
 
   x64_test_clang:
-    needs: [ x64_test ]
+    needs: [ squash_thirdparty ]
     uses: ./.github/workflows/x64_test_clang.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
