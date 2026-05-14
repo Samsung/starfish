@@ -68,10 +68,10 @@ def run_test(argv_input, env=None):
 
 
 def internal_test():
-    run_test(["basic", "tool/reftest/cairo/internal.res", "common"])
-    run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep"])
-    run_test(["csswg", "tool/pixel_test/svg.res", "cairo"])
-    run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common"])
+    run_test(["basic", "tool/reftest/cairo/internal.res", "common", "-p8"])
+    run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep", "-p8"])
+    run_test(["csswg", "tool/pixel_test/svg.res", "cairo", "-p8"])
+    run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common", "-p8"])
 
 
 def dom_conformance_test():
@@ -237,7 +237,7 @@ def wpt_websocket():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/websocket.res", "cairo"])
 
 def wpt_xhr():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo", "-p4"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo", "-p8"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_single_thread.res", "cairo", "-p1"])
 
 def wpt_pwa():
