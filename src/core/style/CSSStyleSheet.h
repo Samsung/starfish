@@ -233,6 +233,7 @@ public:
 
 protected:
     void syncChildRuleWrappers();
+    void notifyStyleSheetChanged();
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;

@@ -1782,6 +1782,7 @@ public:
     enum ParseResult { Consumed, ErrorFounded, Failed };
 
     CSSParser(Node* origin);
+    CSSParser(ExecutionContext* executionContext);
     inline ~CSSParser()
     {
         m_isPoolEnabled = false;
@@ -1868,7 +1869,10 @@ private:
     bool m_preserveWS;
     bool m_preserveComments;
     Node* m_origin;
+    ExecutionContext* m_executionContext;
     GCVector<RefPtr<CSSToken>> m_preservedTokens;
+
+    Document* document();
     CSSScanner* m_scanner;
     RefPtr<CSSToken> m_lookAhead;
     RefPtr<CSSToken> m_token;
@@ -1946,6 +1950,8 @@ private:
     CSSSelector* setSelectorRelationIsAffectedByPseudoContent(
         CSSSelector* selector);
     CSSSelectorPool m_selectorPool;
+
+    void init();
 };
 
 struct MediaQueryExpValue {
