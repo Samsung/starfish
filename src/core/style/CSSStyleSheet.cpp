@@ -101,7 +101,7 @@ CSSStyleSheet::CSSStyleSheet(ExecutionContext* executionContext,
         String* mediaString = media.getDOMStringValue();
         if (mediaString && !mediaString->isEmpty()) {
             // Parse media string using CSSParser
-            CSSParser parser(nullptr);
+            CSSParser parser(executionContext);
             parser.makeToken(mediaString);
             m_mediaQuerySet = parser.parseMediaQuery();
         }
@@ -560,16 +560,22 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(String::fromInt(length()));
         msg.appendString(").");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(origin()->executionContext(),
-                               DOMException::INDEX_SIZE_ERR, s.data());
+        throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
+                               s.data());
     }
 
-    CSSParser parser(m_origin);
-    RefPtr<CSSToken> token = parser.makeToken(ruleString);
-
     GCVector<StyleRuleBase*> rules;
-    parser.parseRules(token, rules, CSSParser::RuleListType::TopLevelRuleList,
-                      true);
+    if (m_origin) {
+        CSSParser parser(m_origin);
+        RefPtr<CSSToken> token = parser.makeToken(ruleString);
+        parser.parseRules(token, rules,
+                          CSSParser::RuleListType::TopLevelRuleList, true);
+    } else {
+        CSSParser parser(m_executionContext);
+        RefPtr<CSSToken> token = parser.makeToken(ruleString);
+        parser.parseRules(token, rules,
+                          CSSParser::RuleListType::TopLevelRuleList, true);
+    }
 
     if (rules.size() != 1) {
         StringBuilder msg;
@@ -577,23 +583,19 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(ruleString);
         msg.appendString("'.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(origin()->executionContext(),
-                               DOMException::SYNTAX_ERR, s.data());
+        throw new DOMException(m_executionContext, DOMException::SYNTAX_ERR,
+                               s.data());
     }
 
     bool success = wrapperInsertRule(rules[0], index);
     if (!success) {
-        throw new DOMException(origin()->executionContext(),
+        throw new DOMException(m_executionContext,
                                DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to insert the rule.");
     }
 
     syncChildRuleWrappers();
-    origin()->styleResolver().setNeedsRecalcRuleSet();
-    scriptBindingInstance()
-        ->ownerWindow()
-        ->browsingContext()
-        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+    notifyStyleSheetChanged();
 
     return index;
 }
@@ -628,13 +630,13 @@ void CSSStyleSheet::deleteRule(unsigned index)
         msg.appendString(String::fromInt(length() - 1));
         msg.appendString(").");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(origin()->executionContext(),
-                               DOMException::INDEX_SIZE_ERR, s.data());
+        throw new DOMException(m_executionContext, DOMException::INDEX_SIZE_ERR,
+                               s.data());
     }
 
     bool success = wrapperDeleteRule(index);
     if (!success) {
-        throw new DOMException(origin()->executionContext(),
+        throw new DOMException(m_executionContext,
                                DOMException::INVALID_STATE_ERR,
                                "Failed to delete rule");
     }
@@ -647,11 +649,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
         m_childRuleWrappers.erase(m_childRuleWrappers.begin() + index);
     }
 
-    origin()->styleResolver().setNeedsRecalcRuleSet();
-    scriptBindingInstance()
-        ->ownerWindow()
-        ->browsingContext()
-        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+    notifyStyleSheetChanged();
 }
 
 unsigned CSSStyleSheet::length() const
@@ -683,6 +681,19 @@ void CSSStyleSheet::syncChildRuleWrappers()
     }
 }
 
+void CSSStyleSheet::notifyStyleSheetChanged()
+{
+    // For constructable stylesheets (m_origin is nullptr), skip style recalc
+    // as they are not associated with a document until adopted
+    if (m_origin) {
+        origin()->styleResolver().setNeedsRecalcRuleSet();
+        scriptBindingInstance()
+            ->ownerWindow()
+            ->browsingContext()
+            ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+    }
+}
+
 CSSRule* CSSStyleSheet::item(unsigned index)
 {
     unsigned ruleCount = length();
@@ -706,10 +717,7 @@ void CSSStyleSheet::setDisabled(bool disabled)
     }
     m_disabled = disabled;
 
-    origin()->styleResolver().setNeedsRecalcRuleSet();
-    scriptBindingInstance()
-        ->ownerWindow()
-        ->browsingContext()
-        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+    notifyStyleSheetChanged();
 }
+
 } /* namespace Starfish */

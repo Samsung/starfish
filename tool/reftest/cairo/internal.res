@@ -2,6 +2,7 @@ test/cairo/internal-test/css/all/all_repeated_use.html
 test/cairo/internal-test/css/constructable-stylesheet/constructor_test.html
 test/cairo/internal-test/css/constructable-stylesheet/constructor_options_test.html
 test/cairo/internal-test/css/constructable-stylesheet/constructor_spec_test.html
+test/cairo/internal-test/css/constructable-stylesheet/constructable-stylesheets-insertRule.html
 test/cairo/internal-test/css/css-variables/customproperty_00.html
 test/cairo/internal-test/css/css-variables/customproperty_01.html
 test/cairo/internal-test/css/css-variables/customproperty_02.html

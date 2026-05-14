@@ -763,12 +763,35 @@ CSSParser::CSSParser(Node* origin)
     : m_preserveWS(false)
     , m_preserveComments(false)
     , m_origin(origin)
+    , m_executionContext(origin->executionContext())
     , m_scanner(nullptr)
     , m_error(nullptr)
     , m_state()
     , m_parserType(MediaQuerySetParser)
     , m_querySet(nullptr)
     , m_blockLevel(0)
+{
+    STARFISH_ASSERT(origin);
+    init();
+}
+
+CSSParser::CSSParser(ExecutionContext* executionContext)
+    : m_preserveWS(false)
+    , m_preserveComments(false)
+    , m_origin(nullptr)
+    , m_executionContext(executionContext)
+    , m_scanner(nullptr)
+    , m_error(nullptr)
+    , m_state()
+    , m_parserType(MediaQuerySetParser)
+    , m_querySet(nullptr)
+    , m_blockLevel(0)
+{
+    STARFISH_ASSERT(executionContext);
+    init();
+}
+
+void CSSParser::init()
 {
     m_error = String::emptyString;
     m_failedParsing = false;
@@ -782,9 +805,16 @@ CSSParser::CSSParser(Node* origin)
     m_isPoolEnabled = true;
 }
 
+Document* CSSParser::document()
+{
+    STARFISH_ASSERT(m_executionContext);
+    return m_executionContext->document();
+}
+
 Starfish* CSSParser::starfish()
 {
-    return m_origin->starfish();
+    STARFISH_ASSERT(m_executionContext);
+    return m_executionContext->starfish();
 }
 
 RefPtr<CSSToken> CSSParser::getToken(bool aSkipWS, bool aSkipComment,
@@ -1221,24 +1251,24 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
         return (String*)value.peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t) new StringDataASCII(buf + sender->start,
-                                                    sender->len);
+                return (size_t)new StringDataASCII(buf + sender->start,
+                                                   sender->len);
             },
             &s);
     } else if (value.hasBMPContent()) {
         return (String*)value.peekBMPBuffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t) new StringDataBMP(buf + sender->start,
-                                                  sender->len);
+                return (size_t)new StringDataBMP(buf + sender->start,
+                                                 sender->len);
             },
             &s);
     } else {
         return (String*)value.peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t) new StringDataUTF32(buf + sender->start,
-                                                    sender->len);
+                return (size_t)new StringDataUTF32(buf + sender->start,
+                                                   sender->len);
             },
             &s);
     }
@@ -1836,8 +1866,7 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     bool valid = false;
     bool invalidDeclaration = false;
 
-    CSSStyleDeclaration* declarations =
-        new CSSStyleDeclaration(m_origin->document());
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
     CSSParser::ParseResult ret = parseStyleDeclarations(
         declarations, valid, invalidDeclaration, list.size() > 0, validSelector,
         isQueryingSelector);
@@ -2085,7 +2114,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
 {
     preserveState();
 
-    CSSStyleDeclaration* decl = new CSSStyleDeclaration(m_origin->document());
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
 
     RefPtr<CSSToken> token = getToken(true, false);
     bool valid = false;
@@ -2128,8 +2157,7 @@ StyleRuleFontFace* CSSParser::parseFontFaceRule()
                    decl->hasCSSValuePair(
                        CSSStyleValuePair::KeyKind::FontKerning) ||
                    decl->hasCSSValuePair(CSSStyleValuePair::KeyKind::Src)) {
-            return new StyleRuleFontFace(
-                new CSSStyleDeclaration(m_origin->document()));
+            return new StyleRuleFontFace(new CSSStyleDeclaration(document()));
         } else {
             return nullptr;
         }
@@ -2410,7 +2438,7 @@ bool CSSParser::parseSupportsDeclarationCondition()
         restoreState();
     }
 
-    CSSStyleDeclaration* decl = new CSSStyleDeclaration(m_origin->document());
+    CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
     parseDeclaration(key, decl);
 
     if (decl->cssText()->equals(String::emptyString)) {
@@ -2525,8 +2553,7 @@ CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
     bool valid = false;
     bool invalidDeclaration = false;
 
-    CSSStyleDeclaration* declarations =
-        new CSSStyleDeclaration(m_origin->document());
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
     CSSParser::ParseResult ret = parseStyleDeclarations(
         declarations, valid, invalidDeclaration, true, true, false);
 
