@@ -2982,7 +2982,7 @@ public:
     }
 
     void draw(const bool needsFlipY, const bool needsPremultiplyAlpha,
-              const GLenum type)
+              const GLenum type, const size_t bytesPerPixel)
     {
         const size_t width = m_sourceImage.width;
         const size_t height = m_sourceImage.height;
@@ -2994,12 +2994,11 @@ public:
             return;
         }
 
-        if (m_isNativeImageDataUsed && type != GL_UNSIGNED_BYTE) {
-            // NativeImageData is packed as UNSIGNED_BYTE. Type conversion might
-            // be needed, but how often this is used is unclear for now. TODO:
-            // Convert if necessary.
+        if (m_isNativeImageDataUsed && type != GL_UNSIGNED_BYTE &&
+            !Pixel::isTwoBytesPerPixel(type)) {
             STARFISH_UNSUPPORTED(
-                "type (%s). GL_UNSIGNED_BYTE is only supported for now.",
+                "type (%s). Only GL_UNSIGNED_BYTE and packed short types are "
+                "supported for NativeImageData sources.",
                 hex(type).c_str());
         }
 
@@ -3013,7 +3012,7 @@ public:
 #if defined(PORT_PIXEL_ORDER_BGRA)
         if (m_isNativeImageDataUsed) {
             // NativeImageData is formatted as BGRA.
-            if (m_sourceImage.format == GL_RGBA &&
+            if (m_sourceImage.format == GL_RGBA && type == GL_UNSIGNED_BYTE &&
                 WebGLExtensionRegistry::instance()
                     .hasEXT_texture_format_BGRA8888()) {
                 m_dataFormat = GL_BGRA_EXT;
@@ -3025,11 +3024,9 @@ public:
 #endif
 
         const size_t srcBytesPerPixel =
-            m_isNativeImageDataUsed ? 4
-                                    : (m_sourceImage.format == GL_RGB ? 3 : 4);
+            m_isNativeImageDataUsed ? 4 : bytesPerPixel;
         const size_t srcStride = m_sourceImage.stride;
-        const size_t dstBytesPerPixel =
-            (m_sourceImage.format == GL_RGB) ? 3 : 4;
+        const size_t dstBytesPerPixel = bytesPerPixel;
         const bool needsStrideConversion =
             (srcBytesPerPixel != dstBytesPerPixel);
 
@@ -3066,7 +3063,34 @@ public:
                 srcOffset = offset + column * srcBytesPerPixel;
                 destOffset = newOffset + column * dstBytesPerPixel;
 
-                if (needsPremultiplyAlpha && srcBytesPerPixel == 4) {
+                if (Pixel::isTwoBytesPerPixel(type)) {
+                    if (m_isNativeImageDataUsed) {
+                        uint8_t r = image[srcOffset + order[0]];
+                        uint8_t g = image[srcOffset + order[1]];
+                        uint8_t b = image[srcOffset + order[2]];
+                        uint8_t a = image[srcOffset + order[3]];
+                        if (needsPremultiplyAlpha) {
+                            float alpha = a / 255.f;
+                            r = multiplyAlpha(r, alpha);
+                            g = multiplyAlpha(g, alpha);
+                            b = multiplyAlpha(b, alpha);
+                        }
+                        GLushort packed;
+                        if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
+                            packed = Pixel::makePixel5551(r, g, b, a);
+                        } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
+                            packed = Pixel::makePixel4444(r, g, b, a);
+                        } else if (type == GL_UNSIGNED_SHORT_5_6_5) {
+                            packed = Pixel::makePixel565(r, g, b);
+                        } else {
+                            STARFISH_ASSERT_NOT_REACHED();
+                        }
+                        memcpy(&m_data[destOffset], &packed, sizeof(GLushort));
+                    } else {
+                        m_data[destOffset + 0] = image[srcOffset + 0];
+                        m_data[destOffset + 1] = image[srcOffset + 1];
+                    }
+                } else if (needsPremultiplyAlpha && srcBytesPerPixel == 4) {
                     float alpha = image[srcOffset + order[3]] / 255.f;
                     m_data[destOffset + 0] =
                         multiplyAlpha(image[srcOffset + order[0]], alpha);
@@ -3182,7 +3206,8 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
         // behavior of this function.
         TexImageHelper image(width, height, width * bytesPerPixel, format,
                              data);
-        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type);
+        image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type,
+                   bytesPerPixel);
 
         updateImage(&image);
     } else {
@@ -3208,10 +3233,10 @@ void WebGLRenderingContext::handleTexImageWithArrayBufferView(
                 if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
                     std::vector<GLushort> blackData;
                     blackData.resize(byteLengthOfPixels,
-                                     Pixel::makePixel5551(0, 0, 0, 0x1));
+                                     Pixel::makePixel5551(0, 0, 0, 0xFF));
                 } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
                     blackData.resize(byteLengthOfPixels,
-                                     Pixel::makePixel4444(0, 0, 0, 0xF));
+                                     Pixel::makePixel4444(0, 0, 0, 0xFF));
                 } else {
                     // format == GL_RGB
                     STARFISH_ASSERT(type == GL_UNSIGNED_SHORT_5_6_5);
@@ -3315,7 +3340,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
     // Handle WebGL-specific pixel storage parameters that affect the behavior
     // of this function.
     TexImageHelper image(imageData, format);
-    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type);
+    image.draw(m_unpackFlipY, m_unpackPremultiplyAlpha, type, bytesPerPixel);
 
     TRACE(WEBGL_V, "source:", KV(width), KV(height), KV(stride),
           KV(byteLengthOfPixels), KV(imageData));

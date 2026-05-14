@@ -227,17 +227,19 @@ bool Pixel::isTwoBytesPerPixel(GLenum type)
 GLushort Pixel::makePixel5551(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
     return (((r >> 3) & 0x1F) << 11) | (((g >> 3) & 0x1F) << 6) |
-           (((b >> 3) & 0x1F) << 1) | (a & 0x01);
+           (((b >> 3) & 0x1F) << 1) | ((a >> 7) & 0x01);
 }
 
 GLushort Pixel::makePixel4444(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-    r = (r > 15) ? (r >> 4) : r;
-    g = (g > 15) ? (g >> 4) : g;
-    b = (b > 15) ? (b >> 4) : b;
-    a = (a > 15) ? (a >> 4) : a;
+    return (((r >> 4) & 0xF) << 12) | (((g >> 4) & 0xF) << 8) |
+           (((b >> 4) & 0xF) << 4) | ((a >> 4) & 0xF);
+}
 
-    return ((r & 0xF) << 12) | ((g & 0xF) << 8) | ((b & 0xF) << 4) | (a & 0xF);
+GLushort Pixel::makePixel565(uint8_t r, uint8_t g, uint8_t b)
+{
+    return (((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) |
+           ((b >> 3) & 0x1F);
 }
 
 std::string glValueString(uint32_t value)
