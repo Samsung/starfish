@@ -440,7 +440,10 @@ void CSSStyleSheet::willAddToDocument()
 
 String* CSSStyleSheet::href() const
 {
-    if (m_origin->isHTMLLinkElement()) {
+    // For constructable stylesheets, m_origin is nullptr
+    if (!m_origin) {
+        return String::emptyString;
+    } else if (m_origin->isHTMLLinkElement()) {
         STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
         return m_origin->asHTMLLinkElement()->href();
     } else if (m_ownerRule) {
