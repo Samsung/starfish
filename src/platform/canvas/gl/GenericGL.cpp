@@ -42,6 +42,14 @@ typedef EGLImageKHR (*PFNEGLCREATEIMAGEKHRPROC)(EGLDisplay dpy, EGLContext ctx,
                                                 const EGLint *attribList);
 typedef EGLBoolean (*PFNEGLDESTROYIMAGEKHRPROC)(EGLDisplay dpy,
                                                 EGLImageKHR image);
+
+// gles3.0 only
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+typedef void(GLAPIENTRY *PFNGLINVALIDATEFRAMEBUFFERPROC)(
+    GLenum target, GLsizei numAttachments, const GLenum *attachments);
+
 namespace Starfish {
 
 class GenericGL : public GL {
@@ -1069,6 +1077,12 @@ public:
         glGetBufferParameteri64v(target, pname, params);
     }
 
+    void invalidateFramebuffer(GLenum target, GLsizei numAttachments,
+                               const GLenum *attachments) override
+    {
+        glInvalidateFramebuffer(target, numAttachments, attachments);
+    }
+
     GenericGL(Renderer *renderer)
     {
         m_eglGetCurrentDisplayProc =
@@ -1084,6 +1098,9 @@ public:
             reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
                 renderer->getProcAddress("glEGLImageTargetTexture2DOES"));
 #endif
+        m_glInvalidateFramebuffer =
+            reinterpret_cast<PFNGLINVALIDATEFRAMEBUFFERPROC>(
+                renderer->getProcAddress("glInvalidateFramebuffer"));
     }
 
     ~GenericGL()
@@ -1094,6 +1111,7 @@ public:
 #if !defined(STARFISH_WINDOWS)
         m_glEGLImageTargetTexture2DOESProc = nullptr;
 #endif
+        m_glInvalidateFramebuffer = nullptr;
     }
 
 private:
@@ -1104,6 +1122,7 @@ private:
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOESProc =
         nullptr;
 #endif
+    PFNGLINVALIDATEFRAMEBUFFERPROC m_glInvalidateFramebuffer = nullptr;
 };
 
 #if !defined(PORT_WEBVIEW_BRIDGE_EFL)

@@ -267,7 +267,7 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
 namespace Starfish {
 
 static bool g_needsCheckCompatibility = true;
-static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
+static bool g_isOpenGLES3 = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
 static bool g_isSupportBGRATexture = false;
 static bool g_isSupportTextureSwizzle = false;
@@ -280,6 +280,7 @@ static bool g_isSupportStandardDerivatives = false;
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
+
 static void checkError(GL* gl)
 {
 #if !defined(NDEBUG)
@@ -500,20 +501,40 @@ public:
 
     GLuint m_texVertexShader;
     GLuint m_texFragmentShader;
-    GLuint m_texShaderProgram;
+    GLuint m_texShaderProgram; // Without mask
     GLint m_texShaderProgramTexPos;
     GLint m_texShaderProgramTexIdx;
     GLint m_texShaderProgramPosition;
     GLint m_texShaderProgramTexture;
     GLint m_texShaderProgramAlpha;
 
+    GLuint m_texFragmentShaderWithMask;
+    GLuint m_texShaderProgramWithMask; // With mask
+    GLint m_texShaderProgramWithMaskTexPos;
+    GLint m_texShaderProgramWithMaskTexIdx;
+    GLint m_texShaderProgramWithMaskPosition;
+    GLint m_texShaderProgramWithMaskTexture;
+    GLint m_texShaderProgramWithMaskAlpha;
+    GLint m_texShaderProgramWithMaskMaskTexture;
+    GLint m_texShaderProgramWithMaskMaskUV;
+
     GLuint m_texFragmentShaderEGLImageExternal;
-    GLuint m_texShaderProgramEGLImageExternal;
+    GLuint m_texShaderProgramEGLImageExternal; // Without mask
     GLint m_texShaderProgramEGLImageExternalTexPos;
     GLint m_texShaderProgramEGLImageExternalTexIdx;
     GLint m_texShaderProgramEGLImageExternalPosition;
     GLint m_texShaderProgramEGLImageExternalTexture;
     GLint m_texShaderProgramEGLImageExternalAlpha;
+
+    GLuint m_texFragmentShaderEGLImageExternalWithMask;
+    GLuint m_texShaderProgramEGLImageExternalWithMask; // With mask
+    GLint m_texShaderProgramEGLImageExternalWithMaskTexPos;
+    GLint m_texShaderProgramEGLImageExternalWithMaskTexIdx;
+    GLint m_texShaderProgramEGLImageExternalWithMaskPosition;
+    GLint m_texShaderProgramEGLImageExternalWithMaskTexture;
+    GLint m_texShaderProgramEGLImageExternalWithMaskAlpha;
+    GLint m_texShaderProgramEGLImageExternalWithMaskMaskTexture;
+    GLint m_texShaderProgramEGLImageExternalWithMaskMaskUV;
 
     GLuint m_texFragmentBlurShaderW;
     GLuint m_texFragmentBlurShaderEGLImageExternalW;
@@ -538,7 +559,8 @@ public:
     GLint m_texBlurShaderProgramEGLImageExternalWTextureHeight;
     GLint m_texBlurShaderProgramEGLImageExternalWAlphaMask;
 
-    GLuint m_texBlurShaderProgramH;
+    GLuint m_texFragmentBlurShaderHWithMask;
+    GLuint m_texBlurShaderProgramH; // Without mask
     GLint m_texBlurShaderProgramHTexPos;
     GLint m_texBlurShaderProgramHTexIdx;
     GLint m_texBlurShaderProgramHPosition;
@@ -547,14 +569,25 @@ public:
     GLint m_texBlurShaderProgramHTextureWidth;
     GLint m_texBlurShaderProgramHTextureHeight;
     GLint m_texBlurShaderProgramHAlpha;
-    GLint m_texBlurShaderProgramHAlphaMask;
+
+    GLuint m_texBlurShaderProgramHWithMask; // With mask
+    GLint m_texBlurShaderProgramHWithMaskTexPos;
+    GLint m_texBlurShaderProgramHWithMaskTexIdx;
+    GLint m_texBlurShaderProgramHWithMaskPosition;
+    GLint m_texBlurShaderProgramHWithMaskTexture;
+    GLint m_texBlurShaderProgramHWithMaskBlurRadius;
+    GLint m_texBlurShaderProgramHWithMaskTextureWidth;
+    GLint m_texBlurShaderProgramHWithMaskTextureHeight;
+    GLint m_texBlurShaderProgramHWithMaskAlpha;
+    GLint m_texBlurShaderProgramHWithMaskMaskTexture;
+    GLint m_texBlurShaderProgramHWithMaskMaskUV;
 
     GLuint m_texTexPosBuffer;
     GLuint m_texIdxBuffer;
 
     GLuint m_lastProgram;
 
-    std::vector<std::tuple<size_t, size_t, GLuint>> m_cachedTextures;
+    std::vector<std::tuple<size_t, size_t, GLuint, GLenum>> m_cachedTextures;
 
     struct ClipPathCacheKey {
         Unit::Rect clipRect;
@@ -649,12 +682,35 @@ public:
         m_rectShaderProgramPosition = 0;
         m_rectShaderProgramColor = 0;
         m_rectShaderProgramTexIdx = 0;
+
+        // texShaderProgram (without mask)
         m_texShaderProgramPosition = 0;
         m_texShaderProgramTexture = 0;
         m_texShaderProgramAlpha = 0;
+
+        // texShaderProgramWithMask
+        m_texShaderProgramWithMask = 0;
+        m_texShaderProgramWithMaskPosition = 0;
+        m_texShaderProgramWithMaskTexture = 0;
+        m_texShaderProgramWithMaskAlpha = 0;
+        m_texShaderProgramWithMaskMaskTexture = 0;
+        m_texShaderProgramWithMaskMaskUV = 0;
+        m_texFragmentShaderWithMask = 0;
+
+        // texShaderProgramEGLImageExternal (without mask)
         m_texShaderProgramEGLImageExternalPosition = 0;
         m_texShaderProgramEGLImageExternalTexture = 0;
         m_texShaderProgramEGLImageExternalAlpha = 0;
+
+        // texShaderProgramEGLImageExternalWithMask
+        m_texShaderProgramEGLImageExternalWithMask = 0;
+        m_texShaderProgramEGLImageExternalWithMaskPosition = 0;
+        m_texShaderProgramEGLImageExternalWithMaskTexture = 0;
+        m_texShaderProgramEGLImageExternalWithMaskAlpha = 0;
+        m_texShaderProgramEGLImageExternalWithMaskMaskTexture = 0;
+        m_texShaderProgramEGLImageExternalWithMaskMaskUV = 0;
+        m_texFragmentShaderEGLImageExternalWithMask = 0;
+
         m_texVertexShader = m_texFragmentShader = 0;
         m_texShaderProgramEGLImageExternal =
             m_texFragmentShaderEGLImageExternal = 0;
@@ -683,7 +739,20 @@ public:
         m_texBlurShaderProgramHTextureWidth = 0;
         m_texBlurShaderProgramHTextureHeight = 0;
         m_texBlurShaderProgramHAlpha = 0;
-        m_texBlurShaderProgramHAlphaMask = 0;
+
+        // texBlurShaderProgramHWithMask
+        m_texFragmentBlurShaderHWithMask = 0;
+        m_texBlurShaderProgramHWithMask = 0;
+        m_texBlurShaderProgramHWithMaskPosition = 0;
+        m_texBlurShaderProgramHWithMaskTexture = 0;
+        m_texBlurShaderProgramHWithMaskBlurRadius = 0;
+        m_texBlurShaderProgramHWithMaskTextureWidth = 0;
+        m_texBlurShaderProgramHWithMaskTextureHeight = 0;
+        m_texBlurShaderProgramHWithMaskAlpha = 0;
+        m_texBlurShaderProgramHWithMaskMaskTexture = 0;
+        m_texBlurShaderProgramHWithMaskMaskUV = 0;
+        m_texBlurShaderProgramHWithMaskTexPos = 0;
+        m_texBlurShaderProgramHWithMaskTexIdx = 0;
 
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
@@ -726,7 +795,7 @@ public:
         for (size_t i = 0; i < m_cachedTextures.size(); i++) {
             gl()->deleteTextures(1, &std::get<2>(m_cachedTextures[i]));
         }
-        std::vector<std::tuple<size_t, size_t, GLuint>>().swap(
+        std::vector<std::tuple<size_t, size_t, GLuint, GLenum>>().swap(
             m_cachedTextures);
     }
 
@@ -752,6 +821,14 @@ public:
             gl()->detachShader(m_texBlurShaderProgramH,
                                m_texFragmentBlurShaderH);
             gl()->deleteProgram(m_texBlurShaderProgramH);
+        }
+
+        if (m_texBlurShaderProgramHWithMask) {
+            gl()->detachShader(m_texBlurShaderProgramHWithMask,
+                               m_texVertexShader);
+            gl()->detachShader(m_texBlurShaderProgramHWithMask,
+                               m_texFragmentBlurShaderHWithMask);
+            gl()->deleteProgram(m_texBlurShaderProgramHWithMask);
         }
 
         if (m_texFragmentBlurShaderW) {
@@ -799,6 +876,13 @@ public:
             gl()->deleteProgram(m_texShaderProgram);
         }
 
+        if (m_texShaderProgramWithMask) {
+            gl()->detachShader(m_texShaderProgramWithMask, m_texVertexShader);
+            gl()->detachShader(m_texShaderProgramWithMask,
+                               m_texFragmentShaderWithMask);
+            gl()->deleteProgram(m_texShaderProgramWithMask);
+        }
+
         if (m_texVertexShader) {
             gl()->deleteShader(m_texVertexShader);
         }
@@ -806,22 +890,42 @@ public:
         if (m_texFragmentShader) {
             gl()->deleteShader(m_texFragmentShader);
         }
+
+        if (m_texFragmentShaderWithMask) {
+            gl()->deleteShader(m_texFragmentShaderWithMask);
+        }
+
+        if (m_texShaderProgramEGLImageExternalWithMask) {
+            gl()->detachShader(m_texShaderProgramEGLImageExternalWithMask,
+                               m_texVertexShader);
+            gl()->detachShader(m_texShaderProgramEGLImageExternalWithMask,
+                               m_texFragmentShaderEGLImageExternalWithMask);
+            gl()->deleteProgram(m_texShaderProgramEGLImageExternalWithMask);
+        }
+
+        if (m_texFragmentShaderEGLImageExternalWithMask) {
+            gl()->deleteShader(m_texFragmentShaderEGLImageExternalWithMask);
+        }
+
         clearGLProgramVariables();
     }
 
     void putGenericTextureToCache(GLuint textureID, size_t textureDataWidth,
-                                  size_t textureDataHeight)
+                                  size_t textureDataHeight,
+                                  GLenum textureFormat = GL_RGBA)
     {
-        m_cachedTextures.push_back(
-            std::make_tuple(textureDataWidth, textureDataHeight, textureID));
+        m_cachedTextures.push_back(std::make_tuple(
+            textureDataWidth, textureDataHeight, textureID, textureFormat));
     }
 
     GLuint takeGenericTextureFromCache(size_t textureDataWidth,
-                                       size_t textureDataHeight)
+                                       size_t textureDataHeight,
+                                       GLenum textureFormat = GL_RGBA)
     {
         for (size_t i = 0; i < m_cachedTextures.size(); i++) {
             if (std::get<0>(m_cachedTextures[i]) == textureDataWidth &&
-                std::get<1>(m_cachedTextures[i]) == textureDataHeight) {
+                std::get<1>(m_cachedTextures[i]) == textureDataHeight &&
+                std::get<3>(m_cachedTextures[i]) == textureFormat) {
                 GLuint textureID = std::get<2>(m_cachedTextures[i]);
                 m_cachedTextures.erase(m_cachedTextures.begin() + i);
                 return textureID;
@@ -1184,9 +1288,11 @@ public:
         return m_texVertexShader;
     }
 
+    // EGLImageExternal shader program without mask support (simpler, faster)
     GLuint texShaderProgramEGLImageExternal()
     {
         if (!m_texShaderProgramEGLImageExternal) {
+            // Simple version without mask support
             const GLchar* texFragmentSourceEGLImageExternal =
                 "#extension GL_OES_EGL_image_external : require\n"
                 "#ifdef GL_ES\n"
@@ -1197,8 +1303,7 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
-                "  gl_FragColor = texColor * uAlpha;\n"
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
             if (g_needsRGBShuffle) {
                 texFragmentSourceEGLImageExternal =
@@ -1211,8 +1316,7 @@ public:
                     "uniform float uAlpha;\n"
                     "void main(void)\n"
                     "{\n"
-                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
-                    "  texData = texData * uAlpha;\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
                     "  gl_FragColor.g = texData[1];\n"
                     "  gl_FragColor.b = texData[0];\n"
@@ -1279,12 +1383,138 @@ public:
         return m_texShaderProgramEGLImageExternal;
     }
 
+    // EGLImageExternal shader program with mask support
+    GLuint texShaderProgramEGLImageExternalWithMask()
+    {
+        if (!m_texShaderProgramEGLImageExternalWithMask) {
+            const GLchar* texFragmentSourceEGLImageExternalWithMask =
+                "#extension GL_OES_EGL_image_external : require\n"
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform samplerExternalOES uTexture;\n"
+                "uniform sampler2D uMaskTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "uniform float uAlpha;\n"
+                "uniform vec4 uMaskUV;\n"
+                "void main(void)\n"
+                "{\n"
+                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
+                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
+                "1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n"
+                "  float maskAlpha = texture2D(uMaskTexture, maskCoord).a;\n"
+                "  gl_FragColor = texColor * uAlpha * maskAlpha;\n"
+                "}";
+            if (g_needsRGBShuffle) {
+                texFragmentSourceEGLImageExternalWithMask =
+                    "#extension GL_OES_EGL_image_external : require\n"
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform samplerExternalOES uTexture;\n"
+                    "uniform sampler2D uMaskTexture;\n"
+                    "varying vec2 vTexPos;\n"
+                    "uniform float uAlpha;\n"
+                    "uniform vec4 uMaskUV;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+                    "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + "
+                    "uMaskUV.x, 1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n"
+                    "  float maskAlpha = texture2D(uMaskTexture, "
+                    "maskCoord).a;\n"
+                    "  texData = texData * uAlpha * maskAlpha;\n"
+                    "  gl_FragColor.r = texData[2];\n"
+                    "  gl_FragColor.g = texData[1];\n"
+                    "  gl_FragColor.b = texData[0];\n"
+                    "  gl_FragColor.a = texData[3];\n"
+                    "}";
+            }
+
+            m_texFragmentShaderEGLImageExternalWithMask =
+                loadShader(gl(), GL_FRAGMENT_SHADER,
+                           texFragmentSourceEGLImageExternalWithMask);
+            checkError(gl());
+
+            m_texShaderProgramEGLImageExternalWithMask = gl()->createProgram();
+            checkError(gl());
+
+            gl()->attachShader(m_texShaderProgramEGLImageExternalWithMask,
+                               texVertexShader());
+            checkError(gl());
+            gl()->attachShader(m_texShaderProgramEGLImageExternalWithMask,
+                               m_texFragmentShaderEGLImageExternalWithMask);
+            checkError(gl());
+
+            gl()->linkProgram(m_texShaderProgramEGLImageExternalWithMask);
+            checkError(gl());
+
+            m_lastProgram = m_texShaderProgramEGLImageExternalWithMask;
+            gl()->useProgram(m_texShaderProgramEGLImageExternalWithMask);
+            checkError(gl());
+
+            m_texShaderProgramEGLImageExternalWithMaskPosition =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uPosition");
+            m_texShaderProgramEGLImageExternalWithMaskTexPos =
+                gl()->getAttribLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "aTexPos");
+            m_texShaderProgramEGLImageExternalWithMaskTexIdx =
+                gl()->getAttribLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "aTexIdx");
+            m_texShaderProgramEGLImageExternalWithMaskTexture =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uTexture");
+            m_texShaderProgramEGLImageExternalWithMaskAlpha =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uAlpha");
+            m_texShaderProgramEGLImageExternalWithMaskMaskTexture =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uMaskTexture");
+            m_texShaderProgramEGLImageExternalWithMaskMaskUV =
+                gl()->getUniformLocation(
+                    m_texShaderProgramEGLImageExternalWithMask, "uMaskUV");
+
+            gl()->uniform1i(m_texShaderProgramEGLImageExternalWithMaskTexture,
+                            0);
+            gl()->uniform1i(
+                m_texShaderProgramEGLImageExternalWithMaskMaskTexture, 1);
+            gl()->uniform1f(m_texShaderProgramEGLImageExternalWithMaskAlpha, 1);
+            gl()->uniform4f(m_texShaderProgramEGLImageExternalWithMaskMaskUV, 0,
+                            0, 1, 1);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(
+                m_texShaderProgramEGLImageExternalWithMaskTexPos, 2, GL_FLOAT,
+                false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+
+            bindTexPos(m_texShaderProgramEGLImageExternalWithMaskTexPos);
+            bindTexIdx(m_texShaderProgramEGLImageExternalWithMaskTexIdx, false);
+        } else {
+            if (m_lastProgram != m_texShaderProgramEGLImageExternalWithMask) {
+                m_lastProgram = m_texShaderProgramEGLImageExternalWithMask;
+                gl()->useProgram(m_texShaderProgramEGLImageExternalWithMask);
+
+                bindTexPos(m_texShaderProgramEGLImageExternalWithMaskTexPos);
+                bindTexIdx(m_texShaderProgramEGLImageExternalWithMaskTexIdx,
+                           true);
+            }
+        }
+
+        return m_texShaderProgramEGLImageExternalWithMask;
+    }
+
+    // Shader program without mask support (simpler, faster)
     GLuint texShaderProgram()
     {
         if (!m_texShaderProgram) {
             // We only Support OpenGL ES 2.0+ context
             // but some develoment environment only support desktop context
             // so we add `#ifdef GL_ES` for debug purpose
+            // This is the simple version without mask support
             const GLchar* texFragmentSource =
                 "#ifdef GL_ES\n"
                 "  precision mediump float;\n"
@@ -1294,8 +1524,7 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
-                "  gl_FragColor = texColor * uAlpha;\n"
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
             if (g_needsRGBShuffle) {
                 texFragmentSource =
@@ -1307,8 +1536,7 @@ public:
                     "uniform float uAlpha;\n"
                     "void main(void)\n"
                     "{\n"
-                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
-                    "  texData = texData * uAlpha;\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
                     "  gl_FragColor.r = texData[2];\n"
                     "  gl_FragColor.g = texData[1];\n"
                     "  gl_FragColor.b = texData[0];\n"
@@ -1370,6 +1598,113 @@ public:
         return m_texShaderProgram;
     }
 
+    // Shader program with mask support
+    GLuint texShaderProgramWithMask()
+    {
+        if (!m_texShaderProgramWithMask) {
+            const GLchar* texFragmentSourceWithMask =
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform sampler2D uTexture;\n"
+                "uniform sampler2D uMaskTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "uniform float uAlpha;\n"
+                "uniform vec4 uMaskUV;\n"
+                "void main(void)\n"
+                "{\n"
+                "  vec4 texColor = texture2D(uTexture, vTexPos);\n"
+                "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
+                "1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n"
+                "  float maskAlpha = texture2D(uMaskTexture, maskCoord).a;\n"
+                "  gl_FragColor = texColor * uAlpha * maskAlpha;\n"
+                "}";
+            if (g_needsRGBShuffle) {
+                texFragmentSourceWithMask =
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform sampler2D uTexture;\n"
+                    "uniform sampler2D uMaskTexture;\n"
+                    "varying vec2 vTexPos;\n"
+                    "uniform float uAlpha;\n"
+                    "uniform vec4 uMaskUV;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+                    "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + "
+                    "uMaskUV.x, 1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n"
+                    "  float maskAlpha = texture2D(uMaskTexture, "
+                    "maskCoord).a;\n"
+                    "  texData = texData * uAlpha * maskAlpha;\n"
+                    "  gl_FragColor.r = texData[2];\n"
+                    "  gl_FragColor.g = texData[1];\n"
+                    "  gl_FragColor.b = texData[0];\n"
+                    "  gl_FragColor.a = texData[3];\n"
+                    "}";
+            }
+
+            m_texFragmentShaderWithMask =
+                loadShader(gl(), GL_FRAGMENT_SHADER, texFragmentSourceWithMask);
+            checkError(gl());
+
+            m_texShaderProgramWithMask = gl()->createProgram();
+            checkError(gl());
+
+            gl()->attachShader(m_texShaderProgramWithMask, texVertexShader());
+            checkError(gl());
+            gl()->attachShader(m_texShaderProgramWithMask,
+                               m_texFragmentShaderWithMask);
+            checkError(gl());
+
+            gl()->linkProgram(m_texShaderProgramWithMask);
+            checkError(gl());
+
+            m_lastProgram = m_texShaderProgramWithMask;
+            gl()->useProgram(m_texShaderProgramWithMask);
+            checkError(gl());
+
+            m_texShaderProgramWithMaskPosition = gl()->getUniformLocation(
+                m_texShaderProgramWithMask, "uPosition");
+            m_texShaderProgramWithMaskTexPos =
+                gl()->getAttribLocation(m_texShaderProgramWithMask, "aTexPos");
+            m_texShaderProgramWithMaskTexIdx =
+                gl()->getAttribLocation(m_texShaderProgramWithMask, "aTexIdx");
+            m_texShaderProgramWithMaskTexture = gl()->getUniformLocation(
+                m_texShaderProgramWithMask, "uTexture");
+            m_texShaderProgramWithMaskAlpha =
+                gl()->getUniformLocation(m_texShaderProgramWithMask, "uAlpha");
+            m_texShaderProgramWithMaskMaskTexture = gl()->getUniformLocation(
+                m_texShaderProgramWithMask, "uMaskTexture");
+            m_texShaderProgramWithMaskMaskUV =
+                gl()->getUniformLocation(m_texShaderProgramWithMask, "uMaskUV");
+
+            gl()->uniform1i(m_texShaderProgramWithMaskTexture, 0);
+            gl()->uniform1i(m_texShaderProgramWithMaskMaskTexture, 1);
+            gl()->uniform1f(m_texShaderProgramWithMaskAlpha, 1);
+            gl()->uniform4f(m_texShaderProgramWithMaskMaskUV, 0, 0, 1, 1);
+
+            gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                             GL_STREAM_DRAW);
+            gl()->vertexAttribPointer(m_texShaderProgramWithMaskTexPos, 2,
+                                      GL_FLOAT, false, 0, 0);
+            gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+            bindTexPos(m_texShaderProgramWithMaskTexPos);
+            bindTexIdx(m_texShaderProgramWithMaskTexIdx, false);
+        } else {
+            if (m_lastProgram != m_texShaderProgramWithMask) {
+                m_lastProgram = m_texShaderProgramWithMask;
+                gl()->useProgram(m_texShaderProgramWithMask);
+
+                bindTexPos(m_texShaderProgramWithMaskTexPos);
+                bindTexIdx(m_texShaderProgramWithMaskTexIdx, true);
+            }
+        }
+
+        return m_texShaderProgramWithMask;
+    }
+
 // I take blur shader source from WebKit
 // https://github.com/WebKit/webkit/blob/master/Source/WebCore/platform/graphics/texmap/TextureMapperShaderProgram.cpp(6f9b511a115311b13c06eb58038ddc2c78da5531)
 #define GAUSSIAN_KERNEL_HALF_WIDTH 11
@@ -1401,7 +1736,7 @@ public:
     }
 
     static std::string generateBlurEffectFragmentShader(
-        bool isEGLImage, bool addColorAlign = false)
+        bool isEGLImage, bool addColorAlign = false, bool withMask = false)
     {
         // Don't support when needsRGBShuffle is true.
         STARFISH_ASSERT(!g_needsRGBShuffle);
@@ -1420,12 +1755,15 @@ public:
         } else {
             ss << "uniform sampler2D uTexture;\n";
         }
-        ss << "uniform sampler2D uAlphaMask;\n";
 
         ss << "uniform float uTextureWidth;\n";
         ss << "uniform float uTextureHeight;\n";
         if (addColorAlign) {
             ss << "uniform float uAlpha;\n";
+        }
+        if (withMask) {
+            ss << "uniform sampler2D uMaskTexture;\n";
+            ss << "uniform vec4 uMaskUV;\n";
         }
         ss << "uniform vec2 uBlurRadius;\n";
         ss << "varying vec2 vTexPos;\n";
@@ -1452,11 +1790,26 @@ public:
                << gaussianKernel[i] << ";\n";
         }
 
-        if (addColorAlign) {
-            ss << "  float maskAlpha = texture2D(uAlphaMask, vTexPos).a;\n";
-            ss << "  gl_FragColor = total * uAlpha * maskAlpha;\n";
+        if (withMask) {
+            ss << "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x, "
+                  "1.0 - (vTexPos.y * uMaskUV.w + uMaskUV.y));\n";
+            ss << "  float maskAlpha = 0.0;\n";
+            ss << "  if (maskCoord.x >= 0.0 && maskCoord.x <= 1.0 && "
+                  "maskCoord.y "
+                  ">= 0.0 && maskCoord.y <= 1.0) {\n";
+            ss << "    maskAlpha = texture2D(uMaskTexture, maskCoord).a;\n";
+            ss << "  }\n";
+            if (addColorAlign) {
+                ss << "  gl_FragColor = total * uAlpha * maskAlpha;\n";
+            } else {
+                ss << "  gl_FragColor = total * maskAlpha;\n";
+            }
         } else {
-            ss << "  gl_FragColor = total;\n";
+            if (addColorAlign) {
+                ss << "  gl_FragColor = total * uAlpha;\n";
+            } else {
+                ss << "  gl_FragColor = total;\n";
+            }
         }
 
         ss << "}\n";
@@ -1649,11 +2002,8 @@ public:
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uTextureHeight");
         m_texBlurShaderProgramHAlpha =
             gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlpha");
-        m_texBlurShaderProgramHAlphaMask =
-            gl()->getUniformLocation(m_texBlurShaderProgramH, "uAlphaMask");
 
         gl()->uniform1i(m_texBlurShaderProgramHTexture, 0);
-        gl()->uniform1i(m_texBlurShaderProgramHAlphaMask, 1);
         gl()->uniform1f(m_texBlurShaderProgramHAlpha, 1);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
@@ -1665,6 +2015,77 @@ public:
         bindTexPos(m_texBlurShaderProgramHTexPos);
         bindTexIdx(m_texBlurShaderProgramHTexIdx, false);
         return m_texBlurShaderProgramH;
+    }
+
+    GLuint texFragmentBlurShaderHWithMask()
+    {
+        if (m_texFragmentBlurShaderHWithMask) {
+            return m_texFragmentBlurShaderHWithMask;
+        }
+        m_texFragmentBlurShaderHWithMask = loadShader(
+            gl(), GL_FRAGMENT_SHADER,
+            generateBlurEffectFragmentShader(false, true, true).data());
+        checkError(gl());
+        return m_texFragmentBlurShaderHWithMask;
+    }
+
+    GLuint texBlurShaderProgramHWithMask()
+    {
+        if (m_texBlurShaderProgramHWithMask) {
+            if (m_lastProgram != m_texBlurShaderProgramHWithMask) {
+                m_lastProgram = m_texBlurShaderProgramHWithMask;
+                gl()->useProgram(m_texBlurShaderProgramHWithMask);
+                bindTexPos(m_texBlurShaderProgramHWithMaskTexPos);
+                bindTexIdx(m_texBlurShaderProgramHWithMaskTexIdx, true);
+            }
+            return m_texBlurShaderProgramHWithMask;
+        }
+        m_texBlurShaderProgramHWithMask = gl()->createProgram();
+
+        gl()->attachShader(m_texBlurShaderProgramHWithMask, texVertexShader());
+        gl()->attachShader(m_texBlurShaderProgramHWithMask,
+                           texFragmentBlurShaderHWithMask());
+        gl()->linkProgram(m_texBlurShaderProgramHWithMask);
+        checkError(gl());
+
+        m_lastProgram = m_texBlurShaderProgramHWithMask;
+        gl()->useProgram(m_texBlurShaderProgramHWithMask);
+
+        m_texBlurShaderProgramHWithMaskPosition = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uPosition");
+        m_texBlurShaderProgramHWithMaskTexPos =
+            gl()->getAttribLocation(m_texBlurShaderProgramHWithMask, "aTexPos");
+        m_texBlurShaderProgramHWithMaskTexIdx =
+            gl()->getAttribLocation(m_texBlurShaderProgramHWithMask, "aTexIdx");
+        m_texBlurShaderProgramHWithMaskTexture = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uTexture");
+        m_texBlurShaderProgramHWithMaskBlurRadius = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uBlurRadius");
+        m_texBlurShaderProgramHWithMaskTextureWidth = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uTextureWidth");
+        m_texBlurShaderProgramHWithMaskTextureHeight = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uTextureHeight");
+        m_texBlurShaderProgramHWithMaskAlpha =
+            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask, "uAlpha");
+        m_texBlurShaderProgramHWithMaskMaskTexture = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uMaskTexture");
+        m_texBlurShaderProgramHWithMaskMaskUV = gl()->getUniformLocation(
+            m_texBlurShaderProgramHWithMask, "uMaskUV");
+
+        gl()->uniform1i(m_texBlurShaderProgramHWithMaskTexture, 0);
+        gl()->uniform1i(m_texBlurShaderProgramHWithMaskMaskTexture, 1);
+        gl()->uniform1f(m_texBlurShaderProgramHWithMaskAlpha, 1);
+        gl()->uniform4f(m_texBlurShaderProgramHWithMaskMaskUV, 0, 0, 1, 1);
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                         GL_STREAM_DRAW);
+        gl()->vertexAttribPointer(m_texBlurShaderProgramHWithMaskTexPos, 2,
+                                  GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        bindTexPos(m_texBlurShaderProgramHWithMaskTexPos);
+        bindTexIdx(m_texBlurShaderProgramHWithMaskTexIdx, false);
+        return m_texBlurShaderProgramHWithMask;
     }
 };
 
@@ -1747,7 +2168,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
 
         if (major >= 3) {
-            g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
+            g_isOpenGLES3 = true;
         }
 
         const char* ex = (const char*)gl->getString(GL_EXTENSIONS);
@@ -1772,7 +2193,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 #endif
 
 #if defined(STARFISH_TIZEN)
-        if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+        if (isOpenGLES3) {
             g_shouldUseEGLImageOnPlainSurface = false;
         }
 #endif
@@ -1950,7 +2371,8 @@ public:
                         if (ctx) {
                             ctx->putGenericTextureToCache(
                                 id, m_textureFragments[i].textureWidth,
-                                m_textureFragments[i].textureHeight);
+                                m_textureFragments[i].textureHeight,
+                                textureFormat());
                         } else {
                             gl()->deleteTextures(1, &id);
                         }
@@ -2320,7 +2742,7 @@ public:
                 AHardwareBuffer_lock(m_aHardwareBuffer,
                                      AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
                                          AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
-                                     -1, NULL, (void**)&m_buffer);
+                                     1, NULL, (void**)&m_buffer);
 #endif
             }
         } else {
@@ -2513,7 +2935,7 @@ public:
                                               fragment.textureID);
                             checkError(gl());
 
-                            if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+                            if (g_isOpenGLES3) {
                                 gl()->pixelStorei(GL_UNPACK_ROW_LENGTH,
                                                   bufferWidth());
                                 gl()->pixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
@@ -3490,9 +3912,11 @@ public:
     void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
                              GLuint textureID, GLenum textureKind,
                              GLenum textureBindNumber, size_t textureWidth,
-                             size_t textureHeight)
+                             size_t textureHeight, GLuint maskTextureID,
+                             float maskUV[4])
     {
         auto& lastState = m_state.back();
+        bool enableMask = maskTextureID != 0;
 
         // Use FBO in order to 2-pass blur
         pushFBOContext(textureWidth, textureHeight, false,
@@ -3581,7 +4005,7 @@ public:
             gl()->disableVertexAttribArray(*texIdx);
         }
 
-        GLuint fboTex = popFBOContext();
+        auto fboState = popFBOContext();
         checkError(gl());
 
         if (isScissorEnabled) {
@@ -3590,97 +4014,166 @@ public:
 
         // blur H
         {
-            m_compositorContext->texBlurShaderProgramH();
+            // Select appropriate shader program based on mask requirement
+            if (enableMask) {
+                m_compositorContext->texBlurShaderProgramHWithMask();
+            } else {
+                m_compositorContext->texBlurShaderProgramH();
+            }
 
-            gl()->enableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHTexPos);
-            gl()->enableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHTexIdx);
+            GLint* texPos;
+            GLint* texIdx;
+            GLint* positionPos;
+            GLint* width;
+            GLint* height;
+            GLint* blurRadius;
+            GLint* alphaPos;
+            GLint* maskUVUniform = nullptr;
 
-            gl()->uniform2fv(
-                m_compositorContext->m_texBlurShaderProgramHPosition, 4,
-                position);
+            if (enableMask) {
+                texPos =
+                    &m_compositorContext->m_texBlurShaderProgramHWithMaskTexPos;
+                texIdx =
+                    &m_compositorContext->m_texBlurShaderProgramHWithMaskTexIdx;
+                positionPos = &m_compositorContext
+                                   ->m_texBlurShaderProgramHWithMaskPosition;
+                width = &m_compositorContext
+                             ->m_texBlurShaderProgramHWithMaskTextureWidth;
+                height = &m_compositorContext
+                              ->m_texBlurShaderProgramHWithMaskTextureHeight;
+                blurRadius = &m_compositorContext
+                                  ->m_texBlurShaderProgramHWithMaskBlurRadius;
+                alphaPos =
+                    &m_compositorContext->m_texBlurShaderProgramHWithMaskAlpha;
+                maskUVUniform =
+                    &m_compositorContext->m_texBlurShaderProgramHWithMaskMaskUV;
+            } else {
+                texPos = &m_compositorContext->m_texBlurShaderProgramHTexPos;
+                texIdx = &m_compositorContext->m_texBlurShaderProgramHTexIdx;
+                positionPos =
+                    &m_compositorContext->m_texBlurShaderProgramHPosition;
+                width =
+                    &m_compositorContext->m_texBlurShaderProgramHTextureWidth;
+                height =
+                    &m_compositorContext->m_texBlurShaderProgramHTextureHeight;
+                blurRadius =
+                    &m_compositorContext->m_texBlurShaderProgramHBlurRadius;
+                alphaPos = &m_compositorContext->m_texBlurShaderProgramHAlpha;
+            }
+
+            gl()->enableVertexAttribArray(*texPos);
+            gl()->enableVertexAttribArray(*texIdx);
+
+            gl()->uniform2fv(*positionPos, 4, position);
 
             gl()->activeTexture(GL_TEXTURE0);
-            gl()->bindTexture(GL_TEXTURE_2D, fboTex);
+            gl()->bindTexture(GL_TEXTURE_2D, fboState.fboTex);
 
-            gl()->uniform1f(
-                m_compositorContext->m_texBlurShaderProgramHTextureWidth,
-                textureWidth);
-            gl()->uniform1f(
-                m_compositorContext->m_texBlurShaderProgramHTextureHeight,
-                textureHeight);
+            if (enableMask) {
+                gl()->activeTexture(GL_TEXTURE1);
+                gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
+                gl()->activeTexture(GL_TEXTURE0);
+            }
 
-            gl()->uniform2f(
-                m_compositorContext->m_texBlurShaderProgramHBlurRadius,
-                blurSubRadius, blurMainRadius);
+            gl()->uniform1f(*width, textureWidth);
+            gl()->uniform1f(*height, textureHeight);
+
+            gl()->uniform2f(*blurRadius, blurSubRadius, blurMainRadius);
+
             float a = lastState.opacity;
             if (a != 1) {
-                gl()->uniform1f(
-                    m_compositorContext->m_texBlurShaderProgramHAlpha, a);
+                gl()->uniform1f(*alphaPos, a);
             }
+
+            if (enableMask) {
+                gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
+                                maskUV[3]);
+            }
+
             if (UNLIKELY(cs->isFlipYNeeded())) {
-                m_compositorContext->bindTexPos(
-                    m_compositorContext->m_texBlurShaderProgramHTexPos, true);
+                m_compositorContext->bindTexPos(*texPos, true);
             }
 
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-#if !defined(NDEBUG)
-            if (gl()->getError() == 1286) {
-                STARFISH_LOG_ERROR("drawFilteredTexture got error 1286");
-            }
-#endif
-
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHTexPos);
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texBlurShaderProgramHTexIdx);
+            gl()->disableVertexAttribArray(*texPos);
+            gl()->disableVertexAttribArray(*texIdx);
 
             if (a != 1) {
-                gl()->uniform1f(
-                    m_compositorContext->m_texBlurShaderProgramHAlpha, 1);
+                gl()->uniform1f(*alphaPos, 1);
             }
             if (UNLIKELY(cs->isFlipYNeeded())) {
-                m_compositorContext->bindTexPos(
-                    m_compositorContext->m_texBlurShaderProgramHTexPos, false);
+                m_compositorContext->bindTexPos(*texPos, false);
             }
             checkError(gl());
         }
 
-        m_compositorContext->putGenericTextureToCache(fboTex, textureWidth,
-                                                      textureHeight);
+        m_compositorContext->putGenericTextureToCache(
+            fboState.fboTex, textureWidth, textureHeight, textureFormat());
         checkError(gl());
     }
 
     void drawTexture(CanvasSurfaceGL* cs, float position[8], GLuint textureID,
                      GLenum textureKind, GLenum textureBindNumber,
-                     size_t textureWidth, size_t textureHeight)
+                     size_t textureWidth, size_t textureHeight,
+                     GLuint maskTextureID, float maskUV[4])
     {
         auto& lastState = m_state.back();
         if (lastState.blurRadius) {
             drawFilteredTexture(cs, position, textureID, textureKind,
-                                textureBindNumber, textureWidth, textureHeight);
+                                textureBindNumber, textureWidth, textureHeight,
+                                maskTextureID, maskUV);
             return;
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
+        bool enableMask = maskTextureID != 0;
+
+        // Select appropriate shader program based on mask requirement
         if (isEGLImage) {
             m_webView->renderer()->mayNeedsSync();
-            m_compositorContext->texShaderProgramEGLImageExternal();
+            if (enableMask) {
+                m_compositorContext->texShaderProgramEGLImageExternalWithMask();
+            } else {
+                m_compositorContext->texShaderProgramEGLImageExternal();
+            }
         } else {
-            m_compositorContext->texShaderProgram();
+            if (enableMask) {
+                m_compositorContext->texShaderProgramWithMask();
+            } else {
+                m_compositorContext->texShaderProgram();
+            }
         }
 
         gl()->activeTexture(GL_TEXTURE0);
         gl()->bindTexture(textureKind, textureID);
 
+        if (enableMask) {
+            gl()->activeTexture(GL_TEXTURE1);
+            gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
+            gl()->activeTexture(GL_TEXTURE0);
+        }
+
         GLint* positionPos;
         GLint* alphaPos;
         GLint* texPos;
         GLint* texIdx;
+        GLint* maskUVUniform = nullptr;
 
         float a = lastState.opacity;
-        if (isEGLImage) {
+        if (isEGLImage && enableMask) {
+            positionPos =
+                &m_compositorContext
+                     ->m_texShaderProgramEGLImageExternalWithMaskPosition;
+            alphaPos = &m_compositorContext
+                            ->m_texShaderProgramEGLImageExternalWithMaskAlpha;
+            texPos = &m_compositorContext
+                          ->m_texShaderProgramEGLImageExternalWithMaskTexPos;
+            texIdx = &m_compositorContext
+                          ->m_texShaderProgramEGLImageExternalWithMaskTexIdx;
+            maskUVUniform =
+                &m_compositorContext
+                     ->m_texShaderProgramEGLImageExternalWithMaskMaskUV;
+        } else if (isEGLImage) {
             positionPos = &m_compositorContext
                                ->m_texShaderProgramEGLImageExternalPosition;
             alphaPos =
@@ -3689,11 +4182,21 @@ public:
                 &m_compositorContext->m_texShaderProgramEGLImageExternalTexPos;
             texIdx =
                 &m_compositorContext->m_texShaderProgramEGLImageExternalTexIdx;
+            STARFISH_ASSERT(!enableMask);
+        } else if (enableMask) {
+            positionPos =
+                &m_compositorContext->m_texShaderProgramWithMaskPosition;
+            alphaPos = &m_compositorContext->m_texShaderProgramWithMaskAlpha;
+            texPos = &m_compositorContext->m_texShaderProgramWithMaskTexPos;
+            texIdx = &m_compositorContext->m_texShaderProgramWithMaskTexIdx;
+            maskUVUniform =
+                &m_compositorContext->m_texShaderProgramWithMaskMaskUV;
         } else {
             positionPos = &m_compositorContext->m_texShaderProgramPosition;
             alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
             texPos = &m_compositorContext->m_texShaderProgramTexPos;
             texIdx = &m_compositorContext->m_texShaderProgramTexIdx;
+            STARFISH_ASSERT(!enableMask);
         }
 
         gl()->enableVertexAttribArray(*texPos);
@@ -3703,6 +4206,11 @@ public:
 
         if (a != 1) {
             gl()->uniform1f(*alphaPos, a);
+        }
+
+        if (enableMask) {
+            gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
+                            maskUV[3]);
         }
 
         if (UNLIKELY(cs->isFlipYNeeded())) {
@@ -3799,17 +4307,17 @@ public:
         auto& lastState = m_state.back();
 
         bool scissorClippingEnabled = false;
-        bool alphaTextureClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
             Unit::Rect(0, 0, screenWidth(), screenHeight());
-        float diffXDueToAlphaTextureCliping = 0;
-        float diffYDueToAlphaTextureCliping = 0;
 
         SkMatrix ctm = lastState.matrix;
         SkMatrix screenMatrix = m_screenMatrix;
         size_t screenWidth = this->screenWidth();
         size_t screenHeight = this->screenHeight();
+        FBOState maskFBO;
+        GLenum maskFormat = GL_RGBA;
+        float maskUV[4] = { 0, 0, 1, 1 };
 
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
         dest[0][0] = dst.x();
@@ -3848,51 +4356,67 @@ public:
                             visibleArea.width(), visibleArea.height());
                     scissorClippingEnabled = true;
                 } else {
-                    for (size_t i = 0; i < result.size(); i++) {
-                        visibleArea.unite(boundingRect(result[i]));
-                    }
+                    visibleArea = toRect(dest);
 
-                    diffXDueToAlphaTextureCliping = -visibleArea.x();
-                    diffYDueToAlphaTextureCliping = -visibleArea.y();
-                    alphaTextureClippingEnabled = true;
+                    float nx = std::floor(visibleArea.x());
+                    float ny = std::floor(visibleArea.y());
 
-                    pushFBOContext(visibleArea.width(), visibleArea.height(),
-                                   false,
-                                   LayoutRect(0, 0, visibleArea.width(),
-                                              visibleArea.height()));
+                    visibleArea.setX(nx);
+                    visibleArea.setY(ny);
+                    visibleArea.setWidth(
+                        std::ceil(visibleArea.width() + visibleArea.x() - nx));
+                    visibleArea.setHeight(
+                        std::ceil(visibleArea.height() + visibleArea.y() - ny));
 
-                    screenWidth = visibleArea.width();
-                    screenHeight = visibleArea.height();
+                    if (!visibleArea.isEmpty()) {
+                        // Create mask texture using FBO
+                        // Draw clipping polygon with white color to create
+                        // alpha mask
 
-                    ctm.postTranslate(diffXDueToAlphaTextureCliping,
-                                      diffYDueToAlphaTextureCliping);
-
-                    visibleArea.setX(0);
-                    visibleArea.setY(0);
-
-                    gl()->clearColor(0, 0, 0, 0);
-                    gl()->clear(GL_COLOR_BUFFER_BIT);
-
-                    // reset screen matrix while draw fbo on screen
-                    screenMatrix.reset();
-
-                    // Draw clipping polygon with white color to create
-                    // alpha mask Using drawTessellatedPolygon for
-                    // anti-aliased edges
-                    for (auto& path : result) {
-                        for (auto& pt : path) {
-                            pt.x += diffXDueToAlphaTextureCliping;
-                            pt.y += diffYDueToAlphaTextureCliping;
+                        if (g_isOpenGLES3) {
+                            maskFormat = GL_RED;
                         }
-                    }
-                    drawTessellatedPolygon(
-                        result, Unit::Color(255, 255, 255, 255), 1.0f, true,
-                        &screenMatrix, screenWidth, screenHeight);
 
-                    // Set blending to use alpha mask: result = src *
-                    // dst_alpha
-                    gl()->blendFunc(GL_DST_ALPHA, GL_ZERO);
-                    gl()->blendEquation(GL_FUNC_ADD);
+                        auto fboViewport = LayoutRect(0, 0, visibleArea.width(),
+                                                      visibleArea.height());
+                        pushFBOContext(visibleArea.width(),
+                                       visibleArea.height(), false, fboViewport,
+                                       maskFormat);
+
+                        gl()->clearColor(0, 0, 0, 0);
+                        gl()->clear(GL_COLOR_BUFFER_BIT);
+
+                        // Translate clip paths to FBO coordinates
+                        SkMatrix fboMatrix;
+                        fboMatrix.reset();
+                        fboMatrix.postTranslate(-visibleArea.x(),
+                                                -visibleArea.y());
+                        drawTessellatedPolygon(
+                            result, Unit::Color(255, 255, 255, 255), 1.0f, true,
+                            &fboMatrix, visibleArea.width(),
+                            visibleArea.height());
+
+                        // Get the mask texture from FBO
+                        maskFBO = popFBOContext(false);
+
+                        if (g_isOpenGLES3) {
+                            // Set texture swizzle so that reading alpha channel
+                            // returns red channel value
+                            gl()->bindTexture(GL_TEXTURE_2D, maskFBO.fboTex);
+                            gl()->texParameteri(GL_TEXTURE_2D,
+                                                GL_TEXTURE_SWIZZLE_A, GL_RED);
+                        }
+
+                        auto clipArea = toRect(dest);
+                        clipArea = toRect(dest);
+                        clipArea.intersect(lastState.clipRect);
+                        gl()->enable(GL_SCISSOR_TEST);
+                        scissor(clipArea.x(), clipArea.y(), clipArea.width(),
+                                clipArea.height());
+                        scissorClippingEnabled = true;
+                    } else {
+                        shouldSkipTexturePainting = true;
+                    }
                 }
             } else {
                 shouldSkipTexturePainting = true;
@@ -3901,31 +4425,18 @@ public:
 
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
-                float eglDest[4][2] = {
-                    { dest[0][0] + diffXDueToAlphaTextureCliping,
-                      dest[0][1] + diffYDueToAlphaTextureCliping },
-                    { dest[1][0] + diffXDueToAlphaTextureCliping,
-                      dest[1][1] + diffYDueToAlphaTextureCliping },
-                    { dest[2][0] + diffXDueToAlphaTextureCliping,
-                      dest[2][1] + diffYDueToAlphaTextureCliping },
-                    { dest[3][0] + diffXDueToAlphaTextureCliping,
-                      dest[3][1] + diffYDueToAlphaTextureCliping }
-                };
-                Unit::Rect screenBoundingRect = toRect(eglDest);
-                if (screenBoundingRect.intersects(visibleArea)) {
-                    float texPosition[8];
-                    computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
-                                           screenHeight, texPosition);
-                    drawTexture(csGL, texPosition,
-                                csGL->m_textureFragments[0].textureID,
+                float texPosition[8];
+                computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
+                                       screenHeight, texPosition);
+                drawTexture(csGL, texPosition,
+                            csGL->m_textureFragments[0].textureID,
 #if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
-                                GL_TEXTURE_2D, -1,
+                            GL_TEXTURE_2D, -1,
 #else
-                                GL_TEXTURE_EXTERNAL_OES, -1,
+                            GL_TEXTURE_EXTERNAL_OES, -1,
 #endif
-                                csGL->m_bufferWidth, csGL->m_bufferHeight);
-                }
-
+                            csGL->m_bufferWidth, csGL->m_bufferHeight,
+                            maskFBO.fboTex, maskUV);
             } else {
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
@@ -3991,9 +4502,20 @@ public:
                                 computeTexturePosition(
                                     newDst, ctm, screenMatrix, screenWidth,
                                     screenHeight, texPosition);
+
+                                if (maskFBO.fboTex) {
+                                    auto w = visibleArea.width();
+                                    auto h = visibleArea.height();
+                                    maskUV[0] = (minX - visibleArea.x()) / w;
+                                    maskUV[1] = (minY - visibleArea.y()) / h;
+                                    maskUV[2] = (maxX - minX) / w;
+                                    maskUV[3] = (maxY - minY) / h;
+                                }
+
                                 drawTexture(csGL, texPosition, tid,
                                             GL_TEXTURE_2D, GL_TEXTURE0,
-                                            texureDataWidth, texureDataHeight);
+                                            texureDataWidth, texureDataHeight,
+                                            maskFBO.fboTex, maskUV);
                             }
                         }
                         i++;
@@ -4005,95 +4527,26 @@ public:
             }
         }
 
-        if (alphaTextureClippingEnabled) {
-            // Restore blend mode before drawing FBO texture to screen
-            updateBlendMode();
+        if (maskFBO.fboTex) {
+            if (g_isOpenGLES3) {
+                gl()->bindFramebuffer(GL_FRAMEBUFFER, maskFBO.fboId);
+                GLenum e[1] = { GL_COLOR_ATTACHMENT0 };
+                gl()->invalidateFramebuffer(GL_FRAMEBUFFER, 1, e);
+                if (m_fboState.size()) {
+                    gl()->bindFramebuffer(GL_FRAMEBUFFER,
+                                          m_fboState.back().fboId);
+                } else {
+                    gl()->bindFramebuffer(GL_FRAMEBUFFER, 0);
+                }
+            }
 
-            GLuint fboTex = popFBOContext();
-
-            m_compositorContext->texShaderProgram();
-
-            float dest[4][2]; // order is LB, LT, RB, RT
-            dest[0][0] = visibleArea.x() - diffXDueToAlphaTextureCliping;
-            dest[0][1] = visibleArea.maxY() - diffYDueToAlphaTextureCliping;
-            dest[1][0] = visibleArea.x() - diffXDueToAlphaTextureCliping;
-            dest[1][1] = visibleArea.y() - diffYDueToAlphaTextureCliping;
-            dest[2][0] = visibleArea.maxX() - diffXDueToAlphaTextureCliping;
-            dest[2][1] = visibleArea.maxY() - diffYDueToAlphaTextureCliping;
-            dest[3][0] = visibleArea.maxX() - diffXDueToAlphaTextureCliping;
-            dest[3][1] = visibleArea.y() - diffYDueToAlphaTextureCliping;
-
-            screenMatrix = m_screenMatrix;
-
-            mapPointsByMatrix(dest[0][0], dest[0][1], screenMatrix);
-            mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
-            mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
-            mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
-
-            float hw = 2.f / this->screenWidth();
-            float hh = -2.f / this->screenHeight();
-
-            float position[8];
-            position[0] = dest[0][0] * hw - 1;
-            position[1] = dest[0][1] * hh + 1;
-
-            position[2] = dest[1][0] * hw - 1;
-            position[3] = dest[1][1] * hh + 1;
-
-            position[4] = dest[2][0] * hw - 1;
-            position[5] = dest[2][1] * hh + 1;
-
-            position[6] = dest[3][0] * hw - 1;
-            position[7] = dest[3][1] * hh + 1;
-
-            // Alpha mask position: map screen coordinates to FBO texture
-            // coordinates The FBO covers visibleArea, so we need to map screen
-            // position to [0,1] range relative to visibleArea
-            float alphaMaskPosition[8];
-
-            // Map visibleArea corners to FBO NDC coordinates
-            // The FBO texture coordinates should match vTexPos from bindTexPos
-            // (flipY=false) vTexPos order: (0,0), (0,1), (1,0), (1,1) for LB,
-            // LT, RB, RT NDC (-1,-1) maps to texture coord (0,0), NDC (1,1)
-            // maps to texture coord (1,1) So we need to map each corner
-            // correctly: LB (aTexIdx=0): vTexPos=(0,0) -> NDC (-1,-1) LT
-            // (aTexIdx=1): vTexPos=(0,1) -> NDC (-1,1) RB (aTexIdx=2):
-            // vTexPos=(1,0) -> NDC (1,-1) RT (aTexIdx=3): vTexPos=(1,1) -> NDC
-            // (1,1)
-            alphaMaskPosition[0] = -1.0f; // LB -> NDC (-1, -1)
-            alphaMaskPosition[1] = -1.0f;
-
-            alphaMaskPosition[2] = -1.0f; // LT -> NDC (-1, 1)
-            alphaMaskPosition[3] = 1.0f;
-
-            alphaMaskPosition[4] = 1.0f; // RB -> NDC (1, -1)
-            alphaMaskPosition[5] = -1.0f;
-
-            alphaMaskPosition[6] = 1.0f; // RT -> NDC (1, 1)
-            alphaMaskPosition[7] = 1.0f;
-
-            gl()->activeTexture(GL_TEXTURE0);
-            gl()->bindTexture(GL_TEXTURE_2D, fboTex);
-            checkError(gl());
-
-            gl()->enableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramTexPos);
-            gl()->enableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramTexIdx);
-
-            gl()->uniform2fv(m_compositorContext->m_texShaderProgramPosition, 4,
-                             position);
-
-            gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramTexPos);
-            gl()->disableVertexAttribArray(
-                m_compositorContext->m_texShaderProgramTexIdx);
-
+            deleteFBOContext(maskFBO);
+            // Return mask texture to cache
             m_compositorContext->putGenericTextureToCache(
-                fboTex, visibleArea.width(), visibleArea.height());
+                maskFBO.fboTex, maskFBO.textureSize.width(),
+                maskFBO.textureSize.height(), maskFormat);
         }
+
         if (scissorClippingEnabled) {
             gl()->disable(GL_SCISSOR_TEST);
         }
@@ -4239,35 +4692,43 @@ public:
     }
 
     struct FBOState {
-        GLuint fboId;
-        GLuint fboTex;
-        GLuint fboSupportTex;
-        GLuint renderBufferId;
+        GLuint fboId = 0;
+        GLuint fboTex = 0;
+        GLuint fboSupportTex = 0;
+        GLuint renderBufferId = 0;
         LayoutRect viewport;
+        GLenum textureFormat = 0;
+        Unit::IntSize textureSize;
     };
 
     void pushFBOContext(size_t width, size_t height, bool needsStencilDepth,
-                        LayoutRect viewport)
+                        LayoutRect viewport, GLenum textureFormat = GL_RGBA)
     {
         m_seenFBOUsage = true;
 
         FBOState newFBOState;
+        newFBOState.textureFormat = textureFormat;
+        newFBOState.textureSize = Unit::IntSize(width, height);
 
         // generate FBO
         gl()->genFramebuffers(1, &newFBOState.fboId);
         checkError(gl());
 
         // generate texture
-        newFBOState.fboTex =
-            m_compositorContext->takeGenericTextureFromCache(width, height);
+        bool tookFromCache = true;
+        newFBOState.fboTex = m_compositorContext->takeGenericTextureFromCache(
+            width, height, textureFormat);
         if (newFBOState.fboTex == 0) {
             gl()->genTextures(1, &newFBOState.fboTex);
+            tookFromCache = false;
             checkError(gl());
         }
 
         // generate render buffer
-        gl()->genRenderbuffers(1, &newFBOState.renderBufferId);
-        checkError(gl());
+        if (needsStencilDepth) {
+            gl()->genRenderbuffers(1, &newFBOState.renderBufferId);
+            checkError(gl());
+        }
 
         // Bind Frame buffer
         gl()->bindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
@@ -4277,17 +4738,27 @@ public:
         gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
         checkError(gl());
 
-        // Define texture parameters
-        gl()->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                         GL_UNSIGNED_BYTE, nullptr);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        checkError(gl());
+        // Define texture parameters with specified format
+        if (!tookFromCache) {
+            gl()->texImage2D(GL_TEXTURE_2D, 0,
+                             textureFormat == GL_RED ? GL_R8 : textureFormat,
+                             width, height, 0, textureFormat, GL_UNSIGNED_BYTE,
+                             nullptr);
+            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                GL_CLAMP_TO_EDGE);
+            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                GL_CLAMP_TO_EDGE);
+            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                GL_LINEAR);
+            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+            checkError(gl());
+        }
 
         // Bind render buffer and define buffer dimension
-        gl()->bindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
+        if (needsStencilDepth) {
+            gl()->bindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
+        }
 
         // Attach texture FBO color attachment
         gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -4328,14 +4799,29 @@ public:
         m_fboState.push_back(newFBOState);
     }
 
-    GLuint popFBOContext() // returns texture
+    void deleteFBOContext(FBOState s)
+    {
+        gl()->deleteFramebuffers(1, &s.fboId);
+        if (s.renderBufferId) {
+            gl()->deleteRenderbuffers(1, &s.renderBufferId);
+        }
+        if (s.fboSupportTex) {
+            gl()->deleteTextures(1, &s.fboSupportTex);
+        }
+    }
+
+    FBOState popFBOContext(bool deleteFBO = true) // returns texture
     {
         FBOState lastState = m_fboState.back();
         m_fboState.pop_back();
 
         if (m_fboState.size()) {
             auto& s = m_fboState.back();
-            gl()->bindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
+            if (s.renderBufferId) {
+                gl()->bindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
+            } else {
+                gl()->bindRenderbuffer(GL_RENDERBUFFER, 0);
+            }
             gl()->bindFramebuffer(GL_FRAMEBUFFER, s.fboId);
 
             gl()->viewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
@@ -4357,12 +4843,10 @@ public:
             setViewport();
         }
 
-        gl()->deleteRenderbuffers(1, &lastState.renderBufferId);
-        gl()->deleteFramebuffers(1, &lastState.fboId);
-        if (lastState.fboSupportTex) {
-            gl()->deleteTextures(1, &lastState.fboSupportTex);
+        if (deleteFBO) {
+            deleteFBOContext(lastState);
         }
-        return lastState.fboTex;
+        return lastState;
     }
 
 protected:

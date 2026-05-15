@@ -20,7 +20,7 @@
 #ifndef __StarfishIncludeGL__
 #define __StarfishIncludeGL__
 
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_HEADLESS)
 
 #if defined(STARFISH_WINDOWS_UWP)
 // Enable function definitions in the GL headers below
@@ -116,6 +116,9 @@
 #endif
 #ifndef GL_ALPHA
 #define GL_ALPHA 0x1906
+#endif
+#ifndef GL_R8
+#define GL_R8 0x8229
 #endif
 
 #endif
