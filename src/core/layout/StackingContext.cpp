@@ -2687,6 +2687,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 needsCompositeAnyWay = true;
             }
         }
+        if (owner()->contentSurface()) {
+            needsCompositeAnyWay = true;
+        }
         if (!needsCompositeAnyWay) {
             return;
         }
