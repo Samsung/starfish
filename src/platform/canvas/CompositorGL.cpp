@@ -83,7 +83,7 @@ using Coord = double;
 // The index type. Defaults to uint32_t, but you can also pass uint16_t if you
 // know that your
 // data won't have more than 65536 vertices.
-using N = uint32_t;
+using N = uint16_t;
 // Create array
 using Point = std::array<Coord, 2>;
 
@@ -3083,16 +3083,25 @@ public:
                                 size_t customScreenHeight = 0)
     {
         m_compositorContext->polygonProgram();
+        size_t count = 0;
+        std::vector<std::pair<N, N>> pointPerIndex;
+        for (size_t i = 0; i < paths.size(); i++) {
+            for (size_t j = 0; j < paths[i].size(); j++) {
+                pointPerIndex.push_back({ i, j });
+            }
+            count += paths[i].size();
+        }
+
+        if (sizeof(N) != sizeof(size_t) &&
+            count > std::numeric_limits<N>::max()) {
+            STARFISH_LOG_ERROR("Too many vertices for drawTessellatedPolygon");
+            return;
+        }
+
         std::vector<N> indices = mapbox::earcut<N>(paths);
 
         std::vector<float> position;
         position.reserve((indices.size() / 3) * 6);
-
-        std::vector<size_t> cumulativeSizes(paths.size() + 1);
-        cumulativeSizes[0] = 0;
-        for (size_t j = 0; j < paths.size(); j++) {
-            cumulativeSizes[j + 1] = cumulativeSizes[j] + paths[j].size();
-        }
 
         // Use custom parameters if provided, otherwise use defaults
         const SkMatrix& screenMatrix =
@@ -3102,31 +3111,16 @@ public:
 
         size_t triangleCount = 0;
         for (size_t i = 0; i < indices.size(); i += 3) {
-            size_t idx0 = indices[i];
-            size_t idx1 = indices[i + 1];
-            size_t idx2 = indices[i + 2];
+            const auto& p1 = pointPerIndex[indices[i]];
+            const auto& p2 = pointPerIndex[indices[i + 1]];
+            const auto& p3 = pointPerIndex[indices[i + 2]];
 
-            auto it0 = std::upper_bound(cumulativeSizes.begin(),
-                                        cumulativeSizes.end(), idx0);
-            size_t pathIdx0 = std::distance(cumulativeSizes.begin(), it0) - 1;
-            size_t pointIdx0 = idx0 - cumulativeSizes[pathIdx0];
-
-            auto it1 = std::upper_bound(cumulativeSizes.begin(),
-                                        cumulativeSizes.end(), idx1);
-            size_t pathIdx1 = std::distance(cumulativeSizes.begin(), it1) - 1;
-            size_t pointIdx1 = idx1 - cumulativeSizes[pathIdx1];
-
-            auto it2 = std::upper_bound(cumulativeSizes.begin(),
-                                        cumulativeSizes.end(), idx2);
-            size_t pathIdx2 = std::distance(cumulativeSizes.begin(), it2) - 1;
-            size_t pointIdx2 = idx2 - cumulativeSizes[pathIdx2];
-
-            float trianglePoints[6] = { (float)paths[pathIdx0][pointIdx0].x,
-                                        (float)paths[pathIdx0][pointIdx0].y,
-                                        (float)paths[pathIdx1][pointIdx1].x,
-                                        (float)paths[pathIdx1][pointIdx1].y,
-                                        (float)paths[pathIdx2][pointIdx2].x,
-                                        (float)paths[pathIdx2][pointIdx2].y };
+            float trianglePoints[6] = { (float)paths[p1.first][p1.second].x,
+                                        (float)paths[p1.first][p1.second].y,
+                                        (float)paths[p2.first][p2.second].x,
+                                        (float)paths[p2.first][p2.second].y,
+                                        (float)paths[p3.first][p3.second].x,
+                                        (float)paths[p3.first][p3.second].y };
 
             // Map points using the appropriate screen matrix
             float x, y;
@@ -3907,7 +3901,17 @@ public:
 
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
-                Unit::Rect screenBoundingRect = toRect(dest);
+                float eglDest[4][2] = {
+                    { dest[0][0] + diffXDueToAlphaTextureCliping,
+                      dest[0][1] + diffYDueToAlphaTextureCliping },
+                    { dest[1][0] + diffXDueToAlphaTextureCliping,
+                      dest[1][1] + diffYDueToAlphaTextureCliping },
+                    { dest[2][0] + diffXDueToAlphaTextureCliping,
+                      dest[2][1] + diffYDueToAlphaTextureCliping },
+                    { dest[3][0] + diffXDueToAlphaTextureCliping,
+                      dest[3][1] + diffYDueToAlphaTextureCliping }
+                };
+                Unit::Rect screenBoundingRect = toRect(eglDest);
                 if (screenBoundingRect.intersects(visibleArea)) {
                     float texPosition[8];
                     computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
