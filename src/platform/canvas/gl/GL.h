@@ -340,6 +340,9 @@ public:
                            GLsizei *length, GLint *values) = 0;
     virtual void getBufferParameteri64v(GLenum target, GLenum pname,
                                         GLint64 *params) = 0;
+
+    virtual void invalidateFramebuffer(GLenum target, GLsizei numAttachments,
+                                       const GLenum *attachments) = 0;
 };
 
 } // namespace Starfish

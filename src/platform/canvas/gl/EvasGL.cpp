@@ -22,10 +22,16 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_EFL_HEADLESS)
 #include <Evas_GL.h>
+#include <dlfcn.h>
 
 #include "GL.h"
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
+
+// gles3.0 only
+typedef void (*PFNGLINVALIDATEFRAMEBUFFERPROC)(GLenum target,
+                                               GLsizei numAttachments,
+                                               const GLenum *attachments);
 
 namespace Starfish {
 
@@ -1053,13 +1059,23 @@ public:
         m_evasGLAPI->glGetBufferParameteri64v(target, pname, params);
     }
 
+    void invalidateFramebuffer(GLenum target, GLsizei numAttachments,
+                               const GLenum *attachments) override
+    {
+        m_glInvalidateFramebuffer(target, numAttachments, attachments);
+    }
+
     EvasGL(void *p)
         : m_evasGLAPI(static_cast<Evas_GL_API *>(p))
     {
+        m_glInvalidateFramebuffer =
+            reinterpret_cast<PFNGLINVALIDATEFRAMEBUFFERPROC>(
+                dlsym(RTLD_DEFAULT, "glInvalidateFramebuffer"));
     }
 
 private:
     Evas_GL_API *m_evasGLAPI;
+    PFNGLINVALIDATEFRAMEBUFFERPROC m_glInvalidateFramebuffer;
 };
 
 GL *GL::create(Renderer *renderer)
