@@ -2656,7 +2656,8 @@ void WebGLRenderingContext::bufferData(GLenum target, GLsizeiptr size,
 
     // Set the size of the currently bound WebGLBuffer object for the passed
     // target. The buffer is initialized to 0.
-    m_gl->bufferData(target, size, nullptr, usage);
+    std::vector<unsigned char> zeros(size);
+    m_gl->bufferData(target, size, zeros.data(), usage);
 }
 
 void WebGLRenderingContext::bufferData(GLenum target,
