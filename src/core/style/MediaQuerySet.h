@@ -43,11 +43,13 @@ namespace Starfish {
 
 class Node;
 class MediaQuery;
+class ExecutionContext;
+
 class MediaQuerySet : public gc {
 public:
-    static MediaQuerySet* create(Node* origin)
+    static MediaQuerySet* create(ExecutionContext* context)
     {
-        return new MediaQuerySet(origin);
+        return new MediaQuerySet(context);
     }
 
     void addMediaQuery(MediaQuery* mediaQuery);
@@ -67,9 +69,9 @@ public:
     Document* document() const;
 
 protected:
-    MediaQuerySet(Node* origin);
+    MediaQuerySet(ExecutionContext* context);
     MediaQuerySet(MediaQuerySet& o);
-    Node* m_origin;
+    ExecutionContext* m_executionContext;
     GCVector<MediaQuery*> m_queries;
 };
 } // namespace Starfish

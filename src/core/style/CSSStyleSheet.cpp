@@ -107,7 +107,7 @@ CSSStyleSheet::CSSStyleSheet(ExecutionContext* executionContext,
         }
     } else if (media.isMediaListValue()) {
         // If MediaList is provided, use its MediaQuerySet
-        m_mediaQuerySet = MediaQuerySet::create((Node*)nullptr);
+        m_mediaQuerySet = MediaQuerySet::create(executionContext);
         MediaList* mediaList = media.getMediaListValue();
         if (mediaList && mediaList->mediaQuerySet()) {
             // Copy the media queries from the provided MediaList
@@ -457,9 +457,9 @@ String* CSSStyleSheet::href() const
 
 String* CSSStyleSheet::title() const
 {
-    // For constructable stylesheets, m_origin is nullptr
+    // For constructable stylesheets, return nulltpr.
     if (!m_origin) {
-        return String::emptyString;
+        return nullptr;
     }
     if (m_origin->isElement()) {
         auto title = m_origin->asElement()->getAttribute(
@@ -500,7 +500,7 @@ MediaList* CSSStyleSheet::media()
 {
     // For constructable stylesheets, create an empty MediaList if needed
     if (!m_mediaQuerySet) {
-        m_mediaQuerySet = MediaQuerySet::create(m_origin);
+        m_mediaQuerySet = MediaQuerySet::create(m_executionContext);
     }
 
     if (!m_mediaWrapper) {

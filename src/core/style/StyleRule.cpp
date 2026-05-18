@@ -212,7 +212,8 @@ StyleRuleMedia::StyleRuleMedia(StyleRuleMedia& o)
     , m_mediaQuerySet(nullptr)
 {
     if (o.mediaQuerySet()) {
-        m_mediaQuerySet = MediaQuerySet::create(o.mediaQuerySet()->document());
+        m_mediaQuerySet = MediaQuerySet::create(
+            o.mediaQuerySet()->document()->executionContext());
         m_mediaQuerySet->queryVector().assign(
             o.mediaQuerySet()->queryVector().begin(),
             o.mediaQuerySet()->queryVector().end());
