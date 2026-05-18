@@ -38,17 +38,18 @@
 #include "StarfishConfig.h"
 #include "MediaQuerySet.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/style/CSSParser.h"
 
 namespace Starfish {
-MediaQuerySet::MediaQuerySet(Node* origin)
-    : m_origin(origin)
+MediaQuerySet::MediaQuerySet(ExecutionContext* context)
+    : m_executionContext(context)
 {
 }
 
 MediaQuerySet::MediaQuerySet(MediaQuerySet& o)
 {
-    m_origin = o.m_origin;
+    m_executionContext = o.m_executionContext;
     m_queries.clear();
     m_queries.assign(o.queryVector().begin(), o.queryVector().end());
 }
@@ -77,10 +78,10 @@ String* MediaQuerySet::mediaText() const
 MediaQuerySet* MediaQuerySet::create(String* mediaString)
 {
     if (mediaString->equals(String::emptyString)) {
-        return MediaQuerySet::create(m_origin);
+        return MediaQuerySet::create(m_executionContext);
     }
 
-    CSSParser parser(m_origin);
+    CSSParser parser(m_executionContext);
     parser.makeToken(mediaString);
     return parser.parseMediaQuery();
 }
@@ -140,6 +141,6 @@ bool MediaQuerySet::remove(String* mediaString)
 
 Document* MediaQuerySet::document() const
 {
-    return m_origin->document();
+    return m_executionContext->document();
 }
 } // namespace Starfish

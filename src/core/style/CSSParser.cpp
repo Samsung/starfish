@@ -1251,24 +1251,24 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
         return (String*)value.peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t)new StringDataASCII(buf + sender->start,
-                                                   sender->len);
+                return (size_t) new StringDataASCII(buf + sender->start,
+                                                    sender->len);
             },
             &s);
     } else if (value.hasBMPContent()) {
         return (String*)value.peekBMPBuffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t)new StringDataBMP(buf + sender->start,
-                                                 sender->len);
+                return (size_t) new StringDataBMP(buf + sender->start,
+                                                  sender->len);
             },
             &s);
     } else {
         return (String*)value.peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
                 Sender* sender = (Sender*)data;
-                return (size_t)new StringDataUTF32(buf + sender->start,
-                                                   sender->len);
+                return (size_t) new StringDataUTF32(buf + sender->start,
+                                                    sender->len);
             },
             &s);
     }
@@ -2854,7 +2854,7 @@ void CSSParser::initParseMediaQuery(MediaQueryParserType parserType)
 {
     m_parserType = parserType;
     m_blockLevel = 0;
-    m_querySet = MediaQuerySet::create(m_origin);
+    m_querySet = MediaQuerySet::create(m_executionContext);
     if (parserType == MediaQuerySetParser)
         m_state = &CSSParser::readRestrictor;
     else // MediaConditionParser
