@@ -430,6 +430,24 @@ static bool isRectangleClipPath(const Clipper2Lib::PathsD& paths)
     return (xcnt == 2 && ycnt == 2);
 }
 
+static size_t roundUpToPowerOfTwo(size_t n)
+{
+    if (n <= 0) {
+        return 1;
+    }
+
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+#if defined(STARFISH_64)
+    n |= n >> 32; // 64-bit size_t
+#endif
+    return n + 1;
+}
+
 struct CompositorImplGLState {
     bool matrixStaysInRect;
     SkMatrix matrix;
@@ -588,6 +606,15 @@ public:
     GLuint m_lastProgram;
 
     std::vector<std::tuple<size_t, size_t, GLuint, GLenum>> m_cachedTextures;
+
+    struct FBOCacheEntry {
+        GLuint fboId = 0;
+        GLuint textureId = 0;
+        size_t width = 0;
+        size_t height = 0;
+        GLenum format = GL_RGBA;
+    };
+    std::vector<FBOCacheEntry> m_cachedFBOs;
 
     struct ClipPathCacheKey {
         Unit::Rect clipRect;
@@ -775,6 +802,7 @@ public:
         gl()->useProgram(0);
 
         cleanUpTextureCache();
+        cleanUpFBOCache();
         cleanUpGLPrograms();
 
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
@@ -934,6 +962,56 @@ public:
         return 0;
     }
 
+    void putFBOToCache(GLuint fboId, GLuint textureId, size_t width,
+                       size_t height, GLenum format)
+    {
+        size_t maxCacheSize = m_renderer->width() * m_renderer->height();
+        size_t currentCacheSize = 0;
+        for (const auto& e : m_cachedFBOs) {
+            currentCacheSize += e.width * e.height;
+        }
+        size_t newEntrySize = width * height;
+        while (!m_cachedFBOs.empty() &&
+               currentCacheSize + newEntrySize > maxCacheSize) {
+            FBOCacheEntry& oldest = m_cachedFBOs.front();
+            currentCacheSize -= oldest.width * oldest.height;
+            gl()->deleteFramebuffers(1, &oldest.fboId);
+            gl()->deleteTextures(1, &oldest.textureId);
+            m_cachedFBOs.erase(m_cachedFBOs.begin());
+        }
+        FBOCacheEntry entry;
+        entry.fboId = fboId;
+        entry.textureId = textureId;
+        entry.width = width;
+        entry.height = height;
+        entry.format = format;
+        m_cachedFBOs.push_back(entry);
+    }
+
+    bool takeFBOFromCache(size_t width, size_t height, GLenum format,
+                          FBOCacheEntry& outEntry)
+    {
+        for (size_t i = 0; i < m_cachedFBOs.size(); i++) {
+            auto& entry = m_cachedFBOs[i];
+            if (entry.width == width && entry.height == height &&
+                entry.format == format) {
+                outEntry = entry;
+                m_cachedFBOs.erase(m_cachedFBOs.begin() + i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void cleanUpFBOCache()
+    {
+        for (auto& entry : m_cachedFBOs) {
+            gl()->deleteTextures(1, &entry.textureId);
+            gl()->deleteFramebuffers(1, &entry.fboId);
+        }
+        m_cachedFBOs.clear();
+    }
+
     virtual void willRendering() override
     {
     }
@@ -1002,6 +1080,7 @@ public:
     virtual void onIdle() override
     {
         cleanUpTextureCache();
+        cleanUpFBOCache();
         cleanUpGLPrograms();
     }
 
@@ -3919,7 +3998,7 @@ public:
         bool enableMask = maskTextureID != 0;
 
         // Use FBO in order to 2-pass blur
-        pushFBOContext(textureWidth, textureHeight, false,
+        pushFBOContext(textureWidth, textureHeight,
                        LayoutRect(0, 0, textureWidth, textureHeight));
 
         bool isScissorEnabled = gl()->isEnabled(GL_SCISSOR_TEST);
@@ -4107,9 +4186,6 @@ public:
             }
             checkError(gl());
         }
-
-        m_compositorContext->putGenericTextureToCache(
-            fboState.fboTex, textureWidth, textureHeight, textureFormat());
         checkError(gl());
     }
 
@@ -4357,17 +4433,18 @@ public:
                     scissorClippingEnabled = true;
                 } else {
                     visibleArea = toRect(dest);
+                    Unit::Rect pixelSnappedVisibleArea = visibleArea;
+                    float nx = std::floor(pixelSnappedVisibleArea.x());
+                    float ny = std::floor(pixelSnappedVisibleArea.y());
 
-                    float nx = std::floor(visibleArea.x());
-                    float ny = std::floor(visibleArea.y());
-
-                    visibleArea.setX(nx);
-                    visibleArea.setY(ny);
-                    visibleArea.setWidth(
-                        std::ceil(visibleArea.width() + visibleArea.x() - nx));
-                    visibleArea.setHeight(
-                        std::ceil(visibleArea.height() + visibleArea.y() - ny));
-
+                    pixelSnappedVisibleArea.setWidth(
+                        std::ceil(pixelSnappedVisibleArea.width() +
+                                  pixelSnappedVisibleArea.x() - nx));
+                    pixelSnappedVisibleArea.setHeight(
+                        std::ceil(pixelSnappedVisibleArea.height() +
+                                  pixelSnappedVisibleArea.y() - ny));
+                    pixelSnappedVisibleArea.setX(nx);
+                    pixelSnappedVisibleArea.setY(ny);
                     if (!visibleArea.isEmpty()) {
                         // Create mask texture using FBO
                         // Draw clipping polygon with white color to create
@@ -4377,11 +4454,15 @@ public:
                             maskFormat = GL_RED;
                         }
 
-                        auto fboViewport = LayoutRect(0, 0, visibleArea.width(),
-                                                      visibleArea.height());
-                        pushFBOContext(visibleArea.width(),
-                                       visibleArea.height(), false, fboViewport,
-                                       maskFormat);
+                        auto rw = roundUpToPowerOfTwo(
+                            pixelSnappedVisibleArea.width());
+                        auto rh = roundUpToPowerOfTwo(
+                            pixelSnappedVisibleArea.height());
+                        auto fboViewport =
+                            LayoutRect(0, rh - pixelSnappedVisibleArea.height(),
+                                       pixelSnappedVisibleArea.width(),
+                                       pixelSnappedVisibleArea.height());
+                        pushFBOContext(rw, rh, fboViewport, maskFormat);
 
                         gl()->clearColor(0, 0, 0, 0);
                         gl()->clear(GL_COLOR_BUFFER_BIT);
@@ -4405,10 +4486,10 @@ public:
                             gl()->bindTexture(GL_TEXTURE_2D, maskFBO.fboTex);
                             gl()->texParameteri(GL_TEXTURE_2D,
                                                 GL_TEXTURE_SWIZZLE_A, GL_RED);
+                            gl()->bindTexture(GL_TEXTURE_2D, 0);
                         }
 
                         auto clipArea = toRect(dest);
-                        clipArea = toRect(dest);
                         clipArea.intersect(lastState.clipRect);
                         gl()->enable(GL_SCISSOR_TEST);
                         scissor(clipArea.x(), clipArea.y(), clipArea.width(),
@@ -4506,10 +4587,14 @@ public:
                                 if (maskFBO.fboTex) {
                                     auto w = visibleArea.width();
                                     auto h = visibleArea.height();
-                                    maskUV[0] = (minX - visibleArea.x()) / w;
-                                    maskUV[1] = (minY - visibleArea.y()) / h;
-                                    maskUV[2] = (maxX - minX) / w;
-                                    maskUV[3] = (maxY - minY) / h;
+                                    float fw = w / maskFBO.textureSize.width();
+                                    float fh = h / maskFBO.textureSize.height();
+                                    maskUV[0] =
+                                        (minX - visibleArea.x()) / w * fw;
+                                    maskUV[1] =
+                                        (minY - visibleArea.y()) / h * fh;
+                                    maskUV[2] = (maxX - minX) / w * fw;
+                                    maskUV[3] = (maxY - minY) / h * fh;
                                 }
 
                                 drawTexture(csGL, texPosition, tid,
@@ -4540,11 +4625,9 @@ public:
                 }
             }
 
-            deleteFBOContext(maskFBO);
-            // Return mask texture to cache
-            m_compositorContext->putGenericTextureToCache(
-                maskFBO.fboTex, maskFBO.textureSize.width(),
-                maskFBO.textureSize.height(), maskFormat);
+            m_compositorContext->putFBOToCache(
+                maskFBO.fboId, maskFBO.fboTex, maskFBO.textureSize.width(),
+                maskFBO.textureSize.height(), maskFBO.textureFormat);
         }
 
         if (scissorClippingEnabled) {
@@ -4694,15 +4777,13 @@ public:
     struct FBOState {
         GLuint fboId = 0;
         GLuint fboTex = 0;
-        GLuint fboSupportTex = 0;
-        GLuint renderBufferId = 0;
         LayoutRect viewport;
         GLenum textureFormat = 0;
         Unit::IntSize textureSize;
     };
 
-    void pushFBOContext(size_t width, size_t height, bool needsStencilDepth,
-                        LayoutRect viewport, GLenum textureFormat = GL_RGBA)
+    void pushFBOContext(size_t width, size_t height, LayoutRect viewport,
+                        GLenum textureFormat = GL_RGBA)
     {
         m_seenFBOUsage = true;
 
@@ -4710,86 +4791,55 @@ public:
         newFBOState.textureFormat = textureFormat;
         newFBOState.textureSize = Unit::IntSize(width, height);
 
-        // generate FBO
-        gl()->genFramebuffers(1, &newFBOState.fboId);
-        checkError(gl());
+        CompositorContextGL::FBOCacheEntry cachedFBO;
+        bool tookFromFBOCache = m_compositorContext->takeFBOFromCache(
+            width, height, textureFormat, cachedFBO);
 
-        // generate texture
-        bool tookFromCache = true;
-        newFBOState.fboTex = m_compositorContext->takeGenericTextureFromCache(
-            width, height, textureFormat);
-        if (newFBOState.fboTex == 0) {
-            gl()->genTextures(1, &newFBOState.fboTex);
-            tookFromCache = false;
-            checkError(gl());
-        }
+        if (tookFromFBOCache) {
+            newFBOState.fboId = cachedFBO.fboId;
+            newFBOState.fboTex = cachedFBO.textureId;
 
-        // generate render buffer
-        if (needsStencilDepth) {
-            gl()->genRenderbuffers(1, &newFBOState.renderBufferId);
-            checkError(gl());
-        }
-
-        // Bind Frame buffer
-        gl()->bindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
-        checkError(gl());
-
-        // Bind texture
-        gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
-        checkError(gl());
-
-        // Define texture parameters with specified format
-        if (!tookFromCache) {
-            gl()->texImage2D(GL_TEXTURE_2D, 0,
-                             textureFormat == GL_RED ? GL_R8 : textureFormat,
-                             width, height, 0, textureFormat, GL_UNSIGNED_BYTE,
-                             nullptr);
-            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                                GL_CLAMP_TO_EDGE);
-            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                                GL_CLAMP_TO_EDGE);
-            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                                GL_LINEAR);
-            gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR);
-            checkError(gl());
-        }
-
-        // Bind render buffer and define buffer dimension
-        if (needsStencilDepth) {
-            gl()->bindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
-        }
-
-        // Attach texture FBO color attachment
-        gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, newFBOState.fboTex, 0);
-        checkError(gl());
-
-        if (needsStencilDepth) {
-            gl()->genTextures(1, &newFBOState.fboSupportTex);
-            gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboSupportTex);
-            gl()->texImage2D(
-                GL_TEXTURE_2D, 0,                // target and mipmap level
-                GL_DEPTH_STENCIL, width, height, // size of texture
-                0,                               // border size
-                GL_DEPTH_STENCIL,     // format of of data we are uploading
-                                      // to to the texture (ignored)
-                GL_UNSIGNED_INT_24_8, // type of of data we are
-                                      // uploading to to the texture
-                                      // (ignored)
-                NULL /* no data uploaded */);
-            checkError(gl());
-            // attatch the depth/stencil texture to both the stencil and depth
-            // render objects.
-            gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                       GL_TEXTURE_2D, newFBOState.fboSupportTex,
-                                       0);
-            gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                                       GL_TEXTURE_2D, newFBOState.fboSupportTex,
-                                       0);
+            gl()->bindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
             checkError(gl());
         } else {
-            newFBOState.fboSupportTex = 0;
+            gl()->genFramebuffers(1, &newFBOState.fboId);
+            checkError(gl());
+
+            bool tookFromCache = true;
+            newFBOState.fboTex =
+                m_compositorContext->takeGenericTextureFromCache(width, height,
+                                                                 textureFormat);
+            if (newFBOState.fboTex == 0) {
+                gl()->genTextures(1, &newFBOState.fboTex);
+                tookFromCache = false;
+                checkError(gl());
+            }
+
+            gl()->bindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
+            checkError(gl());
+
+            if (!tookFromCache) {
+                gl()->bindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
+                checkError(gl());
+                gl()->texImage2D(
+                    GL_TEXTURE_2D, 0,
+                    textureFormat == GL_RED ? GL_R8 : textureFormat, width,
+                    height, 0, textureFormat, GL_UNSIGNED_BYTE, nullptr);
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                    GL_CLAMP_TO_EDGE);
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                    GL_CLAMP_TO_EDGE);
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                    GL_LINEAR);
+                gl()->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                    GL_LINEAR);
+                checkError(gl());
+                gl()->bindTexture(GL_TEXTURE_2D, 0);
+            }
+
+            gl()->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                       GL_TEXTURE_2D, newFBOState.fboTex, 0);
+            checkError(gl());
         }
 
         newFBOState.viewport = viewport;
@@ -4799,17 +4849,6 @@ public:
         m_fboState.push_back(newFBOState);
     }
 
-    void deleteFBOContext(FBOState s)
-    {
-        gl()->deleteFramebuffers(1, &s.fboId);
-        if (s.renderBufferId) {
-            gl()->deleteRenderbuffers(1, &s.renderBufferId);
-        }
-        if (s.fboSupportTex) {
-            gl()->deleteTextures(1, &s.fboSupportTex);
-        }
-    }
-
     FBOState popFBOContext(bool deleteFBO = true) // returns texture
     {
         FBOState lastState = m_fboState.back();
@@ -4817,11 +4856,6 @@ public:
 
         if (m_fboState.size()) {
             auto& s = m_fboState.back();
-            if (s.renderBufferId) {
-                gl()->bindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
-            } else {
-                gl()->bindRenderbuffer(GL_RENDERBUFFER, 0);
-            }
             gl()->bindFramebuffer(GL_FRAMEBUFFER, s.fboId);
 
             gl()->viewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
@@ -4844,7 +4878,10 @@ public:
         }
 
         if (deleteFBO) {
-            deleteFBOContext(lastState);
+            m_compositorContext->putFBOToCache(
+                lastState.fboId, lastState.fboTex,
+                lastState.textureSize.width(), lastState.textureSize.height(),
+                lastState.textureFormat);
         }
         return lastState;
     }
