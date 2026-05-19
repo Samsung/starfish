@@ -203,7 +203,9 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 
     MicroTaskExecutionManager microTaskExecutionManager(
-        nwd->request->executionContext()->scriptBindingInstance()->engineInstance());
+        nwd->request->executionContext()
+            ->scriptBindingInstance()
+            ->engineInstance());
 
     {
         Locker<Mutex> locker(*nwd->request->m_mutex);
@@ -227,7 +229,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
 
     MicroTaskExecutionManager microTaskExecutionManager(
-        nwd->request->executionContext()->scriptBindingInstance()->engineInstance());
+        nwd->request->executionContext()
+            ->scriptBindingInstance()
+            ->engineInstance());
 
     if (nwd->isAborted) {
         abortHandeler(handle, data);
