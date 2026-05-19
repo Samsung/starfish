@@ -761,7 +761,11 @@ std::pair<OverflowValue, OverflowValue> Node::appliedOverflow()
         return std::make_pair(VisibleOverflow, VisibleOverflow);
     }
 
-    return std::make_pair(style()->overflowX(), style()->overflowY());
+    ComputedStyle* s = style();
+    if (!s) {
+        return std::make_pair(VisibleOverflow, VisibleOverflow);
+    }
+    return std::make_pair(s->overflowX(), s->overflowY());
 }
 
 Element* Node::firstElementChild()
