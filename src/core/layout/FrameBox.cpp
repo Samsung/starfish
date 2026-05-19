@@ -3570,7 +3570,8 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
         } else if (layoutParent()) {
             FrameBox* p = layoutParent()->asFrameBox();
             while (true) {
-                if (p->needToEstablishStackingContext()) {
+                if (p->needToEstablishStackingContext() &&
+                    p->stackingContext()) {
                     if (p->canOwnsStackingContext() ||
                         p->shouldApplyOverflow()) {
                         ensureFrameBoxRareData()->m_stackingContext =
