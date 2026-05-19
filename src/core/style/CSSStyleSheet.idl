@@ -13,7 +13,7 @@ interface CSSStyleSheet : StyleSheet {
     [RaisesException] void deleteRule(unsigned long index);
 
     [Unimplemented] Promise<CSSStyleSheet> replace(USVString text);
-    [Unimplemented] undefined replaceSync(USVString text);
+    [RaisesException] undefined replaceSync(USVString text);
 };
 
 dictionary CSSStyleSheetInit {
