@@ -61,7 +61,9 @@ public:
 
     ScriptBindingInstance* scriptBindingInstance() override
     {
-        return styleSheet()->origin()->scriptBindingInstance();
+        // Use styleSheet's scriptBindingInstance directly to support
+        // constructable stylesheets where origin() is nullptr
+        return styleSheet()->scriptBindingInstance();
     }
 
     unsigned length() const override

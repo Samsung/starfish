@@ -158,6 +158,15 @@ public:
         m_ownerRule = nullptr;
     }
 
+    void clearAllRules()
+    {
+        m_childRuleWrappers.clear();
+        m_childRules.clear();
+        m_importRules.clear();
+        clearStyleRules();
+        clearKeyframesRules();
+    }
+
     void clearStyleRules()
     {
         m_styleRules.clear();
@@ -227,6 +236,7 @@ public:
     }
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
+    void replaceSync(String* text);
 
     bool disabled() override;
     void setDisabled(bool disabled) override;

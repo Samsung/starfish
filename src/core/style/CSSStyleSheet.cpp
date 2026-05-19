@@ -713,6 +713,40 @@ bool CSSStyleSheet::disabled()
     return m_disabled;
 }
 
+void CSSStyleSheet::replaceSync(String* text)
+{
+    // Spec: https://drafts.csswg.org/cssom/#dom-cssstylesheet-replacesync
+    // Step 1: Throw NotAllowedError if not a constructed stylesheet
+    if (m_origin) {
+        throw new DOMException(
+            m_executionContext,
+            String::fromUTF8(
+                "Can't call replaceSync on non-constructed stylesheet"),
+            String::fromUTF8("NotAllowedError"));
+    }
+
+    // Step 2: Parse first to ensure atomic replacement
+    CSSParser parser(m_executionContext);
+    RefPtr<CSSToken> token = parser.makeToken(text);
+    GCVector<StyleRuleBase*> newRules;
+    parser.parseRules(token, newRules,
+                      CSSParser::RuleListType::TopLevelRuleList, false);
+
+    // Step 3: "parse a stylesheet" always returns a list of rules (possibly
+    // empty). The "not a list of rules" case only applies to extreme edge cases
+    // (e.g., encoding errors), not normal parse failures. No action needed.
+
+    // Step 4: Remove all existing rules
+    clearAllRules();
+
+    // Step 5: Add each parsed rule
+    for (size_t i = 0; i < newRules.size(); i++) {
+        addRule(newRules[i]);
+    }
+
+    notifyStyleSheetChanged();
+}
+
 void CSSStyleSheet::setDisabled(bool disabled)
 {
     if (m_disabled == disabled) {
