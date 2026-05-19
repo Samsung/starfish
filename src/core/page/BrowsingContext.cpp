@@ -1185,11 +1185,22 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                              targetY);
 
         TouchData newData(newX, newY, targetScreenX, targetScreenY);
-        if (targetNode->asHTMLIFrameElement()
-                ->browsingContext()
-                ->dispatchTouchEvent(kind, &newData, 1)) {
-            return true;
+        bool innerReturn = targetNode->asHTMLIFrameElement()
+                               ->browsingContext()
+                               ->dispatchTouchEvent(kind, &newData, 1);
+
+        // Touch events do not bubble across iframe boundaries. Mirror the
+        // mouse-event logic above: if the iframe is still the hit target,
+        // the event was fully handled inside the iframe and must not be
+        // re-dispatched in the parent browsing context.
+        Node* afterTarget = hitTest(targetX, targetY);
+        if (afterTarget == targetNode) {
+            return innerReturn;
         }
+        if (!afterTarget) {
+            return false;
+        }
+        targetNode = afterTarget;
     }
 
     bool returnValue = false;
@@ -1295,21 +1306,31 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
                     targetY);
 
+        Node* iframeNode = targetNode;
         MouseData newData(data.button(), data.buttons(), newX, newY,
                           data.screenX(), data.screenY(), 0);
-        if (targetNode->asHTMLIFrameElement()
-                ->browsingContext()
-                ->dispatchMouseEvent(kind, newData)) {
-            return true;
+        bool innerReturn = iframeNode->asHTMLIFrameElement()
+                               ->browsingContext()
+                               ->dispatchMouseEvent(kind, newData);
+
+        // Mouse events do not bubble across iframe boundaries. If the iframe
+        // is still attached and still owns the hit position, the event was
+        // fully handled inside the iframe and must not be re-dispatched in
+        // the parent browsing context (otherwise window-level listeners in
+        // the parent would also fire for clicks inside the iframe, with
+        // coordinates referring to the parent's viewport).
+        Node* afterTarget =
+            hitTest((float)data.clientX(), (float)data.clientY());
+        if (afterTarget == iframeNode) {
+            return innerReturn;
         }
 
-        // Because the iframe may be detached during an event, it will not be
-        // able to maintain an appropriate event path. Therefore, do a hit test
-        // again to validate event position.
-        targetNode = hitTest((float)data.clientX(), (float)data.clientY());
-        if (!targetNode) {
+        // The iframe was detached or replaced synchronously by a handler.
+        // Fall back to dispatching at the new target in the parent context.
+        if (!afterTarget) {
             return false;
         }
+        targetNode = afterTarget;
     }
 
     bool returnValue = false;
