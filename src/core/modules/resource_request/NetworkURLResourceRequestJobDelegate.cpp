@@ -29,6 +29,8 @@
 #include "platform/network/http/HTTPCache.h"
 #include "platform/network/http/HTTPCacheEntry.h"
 #endif
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
@@ -200,6 +202,9 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
 
+    MicroTaskExecutionManager microTaskExecutionManager(
+        nwd->request->executionContext()->scriptBindingInstance()->engineInstance());
+
     {
         Locker<Mutex> locker(*nwd->request->m_mutex);
         if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
@@ -220,6 +225,9 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     STARFISH_ASSERT(nwd->request->executionContext()->isContextThread());
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
+
+    MicroTaskExecutionManager microTaskExecutionManager(
+        nwd->request->executionContext()->scriptBindingInstance()->engineInstance());
 
     if (nwd->isAborted) {
         abortHandeler(handle, data);
@@ -779,6 +787,10 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                             NetworkURLWorkerData* nwd =
                                 (NetworkURLWorkerData*)data;
                             ResourceRequest* request = nwd->request;
+                            MicroTaskExecutionManager microTaskExecutionManager(
+                                request->executionContext()
+                                    ->scriptBindingInstance()
+                                    ->engineInstance());
                             {
                                 Locker<Mutex> locker(*request->m_mutex);
                                 {
