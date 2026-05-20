@@ -331,6 +331,7 @@ test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow2.htm
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-transform.html
 test/cairo/internal-test/css/overflow/scroll-rect-fixed-child.html
 test/cairo/internal-test/css/overflow/overflow-border-radius-test-1.html
+#test/cairo/internal-test/css/overflow/border-radius-buffered-stackingcontext.html
 test/cairo/internal-test/css/padding/padding_apply-order_direction-aware.html
 test/cairo/internal-test/css/padding/padding_with_direction-aware.html
 test/cairo/internal-test/css/padding/padding-block.html
@@ -615,6 +616,7 @@ test/cairo/internal-test/css/transform/transform01.html
 test/cairo/internal-test/css/transform/transform02.html
 test/cairo/internal-test/css/transform/transform03.html
 test/cairo/internal-test/css/transform/var-resolve.html
+test/cairo/internal-test/css/transform/transform-inherit-no-parent.html
 test/cairo/internal-test/css/style/cssinherit.html
 test/cairo/internal-test/css/opacity/3d-layer-overlapped.html
 test/cairo/internal-test/css/incremental/incremental_layout_relative_position_bug01.html
@@ -622,6 +624,7 @@ test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug.html
 test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug-01.html
 test/cairo/internal-test/css/incremental/flex-item-resolve-height-correctly.html
 test/cairo/internal-test/css/stackingcontext/iframe_border_with_composite.html
+#test/cairo/internal-test/css/stackingcontext/fixed-inside-buffered-ancestors.html
 test/cairo/internal-test/css/flex/flex-webkit-prefix.html
 test/cairo/internal-test/css/flex/flex-webkit-prefix_with_-webkit-line-clamp.html
 test/cairo/internal-test/css/flex/layout-both-side-every-flex-item.html
