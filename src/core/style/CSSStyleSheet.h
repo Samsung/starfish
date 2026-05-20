@@ -237,6 +237,7 @@ public:
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
     void replaceSync(String* text);
+    Promise* replace(String* text);
 
     bool disabled() override;
     void setDisabled(bool disabled) override;

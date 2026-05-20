@@ -725,26 +725,70 @@ void CSSStyleSheet::replaceSync(String* text)
             String::fromUTF8("NotAllowedError"));
     }
 
-    // Step 2: Parse first to ensure atomic replacement
+    // Step 2: Constructor document validation deferred (adoptedStyleSheets not
+    // implemented yet)
+
+    // Step 3: Parse a stylesheet from text
     CSSParser parser(m_executionContext);
     RefPtr<CSSToken> token = parser.makeToken(text);
     GCVector<StyleRuleBase*> newRules;
     parser.parseRules(token, newRules,
                       CSSParser::RuleListType::TopLevelRuleList, false);
 
-    // Step 3: "parse a stylesheet" always returns a list of rules (possibly
+    // Step 4: "parse a stylesheet" always returns a list of rules (possibly
     // empty). The "not a list of rules" case only applies to extreme edge cases
     // (e.g., encoding errors), not normal parse failures. No action needed.
 
-    // Step 4: Remove all existing rules
+    // Step 5: Remove all existing rules
     clearAllRules();
 
-    // Step 5: Add each parsed rule
+    // Step 6: Add each parsed rule
     for (size_t i = 0; i < newRules.size(); i++) {
         addRule(newRules[i]);
     }
 
     notifyStyleSheetChanged();
+}
+
+Promise* CSSStyleSheet::replace(String* text)
+{
+    // Spec: https://drafts.csswg.org/cssom/#dom-cssstylesheet-replace
+    Promise* promise = new Promise(m_executionContext->scriptBindingInstance());
+
+    // Step 1: Reject with NotAllowedError if not a constructed stylesheet
+    if (m_origin) {
+        auto exception = new DOMException(
+            m_executionContext,
+            String::fromUTF8(
+                "Can't call replace on non-constructed stylesheet"),
+            String::fromUTF8("NotAllowedError"));
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // Step 2: Constructor document validation deferred (adoptedStyleSheets not
+    // implemented yet)
+
+    // Step 3: Parse first to ensure atomic replacement
+    CSSParser parser(m_executionContext);
+    RefPtr<CSSToken> token = parser.makeToken(text);
+    GCVector<StyleRuleBase*> newRules;
+    parser.parseRules(token, newRules,
+                      CSSParser::RuleListType::TopLevelRuleList, false);
+
+    // Step 4: "parse a stylesheet" always returns a list of rules
+
+    // Step 5-6: Remove all existing rules, then add each parsed rule
+    clearAllRules();
+    for (size_t i = 0; i < newRules.size(); i++) {
+        addRule(newRules[i]);
+    }
+
+    notifyStyleSheetChanged();
+
+    // Resolve p with this CSSStyleSheet
+    promise->fulfill(scriptValue());
+    return promise;
 }
 
 void CSSStyleSheet::setDisabled(bool disabled)
