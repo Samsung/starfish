@@ -2246,9 +2246,22 @@ public:
             return false;
         }
 
-        return (child->style()->position() != FixedPositionValue &&
-                isPositioned()) ||
-               style()->hasTransforms(this);
+        if ((child->style()->position() != FixedPositionValue &&
+             isPositioned()) ||
+            style()->hasTransforms(this)) {
+            return true;
+        }
+
+        // will-change: transform creates a containing block for
+        // position: fixed (and absolute) descendants, matching the behavior
+        // of an actual transform. transform does not apply to non-
+        // transformable elements (inline, inline-non-replaced), so
+        // will-change: transform must not promote them either.
+        if (!isTransformable()) {
+            return false;
+        }
+        WillChangeData* wc = style()->willChange();
+        return wc && wc->transform();
     }
 
     bool canHaveFirstLineOrFirstLetterStyle()
