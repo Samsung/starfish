@@ -394,13 +394,19 @@ public:
                 frameList.push_back(frame->asFrameBox());
                 frame = frame->layoutParent();
 
+                bool isNearestBufferedFrame = false;
                 if (needToShareBuffer &&
                     canBeNearestBufferedFrame(frame, childStackingContext)) {
                     nearestBufferedFrame = frame;
                     needToShareBuffer = false;
+                    isNearestBufferedFrame = true;
                 }
 
-                if (needToShareBuffer) {
+                // We still need overflow/border-radius info for the buffered
+                // frame itself so its rounded clip is re-applied after
+                // resetMatrixAndClip wipes the canvas clip set by
+                // fillGraphicsBufferContents.
+                if (needToShareBuffer || isNearestBufferedFrame) {
                     insertOverflowOrScroll(frame, status, canScroll);
                 }
 
