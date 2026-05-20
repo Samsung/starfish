@@ -6356,7 +6356,9 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::Transform:
         style->clearTransform();
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-            style->setTransform(parentStyle->transforms());
+            if (parentStyle->transforms()) {
+                style->setTransform(parentStyle->transforms());
+            }
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
         } else if (newCssValue.valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial ||
