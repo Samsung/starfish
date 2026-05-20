@@ -12,7 +12,7 @@ interface CSSStyleSheet : StyleSheet {
     [RaisesException] unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0);
     [RaisesException] void deleteRule(unsigned long index);
 
-    [Unimplemented] Promise<CSSStyleSheet> replace(USVString text);
+    [RaisesException] Promise<CSSStyleSheet> replace(USVString text);
     [RaisesException] undefined replaceSync(USVString text);
 };
 
