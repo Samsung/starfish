@@ -483,11 +483,15 @@ bool SVGAnimationElement::parseDur(const String* durValue, CSSTime& duration)
     auto str = durValue->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, str.c_str(), str.length());
-    if (!temp.updateValueTime(tokens, 0)) {
-        return false;
+    if (temp.updateValueTime(tokens, 0)) {
+        duration = temp.timeValue();
+        return true;
+    } else if (temp.updateValueTime(tokens,
+                                    CSSPropertyParser::AllowWithoutUnit)) {
+        duration = CSSTime(temp.timeValue().value() * 1000);
+        return true;
     }
-    duration = temp.timeValue();
-    return true;
+    return false;
 }
 
 bool SVGAnimationElement::parseFill(const String* fillValue,
