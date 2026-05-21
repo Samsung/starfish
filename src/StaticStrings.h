@@ -599,7 +599,7 @@ public:
     QualifiedName m_floodOpacity;
 
     // SVG animate
-    QualifiedName m_attributename;
+    QualifiedName m_attributeName;
     QualifiedName m_beginEvent;
     QualifiedName m_endEvent;
     QualifiedName m_repeatEvent;

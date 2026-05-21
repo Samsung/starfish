@@ -111,7 +111,7 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
 
     // TODO: Apply changed valued to active animations.
 
-    if (ss->m_attributename == name) {
+    if (ss->m_attributeName == name) {
         CSSStyleValuePair::KeyKind keyKind;
         if (parseAttributeName(value, keyKind)) {
             if (!m_attributeName.hasValue() ||
