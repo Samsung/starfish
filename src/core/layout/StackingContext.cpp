@@ -28,6 +28,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/Scrolling.h"
+#include "core/dom/svg/SVGElement.h"
 #include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationExecutor.h"
 #include "core/style/FilterFunctions.h"
@@ -175,6 +176,34 @@ struct StackingContext::ComputeStackingContextContext {
     }
 };
 
+static bool canSplitBuffer(StackingContext* sc)
+{
+    bool canSplitGraphicsBufferCond = true;
+    if (sc->owner()->style()->hasFilter() || sc->owner()->isFrameSVGSVGBox()) {
+        canSplitGraphicsBufferCond = false;
+    } else {
+        sc->owner()->iterateChildFrameBox([&](FrameBox* fb) {
+            if (fb->stackingContext() &&
+                fb->stackingContext()->needsGraphicsBuffer()) {
+                return false;
+            }
+
+            if (fb->isFrameSVGBox()) {
+                auto filterElement =
+                    fb->node()->asSVGElement()->filterElement();
+                if (filterElement) {
+                    canSplitGraphicsBufferCond = false;
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    return canSplitGraphicsBufferCond;
+}
+
 GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
                                            size_t bufferHeight,
                                            size_t screenWidth,
@@ -188,11 +217,7 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     , m_verticalTileCount(1)
     , m_additionalPixelRatio(sc->additionalPixelRatio())
 {
-    bool dontSplitGraphicsBufferCond = false;
-
-    if (sc->owner()->style()->hasFilter() || sc->owner()->isFrameSVGSVGBox()) {
-        dontSplitGraphicsBufferCond = true;
-    }
+    bool canSplitGraphicsBufferCond = canSplitBuffer(sc);
 
     LayoutRect screenRect(0, 0, screenWidth, screenHeight);
     // if buffer is smaller than screen && whole content will be shown on
@@ -200,15 +225,15 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     // we don't need to divide buffer
     if (screenRect.containsInVisual(sc->screenExtent()) &&
         bufferWidth <= screenWidth && bufferHeight <= screenHeight) {
-        dontSplitGraphicsBufferCond = true;
+        canSplitGraphicsBufferCond = false;
     }
 
     // FIXME non-integer pixel ratio makes glitch between tiles
     if (m_additionalPixelRatio != 1) {
-        dontSplitGraphicsBufferCond = true;
+        canSplitGraphicsBufferCond = false;
     }
 
-    if (dontSplitGraphicsBufferCond) {
+    if (!canSplitGraphicsBufferCond) {
         m_tileDataWidth = ceil(bufferWidth * m_additionalPixelRatio);
         m_horizontalTileCount = 1;
         m_tileDataHeight = ceil(bufferHeight * m_additionalPixelRatio);
