@@ -2317,7 +2317,8 @@ ScriptValue Promise::promiseResult()
     return result.result;
 }
 
-void freezeArray(Escargot::ExecutionStateRef* state, Escargot::ArrayObjectRef* array)
+void freezeArray(Escargot::ExecutionStateRef* state,
+                 Escargot::ArrayObjectRef* array)
 {
     // Call Object.freeze() via Evaluator to access internal GlobalObject API
     auto ctx = state->context();
@@ -2325,9 +2326,11 @@ void freezeArray(Escargot::ExecutionStateRef* state, Escargot::ArrayObjectRef* a
         ctx,
         [](ExecutionStateRef* state, ArrayObjectRef* array) -> ValueRef* {
             auto globalObject = state->context()->globalObject();
-            // Object.freeze is stored as a property of Object.prototype.constructor
+            // Object.freeze is stored as a property of
+            // Object.prototype.constructor
             auto objectConstructor = globalObject->object();
-            auto freezeFunc = objectConstructor->get(state, StringRef::createFromASCII("freeze"));
+            auto freezeFunc = objectConstructor->get(
+                state, StringRef::createFromASCII("freeze"));
             ValueRef* argv[] = { array };
             return freezeFunc->call(state, objectConstructor, 1, argv);
         },
