@@ -33,7 +33,6 @@ dictionary RTCTrackEventInit : EventInit {
 interface RTCTrackEvent : Event {
   readonly attribute RTCRtpReceiver receiver;
   readonly attribute MediaStreamTrack track;
-  // FIXME: FrozenArray<MediaStream> -> sequence<MediaStream>;
-  [SameObject] readonly attribute sequence<MediaStream> streams;
+  [SameObject] readonly attribute FrozenArray<MediaStream> streams;
   readonly attribute RTCRtpTransceiver transceiver;
 };
