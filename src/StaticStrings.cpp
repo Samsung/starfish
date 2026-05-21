@@ -667,8 +667,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "flood-opacity"));
 
     // SVG animate
-    m_attributename = QualifiedName(
-        AtomicString::createAtomicString(starfish, "attributename"));
+    m_attributeName = QualifiedName(
+        AtomicString::createAtomicString(starfish, "attributeName"));
     m_beginEvent =
         QualifiedName(AtomicString::createAtomicString(starfish, "beginEvent"));
     m_endEvent =
@@ -676,7 +676,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_repeatEvent = QualifiedName(
         AtomicString::createAtomicString(starfish, "repeatEvent"));
     m_repeatCount = QualifiedName(
-        AtomicString::createAtomicString(starfish, "repeatcount"));
+        AtomicString::createAtomicString(starfish, "repeatCount"));
     m_calcMode =
         QualifiedName(AtomicString::createAtomicString(starfish, "calcmode"));
     m_keySplines =

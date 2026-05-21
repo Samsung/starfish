@@ -709,7 +709,7 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_gradientUnits,
                           tokenAttribute.value());
-        } else if (tokenAttribute.name().localName()->equals("spreadMethod")) {
+        } else if (tokenAttribute.name().localName()->equals("spreadmethod")) {
             tokenAttribute =
                 Attribute(token->starfish()->staticStrings()->m_spreadMethod,
                           tokenAttribute.value());
@@ -836,6 +836,169 @@ static void adjustSVGAttributes(AtomicHTMLToken* token)
             tokenAttribute = Attribute(
                 token->starfish()->staticStrings()->m_gradientTransform,
                 tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("clippathunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_clipPathUnits,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("markerunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_markerUnits,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("maskunits")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_maskUnits,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "maskcontentunits")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_maskContentUnits,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("attributename")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_attributeName,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("repeatcount")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_repeatCount,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("calcmode")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_calcMode,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("keysplines")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_keySplines,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("textanchor")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_textAnchor,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "alignmentbaseline")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_alignmentBaseline,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("strokewidth")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_strokeWidth,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("strokelinecap")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_strokeLineCap,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "strokelinejoin")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_strokeLineJoin,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "strokemiterlimit")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_strokeMiterLimit,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "strokedasharray")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_strokeDasharray,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "strokedashoffset")) {
+            tokenAttribute = Attribute(
+                token->starfish()->staticStrings()->m_strokeDashoffset,
+                tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("strokeopacity")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_strokeOpacity,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("fillopacity")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_fillOpacity,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("fillrule")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_fillRule,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stopcolor")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stopColor,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("stopopacity")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_stopOpacity,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("floodcolor")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_floodColor,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("floodopacity")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_floodOpacity,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals(
+                       "transformorigin")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_transformOrigin,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("beginevent")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_beginEvent,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("endevent")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_endEvent,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("repeatevent")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_repeatEvent,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkhref")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkHref,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinktype")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkType,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkrole")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkRole,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkarcrole")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkArcrole,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinktitle")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkTitle,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkshow")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkShow,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkactuate")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkActuate,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinklabel")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkLabel,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkfrom")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkFrom,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xlinkto")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xlinkTo,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("xmlbase")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_xmlBase,
+                          tokenAttribute.value());
+        } else if (tokenAttribute.name().localName()->equals("kernelmatrix")) {
+            tokenAttribute =
+                Attribute(token->starfish()->staticStrings()->m_kernelMatrix,
+                          tokenAttribute.value());
         }
     }
 }
