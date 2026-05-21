@@ -331,7 +331,7 @@ test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow2.htm
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-transform.html
 test/cairo/internal-test/css/overflow/scroll-rect-fixed-child.html
 test/cairo/internal-test/css/overflow/overflow-border-radius-test-1.html
-#test/cairo/internal-test/css/overflow/border-radius-buffered-stackingcontext.html
+test/cairo/internal-test/css/overflow/border-radius-buffered-stackingcontext.html
 test/cairo/internal-test/css/padding/padding_apply-order_direction-aware.html
 test/cairo/internal-test/css/padding/padding_with_direction-aware.html
 test/cairo/internal-test/css/padding/padding-block.html
