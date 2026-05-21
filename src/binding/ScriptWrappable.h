@@ -569,7 +569,8 @@ protected:
 Promise* toPromise(ScriptBindingInstance* instance, ScriptValue scriptValue);
 
 // Freeze ArrayObjectRef per Web IDL FrozenArray<T> spec
-void freezeArray(Escargot::ExecutionStateRef* state, Escargot::ArrayObjectRef* array);
+void freezeArray(Escargot::ExecutionStateRef* state,
+                 Escargot::ArrayObjectRef* array);
 
 } // namespace Starfish
 
