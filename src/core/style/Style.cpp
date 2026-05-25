@@ -338,6 +338,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         CSSTransformFunction& f = this->at(c);
         size_t valueSize = f.values()->size();
         float* dValues = ALLOCA(valueSize * sizeof(float), float);
+        memset(dValues, 0, valueSize * sizeof(float));
         ValueList convertedValueList(*f.values());
 
         for (size_t i = 0; i < valueSize; i++) {
@@ -373,6 +374,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                 } else {
                     valueSize = values->size();
                     dValues = ALLOCA(valueSize * sizeof(float), float);
+                    memset(dValues, 0, valueSize * sizeof(float));
                     convertedValueList.clear();
                     for (const auto& item : *values) {
                         convertedValueList.push_back(item);
