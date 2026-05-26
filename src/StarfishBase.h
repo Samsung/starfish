@@ -325,9 +325,13 @@ inline void clearStack()
 #elif defined(__arm__) || defined(__thumb__) || defined(_ARM) || \
     defined(_M_ARM) || defined(_M_ARMT) || defined(__arm) || defined(__arm)
 #define STARFISH_ARM
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#define STARFISH_ARM_NEON
+#endif
 
 #elif defined(__aarch64__)
 #define STARFISH_ARM64
+#define STARFISH_ARM_NEON
 
 #elif defined(__riscv) && defined(__riscv_xlen) && __riscv_xlen == 32
 #define STARFISH_RISCV32

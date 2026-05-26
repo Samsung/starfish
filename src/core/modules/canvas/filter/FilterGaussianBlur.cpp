@@ -33,6 +33,12 @@
 #include "core/layout/svg/FrameSVGBox.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 
+#if defined(STARFISH_X86) || defined(STARFISH_X86_64)
+#include <emmintrin.h>
+#elif defined(STARFISH_ARM_NEON)
+#include <arm_neon.h>
+#endif
+
 namespace Starfish {
 
 inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
@@ -107,10 +113,12 @@ inline void boxBlurAlphaOnly(uint8_t* srcData, uint8_t* dstData,
     }
 }
 
-inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
-                    int dxRight, int stride, int strideLine, int effectWidth,
-                    int effectHeight, bool alphaImage,
-                    SVGFEGaussianBlurElement::EdgeMode edgeMode)
+#if defined(STARFISH_X86)
+// SSE2 SIMD implementation for x86 (32-bit)
+inline void boxBlurSIMD(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                        int dxLeft, int dxRight, int stride, int strideLine,
+                        int effectWidth, int effectHeight, bool alphaImage,
+                        SVGFEGaussianBlurElement::EdgeMode edgeMode)
 {
     const int maxKernelSize = std::min(dxRight, effectWidth);
 
@@ -120,49 +128,643 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
                                 maxKernelSize);
     }
 
-    // Concerning the array width/length: it is Element size + Margin + Border.
-    // The number of pixels will be
-    // P = width * height * channels.
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        __m128i vsum = _mm_setzero_si128();
+
+        if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                __m128i pixel = _mm_cvtsi32_si128(
+                    *reinterpret_cast<const int32_t*>(srcPtr));
+                __m128i pixel16 = _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                __m128i pixel32 =
+                    _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                // Extract and divide each channel (SSE2 doesn't have
+                // _mm_div_epi32)
+                int sumR = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_R_INDEX)));
+                int sumG = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_G_INDEX)));
+                int sumB = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_B_INDEX)));
+                int sumA = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_A_INDEX)));
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    __m128i pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                    __m128i pixel16 =
+                        _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                    __m128i pixel32 =
+                        _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                    vsum = _mm_sub_epi32(vsum, pixel32);
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    __m128i pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                    __m128i pixel16 =
+                        _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                    __m128i pixel32 =
+                        _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                    vsum = _mm_add_epi32(vsum, pixel32);
+                }
+            }
+        } else {
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                __m128i pixel;
+
+                if (i < 0) {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueLeft));
+                } else if (i >= effectWidth) {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueRight));
+                } else {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i pixel16 = _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                __m128i pixel32 =
+                    _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                // Extract and divide each channel (SSE2 doesn't have
+                // _mm_div_epi32)
+                int sumR = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_R_INDEX)));
+                int sumG = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_G_INDEX)));
+                int sumB = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_B_INDEX)));
+                int sumA = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_A_INDEX)));
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                __m128i leftPixel;
+                if (x < dxLeft) {
+                    leftPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueLeft));
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    leftPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i leftPixel16 =
+                    _mm_unpacklo_epi8(leftPixel, _mm_setzero_si128());
+                __m128i leftPixel32 =
+                    _mm_unpacklo_epi16(leftPixel16, _mm_setzero_si128());
+                vsum = _mm_sub_epi32(vsum, leftPixel32);
+
+                __m128i rightPixel;
+                if (x + dxRight >= effectWidth) {
+                    rightPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueRight));
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    rightPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i rightPixel16 =
+                    _mm_unpacklo_epi8(rightPixel, _mm_setzero_si128());
+                __m128i rightPixel32 =
+                    _mm_unpacklo_epi16(rightPixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, rightPixel32);
+            }
+        }
+    }
+}
+#elif defined(STARFISH_X86_64)
+inline void boxBlurSIMD(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                        int dxLeft, int dxRight, int stride, int strideLine,
+                        int effectWidth, int effectHeight, bool alphaImage,
+                        SVGFEGaussianBlurElement::EdgeMode edgeMode)
+{
+    const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    if (alphaImage) {
+        return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
+                                strideLine, effectWidth, effectHeight,
+                                maxKernelSize);
+    }
+
+    __m128i vdx = _mm_set1_epi32(static_cast<int>(dx));
+
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        __m128i vsum = _mm_setzero_si128();
+
+        if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                __m128i pixel = _mm_cvtsi32_si128(
+                    *reinterpret_cast<const int32_t*>(srcPtr));
+                __m128i pixel16 = _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                __m128i pixel32 =
+                    _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                // Extract and divide each channel (SSE2 doesn't have
+                // _mm_div_epi32)
+                int sumR = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_R_INDEX)));
+                int sumG = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_G_INDEX)));
+                int sumB = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_B_INDEX)));
+                int sumA = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_A_INDEX)));
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    __m128i pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                    __m128i pixel16 =
+                        _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                    __m128i pixel32 =
+                        _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                    vsum = _mm_sub_epi32(vsum, pixel32);
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    __m128i pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                    __m128i pixel16 =
+                        _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                    __m128i pixel32 =
+                        _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                    vsum = _mm_add_epi32(vsum, pixel32);
+                }
+            }
+        } else {
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                __m128i pixel;
+
+                if (i < 0) {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueLeft));
+                } else if (i >= effectWidth) {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueRight));
+                } else {
+                    pixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i pixel16 = _mm_unpacklo_epi8(pixel, _mm_setzero_si128());
+                __m128i pixel32 =
+                    _mm_unpacklo_epi16(pixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                // Extract and divide each channel (SSE2 doesn't have
+                // _mm_div_epi32)
+                int sumR = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_R_INDEX)));
+                int sumG = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_G_INDEX)));
+                int sumB = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_B_INDEX)));
+                int sumA = _mm_cvtsi128_si32(_mm_shuffle_epi32(
+                    vsum, _MM_SHUFFLE(0, 0, 0, STARFISH_PIXEL_A_INDEX)));
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                __m128i leftPixel;
+                if (x < dxLeft) {
+                    leftPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueLeft));
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    leftPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i leftPixel16 =
+                    _mm_unpacklo_epi8(leftPixel, _mm_setzero_si128());
+                __m128i leftPixel32 =
+                    _mm_unpacklo_epi16(leftPixel16, _mm_setzero_si128());
+                vsum = _mm_sub_epi32(vsum, leftPixel32);
+
+                __m128i rightPixel;
+                if (x + dxRight >= effectWidth) {
+                    rightPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(edgeValueRight));
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    rightPixel = _mm_cvtsi32_si128(
+                        *reinterpret_cast<const int32_t*>(srcPtr));
+                }
+                __m128i rightPixel16 =
+                    _mm_unpacklo_epi8(rightPixel, _mm_setzero_si128());
+                __m128i rightPixel32 =
+                    _mm_unpacklo_epi16(rightPixel16, _mm_setzero_si128());
+                vsum = _mm_add_epi32(vsum, rightPixel32);
+            }
+        }
+    }
+}
+#elif defined(STARFISH_ARM) && defined(STARFISH_ARM_NEON)
+inline void boxBlurSIMD(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                        int dxLeft, int dxRight, int stride, int strideLine,
+                        int effectWidth, int effectHeight, bool alphaImage,
+                        SVGFEGaussianBlurElement::EdgeMode edgeMode)
+{
+    const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    if (alphaImage) {
+        return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
+                                strideLine, effectWidth, effectHeight,
+                                maxKernelSize);
+    }
+
+    int32x4_t vdx = vdupq_n_s32(static_cast<int>(dx));
+
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        int32x4_t vsum = vdupq_n_s32(0);
+
+        if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                uint8x8_t pixel8 = vld1_u8(srcPtr);
+                uint16x8_t pixel16 = vmovl_u8(pixel8);
+                int32x4_t pixel32 =
+                    vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                vsum = vaddq_s32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                int sumR = vgetq_lane_s32(vsum, STARFISH_PIXEL_R_INDEX);
+                int sumG = vgetq_lane_s32(vsum, STARFISH_PIXEL_G_INDEX);
+                int sumB = vgetq_lane_s32(vsum, STARFISH_PIXEL_B_INDEX);
+                int sumA = vgetq_lane_s32(vsum, STARFISH_PIXEL_A_INDEX);
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    int32x4_t pixel32 =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                    vsum = vsubq_s32(vsum, pixel32);
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    int32x4_t pixel32 =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                    vsum = vaddq_s32(vsum, pixel32);
+                }
+            }
+        } else {
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                uint8x8_t pixel8;
+
+                if (i < 0) {
+                    pixel8 = vld1_u8(edgeValueLeft);
+                } else if (i >= effectWidth) {
+                    pixel8 = vld1_u8(edgeValueRight);
+                } else {
+                    pixel8 = vld1_u8(srcPtr);
+                }
+                uint16x8_t pixel16 = vmovl_u8(pixel8);
+                int32x4_t pixel32 =
+                    vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                vsum = vaddq_s32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                int sumR = vgetq_lane_s32(vsum, STARFISH_PIXEL_R_INDEX);
+                int sumG = vgetq_lane_s32(vsum, STARFISH_PIXEL_G_INDEX);
+                int sumB = vgetq_lane_s32(vsum, STARFISH_PIXEL_B_INDEX);
+                int sumA = vgetq_lane_s32(vsum, STARFISH_PIXEL_A_INDEX);
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                int32x4_t leftPixel;
+                if (x < dxLeft) {
+                    uint8x8_t pixel8 = vld1_u8(edgeValueLeft);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    leftPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    leftPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                }
+                vsum = vsubq_s32(vsum, leftPixel);
+
+                int32x4_t rightPixel;
+                if (x + dxRight >= effectWidth) {
+                    uint8x8_t pixel8 = vld1_u8(edgeValueRight);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    rightPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    rightPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                }
+                vsum = vaddq_s32(vsum, rightPixel);
+            }
+        }
+    }
+}
+#elif defined(STARFISH_ARM64) && defined(STARFISH_ARM_NEON)
+inline void boxBlurSIMD(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                        int dxLeft, int dxRight, int stride, int strideLine,
+                        int effectWidth, int effectHeight, bool alphaImage,
+                        SVGFEGaussianBlurElement::EdgeMode edgeMode)
+{
+    const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    if (alphaImage) {
+        return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
+                                strideLine, effectWidth, effectHeight,
+                                maxKernelSize);
+    }
+
+    int32x4_t vdx = vdupq_n_s32(static_cast<int>(dx));
+
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        int32x4_t vsum = vdupq_n_s32(0);
+
+        if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                uint8x8_t pixel8 = vld1_u8(srcPtr);
+                uint16x8_t pixel16 = vmovl_u8(pixel8);
+                int32x4_t pixel32 =
+                    vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                vsum = vaddq_s32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                int sumR = vgetq_lane_s32(vsum, STARFISH_PIXEL_R_INDEX);
+                int sumG = vgetq_lane_s32(vsum, STARFISH_PIXEL_G_INDEX);
+                int sumB = vgetq_lane_s32(vsum, STARFISH_PIXEL_B_INDEX);
+                int sumA = vgetq_lane_s32(vsum, STARFISH_PIXEL_A_INDEX);
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    int32x4_t pixel32 =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                    vsum = vsubq_s32(vsum, pixel32);
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    int32x4_t pixel32 =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                    vsum = vaddq_s32(vsum, pixel32);
+                }
+            }
+        } else {
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                uint8x8_t pixel8;
+
+                if (i < 0) {
+                    pixel8 = vld1_u8(edgeValueLeft);
+                } else if (i >= effectWidth) {
+                    pixel8 = vld1_u8(edgeValueRight);
+                } else {
+                    pixel8 = vld1_u8(srcPtr);
+                }
+                uint16x8_t pixel16 = vmovl_u8(pixel8);
+                int32x4_t pixel32 =
+                    vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                vsum = vaddq_s32(vsum, pixel32);
+            }
+
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                int sumR = vgetq_lane_s32(vsum, STARFISH_PIXEL_R_INDEX);
+                int sumG = vgetq_lane_s32(vsum, STARFISH_PIXEL_G_INDEX);
+                int sumB = vgetq_lane_s32(vsum, STARFISH_PIXEL_B_INDEX);
+                int sumA = vgetq_lane_s32(vsum, STARFISH_PIXEL_A_INDEX);
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / static_cast<int>(dx));
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / static_cast<int>(dx));
+
+                int32x4_t leftPixel;
+                if (x < dxLeft) {
+                    uint8x8_t pixel8 = vld1_u8(edgeValueLeft);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    leftPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    leftPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                }
+                vsum = vsubq_s32(vsum, leftPixel);
+
+                int32x4_t rightPixel;
+                if (x + dxRight >= effectWidth) {
+                    uint8x8_t pixel8 = vld1_u8(edgeValueRight);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    rightPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    uint8x8_t pixel8 = vld1_u8(srcPtr);
+                    uint16x8_t pixel16 = vmovl_u8(pixel8);
+                    rightPixel =
+                        vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pixel16)));
+                }
+                vsum = vaddq_s32(vsum, rightPixel);
+            }
+        }
+    }
+}
+#else
+inline void boxBlurScalar(uint8_t* srcData, uint8_t* dstData, unsigned dx,
+                          int dxLeft, int dxRight, int stride, int strideLine,
+                          int effectWidth, int effectHeight, bool alphaImage,
+                          SVGFEGaussianBlurElement::EdgeMode edgeMode)
+{
+    const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    if (alphaImage) {
+        return boxBlurAlphaOnly(srcData, dstData, dx, dxLeft, dxRight, stride,
+                                strideLine, effectWidth, effectHeight,
+                                maxKernelSize);
+    }
+
     for (int y = 0; y < effectHeight; ++y) {
         int line = y * strideLine;
         int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
 
         if (edgeMode == SVGFEGaussianBlurElement::EdgeMode::SVG_EDGEMODE_NONE) {
-            // Fill the kernel.
             for (int i = 0; i < maxKernelSize; ++i) {
                 unsigned offset = line + i * stride;
                 const uint8_t* srcPtr = srcData + offset;
-#if defined(PORT_PIXEL_ORDER_RGBA)
-                sumR += *srcPtr++;
-                sumG += *srcPtr++;
-                sumB += *srcPtr++;
-                sumA += *srcPtr;
-#else
-                sumB += *srcPtr++;
-                sumG += *srcPtr++;
-                sumR += *srcPtr++;
-                sumA += *srcPtr;
-#endif
+                sumR += srcPtr[STARFISH_PIXEL_R_INDEX];
+                sumG += srcPtr[STARFISH_PIXEL_G_INDEX];
+                sumB += srcPtr[STARFISH_PIXEL_B_INDEX];
+                sumA += srcPtr[STARFISH_PIXEL_A_INDEX];
             }
 
-            // Blurring.
             for (int x = 0; x < effectWidth; ++x) {
                 unsigned pixelByteOffset = line + x * stride;
                 uint8_t* dstPtr = dstData + pixelByteOffset;
 
-#if defined(PORT_PIXEL_ORDER_RGBA)
-                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-                *dstPtr = static_cast<uint8_t>(sumA / dx);
-#else
-                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-                *dstPtr = static_cast<uint8_t>(sumA / dx);
-#endif
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / dx);
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / dx);
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / dx);
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / dx);
 
-                // Shift kernel.
                 if (x >= dxLeft) {
                     unsigned leftOffset = pixelByteOffset - dxLeft * stride;
                     const uint8_t* srcPtr = srcData + leftOffset;
@@ -181,17 +783,12 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
                     sumA += srcPtr[STARFISH_PIXEL_A_INDEX];
                 }
             }
-
         } else {
-            // FIXME: Add support for 'wrap' here.
-            // Get edge values for edgeMode 'duplicate'.
             const uint8_t* edgeValueLeft = srcData + line;
             const uint8_t* edgeValueRight =
                 srcData + (line + (effectWidth - 1) * stride);
 
-            // Fill the kernel.
             for (int i = dxLeft * -1; i < dxRight; ++i) {
-                // Is this right for negative values of 'i'?
                 unsigned offset = line + i * stride;
                 const uint8_t* srcPtr = srcData + offset;
 
@@ -206,37 +803,26 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
                     sumB += edgeValueRight[STARFISH_PIXEL_B_INDEX];
                     sumA += edgeValueRight[STARFISH_PIXEL_A_INDEX];
                 } else {
-#if defined(PORT_PIXEL_ORDER_RGBA)
-                    sumR += *srcPtr++;
-                    sumG += *srcPtr++;
-                    sumB += *srcPtr++;
-                    sumA += *srcPtr;
-#else
-                    sumB += *srcPtr++;
-                    sumG += *srcPtr++;
-                    sumR += *srcPtr++;
-                    sumA += *srcPtr;
-#endif
+                    sumR += srcPtr[STARFISH_PIXEL_R_INDEX];
+                    sumG += srcPtr[STARFISH_PIXEL_G_INDEX];
+                    sumB += srcPtr[STARFISH_PIXEL_B_INDEX];
+                    sumA += srcPtr[STARFISH_PIXEL_A_INDEX];
                 }
             }
 
-            // Blurring.
             for (int x = 0; x < effectWidth; ++x) {
                 unsigned pixelByteOffset = line + x * stride;
                 uint8_t* dstPtr = dstData + pixelByteOffset;
 
-#if defined(PORT_PIXEL_ORDER_RGBA)
-                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-                *dstPtr = static_cast<uint8_t>(sumA / dx);
-#else
-                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
-                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
-                *dstPtr = static_cast<uint8_t>(sumA / dx);
-#endif
-                // Shift kernel.
+                dstPtr[STARFISH_PIXEL_R_INDEX] =
+                    static_cast<uint8_t>(sumR / dx);
+                dstPtr[STARFISH_PIXEL_G_INDEX] =
+                    static_cast<uint8_t>(sumG / dx);
+                dstPtr[STARFISH_PIXEL_B_INDEX] =
+                    static_cast<uint8_t>(sumB / dx);
+                dstPtr[STARFISH_PIXEL_A_INDEX] =
+                    static_cast<uint8_t>(sumA / dx);
+
                 if (x < dxLeft) {
                     sumR -= edgeValueLeft[STARFISH_PIXEL_R_INDEX];
                     sumG -= edgeValueLeft[STARFISH_PIXEL_G_INDEX];
@@ -267,6 +853,22 @@ inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
             }
         }
     }
+}
+#endif
+
+inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
+                    int dxRight, int stride, int strideLine, int effectWidth,
+                    int effectHeight, bool alphaImage,
+                    SVGFEGaussianBlurElement::EdgeMode edgeMode)
+{
+#if defined(STARFISH_X86) || defined(STARFISH_X86_64) || \
+    defined(STARFISH_ARM_NEON)
+    boxBlurSIMD(srcData, dstData, dx, dxLeft, dxRight, stride, strideLine,
+                effectWidth, effectHeight, alphaImage, edgeMode);
+#else
+    boxBlurScalar(srcData, dstData, dx, dxLeft, dxRight, stride, strideLine,
+                  effectWidth, effectHeight, alphaImage, edgeMode);
+#endif
 }
 
 inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
