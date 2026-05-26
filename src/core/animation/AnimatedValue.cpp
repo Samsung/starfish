@@ -364,6 +364,8 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
         } else {
             return AnimatedValue::createAnimatedValueFromLength(property);
         }
+    case CSSStyleValuePair::KeyKind::Fill:
+        return AnimatedValue::createAnimatedValueFromColor(property);
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();
