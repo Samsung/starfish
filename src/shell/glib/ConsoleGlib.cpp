@@ -45,14 +45,21 @@ public:
 
     void send(Param* param)
     {
-        g_idle_add(
+        g_idle_add_full(
+            G_PRIORITY_DEFAULT,
             [](gpointer data) -> gboolean {
-                Param* p = reinterpret_cast<Param*>(data);
-                p->console->write(p->input);
-                delete p;
+                g_timeout_add(
+                    0,
+                    [](gpointer data) -> gboolean {
+                        Param* p = reinterpret_cast<Param*>(data);
+                        p->console->write(p->input);
+                        delete p;
+                        return G_SOURCE_REMOVE;
+                    },
+                    data);
                 return G_SOURCE_REMOVE;
             },
-            param);
+            param, NULL);
     }
 };
 
