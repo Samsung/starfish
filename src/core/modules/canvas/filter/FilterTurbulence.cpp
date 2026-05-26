@@ -1,5 +1,5 @@
 /*
- 24* Copyright (C) 2004, 2005, 2006, 2007 Nikolas Zimmermann
+ * Copyright (C) 2004, 2005, 2006, 2007 Nikolas Zimmermann
  <zimmermann@kde.org>
  * Copyright (C) 2004, 2005 Rob Buis <buis@kde.org>
  * Copyright (C) 2005 Eric Seidel <eric@webkit.org>
@@ -31,6 +31,7 @@
 #include "core/dom/svg/SVGFilterElement.h"
 #include "core/modules/canvas/filter/Filter.h"
 #include "core/modules/canvas/filter/FilterTurbulence.h"
+#include "core/modules/threading/ParallelJobExecutor.h"
 #include "core/page/WebView.h"
 #include "core/layout/svg/FrameSVGBox.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
@@ -189,7 +190,7 @@ FilterTurbulence::StitchData FilterTurbulence::computeStitching(
 
 // This is taken 1:1 from SVG spec:
 // http://www.w3.org/TR/SVG11/filters.html#feTurbulenceElement.
-std::array<float, 4> FilterTurbulence::noise2D(
+ALWAYS_INLINE std::array<float, 4> FilterTurbulence::noise2D(
     const PaintingData& paintingData, const StitchData& stitchData,
     const Unit::FloatPoint& noiseVector)
 {
@@ -292,7 +293,8 @@ std::array<float, 4> FilterTurbulence::noise2D(
              noiseForChannel(3) };
 }
 
-std::array<uint8_t, 4> FilterTurbulence::toIntBasedColorComponents(
+ALWAYS_INLINE std::array<uint8_t, 4>
+FilterTurbulence::toIntBasedColorComponents(
     const std::array<float, 4>& floatComponents)
 {
     return {
@@ -303,7 +305,8 @@ std::array<uint8_t, 4> FilterTurbulence::toIntBasedColorComponents(
     };
 }
 
-std::array<uint8_t, 4> FilterTurbulence::calculateTurbulenceValueForPoint(
+ALWAYS_INLINE std::array<uint8_t, 4>
+FilterTurbulence::calculateTurbulenceValueForPoint(
     const PaintingData& paintingData, StitchData stitchData,
     const Unit::FloatPoint& point)
 {
@@ -394,20 +397,87 @@ void FilterTurbulence::apply(const Unit::Rect& subRegionInFloat,
         Unit::IntSize(width / ctx.viewportScaleX, height / ctx.viewportScaleY));
 
     unsigned char* data = (unsigned char*)outputSource->data();
-    for (uint y = 0; y < height; y++) {
-        for (uint x = 0; x < width; x++) {
-            auto color = calculateTurbulenceValueForPoint(
-                paintingData, stitchData,
-                Unit::FloatPoint((x + xposition) / ctx.viewportScaleX,
-                                 (y + yposition) / ctx.viewportScaleY));
-            int offset = y * ctx.stride + x * 4;
-            data[offset + STARFISH_PIXEL_R_INDEX] = color[0];
-            data[offset + STARFISH_PIXEL_G_INDEX] = color[1];
-            data[offset + STARFISH_PIXEL_B_INDEX] = color[2];
-            data[offset + STARFISH_PIXEL_A_INDEX] = color[3];
+    if (height * width > 100 * 100 && height > 20) {
+        WebView* webView = e->webView();
+        struct Params {
+            unsigned char* data;
+            size_t width;
+            size_t startY;
+            size_t endY;
+            size_t stride;
+            size_t xposition;
+            size_t yposition;
+            FilterTurbulence::StitchData* stitchData;
+            FilterTurbulence::PaintingData* paintingData;
+            Filter::FilterApplyContext* ctx;
+        };
+
+        auto worker = [](void* data) -> void* {
+            auto params = (Params*)data;
+            auto buffer = params->data;
+            for (uint y = params->startY; y < params->endY; y++) {
+                for (uint x = 0; x < params->width; x++) {
+                    auto color = calculateTurbulenceValueForPoint(
+                        *params->paintingData, *params->stitchData,
+                        Unit::FloatPoint((x + params->xposition) /
+                                             params->ctx->viewportScaleX,
+                                         (y + params->yposition) /
+                                             params->ctx->viewportScaleY));
+                    int offset = y * params->stride + x * 4;
+                    buffer[offset + STARFISH_PIXEL_R_INDEX] = color[0];
+                    buffer[offset + STARFISH_PIXEL_G_INDEX] = color[1];
+                    buffer[offset + STARFISH_PIXEL_B_INDEX] = color[2];
+                    buffer[offset + STARFISH_PIXEL_A_INDEX] = color[3];
+                }
+            }
+            return nullptr;
+        };
+
+        ParallelJobExecutor<Params>* parallelJobExecutor =
+            new ParallelJobExecutor<Params>(
+                webView, worker, std::min(size_t(6), numberOfCores()));
+
+        size_t num = parallelJobExecutor->numberOfThread();
+
+        const size_t blockHeight = height / num;
+        const size_t jobsWithExtra = height % num;
+        size_t currentY = 0;
+        for (size_t i = 0; i < num; ++i) {
+            auto& params = parallelJobExecutor->parameters(i);
+
+            size_t startY = !i ? 0 : currentY;
+            currentY += blockHeight;
+            size_t endY = i == num - 1 ? height : currentY;
+
+            params.width = width;
+            params.stride = ctx.stride;
+            params.startY = startY;
+            params.endY = endY;
+            params.data = data;
+            params.xposition = xposition;
+            params.yposition = yposition;
+            params.stitchData = &stitchData;
+            params.paintingData = &paintingData;
+            params.ctx = &ctx;
+        }
+
+        parallelJobExecutor->execute();
+    } else {
+        // single threaded
+        for (uint y = 0; y < height; y++) {
+            for (uint x = 0; x < width; x++) {
+                auto color = calculateTurbulenceValueForPoint(
+                    paintingData, stitchData,
+                    Unit::FloatPoint((x + xposition) / ctx.viewportScaleX,
+                                     (y + yposition) / ctx.viewportScaleY));
+                int offset = y * ctx.stride + x * 4;
+                data[offset + STARFISH_PIXEL_R_INDEX] = color[0];
+                data[offset + STARFISH_PIXEL_G_INDEX] = color[1];
+                data[offset + STARFISH_PIXEL_B_INDEX] = color[2];
+                data[offset + STARFISH_PIXEL_A_INDEX] = color[3];
+            }
         }
     }
-
     convertImageBufferAsPremultipliedAlphaIfNeeds(
         outputSource->data(), ctx.width, ctx.stride, ctx.height);
 
