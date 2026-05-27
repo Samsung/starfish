@@ -30,6 +30,18 @@
 #include "core/dom/svg/SVGFETurbulenceElement.h"
 #include <array>
 
+// Architecture-specific SIMD type definitions
+#if defined(STARFISH_X86) || defined(STARFISH_X86_64)
+#include <xmmintrin.h>
+typedef __m128 SimdFloat4;
+#elif defined(STARFISH_ARM_NEON)
+#include <arm_neon.h>
+typedef float32x4_t SimdFloat4;
+#else
+// Fallback: use std::array<float, 4> for non-SIMD architectures
+typedef std::array<float, 4> SimdFloat4;
+#endif
+
 namespace Starfish {
 
 /**
@@ -105,12 +117,14 @@ private:
                                        float& baseFrequencyX,
                                        float& baseFrequencyY, bool stitchTiles);
 
-    static std::array<float, 4> noise2D(const PaintingData&, const StitchData&,
-                                        const Unit::FloatPoint& noiseVector);
-    static std::array<uint8_t, 4> toIntBasedColorComponents(
-        const std::array<float, 4>& floatComponents);
-    static std::array<uint8_t, 4> calculateTurbulenceValueForPoint(
-        const PaintingData&, StitchData, const Unit::FloatPoint&);
+    static SimdFloat4 noise2D(const PaintingData&, const StitchData&,
+                              const Unit::FloatPoint& noiseVector);
+    static void toIntBasedColorComponents(SimdFloat4 floatComponents,
+                                          uint8_t* buffer);
+    static void calculateTurbulenceValueForPoint(const PaintingData&,
+                                                 StitchData,
+                                                 const Unit::FloatPoint&,
+                                                 uint8_t* buffer);
 
 public:
     FilterTurbulence(Filter* filter,
