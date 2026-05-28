@@ -237,6 +237,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_callback));
         GC_set_bit(desc, GC_WORD_OFFSET(MutationObserver, m_queuedRecords));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(MutationObserver, m_pendingQueuedRecords));
         markHashTable(desc, GC_WORD_OFFSET(MutationObserver, m_registrations));
     }
 

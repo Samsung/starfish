@@ -57,8 +57,12 @@ void* SVGTransform::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(SVGTransform)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
 
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_sourceElement));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_value));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_value) + 1);
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransform, m_matrixObject));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGTransform, m_matrixComparisonTarget));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(SVGTransform, m_matrixComparisonTarget));
 

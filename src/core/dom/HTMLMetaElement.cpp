@@ -38,6 +38,7 @@ void* HTMLMetaElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(HTMLMetaElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMetaElement, m_name));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLMetaElement, m_content));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLMetaElement, m_httpEquiv));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLMetaElement));
         typeInited = true;

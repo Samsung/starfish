@@ -257,7 +257,7 @@ void SVGAnimationElement::beginElementAtInternal(
     float offset, CSSStyleValuePair::KeyKind keyKind,
     const Optional<CSSStyleValuePair>& from,
     const Optional<CSSStyleValuePair>& to,
-    const Optional<GCVector<CSSStyleValuePair>>& values)
+    const Optional<GCAtomicVector<CSSStyleValuePair>>& values)
 {
     // TODO: Apply offset.
 
@@ -294,7 +294,9 @@ void SVGAnimationElement::beginElementAtInternal(
 
     GCVector<CSSStyleValuePair> valueList;
     if (values.hasValue()) {
-        valueList = values.value();
+        valueList.resize(values.value().size());
+        memcpy(valueList.data(), values.value().data(),
+               sizeof(CSSStyleValuePair) * values.value().size());
     } else if (from.hasValue() && to.hasValue()) {
         valueList.push_back(from.value());
         valueList.push_back(to.value());
@@ -626,6 +628,9 @@ void SVGAnimationElement::updateValueFamilyAttribute()
 void SVGAnimationElement::updateFromTo(String* value,
                                        Optional<CSSStyleValuePair>& output)
 {
+    if (output) {
+        output.value().unrootPointerValue(m_valuesFromToPointerRooter);
+    }
     CSSStyleValuePair temp;
     if (parseFromTo(m_attributeName.value(), value, temp)) {
         if (!output.hasValue() || output.value() != temp) {
@@ -634,19 +639,35 @@ void SVGAnimationElement::updateFromTo(String* value,
     } else {
         output.reset();
     }
+    if (output) {
+        output.value().rootPointerValue(m_valuesFromToPointerRooter);
+    }
 }
 
 void SVGAnimationElement::updateValues(String* value)
 {
+    if (m_values) {
+        for (auto& v : m_values.value()) {
+            v.unrootPointerValue(m_valuesFromToPointerRooter);
+        }
+    }
     GCVector<CSSStyleValuePair> values;
     if (parseValues(m_attributeName.value(), value, values)) {
         if (!m_values.hasValue() || m_values.value().size() != values.size() ||
             !std::equal(m_values.value().begin(), m_values.value().end(),
                         values.begin())) {
-            m_values = std::move(values);
+            m_values = GCAtomicVector<CSSStyleValuePair>();
+            m_values.value().resize(values.size());
+            memcpy(m_values.value().data(), values.data(),
+                   sizeof(CSSStyleValuePair) * values.size());
         }
     } else {
         m_values.reset();
+    }
+    if (m_values) {
+        for (auto& v : m_values.value()) {
+            v.rootPointerValue(m_valuesFromToPointerRooter);
+        }
     }
 }
 
