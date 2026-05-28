@@ -56,17 +56,15 @@ public:
         SVGElement::fillGCDescriptor(desc);
         // Fill GC descriptor here if needed
         GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_declarations));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_href));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(SVGAnimationElement, m_animationKeyframes));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
-        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_href));
         GC_set_bit(
             desc, GC_WORD_OFFSET(SVGAnimationElement, m_attributeNameAsString));
-        for (size_t i = 0; i < sizeof(m_from) / sizeof(size_t); i++) {
-            GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_from) + i);
-            GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_to) + i);
-        }
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_values) + 1);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement,
+                                        m_valuesFromToPointerRooter));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGAnimationElement, m_keySplines));
     }
 
     SVGAnimationElement(Document* document, const QualifiedName& qname);
@@ -125,7 +123,7 @@ protected:
         float offset, CSSStyleValuePair::KeyKind keyKind,
         const Optional<CSSStyleValuePair>& from,
         const Optional<CSSStyleValuePair>& to,
-        const Optional<GCVector<CSSStyleValuePair>>& values);
+        const Optional<GCAtomicVector<CSSStyleValuePair>>& values);
 
     bool hasValidAttributes();
 
@@ -176,7 +174,8 @@ protected:
         m_attributeNameAsString; // keyKind::Unknown means generic svg attribute
     Optional<CSSStyleValuePair> m_from;
     Optional<CSSStyleValuePair> m_to;
-    Optional<GCVector<CSSStyleValuePair>> m_values;
+    Optional<GCAtomicVector<CSSStyleValuePair>> m_values;
+    GCVector<void*> m_valuesFromToPointerRooter;
     Optional<CSSTime> m_dur;
     Optional<CSSTime> m_begin;
     Optional<SVGAnimationFill> m_fill;

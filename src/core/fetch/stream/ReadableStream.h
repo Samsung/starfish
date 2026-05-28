@@ -84,6 +84,8 @@ private:
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ReadableStream, m_object)); // ScriptWrappable
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_controller));
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_reader));
         GC_set_bit(desc, GC_WORD_OFFSET(ReadableStream, m_streamBuffer));

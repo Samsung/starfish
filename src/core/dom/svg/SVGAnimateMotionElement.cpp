@@ -96,8 +96,8 @@ void SVGAnimateMotionElement::beginElementAt(float offset)
     auto path = Path::create();
     SVGPathElement::parsePath(value, path);
 
-    GCVector<CSSStyleValuePair> v;
-    auto vec = new GCAtomicVector<Unit::FloatPoint>(path->pointList());
+    GCAtomicVector<CSSStyleValuePair> v;
+    volatile auto vec = new GCAtomicVector<Unit::FloatPoint>(path->pointList());
     CSSStyleValuePair p;
     p.setAnimateMotionValue(vec);
     v.push_back(p);

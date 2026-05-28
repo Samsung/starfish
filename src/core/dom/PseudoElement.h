@@ -74,6 +74,7 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Element::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(PseudoElement, m_originElement));
     }
 };
 
