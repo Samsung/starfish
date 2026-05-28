@@ -457,9 +457,10 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
             }
         });
 
-    m_window->setExitEventHandler([]() {
+    m_window->setExitEventHandler([this]() {
         printf("Exit\n");
         setenv("SHELL_DONE_FLAG", "1", 1);
+        m_window->appLoop()->stop();
     });
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     g_eventPoller.start(m_window, m_lwe);
