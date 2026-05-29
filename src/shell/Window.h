@@ -44,6 +44,8 @@ public:
     using KeyEventHandler =
         std::function<void(unsigned long code, INPUT action, unsigned mods)>;
     using FocusInHandler = std::function<void()>;
+    using CompositionEventHandler =
+        std::function<void(const char* text, bool isEnd)>;
 
     static Window* create();
     static LWE::KeyValue convertKeyCode(const unsigned long key, INPUT action,
@@ -90,6 +92,11 @@ public:
         m_focusInHandler = handler;
     }
 
+    void setCompositionEventHandler(const CompositionEventHandler& handler)
+    {
+        m_compositionEventHandler = handler;
+    }
+
     void setInitHint(int hint, int value)
     {
         if (hint == HINT_VISIBLE) {
@@ -112,6 +119,13 @@ public:
 
     virtual void setRotate(int degree){};
 
+    virtual void ShowSoftwareKeyboardIfPossible()
+    {
+    }
+    virtual void HideSoftwareKeyboardIfPossible()
+    {
+    }
+
     AppLoop* appLoop()
     {
         return m_appLoop.get();
@@ -130,6 +144,7 @@ protected:
     ScrollEventHandler m_scrollEventHandler;
     ExitEventHandler m_exitEventHandler;
     FocusInHandler m_focusInHandler;
+    CompositionEventHandler m_compositionEventHandler;
 
     std::unique_ptr<AppLoop> m_appLoop;
     int m_isVisible = 1;

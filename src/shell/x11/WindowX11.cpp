@@ -23,11 +23,15 @@
 
 #include "Window.h"
 
+#include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xlocale.h>
 #include <EGL/egl.h>
+#include <glib-unix.h>
 
 #include <memory>
 #include <cstring>
+#include <locale>
 
 using XWindow = Window;
 
@@ -271,6 +275,8 @@ public:
     void pollEvent() override;
     void terminate() override;
     void getCursorPos(double& xpos, double& ypos) override;
+    void ShowSoftwareKeyboardIfPossible() override;
+    void HideSoftwareKeyboardIfPossible() override;
 
     void* getNativeWindowHandle() override
     {
@@ -282,11 +288,24 @@ public:
         return m_renderer.get();
     }
 
+    void handleComposeString(const char* composeString);
+    void registerX11Fd();
+
 private:
+    static gboolean onX11Event(GIOChannel* source, GIOCondition condition,
+                               gpointer data);
+
     Display* m_display = nullptr;
     XWindow m_window = 0;
     Atom m_wmDeleteWindow = 0;
     std::unique_ptr<RendererDelegateEGL> m_renderer;
+
+    // XIM (X Input Method) support for IME
+    XIM m_im = nullptr;
+    XIC m_ic = nullptr;
+
+    // Event-based X11 monitoring
+    guint m_x11FdSource = 0;
 };
 
 WindowX11::WindowX11()
@@ -303,11 +322,20 @@ bool WindowX11::init(const char* appName, int width, int height)
     XWindow window;
     Atom wmDeleteWindow;
 
+    if (!setlocale(LC_ALL, "")) {
+        fprintf(stderr, "Warning: Cannot set system locale\n");
+    }
+
     display = XOpenDisplay(nullptr);
 
     if (display == nullptr) {
         printf("Cannot open display\n");
         return false;
+    }
+
+    const char* xmodifiers = getenv("XMODIFIERS");
+    if (!XSetLocaleModifiers(xmodifiers ? xmodifiers : "")) {
+        fprintf(stderr, "Warning: Cannot set X modifiers\n");
     }
 
     createSimpleWindow(display, window, width, height);
@@ -331,6 +359,22 @@ bool WindowX11::init(const char* appName, int width, int height)
     m_window = window;
     m_wmDeleteWindow = wmDeleteWindow;
 
+    m_im = XOpenIM(display, nullptr, nullptr, nullptr);
+    if (!m_im) {
+        fprintf(stderr, "Warning: Cannot connect to XIM server\n");
+    } else {
+        m_ic =
+            XCreateIC(m_im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+                      XNClientWindow, window, XNFocusWindow, window, nullptr);
+        if (!m_ic) {
+            fprintf(stderr, "Warning: Cannot create XIC\n");
+            XCloseIM(m_im);
+            m_im = nullptr;
+        } else {
+            XSetICFocus(m_ic);
+        }
+    }
+
     m_renderer =
         std::unique_ptr<RendererDelegateEGL>(new RendererDelegateEGL());
     if (!m_renderer->initialize(m_window)) {
@@ -339,7 +383,52 @@ bool WindowX11::init(const char* appName, int width, int height)
 
     m_appLoop->init();
 
+    registerX11Fd();
+
     return true;
+}
+
+void WindowX11::registerX11Fd()
+{
+    int fd = ConnectionNumber(m_display);
+    GIOChannel* channel = g_io_channel_unix_new(fd);
+
+    m_x11FdSource = g_io_add_watch_full(
+        channel, G_PRIORITY_DEFAULT,
+        (GIOCondition)(G_IO_IN | G_IO_HUP | G_IO_ERR),
+        [](GIOChannel* source, GIOCondition condition,
+           gpointer data) -> gboolean {
+            WindowX11* self = static_cast<WindowX11*>(data);
+
+            if (condition & (G_IO_HUP | G_IO_ERR)) {
+                return G_SOURCE_CONTINUE;
+            }
+
+            self->pollEvent();
+
+            return G_SOURCE_CONTINUE;
+        },
+        this,
+        [](gpointer data) {
+            GIOChannel* channel = static_cast<GIOChannel*>(data);
+            g_io_channel_unref(channel);
+        });
+
+    g_io_channel_unref(channel);
+}
+
+gboolean WindowX11::onX11Event(GIOChannel* source, GIOCondition condition,
+                               gpointer data)
+{
+    WindowX11* self = static_cast<WindowX11*>(data);
+
+    if (condition & (G_IO_HUP | G_IO_ERR)) {
+        return G_SOURCE_CONTINUE;
+    }
+
+    self->pollEvent();
+
+    return G_SOURCE_CONTINUE;
 }
 
 void WindowX11::getCursorPos(double& xpos, double& ypos)
@@ -353,6 +442,20 @@ void WindowX11::getCursorPos(double& xpos, double& ypos)
     ypos = event.xbutton.y;
 }
 
+void WindowX11::ShowSoftwareKeyboardIfPossible()
+{
+    if (m_ic) {
+        XSetICFocus(m_ic);
+    }
+}
+
+void WindowX11::HideSoftwareKeyboardIfPossible()
+{
+    if (m_ic) {
+        XUnsetICFocus(m_ic);
+    }
+}
+
 void WindowX11::pollEvent()
 {
     Display* display = m_display;
@@ -360,6 +463,10 @@ void WindowX11::pollEvent()
     while (XPending(display)) {
         XEvent event;
         XNextEvent(display, &event);
+
+        if (XFilterEvent(&event, None)) {
+            continue;
+        }
 
         switch (event.type) {
         case ConfigureNotify:
@@ -403,22 +510,51 @@ void WindowX11::pollEvent()
         case KeyPress:
         case KeyRelease:
             if (m_keyEventHandler) {
-                char keychar;
+                char buf[128];
+                memset(buf, 0, sizeof(buf));
+
                 KeySym keysym;
+                Status status;
                 INPUT type =
                     event.type == KeyPress ? INPUT::PRESS : INPUT::RELEASE;
-                // Convert the system keycodes to the ascii keycodes if exists.
-                if (XLookupString(&event.xkey, &keychar, 1, &keysym, nullptr)) {
-                    m_keyEventHandler(keychar, type, event.xkey.state);
-                    return;
+
+                if (m_ic) {
+                    int len =
+                        XmbLookupString(m_ic, &event.xkey, buf, sizeof(buf) - 1,
+                                        &keysym, &status);
+
+                    if (status == XLookupChars || status == XLookupBoth) {
+                        if (len > 0) {
+                            buf[len] = '\0';
+                            if (len == 1 &&
+                                isprint(static_cast<unsigned char>(buf[0]))) {
+                                m_keyEventHandler(
+                                    static_cast<unsigned char>(buf[0]), type,
+                                    event.xkey.state);
+                            } else {
+                                // NOTE there is no compositing event in XIM
+                                if (m_compositionEventHandler) {
+                                    m_compositionEventHandler(buf, true);
+                                }
+                            }
+                        }
+                    } else if (status == XLookupKeySym ||
+                               status == XLookupNone) {
+                        if (static_cast<KeySym>(INPUT::LEFT) <= keysym &&
+                            keysym < static_cast<KeySym>(INPUT::CODE_END)) {
+                            m_keyEventHandler(keysym, type, event.xkey.state);
+                        }
+                    }
                 } else {
-                    if (static_cast<KeySym>(INPUT::LEFT) <= keysym &&
-                        keysym < static_cast<KeySym>(INPUT::CODE_END)) {
+                    char keychar;
+                    if (XLookupString(&event.xkey, &keychar, 1, &keysym,
+                                      nullptr)) {
+                        m_keyEventHandler(keychar, type, event.xkey.state);
+                    } else if (static_cast<KeySym>(INPUT::LEFT) <= keysym &&
+                               keysym < static_cast<KeySym>(INPUT::CODE_END)) {
                         m_keyEventHandler(keysym, type, event.xkey.state);
-                        return;
                     }
                 }
-                printf("UNIMPLEMENTED\n");
             }
             break;
 
@@ -444,6 +580,23 @@ void WindowX11::terminate()
 {
     m_renderer->deinitialize();
     m_renderer = nullptr;
+
+    // FIXME deleting m_x11FdSource cause segfault
+    /*
+    if (m_x11FdSource) {
+        g_source_remove(m_x11FdSource);
+        m_x11FdSource = 0;
+    }
+    */
+
+    if (m_ic) {
+        XDestroyIC(m_ic);
+        m_ic = nullptr;
+    }
+    if (m_im) {
+        XCloseIM(m_im);
+        m_im = nullptr;
+    }
 
     XDestroyWindow(m_display, m_window);
     XCloseDisplay(m_display);

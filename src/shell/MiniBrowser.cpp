@@ -462,6 +462,24 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
         setenv("SHELL_DONE_FLAG", "1", 1);
         m_window->appLoop()->stop();
     });
+
+    m_lwe->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+        [this](LWE::WebContainer*) {
+            m_window->ShowSoftwareKeyboardIfPossible();
+        });
+
+    m_lwe->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+        [this](LWE::WebContainer*) {
+            m_window->HideSoftwareKeyboardIfPossible();
+        });
+
+    m_window->setCompositionEventHandler([this](const char* text, bool isEnd) {
+        if (isEnd) {
+            m_lwe->DispatchCompositionEndEvent(text);
+        } else {
+            m_lwe->DispatchCompositionUpdateEvent(text);
+        }
+    });
 #if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
     g_eventPoller.start(m_window, m_lwe);
 #endif
