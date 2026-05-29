@@ -109,7 +109,9 @@ public:
     virtual void terminate() = 0;
 
 #if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
-    virtual void addAutoFitChild(void* child) = 0;
+    virtual void addAutoFitChild(void* child)
+    {
+    }
 #endif
 
     virtual void* getNativeWindowHandle() = 0;
