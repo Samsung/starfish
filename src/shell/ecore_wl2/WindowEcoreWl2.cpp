@@ -26,6 +26,7 @@
 #include <Ecore.h>
 #include <Ecore_Wl2.h>
 #include <Ecore_Input.h>
+#include <Ecore_IMF.h>
 #include <EGL/egl.h>
 
 #include <GLES2/gl2.h>
@@ -308,6 +309,8 @@ public:
     bool init(const char* appName, int width, int height) override;
     void terminate() override;
     void getCursorPos(double& xpos, double& ypos) override;
+    void ShowSoftwareKeyboardIfPossible() override;
+    void HideSoftwareKeyboardIfPossible() override;
 
     void* getNativeWindowHandle() override
     {
@@ -319,8 +322,13 @@ public:
         return m_renderer.get();
     }
 
+    void handleImfCommit(const char* commitStr);
+    void handleImfPreeditChanged(const char* preeditStr, int cursorPos);
+
 private:
     void setupEventHandlers();
+    void setupIMF();
+    void cleanupIMF();
 
     Ecore_Wl2_Display* m_display = nullptr;
     Ecore_Wl2_Window* m_window = nullptr;
@@ -334,6 +342,10 @@ private:
     Ecore_Event_Handler* m_mouseWheelHandler = nullptr;
     Ecore_Event_Handler* m_windowResizeHandler = nullptr;
     Ecore_Event_Handler* m_windowDeleteHandler = nullptr;
+
+    // Ecore_IMF support for IME
+    Ecore_IMF_Context* m_imfContext = nullptr;
+    bool m_isImfInitialized = false;
 };
 
 WindowEcoreWl2::WindowEcoreWl2()
@@ -404,7 +416,30 @@ bool WindowEcoreWl2::init(const char* appName, int width, int height)
         return false;
     }
 
+    // Initialize IMF for IME support
+    setupIMF();
+
     return true;
+}
+
+static Ecore_IMF_Keyboard_Modifiers ecore_modifier_to_imf_modifier(
+    unsigned int ecore_modifiers)
+{
+    unsigned int imf_modifiers = ECORE_IMF_KEYBOARD_MODIFIER_NONE;
+
+    if (ecore_modifiers & ECORE_EVENT_MODIFIER_SHIFT) {
+        imf_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_SHIFT;
+    }
+
+    if (ecore_modifiers & ECORE_EVENT_MODIFIER_CTRL) {
+        imf_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_CTRL;
+    }
+
+    if (ecore_modifiers & ECORE_EVENT_MODIFIER_ALT) {
+        imf_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_ALT;
+    }
+
+    return (Ecore_IMF_Keyboard_Modifiers)imf_modifiers;
 }
 
 void WindowEcoreWl2::setupEventHandlers()
@@ -415,6 +450,24 @@ void WindowEcoreWl2::setupEventHandlers()
         [](void* data, int type, void* event) -> Eina_Bool {
             WindowEcoreWl2* win = static_cast<WindowEcoreWl2*>(data);
             Ecore_Event_Key* keyEvent = static_cast<Ecore_Event_Key*>(event);
+
+            // Filter through IMF first if available
+            if (win->m_imfContext) {
+                Ecore_IMF_Event_Key_Down imfEvent;
+                memset(&imfEvent, 0, sizeof(Ecore_IMF_Event_Key_Down));
+                imfEvent.keyname = (char*)keyEvent->keyname;
+                imfEvent.key = keyEvent->key;
+                imfEvent.string = keyEvent->string;
+                imfEvent.compose = keyEvent->compose;
+                imfEvent.timestamp = keyEvent->timestamp;
+                imfEvent.modifiers =
+                    ecore_modifier_to_imf_modifier(keyEvent->modifiers);
+                if (ecore_imf_context_filter_event(
+                        win->m_imfContext, ECORE_IMF_EVENT_KEY_DOWN,
+                        (Ecore_IMF_Event*)&imfEvent)) {
+                    return ECORE_CALLBACK_DONE;
+                }
+            }
 
             if (win->m_keyEventHandler && keyEvent->keyname) {
                 unsigned long keycode = 0;
@@ -603,6 +656,119 @@ void WindowEcoreWl2::setupEventHandlers()
         this);
 }
 
+void WindowEcoreWl2::setupIMF()
+{
+    if (m_isImfInitialized) {
+        return;
+    }
+
+    // Initialize Ecore_IMF
+    ecore_imf_init();
+
+    // Get default IMF context ID
+    const char* imfMethod = ecore_imf_context_default_id_get();
+    if (!imfMethod) {
+        printf("Warning: No default IMF method available\n");
+        return;
+    }
+
+    // Create IMF context
+    m_imfContext = ecore_imf_context_add(imfMethod);
+    if (!m_imfContext) {
+        printf("Warning: Failed to create IMF context\n");
+        return;
+    }
+
+    // Set client window for IMF - use the wayland window
+    ecore_imf_context_client_window_set(
+        m_imfContext, (void*)(uintptr_t)ecore_wl2_window_id_get(m_window));
+
+    // Register commit callback
+    ecore_imf_context_event_callback_add(
+        m_imfContext, ECORE_IMF_CALLBACK_COMMIT,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            WindowEcoreWl2* self = static_cast<WindowEcoreWl2*>(data);
+            char* commitStr = static_cast<char*>(event_info);
+            printf("[IMF] COMMIT: %s\n", commitStr ? commitStr : "(empty)");
+            if (commitStr && self->m_compositionEventHandler) {
+                self->m_compositionEventHandler(commitStr, true);
+            }
+        },
+        this);
+
+    // Register preedit changed callback
+    ecore_imf_context_event_callback_add(
+        m_imfContext, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+        [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
+            WindowEcoreWl2* self = static_cast<WindowEcoreWl2*>(data);
+            char* preeditStr = nullptr;
+            int cursorPos = 0;
+            ecore_imf_context_preedit_string_get(self->m_imfContext,
+                                                 &preeditStr, &cursorPos);
+            printf("[IMF] PREEDIT: %s (cursor: %d)\n",
+                   preeditStr ? preeditStr : "(empty)", cursorPos);
+            if (preeditStr) {
+                if (self->m_compositionEventHandler) {
+                    self->m_compositionEventHandler(preeditStr, false);
+                }
+                free(preeditStr);
+            }
+        },
+        this);
+
+    m_isImfInitialized = true;
+    printf("[IMF] IMF initialized for ecore_wl2 window\n");
+}
+
+void WindowEcoreWl2::cleanupIMF()
+{
+    if (!m_isImfInitialized || !m_imfContext) {
+        return;
+    }
+
+    ecore_imf_context_hide(m_imfContext);
+    ecore_imf_context_focus_out(m_imfContext);
+    ecore_imf_context_reset(m_imfContext);
+    ecore_imf_context_client_window_set(m_imfContext, nullptr);
+    ecore_imf_context_del(m_imfContext);
+    m_imfContext = nullptr;
+    ecore_imf_shutdown();
+    m_isImfInitialized = false;
+}
+
+void WindowEcoreWl2::ShowSoftwareKeyboardIfPossible()
+{
+    if (m_imfContext) {
+        ecore_imf_context_focus_in(m_imfContext);
+        ecore_imf_context_show(m_imfContext);
+        printf("[IMF] Show software keyboard\n");
+    }
+}
+
+void WindowEcoreWl2::HideSoftwareKeyboardIfPossible()
+{
+    if (m_imfContext) {
+        ecore_imf_context_hide(m_imfContext);
+        ecore_imf_context_focus_out(m_imfContext);
+        printf("[IMF] Hide software keyboard\n");
+    }
+}
+
+void WindowEcoreWl2::handleImfCommit(const char* commitStr)
+{
+    if (commitStr && m_compositionEventHandler) {
+        m_compositionEventHandler(commitStr, true);
+    }
+}
+
+void WindowEcoreWl2::handleImfPreeditChanged(const char* preeditStr,
+                                             int cursorPos)
+{
+    if (preeditStr && m_compositionEventHandler) {
+        m_compositionEventHandler(preeditStr, false);
+    }
+}
+
 void WindowEcoreWl2::getCursorPos(double& xpos, double& ypos)
 {
     int win_x = 0, win_y = 0;
@@ -652,6 +818,9 @@ void WindowEcoreWl2::terminate()
         ecore_event_handler_del(m_windowDeleteHandler);
         m_windowDeleteHandler = nullptr;
     }
+
+    // Clean up IMF
+    cleanupIMF();
 
     m_renderer->deinitialize();
     m_renderer = nullptr;
