@@ -25,6 +25,7 @@
 
 #include <tizen_core_wl.h>
 #include <tizen_core_wl_internal.h>
+#include <tizen_core_imf.h>
 #include <EGL/egl.h>
 
 #include <GLES2/gl2.h>
@@ -310,6 +311,8 @@ public:
     bool init(const char* appName, int width, int height) override;
     void terminate() override;
     void getCursorPos(double& xpos, double& ypos) override;
+    void ShowSoftwareKeyboardIfPossible() override;
+    void HideSoftwareKeyboardIfPossible() override;
 
     void* getNativeWindowHandle() override
     {
@@ -321,11 +324,20 @@ public:
         return m_renderer.get();
     }
 
+    void handleImfCommit(const char* commitStr);
+    void handleImfPreeditChanged(const char* preeditStr, int cursorPos);
+
 private:
     void setupEventHandlers();
+    void setupIMF();
+    void cleanupIMF();
     static void eventCallback(void* event,
                               tizen_core_wl_event_type_e event_type,
                               void* user_data);
+    static void imfCommitCallback(tizen_core_imf_context_h ctx,
+                                  void* event_info, void* user_data);
+    static void imfPreeditChangedCallback(tizen_core_imf_context_h ctx,
+                                          void* event_info, void* user_data);
 
     tizen_core_wl_display_h m_display = nullptr;
     tizen_core_wl_window_h m_window = nullptr;
@@ -342,6 +354,10 @@ private:
     int m_mouseX = 0, m_mouseY = 0;
     tizen_core_event_h m_eventHandle = nullptr;
     std::unique_ptr<RendererDelegateEGL> m_renderer;
+
+    // tizen_core_imf support for IME
+    tizen_core_imf_context_h m_imfContext = nullptr;
+    bool m_isImfInitialized = false;
 };
 
 WindowTcoreWl::WindowTcoreWl()
@@ -350,6 +366,114 @@ WindowTcoreWl::WindowTcoreWl()
 
 WindowTcoreWl::~WindowTcoreWl()
 {
+}
+
+void WindowTcoreWl::setupIMF()
+{
+    if (m_isImfInitialized) {
+        return;
+    }
+
+    // Initialize tizen_core_imf
+    if (tizen_core_imf_init() != TIZEN_CORE_IMF_ERROR_NONE) {
+        printf("Warning: Failed to initialize tizen_core_imf\n");
+        return;
+    }
+
+    // Create IMF context
+    if (tizen_core_imf_context_create(&m_imfContext) !=
+        TIZEN_CORE_IMF_ERROR_NONE) {
+        printf("Warning: Failed to create IMF context\n");
+        tizen_core_imf_shutdown();
+        return;
+    }
+
+    // Set client window for IMF - use the tizen_core_wl window
+    tizen_core_imf_context_set_client_window(m_imfContext, (void*)m_window);
+
+    // Register commit callback
+    tizen_core_imf_context_add_event_callback(
+        m_imfContext, TIZEN_CORE_IMF_CALLBACK_COMMIT,
+        [](tizen_core_imf_context_h ctx, void* event_info, void* user_data) {
+            WindowTcoreWl* self = static_cast<WindowTcoreWl*>(user_data);
+            char* commitStr = static_cast<char*>(event_info);
+            self->handleImfCommit(commitStr);
+        },
+        this);
+
+    // Register preedit changed callback
+    tizen_core_imf_context_add_event_callback(
+        m_imfContext, TIZEN_CORE_IMF_CALLBACK_PREEDIT_CHANGED,
+        [](tizen_core_imf_context_h ctx, void* event_info, void* user_data) {
+            WindowTcoreWl* self = static_cast<WindowTcoreWl*>(user_data);
+            char* preeditStr = nullptr;
+            int cursorPos = 0;
+            tizen_core_imf_preedit_attr_h* attrs = nullptr;
+            int attrsCount = 0;
+
+            if (tizen_core_imf_context_get_preedit_string(
+                    self->m_imfContext, &preeditStr, &attrs, &attrsCount,
+                    &cursorPos) == TIZEN_CORE_IMF_ERROR_NONE) {
+                self->handleImfPreeditChanged(preeditStr, cursorPos);
+                if (preeditStr)
+                    free(preeditStr);
+                if (attrs) {
+                    for (int i = 0; i < attrsCount; i++) {
+                        // attrs will be freed by the framework
+                    }
+                    free(attrs);
+                }
+            }
+        },
+        this);
+
+    m_isImfInitialized = true;
+}
+
+void WindowTcoreWl::cleanupIMF()
+{
+    if (!m_isImfInitialized || !m_imfContext) {
+        return;
+    }
+
+    tizen_core_imf_context_input_panel_hide(m_imfContext);
+    tizen_core_imf_context_focus_out(m_imfContext);
+    tizen_core_imf_context_set_client_window(m_imfContext, nullptr);
+    tizen_core_imf_context_destroy(m_imfContext);
+    m_imfContext = nullptr;
+    tizen_core_imf_shutdown();
+    m_isImfInitialized = false;
+}
+
+void WindowTcoreWl::ShowSoftwareKeyboardIfPossible()
+{
+    if (m_imfContext) {
+        tizen_core_imf_context_focus_in(m_imfContext);
+        tizen_core_imf_context_input_panel_show(m_imfContext);
+    }
+}
+
+void WindowTcoreWl::HideSoftwareKeyboardIfPossible()
+{
+    if (m_imfContext) {
+        tizen_core_imf_context_input_panel_hide(m_imfContext);
+        tizen_core_imf_context_focus_out(m_imfContext);
+    }
+}
+
+void WindowTcoreWl::handleImfCommit(const char* commitStr)
+{
+    if (commitStr && m_compositionEventHandler) {
+        m_compositionEventHandler(commitStr, true);
+    }
+}
+
+void WindowTcoreWl::handleImfPreeditChanged(const char* preeditStr,
+                                            int cursorPos)
+{
+    if (preeditStr && m_compositionEventHandler) {
+        m_compositionEventHandler(preeditStr, false);
+    }
 }
 
 void WindowTcoreWl::eventCallback(void* event,
@@ -361,7 +485,104 @@ void WindowTcoreWl::eventCallback(void* event,
         (tizen_core_wl_event_input_base_h)event;
 
     switch (event_type) {
-    case TIZEN_CORE_WL_EVENT_KEY_DOWN:
+    case TIZEN_CORE_WL_EVENT_KEY_DOWN: {
+        // Filter through IMF first if available
+        if (win->m_imfContext) {
+            char* keyname = NULL;
+            char* devId = NULL;
+
+            unsigned int keycode;
+            tizen_core_wl_error_e ret =
+                tizen_core_wl_event_key_get_keycode(inputEvent, &keycode);
+            if (ret != TIZEN_CORE_WL_ERROR_NONE) {
+                printf("Failed to get keycode: %d\n", ret);
+                return;
+            }
+
+            ret = tizen_core_wl_event_key_get_keyname(inputEvent, &keyname);
+            if (ret != TIZEN_CORE_WL_ERROR_NONE) {
+                printf("Failed to get keyname: %d\n", ret);
+                return;
+            }
+
+            tizen_core_wl_window_h window;
+            ret =
+                tizen_core_wl_event_input_base_get_window(inputEvent, &window);
+            if (ret != TIZEN_CORE_WL_ERROR_NONE) {
+                printf("Failed to get window: %d\n", ret);
+                return;
+            }
+
+            ret = tizen_core_wl_event_input_base_get_device_identifier(
+                inputEvent, &devId);
+            if (ret != TIZEN_CORE_WL_ERROR_NONE) {
+                printf("Failed to get device identifier: %d\n", ret);
+                return;
+            }
+
+            tizen_core_imf_event_key_h keyEv = NULL;
+            tizen_core_imf_event_key_create(&keyEv);
+            tizen_core_imf_event_key_set_keyname(keyEv, keyname);
+            tizen_core_imf_event_key_set_key(keyEv, keyname);
+            tizen_core_imf_event_key_set_device_name(keyEv, devId);
+            tizen_core_imf_event_key_set_device_class(
+                keyEv, TIZEN_CORE_IMF_DEVICE_CLASS_KEYBOARD);
+            tizen_core_imf_event_key_set_device_subclass(
+                keyEv, TIZEN_CORE_IMF_DEVICE_SUBCLASS_NONE);
+            tizen_core_imf_event_key_set_keycode(keyEv, keycode);
+
+            bool filtered = false;
+            tizen_core_imf_context_filter_event(
+                win->m_imfContext, TIZEN_CORE_IMF_EVENT_TYPE_KEY_DOWN,
+                (void*)keyEv, &filtered);
+            tizen_core_imf_event_key_destroy(keyEv);
+            if (filtered) {
+                // Event was handled by IMF, don't process further
+                break;
+            }
+        }
+
+        if (win->m_keyEventHandler) {
+            char* keyname = nullptr;
+            unsigned int keycode = 0;
+            unsigned int modifiers = 0;
+
+            tizen_core_wl_event_key_get_keyname(inputEvent, &keyname);
+            tizen_core_wl_event_key_get_keycode(inputEvent, &keycode);
+            tizen_core_wl_event_key_get_modifiers(inputEvent, &modifiers);
+
+            unsigned long finalKeycode = 0;
+            if (keyname) {
+                if (strcmp(keyname, "Left") == 0) {
+                    finalKeycode = static_cast<unsigned long>(INPUT::LEFT);
+                } else if (strcmp(keyname, "Up") == 0) {
+                    finalKeycode = static_cast<unsigned long>(INPUT::UP);
+                } else if (strcmp(keyname, "Right") == 0) {
+                    finalKeycode = static_cast<unsigned long>(INPUT::RIGHT);
+                } else if (strcmp(keyname, "Down") == 0) {
+                    finalKeycode = static_cast<unsigned long>(INPUT::DOWN);
+                } else if (strlen(keyname) == 1) {
+                    finalKeycode = static_cast<unsigned long>(keyname[0]);
+                } else {
+                    finalKeycode = keycode;
+                }
+                free(keyname);
+            }
+
+            unsigned mods = 0;
+            if (modifiers & TIZEN_CORE_WL_MODIFIER_SHIFT) {
+                mods |= static_cast<unsigned>(MOD::SHIFT);
+            }
+            if (modifiers & TIZEN_CORE_WL_MODIFIER_CTRL) {
+                mods |= static_cast<unsigned>(MOD::CONTROL);
+            }
+
+            INPUT action = INPUT::PRESS;
+            win->m_keyEventHandler(finalKeycode, action, mods);
+        }
+        break;
+    }
+
     case TIZEN_CORE_WL_EVENT_KEY_UP: {
         if (win->m_keyEventHandler) {
             char* keyname = nullptr;
@@ -398,9 +619,7 @@ void WindowTcoreWl::eventCallback(void* event,
                 mods |= static_cast<unsigned>(MOD::CONTROL);
             }
 
-            INPUT action = (event_type == TIZEN_CORE_WL_EVENT_KEY_DOWN)
-                               ? INPUT::PRESS
-                               : INPUT::RELEASE;
+            INPUT action = INPUT::RELEASE;
             win->m_keyEventHandler(finalKeycode, action, mods);
         }
         break;
@@ -544,6 +763,9 @@ bool WindowTcoreWl::init(const char* appName, int width, int height)
         return false;
     }
 
+    // Initialize IMF for IME support
+    setupIMF();
+
     return true;
 }
 
@@ -621,16 +843,16 @@ void WindowTcoreWl::terminate()
         }
     }
 
+    // Clean up IMF
+    cleanupIMF();
+
     m_renderer->deinitialize();
     m_renderer = nullptr;
 
     tizen_core_wl_egl_window_destroy(m_eglWindow);
     tizen_core_wl_window_destroy(m_window);
-    // FIXME tizen_core_wl_display_{disconnect, destroy} call cause error
-    // ../src/wayland-client.c:282: wl_proxy_unref: Assertion `proxy->refcount >
-    // 0' failed. but there is no call tizen_core_wl_display_disconnect
-    // tizen_core_wl_display_disconnect(m_display);
-    // tizen_core_wl_display_destroy(m_display);
+    tizen_core_wl_display_disconnect(m_display);
+    tizen_core_wl_display_destroy(m_display);
     tizen_core_wl_shutdown();
 
     m_window = nullptr;

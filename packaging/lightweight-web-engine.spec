@@ -227,6 +227,7 @@ BuildRequires: libasound-devel
 %if 0%{?tizen_version_major} >= 11
 BuildRequires: pkgconfig(tizen-core)
 BuildRequires: pkgconfig(tizen-core-wl)
+BuildRequires: pkgconfig(tizen-core-imf)
 %define lwe_backend glib_cairo_gl
 %define lwe_shell_type tcore_wl
 %define lwe_headless_backend glib_headless
