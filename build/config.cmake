@@ -242,6 +242,13 @@ SET (LWE_DEFINES_BACKEND ${LWE_DEFINES_BACKEND}
     -DSTARFISH_BACKEND_STR="${BACKEND}"
 )
 
+#######################################################
+# SHELL DEFINES
+#######################################################
+
+INCLUDE(${STARFISH_ROOT}/build/starfish_shell_defines.cmake)
+SET_STARFISH_SHELL_DEFINES()
+
 # Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
 IF (${HOST} STREQUAL "linux")
     # SET (WEBRTC "1")
@@ -525,6 +532,17 @@ SET (STARFISH_LIBRARIES_DEFAULT
     # -lasan # for -fsanitize=address
 )
 
+# library for public bridge
+IF (${SHELL} STREQUAL "x11")
+    pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED glib-2.0 x11 egl)
+ELSEIF (${SHELL} STREQUAL "ecore_x")
+    pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED ecore ecore-x ecore-input ecore-imf)
+ELSEIF (${SHELL} STREQUAL "ecore_wl2")
+    pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED ecore ecore-wl2 ecore-input ecore-imf wayland-client)
+ELSEIF (${SHELL} STREQUAL "tcore_wl")
+    pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED tizen-core tizen-core-wl tizen-core-imf glib-2.0 wayland-client)
+ENDIF()
+
 CHECK_LIBRARY_EXISTS(cap cap_set_flag "" STARFISH_HAVE_LIBCAP)
 if (STARFISH_HAVE_LIBCAP)
 	list(APPEND STARFISH_LIBRARIES_DEFAULT cap )
@@ -648,6 +666,7 @@ SET (LWE_DEFINITIONS
     ${LWE_DEFINES_CUSTOM}
     ${LWE_DEFINES_MODE}
     ${LWE_DEFINES_BACKEND}
+    ${STARFISH_SHELL_DEFINES}
 )
 
 
