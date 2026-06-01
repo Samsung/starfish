@@ -11,7 +11,7 @@ on:
 
 
 jobs:
-  build_x64_glfw_debug_wasm:
+  build_x64_x11_debug_wasm:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
@@ -34,10 +34,10 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw -DDOCKER=1 -DENABLE_WASM=1 -G Ninja
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -DENABLE_WASM=1 -G Ninja
             ninja starfish.executable
 
-  build_x64_glfw_release:
+  build_x64_x11_release:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
@@ -60,7 +60,7 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=release -DBACKEND=uv_cairo_gl -DSHELL=glfw -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DMODE=release -DBACKEND=uv_cairo_gl -DSHELL=x11 -DDOCKER=1 -G Ninja
             ninja starfish.executable
       - name: Run crash test
         run: |

@@ -41,7 +41,7 @@ jobs:
         run: |
             cmake CMakeLists.txt -Buv_cairo_gl/debug -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=glfw \
+            -DMODE=debug -DBACKEND=uv_cairo_gl -DSHELL=x11 \
             -DWORKER=1 -DSHARED_WORKER=1 -DSERVICE_WORKER=1
       - name: Build Starfish
         run: ninja -C uv_cairo_gl/debug starfish.executable
@@ -52,7 +52,7 @@ jobs:
 
       - uses: CODE-Actions/upload-artifact@v2
         with:
-          name: starfish-x64_glfw_worker
+          name: starfish-x64_x11_worker
           path: |
             ./uv_cairo_gl/debug/bin/*
             ./uv_cairo_gl/debug/lib/*
@@ -88,7 +88,7 @@ jobs:
 
       - uses: CODE-Actions/download-artifact@v2
         with:
-          name: starfish-x64_glfw_worker
+          name: starfish-x64_x11_worker
 
       - name: Prepare Test
         run: |
