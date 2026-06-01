@@ -5,6 +5,12 @@ test/cairo/internal-test/css/constructable-stylesheet/constructor_spec_test.html
 test/cairo/internal-test/css/constructable-stylesheet/replaceSync_test.html
 test/cairo/internal-test/css/constructable-stylesheet/replace_test.html
 test/cairo/internal-test/dom/frozenarray_test.html
+test/cairo/internal-test/observable-array/identity_sameobject.html
+test/cairo/internal-test/observable-array/write_through.html
+test/cairo/internal-test/observable-array/whole_assignment.html
+test/cairo/internal-test/observable-array/length_truncation.html
+test/cairo/internal-test/observable-array/element_type_reject.html
+test/cairo/internal-test/observable-array/iteration.html
 test/cairo/internal-test/css/css-variables/customproperty_00.html
 test/cairo/internal-test/css/css-variables/customproperty_01.html
 test/cairo/internal-test/css/css-variables/customproperty_02.html
