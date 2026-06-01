@@ -118,9 +118,13 @@ jobs:
           cmake build/test -G Ninja
           ninja install_pixel_test_dep
 
-      - name: Run unit-test
-        run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish unit-test || exit 1
+      # allow failure due to x11 server bug
+      - name: Run unit_test
+        uses: CODE-Actions/nick-fields-retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 5
+          command: xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish unit-test || exit 1
 
       - name: Run internal_test
         run: |
