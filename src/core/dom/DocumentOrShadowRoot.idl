@@ -1,0 +1,18 @@
+// https://drafts.csswg.org/cssom/#extensions-to-the-document-or-shadow-root-interface
+//
+// The standard WebIDL form is
+//   partial interface mixin DocumentOrShadowRoot {
+//     [SameObject] readonly attribute StyleSheetList styleSheets;
+//     attribute ObservableArray<CSSStyleSheet> adoptedStyleSheets;
+//   };
+// but starfish's binding generator expresses mixins as a [PartialInterface,
+// NoInterfaceObject] interface plus `X implements ...` statements.
+
+// The `X implements DocumentOrShadowRoot;` statements live in Document.idl and
+// ShadowRoot.idl — the generator only attaches an `implements` to an interface
+// defined in the same file.
+[PartialInterface,
+ NoInterfaceObject]
+interface DocumentOrShadowRoot {
+  attribute ObservableArray<CSSStyleSheet> adoptedStyleSheets;
+};
