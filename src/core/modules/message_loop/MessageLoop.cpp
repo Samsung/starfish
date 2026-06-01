@@ -19,7 +19,6 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "platform/message_loop/MessageLoopEFL.h"
 #include "platform/message_loop/MessageLoopLibUV.h"
 #include "platform/message_loop/MessageLoopWindows.h"
 #include "platform/message_loop/MessageLoopGLib.h"
@@ -33,9 +32,7 @@ namespace Starfish {
 
 MessageLoop* MessageLoop::create()
 {
-#if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    return new MessageLoopEFL();
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new MessageLoopLibUV();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     return new MessageLoopWindows();
