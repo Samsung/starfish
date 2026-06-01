@@ -75,9 +75,10 @@ int Shell::run(int argc, char* argv[])
         return false;
     }
 
-    if (strstr(argv[1], "unit-test")) {
+    std::string argv1 = argv[1];
+    if (argv1 == "unit-test") {
         return runUnitTest(argc, argv);
-    } else if (strstr(argv[1], "create-destroy-test")) {
+    } else if (argv1 == "create-destroy-test") {
         // Usage: ./Starfish create-destroy-test {repeat-count} {interval} {URL}
         return runCreateDestroyTest(argc, argv);
     } else {
