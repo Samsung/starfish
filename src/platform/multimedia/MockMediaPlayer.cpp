@@ -316,6 +316,9 @@ void MockMediaPlayer::prepare(ResourceURL* url)
         m_container->window(),
         [](size_t, void* data) {
             MockMediaPlayer* self = (MockMediaPlayer*)data;
+            if (!self->m_alive) {
+                return;
+            }
             self->processNextOperationQueueInContainer();
             self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
                 HTMLMediaElement::HAVE_METADATA);

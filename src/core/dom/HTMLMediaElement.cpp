@@ -1011,6 +1011,9 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
     if (state == m_readyState) {
         return;
     }
+    if (!starfish()->isAlive()) {
+        return;
+    }
     MEDIA_ELEMENT_LOG(
         this,
         "HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(%d)",
