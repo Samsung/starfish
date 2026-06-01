@@ -12,3 +12,5 @@ interface ShadowRoot : DocumentFragment {
 
 enum ShadowRootMode { "open", "closed" };
 enum SlotAssignmentMode { "manual", "named" };
+
+ShadowRoot implements DocumentOrShadowRoot; // https://drafts.csswg.org/cssom/

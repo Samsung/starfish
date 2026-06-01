@@ -32,9 +32,14 @@
 // if we optimize gradient painting we can reduce this size as FHD
 #define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1920 * 1080 * 4 * 2
 
+namespace Escargot {
+class ProxyObjectRef;
+}
+
 namespace Starfish {
 
 class Attr;
+class CSSStyleSheet;
 class CDATASection;
 class Comment;
 class ProcessingInstruction;
@@ -461,6 +466,22 @@ public:
 
     StyleSheetList* styleSheets();
 
+    // CSSOM `adoptedStyleSheets` observable array. Binding + data model only:
+    // the backing list is stored and validated for element type, but not yet
+    // applied to the style cascade. See AdoptedStyleSheets.{h,cpp}.
+    Escargot::ProxyObjectRef* adoptedStyleSheetsObservableArray(
+        Escargot::ExecutionStateRef* state);
+    void setAdoptedStyleSheetsFromObservableArray(
+        Escargot::ExecutionStateRef* state, Escargot::ValueRef* value);
+    GCVector<CSSStyleSheet*>& adoptedStyleSheetsBackingList()
+    {
+        return m_adoptedStyleSheets;
+    }
+    Escargot::ProxyObjectRef*& adoptedStyleSheetsProxySlot()
+    {
+        return m_adoptedStyleSheetsProxy;
+    }
+
     const GCVector<FontResource*>& loadedWebFontList()
     {
         return m_loadedWebFontList;
@@ -783,6 +804,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleResolver));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentBuilder));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_adoptedStyleSheets));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_adoptedStyleSheetsProxy));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_brokenImage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_animationExecutor));
         GC_set_bit(desc, GC_WORD_OFFSET(Document,
@@ -850,6 +873,8 @@ protected:
     StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;
+    GCVector<CSSStyleSheet*> m_adoptedStyleSheets;
+    Escargot::ProxyObjectRef* m_adoptedStyleSheetsProxy;
     NativeImageData* m_brokenImage;
     AnimationExecutor* m_animationExecutor;
     size_t m_domVersion;

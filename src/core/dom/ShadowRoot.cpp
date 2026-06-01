@@ -24,6 +24,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLSlotElement.h"
 #include "core/dom/Traverse.h"
+#include "core/style/AdoptedStyleSheets.h"
 
 namespace Starfish {
 
@@ -40,9 +41,22 @@ ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
     , m_declarative(false)
     , m_host(host)
     , m_styleResolver(new StyleResolver(m_document))
+    , m_adoptedStyleSheetsProxy(nullptr)
 {
     // add ua sheet
     m_styleResolver->addSheet(document->styleResolver().sheets()[0]);
+}
+
+Escargot::ProxyObjectRef* ShadowRoot::adoptedStyleSheetsObservableArray(
+    Escargot::ExecutionStateRef* state)
+{
+    return AdoptedStyleSheets::observableArray(state, this);
+}
+
+void ShadowRoot::setAdoptedStyleSheetsFromObservableArray(
+    Escargot::ExecutionStateRef* state, Escargot::ValueRef* value)
+{
+    AdoptedStyleSheets::setFromObservableArray(state, this, value);
 }
 
 void* ShadowRoot::operator new(size_t size)

@@ -24,10 +24,15 @@
 #include "core/dom/ShadowRootInit.h"
 #include "core/layout/Frame.h"
 
+namespace Escargot {
+class ProxyObjectRef;
+}
+
 namespace Starfish {
 
 class HTMLSlotElement;
 class StyleResolver;
+class CSSStyleSheet;
 
 class SlotAssignment : public gc {
 public:
@@ -143,6 +148,21 @@ public:
         return *m_styleResolver;
     }
 
+    // CSSOM `adoptedStyleSheets` observable array. Binding + data model only.
+    // See AdoptedStyleSheets.{h,cpp}.
+    Escargot::ProxyObjectRef* adoptedStyleSheetsObservableArray(
+        Escargot::ExecutionStateRef* state);
+    void setAdoptedStyleSheetsFromObservableArray(
+        Escargot::ExecutionStateRef* state, Escargot::ValueRef* value);
+    GCVector<CSSStyleSheet*>& adoptedStyleSheetsBackingList()
+    {
+        return m_adoptedStyleSheets;
+    }
+    Escargot::ProxyObjectRef*& adoptedStyleSheetsProxySlot()
+    {
+        return m_adoptedStyleSheetsProxy;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(slotchange);
@@ -160,6 +180,8 @@ private:
         DocumentFragment::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_host));
         GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_styleResolver));
+        GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_adoptedStyleSheets));
+        GC_set_bit(desc, GC_WORD_OFFSET(ShadowRoot, m_adoptedStyleSheetsProxy));
         markHashTable(desc, GC_WORD_OFFSET(ShadowRoot, m_namedSlotElements));
     }
 
@@ -173,6 +195,8 @@ private:
     Element* m_host;
     GCUnorderedMap<String*, HTMLSlotElement*> m_namedSlotElements;
     StyleResolver* m_styleResolver;
+    GCVector<CSSStyleSheet*> m_adoptedStyleSheets;
+    Escargot::ProxyObjectRef* m_adoptedStyleSheetsProxy;
 };
 } // namespace Starfish
 

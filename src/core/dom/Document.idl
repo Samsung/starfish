@@ -164,3 +164,4 @@ Document implements GlobalEventHandlers; // [REF3]
 Document implements DocumentAndElementEventHandlers; // [REF3]
 Document implements NonElementParentNode; // [REF7]
 Document implements ParentNode; // [REF8]
+Document implements DocumentOrShadowRoot; // https://drafts.csswg.org/cssom/

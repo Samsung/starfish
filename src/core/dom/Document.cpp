@@ -92,6 +92,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryListMatcher.h"
 #include "core/style/StyleSheetList.h"
+#include "core/style/AdoptedStyleSheets.h"
 #include "core/style/StyleRule.h"
 #include "core/style/GradientData.h"
 #include "core/animation/AnimationExecutor.h"
@@ -141,6 +142,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
+    , m_adoptedStyleSheetsProxy(nullptr)
     , m_brokenImage(nullptr)
     , m_animationExecutor(new AnimationExecutor())
     , m_domVersion(0)
@@ -1868,6 +1870,18 @@ StyleSheetList* Document::styleSheets()
         m_styleSheetList = new StyleSheetList(this);
     }
     return m_styleSheetList;
+}
+
+Escargot::ProxyObjectRef* Document::adoptedStyleSheetsObservableArray(
+    Escargot::ExecutionStateRef* state)
+{
+    return AdoptedStyleSheets::observableArray(state, this);
+}
+
+void Document::setAdoptedStyleSheetsFromObservableArray(
+    Escargot::ExecutionStateRef* state, Escargot::ValueRef* value)
+{
+    AdoptedStyleSheets::setFromObservableArray(state, this, value);
 }
 
 NativeImageData* Document::brokenImage()
