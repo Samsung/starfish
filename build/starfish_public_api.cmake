@@ -14,6 +14,7 @@ ELSEIF (${MODE} STREQUAL "release")
 ENDIF()
 
 SET (STARFISH_API_OBJECT_LIBRARY starfish_api_object_library)
+
 ADD_LIBRARY (${STARFISH_API_OBJECT_LIBRARY} OBJECT
     ${STARFISH_ROOT}/src/public/LWEWebView.cpp
     ${STARFISH_ROOT}/src/public/LWELoaderUtils.cpp
