@@ -187,6 +187,8 @@ public:
 protected:
     static void SetUpTestCase()
     {
+        // give some delay for x11 server
+        usleep(1000000);
         LWE::LWE::Initialize("/tmp/starfish_storage/");
         window = Window::create();
         window->setInitHint(HINT_VISIBLE, 0);
