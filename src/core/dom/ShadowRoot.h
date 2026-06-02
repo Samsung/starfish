@@ -24,10 +24,6 @@
 #include "core/dom/ShadowRootInit.h"
 #include "core/layout/Frame.h"
 
-namespace Escargot {
-class ProxyObjectRef;
-}
-
 namespace Starfish {
 
 class HTMLSlotElement;
@@ -150,7 +146,7 @@ public:
 
     // CSSOM `adoptedStyleSheets` observable array. Binding + data model only.
     // See AdoptedStyleSheets.{h,cpp}.
-    Escargot::ProxyObjectRef* adoptedStyleSheetsObservableArray(
+    ScriptProxyObject adoptedStyleSheetsObservableArray(
         Escargot::ExecutionStateRef* state);
     void setAdoptedStyleSheetsFromObservableArray(
         Escargot::ExecutionStateRef* state, Escargot::ValueRef* value);
@@ -158,7 +154,7 @@ public:
     {
         return m_adoptedStyleSheets;
     }
-    Escargot::ProxyObjectRef*& adoptedStyleSheetsProxySlot()
+    ScriptProxyObject& adoptedStyleSheetsProxySlot()
     {
         return m_adoptedStyleSheetsProxy;
     }
@@ -196,7 +192,7 @@ private:
     GCUnorderedMap<String*, HTMLSlotElement*> m_namedSlotElements;
     StyleResolver* m_styleResolver;
     GCVector<CSSStyleSheet*> m_adoptedStyleSheets;
-    Escargot::ProxyObjectRef* m_adoptedStyleSheetsProxy;
+    ScriptProxyObject m_adoptedStyleSheetsProxy;
 };
 } // namespace Starfish
 

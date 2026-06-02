@@ -128,7 +128,7 @@ namespace {
                                                    getIndexedValue, lengthOf,
                                                    setLength };
 
-    Escargot::ProxyObjectRef*& proxySlotOf(Node* host)
+    ScriptProxyObject& proxySlotOf(Node* host)
     {
         if (host->isDocument()) {
             return static_cast<Document*>(host)->adoptedStyleSheetsProxySlot();
@@ -140,10 +140,9 @@ namespace {
 
 namespace AdoptedStyleSheets {
 
-    Escargot::ProxyObjectRef* observableArray(ExecutionStateRef* state,
-                                              Node* host)
+    ScriptProxyObject observableArray(ExecutionStateRef* state, Node* host)
     {
-        Escargot::ProxyObjectRef*& slot = proxySlotOf(host);
+        ScriptProxyObject& slot = proxySlotOf(host);
         if (slot == nullptr) {
             slot = ObservableArray::create(state, host, &s_callbacks);
         }

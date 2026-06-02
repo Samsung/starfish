@@ -22,10 +22,6 @@
 
 #include "binding/ScriptWrappable.h"
 
-namespace Escargot {
-class ProxyObjectRef;
-}
-
 namespace Starfish {
 
 // Web IDL observable array
@@ -73,14 +69,14 @@ class ObservableArray {
 public:
     // Build a Proxy-backed observable array bound to `host`. `callbacks` must
     // point to storage that outlives the proxy (a static const is ideal).
-    static Escargot::ProxyObjectRef* create(
-        Escargot::ExecutionStateRef* state, ScriptWrappable* host,
-        const ObservableArrayCallbacks* callbacks);
+    static ScriptProxyObject create(Escargot::ExecutionStateRef* state,
+                                    ScriptWrappable* host,
+                                    const ObservableArrayCallbacks* callbacks);
 
     // Re-seed the proxy's backing Array from the host's native list. Call after
     // the host replaces its backing list wholesale (the attribute setter path).
     static void syncFromHost(Escargot::ExecutionStateRef* state,
-                             Escargot::ProxyObjectRef* proxy);
+                             ScriptProxyObject proxy);
 };
 
 } // namespace Starfish

@@ -47,7 +47,7 @@ ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
     m_styleResolver->addSheet(document->styleResolver().sheets()[0]);
 }
 
-Escargot::ProxyObjectRef* ShadowRoot::adoptedStyleSheetsObservableArray(
+ScriptProxyObject ShadowRoot::adoptedStyleSheetsObservableArray(
     Escargot::ExecutionStateRef* state)
 {
     return AdoptedStyleSheets::observableArray(state, this);

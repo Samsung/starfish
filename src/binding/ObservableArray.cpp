@@ -173,7 +173,7 @@ static void defineTrap(ExecutionStateRef* state, ObjectRef* handler,
         false /* writable */, false /* enumerable */, true /* configurable */);
 }
 
-Escargot::ProxyObjectRef* ObservableArray::create(
+ScriptProxyObject ObservableArray::create(
     ExecutionStateRef* state, ScriptWrappable* host,
     const ObservableArrayCallbacks* callbacks)
 {
@@ -193,7 +193,7 @@ Escargot::ProxyObjectRef* ObservableArray::create(
 }
 
 void ObservableArray::syncFromHost(ExecutionStateRef* state,
-                                   Escargot::ProxyObjectRef* proxy)
+                                   ScriptProxyObject proxy)
 {
     ObservableArrayBackend* backend =
         (ObservableArrayBackend*)proxy->handler()->extraData();

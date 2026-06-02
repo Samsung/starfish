@@ -51,6 +51,7 @@ class Float64ArrayObjectRef;
 class SharedArrayBufferObjectRef;
 class MapObjectRef;
 class SetObjectRef;
+class ProxyObjectRef;
 
 template <typename T>
 class OptionalRef;
@@ -104,6 +105,7 @@ typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptOptionalValue;
 typedef Escargot::ScriptRef* ScriptModule;
 typedef Escargot::MapObjectRef* ScriptMap;
 typedef Escargot::SetObjectRef* ScriptSet;
+typedef Escargot::ProxyObjectRef* ScriptProxyObject;
 
 void staticallyInitScriptEngine();
 void staticallyDestroyScriptEngine();
