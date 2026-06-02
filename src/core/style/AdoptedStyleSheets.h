@@ -33,7 +33,7 @@ class Node;
 // Shared implementation of the CSSOM `adoptedStyleSheets` observable array for
 // both Document and ShadowRoot. `host` must be a Document or a ShadowRoot; the
 // helper reads/writes the host's own backing list and cached proxy slot through
-// the accessors those classes expose. Binding + data model only — no cascade.
+// the accessors those classes expose. Binding + data model only - no cascade.
 namespace AdoptedStyleSheets {
 
     // Lazily create (and cache) the observable-array proxy for `host`.
