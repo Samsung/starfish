@@ -1872,7 +1872,7 @@ StyleSheetList* Document::styleSheets()
     return m_styleSheetList;
 }
 
-Escargot::ProxyObjectRef* Document::adoptedStyleSheetsObservableArray(
+ScriptProxyObject Document::adoptedStyleSheetsObservableArray(
     Escargot::ExecutionStateRef* state)
 {
     return AdoptedStyleSheets::observableArray(state, this);

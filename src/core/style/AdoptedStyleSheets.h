@@ -20,11 +20,7 @@
 #ifndef __StarfishAdoptedStyleSheets__
 #define __StarfishAdoptedStyleSheets__
 
-namespace Escargot {
-class ProxyObjectRef;
-class ExecutionStateRef;
-class ValueRef;
-} // namespace Escargot
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
@@ -37,8 +33,8 @@ class Node;
 namespace AdoptedStyleSheets {
 
     // Lazily create (and cache) the observable-array proxy for `host`.
-    Escargot::ProxyObjectRef* observableArray(
-        Escargot::ExecutionStateRef* state, Node* host);
+    ScriptProxyObject observableArray(Escargot::ExecutionStateRef* state,
+                                      Node* host);
 
     // Attribute setter: replace the backing list with the contents of `value`.
     void setFromObservableArray(Escargot::ExecutionStateRef* state, Node* host,
