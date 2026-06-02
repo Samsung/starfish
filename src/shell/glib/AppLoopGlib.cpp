@@ -19,7 +19,9 @@
 
 #include "ShellConfig.h"
 
-#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLIB_HEADLESS)) && \
+#if (defined(STARFISH_SHELL_X11) ||              \
+     defined(STARFISH_SHELL_X11_WEBCONTAINER) || \
+     defined(STARFISH_SHELL_GLIB_HEADLESS)) &&   \
     (defined(STARFISH_GLIB_CAIRO_GL) || defined(STARFISH_GLIB_HEADLESS))
 
 #include "AppLoop.h"
