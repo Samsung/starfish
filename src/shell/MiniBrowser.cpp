@@ -41,7 +41,7 @@ enum StarfishStartUpFlag {
 
 namespace StarfishShell {
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_GLFW)
 
 class EventPoller {
 public:
@@ -228,7 +228,7 @@ MiniBrowser::~MiniBrowser()
         delete m_console;
     }
     m_lwe->Blur();
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_GLFW)
     g_eventPoller.stop();
 #endif
     m_lwe->Destroy();
@@ -496,7 +496,7 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
             m_lwe->DispatchCompositionUpdateEvent(text);
         }
     });
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_GLFW)
     g_eventPoller.start(m_window, m_lwe);
 #endif
 #elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) || \
