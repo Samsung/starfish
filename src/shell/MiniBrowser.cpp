@@ -41,41 +41,6 @@ enum StarfishStartUpFlag {
 
 namespace StarfishShell {
 
-#if defined(STARFISH_SHELL_GLFW)
-
-class EventPoller {
-public:
-    void start(Window* window, LWE::WebContainer* webContainer)
-    {
-        m_lwe = webContainer;
-        m_window = window;
-
-        m_timeout = m_lwe->AddTimeout(onTimeout, this, 10);
-    }
-
-    void stop()
-    {
-        if (m_timeout) {
-            m_lwe->ClearTimeout(m_timeout);
-            m_timeout = 0;
-        }
-    }
-
-private:
-    static void onTimeout(void* data)
-    {
-        EventPoller* self = reinterpret_cast<EventPoller*>(data);
-        self->m_window->pollEvent();
-        self->m_timeout = self->m_lwe->AddTimeout(onTimeout, data, 10);
-    }
-
-    LWE::WebContainer* m_lwe = nullptr;
-    Window* m_window = nullptr;
-    size_t m_timeout = 0;
-
-} g_eventPoller;
-#endif
-
 void MiniBrowser::parseArgs(int argc, char* argv[],
                             MiniBrowser::EnvironmentValues& env,
                             MiniBrowser::InitOption& init,
@@ -228,9 +193,6 @@ MiniBrowser::~MiniBrowser()
         delete m_console;
     }
     m_lwe->Blur();
-#if defined(STARFISH_SHELL_GLFW)
-    g_eventPoller.stop();
-#endif
     m_lwe->Destroy();
 
     m_window->terminate();
@@ -366,140 +328,7 @@ bool MiniBrowser::createWindow(const InitOption& initOption)
 
 bool MiniBrowser::createLWE(const InitOption& initOption)
 {
-#if defined(STARFISH_SHELL_GLFW)
-    LWE::WebContainer::WebContainerArguments args{
-        .width = initOption.geometry.width,
-        .height = initOption.geometry.height,
-        .devicePixelRatio = initOption.scaleFactor,
-        .defaultFontName = "serif",
-        .locale = "ko-KR",
-        .timezoneID = "Asia/Seoul",
-    };
-    LWE::WebContainer::RendererGLConfiguration config;
-    config.onMakeCurrent = [this](LWE::WebContainer* wc) {
-        m_window->renderer()->makeCurrent();
-    };
-    config.onSwapBuffers = [this](LWE::WebContainer* wc, bool mayNeedsSync) {
-        m_window->renderer()->swapBuffers();
-    };
-    config.onCreateSharedContext = [this](LWE::WebContainer* wc) -> uintptr_t {
-        return m_window->renderer()->createSharedContext();
-    };
-    config.onDestroyContext = [this](LWE::WebContainer* wc,
-                                     uintptr_t context) -> bool {
-        return m_window->renderer()->destroyContext(context);
-    };
-    config.onClearCurrentContext = [this](LWE::WebContainer* wc) -> bool {
-        return m_window->renderer()->clearCurrentContext();
-    };
-    config.onMakeCurrentWithContext = [this](LWE::WebContainer* wc,
-                                             uintptr_t context) -> bool {
-        return m_window->renderer()->makeCurrentWithContext(context);
-    };
-    config.onGetProcAddress = [this](LWE::WebContainer* wc,
-                                     const char* name) -> void* {
-        return m_window->renderer()->getProcAddress(name);
-    };
-    config.onIsSupportedExtension = [this](LWE::WebContainer* wc,
-                                           const char* extension) -> bool {
-        return m_window->renderer()->isSupportedExtension(extension);
-    };
-
-    m_lwe = LWE::WebContainer::CreateGL(args, config);
-
-    if (!m_lwe) {
-        return false;
-    }
-
-    m_window->setWindowSizeEventHandler(
-        [this](int width, int height) { m_lwe->ResizeTo(width, height); });
-
-    m_window->setMotionEventHandler([this](int xpos, int ypos) {
-        LWE::MouseButtonsValue buttons =
-            m_isMouseLbuttonDown ? LWE::MouseButtonsValue::LeftButtonDown
-                                 : LWE::MouseButtonsValue::NoButtonDown;
-        m_lwe->DispatchMouseMoveEvent(LWE::MouseButtonValue::NoButton, buttons,
-                                      xpos, ypos);
-    });
-
-    m_window->setButtonEventHandler([this](INPUT type, INPUT action) {
-        if (type == INPUT::MOUSE_LBUTTON) {
-            double xpos, ypos;
-            m_window->getCursorPos(xpos, ypos);
-            if (action == INPUT::PRESS) {
-                m_isMouseLbuttonDown = true;
-                m_lwe->DispatchMouseDownEvent(
-                    LWE::MouseButtonValue::NoButton,
-                    LWE::MouseButtonsValue::LeftButtonDown, xpos, ypos);
-            } else {
-                m_isMouseLbuttonDown = false;
-                m_lwe->DispatchMouseUpEvent(
-                    LWE::MouseButtonValue::NoButton,
-                    LWE::MouseButtonsValue::NoButtonDown, xpos, ypos);
-            }
-        }
-    });
-
-    m_window->setScrollEventHandler([this](double x, double y, int delta) {
-        m_lwe->DispatchMouseWheelEvent(x, y, delta);
-    });
-
-    m_window->setKeyEventHandler(
-        [this](unsigned long code, INPUT action, unsigned mods) {
-            LWE::KeyValue keyValue = Window::convertKeyCode(code, action, mods);
-            if (action == INPUT::PRESS) {
-                m_lwe->DispatchKeyDownEvent(keyValue);
-                m_lwe->DispatchKeyPressEvent(keyValue);
-            } else {
-                m_lwe->DispatchKeyUpEvent(keyValue);
-            }
-        });
-
-    m_window->setExitEventHandler([this]() {
-        printf("Exit\n");
-        setenv("SHELL_DONE_FLAG", "1", 1);
-        m_window->appLoop()->stop();
-    });
-
-    m_lwe->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-        [this](LWE::WebContainer*) {
-            m_window->ShowSoftwareKeyboardIfPossible();
-        });
-
-    m_lwe->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-        [this](LWE::WebContainer*) {
-            m_window->HideSoftwareKeyboardIfPossible();
-        });
-
-    m_window->setCompositionEventHandler([this](const char* text, bool isEnd) {
-        if (isEnd) {
-            m_lwe->DispatchCompositionEndEvent(text);
-        } else {
-            m_lwe->DispatchCompositionUpdateEvent(text);
-        }
-    });
-
-    m_lwe->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-        [this](LWE::WebContainer*) {
-            m_window->ShowSoftwareKeyboardIfPossible();
-        });
-
-    m_lwe->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-        [this](LWE::WebContainer*) {
-            m_window->HideSoftwareKeyboardIfPossible();
-        });
-
-    m_window->setCompositionEventHandler([this](const char* text, bool isEnd) {
-        if (isEnd) {
-            m_lwe->DispatchCompositionEndEvent(text);
-        } else {
-            m_lwe->DispatchCompositionUpdateEvent(text);
-        }
-    });
-#if defined(STARFISH_SHELL_GLFW)
-    g_eventPoller.start(m_window, m_lwe);
-#endif
-#elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
     defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
     defined(STARFISH_SHELL_TCORE_WL)
     m_lwe = LWE::WebView::Create(
