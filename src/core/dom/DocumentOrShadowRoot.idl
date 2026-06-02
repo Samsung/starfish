@@ -9,7 +9,7 @@
 // NoInterfaceObject] interface plus `X implements ...` statements.
 
 // The `X implements DocumentOrShadowRoot;` statements live in Document.idl and
-// ShadowRoot.idl — the generator only attaches an `implements` to an interface
+// ShadowRoot.idl - the generator only attaches an `implements` to an interface
 // defined in the same file.
 [PartialInterface,
  NoInterfaceObject]
