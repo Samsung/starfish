@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_X11)
+#if defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_ECORE_X)
 
 #include "Window.h"
 

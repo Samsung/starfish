@@ -28,10 +28,10 @@
 
 namespace StarfishShell {
 
-class AppLoopEcoreX : public AppLoop {
+class AppLoopEcore : public AppLoop {
 public:
-    AppLoopEcoreX();
-    ~AppLoopEcoreX();
+    AppLoopEcore();
+    ~AppLoopEcore();
 
     virtual void init() override;
     virtual int start(double timeoutInSec = 0) override;
@@ -42,28 +42,27 @@ private:
     Ecore_Timer* m_timerID = nullptr;
 };
 
-AppLoopEcoreX::AppLoopEcoreX()
+AppLoopEcore::AppLoopEcore()
 {
     ecore_init();
-    ecore_main_loop_glib_integrate();
 }
 
-AppLoopEcoreX::~AppLoopEcoreX()
+AppLoopEcore::~AppLoopEcore()
 {
     ecore_shutdown();
 }
 
-void AppLoopEcoreX::init()
+void AppLoopEcore::init()
 {
 }
 
-int AppLoopEcoreX::start(double timeoutInSec)
+int AppLoopEcore::start(double timeoutInSec)
 {
     if (timeoutInSec) {
         m_timerID = ecore_timer_add(
             timeoutInSec,
             [](void* data) -> Eina_Bool {
-                AppLoopEcoreX* self = static_cast<AppLoopEcoreX*>(data);
+                AppLoopEcore* self = static_cast<AppLoopEcore*>(data);
                 self->stop();
                 self->m_timerID = nullptr;
                 return ECORE_CALLBACK_DONE;
@@ -74,7 +73,7 @@ int AppLoopEcoreX::start(double timeoutInSec)
     return 0;
 }
 
-void AppLoopEcoreX::stop()
+void AppLoopEcore::stop()
 {
     if (m_timerID) {
         ecore_timer_freeze(m_timerID);
@@ -84,13 +83,13 @@ void AppLoopEcoreX::stop()
     ecore_main_loop_quit();
 }
 
-void AppLoopEcoreX::deinit()
+void AppLoopEcore::deinit()
 {
 }
 
 std::unique_ptr<AppLoop> AppLoop::create()
 {
-    return std::unique_ptr<AppLoopEcoreX>(new AppLoopEcoreX());
+    return std::unique_ptr<AppLoop>(new AppLoopEcore());
 }
 
 } // namespace StarfishShell

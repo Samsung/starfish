@@ -30,14 +30,14 @@
 
 namespace StarfishShell {
 
-class ConsoleEcoreX : public Console {
+class ConsoleEcore : public Console {
 public:
-    ConsoleEcoreX(MiniBrowser* browser)
+    ConsoleEcore(MiniBrowser* browser)
         : Console(browser)
     {
     }
 
-    ~ConsoleEcoreX()
+    ~ConsoleEcore()
     {
     }
 
@@ -58,7 +58,7 @@ public:
 
 Console* Console::create(MiniBrowser* browser)
 {
-    return new ConsoleEcoreX(browser);
+    return new ConsoleEcore(browser);
 }
 
 } // namespace StarfishShell
