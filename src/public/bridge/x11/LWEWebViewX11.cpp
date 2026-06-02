@@ -54,6 +54,10 @@ void gc::operator delete(void* p)
 #include <EGL/egl.h>
 #include <glib-unix.h>
 
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#include <uv.h>
+#endif
+
 #include <memory>
 #include <cstring>
 #include <locale>
@@ -186,7 +190,11 @@ public:
         , m_lastWidth(width)
         , m_lastHeight(height)
         , m_webContainer(nullptr)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+        , m_uvPollHandle(nullptr)
+#else
         , m_x11FdSource(0)
+#endif
     {
         STARFISH_LOG_INFO("WebViewX11::WebViewX11");
 
@@ -379,10 +387,20 @@ public:
             m_im = nullptr;
         }
 
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+        if (m_uvPollHandle) {
+            uv_poll_stop(m_uvPollHandle);
+            uv_close(reinterpret_cast<uv_handle_t*>(m_uvPollHandle),
+                     [](uv_handle_t* handle) {
+                         delete reinterpret_cast<uv_poll_t*>(handle);
+                     });
+        }
+#else
         if (m_x11FdSource) {
             g_source_remove(m_x11FdSource);
             m_x11FdSource = 0;
         }
+#endif
 
         if (m_ownsWindow && m_window && m_display) {
             XDestroyWindow(m_display, m_window);
@@ -686,6 +704,20 @@ public:
             return;
 
         int fd = ConnectionNumber(m_display);
+
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+        m_uvPollHandle = new uv_poll_t;
+        uv_poll_init(uv_default_loop(), m_uvPollHandle, fd);
+        m_uvPollHandle->data = this;
+        uv_poll_start(m_uvPollHandle, UV_READABLE,
+                      [](uv_poll_t* handle, int status, int events) {
+                          WebViewX11* self =
+                              static_cast<WebViewX11*>(handle->data);
+                          if (status == 0) {
+                              self->pollEvent();
+                          }
+                      });
+#else
         GIOChannel* channel = g_io_channel_unix_new(fd);
 
         m_x11FdSource = g_io_add_watch_full(
@@ -710,6 +742,7 @@ public:
             });
 
         g_io_channel_unref(channel);
+#endif
     }
 
     Display* getDisplay()
@@ -790,7 +823,11 @@ private:
     KeyCallback m_keyCallback;
     RenderCallback m_renderCallback;
     CloseCallback m_closeCallback;
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    uv_poll_t* m_uvPollHandle;
+#else
     guint m_x11FdSource;
+#endif
 };
 
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
