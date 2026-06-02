@@ -19,7 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if defined(STARFISH_SHELL_ECORE_X)
+#if defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2)
 
 #include "AppLoop.h"
 
