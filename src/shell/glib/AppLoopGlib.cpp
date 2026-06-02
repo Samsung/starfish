@@ -19,8 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLFW) || \
-     defined(STARFISH_SHELL_GLIB_HEADLESS)) &&                      \
+#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLIB_HEADLESS)) && \
     (defined(STARFISH_GLIB_CAIRO_GL) || defined(STARFISH_GLIB_HEADLESS))
 
 #include "AppLoop.h"
@@ -31,10 +30,10 @@
 
 namespace StarfishShell {
 
-class AppLoopGlibX : public AppLoop {
+class AppLoopGlib : public AppLoop {
 public:
-    AppLoopGlibX();
-    ~AppLoopGlibX();
+    AppLoopGlib();
+    ~AppLoopGlib();
 
     virtual void init() override;
     virtual int start(double timeoutInSec = 0) override;
@@ -50,12 +49,12 @@ private:
     guint m_sigtermSourceID = 0;
 };
 
-AppLoopGlibX::AppLoopGlibX()
+AppLoopGlib::AppLoopGlib()
 {
     m_mainLoop = g_main_loop_new(nullptr, FALSE);
 }
 
-AppLoopGlibX::~AppLoopGlibX()
+AppLoopGlib::~AppLoopGlib()
 {
     if (m_mainLoop) {
         g_main_loop_unref(m_mainLoop);
@@ -63,16 +62,16 @@ AppLoopGlibX::~AppLoopGlibX()
     }
 }
 
-void AppLoopGlibX::init()
+void AppLoopGlib::init()
 {
     // Use g_unix_signal_add for safe signal handling in GLib main loop
     m_sigintSourceID = g_unix_signal_add(SIGINT, onSignal, this);
     m_sigtermSourceID = g_unix_signal_add(SIGTERM, onSignal, this);
 }
 
-gboolean AppLoopGlibX::onSignal(gpointer data)
+gboolean AppLoopGlib::onSignal(gpointer data)
 {
-    AppLoopGlibX* self = static_cast<AppLoopGlibX*>(data);
+    AppLoopGlib* self = static_cast<AppLoopGlib*>(data);
     // Mark source IDs as 0 since GLib will auto-remove the source after
     // G_SOURCE_REMOVE This prevents g_source_remove() from being called on
     // already-removed sources
@@ -85,13 +84,13 @@ gboolean AppLoopGlibX::onSignal(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
-int AppLoopGlibX::start(double timeoutInSec)
+int AppLoopGlib::start(double timeoutInSec)
 {
     if (timeoutInSec) {
         m_timerID = g_timeout_add_seconds(
             static_cast<guint>(timeoutInSec),
             [](gpointer data) -> gboolean {
-                AppLoopGlibX* self = static_cast<AppLoopGlibX*>(data);
+                AppLoopGlib* self = static_cast<AppLoopGlib*>(data);
                 self->m_timerID = 0;
                 self->stop();
                 return G_SOURCE_REMOVE;
@@ -102,7 +101,7 @@ int AppLoopGlibX::start(double timeoutInSec)
     return 0;
 }
 
-void AppLoopGlibX::stop()
+void AppLoopGlib::stop()
 {
     if (m_timerID) {
         g_source_remove(m_timerID);
@@ -113,7 +112,7 @@ void AppLoopGlibX::stop()
     }
 }
 
-void AppLoopGlibX::deinit()
+void AppLoopGlib::deinit()
 {
     if (m_sigintSourceID) {
         g_source_remove(m_sigintSourceID);
@@ -127,7 +126,7 @@ void AppLoopGlibX::deinit()
 
 std::unique_ptr<AppLoop> AppLoop::create()
 {
-    return std::unique_ptr<AppLoopGlibX>(new AppLoopGlibX());
+    return std::unique_ptr<AppLoopGlib>(new AppLoopGlib());
 }
 
 } // namespace StarfishShell

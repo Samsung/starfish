@@ -25,10 +25,6 @@
 #define SHELL_ENABLE_ELEMENTARY_GL
 #endif
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_X11)
-#define SHELL_ENABLE_UV
-#endif
-
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || \
     defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
 #define SHELL_X86_64

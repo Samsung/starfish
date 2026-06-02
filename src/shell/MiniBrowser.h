@@ -35,8 +35,8 @@ namespace StarfishShell {
 class Window;
 class Console;
 
-#if defined(STARFISH_SHELL_GLFW) || defined(STARFISH_SHELL_EFL_HEADLESS) || \
-    defined(STARFISH_SHELL_TCORE_HEADLESS) ||                               \
+#if defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
+    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
     defined(STARFISH_SHELL_GLIB_HEADLESS)
 typedef LWE::WebContainer* LWEType;
 #elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \

@@ -19,8 +19,7 @@
 
 #include "ShellConfig.h"
 
-#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLFW) || \
-     defined(STARFISH_SHELL_GLIB_HEADLESS)) &&                      \
+#if (defined(STARFISH_SHELL_X11) || defined(STARFISH_SHELL_GLIB_HEADLESS)) && \
     (defined(STARFISH_GLIB_CAIRO_GL) || defined(STARFISH_GLIB_HEADLESS))
 #include "Console.h"
 
@@ -32,14 +31,14 @@
 
 namespace StarfishShell {
 
-class ConsoleGlibX : public Console {
+class ConsoleGlib : public Console {
 public:
-    ConsoleGlibX(MiniBrowser* browser)
+    ConsoleGlib(MiniBrowser* browser)
         : Console(browser)
     {
     }
 
-    ~ConsoleGlibX()
+    ~ConsoleGlib()
     {
     }
 
@@ -65,7 +64,7 @@ public:
 
 Console* Console::create(MiniBrowser* browser)
 {
-    return new ConsoleGlibX(browser);
+    return new ConsoleGlib(browser);
 }
 
 } // namespace StarfishShell
