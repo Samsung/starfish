@@ -37,7 +37,8 @@ class Console;
 
 #if defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
     defined(STARFISH_SHELL_TCORE_HEADLESS) || \
-    defined(STARFISH_SHELL_GLIB_HEADLESS)
+    defined(STARFISH_SHELL_GLIB_HEADLESS) ||  \
+    defined(STARFISH_SHELL_X11_WEBCONTAINER)
 typedef LWE::WebContainer* LWEType;
 #elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \
     defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
