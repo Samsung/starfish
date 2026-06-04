@@ -108,7 +108,7 @@ public:
     virtual void pollEvent(){};
     virtual void terminate() = 0;
 
-#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_CAIRO_GL)
+#if defined(STARFISH_SHELL_EFL)
     virtual void addAutoFitChild(void* child)
     {
     }

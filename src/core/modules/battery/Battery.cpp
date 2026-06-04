@@ -22,11 +22,6 @@
 #include "Starfish.h"
 #include "Battery.h"
 
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-#include <device/battery.h>
-#include <device/callback.h>
-#endif
-
 namespace Starfish {
 
 BatteryManager::BatteryManager(ExecutionContext* executionContext)
@@ -47,15 +42,6 @@ ExecutionContext* BatteryManager::executionContext() const
 
 double BatteryManager::level()
 {
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    int batteryLevel = 0;
-    int ret = device_battery_get_percent(&batteryLevel);
-    if (ret == DEVICE_ERROR_NONE) {
-        return ((double)batteryLevel) / 100;
-    } else {
-        STARFISH_ASSERT(0);
-    }
-#endif
     return 1.0;
 }
 

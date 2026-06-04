@@ -42,14 +42,9 @@
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerTizen.h"
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_EFL_HEADLESS) && \
-    !defined(PORT_WEBVIEW_BRIDGE_FLUTTER) &&                                \
+#if !defined(STARFISH_SHELL_EFL) && !defined(PORT_WEBVIEW_BRIDGE_FLUTTER) && \
     !defined(STARFISH_GLIB_CAIRO_GL) && !defined(STARFISH_GLIB_HEADLESS)
 #error "You can not use this player with this option"
-#endif
-
-#if !defined(STARFISH_MM_OUTPUT_WITH_GL) && !defined(STARFISH_EFL_HEADLESS)
-#include <Evas.h>
 #endif
 
 namespace Starfish {

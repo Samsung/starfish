@@ -16,7 +16,7 @@ The following platforms are supported.
 
 ```sh
 # Verified on Ubuntu 20.04.
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libturbojpeg libturbojpeg0-dev libgif-dev cmake autoconf automake libtool ninja libwebp-dev libefl-all-dev
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libturbojpeg libturbojpeg0-dev libgif-dev cmake autoconf automake libtool ninja libwebp-dev libx11-dev libglib2.0-dev
 
 sudo apt-get install python-pip
 pip install Jinja2
@@ -37,8 +37,8 @@ git submodule update
 ### Compile Starfish
 
 ```sh
-cmake -Bout/efl/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -DSHELL=efl -DTARGETNAME=Starfish -G Ninja
-ninja -C out/efl/release starfish.executable
+cmake -Bout/release -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DTARGETNAME=Starfish -G Ninja
+ninja -C out/release starfish.executable
 ```
 
 #### Build targets
@@ -68,7 +68,7 @@ Default values are in **bold**.
   Compile Starfish for either Linux or Tizen platform
 * -DMODE=[ debug | **release** ]<br>
   Compile Starfish for either release or debug mode
-* -DBACKEND=[ **efl_cairo_gl** | uv_cairo_gl | glib_cairo_gl ]<br>
+* -DBACKEND=[ **glib_cairo_gl** | uv_cairo_gl ]<br>
   Use either cairo or cairo_gl as the backend graphics library
 * -DARCH=[ **x64** | arm ]
   Compile Starfish for either x64 or arm target
@@ -80,7 +80,7 @@ Default values are in **bold**.
   Define target output name
 * -DCOVERAGE=[ **0** | 1 ]<br>
   Enable coverage measurements with gcov
-* -DSHELL=[ **efl** | efl_headless | glfw | x11 ]<br>
+* -DSHELL=[ **x11** | glib_headless ]<br>
   Create an executable build target.
 
 ### Directory Structure
@@ -214,55 +214,3 @@ You can debug JS with escargot vscode extension.
 See: [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension)
 
 ## Misc.
-
-### CI Infrastructure
-
-http://10.113.138.181/overview/444
-
-## Outdated
-All instructions in this section are outdated. They are listed here only for historical reasons.
-
-### GYP-based Build System
-
-#### Compile Starfish
-```sh
-./build_third_party.sh
-
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
-ninja -C out/release starfish.x64.release
-```
-
-#### Build options
-The following build options are supported when generating ninja script using gyp.
-Default values are in **bold**.
-
-* -Dcomponent=[ executable | **static_library** | shared_library ]<br>
-  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
-* -Ddeplib=[ **shared_library** | static_library ]<br>
-  Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ efl_cairo | **efl_cairo_gl** ]<br>
-  Use either cairo or cairo_gl as the backend graphics library
-* -Dplatform=[ **linux** | tizen ]<br>
-  Compile Starfish for either Linux or Tizen platform
-* -DtouchUi=[ 0 | **1** ]<br>
-  Enable a touch UI.
-
-
-### Makefile-based Build System
-
-``` sh
-git clone git@github.sec.samsung.net:lws/starfish.git
-cd starfish
-git submodule init
-git submodule update
-./build_third_party.sh
-make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
-```
-
-e.g. `make x64.exe.debug -j`
-
-## Governance
-All decisions in this project are made by consensus, respecting the principles and rules of the community.
-
-Please refer to the [Samsung Inner Source Governance](https://github.sec.samsung.net/InnerSource/SamsungInnerSourceProgram/blob/master/GettingStarted/Governance.md) in more detail.
-

@@ -52,6 +52,7 @@ AppLoopEFL::~AppLoopEFL()
 void AppLoopEFL::init()
 {
     elm_init(0, 0);
+    ecore_main_loop_glib_integrate();
 }
 
 int AppLoopEFL::start(double timeoutInSec)

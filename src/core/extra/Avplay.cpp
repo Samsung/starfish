@@ -31,8 +31,8 @@
 #include <Elementary.h>
 #include <EscargotPublic.h>
 
-#ifndef PORT_WEBVIEW_BRIDGE_EFL
-#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
+#ifndef STARFISH_SHELL_EFL
+#error "You must need STARFISH_SHELL_EFL to use this"
 #endif
 
 namespace Starfish {

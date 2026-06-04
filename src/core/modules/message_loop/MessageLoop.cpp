@@ -53,9 +53,7 @@ MessageLoop* MessageLoop::createForWorker(RunLoop* runLoop)
 void MessageLoop::init()
 {
     registerMainThread();
-#if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    MessageLoopEFL::init();
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::init();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::init();
@@ -68,9 +66,7 @@ void MessageLoop::init()
 
 void MessageLoop::run()
 {
-#if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    MessageLoopEFL::run();
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::run();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::run();
@@ -83,9 +79,7 @@ void MessageLoop::run()
 
 void MessageLoop::stop()
 {
-#if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    MessageLoopEFL::stop();
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::stop();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::stop();
@@ -98,9 +92,7 @@ void MessageLoop::stop()
 
 void MessageLoop::runOnMainThreadSync(const std::function<void()>& functor)
 {
-#if defined(PORT_EVENTLOOP_BACKEND_EFL)
-    MessageLoopEFL::runOnMainThreadSync(functor);
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     MessageLoopLibUV::runOnMainThreadSync(functor);
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
     MessageLoopWindows::runOnMainThreadSync(functor);

@@ -51,6 +51,7 @@ AppLoopEFLHeadless::~AppLoopEFLHeadless()
 void AppLoopEFLHeadless::init()
 {
     ecore_init();
+    ecore_main_loop_glib_integrate();
 }
 
 int AppLoopEFLHeadless::start(double timeoutInSec)

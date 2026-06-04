@@ -22,7 +22,7 @@
 #include "public/delegate/LWEWebViewDelegateImpl.h"
 #include "public/delegate/LWEWebContainerDelegate.h"
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_SHELL_EFL)
 
 #define STARFISH_ENABLE_PROFILE_TIMER
 
@@ -429,83 +429,6 @@ public:
         // Initialize screen matrix.
         updateScreenMatrix(0, width, height);
 
-#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
-        m_buttonForClick = elm_button_add(m_windowObject);
-        elm_box_pack_end(m_mainBox, m_buttonForClick);
-        evas_object_show(m_buttonForClick);
-
-        m_buttonForClickCipper =
-            evas_object_rectangle_add(evas_object_evas_get(m_windowObject));
-        evas_object_clip_set(m_buttonForClick, m_buttonForClickCipper);
-        evas_object_color_set(m_buttonForClickCipper, 0, 0, 0, 0);
-        elm_box_pack_end(m_mainBox, m_buttonForClickCipper);
-        evas_object_show(m_buttonForClickCipper);
-
-        m_buttonForClickMouseDownEventHandler = [](void* data, Evas* evas,
-                                                   Evas_Object* obj,
-                                                   void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
-            wv->m_lastMouseX = ev->canvas.x;
-            wv->m_lastMouseY = ev->canvas.y;
-
-            int x, y;
-            evas_object_geometry_get(wv->m_graphicsAdapter, &x, &y, 0, 0);
-            wv->m_lastMouseX -= x;
-            wv->m_lastMouseY -= y;
-
-            wv->FetchWebContainer()->DispatchMouseDownEvent(
-                MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
-                wv->m_lastMouseX, wv->m_lastMouseY);
-            wv->m_isMouseLbuttonDown = true;
-            return;
-        };
-        evas_object_event_callback_add(
-            m_buttonForClick, EVAS_CALLBACK_MOUSE_DOWN,
-            m_buttonForClickMouseDownEventHandler, this);
-
-        m_buttonForClickMouseMoveEventHandler = [](void* data, Evas* evas,
-                                                   Evas_Object* obj,
-                                                   void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
-            wv->m_lastMouseX = ev->cur.canvas.x;
-            wv->m_lastMouseY = ev->cur.canvas.y;
-
-            unsigned char buttons = wv->m_isMouseLbuttonDown
-                                        ? MouseButtonsValue::LeftButtonDown
-                                        : MouseButtonsValue::NoButtonDown;
-            wv->FetchWebContainer()->DispatchMouseMoveEvent(
-                MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
-                wv->m_lastMouseX, wv->m_lastMouseY);
-            return;
-        };
-        evas_object_event_callback_add(
-            m_buttonForClick, EVAS_CALLBACK_MOUSE_MOVE,
-            m_buttonForClickMouseMoveEventHandler, this);
-
-        m_buttonForClickMouseUpEventHandler = [](void* data, Evas* evas,
-                                                 Evas_Object* obj,
-                                                 void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            wv->m_isMouseLbuttonDown = false;
-            return;
-        };
-        evas_object_event_callback_add(m_buttonForClick, EVAS_CALLBACK_MOUSE_UP,
-                                       m_buttonForClickMouseUpEventHandler,
-                                       this);
-
-        m_buttonForClickClickEventHandler = [](void* data, Evas_Object* obj,
-                                               void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            wv->FetchWebContainer()->DispatchMouseUpEvent(
-                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
-                wv->m_lastMouseX, wv->m_lastMouseY);
-            wv->m_isMouseLbuttonDown = false;
-        };
-        evas_object_smart_callback_add(m_buttonForClick, "clicked",
-                                       m_buttonForClickClickEventHandler, this);
-#else
         m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                      void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
@@ -964,8 +887,6 @@ public:
                                                ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
         ecore_imf_context_prediction_allow_set(m_imfContext, EINA_FALSE);
 
-#endif
-
         float glScale = 1;
         if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
             glScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
@@ -1276,7 +1197,6 @@ public:
 
     void ShowSoftwareKeyboardIfPossible()
     {
-#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         if (ecore_imf_input_panel_hide() == EINA_FALSE) {
             FetchWebContainer()->AddIdleCallback(
                 [](void* data) {
@@ -1297,12 +1217,10 @@ public:
                 },
                 this, 100);
         }
-#endif
     }
 
     void HideSoftwareKeyboardIfPossible()
     {
-#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         FetchWebContainer()->ClearTimeout(m_hideKeyboardTimeoutId);
         m_hideKeyboardTimeoutId = FetchWebContainer()->AddTimeout(
             [](void* data) {
@@ -1312,7 +1230,6 @@ public:
                 self->m_hideKeyboardTimeoutId = SIZE_MAX;
             },
             this, 100);
-#endif
     }
 
 protected:

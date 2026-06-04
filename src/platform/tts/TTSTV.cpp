@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 
 #if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS) && \
-    defined(STARFISH_TIZEN_PROD_TV) && defined(PORT_WEBVIEW_BRIDGE_EFL)
+    defined(STARFISH_TIZEN_PROD_TV) && defined(STARFISH_SHELL_EFL)
 
 #include "Starfish.h"
 #include "core/dom/Document.h"

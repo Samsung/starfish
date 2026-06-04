@@ -43,7 +43,7 @@ MACRO (add_worker_api_taget file_name variable_name)
     # This block came from config.cmake. please remove this and enable SOVERSION and VERSION properties.
     # The spec file will also need to be modified.
     IF (${HOST} STREQUAL "tizen")
-        IF (${BACKEND} STREQUAL "efl_cairo_gl")
+        IF (${BACKEND} STREQUAL "glib_cairo_gl")
             SET (STARFISH_${variable_name}_API_LDFLAGS ${STARFISH_WORKER_API_LDFLAGS} -Wl,-soname,liblightweight-web-engine-${file_name}.so.1)
         ENDIF()
     ENDIF()

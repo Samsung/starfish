@@ -892,13 +892,6 @@ String* ResourceURL::getUrlPathString() const
     size_t min = search > hash ? hash : search;
 
     if (min != SIZE_MAX) {
-#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
-        if (m_protocol == FILE_PROTOCOL) {
-            STARFISH_LOG_INFO("Accept special characters in a filename: %s",
-                              m_urlString->toUTF8NonGCString().data());
-            return m_urlString;
-        }
-#endif
         return m_urlString->substring(0, min);
     } else {
         return m_urlString;

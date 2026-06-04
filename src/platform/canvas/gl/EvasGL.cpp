@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(STARFISH_EFL_HEADLESS)
+#if defined(STARFISH_SHELL_EFL)
 #include <Evas_GL.h>
 #include <dlfcn.h>
 

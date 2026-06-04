@@ -156,7 +156,7 @@ static void logEglError(const char* name) noexcept
 #if defined(STARFISH_TIZEN)
 #define EVAS_GL_IMAGE_PRESERVED 0x30D2
 #define EVAS_GL_NATIVE_SURFACE_TIZEN 0x32A1
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_SHELL_EFL)
 #include <tbm_surface.h>
 typedef GLint EGLint;
 #define EGL_TRUE 1
@@ -2278,7 +2278,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 #endif
 
         // if efl enabled, there is no way to support egl image with evasgl
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_SHELL_EFL)
         g_shouldUseEGLImageOnPlainSurface = false;
 #endif
 
@@ -2312,7 +2312,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
         g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
             renderer->isSupportedExtension(nativeSurfaceExtensionStr);
-#if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_TIZEN) && defined(STARFISH_SHELL_EFL)
         STARFISH_RELEASE_ASSERT(g_isSupported_EGL_NATIVE_SURFACE_TIZEN);
 #endif
         g_needsCheckCompatibility = false;
@@ -2608,7 +2608,7 @@ public:
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
 
                 if (gl()->isGeneric()) {
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_SHELL_EFL)
                     EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                                          EGL_NONE };
                     m_eglImage = gl()->xglCreateImage(
@@ -3141,7 +3141,7 @@ protected:
     bool m_isFrameBuffer{ false };
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
-#if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_TIZEN) && defined(STARFISH_SHELL_EFL)
     tbm_surface_h m_tbmSurface;
     void* m_eglImage;
 #elif defined(STARFISH_TIZEN)
