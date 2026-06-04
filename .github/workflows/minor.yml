@@ -68,7 +68,7 @@ jobs:
             xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
             xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
 
-  x64_efl_headless:
+  x64_x11_webcontainer:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
@@ -92,9 +92,9 @@ jobs:
             git clean -xdf
       - name: Build Starfish
         run: |
-            cmake CMakeLists.txt -DMODE=debug -DBACKEND=efl_headless -DSHELL=efl_headless -DDOCKER=1 -G Ninja
+            cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_cairo_gl -DSHELL=x11_webcontainer -DDOCKER=1 -G Ninja
             ninja starfish.executable
-
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
   x64_glib_headless:
     runs-on:  [ code-linux, code-2xlarge ]
     container:
@@ -121,3 +121,4 @@ jobs:
         run: |
             cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
             ninja starfish.executable
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console 1>/dev/null || exit 1
