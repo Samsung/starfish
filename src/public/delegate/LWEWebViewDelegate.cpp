@@ -21,8 +21,8 @@
 
 #include "LWEWebViewDelegate.h"
 
-#if defined(_MSC_VER) || defined(STARFISH_EFL_HEADLESS) ||          \
-    defined(STARFISH_ANDROID) || defined(STARFISH_GLIB_HEADLESS) || \
+#if defined(STARFISH_WINDOWS) || defined(STARFISH_ANDROID) || \
+    defined(STARFISH_GLIB_HEADLESS) ||                        \
     defined(STARFISH_SHELL_X11_WEBCONTAINER)
 
 namespace LWEDelegate {

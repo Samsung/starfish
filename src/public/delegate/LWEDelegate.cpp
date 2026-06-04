@@ -37,11 +37,6 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#if defined(STARFISH_EFL_CAIRO_GL) || defined(PORT_WEBVIEW_BRIDGE_EFL) || \
-    defined(STARFISH_EFL_HEADLESS)
-#include <Ecore.h>
-#endif
-
 using namespace Escargot;
 
 namespace LWEDelegate {
@@ -69,7 +64,7 @@ void LWE::Initialize(const char* storageDirectoryPath)
         backend == "uv_worker") {
         isThreadMode = true;
     }
-    if (backend == "efl_headless" || backend == "glib_headless") {
+    if (backend == "glib_headless") {
         rendererType = Starfish::StarfishRendererType::kHeadless;
     }
 #ifdef STARFISH_ENABLE_TEST
@@ -81,10 +76,6 @@ void LWE::Initialize(const char* storageDirectoryPath)
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() -> void {
 #if defined(STARFISH_WINDOWS)
         FcInitLoadConfigAndFonts();
-#endif
-#if defined(STARFISH_EFL_CAIRO_GL) || defined(PORT_WEBVIEW_BRIDGE_EFL) || \
-    defined(STARFISH_EFL_HEADLESS)
-        ecore_main_loop_glib_integrate();
 #endif
         Starfish::StarfishConfiguration config;
         config.storageDirectoryPath = storageDirectoryPath;

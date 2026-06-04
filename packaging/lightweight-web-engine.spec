@@ -237,9 +237,9 @@ BuildRequires: pkgconfig(evas)
 BuildRequires: pkgconfig(ecore-evas)
 BuildRequires: pkgconfig(elementary)
 BuildRequires: pkgconfig(efl-extension)
-%define lwe_backend efl_cairo_gl
+%define lwe_backend glib_cairo_gl
 %define lwe_shell_type efl
-%define lwe_headless_backend efl_headless
+%define lwe_headless_backend glib_headless
 %define lwe_headless_shell_type efl_headless
 %endif
 

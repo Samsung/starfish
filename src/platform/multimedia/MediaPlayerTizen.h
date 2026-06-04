@@ -45,14 +45,14 @@
 
 #define STARFISH_RUN_MSE_THREAD
 
-#if !defined(STARFISH_EFL_HEADLESS)
+#if !defined(STARFISH_GLIB_HEADLESS)
 #if !defined(STARFISH_TIZEN_TV)
 #define STARFISH_MM_OUTPUT_WITH_GL
 #endif
 #else
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL)
-#if !defined(STARFISH_EFL_HEADLESS)
-#error "Without GL, you need `PORT_WEBVIEW_BRIDGE_EFL`"
+#if !defined(STARFISH_SHELL_EFL)
+#if !defined(STARFISH_GLIB_HEADLESS)
+#error "Without GL, you need `STARFISH_SHELL_EFL`"
 #endif
 #endif
 #endif

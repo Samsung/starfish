@@ -21,7 +21,7 @@
 #define __StarfishShellConfig__
 
 // Define the SHELL macros using define given from CMAKE.
-#if defined(STARFISH_EFL_CAIRO_GL)
+#if defined(STARFISH_SHELL_EFL)
 #define SHELL_ENABLE_ELEMENTARY_GL
 #endif
 

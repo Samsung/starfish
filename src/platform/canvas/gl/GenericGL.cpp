@@ -1125,7 +1125,7 @@ private:
     PFNGLINVALIDATEFRAMEBUFFERPROC m_glInvalidateFramebuffer = nullptr;
 };
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if !defined(STARFISH_SHELL_EFL)
 GL *GL::create(Renderer *renderer)
 {
     return new GenericGL(renderer);

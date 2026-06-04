@@ -544,16 +544,12 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ReferrerURL* referrerURL)
     reqData->m_mode = RequestMode::Navigate;
     reqData->m_destination = RequestDestination::Document;
 
-#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     if (url->urlString()->isEmpty() ||
         url->urlString()->equals("about:blank")) {
         reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
     } else {
         reqData->m_syncLevel = RequestSyncLevel::NeverSync;
     }
-#else
-    reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
-#endif
     m_resource->request(reqData, true);
 }
 
