@@ -1549,6 +1549,12 @@ RenderResult WebView::rendering(bool force)
                             (float)iter->second.x(), (float)iter->second.y(),
                             (float)iter->second.width(),
                             (float)iter->second.height());
+                    } else if (iter->first && iter->first->isDocument()) {
+                        STARFISH_LOG_INFO(
+                            "repaint region (#document) %f %f %f %f",
+                            (float)iter->second.x(), (float)iter->second.y(),
+                            (float)iter->second.width(),
+                            (float)iter->second.height());
                     } else {
                         STARFISH_LOG_INFO("repaint region (screen) %f %f %f %f",
                                           (float)iter->second.x(),

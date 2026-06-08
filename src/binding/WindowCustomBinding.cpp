@@ -1000,18 +1000,10 @@ static ValueRef* checkPixelColorFunction(ExecutionStateRef* state,
     uint8_t* pixel = &pixelData[y * rowbytes + x * 4];
 
     int32_t actualR, actualG, actualB, actualA;
-#ifdef PORT_PIXEL_ORDER_RGBA
     actualR = pixel[0];
     actualG = pixel[1];
     actualB = pixel[2];
     actualA = pixel[3];
-#else
-    // BGRA format
-    actualR = pixel[2];
-    actualG = pixel[1];
-    actualB = pixel[0];
-    actualA = pixel[3];
-#endif
 
     // Compare with tolerance
     auto inRange = [tolerance](int32_t actual, int32_t expected) -> bool {
