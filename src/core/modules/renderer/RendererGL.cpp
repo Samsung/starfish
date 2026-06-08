@@ -80,8 +80,8 @@ public:
 
     void ensureCompositorContext()
     {
-        STARFISH_ASSERT(!m_compostiorContext);
-        m_compostiorContext = Compositor::initCompositorContext(this);
+        STARFISH_ASSERT(!m_compositorContext);
+        m_compositorContext = Compositor::initCompositorContext(this);
     }
 
     virtual uint32_t width() override
@@ -118,17 +118,17 @@ public:
             return RenderResult();
         }
 
-        if (!m_compostiorContext) {
+        if (!m_compositorContext) {
             // calling makeCurrent will create compositor context
             makeCurrent();
-            STARFISH_ASSERT(m_compostiorContext);
+            STARFISH_ASSERT(m_compositorContext);
         }
 
-        m_compostiorContext->willRendering();
+        m_compositorContext->willRendering();
         if (m_renderingPrepareCallback) {
             RenderInfo renderInfo = m_renderingPrepareCallback();
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compostiorContext->prepareExternalSurface(
+            m_compositorContext->prepareExternalSurface(
                 renderInfo.updatedBufferAddress);
 #endif
         }
@@ -143,17 +143,17 @@ public:
                 float oldDPR = webView()->screenInfo().devicePixelRatio;
                 webView()->mutableScreenInfo().devicePixelRatio = 1;
                 Compositor* c =
-                    Compositor::create3D(webView(), m_compostiorContext);
+                    Compositor::create3D(webView(), m_compositorContext);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
                 delete c;
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
-            m_compostiorContext->didRendering();
+            m_compositorContext->didRendering();
             swapBuffers();
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compostiorContext->flushExternalSurface(
+            m_compositorContext->flushExternalSurface(
                 m_surfaceFlushCallback, ret.didPaintingOrCompositing);
 #endif
         } else {
@@ -167,7 +167,7 @@ public:
                     float oldDPR = webView()->screenInfo().devicePixelRatio;
                     webView()->mutableScreenInfo().devicePixelRatio = 1;
                     Compositor* c =
-                        Compositor::create3D(webView(), m_compostiorContext);
+                        Compositor::create3D(webView(), m_compositorContext);
                     c->clearColor(Unit::Color(0, 0, 0, 0));
                     if (m_glPaintingSurface != nullptr) {
                         c->drawSurface(m_glPaintingSurface,
@@ -176,12 +176,12 @@ public:
                     delete c;
                     webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
                 }
-                m_compostiorContext->didRendering();
+                m_compositorContext->didRendering();
                 swapBuffers();
             }
 #endif
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            m_compostiorContext->flushExternalSurface(m_surfaceFlushCallback,
+            m_compositorContext->flushExternalSurface(m_surfaceFlushCallback,
                                                       false);
 #endif
         }
@@ -241,7 +241,7 @@ public:
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
         }
-        return Compositor::create3D(webView(), m_compostiorContext);
+        return Compositor::create3D(webView(), m_compositorContext);
     }
 
     virtual bool makeCurrent() override
@@ -251,7 +251,7 @@ public:
         }
         m_onMakeCurrent(this);
         m_currentContext = kEmptyContextOrUnknown;
-        if (!m_compostiorContext) {
+        if (!m_compositorContext) {
             ensureCompositorContext();
         }
         return true;
@@ -321,7 +321,7 @@ public:
 
     virtual void pause() override
     {
-        // release m_glPaintingSurface && m_compostiorContext for reducing
+        // release m_glPaintingSurface && m_compositorContext for reducing
         // memory usage
         makeCurrent();
 
@@ -332,8 +332,8 @@ public:
             m_glPaintingSurface = nullptr;
         }
 
-        if (m_compostiorContext) {
-            m_compostiorContext->onIdle();
+        if (m_compositorContext) {
+            m_compositorContext->onIdle();
         }
         Renderer::pause();
     }
@@ -342,7 +342,7 @@ public:
     {
         STARFISH_LOG_INFO("RendererGL::onClearDrawnBuffers");
 
-        if (m_compostiorContext) {
+        if (m_compositorContext) {
             makeCurrent();
 
             if (m_glPaintingSurface) {
@@ -350,7 +350,7 @@ public:
                 m_glPaintingSurface = nullptr;
             }
 
-            m_compostiorContext->onIdle();
+            m_compositorContext->onIdle();
         }
     }
 

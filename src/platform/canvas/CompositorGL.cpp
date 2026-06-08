@@ -2433,7 +2433,7 @@ public:
 
             if (ret) {
                 CompositorContextGL* ctx =
-                    (CompositorContextGL*)m_renderer->compostiorContext();
+                    (CompositorContextGL*)m_renderer->compositorContext();
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
                     if (m_textureFragments[i].sharedTexture) {
                         // The lifetime of externally created shared textures is
@@ -2953,7 +2953,7 @@ public:
                             if (fragment.textureID == 0) {
                                 CompositorContextGL* ctx =
                                     (CompositorContextGL*)
-                                        m_renderer->compostiorContext();
+                                        m_renderer->compositorContext();
                                 if (ctx) {
                                     fragment.textureID =
                                         ctx->takeGenericTextureFromCache(
@@ -3256,7 +3256,7 @@ public:
 
         m_seenFBOUsage = false;
         m_webView = webView;
-        m_globalScale = m_webView->glCompsitorScale();
+        m_globalScale = m_webView->glCompositorScale();
         m_screenWidth = m_webView->renderer()->width();
         m_screenHeight = m_webView->renderer()->height();
         m_compositorContext = (CompositorContextGL*)compositorContext;

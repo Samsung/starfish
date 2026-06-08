@@ -59,11 +59,11 @@ IntrinsicSize FrameReplacedCanvas::intrinsicSize()
     return result;
 }
 
-void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
+void FrameReplacedCanvas::didCompositeStackingContext(Compositor* c)
 {
 }
 
-void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
+void FrameReplacedCanvas::willCompositeStackingContext(Compositor* c)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
     auto context = canvasElement->canvasRenderingContext();

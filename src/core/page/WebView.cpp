@@ -308,7 +308,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_useExternalPopup(false)
     , m_useSpatialNavigation(false)
     , m_needsDownScaleImageResourceLargerThan(0)
-    , m_glCompsitorScale(1)
+    , m_glCompositorScale(1)
     , m_showFps(false)
     , m_showLoadFailMsg(true)
 {
@@ -353,7 +353,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     // this is secret feature for testing(working on gl + efl webview)
     if (getenv("LWE_GL_COMPOSITOR_SCALE")) {
-        m_glCompsitorScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
+        m_glCompositorScale = atof(getenv("LWE_GL_COMPOSITOR_SCALE"));
     }
 
     m_starfish->m_webViewInstanceCount++;

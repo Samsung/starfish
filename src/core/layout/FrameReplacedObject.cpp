@@ -42,7 +42,7 @@ IntrinsicSize FrameReplacedObject::intrinsicSize()
     return result;
 }
 
-void FrameReplacedObject::didCompsiteStackingContext(Compositor* c)
+void FrameReplacedObject::didCompositeStackingContext(Compositor* c)
 {
     auto v = node()->asHTMLObjectElement();
     LayoutRect contentRect(borderLeft() + paddingLeft(),

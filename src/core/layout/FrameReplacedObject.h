@@ -41,7 +41,7 @@ public:
 
     virtual IntrinsicSize intrinsicSize() override;
 
-    virtual void didCompsiteStackingContext(Compositor* c) override;
+    virtual void didCompositeStackingContext(Compositor* c) override;
 
     void* operator new(size_t size)
     {

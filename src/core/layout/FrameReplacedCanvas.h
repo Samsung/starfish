@@ -46,8 +46,8 @@ public:
     }
 
     virtual IntrinsicSize intrinsicSize() override;
-    virtual void willCompsiteStackingContext(Compositor* c) override;
-    virtual void didCompsiteStackingContext(Compositor* c) override;
+    virtual void willCompositeStackingContext(Compositor* c) override;
+    virtual void didCompositeStackingContext(Compositor* c) override;
 
     virtual Optional<CanvasSurface*> contentSurface() override;
 

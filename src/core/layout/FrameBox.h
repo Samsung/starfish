@@ -796,11 +796,11 @@ public:
     void clearStackingContextIfNeeds();
 
     virtual void paintStackingContextContent(Canvas* canvas);
-    virtual void willCompsiteStackingContext(Compositor* c)
+    virtual void willCompositeStackingContext(Compositor* c)
     {
     }
 
-    virtual void didCompsiteStackingContext(Compositor* c)
+    virtual void didCompositeStackingContext(Compositor* c)
     {
     }
 
