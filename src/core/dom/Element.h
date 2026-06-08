@@ -415,7 +415,7 @@ public:
     }
 
     virtual bool supportsFocus();
-    virtual bool isFocusable();
+    bool isFocusable();
     bool hasFocusableStyle();
     virtual bool isDisabledFormControl()
     {
