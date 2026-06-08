@@ -270,6 +270,112 @@ def wpt_all():
     wpt_intersection_observer()
     wpt_idb()
 
+# WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
+# Runs the active (expected-pass) lists under tool/wpt/lists/; any active test
+# failing is treated as a regression. Failing tests are kept as `# [auto-fail]`
+# comments (refresh with wpt_runner.py + wpt_annotate.py).
+#
+# wpt_serve_all runs every list; each wpt_serve_<module> suite runs one group of
+# lists so a module can be checked in isolation.
+_WPT_LISTS_DIR = os.path.join(working_directory, "tool/wpt/lists")
+
+
+def _wpt_serve_run(*patterns, jobs=8, timeout=20):
+    import glob
+    import wpt_runner
+    from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
+
+    if patterns:
+        targets = []
+        for pat in patterns:
+            targets.extend(sorted(glob.glob(os.path.join(_WPT_LISTS_DIR, pat))))
+    else:
+        targets = [_WPT_LISTS_DIR]
+
+    items = []
+    for t in targets:
+        items.extend(wpt_runner.collect(t, force=False))
+    label = ", ".join(patterns) if patterns else "all"
+    print_table("Running WPT (on-demand)", "%d tests [%s]" % (len(items), label))
+    try:
+        with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
+            npass, reasons, per_list = wpt_runner.run_all(items, jobs, timeout, None)
+    except WptServerError as e:
+        print("wpt serve failed: %s" % e)
+        print("hosts not set? run: "
+              "python3 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts")
+        sys.exit(ERRORCODE.TEST_STOPPED)
+
+    global ran_test_count
+    ran_test_count += len(items)
+    if len(per_list) > 1:
+        for name in sorted(per_list):
+            pn, tn = per_list[name]
+            print("  %-44s %d/%d" % (name, pn, tn))
+    print("WPT pass %d/%d" % (npass, len(items)))
+    if npass != len(items):
+        for reason, n in reasons.most_common():
+            print("  %5d  %s" % (n, reason))
+        sys.exit(ERRORCODE.TEST_FAILED)
+
+
+def wpt_serve_css():
+    _wpt_serve_run("css_*.res")
+
+
+def wpt_serve_dom():
+    _wpt_serve_run("dom_*.res")
+
+
+def wpt_serve_canvas():
+    _wpt_serve_run("2dcontext.res")
+
+
+def wpt_serve_html():
+    _wpt_serve_run("html_*.res")
+
+
+def wpt_serve_xhr():
+    _wpt_serve_run("xhr_*.res")
+
+
+def wpt_serve_fetch():
+    _wpt_serve_run("fetch_*.res")
+
+
+def wpt_serve_worker():
+    _wpt_serve_run("worker.res")
+
+
+def wpt_serve_idb():
+    _wpt_serve_run("indexeddb.res")
+
+
+def wpt_serve_websocket():
+    _wpt_serve_run("websocket.res")
+
+
+def wpt_serve_webrtc():
+    _wpt_serve_run("webrtc.res")
+
+
+def wpt_serve_intersection_observer():
+    _wpt_serve_run("intersection-observer.res")
+
+
+def wpt_serve_svg():
+    _wpt_serve_run("svg_*.res")
+
+
+def wpt_serve_others():
+    _wpt_serve_run("battery_status.res", "cookies.res", "cors.res", "csp.res",
+                   "fileAPI.res", "page_visibility_basic.res", "webstorage.res")
+
+
+def wpt_serve_all():
+    _wpt_serve_run()
+
+
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])
 
@@ -308,7 +414,7 @@ if __name__ == "__main__":
     for key, value in list(locals().items()):
         if callable(value) and value.__module__ == __name__:
             if key not in ["file_len", "print_columns", "print_table",
-                           "run_test", "run_vendor_test_khronos"]:
+                           "run_test", "run_vendor_test_khronos", "_wpt_serve_run"]:
                 test_functions.append(key)
     print_columns(sorted(test_functions), 4)
 

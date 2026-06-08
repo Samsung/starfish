@@ -1,0 +1,27 @@
+# [auto-fail] http://web-platform.test:8000/webrtc/promises-call.html
+# [auto-fail] https://web-platform.test:8443/webrtc/receiver-track-live.https.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCConfiguration-bundlePolicy.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCDataChannelEvent-constructor.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCDataChannel-id.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-addTrack.https.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-getTransceivers.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-iceConnectionState-disconnected.https.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnectionIceEvent-constructor.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-iceGatheringState.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-ontrack.https.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-plan-b-is-not-supported.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-nomsid.html
+# [auto-fail] https://web-platform.test:8443/webrtc/RTCPeerConnection-transceivers.https.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
+# [auto-fail] http://web-platform.test:8000/webrtc/RTCRtpTransceiver-direction.html
+# [auto-fail] https://web-platform.test:8443/webrtc/simplecall.https.html
+# [auto-fail] https://web-platform.test:8443/webrtc/simplecall-no-ssrcs.https.html

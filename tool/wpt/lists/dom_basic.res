@@ -1,0 +1,170 @@
+http://web-platform.test:8000/dom/ranges/Range-intersectsNode-binding.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-insertNode.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-selectNode.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-comparePoint.html
+http://web-platform.test:8000/dom/ranges/Range-detach.html
+http://web-platform.test:8000/dom/ranges/Range-stringifier.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-intersectsNode.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-isPointInRange.html
+http://web-platform.test:8000/dom/ranges/Range-attributes.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-collapse.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-commonAncestorContainer.html
+http://web-platform.test:8000/dom/ranges/Range-constructor.html
+# [auto-fail] http://web-platform.test:8000/dom/ranges/Range-cloneRange.html
+http://web-platform.test:8000/dom/ranges/Range-commonAncestorContainer-2.html
+http://web-platform.test:8000/dom/ranges/Range-comparePoint-2.html
+http://web-platform.test:8000/dom/events/Event-dispatch-order.html
+http://web-platform.test:8000/dom/events/Event-dispatch-multiple-stopPropagation.html
+http://web-platform.test:8000/dom/events/Event-dispatch-throwing.html
+# [auto-fail] http://web-platform.test:8000/dom/events/Event-dispatch-redispatch.html
+# [auto-fail] http://web-platform.test:8000/dom/events/Event-dispatch-bubbles-true.html
+http://web-platform.test:8000/dom/events/Event-dispatch-omitted-capture.html
+# [auto-fail] http://web-platform.test:8000/dom/events/Event-defaultPrevented.html
+# [auto-fail] http://web-platform.test:8000/dom/events/EventListener-handleEvent.html
+http://web-platform.test:8000/dom/events/Event-dispatch-propagation-stopped.html
+http://web-platform.test:8000/dom/events/Event-dispatch-target-removed.html
+http://web-platform.test:8000/dom/events/Event-cancelBubble.html
+http://web-platform.test:8000/dom/events/Event-propagation.html
+http://web-platform.test:8000/dom/events/Event-dispatch-reenter.html
+http://web-platform.test:8000/dom/events/EventTarget-addEventListener.any.html
+http://web-platform.test:8000/dom/events/Event-type.html
+http://web-platform.test:8000/dom/events/Event-constants.html
+http://web-platform.test:8000/dom/events/EventTarget-removeEventListener.any.html
+http://web-platform.test:8000/dom/events/Event-type-empty.html
+# [auto-fail] http://web-platform.test:8000/dom/events/Event-dispatch-handlers-changed.html
+http://web-platform.test:8000/dom/events/Event-dispatch-target-moved.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-walking-outside-a-tree.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-traversal-skip.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-traversal-skip-most.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-previousNodeLastChildReject.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-traversal-reject.html
+http://web-platform.test:8000/dom/traversal/NodeFilter-constants.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-currentNode.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-basic.html
+# [auto-fail] http://web-platform.test:8000/dom/traversal/TreeWalker.html
+# [auto-fail] http://web-platform.test:8000/dom/traversal/TreeWalker-acceptNode-filter.html
+http://web-platform.test:8000/dom/traversal/TreeWalker-previousSiblingLastChildSkip.html
+http://web-platform.test:8000/dom/collections/domstringmap-supported-property-names.html
+http://web-platform.test:8000/dom/collections/HTMLCollection-empty-name.html
+http://web-platform.test:8000/dom/lists/DOMTokenList-stringifier.html
+http://web-platform.test:8000/dom/lists/DOMTokenList-value.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/MutationObserver-childList.html
+http://web-platform.test:8000/dom/nodes/Node-parentNode.html
+http://web-platform.test:8000/dom/nodes/Element-removeAttributeNS.html
+http://web-platform.test:8000/dom/nodes/ChildNode-after.html
+http://web-platform.test:8000/dom/nodes/ParentNode-append.html
+http://web-platform.test:8000/dom/nodes/Document-getElementsByClassName.html
+http://web-platform.test:8000/dom/nodes/Node-isSameNode.html
+http://web-platform.test:8000/dom/nodes/Element-getElementsByClassName.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-13.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-25.htm
+http://web-platform.test:8000/dom/nodes/Element-siblingElement-null.html
+http://web-platform.test:8000/dom/nodes/Comment-constructor.html
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-nochild.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-31.htm
+# [auto-fail] http://web-platform.test:8000/dom/nodes/DOMImplementation-createHTMLDocument.html
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-dynamic-remove.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/DOMImplementation-createDocument.html
+http://web-platform.test:8000/dom/nodes/CharacterData-insertData.html
+http://web-platform.test:8000/dom/nodes/Element-childElementCount-dynamic-add.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-15.htm
+# [auto-fail] http://web-platform.test:8000/dom/nodes/DOMImplementation-createDocumentType.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Document-createAttribute.html
+http://web-platform.test:8000/dom/nodes/CharacterData-appendChild.html
+http://web-platform.test:8000/dom/nodes/Element-tagName.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-compareDocumentPosition.html
+http://web-platform.test:8000/dom/nodes/prepend-on-Document.html
+http://web-platform.test:8000/dom/nodes/Element-remove.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-27.htm
+http://web-platform.test:8000/dom/nodes/MutationObserver-characterData.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-textContent.html
+http://web-platform.test:8000/dom/nodes/Node-baseURI.html
+http://web-platform.test:8000/dom/nodes/ChildNode-replaceWith.html
+http://web-platform.test:8000/dom/nodes/Document-createComment.html
+http://web-platform.test:8000/dom/nodes/Document-adoptNode.html
+http://web-platform.test:8000/dom/nodes/Node-parentElement.html
+http://web-platform.test:8000/dom/nodes/Element-previousElementSibling.html
+http://web-platform.test:8000/dom/nodes/Element-insertAdjacentElement.html
+http://web-platform.test:8000/dom/nodes/ParentNode-prepend.html
+http://web-platform.test:8000/dom/nodes/Node-isEqualNode.html
+http://web-platform.test:8000/dom/nodes/Node-normalize.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-12.htm
+http://web-platform.test:8000/dom/nodes/CharacterData-appendData.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-02.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-14.htm
+http://web-platform.test:8000/dom/nodes/Text-splitText.html
+http://web-platform.test:8000/dom/nodes/remove-unscopable.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-06.htm
+http://web-platform.test:8000/dom/nodes/Document-implementation.html
+http://web-platform.test:8000/dom/nodes/ChildNode-before.html
+http://web-platform.test:8000/dom/nodes/Node-constants.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-09.htm
+http://web-platform.test:8000/dom/nodes/Document-createTreeWalker.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-24.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-08.htm
+http://web-platform.test:8000/dom/nodes/Document-getElementsByTagNameNS.html
+http://web-platform.test:8000/dom/nodes/Element-firstElementChild-namespace.html
+http://web-platform.test:8000/dom/nodes/Node-nodeName.html
+http://web-platform.test:8000/dom/nodes/Element-getElementsByTagNameNS.html
+http://web-platform.test:8000/dom/nodes/case.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-05.htm
+http://web-platform.test:8000/dom/nodes/CharacterData-data.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-contains.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-01.htm
+# [auto-fail] http://web-platform.test:8000/dom/nodes/rootNode.html
+http://web-platform.test:8000/dom/nodes/Element-childElementCount.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-lookupNamespaceURI.html
+http://web-platform.test:8000/dom/nodes/Text-constructor.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-21.htm
+http://web-platform.test:8000/dom/nodes/Element-hasAttributes.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-30.htm
+http://web-platform.test:8000/dom/nodes/CharacterData-substringData.html
+http://web-platform.test:8000/dom/nodes/Element-childElement-null.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-28.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-23.htm
+http://web-platform.test:8000/dom/nodes/DOMImplementation-hasFeature.html
+http://web-platform.test:8000/dom/nodes/Node-insertBefore.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-inner-outer.html
+http://web-platform.test:8000/dom/nodes/Element-lastElementChild.html
+http://web-platform.test:8000/dom/nodes/Element-nextElementSibling.html
+http://web-platform.test:8000/dom/nodes/Element-insertAdjacentText.html
+http://web-platform.test:8000/dom/nodes/insert-adjacent.html
+http://web-platform.test:8000/dom/nodes/DocumentType-literal.html
+http://web-platform.test:8000/dom/nodes/CharacterData-surrogates.html
+http://web-platform.test:8000/dom/nodes/Node-removeChild.html
+http://web-platform.test:8000/dom/nodes/Document-createTextNode.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-29.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-16.htm
+http://web-platform.test:8000/dom/nodes/MutationObserver-attributes.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-03.htm
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-properties.html
+http://web-platform.test:8000/dom/nodes/append-on-Document.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-19.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-18.htm
+http://web-platform.test:8000/dom/nodes/Element-firstElementChild.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-20.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-17.htm
+http://web-platform.test:8000/dom/nodes/MutationObserver-takeRecords.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/createDocument.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_gif.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_html.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_bmp.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/xhr_responseType_document.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_javascripturi.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_jpg.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/createHTMLDocument.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_mimeheader_01.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_xml.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_css.html
+http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_png.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-22.htm
+# [auto-fail] http://web-platform.test:8000/dom/nodes/Document-createElementNS.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-04.htm
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-07.htm
+http://web-platform.test:8000/dom/nodes/Document-createProcessingInstruction.html
+http://web-platform.test:8000/dom/nodes/getElementsByClassName-26.htm
+http://web-platform.test:8000/dom/nodes/Document-getElementById.html
+http://web-platform.test:8000/dom/nodes/Node-nodeValue.html
+# [auto-fail] http://web-platform.test:8000/dom/nodes/CharacterData-remove.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-disconnect.html
+http://web-platform.test:8000/dom/nodes/Node-appendChild.html
