@@ -9575,6 +9575,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
         ComputedStyleDamage::ComputedStyleDamageNone;
 
     StyleResolveContext* ctx;
+    void* slottedElementResolveContextSpace = nullptr;
 
     bool isSVGSVGElement = parentElement->isSVGSVGElement();
     if (UNLIKELY(isSVGSVGElement)) {
@@ -9616,7 +9617,11 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& parentContext,
             ComputedStyle* oldStyle = child->style();
             StyleResolveContext* originalContext = ctx;
             if (UNLIKELY(child->isSlotted())) {
-                ctx = new (alloca(sizeof(StyleResolveContext)))
+                if (slottedElementResolveContextSpace == nullptr) {
+                    slottedElementResolveContextSpace =
+                        alloca(sizeof(StyleResolveContext));
+                }
+                ctx = new (slottedElementResolveContextSpace)
                     StyleResolveContext(child.value(),
                                         ctx->m_computedStylePool);
             }
