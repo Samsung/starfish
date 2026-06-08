@@ -109,7 +109,7 @@ Canvas* RendererHeadless::preparePainting()
 
 Compositor* RendererHeadless::prepareCompositor()
 {
-    return Compositor::create2D(webView(), m_compostiorContext,
+    return Compositor::create2D(webView(), m_compositorContext,
                                 (CanvasSurface*)NULL);
 }
 

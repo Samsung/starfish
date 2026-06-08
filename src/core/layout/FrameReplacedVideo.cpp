@@ -43,7 +43,7 @@ IntrinsicSize FrameReplacedVideo::intrinsicSize()
     return result;
 }
 
-void FrameReplacedVideo::didCompsiteStackingContext(Compositor* c)
+void FrameReplacedVideo::didCompositeStackingContext(Compositor* c)
 {
     STARFISH_ASSERT(node()->isHTMLVideoElement());
     auto v = node()->asHTMLVideoElement();
@@ -57,7 +57,7 @@ void FrameReplacedVideo::didCompsiteStackingContext(Compositor* c)
     }
 }
 
-void FrameReplacedVideo::willCompsiteStackingContext(Compositor* c)
+void FrameReplacedVideo::willCompositeStackingContext(Compositor* c)
 {
     auto v = node()->asHTMLVideoElement();
     if (v->activeMediaPlayer()) {

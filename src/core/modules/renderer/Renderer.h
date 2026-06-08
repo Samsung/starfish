@@ -359,9 +359,9 @@ public:
         return m_eventModifierData;
     }
 
-    CompositorContext* compostiorContext()
+    CompositorContext* compositorContext()
     {
-        return m_compostiorContext;
+        return m_compositorContext;
     }
 #if !defined(STARFISH_HEADLESS)
     GL* gl();
@@ -376,7 +376,7 @@ protected:
 #if !defined(STARFISH_HEADLESS)
     std::unique_ptr<GL> m_gl;
 #endif
-    CompositorContext* m_compostiorContext;
+    CompositorContext* m_compositorContext;
     EventModifierData m_eventModifierData;
     float m_lastMouseMoveX;
     float m_lastMouseMoveY;

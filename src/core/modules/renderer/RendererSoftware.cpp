@@ -122,7 +122,7 @@ public:
                 g_surfaceForScreehShot = CanvasSurface::create(
                     this, width() / webView()->screenInfo().devicePixelRatio,
                     height() / webView()->screenInfo().devicePixelRatio);
-                return Compositor::create2D(webView(), m_compostiorContext,
+                return Compositor::create2D(webView(), m_compositorContext,
                                             g_surfaceForScreehShot);
             }
         }
@@ -134,7 +134,7 @@ public:
 #endif
         CanvasSurface* target = CanvasSurface::createCanvasTarget(
             (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
-        return Compositor::create2D(webView(), m_compostiorContext, target);
+        return Compositor::create2D(webView(), m_compositorContext, target);
     }
 
     uint32_t m_width;

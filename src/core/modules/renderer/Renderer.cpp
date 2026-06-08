@@ -85,7 +85,7 @@ Renderer::Renderer(Starfish* starfish)
     : m_starfish(starfish)
     , m_webView(nullptr)
     , m_renderingAnimator(TimerInvalidID)
-    , m_compostiorContext(nullptr)
+    , m_compositorContext(nullptr)
     , m_lastMouseMoveX(std::numeric_limits<float>::max())
     , m_lastMouseMoveY(std::numeric_limits<float>::max())
     , m_lastMouseMoveEventFiredTime(0)
@@ -164,9 +164,9 @@ void Renderer::destroy()
     m_isDestroyed = true;
     clearResources();
     clearNativeHandlers();
-    if (m_compostiorContext) {
-        delete m_compostiorContext;
-        m_compostiorContext = nullptr;
+    if (m_compositorContext) {
+        delete m_compositorContext;
+        m_compositorContext = nullptr;
     }
 #if !defined(STARFISH_HEADLESS)
     m_gl = nullptr;
@@ -393,8 +393,8 @@ void Renderer::clearResources()
     }
     webView()->clearStackingContext();
 
-    if (m_compostiorContext) {
-        m_compostiorContext->onIdle();
+    if (m_compositorContext) {
+        m_compositorContext->onIdle();
     }
 }
 

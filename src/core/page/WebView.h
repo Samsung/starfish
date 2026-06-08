@@ -408,14 +408,14 @@ public:
         return m_needsDownScaleImageResourceLargerThan;
     }
 
-    void setGLCompsitorScale(float glCompsitorScale)
+    void setGLCompositorScale(float glCompositorScale)
     {
-        m_glCompsitorScale = glCompsitorScale;
+        m_glCompositorScale = glCompositorScale;
     }
 
-    float glCompsitorScale()
+    float glCompositorScale()
     {
-        return m_glCompsitorScale;
+        return m_glCompositorScale;
     }
 
     void setScrollbarVisible(bool visible)
@@ -658,7 +658,7 @@ private:
     bool m_useExternalPopup;
     bool m_useSpatialNavigation;
     uint32_t m_needsDownScaleImageResourceLargerThan;
-    float m_glCompsitorScale;
+    float m_glCompositorScale;
     bool m_showFps;
     bool m_showLoadFailMsg;
 

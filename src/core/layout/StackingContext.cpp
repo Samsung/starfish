@@ -144,10 +144,10 @@ struct StackingContext::ComputeStackingContextContext {
         return rt;
     }
 
-    void pushCompsitedLayer(StackingContext* c)
+    void pushCompositedLayer(StackingContext* c)
     {
         STARFISH_ASSERT(c != nullptr);
-        STARFISH_ASSERT(!isCompsitedLayer(c));
+        STARFISH_ASSERT(!isCompositedLayer(c));
 
         if (seenPositionFixed) {
             throw RecomputeStackContextReason::PositionFixed;
@@ -156,7 +156,7 @@ struct StackingContext::ComputeStackingContextContext {
         compositedDocuments.insert(c->m_owner->node()->document());
     }
 
-    bool isCompsitedLayer(StackingContext* c, size_t* idx = nullptr)
+    bool isCompositedLayer(StackingContext* c, size_t* idx = nullptr)
     {
         STARFISH_ASSERT(c != nullptr);
         for (size_t i = 0; i < compositedLayers.size(); i++) {
@@ -170,7 +170,7 @@ struct StackingContext::ComputeStackingContextContext {
         return false;
     }
 
-    bool seenCompsitedLayer()
+    bool seenCompositedLayer()
     {
         return compositedLayers.size();
     }
@@ -680,7 +680,7 @@ void StackingContext::computeStackingContextProperties(
 
     if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
         if (!compositingState.needsToAllocateGraphicsBufferForFixedElement &&
-            compositingState.seenCompsitedLayer()) {
+            compositingState.seenCompositedLayer()) {
             throw RecomputeStackContextReason::PositionFixed;
         } else if (compositingState
                        .needsToAllocateGraphicsBufferForFixedElement) {
@@ -737,7 +737,7 @@ void StackingContext::computeStackingContextProperties(
     }
 #endif
 
-    if (compositingState.seenCompsitedLayer() && !isRootContext() &&
+    if (compositingState.seenCompositedLayer() && !isRootContext() &&
         m_owner->isAbsolutePositioned()) {
         SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
         auto windowRect = computeBoxExtent(
@@ -750,7 +750,7 @@ void StackingContext::computeStackingContextProperties(
 
     if (Compositor::supportsFilterEffect(m_owner->document()->starfish(), 1,
                                          1) ==
-            true /* test whatever compostior supports filter */
+            true /* test whatever compositor supports filter */
         && m_hasFilterEffect) {
         compositedBySelf = true;
     }
@@ -768,7 +768,7 @@ void StackingContext::computeStackingContextProperties(
     }
     bool willBeComposited = compositedBySelf;
 
-    if (!willBeComposited && compositingState.seenCompsitedLayer() &&
+    if (!willBeComposited && compositingState.seenCompositedLayer() &&
         compositingState.compositedDocuments.find(
             m_owner->node()->document()) !=
             compositingState.compositedDocuments.end()) {
@@ -782,7 +782,7 @@ void StackingContext::computeStackingContextProperties(
             if (p->inScrollActive()) {
                 hasScrollBetweenThisStackigContextAndGraphicsBuffer = true;
             }
-            if (compositingState.isCompsitedLayer(p, &ancestorIndex)) {
+            if (compositingState.isCompositedLayer(p, &ancestorIndex)) {
                 compositedAncestor = p;
                 break;
             }
@@ -907,15 +907,15 @@ void StackingContext::computeStackingContextProperties(
                     STARFISH_ASSERT(
                         compositingState.documentOwners[i]->isRootContext());
                 }
-                if (!compositingState.isCompsitedLayer(
+                if (!compositingState.isCompositedLayer(
                         compositingState.documentOwners[i])) {
-                    compositingState.pushCompsitedLayer(
+                    compositingState.pushCompositedLayer(
                         compositingState.documentOwners[i]);
                 }
             }
         }
-        if (!compositingState.isCompsitedLayer(this)) {
-            compositingState.pushCompsitedLayer(this);
+        if (!compositingState.isCompositedLayer(this)) {
+            compositingState.pushCompositedLayer(this);
         }
     }
 
@@ -951,7 +951,7 @@ void StackingContext::computeStackingContextProperties(
     }
 
     if (m_owner->isRootElement()) {
-        if (compositingState.isCompsitedLayer(this)) {
+        if (compositingState.isCompositedLayer(this)) {
             willBeComposited = true;
             m_needsGraphicsBufferReason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
@@ -2774,7 +2774,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     auto contentSurface = owner()->contentSurface();
     if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface) {
-        owner()->willCompsiteStackingContext(compositor);
+        owner()->willCompositeStackingContext(compositor);
 
         bool hasFilterEffect = false;
         if (Compositor::supportsFilterEffect(m_owner->document()->starfish(),
@@ -3023,7 +3023,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             compositor->restore();
         }
 
-        owner()->didCompsiteStackingContext(compositor);
+        owner()->didCompositeStackingContext(compositor);
     }
 
     compositeScrollbar(compositor);
