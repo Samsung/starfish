@@ -66,3 +66,7 @@ out_coverage/
 kuep_net_signer.sh
 .clinerules
 .design
+
+# WPT audit byproducts: regenerable by tool/wpt_audit.py, not read at runtime.
+tool/wpt/lists/*.remap
+tool/wpt/lists/*.missing

@@ -143,3 +143,7 @@
 [submodule "third_party/libwebp"]
 	path = third_party/libwebp
 	url = git@github.sec.samsung.net:tizen/libwebp.git
+[submodule "third_party/wpt"]
+	path = third_party/wpt
+	url = https://github.com/web-platform-tests/wpt.git
+	ignore = dirty
