@@ -3567,7 +3567,7 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
                                                   ->asFrameBox()
                                                   ->stackingContext());
             }
-        } else if (layoutParent()) {
+        } else if (layoutParent() && !isFrameDocument()) {
             FrameBox* p = layoutParent()->asFrameBox();
             while (true) {
                 if (p->needToEstablishStackingContext() &&
