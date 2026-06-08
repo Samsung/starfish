@@ -745,6 +745,9 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     }
     if (e == m_focusedNode || !e->isFocusable()) {
         // If the element already has or can't get focus.
+        if (e != m_focusedNode && !e->isFocusable() && byMouseEvent) {
+            releaseFocusedNode(nullptr);
+        }
         return;
     }
 
@@ -766,7 +769,7 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
             BrowsingContext* bc = parentBrowsingContext();
             HTMLIFrameElement* focusTarget = sourceElement();
             while (bc && focusTarget) {
-                bc->setFocusedNode(focusTarget->asNode(), false);
+                bc->setFocusedNode(focusTarget->asNode(), byMouseEvent);
                 bc = bc->parentBrowsingContext();
                 focusTarget = nullptr;
                 if (bc && !bc->isTopLevelBrowsingContext()) {
@@ -805,10 +808,6 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
 
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
-
-    if (byMouseEvent && !e->isHTMLFormControl()) {
-        return;
-    }
 
     m_focusedNode = e->asNode();
     m_activeElement = e;

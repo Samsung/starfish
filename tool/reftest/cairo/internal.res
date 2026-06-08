@@ -780,6 +780,7 @@ test/cairo/internal-test/iframe/webgl-blend-in-iframe.html
 test/cairo/internal-test/iframe/postmessage-typedarray.html
 test/cairo/internal-test/iframe/iframe-click-event-isolation.html
 test/cairo/internal-test/iframe/iframe-mouse-screen-coords.html
+test/cairo/internal-test/iframe/iframe-focus-mouse-event.html
 test/cairo/internal-test/canvas/transform.html
 test/cairo/internal-test/css/overflow/scroll-test.html
 test/cairo/internal-test/css/overflow/scroll-test-2.html
