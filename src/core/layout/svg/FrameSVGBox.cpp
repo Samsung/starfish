@@ -983,13 +983,18 @@ namespace {
 
         CanvasGradient* gradient = nullptr;
         if (isUserSpaceOnUseMode) {
-            double xx1 = fx * mat[0] + fy * mat[1] + rect.width() * mat[2];
-            double yy1 = fx * mat[3] + fy * mat[4] + rect.height() * mat[5];
-            double xx2 = cx * mat[0] + cy * mat[1] + rect.width() * mat[2];
-            double yy2 = cx * mat[3] + cy * mat[4] + rect.height() * mat[5];
+            double xx1 = fx * mat[0] + fy * mat[1] + mat[2];
+            double yy1 = fx * mat[3] + fy * mat[4] + mat[5];
+            double xx2 = cx * mat[0] + cy * mat[1] + mat[2];
+            double yy2 = cx * mat[3] + cy * mat[4] + mat[5];
 
-            gradient = new CanvasGradient(gradientElement->executionContext(),
-                                          xx1, yy1, fr, xx2, yy2, r);
+            double scale = std::sqrt(mat[0] * mat[0] + mat[3] * mat[3]);
+            double scaledFr = fr * scale;
+            double scaledR = r * scale;
+
+            gradient =
+                new CanvasGradient(gradientElement->executionContext(), xx1,
+                                   yy1, scaledFr, xx2, yy2, scaledR);
 
             RadialGradientData* radialGradient = new RadialGradientData();
             radialGradient->setHorizontalSide(SideValue::LeftSideValue);
