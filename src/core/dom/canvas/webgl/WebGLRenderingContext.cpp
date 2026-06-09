@@ -208,12 +208,13 @@ void WebGLRenderingContext::flush()
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
 
-    // NOTE: According to the specification, the content of the drawing buffer
-    // should be cleared with default values after the end of the composition.
-    // However, as of now, it's difficult to know when the composition ends and
-    // the GL rendering actually ends, so we leave the clearing as a pending job
+    // NOTE: According to the specification, by default the contents of
+    // the drawing buffer shall be cleared to their default values after
+    // compositing.
+    // However, as of now, it's difficult to know when compositing and GL
+    // rendering actually end, so we leave the clearing as a pending job
     // and let it be done lazily. The assumption here is that the engine will
-    // get this `flush()` invoked every frame after we call `setNeedsComposite`.
+    // invoke this `flush()` every frame after we call `setNeedsComposite()`.
 
     m_hasPendingJobsBetweenFrames = true;
 }
