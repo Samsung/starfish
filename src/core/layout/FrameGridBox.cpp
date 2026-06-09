@@ -1027,7 +1027,9 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
         if (gridTracks.size() == 1) {
             gridTracks.push_back(track);
         }
-    } else {
+    } else if (autoRepeat->gridTrackSizes().size() &&
+               autoRepeat->gridTrackSizes()[0]->type() ==
+                   GridTrackSizeType::kLength) {
         // Covert GridTrackSize to GridTrack and Calculate total width
         // occupied by the template.
         GCVector<GridTrack> templateTracks;
@@ -1057,6 +1059,9 @@ void GridFormattingContext::initializeGridTracksWithAutoRepeat(
             gridTracks.insert(gridTracks.end(), templateTracks.begin(),
                               templateTracks.end());
         }
+    } else {
+        STARFISH_UNSUPPORTED(
+            "GridTrackSizeType other than kLength, kMinMax are not supported");
     }
 }
 
