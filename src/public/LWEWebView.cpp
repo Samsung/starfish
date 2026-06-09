@@ -1364,24 +1364,24 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
 }
 
 void WebContainer::DispatchCompositionStartEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchCompositionStartEvent(soFarCompositiedString);
+        ->DispatchCompositionStartEvent(currentCompositionString);
 }
 
 void WebContainer::DispatchCompositionUpdateEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchCompositionUpdateEvent(soFarCompositiedString);
+        ->DispatchCompositionUpdateEvent(currentCompositionString);
 }
 
 void WebContainer::DispatchCompositionEndEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
-        ->DispatchCompositionEndEvent(soFarCompositiedString);
+        ->DispatchCompositionEndEvent(currentCompositionString);
 }
 
 void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(

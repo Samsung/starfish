@@ -406,10 +406,11 @@ public:
     void DispatchKeyUpEvent(KeyValue keyCode);
 
     void DispatchCompositionStartEvent(
-        const std::string& soFarCompositiedString);
+        const std::string& currentCompositionString);
     void DispatchCompositionUpdateEvent(
-        const std::string& soFarCompositiedString);
-    void DispatchCompositionEndEvent(const std::string& soFarCompositiedString);
+        const std::string& currentCompositionString);
+    void DispatchCompositionEndEvent(
+        const std::string& currentCompositionString);
     void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
         const std::function<void(WebContainer*)>& cb);
     void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
