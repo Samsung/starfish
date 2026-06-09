@@ -613,7 +613,7 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     }
 }
 
-bool ActiveTransformAnimationTask::needsDecompositing(
+bool ActiveTransformAnimationTask::needsDecomposing(
     StyleTransformDataGroup* from, StyleTransformDataGroup* to)
 {
     if (!m_targetElement->frame()->isTransformable()) {
@@ -678,9 +678,9 @@ void ActiveTransformAnimationTask::resolveTransformValues()
     if (!frm) {
         return;
     }
-    m_shouldUseDecompositing =
-        needsDecompositing(currentAnimatedFromValue()->getTransformData(),
-                           currentAnimatedToValue()->getTransformData());
+    m_shouldUseDecomposing =
+        needsDecomposing(currentAnimatedFromValue()->getTransformData(),
+                         currentAnimatedToValue()->getTransformData());
 
     StyleTransformDataGroup* fromTransfromStyle =
         currentAnimatedFromValue()->getTransformData();
@@ -699,7 +699,7 @@ void ActiveTransformAnimationTask::resolveTransformValues()
     }
     matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
 
-    if (!m_shouldUseDecompositing) {
+    if (!m_shouldUseDecomposing) {
         STARFISH_ASSERT(frm->isTransformable());
 
         // we need to clone transform values for keeping original values
@@ -757,7 +757,7 @@ void ActiveTransformAnimationTask::execute(double progress,
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
 
-    if (m_shouldUseDecompositing) {
+    if (m_shouldUseDecomposing) {
         MatrixDecomposed2D now;
         now.angle = m_decomposedFrom.angle * (1 - progress) +
                     m_decomposedTo.angle * progress;

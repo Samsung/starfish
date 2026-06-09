@@ -422,8 +422,8 @@ public:
     }
 
 protected:
-    bool needsDecompositing(StyleTransformDataGroup* from,
-                            StyleTransformDataGroup* to);
+    bool needsDecomposing(StyleTransformDataGroup* from,
+                          StyleTransformDataGroup* to);
     void resolveTransformValues();
     void removePercentValuesFromTransform();
 
@@ -431,7 +431,7 @@ protected:
     // Two transform functions with the same name and the same number of
     // arguments are interpolated numerically
     // without a former conversion
-    bool m_shouldUseDecompositing;
+    bool m_shouldUseDecomposing;
 
     Optional<StyleTransformDataGroup*> m_originalTransformValue;
     MatrixDecomposed2D m_decomposedFrom;
