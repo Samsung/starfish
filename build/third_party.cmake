@@ -323,11 +323,13 @@ IF (${HOST} STREQUAL "linux")
                         WORKING_DIRECTORY ${OPENSSL_BUILD_PATH}
                         COMMENT "BUILDING OPENSSL"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
-                        COMMAND cp -r ${OPENSSL_DIR} ${OPENSSL_BUILD_PATH}/source
-                        COMMAND cd ${OPENSSL_BUILD_PATH}/source
-                        COMMAND ./config --prefix=${OPENSSL_BUILD_PATH}
-                        COMMAND make -j8 build_generated
-                        COMMAND make -j8 build_libs
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || cp -r ${OPENSSL_DIR} ${OPENSSL_BUILD_PATH}/source
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || cd ${OPENSSL_BUILD_PATH}/source
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || ./config --prefix=${OPENSSL_BUILD_PATH}
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || make -j8 build_generated
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || make -j8 build_libs
+                        COMMAND test -f ${OPENSSL_LOCAL_TARGET} || touch ${OPENSSL_LOCAL_TARGET}
+                        DEPENDS ${OPENSSL_DIR}/config
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
