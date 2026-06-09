@@ -63,10 +63,16 @@ def read_res(path, force=False):
             if not line:
                 continue
             if line.startswith("#"):
-                if force:
-                    line = line[1:].strip()
-                else:
+                if not force:
                     continue
+                # --force re-includes commented entries. These may carry an
+                # annotation marker before the URL (e.g. "# [auto-fail] http..."
+                # from wpt_annotate.py), so pick the first http token rather
+                # than assuming the URL follows the '#' directly.
+                toks = [t for t in line.split() if t.startswith("http")]
+                if toks:
+                    urls.append(toks[0])
+                continue
             if line.startswith("http"):
                 urls.append(line.split()[0])
     return urls
