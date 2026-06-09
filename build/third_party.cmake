@@ -136,7 +136,7 @@ IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL
     IF (${ARCH} STREQUAL "x64")
         SET (OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
         SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
-        SET (LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=ON -DLWS_STATIC_PIC:BOOL=OFF -DOPENSSL_ROOT_DIR=${OPENSSL_BUILD_PATH} -DLWS_OPENSSL_INCLUDE_DIRS=${OPENSSL_BUILD_PATH}/include)
+        SET (LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=ON -DLWS_STATIC_PIC:BOOL=OFF -DOPENSSL_ROOT_DIR=${OPENSSL_BUILD_PATH}/source -DLWS_OPENSSL_INCLUDE_DIRS=${OPENSSL_BUILD_PATH}/source/include)
         ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
                             DEPENDS openssl ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
                             WORKING_DIRECTORY ${LIBWEBSOCKETS_BUILD_DIR}
@@ -312,6 +312,7 @@ ADD_SUBDIRECTORY (third_party/escargot)
 # OpenSSL
 #######################################################
 # Used when a target platform does not have openssl.
+# Build in separate directory to avoid conflicts between multiple build configs
 IF (${HOST} STREQUAL "linux")
     SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
     SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
@@ -319,21 +320,21 @@ IF (${HOST} STREQUAL "linux")
     SET (OPENSSL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
-                        WORKING_DIRECTORY ${OPENSSL_DIR}
+                        WORKING_DIRECTORY ${OPENSSL_BUILD_PATH}
                         COMMENT "BUILDING OPENSSL"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
-                        COMMAND cd ${OPENSSL_BUILD_PATH}
-                        COMMAND ${OPENSSL_DIR}/config
+                        COMMAND cp -r ${OPENSSL_DIR} ${OPENSSL_BUILD_PATH}/source
+                        COMMAND cd ${OPENSSL_BUILD_PATH}/source
+                        COMMAND ./config --prefix=${OPENSSL_BUILD_PATH}
                         COMMAND make -j8 build_generated
                         COMMAND make -j8 build_libs
-                        COMMAND cp -r ${OPENSSL_DIR}/include .
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         DEPENDS ${OPENSSL_LOCAL_TARGET}
                         COMMENT "COPYING OPENSSL"
-                        COMMAND cp -P ${OPENSSL_BUILD_PATH}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMAND cp -P ${OPENSSL_BUILD_PATH}/source/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (openssl
@@ -341,7 +342,7 @@ IF (${HOST} STREQUAL "linux")
                     COMMENT "OPENSSL TARGET"
     )
 
-    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OPENSSL_BUILD_PATH}/include)
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OPENSSL_BUILD_PATH}/source/include)
 ENDIF()
 
 #######################################################
