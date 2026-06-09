@@ -48,7 +48,7 @@ http://web-platform.test:8000/dom/collections/domstringmap-supported-property-na
 http://web-platform.test:8000/dom/collections/HTMLCollection-empty-name.html
 http://web-platform.test:8000/dom/lists/DOMTokenList-stringifier.html
 http://web-platform.test:8000/dom/lists/DOMTokenList-value.html
-# [auto-fail] http://web-platform.test:8000/dom/nodes/MutationObserver-childList.html
+http://web-platform.test:8000/dom/nodes/MutationObserver-childList.html
 http://web-platform.test:8000/dom/nodes/Node-parentNode.html
 http://web-platform.test:8000/dom/nodes/Element-removeAttributeNS.html
 http://web-platform.test:8000/dom/nodes/ChildNode-after.html
@@ -62,7 +62,7 @@ http://web-platform.test:8000/dom/nodes/Element-siblingElement-null.html
 http://web-platform.test:8000/dom/nodes/Comment-constructor.html
 http://web-platform.test:8000/dom/nodes/Element-childElementCount-nochild.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-31.htm
-# [auto-fail] http://web-platform.test:8000/dom/nodes/DOMImplementation-createHTMLDocument.html
+http://web-platform.test:8000/dom/nodes/DOMImplementation-createHTMLDocument.html
 http://web-platform.test:8000/dom/nodes/Element-childElementCount-dynamic-remove.html
 # [auto-fail] http://web-platform.test:8000/dom/nodes/DOMImplementation-createDocument.html
 http://web-platform.test:8000/dom/nodes/CharacterData-insertData.html
@@ -77,7 +77,7 @@ http://web-platform.test:8000/dom/nodes/prepend-on-Document.html
 http://web-platform.test:8000/dom/nodes/Element-remove.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-27.htm
 http://web-platform.test:8000/dom/nodes/MutationObserver-characterData.html
-# [auto-fail] http://web-platform.test:8000/dom/nodes/Node-textContent.html
+http://web-platform.test:8000/dom/nodes/Node-textContent.html
 http://web-platform.test:8000/dom/nodes/Node-baseURI.html
 http://web-platform.test:8000/dom/nodes/ChildNode-replaceWith.html
 http://web-platform.test:8000/dom/nodes/Document-createComment.html
