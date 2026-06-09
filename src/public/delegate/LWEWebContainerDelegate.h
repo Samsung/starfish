@@ -257,11 +257,11 @@ public:
     virtual void DispatchKeyUpEvent(::LWE::KeyValue keyCode) = 0;
 
     virtual void DispatchCompositionStartEvent(
-        const std::string& soFarCompositiedString) = 0;
+        const std::string& currentCompositionString) = 0;
     virtual void DispatchCompositionUpdateEvent(
-        const std::string& soFarCompositiedString) = 0;
+        const std::string& currentCompositionString) = 0;
     virtual void DispatchCompositionEndEvent(
-        const std::string& soFarCompositiedString) = 0;
+        const std::string& currentCompositionString) = 0;
     virtual void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
         const std::function<void(WebContainer*)>& cb) = 0;
     virtual void RegisterOnHideSoftwareKeyboardIfPossibleHandler(

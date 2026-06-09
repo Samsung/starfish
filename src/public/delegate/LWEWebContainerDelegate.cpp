@@ -312,11 +312,11 @@ public:
     void DispatchKeyUpEvent(::LWE::KeyValue keyCode) override;
 
     void DispatchCompositionStartEvent(
-        const std::string& soFarCompositiedString) override;
+        const std::string& currentCompositionString) override;
     void DispatchCompositionUpdateEvent(
-        const std::string& soFarCompositiedString) override;
+        const std::string& currentCompositionString) override;
     void DispatchCompositionEndEvent(
-        const std::string& soFarCompositiedString) override;
+        const std::string& currentCompositionString) override;
     void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
         const std::function<void(WebContainer*)>& cb) override;
     void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
@@ -1538,40 +1538,40 @@ void WebContainerImpl::DispatchKeyUpEvent(KeyValue keyCode)
 }
 
 void WebContainerImpl::DispatchCompositionStartEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventStart,
-                ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                             soFarCompositiedString.length()),
+                ::Starfish::String::fromUTF8(currentCompositionString.data(),
+                                             currentCompositionString.length()),
                 nullptr);
         });
 }
 
 void WebContainerImpl::DispatchCompositionUpdateEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventUpdate,
-                ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                             soFarCompositiedString.length()),
+                ::Starfish::String::fromUTF8(currentCompositionString.data(),
+                                             currentCompositionString.length()),
                 nullptr);
         });
 }
 
 void WebContainerImpl::DispatchCompositionEndEvent(
-    const std::string& soFarCompositiedString)
+    const std::string& currentCompositionString)
 {
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
         m_webView->messageLoop(), [=]() -> void {
             m_webView->renderer()->dispatchCompositionEvent(
                 ::Starfish::CompositionEventKind::CompositionEventEnd,
-                ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                             soFarCompositiedString.length()),
+                ::Starfish::String::fromUTF8(currentCompositionString.data(),
+                                             currentCompositionString.length()),
                 nullptr);
         });
 }
