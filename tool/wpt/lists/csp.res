@@ -79,10 +79,10 @@ http://web-platform.test:8000/content-security-policy/style-src/stylehash-allowe
 # [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/stylehash-basic-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/stylehash-default-src.sub.html
 # [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/stylenonce-allowed.sub.html
-# [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/style-src-error-event-fires.html
-# [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-allowed.html
+http://web-platform.test:8000/content-security-policy/style-src/style-src-error-event-fires.html
+http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-allowed.html
 # [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-blocked.html
-# [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-default-src-allowed.html
+http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-default-src-allowed.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-imported-style-allowed.sub.html
 # [auto-fail] http://web-platform.test:8000/content-security-policy/style-src/style-src-imported-style-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-injected-inline-style-allowed.html
