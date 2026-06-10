@@ -198,9 +198,9 @@ void WebGLRenderingContext::initialize()
     m_gl->bindFramebuffer(GL_FRAMEBUFFER, m_framebufferTexture->fbo());
 }
 
-void WebGLRenderingContext::flush()
+void WebGLRenderingContext::flushForReadback()
 {
-    WebGLRenderingContextBaseMixIn::flush();
+    WebGLRenderingContextBaseMixIn::flushForReadback();
 
     GLRevertableContextScope scope(
         m_context, executionContext()->webBase()->asWebView()->renderer());
@@ -214,7 +214,8 @@ void WebGLRenderingContext::flush()
     // However, as of now, it's difficult to know when compositing and GL
     // rendering actually end, so we leave the clearing as a pending job
     // and let it be done lazily. The assumption here is that the engine will
-    // invoke this `flush()` every frame after we call `setNeedsComposite()`.
+    // invoke this `flushForReadback()` every frame after we call
+    // `setNeedsComposite()`.
 
     m_hasPendingJobsBetweenFrames = true;
 }
@@ -3194,7 +3195,7 @@ void WebGLRenderingContext::handleTexImageWithImageSource(
         CanvasRenderingContext* context = element->canvasRenderingContext();
         STARFISH_ASSERT(context != nullptr);
         auto context2d = static_cast<CanvasRenderingContext2DMixIn*>(context);
-        context2d->flush();
+        context2d->flushForReadback();
         imageData = NativeImageData::attach(context2d->canvas());
         width = element->width();
         height = element->height();

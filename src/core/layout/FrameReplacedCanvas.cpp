@@ -68,7 +68,7 @@ void FrameReplacedCanvas::willCompositeStackingContext(Compositor* c)
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
     auto context = canvasElement->canvasRenderingContext();
     if (context) {
-        context->flushInRendering();
+        context->flushForCompositing();
     }
 }
 

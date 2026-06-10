@@ -75,7 +75,7 @@ public:
     void preInitialize(ScriptValue contextAttributes);
 
     void initialize() override;
-    void flush() override;
+    void flushForReadback() override;
     void onResize() override;
 
     GLsizei drawingBufferWidth() const;

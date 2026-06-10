@@ -140,7 +140,7 @@ void WebGLRenderingContextBaseMixIn::finalize()
     m_canvasSurface = nullptr;
 }
 
-void WebGLRenderingContextBaseMixIn::flush()
+void WebGLRenderingContextBaseMixIn::flushForReadback()
 {
 }
 

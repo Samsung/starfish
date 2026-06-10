@@ -341,14 +341,14 @@ void CanvasRenderingContext2DMixIn::finalize()
     m_canvas = nullptr;
 }
 
-void CanvasRenderingContext2DMixIn::flush()
+void CanvasRenderingContext2DMixIn::flushForReadback()
 {
     m_canvas->flush();
 }
 
-void CanvasRenderingContext2DMixIn::flushInRendering()
+void CanvasRenderingContext2DMixIn::flushForCompositing()
 {
-    flush();
+    flushForReadback();
     if (!m_canvasSurfaceBufferAddressBefore) {
         m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
             0, 0, m_canvasSurface->bufferWidth(),
@@ -1585,7 +1585,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
                                DOMException::Code::SECURITY_ERR);
     }
 
-    flush();
+    flushForReadback();
 
     size_t stride = 0;
     if (m_canvasSurface->bufferWidth() != 0 &&

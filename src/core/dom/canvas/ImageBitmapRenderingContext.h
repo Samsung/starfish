@@ -39,7 +39,7 @@ public:
         STARFISH_UNSUPPORTED_METHOD();
     }
 
-    virtual void flush() override
+    virtual void flushForReadback() override
     {
         STARFISH_UNSUPPORTED_METHOD();
     }
