@@ -198,7 +198,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     }
 
     std::string result = "data:,";
-    m_canvasRenderingContext->flush();
+    m_canvasRenderingContext->flushForReadback();
     CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
     if (canvasSurface != nullptr) {
         auto width = canvasSurface->bufferWidth();

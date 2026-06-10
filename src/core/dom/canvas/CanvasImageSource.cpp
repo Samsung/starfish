@@ -131,7 +131,7 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
         auto context = htmlCanvas->canvasRenderingContext();
         if (context != nullptr) {
             auto context2d = (CanvasRenderingContext2DMixIn*)context;
-            context2d->flush();
+            context2d->flushForReadback();
             nativeImageData = NativeImageData::attach(context2d->canvas());
             clean = context->originCleanFlag();
         }

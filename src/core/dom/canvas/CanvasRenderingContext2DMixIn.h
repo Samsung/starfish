@@ -59,8 +59,8 @@ public:
     }
 
     virtual void initialize() override;
-    virtual void flush() override;
-    virtual void flushInRendering() override;
+    virtual void flushForReadback() override;
+    virtual void flushForCompositing() override;
     virtual void onResize() override;
 
     virtual CanvasSurface* surface() override
