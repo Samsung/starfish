@@ -147,3 +147,4 @@
 	path = third_party/wpt
 	url = https://github.com/web-platform-tests/wpt.git
 	ignore = dirty
+	shallow = true
