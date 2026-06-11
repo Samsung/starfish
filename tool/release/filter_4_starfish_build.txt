@@ -13,6 +13,7 @@ P /.circleci
 + /third_party/windows
 - /compat
 - /test
+- /third_party/wpt
 + /tool
 + /tool/imgdiff
 - /out_tizen

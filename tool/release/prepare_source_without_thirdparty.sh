@@ -13,6 +13,8 @@ echo "Found: $repo"
 
 # Syncing with the current Starfish repo
 
+# WPT submodule is not needed for build, only for WPT test jobs
+git config submodule.third_party/wpt.update none
 git submodule update --init binding_generator third_party
 
 # Note) do not use `recursive` update. it may contain other unnecessary submodules.
@@ -36,3 +38,6 @@ echo "======================================="
 msg="LWE_Release_$today""_$hash"
 git commit -m "$msg"
 cd $ROOT
+
+# Restore WPT submodule config
+git config --unset submodule.third_party/wpt.update
