@@ -2024,12 +2024,6 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                         m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
                             coveredRowsCount);
 
-                    LayoutRect tileExtent = computeBoxExtent(
-                        LayoutRect(minX + (LayoutUnit)tileDataX,
-                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
-                                   tileDataHeight),
-                        screenMatrix);
-
                     bool isVisible =
                         hVisibleTextureStart <= y && y < hVisibleTextureEnd &&
                         wVisibleTextureStart <= x && x < wVisibleTextureEnd;

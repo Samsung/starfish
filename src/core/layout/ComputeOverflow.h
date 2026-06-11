@@ -473,9 +473,13 @@ public:
                     }
 
                     if (overflowOrScroll.second) {
-                        translatePosition(
-                            -frameBox->asFrameBlockBox()->scrollLeft(),
-                            -frameBox->asFrameBlockBox()->scrollTop());
+                        if (frameBox != nearestBufferedFrame ||
+                            !frameBox->stackingContext()
+                                 ->inScrollWithGraphicsBufferActive()) {
+                            translatePosition(
+                                -frameBox->asFrameBlockBox()->scrollLeft(),
+                                -frameBox->asFrameBlockBox()->scrollTop());
+                        }
                     }
                 }
 
