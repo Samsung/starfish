@@ -444,7 +444,8 @@ public:
         if (familyName != m_webView->initialFontFamilyDatas()[1]
                               .m_familyName.string()
                               ->toUTF8NonGCString()) {
-            if (after != familyName && fullName != familyName) {
+            if (after.find(familyName) == std::string::npos &&
+                fullName.find(familyName) == std::string::npos) {
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);
                     FcPatternDestroy(pattern);
@@ -470,7 +471,6 @@ public:
             return UTF8StringDataNonGCStd();
         }
         std::string u8FilePath = (char*)filePath;
-
         FcPatternDestroy(resultPattern);
         FcPatternDestroy(pattern);
 
