@@ -45,7 +45,10 @@ jobs:
             export http_proxy=http://10.112.1.184:8080
             git config --global http.sslVerify false
             git config --global --add safe.directory /__w/starfish/starfish
-            git submodule update --init --recursive
+            git submodule update --init binding_generator third_party
+            cd third_party/escargot
+            git submodule update --init third_party
+            cd -
 
       - name: Add safe directory
         run: |
