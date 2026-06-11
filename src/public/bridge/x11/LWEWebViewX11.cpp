@@ -590,7 +590,21 @@ public:
                         }
                     };
 
-                    if (m_ic) {
+                    // First, get the keysym from XLookupString
+                    int result = XLookupString(
+                        &event.xkey, buf, sizeof(buf) - 1, &keysym, nullptr);
+
+                    // Check if this is a special key (arrow keys, function
+                    // keys, etc.) Special keys should be handled regardless of
+                    // XIM status
+                    int keyValue = convertKeySymToKeyValue(keysym);
+                    if (keyValue != ::LWE::KeyValue::UnidentifiedKey &&
+                        (keysym < 32 || keysym > 126)) {
+                        // This is a special key, handle it directly
+                        m_keyCallback(keyValue, event.type == KeyPress ? 1 : 0);
+                        handled = true;
+                    } else if (m_ic) {
+                        // Try XIM for character input
                         int len =
                             XmbLookupString(m_ic, &event.xkey, buf,
                                             sizeof(buf) - 1, &keysym, &status);
@@ -615,22 +629,18 @@ public:
                             }
                         }
                     } else {
-                        char keychar;
-                        int result = XLookupString(&event.xkey, &keychar, 1,
-                                                   &keysym, nullptr);
+                        // No XIM, use keysym conversion for printable
+                        // characters
                         if (result > 0 &&
-                            isprint(static_cast<unsigned char>(keychar))) {
-                            m_keyCallback(keychar,
+                            isprint(static_cast<unsigned char>(buf[0]))) {
+                            m_keyCallback(static_cast<unsigned char>(buf[0]),
                                           event.type == KeyPress ? 1 : 0);
                             handled = true;
-                        } else {
+                        } else if (keyValue != 0) {
                             // No printable character, use keysym conversion
-                            int keyValue = convertKeySymToKeyValue(keysym);
-                            if (keyValue != 0) {
-                                m_keyCallback(keyValue,
-                                              event.type == KeyPress ? 1 : 0);
-                                handled = true;
-                            }
+                            m_keyCallback(keyValue,
+                                          event.type == KeyPress ? 1 : 0);
+                            handled = true;
                         }
                     }
                 }
