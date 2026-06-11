@@ -926,7 +926,7 @@ void WebGLRenderingContext::finish()
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
-void WebGLRenderingContext::flushWebGL()
+void WebGLRenderingContext::flush()
 {
     ENTER_CONTEXT_SCOPE();
 

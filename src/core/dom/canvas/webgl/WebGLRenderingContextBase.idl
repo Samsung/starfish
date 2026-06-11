@@ -563,7 +563,7 @@ interface WebGLRenderingContextBase
     undefined enable(GLenum cap);
     undefined enableVertexAttribArray(GLuint index);
     undefined finish();
-    [Rename=flushWebGL] undefined flush();
+    undefined flush();
     undefined framebufferRenderbuffer(GLenum target, GLenum attachment,
                                       GLenum renderbuffertarget,
                                       WebGLRenderbuffer? renderbuffer);
