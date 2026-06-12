@@ -142,9 +142,17 @@ def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=False,
     if inject_script:
         cmd += ["--inject-script", inject_script]
 
+    # Ensure wpt serve connects directly to loopback, bypassing any proxy.
+    wpt_domains = ".web-platform.test,.not-web-platform.test"
+    env = os.environ.copy()
+    for key in ("no_proxy", "NO_PROXY"):
+        existing = env.get(key, "")
+        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+
     log = open("/tmp/wpt_serve.log", "w")
     proc = subprocess.Popen(cmd, cwd=wpt_root, stdout=log, stderr=subprocess.STDOUT,
-                            stdin=subprocess.DEVNULL, start_new_session=True)
+                            stdin=subprocess.DEVNULL, start_new_session=True,
+                            env=env)
     try:
         good = 0
         deadline = time.time() + startup_timeout
