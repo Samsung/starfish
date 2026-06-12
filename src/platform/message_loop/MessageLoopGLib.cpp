@@ -201,7 +201,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     }
 
     g_idle_add_full(
-        G_PRIORITY_DEFAULT,
+        G_PRIORITY_HIGH,
         [](gpointer data) -> gboolean {
             g_timeout_add(
                 0,
@@ -251,7 +251,7 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
     }
 
     g_idle_add_full(
-        G_PRIORITY_DEFAULT,
+        G_PRIORITY_HIGH,
         [](gpointer data) -> gboolean {
             g_timeout_add(
                 0,
