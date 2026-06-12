@@ -98,6 +98,10 @@ def run_one(url, timeout):
     cmd = [STARFISH, url, "--hide-window", "--width=800", "--height=600"]
     env = dict(os.environ)
     env["HIDE_WINDOW"] = "1"
+    wpt_domains = ".web-platform.test,.not-web-platform.test"
+    for key in ("no_proxy", "NO_PROXY"):
+        existing = env.get(key, "")
+        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
     try:
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              env=env, timeout=timeout).stdout.decode("utf-8", "replace")
