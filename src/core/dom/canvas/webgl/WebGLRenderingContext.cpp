@@ -207,6 +207,11 @@ void WebGLRenderingContext::flushForReadback()
     // we need to bind 0(screen) buffer for sending commands to gpu
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     m_gl->bindFramebuffer(GL_DRAW_FRAMEBUFFER, getCurrentFBO());
+}
+
+void WebGLRenderingContext::flushForCompositing()
+{
+    flushForReadback();
 
     // NOTE: According to the specification, by default the contents of
     // the drawing buffer shall be cleared to their default values after
@@ -214,7 +219,7 @@ void WebGLRenderingContext::flushForReadback()
     // However, as of now, it's difficult to know when compositing and GL
     // rendering actually end, so we leave the clearing as a pending job
     // and let it be done lazily. The assumption here is that the engine will
-    // invoke this `flushForReadback()` every frame after we call
+    // invoke this `flushForCompositing()` every frame after we call
     // `setNeedsComposite()`.
 
     m_hasPendingJobsBetweenFrames = true;
