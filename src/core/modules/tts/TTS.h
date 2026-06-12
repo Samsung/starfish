@@ -28,6 +28,8 @@
 #include <tts.h>
 #endif
 
+#include <set>
+
 namespace Starfish {
 
 class Element;
@@ -113,6 +115,21 @@ public:
         m_currentUtterId = id;
     }
 
+    void addCallbackId(unsigned int id)
+    {
+        m_callbackIds.insert(id);
+    }
+
+    void removeCallbackId(unsigned int id)
+    {
+        m_callbackIds.erase(id);
+    }
+
+    void clearCallbackIds()
+    {
+        m_callbackIds.clear();
+    }
+
     void destroy();
     int prepare();
     void unprepare();
@@ -161,6 +178,7 @@ private:
     std::string m_userLanguage;
     int m_defaultVoiceType;
     int m_currentUtterId;
+    std::set<unsigned int> m_callbackIds;
 };
 } // namespace Starfish
 #endif

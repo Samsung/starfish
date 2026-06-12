@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 
 #if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS) && \
-    defined(STARFISH_TIZEN_PROD_TV) && defined(STARFISH_SHELL_EFL)
+    defined(STARFISH_TIZEN_PROD_TV) && defined(PORT_EVENTLOOP_BACKEND_GLIB)
 
 #include "Starfish.h"
 #include "core/dom/Document.h"
@@ -36,8 +36,8 @@
 #include "core/modules/tts/SpeechSynthesisEvent.h"
 #include "core/modules/profiling/Profiling.h"
 
-#include <Elementary.h>
 #include <vconf/vconf.h>
+#include <glib.h>
 
 // NOTE: Original TTS_MODE_INTERRUPT is defined in tts_internal.h.
 #define TTS_MODE_INTERRUPT 3
@@ -387,16 +387,29 @@ void TTS::initialize()
                              accessibilityChangedCB, this);
 
     if (m_handle == NULL) {
-        ecore_main_loop_thread_safe_call_async(
-            [](void* data) -> void {
-                TTS* t = (TTS*)data;
+        guint* idleIdPtr = new guint(0);
+        guint callbackId = g_idle_add_full(
+            G_PRIORITY_DEFAULT,
+            [](gpointer data) -> gboolean {
+                std::pair<TTS*, guint*>* pair = (std::pair<TTS*, guint*>*)data;
+                TTS* t = pair->first;
+                guint* idleIdPtr = pair->second;
+                t->removeCallbackId(*idleIdPtr);
                 int ret = t->createHandle();
                 if (ret != TTS_ERROR_NONE) {
                     dispatchErrorEvent(t, 0, errorToString(ret),
                                        errorToString(ret));
                 }
+                return G_SOURCE_REMOVE;
             },
-            this);
+            new std::pair<TTS*, guint*>(this, idleIdPtr),
+            [](gpointer data) {
+                std::pair<TTS*, guint*>* pair = (std::pair<TTS*, guint*>*)data;
+                delete pair->second;
+                delete pair;
+            });
+        addCallbackId(callbackId);
+        *idleIdPtr = callbackId;
     }
 }
 
@@ -471,6 +484,12 @@ int TTS::createHandle()
 void TTS::destroy()
 {
     STARFISH_LOG_ERROR("[TTS] TTS::destroy");
+
+    for (guint id : m_callbackIds) {
+        g_source_remove(id);
+    }
+    clearCallbackIds();
+
     if (m_handle) {
         unprepare();
 
@@ -699,21 +718,23 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
     struct Dummy {
         TTS* t;
         SpeechSynthesisUtterance* u;
+        guint* callbackId;
     };
 
     Dummy* d = new Dummy();
     d->t = this;
     d->u = utterance;
+    d->callbackId = new guint(0);
 
-    ecore_main_loop_thread_safe_call_async(
-        [](void* data) -> void {
-            // STARFISH_LOG_INFO("[TTS] speech(SpeechSynthesisUtterance*)");
+    guint callbackId = g_idle_add_full(
+        G_PRIORITY_DEFAULT,
+        [](gpointer data) -> gboolean {
             Dummy* d = (Dummy*)data;
             TTS* t = d->t;
-            SpeechSynthesisUtterance* utter = d->u;
+            t->removeCallbackId(*d->callbackId);
 
             if (t->handle() != NULL) {
-                t->setUtterance(utter);
+                t->setUtterance(d->u);
 
                 int ret = t->speechUtterances();
                 if (ret != TTS_ERROR_NONE) {
@@ -723,9 +744,16 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
             } else {
                 STARFISH_LOG_ERROR("[TTS] handle is null");
             }
-            delete (d);
+            return G_SOURCE_REMOVE;
         },
-        d);
+        d,
+        [](gpointer data) {
+            Dummy* d = (Dummy*)data;
+            delete d->callbackId;
+            delete d;
+        });
+    addCallbackId(callbackId);
+    *d->callbackId = callbackId;
 }
 
 int TTS::speechUtterances()
