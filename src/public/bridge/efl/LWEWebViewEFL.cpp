@@ -313,6 +313,8 @@ public:
 
         m_windowObject = win;
 
+        ecore_main_loop_glib_integrate();
+
         m_windowDelEventHandler = [](void* data, Evas* e, Evas_Object* obj,
                                      void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;

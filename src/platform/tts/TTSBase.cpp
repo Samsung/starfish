@@ -19,9 +19,9 @@
 
 #include "StarfishConfig.h"
 
-#if defined(STARFISH_ENABLE_TTS) && \
-    (!defined(STARFISH_TIZEN) ||    \
-     (defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_SHELL_EFL)))
+#if defined(STARFISH_ENABLE_TTS) &&                                  \
+    (!defined(STARFISH_TIZEN) || (defined(STARFISH_TIZEN_PROD_TV) && \
+                                  !defined(PORT_EVENTLOOP_BACKEND_GLIB)))
 
 #include "Starfish.h"
 #include "core/dom/Element.h"
