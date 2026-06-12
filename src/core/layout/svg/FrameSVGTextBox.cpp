@@ -48,10 +48,14 @@ void FrameSVGTextBox::layoutSVG(SVGLayoutContext& ctx)
 
 void FrameSVGTextBox::layoutChildren(SVGLayoutContext& ctx, SkMatrix matrix)
 {
-    LayoutContext layoutContext(node()->starfish(),
-                                node()->document()->frame()->asFrameDocument());
-    firstChild()->layout(layoutContext, Frame::LayoutWantToResolve::ResolveAll);
-    firstChild()->establishesStackingContextIfNeedsAndComputingPaintingFlags();
+    if (firstChild() && firstChild()->isFrameBlockBox()) {
+        LayoutContext layoutContext(
+            node()->starfish(), node()->document()->frame()->asFrameDocument());
+        firstChild()->layout(layoutContext,
+                             Frame::LayoutWantToResolve::ResolveAll);
+        firstChild()
+            ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
+    }
 }
 
 void FrameSVGTextBox::paintSVG(PaintingContext& ctx)
