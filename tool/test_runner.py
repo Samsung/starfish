@@ -158,13 +158,13 @@ def wpt_css_css21():
 
 
 def wpt_css_backgrounds():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res", "cairo", "--font-dep"])
 
 
 def wpt_css_color():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res", "cairo", "--font-dep"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res", "cairo"])
@@ -172,23 +172,23 @@ def wpt_css_color():
 
 
 def wpt_css_flexbox():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res", "cairo"])
 
 
 def wpt_cssom_view():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom_view.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res", "cairo"])
-
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom_view.res", "cairo"])  # migrated to wpt_serve
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res", "cairo"])  # migrated to wpt_serve
+    pass # fully migrated to wpt_serve_css
 
 def wpt_css_transforms():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res", "cairo", "--font-dep"])
 
 
 def wpt_css_variables():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-variables-1_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-variables-1_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-variables-1_dev_pixel.res", "cairo"])
 
 
@@ -197,9 +197,9 @@ def wpt_mediaqueries():
 
 
 def wpt_selectors():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res", "cairo"])
-#    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res", "cairo"])
 
 
@@ -208,7 +208,7 @@ def wpt_css_all():
     wpt_css_backgrounds()
     wpt_css_color()
     wpt_css_flexbox()
-    wpt_cssom_view()
+    # wpt_cssom_view()  # migrated to wpt_serve_css
     wpt_css_transforms()
     wpt_css_variables()
     wpt_mediaqueries()
@@ -216,18 +216,18 @@ def wpt_css_all():
 
 
 def wpt_others():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/html_basic.res", "cairo"])
-    run_test(["csswg_with_remote", "tool/reftest/cairo/wpt/html_pixel.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_basic.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_parsing_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/html_basic.res", "cairo"])  # migrated to wpt_serve_html
+    # run_test(["csswg_with_remote", "tool/reftest/cairo/wpt/html_pixel.res", "cairo"])  # migrated to wpt_serve_html
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_basic.res", "cairo"])  # migrated to wpt_serve_dom
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_parsing_basic.res", "cairo"])  # migrated to wpt_serve_dom
 #    run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_xpath_basic.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/page_visibility_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/page_visibility_basic.res", "cairo"])  # migrated to wpt_serve_others
     run_test(["multi_basic", "tool/reftest/cairo/wpt/x-frame-options.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/csp.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/cors.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/cookies.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/fileAPI.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/csp.res", "cairo"])  # migrated to wpt_serve_others
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])  # migrated to wpt_serve_others
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/cors.res", "cairo"])  # migrated to wpt_serve_others
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/cookies.res", "cairo"])  # migrated to wpt_serve_others
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/fileAPI.res", "cairo"])  # migrated to wpt_serve_others
 
 
 def wpt_canvas():
@@ -261,14 +261,14 @@ def wpt_worker():
 
 def wpt_all():
     wpt_css_all()
-    wpt_pwa()
+    # wpt_pwa()  # migrated to wpt_serve_fetch
     # wpt_webrtc() // Disable in CI
-    wpt_canvas()
+    # wpt_canvas()  # migrated to wpt_serve_canvas
     wpt_others()
-    wpt_websocket()
-    wpt_xhr()
-    wpt_intersection_observer()
-    wpt_idb()
+    # wpt_websocket()  # migrated to wpt_serve_websocket
+    # wpt_xhr()  # migrated to wpt_serve_xhr
+    # wpt_intersection_observer()  # migrated to wpt_serve_intersection_observer
+    # wpt_idb()  # migrated to wpt_serve_idb
 
 # WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
 # Runs the active (expected-pass) lists under tool/wpt/lists/; any active test
