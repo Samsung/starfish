@@ -80,11 +80,11 @@ jobs:
         run: |
           chmod a+x $PWD/out/debug/bin/lightweight-web-engine
           ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
-          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
-          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
-          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
+          ln -s -f $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s -f $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s -f $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          ln -s -f $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
+          ln -s -f $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
       - name: Setup WPT hosts file
         run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
@@ -117,6 +117,8 @@ jobs:
     steps:
       - name: Checkout main branch
         uses: CODE-Actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
 
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
@@ -129,9 +131,13 @@ jobs:
 
       - name: Setup gh-pages worktree
         run: |
-          git fetch origin gh-pages 2>/dev/null || true
           git worktree remove _pages 2>/dev/null || true
-          git worktree add -B gh-pages _pages origin/gh-pages || git worktree add -B gh-pages _pages
+          if git ls-remote --exit-code origin gh-pages > /dev/null 2>&1; then
+            git fetch origin gh-pages
+            git worktree add -B gh-pages _pages origin/gh-pages
+          else
+            git worktree add --orphan -b gh-pages _pages
+          fi
 
       - name: Update data.json
         run: |
@@ -154,7 +160,12 @@ jobs:
         run: |
           cd _pages
           git add index.html data.json
-          git commit -m "WPT status dashboard update - $(date +%Y-%m-%d)" || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit, skipping."
+          else
+            git commit -m "WPT status dashboard update - $(date +%Y-%m-%d)"
+          fi
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.sec.samsung.net/${GITHUB_REPOSITORY}.git"
           git push -u origin gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

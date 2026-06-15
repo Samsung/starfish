@@ -37,12 +37,12 @@ def load_data(path):
     try:
         with open(path) as fp:
             data = json.load(fp)
-        # Handle both list (default) and dict formats gracefully
         if isinstance(data, dict):
             return data.get("history", [])
         return data if isinstance(data, list) else []
-    except (json.JSONDecodeError, IOError):
-        return []
+    except (json.JSONDecodeError, IOError) as e:
+        print("ERROR: %s is corrupted: %s" % (path, e), file=sys.stderr)
+        sys.exit(1)
 
 
 def load_metrics(path):

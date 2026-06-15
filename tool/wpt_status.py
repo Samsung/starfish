@@ -280,14 +280,17 @@ def render_html(results, generated_at, missing):
     return "".join(parts)
 
 
-def extract_metrics(results):
+def extract_metrics(results, now=None):
     """Extract metrics from test results for dashboard JSON.
 
     Returns a dict with date, time, timestamp, passed, failed, total, rate.
+    now: datetime to use (defaults to datetime.now()); pass the same value
+    used for the HTML report so timestamps are consistent.
     """
+    if now is None:
+        now = datetime.now()
     passed = sum(1 for r in results if r["ok"])
     total = len(results)
-    now = datetime.now()
     return {
         "date": now.strftime("%Y-%m-%d"),
         "time": now.strftime("%H:%M:%S"),
@@ -350,7 +353,8 @@ def main(argv):
         with wpt_serve(args.wpt_root, verbose=True):
             results = go()
 
-    generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    generated_at_dt = datetime.now()
+    generated_at = generated_at_dt.strftime("%Y-%m-%d %H:%M:%S")
     html = render_html(results, generated_at, missing)
     with open(args.output, "w") as fp:
         fp.write(html)
@@ -359,7 +363,7 @@ def main(argv):
     print("\nWrote %s  (%d/%d passed)" % (args.output, passed, len(results)))
 
     if args.output_json:
-        metrics = extract_metrics(results)
+        metrics = extract_metrics(results, generated_at_dt)
         with open(args.output_json, "w") as fp:
             json.dump(metrics, fp, indent=2)
         print("Wrote %s" % args.output_json)
