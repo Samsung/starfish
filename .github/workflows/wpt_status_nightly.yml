@@ -123,6 +123,11 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
+      - name: Configure git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
       - name: Download metrics
         uses: CODE-Actions/download-artifact@v2
         with:
@@ -154,11 +159,6 @@ jobs:
           python3.9 tool/wpt_generate_dashboard.py \
             --data-file _pages/data.json \
             --output _pages/index.html
-
-      - name: Configure git
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
 
       - name: Commit and push to gh-pages
         run: |
