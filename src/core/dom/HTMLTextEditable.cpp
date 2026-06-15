@@ -289,10 +289,17 @@ void HTMLTextEditable::consumeLastPreedit()
         int count = m_preeditEndPos - m_preeditStartPos;
         int start = m_currentCaretPosition - count;
 
-        String* v = value()->remove(start, count);
-        setValue(v);
+        // The preedit range can be stale if the value was mutated out from
+        // under the composition (e.g. script setting input.value
+        // mid-composition). Only remove when the recorded range is still within
+        // the value.
+        if (count > 0 && start >= 0 &&
+            (size_t)(start + count) <= value()->length()) {
+            String* v = value()->remove(start, count);
+            setValue(v);
 
-        m_currentCaretPosition -= count;
+            m_currentCaretPosition -= count;
+        }
     }
     m_havePreedit = false;
     m_preeditEndPos = 0;

@@ -155,6 +155,14 @@ public:
     virtual void didDataReceived(const char*, size_t length);
     virtual void didLoadFinished();
     virtual void didLoadFailed();
+#if defined(STARFISH_ENABLE_CDP)
+    // Network-layer completion notifications for the CDP Network hook. Called
+    // from ResourceNetworkRequestClient at the moment the transport finishes /
+    // errors -- independent of any later image-decode outcome, so CDP reports
+    // the true network result. No-op unless CDP captured a requestId.
+    void cdpNotifyNetworkFinished();
+    void cdpNotifyNetworkFailed();
+#endif
     virtual void didLoadCanceled();
     virtual void didCacheHit(Resource* cache)
     {
@@ -232,6 +240,13 @@ public:
     }
 
 protected:
+#if defined(STARFISH_ENABLE_CDP)
+    // requestId assigned by the CDP Network hook when this resource was
+    // requested while CDP Network is enabled. Empty otherwise. Carried across
+    // the response/data/finished phases so all events share one id.
+    std::string m_cdpRequestId;
+    bool m_cdpResponseEmitted = false;
+#endif
     bool m_isIncludedInComputingWindowOnLoadEvent : 1;
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
@@ -268,10 +283,22 @@ public:
         if (request->progressState() == ProgressState::Load) {
             m_resource->didDataReceived(request->response().data(),
                                         request->response().size());
+#if defined(STARFISH_ENABLE_CDP)
+            // The transport has delivered the full body; report it to CDP now,
+            // before didLoadFinished (which for images defers to async decode
+            // and may end in didLoadFailed despite a successful HTTP fetch).
+            m_resource->cdpNotifyNetworkFinished();
+#endif
             m_resource->didLoadFinished();
         } else if (request->progressState() == ProgressState::InError) {
+#if defined(STARFISH_ENABLE_CDP)
+            m_resource->cdpNotifyNetworkFailed();
+#endif
             m_resource->didLoadFailed();
         } else if (request->progressState() == ProgressState::TimeOut) {
+#if defined(STARFISH_ENABLE_CDP)
+            m_resource->cdpNotifyNetworkFailed();
+#endif
             m_resource->didLoadFailed();
         }
     }

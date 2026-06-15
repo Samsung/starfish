@@ -270,7 +270,14 @@ public:
     void buildFrameTreeIfNeeds();
     // return did layout
     bool layoutIfNeeded();
-    bool isScriptingEnabled()
+    // Page-script gate: false also when CDP
+    // Emulation.setScriptExecutionDisabled is active on the owning WebView, so
+    // page <script>/event-handler/module execution is blocked while inspector
+    // evaluation (which uses isScriptingEnabledIgnoringCDP) keeps working.
+    bool isScriptingEnabled();
+    // Fundamental scripting availability (e.g. sandboxed iframe), ignoring any
+    // CDP script-execution-disabled override.
+    bool isScriptingEnabledIgnoringCDP()
     {
         return m_isScriptingEnabled;
     }

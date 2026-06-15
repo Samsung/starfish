@@ -316,6 +316,11 @@ bool ScriptBindingWindowInstance::isScriptingEnabled()
     return m_ownerWindow->browsingContext()->isScriptingEnabled();
 }
 
+bool ScriptBindingWindowInstance::isScriptingEnabledIgnoringCDP()
+{
+    return m_ownerWindow->browsingContext()->isScriptingEnabledIgnoringCDP();
+}
+
 void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
     ErrorEventInit& errorInfo)
 {

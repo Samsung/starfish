@@ -40,6 +40,7 @@ ENDIF()
 # DEFINITION Description
 # STARFISH_ENABLE_MULTIMEDIA : enable multimedia element (video, audio, track) features
 # STARFISH_ENABLE_INSPECTOR : enable inspector which is used for message sender in separate thread
+# STARFISH_ENABLE_CDP : enable Chrome DevTools Protocol server (Target/Page/Runtime/DOM/Log)
 # STARFISH_ENABLE_TTS : enable TTS (Text-To-Speech)
 # STARFISH_ENABLE_HTTPCACHE : enable HTTPCache feature which caches resources downloaded through HTML
 # STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING : enable multi threaded image decoding
@@ -108,6 +109,15 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_ANIMATION
         -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_ENABLE_WEBAUDIO
+    )
+ENDIF()
+
+# STARFISH_ENABLE_CDP : enable Chrome DevTools Protocol server. Off by default;
+# pass -DSTARFISH_ENABLE_CDP=1 at configure time to enable.
+IF (STARFISH_ENABLE_CDP)
+    SET (LWE_DEFINES_DEFAULT
+        ${LWE_DEFINES_DEFAULT}
+        -DSTARFISH_ENABLE_CDP
     )
 ENDIF()
 

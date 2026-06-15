@@ -22,6 +22,10 @@
 
 #include <cstdint>
 
+namespace Escargot {
+class ValueRef;
+} // namespace Escargot
+
 namespace Starfish {
 
 class WebBase;
@@ -52,11 +56,21 @@ enum class LogLevel : uint8_t {
 class Console : public gc {
 public:
     Console(WebBase* webBase);
-    void log(String* data);
-    void info(String* data);
-    void error(String* data);
-    void warn(String* data);
-    void debug(String* data);
+    // `data` is the concatenated message string (shell print / Log.entryAdded).
+    // Optional argv/argc carry the original JS console arguments so the CDP
+    // bridge can emit Runtime.consoleAPICalled.args as per-arg typed
+    // RemoteObjects. When omitted (internal callers), CDP falls back to a
+    // single string arg holding `data`.
+    void log(String* data, Escargot::ValueRef** argv = nullptr,
+             size_t argc = 0);
+    void info(String* data, Escargot::ValueRef** argv = nullptr,
+              size_t argc = 0);
+    void error(String* data, Escargot::ValueRef** argv = nullptr,
+               size_t argc = 0);
+    void warn(String* data, Escargot::ValueRef** argv = nullptr,
+              size_t argc = 0);
+    void debug(String* data, Escargot::ValueRef** argv = nullptr,
+               size_t argc = 0);
     void time(String* label);
     void timeLog(String* label, Optional<String*> data);
     void timeEnd(String* label);

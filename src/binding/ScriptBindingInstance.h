@@ -105,6 +105,13 @@ public:
         return false;
     }
     virtual bool isScriptingEnabled() = 0;
+    // Fundamental scripting availability, ignoring a CDP
+    // Emulation.setScriptExecutionDisabled override. Used by the inspector so
+    // Runtime.evaluate keeps working while page scripts are blocked.
+    virtual bool isScriptingEnabledIgnoringCDP()
+    {
+        return isScriptingEnabled();
+    }
 
 #define FOR_EACH_BINDING_DECLARATION(exportName)                         \
     Escargot::FunctionObjectRef* fn##exportName()                        \

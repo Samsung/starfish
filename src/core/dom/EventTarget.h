@@ -205,6 +205,16 @@ public:
         m_eventListeners.clear();
     }
 
+#if defined(STARFISH_ENABLE_CDP)
+    // CDP DOMDebugger.getEventListeners: read-only view of the registered
+    // (type -> listener list) pairs. Main-thread only.
+    const GCVector<std::pair<String*, GCVector<EventListener*>*>>&
+    cdpEventListeners() const
+    {
+        return m_eventListeners;
+    }
+#endif
+
     StaticStrings* staticStrings();
 
     enum GlobalPointingEventKind {

@@ -57,14 +57,65 @@ namespace Starfish {
 
 enum MediaFeaturePrefix { NoPrefix, MinPrefix, MaxPrefix };
 
+// CDP Emulation.setEmulatedMedia override state (process-static; see header).
+static std::string s_mediaTypeOverride;
+static int s_prefersColorSchemeOverride = 0;
+static int s_prefersReducedMotionOverride = 0;
+
+void MediaQueryEvaluator::setMediaTypeOverride(const std::string& mediaType)
+{
+    s_mediaTypeOverride = mediaType;
+}
+
+const std::string& MediaQueryEvaluator::mediaTypeOverride()
+{
+    return s_mediaTypeOverride;
+}
+
+void MediaQueryEvaluator::setPrefersColorSchemeOverride(int v)
+{
+    s_prefersColorSchemeOverride = v;
+}
+
+int MediaQueryEvaluator::prefersColorSchemeOverride()
+{
+    return s_prefersColorSchemeOverride;
+}
+
+void MediaQueryEvaluator::setPrefersReducedMotionOverride(int v)
+{
+    s_prefersReducedMotionOverride = v;
+}
+
+int MediaQueryEvaluator::prefersReducedMotionOverride()
+{
+    return s_prefersReducedMotionOverride;
+}
+
+void MediaQueryEvaluator::clearEmulatedMediaOverrides()
+{
+    s_mediaTypeOverride.clear();
+    s_prefersColorSchemeOverride = 0;
+    s_prefersReducedMotionOverride = 0;
+}
+
 bool MediaQueryEvaluator::mediaTypeMatch(String* mediaTypeToMatch) const
 {
-    // If the m_mediaType is an empty string, it means that we support all media
-    // types.
-    return m_mediaType->equals(String::emptyString) ||
+    // CDP media type override (Emulation.setEmulatedMedia): when set, the
+    // emulated media type stands in for the real one. An empty override string
+    // means "no override".
+    String* effectiveMediaType = m_mediaType;
+    if (!s_mediaTypeOverride.empty()) {
+        effectiveMediaType = String::fromUTF8(s_mediaTypeOverride.c_str(),
+                                              s_mediaTypeOverride.size());
+    }
+
+    // If the effective media type is an empty string, it means that we support
+    // all media types.
+    return effectiveMediaType->equals(String::emptyString) ||
            mediaTypeToMatch->equals(String::emptyString) ||
            mediaTypeToMatch->equalsIgnoreCase("all") ||
-           mediaTypeToMatch->equals(m_mediaType);
+           mediaTypeToMatch->equalsIgnoreCase(effectiveMediaType);
 }
 
 static bool applyRestrictor(MediaQuery::RestrictorType type, bool value)
@@ -564,6 +615,49 @@ static bool displayModeMediaFeatureEval(MediaQueryExpValue& value,
         return value.id->equalsIgnoreCase("browser");
     }
     return true;
+}
+
+static bool prefersColorSchemeMediaFeatureEval(MediaQueryExpValue& value,
+                                               MediaValues* mediaValues,
+                                               MediaFeaturePrefix op)
+{
+    // https://drafts.csswg.org/mediaqueries-5/#prefers-color-scheme
+    // The user's preference is "light" by default; CDP
+    // Emulation.setEmulatedMedia can override it (1 = light, 2 = dark).
+    bool prefersDark = MediaQueryEvaluator::prefersColorSchemeOverride() == 2;
+    if (value.isID) {
+        if (value.id->equalsIgnoreCase("dark")) {
+            return prefersDark;
+        }
+        if (value.id->equalsIgnoreCase("light")) {
+            return !prefersDark;
+        }
+        return false;
+    }
+    // Boolean context "(prefers-color-scheme)" always matches since a
+    // preference is always exposed.
+    return true;
+}
+
+static bool prefersReducedMotionMediaFeatureEval(MediaQueryExpValue& value,
+                                                 MediaValues* mediaValues,
+                                                 MediaFeaturePrefix op)
+{
+    // https://drafts.csswg.org/mediaqueries-5/#prefers-reduced-motion
+    // Default is "no-preference"; CDP can override (1 = no-preference,
+    // 2 = reduce).
+    bool reduce = MediaQueryEvaluator::prefersReducedMotionOverride() == 2;
+    if (value.isID) {
+        if (value.id->equalsIgnoreCase("reduce")) {
+            return reduce;
+        }
+        if (value.id->equalsIgnoreCase("no-preference")) {
+            return !reduce;
+        }
+        return false;
+    }
+    // Boolean context matches only when a non-default preference is set.
+    return reduce;
 }
 
 bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const

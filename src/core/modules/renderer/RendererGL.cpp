@@ -70,6 +70,7 @@ public:
         , m_isMouseLbuttonDown(true)
         , m_isKeyDown(true)
         , m_mayNeedsSync(false)
+        , m_suppressSwapForCapture(false)
     {
         m_offsetYDueToSoftwareKeyboard = 0;
         m_currentContext = kEmptyContextOrUnknown;
@@ -110,6 +111,62 @@ public:
             m_glPaintingSurface = nullptr;
         }
         Renderer::destroy();
+    }
+
+    virtual bool captureScreenshotRGBA(std::vector<uint8_t>& outRGBA,
+                                       uint32_t& outW, uint32_t& outH) override
+    {
+        // GL enum literals (stable values; GLTypes.h has no GL constants).
+        const int kGL_RGBA = 0x1908;
+        const int kGL_UNSIGNED_BYTE = 0x1401;
+        const int kGL_PACK_ALIGNMENT = 0x0D05;
+        const int kGL_UNPACK_ALIGNMENT = 0x0CF5;
+
+        uint32_t w = width();
+        uint32_t h = height();
+        if (w == 0 || h == 0) {
+            return false;
+        }
+
+        if (!canRendering()) {
+            return false;
+        }
+
+        // Force a fresh full redraw so the current document is actually painted
+        // and composited into the default GL framebuffer this frame. Suppress
+        // the buffer swap so the composited content stays in the back buffer we
+        // read with glReadPixels.
+        webView()->setNeedsFullRepainting();
+        if (webView()->didCompositeBefore()) {
+            webView()->markNeedsCompositeConsiderInRendering();
+        }
+        m_suppressSwapForCapture = true;
+        RenderResult ret = rendering();
+        m_suppressSwapForCapture = false;
+
+        GL* g = gl();
+        g->finish();
+        g->pixelStorei(kGL_UNPACK_ALIGNMENT, 1);
+        g->pixelStorei(kGL_PACK_ALIGNMENT, 1);
+
+        size_t rowLength = (size_t)w * 4;
+        outRGBA.assign(rowLength * h, 0);
+        g->readPixels(0, 0, w, h, kGL_RGBA, kGL_UNSIGNED_BYTE, outRGBA.data());
+        (void)ret;
+
+        // glReadPixels origin is bottom-left; flip vertically so the result is
+        // top-to-bottom RGBA.
+        for (uint32_t y = 0; y < h / 2; y++) {
+            uint8_t* a = &outRGBA[rowLength * y];
+            uint8_t* b = &outRGBA[rowLength * (h - 1 - y)];
+            for (size_t x = 0; x < rowLength; x++) {
+                std::swap(a[x], b[x]);
+            }
+        }
+
+        outW = w;
+        outH = h;
+        return true;
     }
 
     virtual RenderResult rendering() override
@@ -259,6 +316,12 @@ public:
 
     virtual void swapBuffers() override
     {
+        // During screenshot capture we read the default framebuffer's back
+        // buffer directly; swapping would move the freshly composited content
+        // to the front buffer and leave the back buffer undefined.
+        if (m_suppressSwapForCapture) {
+            return;
+        }
         m_onSwapBuffer(this, m_mayNeedsSync);
         m_mayNeedsSync = false;
     }
@@ -361,6 +424,7 @@ public:
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
     bool m_mayNeedsSync;
+    bool m_suppressSwapForCapture;
     float m_lastMouseX, m_lastMouseY;
     int m_offsetYDueToSoftwareKeyboard;
     uintptr_t m_currentContext;

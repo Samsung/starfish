@@ -51,6 +51,10 @@
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "core/page/GlobalScope.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/CDPServer.h"
+#include "core/cdp/CDPDispatcher.h"
+#endif
 #include "core/serialize/Serializer.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
@@ -736,8 +740,29 @@ void Window::alert()
     alert(String::emptyString);
 }
 
+#if defined(STARFISH_ENABLE_CDP)
+void Window::emitCDPDialog(const char* type, String* message,
+                           String* defaultPrompt)
+{
+    WebView* wv = webView();
+    if (!wv || !wv->cdpServer() || !wv->cdpServer()->dispatcher()) {
+        return;
+    }
+    String* urlStr = document()->urlString();
+    std::string url = urlStr ? urlStr->toUTF8NonGCString() : std::string();
+    std::string msg = message->toUTF8NonGCString();
+    std::string def =
+        defaultPrompt ? defaultPrompt->toUTF8NonGCString() : std::string();
+    wv->cdpServer()->dispatcher()->emitJavaScriptDialogOpening(wv, url, msg,
+                                                               type, def);
+}
+#endif
+
 void Window::alert(String* message)
 {
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPDialog("alert", message, nullptr);
+#endif
     // calls the platform's alert UI
     struct Param {
         std::string title;
@@ -749,6 +774,27 @@ void Window::alert(String* message)
         document()->location()->url()->origin()->toUTF8NonGCString().data();
     p->message = message->toUTF8NonGCString().data();
     webView()->renderer()->callHandler(WindowHandlerShowAlert, (void*)p);
+}
+
+bool Window::confirm(String* message)
+{
+    // Single-thread CDP MVP: alert/confirm/prompt cannot block the engine
+    // waiting for an async Page.handleJavaScriptDialog response, so the dialog
+    // is announced and the call proceeds immediately with the dismiss-default.
+    // confirm() defaults to false (dismiss).
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPDialog("confirm", message, nullptr);
+#endif
+    return false;
+}
+
+Optional<String*> Window::prompt(String* message, String* defaultValue)
+{
+    // See confirm(): proceeds with the dismiss-default (null) immediately.
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPDialog("prompt", message, defaultValue);
+#endif
+    return Optional<String*>();
 }
 
 void Window::processUrlFragment(String* name)

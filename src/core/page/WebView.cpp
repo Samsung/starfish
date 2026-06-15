@@ -77,6 +77,9 @@
 #include "browser/history/HistoryManager.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/CDPServer.h"
+#endif
 #include "core/style/ComputedStyle.h"
 #include "platform/file/PlatformFile.h"
 #include "EscargotPublic.h"
@@ -366,6 +369,26 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
         STARFISH_IMAGE_DECODE_THREAD_THREAD_POOL_SIZE, m_messageLoop);
 #endif
 
+#if defined(STARFISH_ENABLE_CDP)
+    // Start the Chrome DevTools Protocol server when STARFISH_ENABLE_CDP is set
+    // in the environment (mirrors the env-gated startup of START_UP_FLAG etc.).
+    // Port is taken from STARFISH_CDP_PORT or defaults to 9222.
+    //
+    // Only the first WebView in the process owns the CDP server / 9222 socket.
+    // Additional WebViews spawned via Target.createTarget (multi-tab) must not
+    // try to bind the port again; they are driven through the first WebView's
+    // CDPDispatcher (TargetContext routing).
+    static bool s_cdpServerStarted = false;
+    if (getenv("STARFISH_ENABLE_CDP") && !s_cdpServerStarted) {
+        uint16_t cdpPort = 9222;
+        if (getenv("STARFISH_CDP_PORT")) {
+            cdpPort = (uint16_t)atoi(getenv("STARFISH_CDP_PORT"));
+        }
+        s_cdpServerStarted = true;
+        setupCDPServer(cdpPort);
+    }
+#endif
+
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
 }
 
@@ -622,6 +645,15 @@ void WebView::destroy()
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
     m_inspector = nullptr;
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    // Spawned tabs only reference the initial WebView's server (set via
+    // setSharedCDPServer); only the owning WebView tears it down.
+    if (m_cdpServer && m_cdpServer->webView() == this) {
+        m_cdpServer->stop();
+        delete m_cdpServer;
+    }
+    m_cdpServer = nullptr;
 #endif
 
     pause();
@@ -2392,6 +2424,20 @@ void WebView::setupInspector(uint32_t portNumber)
     STARFISH_ASSERT(m_inspector == nullptr);
     m_inspector = new Inspector(this);
     m_inspector->run(portNumber);
+}
+#endif
+
+#if defined(STARFISH_ENABLE_CDP)
+void WebView::setupCDPServer(uint16_t portNumber)
+{
+    STARFISH_ASSERT(m_cdpServer == nullptr);
+    m_cdpServer = new CDPServer(this, portNumber);
+    m_cdpServer->start();
+}
+
+void WebView::setScriptExecutionDisabledByCDP(bool disabled)
+{
+    m_scriptExecutionDisabledByCDP = disabled;
 }
 #endif
 } // namespace Starfish

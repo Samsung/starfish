@@ -157,6 +157,44 @@ void HistoryManager::clear()
     m_curEntry = 0;
 }
 
+size_t HistoryManager::currentIndex()
+{
+    return m_curEntry;
+}
+
+size_t HistoryManager::entryCount()
+{
+    return m_historyEntries.size();
+}
+
+String* HistoryManager::entryURL(size_t index)
+{
+    if (index >= m_historyEntries.size()) {
+        return nullptr;
+    }
+    return m_historyEntries[index]->url()->urlString();
+}
+
+String* HistoryManager::entryTitle(size_t index)
+{
+    if (index >= m_historyEntries.size()) {
+        return nullptr;
+    }
+    return m_historyEntries[index]->title();
+}
+
+bool HistoryManager::goToIndex(size_t index)
+{
+    if (index >= m_historyEntries.size()) {
+        return false;
+    }
+    int delta = (int)index - (int)m_curEntry;
+    if (delta == 0) {
+        return true;
+    }
+    return go(delta);
+}
+
 uint32_t HistoryManager::length()
 {
     return m_historyEntries.size();

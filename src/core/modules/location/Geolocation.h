@@ -56,6 +56,18 @@ public:
     {
     }
 
+    // CDP Emulation.setGeolocationOverride support. When an override is set,
+    // the default (non-Tizen) backend delivers these coordinates to
+    // getCurrentPosition/watchPosition callbacks instead of failing.
+    // Process-wide (single-target headless CDP); set/cleared on the main
+    // thread.
+    static void setOverride(double latitude, double longitude, double accuracy);
+    static void clearOverride();
+    static bool hasOverride();
+    static double overrideLatitude();
+    static double overrideLongitude();
+    static double overrideAccuracy();
+
 protected:
     Geolocation(Document* document);
     bool getCurrentPositionPreprocessing(GeoPositionCallback cb, void* cbData,

@@ -34,6 +34,8 @@ using namespace Escargot;
 
 namespace Starfish {
 
+bool ContentSecurityPolicy::s_bypass = false;
+
 ContentSecurityPolicy::ContentSecurityPolicy(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
 {
@@ -97,6 +99,9 @@ static String* getDirectiveName(CSPDirectives directive)
 
 bool ContentSecurityPolicy::allowInlineEventHandler()
 {
+    if (s_bypass) {
+        return true;
+    }
     return allowInline(CSPDirectives::ScriptSrc, nullptr);
 }
 
@@ -104,6 +109,9 @@ bool ContentSecurityPolicy::allowSource(
     CSPDirectives directive, ResourceURL* resUrl,
     SecurityPolicyViolationEventDelegator eventDelegator)
 {
+    if (s_bypass) {
+        return true;
+    }
     bool isAllowed = true;
     for (auto policy : m_policies) {
         if (!policy->allowSource(directive, resUrl)) {
@@ -122,6 +130,9 @@ bool ContentSecurityPolicy::allowSource(
 bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
                                         String* scriptContent, String* nonce)
 {
+    if (s_bypass) {
+        return true;
+    }
     bool isAllowed = true;
     for (auto policy : m_policies) {
         if (!policy->allowInline(directive, scriptContent, nonce)) {
@@ -140,6 +151,9 @@ bool ContentSecurityPolicy::allowNonceOrSource(CSPDirectives directive,
                                                String* nonce,
                                                ResourceURL* resUrl)
 {
+    if (s_bypass) {
+        return true;
+    }
     bool isAllowed = true;
     for (auto policy : m_policies) {
         if (!policy->allowNonceOrSource(directive, nonce, resUrl)) {
@@ -156,6 +170,9 @@ bool ContentSecurityPolicy::allowNonceOrSource(CSPDirectives directive,
 
 bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
 {
+    if (s_bypass) {
+        return true;
+    }
     bool isAllowed = true;
     for (auto policy : m_policies) {
         if (!policy->allowEval(directive)) {

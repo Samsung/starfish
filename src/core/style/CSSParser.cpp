@@ -3172,7 +3172,9 @@ static inline bool featureWithoutValue(MediaFeature mediaFeature)
            mediaFeature == MediaFeature::MediaFeatureUpdate ||
            mediaFeature == MediaFeature::MediaFeatureOverflowBlock ||
            mediaFeature == MediaFeature::MediaFeatureOverflowInline ||
-           mediaFeature == MediaFeature::MediaFeatureDisplayMode;
+           mediaFeature == MediaFeature::MediaFeatureDisplayMode ||
+           mediaFeature == MediaFeature::MediaFeaturePrefersColorScheme ||
+           mediaFeature == MediaFeature::MediaFeaturePrefersReducedMotion;
 }
 
 static inline bool featureWithValidIdent(MediaFeature mediaFeature,
@@ -3215,6 +3217,12 @@ static inline bool featureWithValidIdent(MediaFeature mediaFeature,
                ident->equalsIgnoreCase("standalone") ||
                ident->equalsIgnoreCase("minimal-ui") ||
                ident->equalsIgnoreCase("browser");
+    case MediaFeature::MediaFeaturePrefersColorScheme:
+        return ident->equalsIgnoreCase("light") ||
+               ident->equalsIgnoreCase("dark");
+    case MediaFeature::MediaFeaturePrefersReducedMotion:
+        return ident->equalsIgnoreCase("no-preference") ||
+               ident->equalsIgnoreCase("reduce");
     default:
         return false;
     }
