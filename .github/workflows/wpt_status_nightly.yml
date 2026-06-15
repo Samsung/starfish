@@ -136,7 +136,11 @@ jobs:
             git fetch origin gh-pages
             git worktree add -B gh-pages _pages origin/gh-pages
           else
-            git worktree add --orphan -b gh-pages _pages
+            git checkout --orphan gh-pages
+            git rm -rf . >/dev/null 2>&1 || true
+            git commit --allow-empty -m "Initialize gh-pages branch"
+            git checkout -
+            git worktree add -B gh-pages _pages gh-pages
           fi
 
       - name: Update data.json
