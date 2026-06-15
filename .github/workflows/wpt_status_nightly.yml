@@ -159,11 +159,12 @@ jobs:
           python3.9 tool/wpt_generate_dashboard.py \
             --data-file _pages/data.json \
             --output _pages/index.html
+          cp /tmp/wpt-metrics/report-*.html _pages/
 
       - name: Commit and push to gh-pages
         run: |
           cd _pages
-          git add index.html data.json
+          git add index.html data.json report-*.html
           if git diff --cached --quiet; then
             echo "No changes to commit, skipping."
           else
