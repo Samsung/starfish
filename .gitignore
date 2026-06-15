@@ -70,3 +70,9 @@ kuep_net_signer.sh
 # WPT audit byproducts: regenerable by tool/wpt_audit.py, not read at runtime.
 tool/wpt/lists/*.remap
 tool/wpt/lists/*.missing
+
+# WPT status report generation
+report.html
+report-*.html
+data.json
+index.html
