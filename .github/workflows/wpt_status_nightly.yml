@@ -1,0 +1,160 @@
+name: WPT Status Nightly Report
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Clean workspace
+        run: git clean -xdf
+
+      - name: Build Starfish
+        run: |
+          cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
+            -DMODE=debug -DBACKEND=glib_cairo_gl -DSHELL=x11 -DENABLE_DYNAMIC_LOADER=1 \
+            -DWEBGL=1 -DWORKER=1 -DIDB=1
+          ninja starfish.executable
+
+      - name: Upload build artifact
+        uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: starfish-x64_gcc_debug
+          path: |
+            ./out/debug/bin/lightweight-web-engine
+            ./out/debug/lib/*.so
+            ./build.ninja
+            ./rules.ninja
+
+  wpt_status:
+    needs: build
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Checkout WPT submodule
+        run: |
+          git submodule init
+          git submodule update third_party/wpt
+
+      - name: Download build artifact
+        uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_gcc_debug
+
+      - name: Prepare test environment
+        run: |
+          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
+          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
+          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
+
+      - name: Setup WPT hosts file
+        run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+
+      - name: Generate WPT status report
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 tool/wpt_status.py \
+            -j8 --timeout 15 \
+            -o report-$(date +%Y%m%d).html \
+            --output-json metrics.json
+
+      - name: Upload artifacts
+        uses: CODE-Actions/upload-artifact@v2
+        with:
+          name: wpt-metrics-and-report
+          path: |
+            metrics.json
+            report-*.html
+
+  dashboard:
+    needs: wpt_status
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main branch
+        uses: CODE-Actions/checkout@v2
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
+      - name: Download metrics
+        uses: CODE-Actions/download-artifact@v2
+        with:
+          name: wpt-metrics-and-report
+          path: /tmp/wpt-metrics
+
+      - name: Setup gh-pages worktree
+        run: |
+          git fetch origin gh-pages 2>/dev/null || true
+          git worktree remove _pages 2>/dev/null || true
+          git worktree add -B gh-pages _pages origin/gh-pages || git worktree add -B gh-pages _pages
+
+      - name: Update data.json
+        run: |
+          python3.9 tool/wpt_update_data.py \
+            --metrics /tmp/wpt-metrics/metrics.json \
+            --data-file _pages/data.json
+
+      - name: Generate dashboard
+        run: |
+          python3.9 tool/wpt_generate_dashboard.py \
+            --data-file _pages/data.json \
+            --output _pages/index.html
+
+      - name: Configure git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Commit and push to gh-pages
+        run: |
+          cd _pages
+          git add index.html data.json
+          git commit -m "WPT status dashboard update - $(date +%Y-%m-%d)" || true
+          git push -u origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
