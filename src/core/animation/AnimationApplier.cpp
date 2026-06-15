@@ -33,7 +33,41 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/svg/SVGAnimationElement.h"
 
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/page/BrowsingContext.h"
+#include "core/cdp/CDPServer.h"
+#include "core/cdp/CDPDispatcher.h"
+#include "core/cdp/domains/AnimationDomain.h"
+#endif
+
 namespace Starfish {
+
+#if defined(STARFISH_ENABLE_CDP)
+// Bridge a starting CSS keyframe animation to the CDP Animation domain. Reaches
+// the WebView owning the element and emits animationCreated/animationStarted on
+// its session (gated on Animation.enable inside the domain). No-op when the
+// element is not in a WebView document or no CDP server is attached.
+static void emitCDPAnimationStarted(Element* element, String* animationName,
+                                    double durationMs)
+{
+    if (!element || !animationName) {
+        return;
+    }
+    BrowsingContext* bc = element->document()->browsingContext();
+    if (!bc) {
+        return;
+    }
+    WebView* webView = bc->webView();
+    if (!webView) {
+        return;
+    }
+    CDPServer* server = webView->cdpServer();
+    if (server && server->dispatcher()) {
+        server->dispatcher()->animation()->emitAnimationStarted(
+            webView, animationName->toUTF8NonGCString(), durationMs);
+    }
+}
+#endif
 
 static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
 {
@@ -142,6 +176,11 @@ bool AnimationApplier::apply()
             m_executor->fireKeyFramesAnimationEvent(
                 KeyFramesAnimationEventType::AnimationStart, m_element,
                 currentKeyFrames.name(), delay);
+#if defined(STARFISH_ENABLE_CDP)
+            emitCDPAnimationStarted(
+                m_element, currentKeyFrames.name(),
+                styleAnimationData->duration(i).toTimeValue());
+#endif
             hasAppliedAnimation = true;
         }
     }

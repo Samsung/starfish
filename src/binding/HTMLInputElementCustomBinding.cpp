@@ -20,11 +20,33 @@
 #include "StarfishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/fileapi/File.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace Starfish {
+
+// `files` is not backed by a real FileList object. It returns a fresh JS Array
+// of File objects each call, which is enough for Array.from(input.files) and
+// input.files.length. Returns null when no files have been selected.
+ValueRef* filesHTMLInputElementGetterFunction(ExecutionStateRef* state,
+                                              ValueRef* thisValue, size_t argc,
+                                              ValueRef** argv,
+                                              bool isNewExpression)
+{
+    GENERATE_THIS_AND_CHECK_TYPE(HTMLInputElement);
+
+    GCVector<File*>* files = originalObj->selectedFiles();
+    if (!files) {
+        return ValueRef::createNull();
+    }
+    ValueVectorRef* elements = ValueVectorRef::create();
+    for (size_t i = 0; i < files->size(); i++) {
+        elements->pushBack((*files)[i]->scriptValue());
+    }
+    return ArrayObjectRef::create(state, elements);
+}
 
 ValueRef* sizeHTMLInputElementSetterFunction(ExecutionStateRef* state,
                                              ValueRef* thisValue, size_t argc,

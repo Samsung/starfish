@@ -24,6 +24,7 @@
 
 namespace Starfish {
 class Event;
+class File;
 class HTMLInputElement : public HTMLTextEditable {
     const int DEFAULT_SIZE = 20;
     const int CARET_THICKNESS = 2;
@@ -105,6 +106,17 @@ public:
     }
     virtual bool shouldUsePlaceholder() override;
 
+    // Selected files for type=file inputs. Returns nullptr when none have been
+    // set. Used by CDP DOM.setFileInputFiles and the `files` binding getter.
+    GCVector<File*>* selectedFiles()
+    {
+        return m_selectedFiles;
+    }
+    void setSelectedFiles(GCVector<File*>* files)
+    {
+        m_selectedFiles = files;
+    }
+
 protected:
 private:
     void toggleChecked();
@@ -137,6 +149,8 @@ private:
     int32_t m_stepScaleFactor;
 
     HTMLInputElement* m_previousCheckedRadioButton;
+
+    GCVector<File*>* m_selectedFiles = nullptr;
 };
 } // namespace Starfish
 

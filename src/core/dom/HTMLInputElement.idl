@@ -11,7 +11,7 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString dirName;
     [CEReactions] attribute boolean disabled;
     readonly attribute HTMLFormElement? form;
-    [Unimplemented] readonly attribute FileList? files;
+    [Custom=Getter] readonly attribute object? files;
     [CEReactions] attribute USVString formAction;
     [CEReactions] attribute DOMString formEnctype;
     [CEReactions] attribute DOMString formMethod;

@@ -159,6 +159,8 @@ public:
 #endif
     void alert();
     void alert(String* message);
+    bool confirm(String* message);
+    Optional<String*> prompt(String* message, String* defaultValue);
 
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* speechSynthesis()
@@ -404,6 +406,12 @@ private:
            uint32_t initialWidth, uint32_t initialHeight);
     Window();
     NodeList* ensureFrames();
+#if defined(STARFISH_ENABLE_CDP)
+    // Emit Page.javascriptDialogOpening for alert/confirm/prompt via the CDP
+    // dispatcher of this window's WebView (no-op without an attached client).
+    void emitCDPDialog(const char* type, String* message,
+                       String* defaultPrompt);
+#endif
 
     BrowsingContext* m_browsingContext;
     ScriptBindingInstance* m_scriptBindingInstance;

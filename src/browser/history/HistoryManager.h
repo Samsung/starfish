@@ -82,6 +82,13 @@ public:
     bool canGo(int delta);
     void clear();
 
+    // CDP Page.getNavigationHistory / navigateToHistoryEntry support.
+    size_t currentIndex();
+    size_t entryCount();
+    String* entryURL(size_t index);   // nullptr if out of range
+    String* entryTitle(size_t index); // nullptr if out of range
+    bool goToIndex(size_t index);     // navigate to an absolute entry index
+
     uint32_t length();
     void pushState(Document* document, ScriptValue state, String* title,
                    Optional<String*> url);

@@ -37,6 +37,7 @@ public:
         return true;
     }
     bool isScriptingEnabled() override;
+    bool isScriptingEnabledIgnoringCDP() override;
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
 #if defined(STARFISH_ENABLE_DEBUGGER)
     bool isDebuggerEnabled() override;

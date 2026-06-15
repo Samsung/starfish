@@ -56,8 +56,8 @@ interface Window : EventTarget {
   // user prompts
   [CrossOrigin] void alert();
   [CrossOrigin] void alert(DOMString message);
-  [Unimplemented] boolean confirm(optional DOMString message = "");
-  [Unimplemented] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
+  [CrossOrigin] boolean confirm(optional DOMString message = "");
+  [CrossOrigin] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Unimplemented] void print();
 
   [Custom] unsigned long requestAnimationFrame(FrameRequestCallback callback);

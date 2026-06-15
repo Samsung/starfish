@@ -36,6 +36,10 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/CDPServer.h"
+#include "core/cdp/CDPDispatcher.h"
+#endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
 #define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 4
@@ -580,6 +584,19 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                             doc->browsingContext()
                                 ->sourceElement()
                                 ->childBrowsingContextLoaded();
+#if defined(STARFISH_ENABLE_CDP)
+                            // The child iframe's BrowsingContext is now loaded;
+                            // announce it to any attached CDP client (frames
+                            // created asynchronously after the navigate
+                            // handler).
+                            WebView* cdpWv = doc->webView();
+                            if (cdpWv && cdpWv->cdpServer() &&
+                                cdpWv->cdpServer()->dispatcher()) {
+                                cdpWv->cdpServer()
+                                    ->dispatcher()
+                                    ->emitChildFrameLoaded(cdpWv);
+                            }
+#endif
                         } else {
                             struct Param : public gc {
                                 String* url;

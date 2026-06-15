@@ -64,6 +64,9 @@ class Thread;
 class ThreadPool;
 class Mutex;
 class Inspector;
+#if defined(STARFISH_ENABLE_CDP)
+class CDPServer;
+#endif
 class MouseData;
 class TouchData;
 class PlatformKeyEventData;
@@ -121,6 +124,17 @@ public:
         return m_topLevelBrowsingContext;
     }
 
+#if defined(STARFISH_ENABLE_CDP)
+    // CDP Emulation.setScriptExecutionDisabled. BrowsingContext::isScripting
+    // Enabled reads this live, so the override applies to the current document
+    // and survives navigation until cleared.
+    void setScriptExecutionDisabledByCDP(bool disabled);
+    bool scriptExecutionDisabledByCDP()
+    {
+        return m_scriptExecutionDisabledByCDP;
+    }
+#endif
+
     StorageNamespace* localStorageNamespace()
     {
         return m_localStorageNamespace;
@@ -165,6 +179,7 @@ public:
     void clearMediaSourceBlobURLStore();
 
     void layoutIfNeeded(bool shouldCareStackingContextNow = true);
+    void updateObservation();
     void clearStackingContext();
     StackingContext* rootStackingContext()
     {
@@ -308,6 +323,24 @@ public:
     }
 
     void setupInspector(uint32_t portNumber = 23888);
+#endif
+
+#if defined(STARFISH_ENABLE_CDP)
+    CDPServer* cdpServer() const
+    {
+        return m_cdpServer;
+    }
+
+    // Spawned tabs (Target.createTarget) do not start their own CDP server;
+    // they reference the initial WebView's server so console output can reach
+    // the shared dispatcher. The referenced server is owned by the initial
+    // WebView.
+    void setSharedCDPServer(CDPServer* server)
+    {
+        m_cdpServer = server;
+    }
+
+    void setupCDPServer(uint16_t portNumber = 9222);
 #endif
 
     GCVector<Thread*>& parallelJobExecutorThreadPool()
@@ -553,8 +586,6 @@ private:
     void navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
                               ReferrerURL* referrerURL);
 
-    void updateObservation();
-
     Renderer* m_renderer;
     BrowsingContext* m_topLevelBrowsingContext;
 
@@ -590,6 +621,11 @@ private:
                      // will be skipped.
     bool m_inIdleMode;
     bool m_didFirstRenderingAfterWakeup;
+#if defined(STARFISH_ENABLE_CDP)
+    // CDP Emulation.setScriptExecutionDisabled: when true, page scripts are
+    // blocked on the current and subsequently navigated documents.
+    bool m_scriptExecutionDisabledByCDP = false;
+#endif
 
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     GCVector<BrowsingContext*> m_browsingContextsDidLayout;
@@ -606,6 +642,9 @@ private:
 #endif
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* m_inspector;
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    CDPServer* m_cdpServer = nullptr; // GC: not inherited -> plain pointer
 #endif
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;

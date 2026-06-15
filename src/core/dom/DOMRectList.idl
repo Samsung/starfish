@@ -4,4 +4,8 @@
 interface DOMRectList {
   readonly attribute unsigned long length;
   getter DOMRect? item(unsigned long index);
+  // DOMRectList must be iterable like NodeList so that spread/for-of works
+  // (e.g. Puppeteer's clickablePoint does [...element.getClientRects()]).
+  // NOTE : Not in the standard IDL, but web engines expose it as iterable.
+  iterable<DOMRect>;
 };

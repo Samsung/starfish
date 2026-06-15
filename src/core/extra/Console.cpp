@@ -23,6 +23,11 @@
 #include "core/inspector/Inspector.h"
 #include "core/page/WebBase.h"
 #include "core/modules/profiling/Profiling.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/page/WebView.h"
+#include "core/cdp/CDPServer.h"
+#include "core/cdp/CDPDispatcher.h"
+#endif
 
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_WEBWORKER_NOT_HOST)
 void starfishRecordTestFailure();
@@ -30,17 +35,38 @@ void starfishRecordTestFailure();
 
 namespace Starfish {
 
+#if defined(STARFISH_ENABLE_CDP)
+static void emitCDPConsole(WebBase* webBase, const char* level, String* data,
+                           Escargot::ValueRef** argv, size_t argc)
+{
+    if (!webBase->isWebView()) {
+        return;
+    }
+    WebView* webView = static_cast<WebView*>(webBase);
+    // Spawned tabs share the initial WebView's CDP server (set via
+    // setSharedCDPServer); the dispatcher routes to this WebView's session.
+    CDPServer* server = webView->cdpServer();
+    if (server && server->dispatcher()) {
+        server->dispatcher()->emitConsoleForWebView(
+            webView, level, data->toUTF8NonGCString(), argv, argc);
+    }
+}
+#endif
+
 Console::Console(WebBase* webBase)
     : m_webBase(webBase)
 {
 }
 
-void Console::log(String* data)
+void Console::log(String* data, Escargot::ValueRef** argv, size_t argc)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
         m_webBase->inspector()->sendInfoMessage(data);
     }
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPConsole(m_webBase, "log", data, argv, argc);
 #endif
     printMessage(
         LogLevel::Log,
@@ -48,12 +74,15 @@ void Console::log(String* data)
         data);
 }
 
-void Console::info(String* data)
+void Console::info(String* data, Escargot::ValueRef** argv, size_t argc)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
         m_webBase->inspector()->sendInfoMessage(data);
     }
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPConsole(m_webBase, "info", data, argv, argc);
 #endif
     printMessage(
         LogLevel::Info,
@@ -61,12 +90,15 @@ void Console::info(String* data)
         data);
 }
 
-void Console::error(String* data)
+void Console::error(String* data, Escargot::ValueRef** argv, size_t argc)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
         m_webBase->inspector()->sendErrorMessage(data);
     }
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPConsole(m_webBase, "error", data, argv, argc);
 #endif
     printMessage(LogLevel::Error,
                  AtomicString::createAtomicString(m_webBase->starfish(),
@@ -74,12 +106,15 @@ void Console::error(String* data)
                  data);
 }
 
-void Console::warn(String* data)
+void Console::warn(String* data, Escargot::ValueRef** argv, size_t argc)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
         m_webBase->inspector()->sendWarnMessage(data);
     }
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPConsole(m_webBase, "warning", data, argv, argc);
 #endif
     printMessage(
         LogLevel::Warn,
@@ -87,12 +122,15 @@ void Console::warn(String* data)
         data);
 }
 
-void Console::debug(String* data)
+void Console::debug(String* data, Escargot::ValueRef** argv, size_t argc)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_webBase->inspector()) {
         m_webBase->inspector()->sendDebugMessage(data);
     }
+#endif
+#if defined(STARFISH_ENABLE_CDP)
+    emitCDPConsole(m_webBase, "verbose", data, argv, argc);
 #endif
     printMessage(LogLevel::Log,
                  AtomicString::createAtomicString(m_webBase->starfish(),

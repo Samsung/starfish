@@ -467,7 +467,7 @@ static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef** argv, bool isNewExpression)
 {
     String* str = _createConcatenatedStringForConsole(state, argc, argv);
-    fetchWebBase(state->context())->console()->log(str);
+    fetchWebBase(state->context())->console()->log(str, argv, argc);
 #if defined(STARFISH_ENABLE_DEBUGGER)
     printToDebuggerInConsole(state, str, "console.log : ");
 #endif
@@ -479,7 +479,7 @@ static ValueRef* _infoConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     String* str = _createConcatenatedStringForConsole(state, argc, argv);
-    fetchWebBase(state->context())->console()->info(str);
+    fetchWebBase(state->context())->console()->info(str, argv, argc);
 #if defined(STARFISH_ENABLE_DEBUGGER)
     printToDebuggerInConsole(state, str, "console.info : ");
 #endif
@@ -491,7 +491,7 @@ static ValueRef* _errorConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     String* str = _createConcatenatedStringForConsole(state, argc, argv);
-    fetchWebBase(state->context())->console()->error(str);
+    fetchWebBase(state->context())->console()->error(str, argv, argc);
 #if defined(STARFISH_ENABLE_DEBUGGER)
     printToDebuggerInConsole(state, str, "console.error : ");
 #endif
@@ -503,7 +503,7 @@ static ValueRef* _warnConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     String* str = _createConcatenatedStringForConsole(state, argc, argv);
-    fetchWebBase(state->context())->console()->warn(str);
+    fetchWebBase(state->context())->console()->warn(str, argv, argc);
 #if defined(STARFISH_ENABLE_DEBUGGER)
     printToDebuggerInConsole(state, str, "console.warn : ");
 #endif
@@ -515,7 +515,7 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     String* str = _createConcatenatedStringForConsole(state, argc, argv);
-    fetchWebBase(state->context())->console()->debug(str);
+    fetchWebBase(state->context())->console()->debug(str, argv, argc);
 #if defined(STARFISH_ENABLE_DEBUGGER)
     printToDebuggerInConsole(state, str, "console.debug : ");
 #endif

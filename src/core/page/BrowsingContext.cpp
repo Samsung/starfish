@@ -83,6 +83,16 @@ BrowsingContext* BrowsingContext::create(WebView* webView)
     return new BrowsingContext(webView);
 }
 
+bool BrowsingContext::isScriptingEnabled()
+{
+#if defined(STARFISH_ENABLE_CDP)
+    if (m_webView && m_webView->scriptExecutionDisabledByCDP()) {
+        return false;
+    }
+#endif
+    return m_isScriptingEnabled;
+}
+
 BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement,
                                          bool isScriptingEnabled)
 {

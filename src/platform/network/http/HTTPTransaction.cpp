@@ -29,7 +29,22 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/profiling/Profiling.h"
 
+#include <atomic>
+
 namespace Starfish {
+
+// Process-wide TLS verify override (CDP Security.setIgnoreCertificateErrors).
+static std::atomic<bool> s_globalIgnoreSSLVerify(false);
+
+void setGlobalIgnoreSSLVerify(bool b)
+{
+    s_globalIgnoreSSLVerify.store(b);
+}
+
+bool globalIgnoreSSLVerify()
+{
+    return s_globalIgnoreSSLVerify.load();
+}
 
 HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     : m_httpRequest()
@@ -58,6 +73,10 @@ HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
 #endif
 {
     if (getenv("IGNORE_SSL_VERIFY") && strlen(getenv("IGNORE_SSL_VERIFY"))) {
+        m_ignoreSSLVerify = true;
+    }
+    // Runtime override via CDP Security.setIgnoreCertificateErrors.
+    if (s_globalIgnoreSSLVerify.load()) {
         m_ignoreSSLVerify = true;
     }
 }

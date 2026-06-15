@@ -1639,7 +1639,11 @@ protected:
     F(Pointer, "pointer", pointer, NoPrefix)                                 \
     F(Scan, "scan", scan, NoPrefix)                                          \
     F(Scripting, "scripting", scripting, NoPrefix)                           \
-    F(Update, "update", update, NoPrefix)
+    F(Update, "update", update, NoPrefix)                                    \
+    F(PrefersColorScheme, "prefers-color-scheme", prefersColorScheme,        \
+      NoPrefix)                                                              \
+    F(PrefersReducedMotion, "prefers-reduced-motion", prefersReducedMotion,  \
+      NoPrefix)
 
 enum MediaFeature {
     MediaFeatureNone,

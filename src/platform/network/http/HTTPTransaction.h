@@ -34,6 +34,15 @@ typedef int (*ProgressCallBack)(void* clientp, curl_off_t dltotal,
 
 typedef size_t (*Callback)(void* ptr, size_t size, size_t nmemb, void* data);
 
+// Process-wide override of TLS certificate verification, toggled at runtime by
+// CDP Security.setIgnoreCertificateErrors. When set, every new HTTPTransaction
+// starts with m_ignoreSSLVerify=true regardless of the build/env defaults. Read
+// on the IO thread (transaction construction), written on the main thread
+// (CDP); implemented with an atomic. Free functions so callers (e.g. the CDP
+// dispatcher) need not pull in the full HTTPTransaction class header chain.
+void setGlobalIgnoreSSLVerify(bool b);
+bool globalIgnoreSSLVerify();
+
 class HTTPTransaction {
 public:
     static std::unique_ptr<HTTPTransaction> create(

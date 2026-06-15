@@ -20,6 +20,8 @@
 #ifndef __StarfishRenderer__
 #define __StarfishRenderer__
 
+#include <vector>
+
 #include "core/page/RenderResult.h"
 #include "core/event/EventModifierData.h"
 #include "platform/canvas/gl/GL.h"
@@ -145,6 +147,15 @@ public:
     }
     virtual void updateDrawingBufferAddress(void* buf, uint32_t stride)
     {
+    }
+
+    // Read back the currently rendered framebuffer as top-to-bottom RGBA8.
+    // Returns false if the backend cannot provide real pixels (e.g. Mock).
+    // On success, outRGBA is resized to width*height*4 and outW/outH are set.
+    virtual bool captureScreenshotRGBA(std::vector<uint8_t>& outRGBA,
+                                       uint32_t& outW, uint32_t& outH)
+    {
+        return false;
     }
 
     virtual bool makeCurrent()

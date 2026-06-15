@@ -27,8 +27,34 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/WebView.h"
 #include "core/xml/FormData.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/CDPServer.h"
+#include "core/cdp/CDPDispatcher.h"
+#include "core/cdp/domains/NetworkDomain.h"
+#endif
 
 namespace Starfish {
+
+#if defined(STARFISH_ENABLE_CDP)
+// Resolve the live NetworkDomain for this resource's WebView, if CDP is up.
+static NetworkDomain* cdpNetwork(Resource* res)
+{
+    WebView* wv = res->loader() && res->loader()->document()
+                      ? res->loader()->document()->webView()
+                      : nullptr;
+    if (!wv || !wv->cdpServer() || !wv->cdpServer()->dispatcher()) {
+        return nullptr;
+    }
+    return wv->cdpServer()->dispatcher()->network();
+}
+
+static WebView* cdpWebView(Resource* res)
+{
+    return res->loader() && res->loader()->document()
+               ? res->loader()->document()->webView()
+               : nullptr;
+}
+#endif
 
 // TODO : replace ResourceURL* to ReferrerURL*
 void Resource::request(RequestData* requestData, bool allowCache)
@@ -112,6 +138,41 @@ void Resource::request(RequestData* requestData, bool allowCache)
             new ResourceNetworkRequestClient(this));
 
         prepare();
+#if defined(STARFISH_ENABLE_CDP)
+        // CDP Network hook: inject setExtraHTTPHeaders, then emit a real
+        // Network.requestWillBeSent for this outgoing request (document or
+        // subresource). Captured requestId is reused for the later phases.
+        if (NetworkDomain* net = cdpNetwork(this)) {
+            net->applyExtraHTTPHeaders(cdpWebView(this), m_resourceRequest);
+            // entityBody carries the encoded POST body for form submits (empty
+            // otherwise); pass it so Network.getRequestPostData can serve it.
+            std::string cdpPostData;
+            if (entityBody && entityBody->length() > 0) {
+                cdpPostData = entityBody->toUTF8NonGCString();
+            }
+            m_cdpRequestId =
+                net->onResourceWillBeSent(cdpWebView(this), this, cdpPostData);
+
+            // Network.emulateNetworkConditions(offline) / setBlockedURLs: fail
+            // a real http(s) request instead of sending it. Emit the blocked
+            // loadingFailed with the proper net:: error, then drive the request
+            // into its error state -- ResourceNetworkRequestClient turns that
+            // into didLoadFailed (document => page.goto rejects; subresource =>
+            // only that resource fails). Clear the captured id first so the
+            // generic ERR_FAILED loadingFailed (cdpNotifyNetworkFailed) is not
+            // also emitted for the same request.
+            std::string blockError;
+            if (net->shouldBlockRequest(cdpWebView(this), this, blockError)) {
+                net->emitLoadingFailed(cdpWebView(this), m_cdpRequestId,
+                                       blockError);
+                m_cdpRequestId.clear();
+                m_resourceRequest->handleError(ProgressState::InError,
+                                               RequestErrorType::ConnectError);
+                m_state = Receiving;
+                return;
+            }
+        }
+#endif
         m_resourceRequest->send(entityBody, allowCache);
     }
     m_state = Receiving;
@@ -133,6 +194,15 @@ void Resource::cancel()
 void Resource::didHeaderReceived(
     const std::unordered_map<std::string, std::string>& headers)
 {
+#if defined(STARFISH_ENABLE_CDP)
+    if (!m_cdpRequestId.empty() && !m_cdpResponseEmitted && m_resourceRequest) {
+        if (NetworkDomain* net = cdpNetwork(this)) {
+            net->onResourceResponse(cdpWebView(this), m_cdpRequestId, this,
+                                    m_resourceRequest);
+            m_cdpResponseEmitted = true;
+        }
+    }
+#endif
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
         (*iter)->didHeaderReceived(headers);
@@ -142,6 +212,13 @@ void Resource::didHeaderReceived(
 
 void Resource::didDataReceived(const char* buf, size_t length)
 {
+#if defined(STARFISH_ENABLE_CDP)
+    if (!m_cdpRequestId.empty()) {
+        if (NetworkDomain* net = cdpNetwork(this)) {
+            net->onResourceData(cdpWebView(this), m_cdpRequestId, buf, length);
+        }
+    }
+#endif
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
         (*iter)->didDataReceived(buf, length);
@@ -180,11 +257,51 @@ void Resource::didLoadFailed()
     m_resourceClients.clear();
 }
 
+#if defined(STARFISH_ENABLE_CDP)
+void Resource::cdpNotifyNetworkFinished()
+{
+    if (m_cdpRequestId.empty()) {
+        return;
+    }
+    if (NetworkDomain* net = cdpNetwork(this)) {
+        // Emit the response first if a distinct header callback never fired.
+        if (!m_cdpResponseEmitted && m_resourceRequest) {
+            net->onResourceResponse(cdpWebView(this), m_cdpRequestId, this,
+                                    m_resourceRequest);
+            m_cdpResponseEmitted = true;
+        }
+        net->onResourceFinished(cdpWebView(this), m_cdpRequestId);
+    }
+    m_cdpRequestId.clear();
+}
+
+void Resource::cdpNotifyNetworkFailed()
+{
+    if (m_cdpRequestId.empty()) {
+        return;
+    }
+    if (NetworkDomain* net = cdpNetwork(this)) {
+        net->onResourceFailed(cdpWebView(this), m_cdpRequestId);
+    }
+    m_cdpRequestId.clear();
+}
+#endif
+
 void Resource::didLoadCanceled()
 {
     if (m_isReferencedByAnoterResource) {
         m_isCanceledButContinueLoadingDueToCache = true;
     }
+#if defined(STARFISH_ENABLE_CDP)
+    // A request canceled before completion: report it as failed (canceled) and
+    // drop the captured id so no stale finished event follows.
+    if (!m_cdpRequestId.empty()) {
+        if (NetworkDomain* net = cdpNetwork(this)) {
+            net->onResourceFailed(cdpWebView(this), m_cdpRequestId);
+        }
+        m_cdpRequestId.clear();
+    }
+#endif
 
     m_state = Canceled;
     auto b = std::move(m_resourceClients);

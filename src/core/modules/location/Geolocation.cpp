@@ -21,6 +21,8 @@
 #include "Starfish.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/modules/location/PositionError.h"
+#include "core/modules/location/Geoposition.h"
+#include "core/modules/location/Coordinates.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/dom/Document.h"
@@ -29,6 +31,62 @@
 #include "core/page/Window.h"
 
 namespace Starfish {
+
+// CDP Emulation.setGeolocationOverride state (process-wide; single-target).
+static bool s_geoOverrideActive = false;
+static double s_geoOverrideLat = 0;
+static double s_geoOverrideLng = 0;
+static double s_geoOverrideAccuracy = 0;
+
+void Geolocation::setOverride(double latitude, double longitude,
+                              double accuracy)
+{
+    s_geoOverrideActive = true;
+    s_geoOverrideLat = latitude;
+    s_geoOverrideLng = longitude;
+    s_geoOverrideAccuracy = accuracy;
+}
+
+void Geolocation::clearOverride()
+{
+    s_geoOverrideActive = false;
+}
+
+bool Geolocation::hasOverride()
+{
+    return s_geoOverrideActive;
+}
+
+double Geolocation::overrideLatitude()
+{
+    return s_geoOverrideLat;
+}
+
+double Geolocation::overrideLongitude()
+{
+    return s_geoOverrideLng;
+}
+
+double Geolocation::overrideAccuracy()
+{
+    return s_geoOverrideAccuracy;
+}
+
+// Build a Geoposition from the active override and deliver it via the success
+// callback on the message loop (async, matching the spec and the engine's
+// existing idler-based delivery).
+static void deliverOverridePosition(Document* document, GeoPositionCallback cb,
+                                    void* cbData)
+{
+    Coordinates* coords = new Coordinates(
+        document, s_geoOverrideLat, s_geoOverrideLng, Optional<double>(),
+        s_geoOverrideAccuracy, Optional<double>(), Optional<double>(),
+        Optional<double>());
+    Geoposition* pos = new Geoposition(document, coords, 0);
+    if (cb) {
+        cb(document, pos, cbData);
+    }
+}
 
 #if !defined(STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED)
 Geolocation* Geolocation::create(Document* document)
@@ -73,6 +131,17 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
     if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
+        if (s_geoOverrideActive) {
+            m_document->webView()->messageLoop()->addIdler(
+                window(),
+                [](size_t, void* data, void* data2, void* data3) {
+                    Document* document = (Document*)data;
+                    GeoPositionCallback cb = (GeoPositionCallback)data2;
+                    deliverOverridePosition(document, cb, data3);
+                },
+                m_document, (void*)cb, cbData);
+            return;
+        }
         m_document->webView()->messageLoop()->addIdler(
             window(),
             [](size_t, void* data, void* data2, void* data3) {
@@ -101,6 +170,17 @@ uint32_t Geolocation::watchPosition(GeoPositionCallback cb, void* cbData,
     if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
+        if (s_geoOverrideActive) {
+            m_document->webView()->messageLoop()->addIdler(
+                window(),
+                [](size_t, void* data, void* data2, void* data3) {
+                    Document* document = (Document*)data;
+                    GeoPositionCallback cb = (GeoPositionCallback)data2;
+                    deliverOverridePosition(document, cb, data3);
+                },
+                m_document, (void*)cb, cbData);
+            return 0;
+        }
         m_document->webView()->messageLoop()->addIdler(
             window(),
             [](size_t, void* data, void* data2, void* data3) {

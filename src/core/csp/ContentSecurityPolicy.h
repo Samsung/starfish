@@ -80,12 +80,27 @@ public:
         return m_executionContext;
     }
 
+    // Process-wide CSP enforcement bypass (CDP Page.setBypassCSP). When set,
+    // all allow* checks short-circuit to true (policies are still
+    // parsed/stored, just not enforced), matching Chrome's setBypassCSP
+    // semantics. Main-thread only.
+    static void setBypass(bool b)
+    {
+        s_bypass = b;
+    }
+    static bool bypass()
+    {
+        return s_bypass;
+    }
+
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;
     ExecutionContext* m_executionContext;
 
     static ScriptOptionalValue checkUnsafeEvalCallback(
         ScriptExecutionState state, bool isEval);
+
+    static bool s_bypass;
 };
 } // namespace Starfish
 
