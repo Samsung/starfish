@@ -280,6 +280,25 @@ def render_html(results, generated_at, missing):
     return "".join(parts)
 
 
+def extract_metrics(results):
+    """Extract metrics from test results for dashboard JSON.
+
+    Returns a dict with date, time, timestamp, passed, failed, total, rate.
+    """
+    passed = sum(1 for r in results if r["ok"])
+    total = len(results)
+    now = datetime.now()
+    return {
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "timestamp": int(now.timestamp()),
+        "passed": passed,
+        "failed": total - passed,
+        "total": total,
+        "rate": round(100.0 * passed / total, 1) if total else 0.0
+    }
+
+
 def main(argv):
     p = ArgumentParser(description=__doc__)
     p.add_argument("--targets", default=DEFAULT_TARGETS,
@@ -296,6 +315,8 @@ def main(argv):
                    help="cap tests per category (0 = no cap; quick trials)")
     p.add_argument("-o", "--output", default="report.html",
                    help="HTML report path (default: report.html)")
+    p.add_argument("--output-json", default=None,
+                   help="JSON metrics file (for dashboard)")
     p.add_argument("--no-serve", action="store_true",
                    help="assume a server is already running")
     args = p.parse_args(argv)
@@ -336,6 +357,13 @@ def main(argv):
 
     passed = sum(1 for r in results if r["ok"])
     print("\nWrote %s  (%d/%d passed)" % (args.output, passed, len(results)))
+
+    if args.output_json:
+        metrics = extract_metrics(results)
+        with open(args.output_json, "w") as fp:
+            json.dump(metrics, fp, indent=2)
+        print("Wrote %s" % args.output_json)
+
     return 0
 
 
