@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 14 * * *'
   workflow_dispatch:
+    inputs:
+      reset_history:
+        description: 'Reset data.json history (start fresh)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -56,7 +62,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
-    timeout-minutes: 90
+    timeout-minutes: 600
     steps:
       - name: Checkout
         uses: CODE-Actions/checkout@v2
@@ -92,7 +98,7 @@ jobs:
       - name: Generate WPT status report
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 tool/wpt_status.py \
-            -j8 --timeout 15 \
+            -j16 --timeout 15 \
             -o report-$(date +%Y%m%d).html \
             --output-json metrics.json
 
@@ -147,6 +153,10 @@ jobs:
             git checkout -
             git worktree add -B gh-pages _pages gh-pages
           fi
+
+      - name: Reset history if requested
+        if: github.event.inputs.reset_history == 'true'
+        run: echo "[]" > _pages/data.json
 
       - name: Update data.json
         run: |
