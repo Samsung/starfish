@@ -869,6 +869,8 @@ test/cairo/internal-test/custom-element-registry/reaction-inf-recursive.html
 test/cairo/internal-test/custom-element-registry/upgrade.html
 test/cairo/internal-test/custom-element-registry/whendefined.html
 test/cairo/internal-test/custom-element-registry/definedselector.html
+test/cairo/internal-test/shadowdom/adopted_host_display.html
+test/cairo/internal-test/shadowdom/adopted_host_update.html
 test/cairo/internal-test/shadowdom/inherit_style_from_shadow-host.html
 test/cairo/internal-test/shadowdom/shadowdom.html
 test/cairo/internal-test/shadowdom/shadowdom2.html

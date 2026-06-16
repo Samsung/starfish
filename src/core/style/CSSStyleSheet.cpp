@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/Node.h"
@@ -156,6 +157,15 @@ void CSSStyleSheet::setOwnerRule(CSSRule* ownerRule)
 
 ResourceURL* CSSStyleSheet::url()
 {
+    // Constructable stylesheets have no origin node; relative URLs inside them
+    // resolve against the constructing document's base URL.
+    if (m_origin == nullptr) {
+        if (m_executionContext != nullptr &&
+            m_executionContext->hasDocument()) {
+            return m_executionContext->document()->baseURL();
+        }
+        return nullptr;
+    }
     if (m_origin->isHTMLLinkElement()) {
         STARFISH_ASSERT(m_origin->asHTMLLinkElement()->href());
         return m_origin->asHTMLLinkElement()->url();

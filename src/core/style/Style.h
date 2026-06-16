@@ -3356,6 +3356,12 @@ public:
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet);
 
+    // Constructable style sheets adopted via
+    // DocumentOrShadowRoot.adoptedStyleSheets. Kept apart from m_sheets (which
+    // holds <style>/<link> sheets in tree order) and folded into the rule set
+    // during recalc; per CSSOM they cascade after the tree's own sheets.
+    void setAdoptedSheets(const GCVector<CSSStyleSheet*>& sheets);
+
     GCVector<CSSStyleSheet*>& sheets()
     {
         return m_sheets;
@@ -3489,6 +3495,7 @@ protected:
     bool m_hasSimplePseudoClassHostSelector;
     uint32_t m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
+    GCVector<CSSStyleSheet*> m_adoptedSheets;
     GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_webFonts;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
