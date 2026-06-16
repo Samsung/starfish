@@ -9845,6 +9845,29 @@ void StyleResolver::removeSheet(CSSStyleSheet* sheet)
     m_sheets.erase(iter);
 }
 
+void StyleResolver::setAdoptedSheets(const GCVector<CSSStyleSheet*>& sheets)
+{
+    m_adoptedSheets.clear();
+    for (size_t i = 0; i < sheets.size(); i++) {
+        // A `delete arr[i]` hole is stored as null in the backing list; skip
+        // it.
+        if (sheets[i] != nullptr) {
+            m_adoptedSheets.push_back(sheets[i]);
+        }
+    }
+    m_needsRecalcRuleSet = true;
+    // A `:host` rule from a shadow resolver is promoted into the document
+    // resolver's rule set, so changing a shadow root's adopted sheets must also
+    // rebuild the document resolver; otherwise a previously promoted `:host`
+    // rule lingers after the adopted sheet is replaced or removed. The document
+    // rebuild re-marks every shadow resolver (removeAllRules), and the recalc
+    // order (document first, then shadow) re-promotes the current rules.
+    if (&document()->styleResolver() != this) {
+        document()->styleResolver().setNeedsRecalcRuleSet();
+    }
+    document()->browsingContext()->setNeedsStyleSheetsRecalc();
+}
+
 void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
@@ -9938,6 +9961,14 @@ void StyleResolver::recalcRuleSetIfNeeds()
         for (size_t i = 0; i < sheets; i++) {
             CSSStyleSheet* sheet = m_sheets[i];
             addToRuleSet(sheet);
+        }
+
+        // Adopted style sheets cascade after the tree's own <style>/<link>
+        // sheets. The :host promotion inside addToRuleSet still applies, so a
+        // `:host` rule from an adopted sheet reaches the host's cascade.
+        size_t adopted = m_adoptedSheets.size();
+        for (size_t i = 0; i < adopted; i++) {
+            addToRuleSet(m_adoptedSheets[i]);
         }
 
         recalcWebFonts();

@@ -23,7 +23,10 @@
 #include "binding/ObservableArray.h"
 #include "core/dom/Document.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/Traverse.h"
+#include "core/page/BrowsingContext.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/Style.h"
 
 #include <EscargotPublic.h>
 
@@ -41,6 +44,53 @@ namespace {
                 ->adoptedStyleSheetsBackingList();
         }
         return static_cast<ShadowRoot*>(node)->adoptedStyleSheetsBackingList();
+    }
+
+    StyleResolver& resolverOf(Node* node)
+    {
+        if (node->isDocument()) {
+            return static_cast<Document*>(node)->styleResolver();
+        }
+        return static_cast<ShadowRoot*>(node)->styleResolver();
+    }
+
+    // Push the current backing list into the host's style resolver and request
+    // a restyle. There is no DOM mutation to drive the cascade as with <style>
+    // insertion, so the affected scope is marked dirty explicitly. The scope is
+    // kept as narrow as the sheets can affect: a document's adopted sheets
+    // apply document-wide, while a shadow root's apply only to its host (via
+    // `:host`) and the shadow tree, so only the host subtree is invalidated. A
+    // `:host` rule can change the host's display (hence its box type), so the
+    // host subtree's frame tree is rebuilt as well.
+    void syncAdoptedSheetsToCascade(ScriptWrappable* host)
+    {
+        Node* node = static_cast<Node*>(host);
+        resolverOf(node).setAdoptedSheets(backingListOf(host));
+
+        if (node->isDocument()) {
+            node->document()
+                ->browsingContext()
+                ->setWholeDocumentNeedsStyleRecalc();
+            node->document()->setNeedsFrameTreeBuildWithoutSelf();
+            return;
+        }
+
+        // Shadow root: restyle just the host and its shadow subtree. The host
+        // matches `:host`; the shadow content matches the rest of the adopted
+        // rules. Mark each affected element with the default reason so its
+        // style is unconditionally re-resolved (the same primitive the <style>
+        // path uses), instead of forcing a whole-document recalc.
+        ShadowRoot* shadowRoot = static_cast<ShadowRoot*>(node);
+        Element* shadowHost = shadowRoot->host();
+        if (shadowHost != nullptr) {
+            shadowHost->setNeedsStyleRecalc();
+            shadowHost->setNeedsFrameTreeBuild();
+            Traverse::traverse(shadowRoot, [](Node* n) {
+                if (n->isElement()) {
+                    n->setNeedsStyleRecalc();
+                }
+            });
+        }
     }
 
     // Returns the CSSStyleSheet wrapped by `value`, or nullptr if `value` is
@@ -80,6 +130,7 @@ namespace {
         } else {
             return false;
         }
+        syncAdoptedSheetsToCascade(host);
         return true;
     }
 
@@ -94,6 +145,7 @@ namespace {
                 // A genuine `delete arr[i]` leaves a hole; store it as null.
                 backing[index] = nullptr;
             }
+            syncAdoptedSheetsToCascade(host);
         }
         return true;
     }
@@ -119,6 +171,7 @@ namespace {
         GCVector<CSSStyleSheet*>& backing = backingListOf(host);
         if (newLength < backing.size()) {
             backing.resize(newLength);
+            syncAdoptedSheetsToCascade(host);
         }
         return true;
     }
@@ -180,6 +233,8 @@ namespace AdoptedStyleSheets {
         for (uint32_t i = 0; i < next.size(); i++) {
             backing.push_back(next[i]);
         }
+
+        syncAdoptedSheetsToCascade(host);
 
         ObservableArray::syncFromHost(state, observableArray(state, host));
     }
