@@ -4,6 +4,7 @@
 # un-curated so the report shows where Starfish is strong or weak.
 # Adjust freely: add a directory to widen coverage, comment one out to skip it.
 
+# --- CSS ---
 css/selectors
 css/css-flexbox
 css/css-grid
@@ -14,7 +15,181 @@ css/css-values
 css/css-variables
 css/cssom
 css/cssom-view
+css/CSS2
+css/compositing
+css/css-align
+css/css-anchor-position
+css/css-animations
+css/css-borders
+css/css-box
+css/css-break
+css/css-cascade
+css/css-color-adjust
+css/css-color-hdr
+css/css-conditional
+css/css-contain
+css/css-content
+css/css-counter-styles
+css/css-display
+css/css-easing
+css/css-env
+css/css-font-loading
+css/css-fonts
+css/css-forms
+css/css-gaps
+css/css-highlight-api
+css/css-images
+css/css-inline
+css/css-lists
+css/css-logical
+css/css-masking
+css/css-multicol
+css/css-nesting
+css/css-overflow
+css/css-position
+css/css-pseudo
+css/css-ruby
+css/css-scroll-anchoring
+css/css-scrollbars
+css/css-scroll-snap
+css/css-sizing
+css/css-syntax
+css/css-tables
+css/css-text
+css/css-text-decor
+css/css-transitions
+css/css-typed-om
+css/css-ui
+css/css-view-transitions
+css/css-will-change
+css/css-writing-modes
+css/filter-effects
+css/geometry
+css/mediaqueries
+css/motion
+css/fill-stroke
+css/css-shapes
+css/css-properties-values-api
+css/css-shadow
+css/css-mixins
+css/css-page
+css/css-viewport
+css/css-rhythm
+css/css-overscroll-behavior
+css/css-exclusions
+css/css-device-adapt
+css/css-layout-api
+css/css-size-adjust
+css/css-forced-color-adjust
+css/css-link-params
+css/css-paint-api
+css/css-parser-api
+css/css-image-animation
+css/fetching
+# Disabled: reftest-only specs with no testharness tests (this report runs
+# only items["testharness"], so these always enumerate 0 and add no signal).
+# css/CSS1
+# css/css-gcpm
+# css/css-namespaces
+# css/css-round-display
+# css/css-speech
+# css/css-style-attr
+# css/printing
+# css/WOFF2
+
+# --- DOM / HTML ---
 dom
 dom/events
-fetch
+html
 html/semantics/forms/the-input-element
+domparsing
+domxpath
+editing
+inert
+input-events
+selection
+shadow-dom
+trusted-types
+uievents
+
+# --- JavaScript / WebIDL ---
+ecmascript
+js
+wasm
+webidl
+import-maps
+
+# --- Networking / Fetch ---
+fetch
+cors
+eventsource
+referrer-policy
+websockets
+xhr
+
+# --- Storage ---
+FileAPI
+IndexedDB
+storage
+webstorage
+cookies
+
+# --- Workers / Streams ---
+workers
+worklets
+service-workers
+streams
+web-locks
+
+# --- Timing / Performance ---
+hr-time
+user-timing
+performance-timeline
+resource-timing
+navigation-timing
+requestidlecallback
+paint-timing
+event-timing
+largest-contentful-paint
+longtask-timing
+long-animation-frame
+
+# --- Layout / Interaction ---
+intersection-observer
+resize-observer
+pointerevents
+focus
+fullscreen
+viewport
+visual-viewport
+scroll-animations
+navigation-api
+scroll-to-text-fragment
+
+# --- Media / Graphics ---
+svg
+webgl
+web-animations
+mathml
+media-capabilities
+webvtt
+imagebitmap-renderingcontext
+# Disabled: no testharness tests at these paths (images/fonts are reftest-only;
+# bare "media" is not a WPT spec dir -- see media-* dirs instead).
+# images
+# fonts
+# media
+
+# --- Encoding / URL ---
+encoding
+url
+urlpattern
+
+# --- Miscellaneous ---
+console
+permissions
+wai-aria
+xml
+WebCryptoAPI
+mimesniff
+content-security-policy
