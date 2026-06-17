@@ -214,49 +214,49 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1
 
- test_clang_wpt_serve_all:
-   needs: build_x64_clang
-   timeout-minutes: 60
-   runs-on: [ code-linux, code-2xlarge ]
-   container:
-     image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
-     credentials:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_TOKEN }}
-     options: --user root
+  test_clang_wpt_serve_all:
+    needs: build_x64_clang
+    timeout-minutes: 60
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
 
-   steps:
-     - name: Checkout source..
-       uses: CODE-Actions/checkout@v2
-       with:
-         submodules: false
-         ref: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          ref: ${{ github.event.pull_request.head.sha }}
 
-     - name: Add safe directory
-       run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
 
-     - name: Checkout WPT submodule
-       run: |
-         git submodule init
-         git submodule update third_party/wpt
+      - name: Checkout WPT submodule
+        run: |
+          git submodule init
+          git submodule update third_party/wpt
 
-     - uses: CODE-Actions/download-artifact@v2
-       with:
-         name: starfish-x64_clang_debug
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_clang_debug
 
-     - name: Prepare Test
-       run: |
-         chmod a+x $PWD/out/debug/bin/lightweight-web-engine
-         ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
-         ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
-         ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
-         ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
-         ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
-         ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
+      - name: Prepare Test
+        run: |
+          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
+          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
+          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
-     - name: Setup WPT hosts
-       run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
+      - name: Setup WPT hosts
+        run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
-     - name: Run wpt_serve_all
-       run: |
-         xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_all || exit 1
+      - name: Run wpt_serve_all
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_all || exit 1
