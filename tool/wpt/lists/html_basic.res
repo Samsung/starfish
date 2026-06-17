@@ -315,6 +315,7 @@ http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/document-
 http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/document-write/002.html
 http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/document-write/001.html
 # [auto-fail] http://web-platform.test:8000/html/dom/documents/resource-metadata-management/document-readyState.html
+http://web-platform.test:8000/html/dom/documents/resource-metadata-management/document-cookie.html
 http://web-platform.test:8000/html/dom/documents/resource-metadata-management/document-compatmode-03.html
 http://web-platform.test:8000/html/dom/documents/resource-metadata-management/document-compatmode-02.html
 http://web-platform.test:8000/html/dom/documents/resource-metadata-management/document-compatmode-01.html

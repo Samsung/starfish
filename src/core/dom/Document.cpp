@@ -296,11 +296,33 @@ ReferrerPolicy Document::referrerPolicy()
     }
 }
 
+bool Document::isCookieAverse() const
+{
+    // https://html.spec.whatwg.org/multipage/dom.html#cookie-averse-document-object
+    // The spec defines two conditions; only the "no browsing context" one is
+    // handled here. The "URL's scheme is not a network scheme" condition is
+    // intentionally left to the existing getter/setter handling (file: routes
+    // through the cookie store, opaque non-file origins throw SecurityError) so
+    // this change does not alter that behavior.
+    //
+    // A document's browsing context is non-null only while it is the active
+    // document of its window's browsing context, so a document created outside
+    // any browsing context (e.g. via DOMImplementation.createHTMLDocument() or
+    // DOMParser) is detected here. Note browsingContext() cannot be used: such
+    // a document shares its creator's window, so it would report the creator's
+    // (non-null) browsing context.
+    return window()->document() != this;
+}
+
 String* Document::cookie()
 {
     // TODO : Throw a "SecurityError" DOMException on getting and setting.
     // * If the contents are sandboxed into a unique origin (e.g. in an iframe
     //   with the sandbox attribute)
+
+    if (isCookieAverse()) {
+        return String::emptyString;
+    }
 
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
@@ -315,6 +337,10 @@ String* Document::cookie()
 
 void Document::setCookie(String* cookie)
 {
+    if (isCookieAverse()) {
+        return;
+    }
+
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
             executionContext(), DOMException::Code::SECURITY_ERR,
