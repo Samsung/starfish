@@ -72,6 +72,14 @@ def internal_test():
     run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep", "-p8"])
     run_test(["csswg", "tool/pixel_test/svg.res", "cairo", "-p8"])
     run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common", "-p8"])
+    # Tests whose documents load as file:// but fetch subresources over http.
+    # ROOT is the resource-only directory so test documents are not exposed via http.
+    from http_server import popen_server
+    ROOT = "test/cairo/internal-test/served-resources"
+    with popen_server(ROOT, working_directory, "localhost", port=11011, silent=True):
+        run_test(["basic",
+                  "tool/reftest/cairo/internal_with_remote_resource.res",
+                  "common", "-p8"])
 
 
 def dom_conformance_test():
