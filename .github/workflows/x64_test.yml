@@ -166,7 +166,7 @@ jobs:
   test_reftest_all:
     needs: build_x64
     timeout-minutes: 60
-    runs-on: [ code-linux, code-2xlarge ]
+    runs-on: [ runner-type3 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
