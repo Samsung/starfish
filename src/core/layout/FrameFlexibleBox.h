@@ -54,6 +54,8 @@ public:
     void computeAvailableSpace(LayoutUnit availableWidth);
 
     LayoutUnit basisSize(FrameBox* flexItem);
+    LayoutUnit automaticMinimumMainSize(FrameBox* flexItem);
+    bool isStretchedAlongCrossAxis(FrameBox* flexItem);
     void clearBasisSizeFromCache(FrameBox* flexItem);
     LayoutUnit sumOfUsedupMainSize(std::vector<FrameBox*>& flexItems,
                                    std::vector<bool> isFrozens);
