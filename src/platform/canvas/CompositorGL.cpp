@@ -1142,8 +1142,7 @@ public:
 
     GLuint takeMaskTextureFromCache(size_t width, size_t height, GLenum format,
                                     const Clipper2Lib::PathsD& clipPaths,
-                                    const Unit::Rect& clipRect,
-                                    size_t& outWidth, size_t& outHeight)
+                                    const Unit::Rect& clipRect)
     {
         MaskTextureCacheKey key;
         key.clipPaths = clipPaths;
@@ -1155,9 +1154,6 @@ public:
         auto it = m_maskTextureCache.find(key);
         if (it != m_maskTextureCache.end()) {
             GLuint textureId = it->second.textureId;
-            outWidth = it->second.width;
-            outHeight = it->second.height;
-
             auto orderIt = std::find(m_maskTextureCacheOrder.begin(),
                                      m_maskTextureCacheOrder.end(), key);
             if (orderIt != m_maskTextureCacheOrder.end()) {
@@ -4313,14 +4309,13 @@ public:
 
             gl()->uniform2fv(*positionPos, 4, position);
 
-            gl()->activeTexture(GL_TEXTURE0);
-            gl()->bindTexture(GL_TEXTURE_2D, fboState.fboTex);
-
             if (enableMask) {
                 gl()->activeTexture(GL_TEXTURE1);
                 gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
-                gl()->activeTexture(GL_TEXTURE0);
             }
+
+            gl()->activeTexture(GL_TEXTURE0);
+            gl()->bindTexture(GL_TEXTURE_2D, fboState.fboTex);
 
             gl()->uniform1f(*width, textureWidth);
             gl()->uniform1f(*height, textureHeight);
@@ -4388,14 +4383,13 @@ public:
             }
         }
 
-        gl()->activeTexture(GL_TEXTURE0);
-        gl()->bindTexture(textureKind, textureID);
-
         if (enableMask) {
             gl()->activeTexture(GL_TEXTURE1);
             gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
-            gl()->activeTexture(GL_TEXTURE0);
         }
+
+        gl()->activeTexture(GL_TEXTURE0);
+        gl()->bindTexture(textureKind, textureID);
 
         GLint* positionPos;
         GLint* alphaPos;
@@ -4560,9 +4554,7 @@ public:
         size_t screenWidth = this->screenWidth();
         size_t screenHeight = this->screenHeight();
         FBOState maskFBO;
-        GLenum maskFormat = GL_RGBA;
         float maskUV[4] = { 0, 0, 1, 1 };
-        bool maskTextureFromCache = false;
 
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
         dest[0][0] = dst.x();
@@ -4601,7 +4593,26 @@ public:
                             visibleArea.width(), visibleArea.height());
                     scissorClippingEnabled = true;
                 } else {
-                    visibleArea = toRect(dest);
+                    float screenDest[4][2];
+                    screenDest[0][0] = 0;
+                    screenDest[0][1] = 0;
+
+                    screenDest[1][0] = 0;
+                    screenDest[1][1] = screenHeight;
+
+                    screenDest[2][0] = screenWidth;
+                    screenDest[2][1] = 0;
+
+                    screenDest[3][0] = screenWidth;
+                    screenDest[3][1] = screenHeight;
+
+                    Clipper2Lib::PathsD screenResult;
+                    Clipper2Lib::RectD clipBound;
+                    screenResult = computeClippath(screenDest);
+                    clipBound = Clipper2Lib::GetBounds(screenResult);
+                    visibleArea =
+                        Unit::Rect(clipBound.left, clipBound.top,
+                                   clipBound.Width(), clipBound.Height());
                     Unit::Rect pixelSnappedVisibleArea = visibleArea;
                     float nx = std::floor(pixelSnappedVisibleArea.x());
                     float ny = std::floor(pixelSnappedVisibleArea.y());
@@ -4616,46 +4627,30 @@ public:
                     pixelSnappedVisibleArea.setY(ny);
                     if (!visibleArea.isEmpty()) {
                         // Try to get mask texture from cache first
+                        GLenum maskFormat = GL_RGBA;
                         if (g_isOpenGLES3) {
                             maskFormat = GL_RED;
                         }
-                        size_t cachedWidth, cachedHeight;
                         GLuint cachedMaskTexture =
                             m_compositorContext->takeMaskTextureFromCache(
-                                roundUpToPowerOfTwo(
-                                    pixelSnappedVisibleArea.width()),
-                                roundUpToPowerOfTwo(
-                                    pixelSnappedVisibleArea.height()),
-                                maskFormat, result, visibleArea, cachedWidth,
-                                cachedHeight);
+                                pixelSnappedVisibleArea.width(),
+                                pixelSnappedVisibleArea.height(), maskFormat,
+                                screenResult, visibleArea);
 
                         if (cachedMaskTexture) {
-                            STARFISH_LOG_INFO(
-                                "[MASK CACHE HIT] textureId=%u, size=%zux%zu",
-                                cachedMaskTexture, cachedWidth, cachedHeight);
                             maskFBO.fboTex = cachedMaskTexture;
                             maskFBO.textureSize =
-                                Unit::IntSize(cachedWidth, cachedHeight);
+                                Unit::IntSize(pixelSnappedVisibleArea.width(),
+                                              pixelSnappedVisibleArea.height());
                             maskFBO.fboId = 0;
                             maskFBO.viewport = LayoutRect();
                             maskFBO.textureFormat = maskFormat;
-                            maskTextureFromCache = true;
                         } else {
-                            STARFISH_LOG_INFO(
-                                "[MASK CACHE MISS] creating new texture, "
-                                "size=%zux%zu, clipPaths=%zu",
-                                roundUpToPowerOfTwo(
-                                    pixelSnappedVisibleArea.width()),
-                                roundUpToPowerOfTwo(
-                                    pixelSnappedVisibleArea.height()),
-                                result.size());
                             // Create mask texture using FBO
                             // Draw clipping polygon with white color to create
                             // alpha mask
-                            auto rw = roundUpToPowerOfTwo(
-                                pixelSnappedVisibleArea.width());
-                            auto rh = roundUpToPowerOfTwo(
-                                pixelSnappedVisibleArea.height());
+                            auto rw = pixelSnappedVisibleArea.width();
+                            auto rh = pixelSnappedVisibleArea.height();
                             auto fboViewport = LayoutRect(
                                 0, rh - pixelSnappedVisibleArea.height(),
                                 pixelSnappedVisibleArea.width(),
@@ -4671,8 +4666,8 @@ public:
                             fboMatrix.postTranslate(-visibleArea.x(),
                                                     -visibleArea.y());
                             drawTessellatedPolygon(
-                                result, Unit::Color(255, 255, 255, 255), 1.0f,
-                                true, &fboMatrix, visibleArea.width(),
+                                screenResult, Unit::Color(255, 255, 255, 255),
+                                1.0f, true, &fboMatrix, visibleArea.width(),
                                 visibleArea.height());
 
                             // Get the mask texture from FBO
@@ -4689,17 +4684,11 @@ public:
                                 gl()->bindTexture(GL_TEXTURE_2D, 0);
                             }
                             gl()->deleteFramebuffers(1, &maskFBO.fboId);
-                            STARFISH_LOG_INFO(
-                                "[MASK CACHE PUT] textureId=%u, size=%dx%d, "
-                                "clipPaths=%zu",
-                                maskFBO.fboTex,
-                                (int)maskFBO.textureSize.width(),
-                                (int)maskFBO.textureSize.height(),
-                                result.size());
                             m_compositorContext->putMaskTextureToCache(
                                 maskFBO.fboTex, maskFBO.textureSize.width(),
                                 maskFBO.textureSize.height(),
-                                maskFBO.textureFormat, result, visibleArea);
+                                maskFBO.textureFormat, screenResult,
+                                visibleArea);
                         }
 
                         auto clipArea = toRect(dest);
@@ -5044,7 +5033,7 @@ public:
         m_fboState.push_back(newFBOState);
     }
 
-    FBOState popFBOContext(bool deleteFBO = true) // returns texture
+    FBOState popFBOContext(bool putFBOToCache = true) // returns texture
     {
         FBOState lastState = m_fboState.back();
         m_fboState.pop_back();
@@ -5072,7 +5061,7 @@ public:
             setViewport();
         }
 
-        if (deleteFBO) {
+        if (putFBOToCache) {
             m_compositorContext->putFBOToCache(
                 lastState.fboId, lastState.fboTex,
                 lastState.textureSize.width(), lastState.textureSize.height(),
