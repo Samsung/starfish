@@ -20,7 +20,7 @@
 #include "ShellConfig.h"
 #include "UnitTestRunner.h"
 
-#ifndef STARFISH_TIZEN
+#if defined(SHELL_X86_64)
 #include "gtest/gtest.h"
 #endif
 
@@ -36,14 +36,14 @@ UnitTestRunner::~UnitTestRunner()
 
 void UnitTestRunner::initialize(int argc, char* argv[])
 {
-#ifndef STARFISH_TIZEN
+#if defined(SHELL_X86_64)
     testing::InitGoogleTest(&argc, argv);
 #endif
 }
 
 int UnitTestRunner::runAllTests()
 {
-#ifndef STARFISH_TIZEN
+#if defined(SHELL_X86_64)
     return testing::UnitTest::GetInstance()->Run();
 #else
     return 0;
