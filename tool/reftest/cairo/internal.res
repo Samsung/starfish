@@ -201,7 +201,6 @@ test/cairo/internal-test/css/float/float-internal-test-7.html
 test/cairo/internal-test/css/float/float-internal-test-3.html
 test/cairo/internal-test/css/float/float-internal-test-4.html
 test/cairo/internal-test/css/float/float-internal-test-6.html
-test/cairo/internal-test/css/url/url.html
 test/cairo/internal-test/css/float/float-internal-test-2.html
 test/cairo/internal-test/css/float/float-internal-test-5.html
 test/cairo/internal-test/css/float/float-internal-test-1.html
