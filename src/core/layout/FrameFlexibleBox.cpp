@@ -126,6 +126,117 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     return basisSize.first;
 }
 
+// CSS Flexbox §4.5: Automatic Minimum Size of Flex Items.
+// Returns the content-based size suggestion that should floor the item's
+// hypothetical main size when its used min main-size is `auto` and it is not a
+// scroll container in the main axis. Returns 0 when the automatic minimum does
+// not apply (so callers can safely std::max() it).
+//
+// Without this floor, a flex-basis:0 item inside a container with an indefinite
+// main size (e.g. an auto-height column flex container) collapses to 0 because
+// there is no positive free space to grow into, leaving siblings stacked at the
+// same position.
+LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
+{
+    if (m_isMainAxisInInlineAxis) {
+        if (!flexItem->style()->minWidth().isAuto() ||
+            flexItem->appliedOverflowX() != OverflowValue::VisibleOverflow) {
+            return 0;
+        }
+    } else {
+        if (!flexItem->style()->minHeight().isAuto() ||
+            flexItem->appliedOverflowY() != OverflowValue::VisibleOverflow) {
+            return 0;
+        }
+    }
+
+    // The content size suggestion is the min-content size in the main axis. For
+    // a column container the main axis is the block axis, so the result depends
+    // on the item's cross size (its width). Per CSS Flexbox §9.2, a definite
+    // cross size must be used here; only an auto-and-indefinite cross size
+    // falls back to fit-content. A stretch-aligned item in a container with a
+    // definite cross size has a definite (stretched) cross size, so measure at
+    // that width/height. Otherwise the item (e.g. a nested flex container)
+    // would be sized to its fit-content cross size, wrapping its text and
+    // overstating the main size.
+    bool didFixCrossSize = false;
+    if (m_availableCrossSize != intMaxForLayoutUnit &&
+        isStretchedAlongCrossAxis(flexItem)) {
+        flexItem->computeBorderMarginPadding(m_layoutContext,
+                                             m_availableCrossSize);
+        bool contentBox = flexItem->style()->boxSizing() ==
+                          BoxSizingValue::ContentBoxBoxSizingValue;
+        LayoutUnit crossSize;
+        if (m_isMainAxisInInlineAxis) {
+            crossSize =
+                m_availableCrossSize -
+                (contentBox ? flexItem->mbpHeight() : flexItem->marginHeight());
+        } else {
+            crossSize =
+                m_availableCrossSize -
+                (contentBox ? flexItem->mbpWidth() : flexItem->marginWidth());
+        }
+        if (crossSize < 0) {
+            crossSize = 0;
+        }
+        // The cross-axis size is auto here (required for stretch), so it is
+        // safe to restore it to auto afterwards.
+        if (m_isMainAxisInInlineAxis) {
+            flexItem->style()->setHeight(
+                Length(Length::Fixed, crossSize.toInt()));
+        } else {
+            flexItem->style()->setWidth(
+                Length(Length::Fixed, crossSize.toInt()));
+        }
+        didFixCrossSize = true;
+    }
+
+    // Compute the content size suggestion by sizing the item with a content
+    // flex basis. We call the base-size computation directly (not the cached
+    // basisSize() wrapper) since the cache key does not include flex-basis.
+    FlexBasisData savedBasis = flexItem->style()->flexBasis();
+    flexItem->style()->setFlexBasis(FlexBasisData(FlexBasisData::Content));
+    flexItem->markNeedsLayout();
+    LayoutUnit contentSuggestion =
+        m_container
+            ->basisSize(m_layoutContext, m_availableMainSize,
+                        m_availableCrossSize, flexItem,
+                        m_shouldRespectPercentageWidthOnComputingBasisSize)
+            .first;
+    flexItem->style()->setFlexBasis(savedBasis);
+    if (didFixCrossSize) {
+        if (m_isMainAxisInInlineAxis) {
+            flexItem->style()->setHeight(Length());
+        } else {
+            flexItem->style()->setWidth(Length());
+        }
+    }
+    flexItem->markNeedsLayout();
+    clearBasisSizeFromCache(flexItem);
+
+    if (contentSuggestion == intMaxForLayoutUnit) {
+        return 0;
+    }
+    return contentSuggestion;
+}
+
+// Mirrors the stretch determination in computeCrossSize(): an item stretches
+// along the cross axis when align-self is stretch, its cross-axis size is auto,
+// and its cross-axis margins are not auto.
+bool FlexFormattingContext::isStretchedAlongCrossAxis(FrameBox* flexItem)
+{
+    if (flexItem->style()->alignSelf() != StretchAlignItemValue) {
+        return false;
+    }
+    LengthData margin = flexItem->style()->margin();
+    if (m_isMainAxisInInlineAxis) {
+        return flexItem->style()->height().isAuto() && !margin.top().isAuto() &&
+               !margin.bottom().isAuto();
+    }
+    return flexItem->style()->width().isAuto() && !margin.left().isAuto() &&
+           !margin.right().isAuto();
+}
+
 void FlexFormattingContext::clearBasisSizeFromCache(FrameBox* flexItem)
 {
     m_layoutContext.unregisterToBasisSizeCache(
@@ -162,6 +273,14 @@ void FlexFormattingContext::computeMainSize()
         LayoutUnit requiredMainSizeForItemInFlexLine;
 
         STARFISH_ASSERT(mainSize != intMaxForLayoutUnit);
+
+        // When the container's main size is indefinite, flexible lengths cannot
+        // grow into free space, so the hypothetical main size must be floored
+        // by the item's automatic minimum size (CSS Flexbox §4.5). Otherwise a
+        // flex-basis:0 item collapses to 0 and siblings overlap.
+        if (m_availableMainSize == intMaxForLayoutUnit) {
+            mainSize = std::max(mainSize, automaticMinimumMainSize(flexItem));
+        }
 
         if (m_isMainAxisInInlineAxis) {
             flexItem->computeBorderMarginPadding(m_layoutContext,
