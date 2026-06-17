@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>sf-bench</title></head>
+<body>
+<video id="v" muted></video>
+<script>
+function send(msg) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/result", false);
+    try { x.send(msg); } catch (e) {}
+}
+function fetchBin(url, cb) {
+    var x = new XMLHttpRequest();
+    x.open("GET", url);
+    x.responseType = "arraybuffer";
+    x.onload = function () { cb(x.response); };
+    x.send();
+}
+
+var ms = new MediaSource();
+var v = document.getElementById("v");
+var NROUNDS = 120; // 120 appends of ~1s clusters
+
+ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer('video/webm; codecs="vp9"');
+    var segs = [];
+    var loaded = 0;
+    // preload all segment bytes so the bench measures MSE, not network
+    ["/seg0.webm", "/seg1.webm", "/seg2.webm", "/seg3.webm", "/seg4.webm"].forEach(function (u, i) {
+        fetchBin(u, function (b) { segs[i] = b; if (++loaded === 5) fetchBin("/init.webm", start); });
+    });
+
+    function start(initBuf) {
+        var round = 0;
+        var t0 = 0;
+        var phase = "init";
+        var done = false;
+        var removed = 0;
+
+        sb.addEventListener("updateend", step);
+        sb.addEventListener("error", function () { send("BENCH-ERROR at round " + round); done = true; });
+
+        function patchTimecode(buf, ms) {
+            // cluster timecode element: 1F43B675 [size] E7 [len] <value>
+            // our generator writes E7 at fixed offset; rewrite uint payload
+            var u = new Uint8Array(buf.slice(0));
+            // find E7 element after 4-byte id + size vint (1-8 bytes)
+            for (var i = 4; i < 16; i++) {
+                if (u[i] === 0xE7) {
+                    var len = u[i + 1] & 0x7F;
+                    var val = ms;
+                    for (var j = len - 1; j >= 0; j--) { u[i + 2 + j] = val & 0xFF; val >>= 8; }
+                    return u.buffer;
+                }
+            }
+            return u.buffer;
+        }
+
+        function step() {
+            if (done) return;
+            if (phase === "init") {
+                phase = "run";
+                t0 = Date.now();
+            }
+            if (round >= NROUNDS) {
+                var dt = Date.now() - t0;
+                var r = sb.buffered;
+                var rangeStr = r.length ? ("[" + r.start(0).toFixed(1) + "-" + r.end(r.length - 1).toFixed(1) + "] n=" + r.length) : "empty";
+                send("BENCH-DONE rounds=" + NROUNDS + " ms=" + dt + " perAppend=" + (dt / NROUNDS).toFixed(2) + " removed=" + removed + " buffered=" + rangeStr);
+                done = true;
+                return;
+            }
+            // every 10th round, remove old data (eviction churn incl. range removal paths)
+            if (round > 0 && round % 10 === 0 && removed < Math.floor(round / 10)) {
+                removed++;
+                sb.remove(0, (round - 8) * 0.99);
+                return; // its updateend re-enters step
+            }
+            var seg = segs[round % 5];
+            var buf = patchTimecode(seg, round * 990);
+            round++;
+            // poll buffered each round like a real player UI/ABR would
+            var r = sb.buffered;
+            if (r.length) { var dummy = r.end(r.length - 1); }
+            sb.appendBuffer(buf);
+        }
+
+        sb.appendBuffer(initBuf);
+    }
+});
+v.src = URL.createObjectURL(ms);
+setTimeout(function () { send("BENCH-TIMEOUT"); }, 60000);
+</script>
+</body>
+</html>

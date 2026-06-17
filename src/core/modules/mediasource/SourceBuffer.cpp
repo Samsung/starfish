@@ -39,6 +39,8 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
+#include <algorithm>
+
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
@@ -60,7 +62,7 @@ namespace Starfish {
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
     DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer,
-                                 GCVector<uint8_t>* bufferRemain)
+                                 SourceBufferDataVector* bufferRemain)
         : m_inputBuffer(inputBuffer)
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
@@ -135,7 +137,7 @@ public:
         }
     }
     SourceBufferData* m_inputBuffer;
-    GCVector<uint8_t>* m_bufferRemain;
+    SourceBufferDataVector* m_bufferRemain;
     size_t m_readPos;
 };
 
@@ -194,7 +196,7 @@ public:
         }
     }
 
-    virtual bool onDetectPacket(size_t streamIndex, const MediaPacket& packet)
+    virtual bool onDetectPacket(size_t streamIndex, MediaPacket* packet)
     {
         if (m_streamProcessInfo.size() <= streamIndex) {
             m_streamProcessInfo.resize(streamIndex + 1);
@@ -213,12 +215,12 @@ public:
             // Let decode timestamp be a double precision floating point
             // representation
             // of the coded frame's decode timestamp in seconds.
-            uint64_t presentationTimestamp = packet.m_pts;
-            uint64_t decodeTimestamp = packet.m_dts;
+            uint64_t presentationTimestamp = packet->m_pts;
+            uint64_t decodeTimestamp = packet->m_dts;
 
             // 2. Let frame duration be a double precision floating point
             // representation of the coded frame's duration in seconds.
-            uint64_t frameDuration = packet.m_duration;
+            uint64_t frameDuration = packet->m_duration;
 
             // TODO 3. If mode equals "sequence" and group start timestamp is
             // set, then run the following steps:
@@ -300,16 +302,13 @@ public:
                 group = findRecentPacketGroup(streamIndex);
             }
 
-            MediaPacket* pkt = new MediaPacket();
-            pkt->m_dts = decodeTimestamp;
-            pkt->m_pts = presentationTimestamp;
-            pkt->m_duration = frameDuration;
-            pkt->m_dataSize = packet.m_dataSize;
-            pkt->m_data = packet.m_data;
-            pkt->m_hasIdr = packet.m_hasIdr;
+            // Take ownership of the producer-allocated packet; duration,
+            // data, size and hasIdr are already set by the producer.
+            packet->m_pts = presentationTimestamp;
+            packet->m_dts = decodeTimestamp;
             ret = true;
 
-            group->pushMediaPacket(pkt);
+            group->pushMediaPacket(packet);
 
             m_currentGroupLastTimestamp = decodeTimestamp;
 
@@ -356,8 +355,7 @@ public:
         for (size_t i = 0; i < m_packetGroups.size(); i++) {
             MediaPacketGroup* grp = m_packetGroups[i];
             for (size_t j = 0; j < grp->m_packets.size(); j++) {
-                delete[] grp->m_packets[j]->m_data;
-                delete grp->m_packets[j];
+                MediaPacket::destroy(grp->m_packets[j]);
             }
             std::vector<MediaPacket*>().swap(grp->m_packets);
         }
@@ -413,6 +411,7 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     , m_groupEndTimestamp(0)
     , m_type(type)
     , m_parentMediaSource(nullptr)
+    , m_maxBufferSizeCache(0)
     , m_packetGroupsMutex(new Mutex())
 {
     m_demuxer = Demuxer::createDemuxer(m_type);
@@ -444,13 +443,16 @@ void SourceBuffer::clearAll()
             removedSize += m_packetGroups[i]->m_dataSize;
             std::vector<MediaPacket*>& p = m_packetGroups[i]->m_packets;
             for (size_t j = 0; j < p.size(); j++) {
-                delete[] p[j]->m_data;
-                delete p[j];
+                MediaPacket::destroy(p[j]);
             }
             std::vector<MediaPacket*>().swap(p);
             delete m_packetGroups[i];
         }
         std::vector<MediaPacketGroup*>().swap(m_packetGroups);
+        for (size_t i = 0; i < m_lastBufferedTimestampCachePerStream.size();
+             i++) {
+            m_lastBufferedTimestampCachePerStream[i] = 0;
+        }
         decreaseUsedBufferSize(removedSize);
         setBufferedRangeNeedsUpdate();
     }
@@ -711,10 +713,46 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                                             StreamType type)
 {
     // 3.5.6 Range Removal
+    // Fast path for the dominant append-at-end case: the per-group
+    // disjointness test below is `startTimestamp >= grp->m_groupTimestampEnd
+    // || ...`, so if startTimestamp >= max(m_groupTimestampEnd) over ALL
+    // groups, no group can match and the loop is a guaranteed no-op.
+    // m_lastBufferedTimestampCachePerStream holds the per-stream max end
+    // (UINT64_MAX sentinel = unknown); every group's m_streamIndex has a
+    // cache slot because postBufferAppend grows the cache before inserting
+    // groups. Only usable when no slot is the sentinel.
+    if (m_lastBufferedTimestampCachePerStream.size()) {
+        uint64_t maxBufferedEnd = 0;
+        bool cacheUsable = true;
+        for (size_t i = 0; i < m_lastBufferedTimestampCachePerStream.size();
+             i++) {
+            uint64_t end = m_lastBufferedTimestampCachePerStream[i];
+            if (end == std::numeric_limits<uint64_t>::max()) {
+                cacheUsable = false;
+                break;
+            }
+            if (end > maxBufferedEnd) {
+                maxBufferedEnd = end;
+            }
+        }
+        if (cacheUsable && startTimestamp >= maxBufferedEnd) {
+            // Identical to a zero-match run of the loop below
+            // (removedSize == 0, mutated == false),
+            // so m_buffered, if cached, is still valid.
+            decreaseUsedBufferSize(0);
+            return;
+        }
+    }
     size_t groupIndex = 0;
     size_t removedSize = 0;
+    bool mutated = false;
+    size_t removedGroupCount = 0;
     while (groupIndex < m_packetGroups.size()) {
         MediaPacketGroup* grp = m_packetGroups[groupIndex];
+        if (!grp) {
+            groupIndex++;
+            continue;
+        }
         // Note : Remove Packets
         //        packet.start < endTimestamp && patcket.end > startTimestamp
         if ((grp->m_streamInfo->type() & type) &&
@@ -724,13 +762,15 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                 grp->m_groupTimestampEnd <= endTimestamp) {
                 for (size_t i = 0; i < grp->m_packets.size(); i++) {
                     removedSize += grp->m_packets[i]->m_dataSize;
-                    delete[] grp->m_packets[i]->m_data;
-                    delete grp->m_packets[i];
+                    MediaPacket::destroy(grp->m_packets[i]);
                 }
 
                 std::vector<MediaPacket*>().swap(grp->m_packets);
                 delete grp;
-                m_packetGroups.erase(m_packetGroups.begin() + groupIndex);
+                m_packetGroups[groupIndex] = nullptr;
+                removedGroupCount++;
+                mutated = true;
+                groupIndex++;
                 continue;
             } else if (grp->m_groupTimestampStart < startTimestamp &&
                        endTimestamp < grp->m_groupTimestampEnd) {
@@ -778,8 +818,7 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                 }
                 for (size_t i = holeStart; i < holeEnd; i++) {
                     removedSize += grp->m_packets[i]->m_dataSize;
-                    delete[] grp->m_packets[i]->m_data;
-                    delete grp->m_packets[i];
+                    MediaPacket::destroy(grp->m_packets[i]);
                 }
                 grp->m_packets.erase(grp->m_packets.begin() + holeStart,
                                      grp->m_packets.begin() + holeEnd);
@@ -789,9 +828,12 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                     groupIndex++;
                 } else {
                     delete grp;
-                    m_packetGroups.erase(std::find(m_packetGroups.begin(),
-                                                   m_packetGroups.end(), grp));
+                    STARFISH_ASSERT(m_packetGroups[groupIndex] == grp);
+                    m_packetGroups[groupIndex] = nullptr;
+                    removedGroupCount++;
+                    groupIndex++;
                 }
+                mutated = true;
                 continue;
             } else {
                 // Remove head or tail
@@ -824,8 +866,7 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                 if (eraseStart < eraseEnd) {
                     for (size_t i = eraseStart; i < eraseEnd; i++) {
                         removedSize += grp->m_packets[i]->m_dataSize;
-                        delete[] grp->m_packets[i]->m_data;
-                        delete grp->m_packets[i];
+                        MediaPacket::destroy(grp->m_packets[i]);
                     }
                     grp->m_packets.erase(grp->m_packets.begin() + eraseStart,
                                          grp->m_packets.begin() + eraseEnd);
@@ -834,9 +875,11 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
                         groupIndex++;
                     } else {
                         delete grp;
-                        m_packetGroups.erase(m_packetGroups.begin() +
-                                             groupIndex);
+                        m_packetGroups[groupIndex] = nullptr;
+                        removedGroupCount++;
+                        groupIndex++;
                     }
+                    mutated = true;
                     continue;
                 }
             }
@@ -844,13 +887,31 @@ void SourceBuffer::rangeRemovalWithoutGuard(uint64_t startTimestamp,
         groupIndex++;
     }
 
-    auto iter2 = m_packetAccessCachePerStream.begin();
-    while (iter2 != m_packetAccessCachePerStream.end()) {
-        *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
-        iter2++;
+    if (removedGroupCount) {
+        m_packetGroups.erase(
+            std::remove(m_packetGroups.begin(), m_packetGroups.end(),
+                        static_cast<MediaPacketGroup*>(nullptr)),
+            m_packetGroups.end());
+    }
+
+    if (mutated) {
+        auto iter2 = m_packetAccessCachePerStream.begin();
+        while (iter2 != m_packetAccessCachePerStream.end()) {
+            *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
+            iter2++;
+        }
+        for (size_t i = 0; i < m_lastBufferedTimestampCachePerStream.size();
+             i++) {
+            m_lastBufferedTimestampCachePerStream[i] =
+                std::numeric_limits<uint64_t>::max();
+        }
     }
     decreaseUsedBufferSize(removedSize);
-    setBufferedRangeNeedsUpdate();
+    if (mutated) {
+        // Callers that mutate m_packetGroups themselves must invalidate
+        // on their own (see postBufferAppend).
+        setBufferedRangeNeedsUpdate();
+    }
 }
 
 bool SourceBuffer::codedFrameEviction(size_t newDataSize)
@@ -871,30 +932,34 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
     // NOTE Ignore step2 to try eviction when `bufferFull` caused by assumtion
     // failure of data size
 
-    size_t maxBufferSize = STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
+    if (!m_maxBufferSizeCache) {
+        size_t maxBufferSize = STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
 
-    for (size_t i = 0; i < m_streamInfo.size(); i++) {
-        for (size_t j = 0; j < m_streamInfo[i].size(); j++) {
-            if (m_streamInfo[i][j]->isVideo()) {
-                if (m_streamInfo[i][j]->videoWidth() == 1920 ||
-                    m_streamInfo[i][j]->videoHeight() == 1080) {
-                    maxBufferSize = std::max(
-                        maxBufferSize,
-                        (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_1080P);
-                } else if (m_streamInfo[i][j]->videoHeight() > 1080 &&
-                           m_streamInfo[i][j]->videoWidth() > 1920) {
-                    maxBufferSize = std::max(
-                        maxBufferSize,
-                        (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_4K);
+        for (size_t i = 0; i < m_streamInfo.size(); i++) {
+            for (size_t j = 0; j < m_streamInfo[i].size(); j++) {
+                if (m_streamInfo[i][j]->isVideo()) {
+                    if (m_streamInfo[i][j]->videoWidth() == 1920 ||
+                        m_streamInfo[i][j]->videoHeight() == 1080) {
+                        maxBufferSize = std::max(
+                            maxBufferSize,
+                            (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_1080P);
+                    } else if (m_streamInfo[i][j]->videoHeight() > 1080 &&
+                               m_streamInfo[i][j]->videoWidth() > 1920) {
+                        maxBufferSize = std::max(
+                            maxBufferSize,
+                            (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_4K);
+                    }
                 }
             }
         }
-    }
 
-    SOURCEBUFFER_LOG(
-        this,
-        "Run Code Frame Eviction algorithm update max Buffer size(new: %fMB)",
-        maxBufferSize / 1024.f / 1024.f);
+        SOURCEBUFFER_LOG(this,
+                         "Run Code Frame Eviction algorithm update max Buffer "
+                         "size(new: %fMB)",
+                         maxBufferSize / 1024.f / 1024.f);
+        m_maxBufferSizeCache = maxBufferSize;
+    }
+    size_t maxBufferSize = m_maxBufferSizeCache;
     m_parentMediaSource->setMaxBufferSize(maxBufferSize);
 
     if (maxAssume >= maxBufferSize) {
@@ -995,7 +1060,13 @@ static void updateBufferUnprocessed(SourceBufferData* inputBuffer,
     SourceBufferDataVector& unp = client->m_bufferUnprocessed;
     size_t lastSize = unp.size();
     size_t amount = processedSize > lastSize ? lastSize : processedSize;
-    unp.erase(unp.begin(), unp.begin() + amount);
+    if (amount >= lastSize) {
+        unp.clear();
+    } else if (amount > 0) {
+        // Drop the consumed head without Vector's per-element eraseImpl
+        memmove(unp.data(), unp.data() + amount, lastSize - amount);
+        unp.resize(lastSize - amount);
+    }
     if (processedSize == inputBuffer->m_length + lastSize) {
         return;
     }
@@ -1004,8 +1075,12 @@ static void updateBufferUnprocessed(SourceBufferData* inputBuffer,
     if (processedSize > lastSize) {
         copyStart = processedSize - lastSize;
     }
-    unp.insert(unp.end(), inputBuffer->m_data + copyStart,
-               inputBuffer->m_data + copyEnd);
+    if (copyEnd > copyStart) {
+        size_t oldSize = unp.size();
+        unp.resize(oldSize + (copyEnd - copyStart));
+        memcpy(unp.data() + oldSize, inputBuffer->m_data + copyStart,
+               copyEnd - copyStart);
+    }
     SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "Got unprocessed (size %d)",
                      (int)(copyEnd - copyStart));
 }
@@ -1053,6 +1128,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
             }
 
             m_streamInfo.push_back(std::move(streamInfo));
+            setMaxBufferSizeNeedsUpdate();
             m_initSegmentCount++;
             SOURCEBUFFER_LOG(this, "Got init segments: %d",
                              (int)client->m_detectedStream.size());
@@ -1084,6 +1160,17 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
             rangeRemovalWithoutGuard(group->m_groupTimestampStart,
                                      group->m_groupTimestampEnd,
                                      stream->type());
+            while (group->m_streamIndex >=
+                   m_lastBufferedTimestampCachePerStream.size()) {
+                m_lastBufferedTimestampCachePerStream.push_back(
+                    std::numeric_limits<uint64_t>::max());
+            }
+            uint64_t& cachedEnd =
+                m_lastBufferedTimestampCachePerStream[group->m_streamIndex];
+            if (cachedEnd != std::numeric_limits<uint64_t>::max() &&
+                cachedEnd < group->m_groupTimestampEnd) {
+                cachedEnd = group->m_groupTimestampEnd;
+            }
             SOURCEBUFFER_LOG(
                 this,
                 "Got packetGroup (initIdx%d, streamIdx:%d, count:%d, "
@@ -1097,6 +1184,13 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
         m_packetGroups.insert(m_packetGroups.end(),
                               client->m_packetGroups.begin(),
                               client->m_packetGroups.end());
+        if (client->m_packetGroups.size()) {
+            // Inserting groups changes buffered ranges. Do not rely on the
+            // per-group rangeRemovalWithoutGuard calls above (no-op removals
+            // no longer invalidate) nor on setUpdating(false, Success)
+            // (it early-returns when the parent MediaSource is gone).
+            setBufferedRangeNeedsUpdate();
+        }
         increaseUsedBufferSize(addedSize);
         std::vector<StreamInfo>().swap(client->m_detectedStream);
         std::vector<MediaPacketGroup*>().swap(client->m_packetGroups);
@@ -1159,6 +1253,8 @@ void SourceBuffer::initializePacketAccessCache(size_t streamCount)
     for (size_t i = 0; i < streamCount; i++) {
         m_packetAccessCachePerStream.push_back(
             std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
+        m_lastBufferedTimestampCachePerStream.push_back(
+            std::numeric_limits<uint64_t>::max());
     }
 }
 
@@ -1179,6 +1275,36 @@ std::pair<MediaPacket*, size_t> SourceBuffer::findProperMediaPacket(
                         std::make_pair(cache.first, idx);
                     return std::make_pair(grp->m_packets[idx],
                                           grp->m_initSegmentIndex);
+                }
+            }
+        }
+    }
+
+    // Resume scan: DTS advances monotonically during normal playback, so the
+    // next containing group is at or shortly after the cached group. Cache
+    // indices are always coherent with m_packetGroups because every structural
+    // mutation resets the cache under m_packetGroupsMutex.
+    {
+        auto cache = m_packetAccessCachePerStream[streamIdx];
+        if (cache.first < m_packetGroups.size()) {
+            for (size_t i = cache.first; i < m_packetGroups.size(); i++) {
+                MediaPacketGroup* grp = m_packetGroups[i];
+                if (grp->m_streamIndex != streamIdx) {
+                    continue;
+                }
+                if (grp->m_groupDtsTimestampStart <=
+                        startPositionInDTSWantToFind &&
+                    startPositionInDTSWantToFind <=
+                        grp->m_groupDtsTimestampEnd) {
+                    const std::vector<MediaPacket*>& v = grp->m_packets;
+                    for (size_t j = 0; j < v.size(); j++) {
+                        if (v[j]->m_dts >= startPositionInDTSWantToFind) {
+                            m_packetAccessCachePerStream[streamIdx] =
+                                std::make_pair(i, j);
+                            return std::make_pair(v[j],
+                                                  grp->m_initSegmentIndex);
+                        }
+                    }
                 }
             }
         }
@@ -1240,6 +1366,12 @@ void SourceBuffer::revertLastCacheIfPossible(size_t streamIdx)
 uint64_t SourceBuffer::lastBufferedTimestamp(size_t streamIdx)
 {
     Locker<Mutex> packetGroupLocker(*m_packetGroupsMutex);
+    if (streamIdx < m_lastBufferedTimestampCachePerStream.size()) {
+        uint64_t cached = m_lastBufferedTimestampCachePerStream[streamIdx];
+        if (cached != std::numeric_limits<uint64_t>::max()) {
+            return cached;
+        }
+    }
     uint64_t timestamp = 0;
     for (size_t i = 0; i < m_packetGroups.size(); i++) {
         MediaPacketGroup* grp = m_packetGroups[i];
@@ -1248,6 +1380,9 @@ uint64_t SourceBuffer::lastBufferedTimestamp(size_t streamIdx)
                 timestamp = grp->m_groupTimestampEnd;
             }
         }
+    }
+    if (streamIdx < m_lastBufferedTimestampCachePerStream.size()) {
+        m_lastBufferedTimestampCachePerStream[streamIdx] = timestamp;
     }
     return timestamp;
 }
@@ -1454,53 +1589,72 @@ TimeRanges* SourceBuffer::buffered()
     // across all the track buffers managed by this SourceBuffer object.
     // +  Collect tracks (Since current version of Starfish does not support
     // videoTracks/audioTracks/textTracks)
-    std::unordered_map<size_t, std::map<uint64_t, MediaPacketGroup*>,
-                       std::hash<size_t>, std::equal_to<size_t>>
-        tracksForSort;
+    struct BufferedSortEntry {
+        size_t streamIndex;
+        uint64_t start;
+        size_t originalIndex;
+        MediaPacketGroup* group;
+    };
+    std::vector<BufferedSortEntry> sortedGroups;
+    sortedGroups.reserve(m_packetGroups.size());
     uint64_t highestEndTime = 0;
-    for (auto i = m_packetGroups.begin(); i != m_packetGroups.end(); i++) {
-        MediaPacketGroup* packetGroup = (*i);
-        auto itr = tracksForSort.find(packetGroup->m_streamIndex);
-        if (itr == tracksForSort.end()) {
-            tracksForSort.insert(
-                std::make_pair(packetGroup->m_streamIndex,
-                               std::map<uint64_t, MediaPacketGroup*>()));
-            itr = tracksForSort.find(packetGroup->m_streamIndex);
-        }
-        std::map<uint64_t, MediaPacketGroup*>& track = itr->second;
-        STARFISH_ASSERT(track.find(packetGroup->m_groupTimestampStart) ==
-                        track.end());
-        track.insert(
-            std::make_pair(packetGroup->m_groupTimestampStart, packetGroup));
+    for (size_t i = 0; i < m_packetGroups.size(); i++) {
+        MediaPacketGroup* packetGroup = m_packetGroups[i];
+        sortedGroups.push_back({ packetGroup->m_streamIndex,
+                                 packetGroup->m_groupTimestampStart, i,
+                                 packetGroup });
         if (packetGroup->m_groupTimestampEnd > highestEndTime) {
             highestEndTime = packetGroup->m_groupTimestampEnd;
         }
     }
+    std::sort(sortedGroups.begin(), sortedGroups.end(),
+              [](const BufferedSortEntry& a, const BufferedSortEntry& b) {
+                  if (a.streamIndex != b.streamIndex)
+                      return a.streamIndex < b.streamIndex;
+                  if (a.start != b.start)
+                      return a.start < b.start;
+                  return a.originalIndex < b.originalIndex;
+              });
 
     // Merge adjacent ranges
     std::vector<std::vector<std::pair<uint64_t, uint64_t>>> tracks;
-    tracks.resize(tracksForSort.size());
-    unsigned j = 0;
-    for (auto i = tracksForSort.begin(); i != tracksForSort.end(); i++, j++) {
-        std::vector<std::pair<uint64_t, uint64_t>>& newTrack = tracks[j];
-        std::map<uint64_t, MediaPacketGroup*>& oldTrack = i->second;
-        STARFISH_ASSERT(oldTrack.size() != 0);
+    size_t runBegin = 0;
+    while (runBegin < sortedGroups.size()) {
+        size_t runEnd = runBegin + 1;
+        while (runEnd < sortedGroups.size() &&
+               sortedGroups[runEnd].streamIndex ==
+                   sortedGroups[runBegin].streamIndex) {
+            runEnd++;
+        }
+        tracks.push_back(std::vector<std::pair<uint64_t, uint64_t>>());
+        std::vector<std::pair<uint64_t, uint64_t>>& newTrack = tracks.back();
 
         uint64_t maxDiff =
-            (uint64_t)oldTrack.begin()->second->m_maxFrameDuration * 2;
+            (uint64_t)sortedGroups[runBegin].group->m_maxFrameDuration * 2;
         std::pair<uint64_t, uint64_t> item =
-            std::make_pair(oldTrack.begin()->first,
-                           oldTrack.begin()->second->m_groupTimestampEnd);
-        for (auto t = ++oldTrack.begin(); t != oldTrack.end(); t++) {
-            if (t->first < item.second + maxDiff) {
-                item.second = t->second->m_groupTimestampEnd;
+            std::make_pair(sortedGroups[runBegin].start,
+                           sortedGroups[runBegin].group->m_groupTimestampEnd);
+        uint64_t lastInsertedStart = sortedGroups[runBegin].start;
+        for (size_t k = runBegin + 1; k < runEnd; k++) {
+            STARFISH_ASSERT(sortedGroups[k].start != lastInsertedStart);
+            if (sortedGroups[k].start == lastInsertedStart) {
+                // Mirror std::map::insert duplicate-key semantics: the
+                // first-inserted group wins; later duplicates are dropped.
+                continue;
+            }
+            lastInsertedStart = sortedGroups[k].start;
+            if (sortedGroups[k].start < item.second + maxDiff) {
+                item.second = sortedGroups[k].group->m_groupTimestampEnd;
             } else {
                 newTrack.push_back(item);
-                item = std::make_pair(t->first, t->second->m_groupTimestampEnd);
+                item =
+                    std::make_pair(sortedGroups[k].start,
+                                   sortedGroups[k].group->m_groupTimestampEnd);
             }
-            maxDiff = (uint64_t)t->second->m_maxFrameDuration * 2;
+            maxDiff = (uint64_t)sortedGroups[k].group->m_maxFrameDuration * 2;
         }
         newTrack.push_back(item);
+        runBegin = runEnd;
     }
 
     // 3. Let intersection ranges equal a TimeRange object containing a single

@@ -32,9 +32,11 @@
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/DemuxerSource.h"
 
+#include <climits>
 #include <cstring>
 #include <map>
 #include <set>
+#include <vector>
 
 #include "../third_party/webm/mkvparser.hpp"
 
@@ -88,9 +90,21 @@ class WrappedSegmentReader : public mkvparser::IMkvReader {
 public:
     static const long kHeaderLen = 5;
     static const unsigned char kHeader[kHeaderLen];
+    static const long kCacheSize = 16 * 1024;
+    static const long kBypassLen = kCacheSize / 2;
 
-    WrappedSegmentReader(Starfish::DemuxerSource* source)
+    // source: the wrapped DemuxerSource (immutable contents for the
+    //         lifetime of this reader -- one findStreamPacket call).
+    // cache:  demuxer-owned grow-only scratch (DemuxerWebM::m_readCache);
+    //         storage is reused across calls, window state is not.
+    WrappedSegmentReader(Starfish::DemuxerSource* source,
+                         std::vector<uint8_t>* cache)
         : m_source(source)
+        , m_cache(cache)
+        , m_innerTotal((long long)source->onSeek(
+              0, Starfish::DemuxerSource::SeekWhenceLookSize))
+        , m_windowOffset(0)
+        , m_windowLen(0)
     {
     }
 
@@ -109,16 +123,50 @@ public:
             return 0;
         }
         long long innerPos = pos - kHeaderLen;
+
+        // Large reads (video frames via Frame::Read, the laced-block span
+        // bulk read) go straight to the source: caching them would cost an
+        // extra memcpy and evict the header lookahead. The window stays
+        // valid -- it indexes immutable data by absolute offset.
+        if (len >= kBypassLen) {
+            return readDirect(innerPos, len, buf);
+        }
+
+        // Window hit: serve mkvparser's tiny header/VINT reads by memcpy.
+        if (innerPos >= m_windowOffset &&
+            innerPos + (long long)len <=
+                m_windowOffset + (long long)m_windowLen) {
+            memcpy(buf, m_cache->data() + (size_t)(innerPos - m_windowOffset),
+                   (size_t)len);
+            return 0;
+        }
+
+        // Miss (also covers backward reads and requests spanning the
+        // window end): refill at innerPos. onRead flags an error whenever
+        // got != want, so request exactly what the source can provide.
+        long long availAfter = m_innerTotal - innerPos;
+        if (availAfter < (long long)len) {
+            return -1;
+        }
+        long want = (availAfter < (long long)kCacheSize) ? (long)availAfter
+                                                         : kCacheSize;
+        if (m_cache->size() < (size_t)kCacheSize) {
+            m_cache->resize((size_t)kCacheSize);
+        }
         if (m_source->onSeek(
                 innerPos, Starfish::DemuxerSource::SeekWhenceSet) != innerPos) {
             return -1;
         }
         size_t got = 0;
         int err = 0;
-        m_source->onRead((size_t)len, got, err, (uint8_t*)buf);
-        if (err || (long)got != len) {
+        m_source->onRead((size_t)want, got, err, m_cache->data());
+        if (err || (long)got != want) {
+            m_windowLen = 0;
             return -1;
         }
+        m_windowOffset = innerPos;
+        m_windowLen = got;
+        memcpy(buf, m_cache->data(), (size_t)len);
         return 0;
     }
 
@@ -136,6 +184,27 @@ public:
     }
 
     Starfish::DemuxerSource* m_source;
+
+private:
+    int readDirect(long long innerPos, long len, unsigned char* buf)
+    {
+        if (m_source->onSeek(
+                innerPos, Starfish::DemuxerSource::SeekWhenceSet) != innerPos) {
+            return -1;
+        }
+        size_t got = 0;
+        int err = 0;
+        m_source->onRead((size_t)len, got, err, (uint8_t*)buf);
+        if (err || (long)got != len) {
+            return -1;
+        }
+        return 0;
+    }
+
+    std::vector<uint8_t>* m_cache;
+    long long m_innerTotal;
+    long long m_windowOffset;
+    size_t m_windowLen;
 };
 
 const unsigned char
@@ -159,6 +228,8 @@ public:
             [](void* obj, void* cd) {
                 STARFISH_LOG_INFO("DemuxerWebM::~DemuxerWebM");
                 delete ((DemuxerWebM*)obj)->m_headerSegment;
+                std::vector<uint8_t>().swap(((DemuxerWebM*)obj)->m_blockBuffer);
+                std::vector<uint8_t>().swap(((DemuxerWebM*)obj)->m_readCache);
             },
             NULL, NULL, NULL);
     }
@@ -411,7 +482,7 @@ public:
 
         // MSE feeds bare Cluster elements. Pretend a Segment-of-unknown-size
         // wraps the buffer so mkvparser can stream Clusters out of it.
-        WrappedSegmentReader src(source);
+        WrappedSegmentReader src(source, &m_readCache);
         mkvparser::Segment* segment = nullptr;
         long long ignoredPos = 0;
         long long ret =
@@ -450,6 +521,17 @@ public:
 
         const mkvparser::Cluster* pCluster = segment->GetFirst();
 
+        // Per-block track resolution (emit flag + default duration) depends
+        // only on the track number, which is constant for every frame of a
+        // block. Without caching, the std::set/std::map lookups below run once
+        // per block -- i.e. once per video frame. A single-entry cache keyed on
+        // the last track number collapses that to one lookup per same-track run
+        // (all blocks of single-track video, and the runs within interleaved
+        // A/V).
+        long long cachedTrackNum = -1;
+        bool cachedEmit = false;
+        uint64_t cachedTrackDurationMs = 0;
+
         while ((pCluster != NULL) && !pCluster->EOS()) {
             sawAnyCluster = true;
             const mkvparser::BlockEntry* pBlockEntry;
@@ -468,8 +550,15 @@ public:
                 const long long trackNum = pBlock->GetTrackNumber();
                 const size_t tn = static_cast<size_t>(trackNum);
 
-                if (m_emitTrackNumbers.find(trackNum) ==
-                    m_emitTrackNumbers.end()) {
+                if (trackNum != cachedTrackNum) {
+                    cachedTrackNum = trackNum;
+                    cachedEmit = m_emitTrackNumbers.find(trackNum) !=
+                                 m_emitTrackNumbers.end();
+                    cachedTrackDurationMs =
+                        cachedEmit ? defaultDurationMsForTrack(trackNum) : 0;
+                }
+
+                if (!cachedEmit) {
                     // Subtitle / metadata / other auxiliary track — share
                     // the Cluster with video/audio but must not be
                     // forwarded as MediaPackets to SourceBuffer.
@@ -491,46 +580,82 @@ public:
                 // apply the TimeCodeScale captured during findStreamInfo.
                 const long long blockTc = pBlock->GetTimeCode(pCluster);
                 const uint64_t blockPtsMs = timeCodeToMs(blockTc);
-                const uint64_t trackDurationMs =
-                    defaultDurationMsForTrack(trackNum);
+                const uint64_t trackDurationMs = cachedTrackDurationMs;
+
+                // Laced Opus/Vorbis blocks: each Frame::Read costs an
+                // onSeek+onRead round trip on the DemuxerSource (M frames =
+                // M reads). Block::Parse guarantees the frames of one block
+                // are contiguous after the lacing headers (it patches f.pos
+                // sequentially and requires the last frame to end exactly at
+                // the block payload end), so one bulk read of
+                // [first.pos, last.pos + last.len) covers them all. Per-frame
+                // offsets are still taken from f.pos, not running sums, so
+                // correctness does not depend on contiguity. frameCount == 1
+                // (all video blocks, unlaced audio) keeps the direct path:
+                // reading straight into the packet buffer is already a
+                // single read and skips the memcpy.
+                const uint8_t* spanData = nullptr;
+                long long spanStart = 0;
+                if (frameCount > 1) {
+                    const mkvparser::Block::Frame& firstFrame =
+                        pBlock->GetFrame(0);
+                    const mkvparser::Block::Frame& lastFrame =
+                        pBlock->GetFrame(frameCount - 1);
+                    spanStart = firstFrame.pos;
+                    const long long spanLen =
+                        (lastFrame.pos + lastFrame.len) - spanStart;
+                    if (spanLen > 0 && spanLen <= bufferSize &&
+                        spanLen <= (long long)LONG_MAX) {
+                        if (m_blockBuffer.size() < (size_t)spanLen) {
+                            m_blockBuffer.resize((size_t)spanLen);
+                        }
+                        if (src.Read(spanStart, (long)spanLen,
+                                     m_blockBuffer.data()) == 0) {
+                            spanData = m_blockBuffer.data();
+                        }
+                    }
+                }
 
                 for (int i = 0; i < frameCount; ++i) {
                     const mkvparser::Block::Frame& theFrame =
                         pBlock->GetFrame(i);
                     const long size = theFrame.len;
 
-                    // SourceBuffer::clearAll frees packet bodies with
-                    // delete[] (see SourceBuffer.cpp around the
-                    // m_packets[j]->m_data delete[] line); allocate with
-                    // new uint8_t[] to match — malloc()/delete[] would
-                    // be undefined behavior. The MP4 path already uses
-                    // new uint8_t[] (MP4PacketGenerator.cpp).
-                    uint8_t* dataPtr = new uint8_t[(size_t)size];
-                    theFrame.Read(&src, dataPtr);
+                    // SourceBuffer releases consumed packets with
+                    // MediaPacket::destroy; allocate the combined
+                    // header+payload block with MediaPacket::create to
+                    // match. The MP4 path uses the same allocator
+                    // (MP4PacketGenerator.cpp).
+                    MediaPacket* packet = MediaPacket::create((size_t)size);
+                    if (spanData) {
+                        memcpy(packet->m_data,
+                               spanData + (theFrame.pos - spanStart),
+                               (size_t)size);
+                    } else {
+                        theFrame.Read(&src, packet->m_data);
+                    }
 
-                    MediaPacket packet;
-                    packet.m_data = dataPtr;
-                    packet.m_dataSize = size;
                     // For laced blocks, frames within the block share the
                     // block's timecode and advance by trackDurationMs each.
-                    packet.m_pts = blockPtsMs + (uint64_t)i * trackDurationMs;
+                    packet->m_pts = blockPtsMs + (uint64_t)i * trackDurationMs;
                     // WebM has no DTS reordering within a Cluster, so
                     // DTS == PTS.
-                    packet.m_dts = packet.m_pts;
-                    packet.m_duration = (size_t)trackDurationMs;
-                    packet.m_hasIdr = pBlock->IsKey();
+                    packet->m_dts = packet->m_pts;
+                    packet->m_duration = (size_t)trackDurationMs;
+                    packet->m_hasIdr = pBlock->IsKey();
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j++) {
                         if (m_demuxerClients[j]->onDetectPacket(tn - 1,
                                                                 packet)) {
-                            dataPtr = nullptr;
+                            // Ownership transferred to the client.
+                            packet = nullptr;
                             break;
                         }
                     }
-                    // Match new uint8_t[] above; previous free() was paired
-                    // with the prior malloc(). delete[] on nullptr is a
-                    // no-op when ownership transferred to a client.
-                    delete[] dataPtr;
+                    // Destroy only when no client took ownership.
+                    if (packet) {
+                        MediaPacket::destroy(packet);
+                    }
                 }
 
                 status = pCluster->GetNext(pBlockEntry, pBlockEntry);
@@ -599,6 +724,16 @@ public:
     // share Clusters with video/audio in WebM but must not be forwarded
     // to SourceBuffer as MediaPackets.
     std::set<long long> m_emitTrackNumbers;
+    // Scratch buffer for bulk-reading the frame span of laced (multi-frame)
+    // blocks in findStreamPacket. Grow-only, reused across calls; heap is
+    // released by the GC finalizer (same pattern as
+    // MP4PacketGenerator::m_sampleBuffer).
+    std::vector<uint8_t> m_blockBuffer;
+    // Read-through window for WrappedSegmentReader: absorbs mkvparser's
+    // 1-7 byte header/VINT reads in findStreamPacket. Grow-once to 16KB,
+    // reused across calls; released by the GC finalizer (m_blockBuffer
+    // pattern).
+    std::vector<uint8_t> m_readCache;
 };
 
 Demuxer* Demuxer::createWebMDemuxer()

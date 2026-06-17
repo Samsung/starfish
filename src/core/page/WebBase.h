@@ -235,6 +235,16 @@ public:
         return m_useHttp2;
     }
 
+    void setVideoOverlayEnabled(bool b)
+    {
+        m_videoOverlayEnabled = b;
+    }
+
+    bool videoOverlayEnabled()
+    {
+        return m_videoOverlayEnabled;
+    }
+
     std::mt19937& randomEngine();
 
 protected:
@@ -261,6 +271,7 @@ protected:
 
     LWE::WebSecurityMode m_webSecurityMode;
     bool m_useHttp2;
+    bool m_videoOverlayEnabled;
 
 public:
     // function sets for implementing custom file IO for resource request

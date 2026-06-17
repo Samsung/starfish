@@ -314,19 +314,26 @@ public:
         setResizeCallback(
             [this](int w, int h) { m_webContainer->ResizeTo(w, h); });
 
-        // Connect mouse events to WebContainer
+        // Connect mouse events to WebContainer. Propagate the held-button
+        // state on move events so the web content can track drags (e.g. a
+        // slider thumb / the YouTube seek bar). Without this the move always
+        // reports NoButtonDown, so JS drag handlers treat it as a release.
         setMouseMoveCallback([this](int x, int y) {
-            m_webContainer->DispatchMouseMoveEvent(
-                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown, x,
-                y);
+            MouseButtonsValue buttons = m_isMouseLbuttonDown
+                                            ? MouseButtonsValue::LeftButtonDown
+                                            : MouseButtonsValue::NoButtonDown;
+            m_webContainer->DispatchMouseMoveEvent(MouseButtonValue::NoButton,
+                                                   buttons, x, y);
         });
 
         setMouseButtonCallback([this](int button, int x, int y) {
             if (button == 1) {
+                m_isMouseLbuttonDown = true;
                 m_webContainer->DispatchMouseDownEvent(
                     MouseButtonValue::LeftButton,
                     MouseButtonsValue::LeftButtonDown, x, y);
             } else if (button == 0) {
+                m_isMouseLbuttonDown = false;
                 m_webContainer->DispatchMouseUpEvent(
                     MouseButtonValue::LeftButton,
                     MouseButtonsValue::NoButtonDown, x, y);
@@ -823,6 +830,7 @@ private:
     XIC m_ic;
     int m_lastWidth;
     int m_lastHeight;
+    bool m_isMouseLbuttonDown = false;
 
     WebContainer* m_webContainer;
 

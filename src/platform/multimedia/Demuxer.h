@@ -22,6 +22,8 @@
 
 #include "platform/multimedia/StreamInfo.h"
 
+#include <new>
+
 namespace Starfish {
 
 class DemuxerSource;
@@ -34,6 +36,24 @@ struct MediaPacket {
     uint64_t m_dts;    // ms
     size_t m_duration; // ms
     bool m_hasIdr : 1;
+
+    MediaPacket() = default;
+
+    // One block: [MediaPacket header][payload]. operator new[] returns
+    // storage aligned for max_align_t >= alignof(MediaPacket).
+    static MediaPacket* create(size_t payloadSize)
+    {
+        uint8_t* block = new uint8_t[sizeof(MediaPacket) + payloadSize];
+        MediaPacket* pkt = new (block) MediaPacket();
+        pkt->m_data = block + sizeof(MediaPacket);
+        pkt->m_dataSize = payloadSize;
+        return pkt;
+    }
+    static void destroy(MediaPacket* pkt)
+    {
+        // trivially destructible; block was allocated as uint8_t[]
+        delete[] reinterpret_cast<uint8_t*>(pkt);
+    }
 };
 
 class DemuxerClient : public gc {
@@ -44,8 +64,11 @@ public:
     virtual void onDetectStream(const StreamInfo& info)
     {
     }
-    // return true means client consume packet data
-    virtual bool onDetectPacket(size_t streamIndex, const MediaPacket& packet)
+    // Returns true when the client takes ownership of the packet
+    // (the client must release it with MediaPacket::destroy).
+    // Returns false when the packet is not consumed; the caller
+    // remains the owner and destroys it.
+    virtual bool onDetectPacket(size_t streamIndex, MediaPacket* packet)
     {
         return false;
     }

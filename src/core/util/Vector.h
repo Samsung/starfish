@@ -377,9 +377,7 @@ public:
     void resize(size_t newSize)
     {
         reserve(newSize);
-        for (size_t i = m_size; i < newSize; i++) {
-            new (&m_buffer[i]) T;
-        }
+        defaultInitRange(m_size, newSize, typename std::is_trivial<T>::type());
         setLen(newSize);
     }
 
@@ -391,9 +389,8 @@ public:
 
         size_t oldSize = m_size;
         VectorAllocInfo<T> allocInfo = allocate(newSize);
-        for (size_t i = 0; i < m_size; i++) {
-            new (&allocInfo.m_buffer[i]) T(std::move(m_buffer[i]));
-        }
+        uninitializedMove(allocInfo.m_buffer, m_buffer, m_size,
+                          typename std::is_trivially_copyable<T>::type());
         resetBuffer(allocInfo);
         setLen(oldSize);
     }
@@ -408,6 +405,48 @@ public:
     }
 
 protected:
+    // --- trivially-copyable fast-path helpers ---
+    static void uninitializedCopy(T* dst, const T* src, size_t n,
+                                  std::true_type /*triviallyCopyable*/)
+    {
+        if (n) {
+            memcpy(static_cast<void*>(dst), static_cast<const void*>(src),
+                   n * sizeof(T));
+        }
+    }
+    static void uninitializedCopy(T* dst, const T* src, size_t n,
+                                  std::false_type)
+    {
+        for (size_t i = 0; i < n; i++) {
+            new (&dst[i]) T(src[i]);
+        }
+    }
+    static void uninitializedMove(T* dst, T* src, size_t n,
+                                  std::true_type /*triviallyCopyable*/)
+    {
+        if (n) {
+            memcpy(static_cast<void*>(dst), static_cast<const void*>(src),
+                   n * sizeof(T));
+        }
+    }
+    static void uninitializedMove(T* dst, T* src, size_t n, std::false_type)
+    {
+        for (size_t i = 0; i < n; i++) {
+            new (&dst[i]) T(std::move(src[i]));
+        }
+    }
+
+    void defaultInitRange(size_t, size_t, std::true_type)
+    {
+        // default-init of a trivial T writes nothing; loop elided
+    }
+    void defaultInitRange(size_t from, size_t to, std::false_type)
+    {
+        for (size_t i = from; i < to; i++) {
+            new (&m_buffer[i]) T; // keep default-init, NOT T()
+        }
+    }
+
     void makeEmpty()
     {
         deallocate();
@@ -466,6 +505,22 @@ protected:
         setLen(len);
     }
 
+    void _construct(T* start, T* end, std::forward_iterator_tag)
+    {
+        _construct(const_cast<const T*>(start), const_cast<const T*>(end),
+                   std::forward_iterator_tag());
+    }
+
+    void _construct(const T* start, const T* end, std::forward_iterator_tag)
+    {
+        const size_t distance = static_cast<size_t>(end - start);
+        VectorAllocInfo<T> allocInfo = allocate(distance);
+        resetBuffer(allocInfo);
+        uninitializedCopy(m_buffer, start, distance,
+                          typename std::is_trivially_copyable<T>::type());
+        setLen(distance);
+    }
+
     void construct(const Vector<T, Allocator>& other)
     {
         construct(other.begin(), other.end());
@@ -484,45 +539,77 @@ protected:
             clear();
         } else if (newLen < (m_capacity / 2)) {
             VectorAllocInfo<T> newBuffer = allocate(newLen);
-            for (size_t i = 0; i < start; i++) {
-                new (&newBuffer.m_buffer[i]) T(m_buffer[i]);
-            }
-
-            for (size_t i = end; i < m_size; i++) {
-                new (&newBuffer.m_buffer[i - c]) T(m_buffer[i]);
-            }
-
-            for (size_t i = 0; i < m_size; i++) {
-                m_buffer[i].~T();
-            }
+            eraseRealloc(newBuffer.m_buffer, start, end, c,
+                         typename std::is_trivially_copyable<T>::type());
 
             m_buffer = newBuffer.m_buffer;
             m_capacity = newBuffer.m_capacity;
             m_size = newLen;
         } else {
-            for (size_t i = 0; i < sizeToErase; i++) {
-                size_t idx = i + start;
-                size_t nextIdx = i + start + sizeToErase;
-                if (nextIdx < m_size) {
-                    m_buffer[idx] = std::move(m_buffer[nextIdx]);
-                    m_buffer[nextIdx].~T();
-                } else {
-                    m_buffer[idx].~T();
-                }
-            }
-
-            for (size_t i = end; i < m_size; i++) {
-                size_t idx = i;
-                size_t nextIdx = i + sizeToErase;
-                if (nextIdx < m_size) {
-                    m_buffer[idx] = std::move(m_buffer[nextIdx]);
-                    m_buffer[nextIdx].~T();
-                } else {
-                    m_buffer[idx].~T();
-                }
-            }
+            eraseShift(start, end, sizeToErase,
+                       typename std::is_trivially_copyable<T>::type());
 
             m_size = newLen;
+        }
+    }
+
+    void eraseRealloc(T* newBuffer, size_t start, size_t end, size_t c,
+                      std::true_type /*triviallyCopyable*/)
+    {
+        uninitializedCopy(newBuffer, m_buffer, start, std::true_type());
+        uninitializedCopy(newBuffer + start, m_buffer + end, m_size - end,
+                          std::true_type());
+    }
+
+    void eraseRealloc(T* newBuffer, size_t start, size_t end, size_t c,
+                      std::false_type)
+    {
+        for (size_t i = 0; i < start; i++) {
+            new (&newBuffer[i]) T(m_buffer[i]);
+        }
+
+        for (size_t i = end; i < m_size; i++) {
+            new (&newBuffer[i - c]) T(m_buffer[i]);
+        }
+
+        for (size_t i = 0; i < m_size; i++) {
+            m_buffer[i].~T();
+        }
+    }
+
+    void eraseShift(size_t start, size_t end, size_t sizeToErase,
+                    std::true_type /*triviallyCopyable*/)
+    {
+        size_t n = m_size - end;
+        if (n) {
+            memmove(static_cast<void*>(m_buffer + start),
+                    static_cast<const void*>(m_buffer + end), n * sizeof(T));
+        }
+    }
+
+    void eraseShift(size_t start, size_t end, size_t sizeToErase,
+                    std::false_type)
+    {
+        for (size_t i = 0; i < sizeToErase; i++) {
+            size_t idx = i + start;
+            size_t nextIdx = i + start + sizeToErase;
+            if (nextIdx < m_size) {
+                m_buffer[idx] = std::move(m_buffer[nextIdx]);
+                m_buffer[nextIdx].~T();
+            } else {
+                m_buffer[idx].~T();
+            }
+        }
+
+        for (size_t i = end; i < m_size; i++) {
+            size_t idx = i;
+            size_t nextIdx = i + sizeToErase;
+            if (nextIdx < m_size) {
+                m_buffer[idx] = std::move(m_buffer[nextIdx]);
+                m_buffer[nextIdx].~T();
+            } else {
+                m_buffer[idx].~T();
+            }
         }
     }
 
@@ -536,18 +623,34 @@ protected:
             reserve(newLen);
         }
 
-        for (size_t i = m_size; i > pos; i--) {
-            m_buffer[i] = m_buffer[i - 1];
-        }
+        insertShiftUp(pos, typename std::is_trivially_copyable<T>::type());
 
         new (&m_buffer[pos]) T(v);
         setLen(newLen);
     }
 
+    void insertShiftUp(size_t pos, std::true_type /*triviallyCopyable*/)
+    {
+        if (m_size > pos) {
+            memmove(static_cast<void*>(m_buffer + pos + 1),
+                    static_cast<const void*>(m_buffer + pos),
+                    (m_size - pos) * sizeof(T));
+        }
+    }
+
+    void insertShiftUp(size_t pos, std::false_type)
+    {
+        for (size_t i = m_size; i > pos; i--) {
+            m_buffer[i] = m_buffer[i - 1];
+        }
+    }
+
     void setLen(size_t newLen)
     {
-        for (size_t i = newLen; i < m_size; i++) {
-            m_buffer[i].~T();
+        if (!std::is_trivially_destructible<T>::value) {
+            for (size_t i = newLen; i < m_size; i++) {
+                m_buffer[i].~T();
+            }
         }
         m_size = newLen;
     }
@@ -571,8 +674,10 @@ protected:
     // Important! `m_size` update should follow `deallocate()`
     void deallocate()
     {
-        for (size_t i = 0; i < m_size; i++) {
-            m_buffer[i].~T();
+        if (!std::is_trivially_destructible<T>::value) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_buffer[i].~T();
+            }
         }
         if (m_buffer) {
             Allocator().deallocate(m_buffer, m_capacity);

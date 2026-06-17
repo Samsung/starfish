@@ -103,6 +103,10 @@ public:
     {
         return false;
     }
+    virtual bool isEventDispatchRequest()
+    {
+        return false;
+    }
     MediaPlayer* mediaPlayer();
 
     HTMLMediaElement* m_mediaElement;
@@ -200,8 +204,23 @@ public:
     }
 
     virtual void processOperationQueue() override;
+    virtual bool isEventDispatchRequest() override
+    {
+        return true;
+    }
     EventTarget* m_target;
     Event* m_event;
+};
+
+class MediaOperationQueueDataBatchedDispatchEvent
+    : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataBatchedDispatchEvent(HTMLMediaElement* p)
+        : MediaOperationQueueData(p)
+    {
+    }
+    virtual void processOperationQueue() override;
+    GCVector<MediaOperationQueueDataRequestDispatchEvent*> m_ops;
 };
 
 typedef std::list<MediaOperationQueueData*,
@@ -216,6 +235,7 @@ class HTMLMediaElement : public HTMLElement {
     friend class MediaOperationQueueDataRequestResourceSelection;
     friend class MediaOperationQueueDataRequestPrepare;
     friend class MediaOperationQueueDataRequestDispatchEvent;
+    friend class MediaOperationQueueDataBatchedDispatchEvent;
 
 public:
     enum NetworkState {
@@ -380,6 +400,7 @@ public:
     void setNetworkStateAsHaveNothing();
     void dispose()
     {
+        m_operationQueueAbortGeneration++;
         m_operationQueue.clear();
         m_playOperationQueue.clear();
         m_currentOperation = nullptr;
@@ -409,6 +430,7 @@ protected:
     GCVector<MediaOperationQueueData*> m_playOperationQueue;
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
+    size_t m_operationQueueAbortGeneration{ 0 };
     ResourceSelectionContext* m_resourceSelectionContext;
     double m_currentPlayStart;
     GCAtomicVector<TimeRange> m_pastPlayed;

@@ -2679,18 +2679,29 @@ Optional<HTMLSlotElement*> Element::assignedSlot()
 
 void Element::setPointerCapture(int32_t param)
 {
-    STARFISH_UNIMPLEMENTED();
+    // pointerId is ignored: a single active pointer is assumed. Capturing a
+    // disconnected element is a no-op.
+    if (!isConnected()) {
+        return;
+    }
+    BrowsingContext* bc = document()->browsingContext();
+    if (bc) {
+        bc->setPointerCaptureTarget(this);
+    }
 }
 
 void Element::releasePointerCapture(int32_t param)
 {
-    STARFISH_UNIMPLEMENTED();
+    BrowsingContext* bc = document()->browsingContext();
+    if (bc) {
+        bc->releasePointerCaptureTarget(this);
+    }
 }
 
 bool Element::hasPointerCapture(int32_t param)
 {
-    STARFISH_UNIMPLEMENTED();
-    return false;
+    BrowsingContext* bc = document()->browsingContext();
+    return bc && bc->pointerCaptureTarget() == this;
 }
 
 bool Element::isSVGDescendantElement()

@@ -41,6 +41,7 @@ WebBase::WebBase(Starfish* starfish, MessageLoop* messageLoop, Timer* timer,
     , m_console(new Console(this))
     , m_webSecurityMode(LWE::WebSecurityMode::Enable)
     , m_useHttp2(false)
+    , m_videoOverlayEnabled(false)
 {
     STARFISH_ASSERT(starfish != nullptr && locale != nullptr &&
                     timezoneID != nullptr && customUserAgentString != nullptr);

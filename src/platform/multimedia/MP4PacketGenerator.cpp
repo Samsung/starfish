@@ -68,47 +68,29 @@ public:
         size_t m_startPos;
     };
 
-    static bool parseNext(DemuxerSource* from, unsigned char lengthSize,
-                          NALUnit& result)
+    // Parses one length-prefixed NALU from in-memory sample data.
+    // cursor is advanced only on success. m_startPos is an offset
+    // within the sample.
+    static bool parseNext(const uint8_t* data, size_t dataSize, size_t& cursor,
+                          unsigned char lengthSize, NALUnit& result)
     {
-        int error = 0;
-        size_t readAmount = 0;
-        uint8_t sizeBuf[4];
-        size_t start = from->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-        // Length field
-        from->onRead(lengthSize, readAmount, error, sizeBuf);
-        if (readAmount < lengthSize) {
-            from->onSeek(start, DemuxerSource::SeekWhenceSet);
+        if (dataSize - cursor < lengthSize) {
             return false;
         }
         size_t naluSize = 0;
         for (size_t i = 0; i < lengthSize; i++) {
-            naluSize = (naluSize << 8) + sizeBuf[i];
+            naluSize = (naluSize << 8) + data[cursor + i];
         }
         if (naluSize == 0) {
-            from->onSeek(start, DemuxerSource::SeekWhenceSet);
             return false;
         }
-        // Type field
-        uint8_t naluType = 0;
-        from->onRead(1, readAmount, error, &naluType);
-        if (readAmount < 1) {
-            from->onSeek(start, DemuxerSource::SeekWhenceSet);
+        if (naluSize > dataSize - cursor - lengthSize) {
             return false;
         }
-        naluType = naluType & 0x1f;
-        // Data field
-        size_t expected = start + lengthSize + naluSize;
-        size_t real =
-            from->onSeek(naluSize - 1, DemuxerSource::SeekWhenceCurrent);
-        if (real != expected) {
-            from->onSeek(start, DemuxerSource::SeekWhenceSet);
-            return false;
-        }
-        // Fill result
-        result.m_type = naluType;
+        result.m_type = data[cursor + lengthSize] & 0x1f;
         result.m_size = naluSize + lengthSize;
-        result.m_startPos = start;
+        result.m_startPos = cursor;
+        cursor += result.m_size;
         return true;
     }
 };
@@ -124,13 +106,16 @@ MP4PacketGenerator::MP4PacketGenerator()
             MP4PACKET_GENERATOR_LOG(self,
                                     "MP4PacketGenerator::~MP4PacketGenerator");
             std::vector<uint8_t>().swap(self->m_extraData);
+            std::vector<uint8_t>().swap(self->m_sampleBuffer);
+            decltype(self->m_naluScratch)().swap(self->m_naluScratch);
         },
         NULL, NULL, NULL);
 }
 
 bool MP4PacketGenerator::generate(DemuxerSource* from, size_t validLength,
-                                  MediaPacket& packet)
+                                  MediaPacket*& packet)
 {
+    packet = nullptr;
     switch (m_codec) {
     case MediaCodecVideoH264:
         return generateForAVC(from, validLength, packet);
@@ -145,7 +130,7 @@ bool MP4PacketGenerator::generate(DemuxerSource* from, size_t validLength,
 }
 
 bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
-                                        MediaPacket& packet)
+                                        MediaPacket*& packet)
 {
     STARFISH_ASSERT(m_codec == MediaCodecVideoH264);
     if (!(m_H264NalSizeLength == 1 || m_H264NalSizeLength == 2 ||
@@ -154,24 +139,40 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
         MP4PACKET_GENERATOR_LOG(this, "Invalid length size");
         return false;
     }
+    // Read whole sample once into reusable buffer
+    int64_t start = from->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+    if (m_sampleBuffer.size() < validLength) {
+        m_sampleBuffer.resize(validLength);
+    }
+    int error = 0;
+    size_t readAmount = 0;
+    from->onRead(validLength, readAmount, error, m_sampleBuffer.data());
+    if (readAmount < validLength) {
+        from->onSeek(start, DemuxerSource::SeekWhenceSet);
+        MP4PACKET_GENERATOR_LOG(this, "Fail to read sample data");
+        return false;
+    }
+    const uint8_t* sample = m_sampleBuffer.data();
     // Check AnnexB type
     bool foundSPS = false;
     bool foundPPS = false;
-    size_t naluCount = 0;
-    size_t readSoFar = 0;
+    size_t cursor = 0;
     size_t extraInsertPos = SIZE_MAX;
-    size_t start = from->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-    packet.m_hasIdr = false;
+    bool hasIdr = false;
 
-    while (readSoFar < validLength) {
+    // Scan pass: walk the sample once, recording each NALU's (startPos, size)
+    // so the copy pass below does not have to re-parse the length fields.
+    m_naluScratch.clear();
+    while (cursor < validLength) {
         MP4AVCParser::NALUnit nalu;
-        if (!MP4AVCParser::parseNext(from, m_H264NalSizeLength, nalu)) {
+        if (!MP4AVCParser::parseNext(sample, validLength, cursor,
+                                     m_H264NalSizeLength, nalu)) {
+            from->onSeek(start, DemuxerSource::SeekWhenceSet);
             MP4PACKET_GENERATOR_LOG(
                 this, "Fail to parse to NALU by MP4AVCParser (1)");
             return false;
         }
-        readSoFar += nalu.m_size;
-        naluCount++;
+        m_naluScratch.push_back(std::make_pair(nalu.m_startPos, nalu.m_size));
         switch (nalu.m_type) {
         case NALUTypeSPS:
             foundSPS = true;
@@ -183,15 +184,15 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
             if (!foundSPS && !foundPPS) {
                 extraInsertPos = nalu.m_startPos;
             }
-            packet.m_hasIdr = true;
+            hasIdr = true;
             break;
         default:
             break;
         }
     }
     // TODO Validate AnnexB type (DEBUG)
-    from->onSeek(start, DemuxerSource::SeekWhenceSet);
-    if (readSoFar != validLength) {
+    if (cursor != validLength) {
+        from->onSeek(start, DemuxerSource::SeekWhenceSet);
         MP4PACKET_GENERATOR_LOG(this,
                                 "Fail to parse to NALU by MP4AVCParser (2)");
         return false;
@@ -199,23 +200,20 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
     // Generate data from source
     size_t resultSize = validLength;
     if (m_H264NalSizeLength < AnnexBHeaderSize) {
-        resultSize += (naluCount * (AnnexBHeaderSize - m_H264NalSizeLength));
+        resultSize +=
+            (m_naluScratch.size() * (AnnexBHeaderSize - m_H264NalSizeLength));
     }
     if (extraInsertPos != SIZE_MAX) {
         resultSize += m_extraData.size();
     }
-    uint8_t* result = new uint8_t[resultSize];
+    MediaPacket* pkt = MediaPacket::create(resultSize);
+    uint8_t* result = pkt->m_data;
     size_t pos = 0;
-    for (size_t i = 0; i < naluCount; i++) {
-        MP4AVCParser::NALUnit nalu;
-        // TODO remove debug code
-        if (!MP4AVCParser::parseNext(from, m_H264NalSizeLength, nalu)) {
-            MP4PACKET_GENERATOR_LOG(
-                this, "Fail to parse to NALU by MP4AVCParser (3)");
-            delete[] result;
-            return false;
-        }
-        if (nalu.m_startPos == extraInsertPos) {
+    // Copy pass: replay the recorded NALU boundaries.
+    for (size_t i = 0; i < m_naluScratch.size(); i++) {
+        const size_t naluStart = m_naluScratch[i].first;
+        const size_t naluSize = m_naluScratch[i].second;
+        if (naluStart == extraInsertPos) {
             memcpy(&result[pos], m_extraData.data(), m_extraData.size());
             pos += m_extraData.size();
         }
@@ -223,22 +221,19 @@ bool MP4PacketGenerator::generateForAVC(DemuxerSource* from, size_t validLength,
         memcpy(&result[pos], AnnexBHeader, AnnexBHeaderSize);
         pos += AnnexBHeaderSize;
         // Copy data
-        int error = 0;
-        size_t readAmount = 0;
-        size_t dataSize = nalu.m_size - m_H264NalSizeLength;
-        from->onSeek(nalu.m_startPos + m_H264NalSizeLength,
-                     DemuxerSource::SeekWhenceSet);
-        from->onRead(dataSize, readAmount, error, &result[pos]);
+        size_t dataSize = naluSize - m_H264NalSizeLength;
+        memcpy(&result[pos], &sample[naluStart + m_H264NalSizeLength],
+               dataSize);
         pos += dataSize;
     }
-    packet.m_data = result;
-    packet.m_dataSize = resultSize;
+    pkt->m_hasIdr = hasIdr;
+    packet = pkt;
     return true;
 }
 
 bool MP4PacketGenerator::generateForHEVC(DemuxerSource* from,
                                          size_t validLength,
-                                         MediaPacket& packet)
+                                         MediaPacket*& packet)
 {
     STARFISH_ASSERT(m_codec == MediaCodecVideoHEVC);
     STARFISH_UNSUPPORTED("Media: HEVC codec is not supported");
@@ -246,7 +241,7 @@ bool MP4PacketGenerator::generateForHEVC(DemuxerSource* from,
 }
 
 bool MP4PacketGenerator::generateForAV1(DemuxerSource* from, size_t validLength,
-                                        MediaPacket& packet)
+                                        MediaPacket*& packet)
 {
     STARFISH_ASSERT(m_codec == MediaCodecVideoAV1);
     // AV1 uses OBU structure, no need for special processing like H.264/HEVC
@@ -256,14 +251,18 @@ bool MP4PacketGenerator::generateForAV1(DemuxerSource* from, size_t validLength,
 
 bool MP4PacketGenerator::generateDefault(DemuxerSource* from,
                                          size_t validLength,
-                                         MediaPacket& packet)
+                                         MediaPacket*& packet)
 {
-    uint8_t* data = new uint8_t[validLength];
-    int error;
-    size_t readAmount;
-    from->onRead(validLength, readAmount, error, data);
-    packet.m_data = data;
-    packet.m_dataSize = validLength;
+    packet = MediaPacket::create(validLength);
+    int error = 0;
+    size_t readAmount = 0;
+    from->onRead(validLength, readAmount, error, packet->m_data);
+    if (readAmount < validLength) {
+        MP4PACKET_GENERATOR_LOG(this, "Fail to read sample data");
+        MediaPacket::destroy(packet);
+        packet = nullptr;
+        return false;
+    }
     return true;
 }
 

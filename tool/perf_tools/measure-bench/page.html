@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>sf-measure-bench</title></head>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+function send(msg) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/result", false);
+    try { x.send(msg); } catch (e) {}
+}
+function mix(h, s) {
+    for (var i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = (h * 16777619) >>> 0;
+    }
+    return h >>> 0;
+}
+
+// Corpus mimicking a YouTube-on-TV text UI: video titles, channel names,
+// view/time metadata, menu labels. Deliberately includes repeated strings
+// (the same label re-measured during navigation/relayout) and many strings
+// sharing the same glyphs, which is exactly what a glyph-advance cache helps.
+var CORPUS = [
+    "Recommended for you", "Trending", "Subscriptions", "Library", "History",
+    "Watch later", "Liked videos", "Home", "Shorts", "Explore",
+    "How to build a web engine from scratch in 2026",
+    "Top 10 programming languages you should learn",
+    "Live: keynote and product announcements",
+    "1.2M views", "342K views", "12K views", "5 years ago", "3 days ago",
+    "1 hour ago", "Streamed 2 weeks ago",
+    "TechChannel", "DevTalks", "MusicWorld", "Gaming Central", "News Network",
+    "Subscribe", "12:34", "1:02:55", "0:47", "LIVE", "4K", "HD", "CC",
+    "The quick brown fox jumps over the lazy dog",
+    "Recommended for you", "Trending", "Subscribe", "1.2M views", "12:34"
+];
+
+try {
+    var ctx = document.getElementById("c").getContext("2d");
+    ctx.font = "16px sans-serif";
+
+    // correctness signature + warm caches
+    var h = 2166136261;
+    var wsum = 0;
+    for (var i = 0; i < CORPUS.length; i++) {
+        var w = ctx.measureText(CORPUS[i]).width;
+        wsum += w;
+        h = mix(h, CORPUS[i].length + ":" + w.toFixed(3) + ";");
+    }
+
+    // timed loop
+    var ITER = 300;
+    var calls = 0;
+    var acc = 0;
+    var t0 = Date.now();
+    for (var n = 0; n < ITER; n++) {
+        for (var i = 0; i < CORPUS.length; i++) {
+            acc += ctx.measureText(CORPUS[i]).width;
+            calls++;
+        }
+    }
+    var dt = Date.now() - t0;
+
+    send("MEASURE-DONE ms=" + dt + " iters=" + ITER + " calls=" + calls +
+         " perCall=" + (dt / calls).toFixed(4) +
+         " widthsig=" + (h >>> 0) + " wsum=" + wsum.toFixed(2) +
+         " acc=" + acc.toFixed(0));
+} catch (e) {
+    send("MEASURE-ERROR " + (e && e.message ? e.message : e));
+}
+setTimeout(function () { send("MEASURE-TIMEOUT"); }, 30000);
+</script>
+</body>
+</html>

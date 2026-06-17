@@ -327,17 +327,21 @@ public:
             [this](int w, int h) { m_webContainer->ResizeTo(w, h); });
 
         setMouseMoveCallback([this](int x, int y) {
-            m_webContainer->DispatchMouseMoveEvent(
-                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown, x,
-                y);
+            MouseButtonsValue buttons = m_isMouseLbuttonDown
+                                            ? MouseButtonsValue::LeftButtonDown
+                                            : MouseButtonsValue::NoButtonDown;
+            m_webContainer->DispatchMouseMoveEvent(MouseButtonValue::NoButton,
+                                                   buttons, x, y);
         });
 
         setMouseButtonCallback([this](int button, int x, int y) {
             if (button == 1) {
+                m_isMouseLbuttonDown = true;
                 m_webContainer->DispatchMouseDownEvent(
                     MouseButtonValue::LeftButton,
                     MouseButtonsValue::LeftButtonDown, x, y);
             } else if (button == 0) {
+                m_isMouseLbuttonDown = false;
                 m_webContainer->DispatchMouseUpEvent(
                     MouseButtonValue::LeftButton,
                     MouseButtonsValue::NoButtonDown, x, y);
@@ -962,6 +966,7 @@ private:
     EGLConfig m_eglConfig;
     int m_lastWidth;
     int m_lastHeight;
+    bool m_isMouseLbuttonDown = false;
 
     WebContainer* m_webContainer;
 

@@ -42,8 +42,15 @@
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
-    MP4BinaryStreamAdapter(Starfish::DemuxerSource* source)
+    static const size_t kCacheSize = 16 * 1024;
+    static const size_t kBypassLen = kCacheSize / 2;
+
+    MP4BinaryStreamAdapter(Starfish::DemuxerSource* source,
+                           std::vector<uint8_t>* cache)
         : m_source(source)
+        , m_cache(cache)
+        , m_windowOffset(0)
+        , m_windowLen(0)
     {
     }
     virtual void ignore(std::streamsize n = 1)
@@ -52,11 +59,44 @@ public:
     }
     virtual void read(char* s, std::streamsize n)
     {
-        size_t sizeWantToRead = n;
-        size_t out;
+        if ((size_t)n >= kBypassLen) {
+            readDirect(s, n);
+            return;
+        }
+        size_t p = (size_t)m_source->onSeek(
+            0, Starfish::DemuxerSource::SeekWhenceCurrent);
+        if (p >= m_windowOffset &&
+            p + (size_t)n <= m_windowOffset + m_windowLen) {
+            memcpy(s, m_cache->data() + (p - m_windowOffset), (size_t)n);
+            m_source->onSeek(n, Starfish::DemuxerSource::SeekWhenceCurrent);
+            return;
+        }
+        // Miss: refill at p. onRead errors on any short read, so request
+        // exactly what the source can provide.
+        size_t total = (size_t)m_source->onSeek(
+            0, Starfish::DemuxerSource::SeekWhenceLookSize);
+        size_t avail = total > p ? total - p : 0;
+        if (avail < (size_t)n) {
+            readDirect(s, n);
+            return;
+        }
+        size_t want = avail < kCacheSize ? avail : kCacheSize;
+        if (m_cache->size() < kCacheSize) {
+            m_cache->resize(kCacheSize);
+        }
+        size_t got = 0;
         int error = 0;
-        m_source->onRead(n, out, error, (uint8_t*)s);
-        STARFISH_ASSERT(error == 0);
+        m_source->onRead(want, got, error, m_cache->data());
+        if (error || got != want) {
+            m_windowLen = 0;
+            m_source->onSeek(p, Starfish::DemuxerSource::SeekWhenceSet);
+            readDirect(s, n);
+            return;
+        }
+        m_windowOffset = p;
+        m_windowLen = got;
+        memcpy(s, m_cache->data(), (size_t)n);
+        m_source->onSeek(p + n, Starfish::DemuxerSource::SeekWhenceSet);
     }
 
     virtual bool eof() const
@@ -72,6 +112,14 @@ public:
     }
 
 private:
+    void readDirect(char* s, std::streamsize n)
+    {
+        size_t sizeWantToRead = n;
+        size_t out;
+        int error = 0;
+        m_source->onRead(n, out, error, (uint8_t*)s);
+        STARFISH_ASSERT(error == 0);
+    }
     virtual void get(char& c)
     {
         read(&c, 1);
@@ -81,6 +129,9 @@ private:
         read(s, n);
     }
     Starfish::DemuxerSource* m_source;
+    std::vector<uint8_t>* m_cache;
+    size_t m_windowOffset;
+    size_t m_windowLen;
 };
 
 namespace Starfish {
@@ -106,13 +157,14 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
 }
 
 static bool parseMP4(DemuxerSource* source, bool findPacket,
+                     std::vector<uint8_t>* readCache,
                      const std::function<bool(MP4::Atom* atom)>& fn)
 {
     uint32_t length;
     uint64_t dataLength;
     size_t lastUnpairedMoofPos = SIZE_MAX;
     char type[5];
-    MP4BinaryStreamAdapter src(source);
+    MP4BinaryStreamAdapter src(source, readCache);
     memset(type, 0, 5);
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
@@ -265,6 +317,7 @@ public:
                 DEMUXERMP4_LOG("DemuxerMP4::~DemuxerMP4");
                 DemuxerMP4* self = (DemuxerMP4*)obj;
                 self->m_streamInfo.clear();
+                std::vector<uint8_t>().swap(self->m_readCache);
             },
             NULL, NULL, NULL);
     }
@@ -275,6 +328,11 @@ public:
     std::unordered_map<size_t, StreamInfoMP4> m_streamInfo;
     Mutex* m_demuxingMutex;
     MP4PacketGenerator* m_packetGenerator;
+    // Read-through window storage for MP4BinaryStreamAdapter: absorbs the
+    // 4-byte TRUN/box-header reads in parseMP4. Grow-once to 16KB, reused
+    // across calls; window state lives in the stack-local adapter. Released
+    // by the GC finalizer (DemuxerWebM::m_readCache pattern).
+    std::vector<uint8_t> m_readCache;
 };
 
 static StreamInfoMP4* handleTKHD(MP4::TKHD* tkhd,
@@ -454,65 +512,66 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
     StreamInfoMP4* currentStream = nullptr;
     MP4::TREX* trexData = nullptr;
 
-    bool result = parseMP4(source, false, [&](MP4::Atom* atom) -> bool {
-        uint32_t type = atom->getType();
-        switch (type) {
-        case MP4_PARSER_DEFINE_TYPE_STRING("tkhd"): {
-            // Found new stream
-            currentStream = handleTKHD((MP4::TKHD*)atom, m_streamInfo);
-            if (!currentStream) {
-                return false;
+    bool result =
+        parseMP4(source, false, &m_readCache, [&](MP4::Atom* atom) -> bool {
+            uint32_t type = atom->getType();
+            switch (type) {
+            case MP4_PARSER_DEFINE_TYPE_STRING("tkhd"): {
+                // Found new stream
+                currentStream = handleTKHD((MP4::TKHD*)atom, m_streamInfo);
+                if (!currentStream) {
+                    return false;
+                }
+                if (trexData) {
+                    currentStream->setTrexData(trexData);
+                    delete trexData;
+                    trexData = nullptr;
+                }
+                detectedStreamIndice.insert(currentStream->streamIndex());
+                return true;
             }
-            if (trexData) {
-                currentStream->setTrexData(trexData);
-                delete trexData;
-                trexData = nullptr;
+            case MP4_PARSER_DEFINE_TYPE_STRING("mdhd"): {
+                return handleMDHD((MP4::MDHD*)atom, currentStream);
             }
-            detectedStreamIndice.insert(currentStream->streamIndex());
+            case MP4_PARSER_DEFINE_TYPE_STRING("elst"): {
+                return handleELST((MP4::ELST*)atom, currentStream);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("avc1"):
+            case MP4_PARSER_DEFINE_TYPE_STRING("avc3"): {
+                return handleMetAVC(currentStream, m_packetGenerator);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("hev1"):
+            case MP4_PARSER_DEFINE_TYPE_STRING("hvc1"): {
+                return handleMetHVC(currentStream, m_packetGenerator);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("av01"): {
+                return handleMetAV1(currentStream, m_packetGenerator);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("mp4a"): {
+                return handleMP4A((MP4::MP4A*)atom, currentStream);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("esds"): {
+                return handleESDS((MP4::ESDS*)atom, currentStream);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("avcC"): {
+                return handleAVCC((MP4::AVCC*)atom, currentStream,
+                                  m_packetGenerator);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("trex"): {
+                if (trexData) {
+                    DEMUXERMP4_LOG("Unexpected structure of MP4");
+                    DEMUXERMP4_LOG("> TREX");
+                    return false;
+                }
+                // Copy trex data
+                trexData = new MP4::TREX(*((MP4::TREX*)atom));
+                return true;
+            }
+            default:
+                break;
+            }
             return true;
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("mdhd"): {
-            return handleMDHD((MP4::MDHD*)atom, currentStream);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("elst"): {
-            return handleELST((MP4::ELST*)atom, currentStream);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("avc1"):
-        case MP4_PARSER_DEFINE_TYPE_STRING("avc3"): {
-            return handleMetAVC(currentStream, m_packetGenerator);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("hev1"):
-        case MP4_PARSER_DEFINE_TYPE_STRING("hvc1"): {
-            return handleMetHVC(currentStream, m_packetGenerator);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("av01"): {
-            return handleMetAV1(currentStream, m_packetGenerator);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("mp4a"): {
-            return handleMP4A((MP4::MP4A*)atom, currentStream);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("esds"): {
-            return handleESDS((MP4::ESDS*)atom, currentStream);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("avcC"): {
-            return handleAVCC((MP4::AVCC*)atom, currentStream,
-                              m_packetGenerator);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("trex"): {
-            if (trexData) {
-                DEMUXERMP4_LOG("Unexpected structure of MP4");
-                DEMUXERMP4_LOG("> TREX");
-                return false;
-            }
-            // Copy trex data
-            trexData = new MP4::TREX(*((MP4::TREX*)atom));
-            return true;
-        }
-        default:
-            break;
-        }
-        return true;
-    });
+        });
     if (trexData) {
         delete trexData;
     }
@@ -664,98 +723,114 @@ bool DemuxerMP4::findStreamPacket(DemuxerSource* source)
     Locker<Mutex> lock(*m_demuxingMutex);
     SegmentParsingInfo parsingInfo;
 
-    bool result = parseMP4(source, true, [&](MP4::Atom* atom) -> bool {
-        uint32_t type = atom->getType();
-        switch (type) {
-        case MP4_PARSER_DEFINE_TYPE_STRING("tfhd"): {
-            return handleTFHD((MP4::TFHD*)atom, parsingInfo);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("tfdt"): {
-            return handleTFDT((MP4::TFDT*)atom, parsingInfo);
-        }
-        case MP4_PARSER_DEFINE_TYPE_STRING("trun"): {
-            return handleTRUN((MP4::TRUN*)atom, parsingInfo);
-        }
-#ifdef STARFISH_MEDIAPLAYER_DEBUG
-        case MP4_PARSER_DEFINE_TYPE_STRING("mfhd"): {
-            return handleMFHD((MP4::MFHD*)atom);
-        }
-#endif
-        case MP4_PARSER_DEFINE_TYPE_STRING("mdat"): {
-            if (!parsingInfo.m_seenTFHD || !parsingInfo.m_seenTFDT ||
-                !parsingInfo.m_seenTRUN) {
-                DEMUXERMP4_LOG("Unexpected structure of MP4");
-                DEMUXERMP4_LOG("> MDAT");
-                return false;
+    bool result =
+        parseMP4(source, true, &m_readCache, [&](MP4::Atom* atom) -> bool {
+            uint32_t type = atom->getType();
+            switch (type) {
+            case MP4_PARSER_DEFINE_TYPE_STRING("tfhd"): {
+                return handleTFHD((MP4::TFHD*)atom, parsingInfo);
             }
-            StreamInfoMP4& stream = m_streamInfo[parsingInfo.m_streamIndex];
-            MP4::MDAT* mdat = (MP4::MDAT*)atom;
-            int64_t before =
-                source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-            int64_t start = (int64_t)mdat->dataPos;
-            source->onSeek(start, DemuxerSource::SeekWhenceSet);
-
-            size_t sizeSum = 0;
-            uint64_t currentDTS = parsingInfo.m_DTS;
-            for (size_t i = 0; i < parsingInfo.m_samples.size(); i++) {
-                MediaPacket packet;
-                size_t sampleSize = resolvePacketSize(stream, parsingInfo, i);
-                if (sampleSize <= 0 || sizeSum + sampleSize > mdat->size) {
-                    DEMUXERMP4_LOG("Unexpected structure of MP4");
-                    DEMUXERMP4_LOG("> MDAT: Wrong sample size");
-                    return false;
-                }
-                sizeSum += sampleSize;
-
-                // packet.m_pts
-                // packet.m_dts
-                int64_t ctsOffset =
-                    resolvePacketCTSOffset(stream, parsingInfo, i);
-                packet.m_pts =
-                    stream.codedTimeToMilliseconds(currentDTS + ctsOffset);
-                packet.m_dts = stream.codedTimeToMilliseconds(currentDTS);
-
-                // packet.m_duration
-                size_t duration = resolvePacketDuration(stream, parsingInfo, i);
-                if (duration <= 0) {
-                    DEMUXERMP4_LOG("Unexpected structure of MP4");
-                    DEMUXERMP4_LOG("> MDAT: Wrong sample duration");
-                    return false;
-                }
-                currentDTS += duration;
-                STARFISH_ASSERT(stream.codedTimeToMilliseconds(duration) <
-                                SIZE_MAX);
-                packet.m_duration =
-                    (size_t)stream.codedTimeToMilliseconds(duration);
-
-                if (!m_packetGenerator->generate(source, sampleSize, packet)) {
-                    STARFISH_UNSUPPORTED("Media: unsupported codec");
+            case MP4_PARSER_DEFINE_TYPE_STRING("tfdt"): {
+                return handleTFDT((MP4::TFDT*)atom, parsingInfo);
+            }
+            case MP4_PARSER_DEFINE_TYPE_STRING("trun"): {
+                return handleTRUN((MP4::TRUN*)atom, parsingInfo);
+            }
+#ifdef STARFISH_MEDIAPLAYER_DEBUG
+            case MP4_PARSER_DEFINE_TYPE_STRING("mfhd"): {
+                return handleMFHD((MP4::MFHD*)atom);
+            }
+#endif
+            case MP4_PARSER_DEFINE_TYPE_STRING("mdat"): {
+                if (!parsingInfo.m_seenTFHD || !parsingInfo.m_seenTFDT ||
+                    !parsingInfo.m_seenTRUN) {
                     DEMUXERMP4_LOG("Unexpected structure of MP4");
                     DEMUXERMP4_LOG("> MDAT");
                     return false;
                 }
-                for (size_t j = 0; j < m_demuxerClients.size(); j++) {
-                    if (!m_demuxerClients[j]->onDetectPacket(
-                            parsingInfo.m_streamIndex, packet)) {
-                        delete[] packet.m_data;
+                StreamInfoMP4& stream = m_streamInfo[parsingInfo.m_streamIndex];
+                MP4::MDAT* mdat = (MP4::MDAT*)atom;
+                int64_t before =
+                    source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                int64_t start = (int64_t)mdat->dataPos;
+                source->onSeek(start, DemuxerSource::SeekWhenceSet);
+
+                size_t sizeSum = 0;
+                uint64_t currentDTS = parsingInfo.m_DTS;
+                for (size_t i = 0; i < parsingInfo.m_samples.size(); i++) {
+                    size_t sampleSize =
+                        resolvePacketSize(stream, parsingInfo, i);
+                    if (sampleSize <= 0 || sizeSum + sampleSize > mdat->size) {
                         DEMUXERMP4_LOG("Unexpected structure of MP4");
-                        DEMUXERMP4_LOG("> Failed to append packet to groups");
-                        DEMUXERMP4_LOG("> packet(pts: %d, dts:%d, dur:%d)",
-                                       (int)packet.m_pts, (int)packet.m_dts,
-                                       (int)packet.m_duration);
+                        DEMUXERMP4_LOG("> MDAT: Wrong sample size");
                         return false;
                     }
+                    sizeSum += sampleSize;
+
+                    // pts / dts
+                    int64_t ctsOffset =
+                        resolvePacketCTSOffset(stream, parsingInfo, i);
+                    uint64_t pts =
+                        stream.codedTimeToMilliseconds(currentDTS + ctsOffset);
+                    uint64_t dts = stream.codedTimeToMilliseconds(currentDTS);
+
+                    // duration
+                    size_t duration =
+                        resolvePacketDuration(stream, parsingInfo, i);
+                    if (duration <= 0) {
+                        DEMUXERMP4_LOG("Unexpected structure of MP4");
+                        DEMUXERMP4_LOG("> MDAT: Wrong sample duration");
+                        return false;
+                    }
+                    currentDTS += duration;
+                    STARFISH_ASSERT(stream.codedTimeToMilliseconds(duration) <
+                                    SIZE_MAX);
+                    size_t durationMs =
+                        (size_t)stream.codedTimeToMilliseconds(duration);
+
+                    MediaPacket* packet = nullptr;
+                    if (!m_packetGenerator->generate(source, sampleSize,
+                                                     packet)) {
+                        STARFISH_UNSUPPORTED("Media: unsupported codec");
+                        DEMUXERMP4_LOG("Unexpected structure of MP4");
+                        DEMUXERMP4_LOG("> MDAT");
+                        return false;
+                    }
+                    packet->m_pts = pts;
+                    packet->m_dts = dts;
+                    packet->m_duration = durationMs;
+                    for (size_t j = 0; j < m_demuxerClients.size(); j++) {
+                        if (!m_demuxerClients[j]->onDetectPacket(
+                                parsingInfo.m_streamIndex, packet)) {
+                            DEMUXERMP4_LOG("Unexpected structure of MP4");
+                            DEMUXERMP4_LOG(
+                                "> Failed to append packet to groups");
+                            DEMUXERMP4_LOG("> packet(pts: %d, dts:%d, dur:%d)",
+                                           (int)packet->m_pts,
+                                           (int)packet->m_dts,
+                                           (int)packet->m_duration);
+                            // Log first: destroy frees the whole combined
+                            // block, packet fields die with it.
+                            MediaPacket::destroy(packet);
+                            return false;
+                        }
+                        // Ownership transferred to the client.
+                        packet = nullptr;
+                        break;
+                    }
+                    if (packet) {
+                        MediaPacket::destroy(packet);
+                    }
                 }
+                source->onSeek(before, DemuxerSource::SeekWhenceSet);
+                parsingInfo.reset();
+                break;
             }
-            source->onSeek(before, DemuxerSource::SeekWhenceSet);
-            parsingInfo.reset();
-            break;
-        }
-        default:
-            break;
-        }
-        return true;
-    });
+            default:
+                break;
+            }
+            return true;
+        });
     return result;
 }
 

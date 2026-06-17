@@ -200,31 +200,26 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
+    // Single hop: the callback body used to be deferred once more through
+    // g_timeout_add(0) (an EFL elm-shutdown workaround carried through the
+    // GLib port), costing an extra main-context iteration per posting. It
+    // runs at G_PRIORITY_DEFAULT, same as the old g_timeout_add(0) source.
     g_idle_add_full(
         G_PRIORITY_HIGH,
         [](gpointer data) -> gboolean {
-            g_timeout_add(
-                0,
-                [](gpointer data) -> gboolean {
-                    IdlerData* id = (IdlerData*)data;
-                    if (!id->m_isDestroyed) {
-                        if (id->m_ml &&
-                            id->m_ml->m_idlersFromOtherThreadMutex) {
-                            Locker<Mutex> l(
-                                *id->m_ml->m_idlersFromOtherThreadMutex);
-                            removeIderFromList(
-                                id->m_ml->m_idlersFromOtherThread, id);
-                        }
-                        if (id->m_needsRun) {
-                            id->m_fn((size_t)id, id->m_data);
-                        }
-                    }
+            IdlerData* id = (IdlerData*)data;
+            if (!id->m_isDestroyed) {
+                if (id->m_ml && id->m_ml->m_idlersFromOtherThreadMutex) {
+                    Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                    removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
+                }
+                if (id->m_needsRun) {
+                    id->m_fn((size_t)id, id->m_data);
+                }
+            }
 
-                    id->m_ml = nullptr;
-                    delete id;
-                    return G_SOURCE_REMOVE;
-                },
-                data);
+            id->m_ml = nullptr;
+            delete id;
             return G_SOURCE_REMOVE;
         },
         id, NULL);
@@ -250,33 +245,28 @@ size_t MessageLoopGLib::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
+    // Single hop: the callback body used to be deferred once more through
+    // g_timeout_add(0) (an EFL elm-shutdown workaround carried through the
+    // GLib port), costing an extra main-context iteration per posting. It
+    // runs at G_PRIORITY_DEFAULT, same as the old g_timeout_add(0) source.
     g_idle_add_full(
         G_PRIORITY_HIGH,
         [](gpointer data) -> gboolean {
-            g_timeout_add(
-                0,
-                [](gpointer data) -> gboolean {
-                    IdlerData* id = (IdlerData*)data;
-                    if (!id->m_isDestroyed) {
-                        id->m_isDestroyed = true;
-                        if (id->m_ml &&
-                            id->m_ml->m_idlersFromOtherThreadMutex) {
-                            Locker<Mutex> l(
-                                *id->m_ml->m_idlersFromOtherThreadMutex);
-                            removeIderFromList(
-                                id->m_ml->m_idlersFromOtherThread, id);
-                        }
-                        if (id->m_needsRun) {
-                            ((void (*)(size_t, void*, void*))id->m_fn)(
-                                (size_t)id, id->m_data, id->m_data1);
-                        }
-                    }
+            IdlerData* id = (IdlerData*)data;
+            if (!id->m_isDestroyed) {
+                id->m_isDestroyed = true;
+                if (id->m_ml && id->m_ml->m_idlersFromOtherThreadMutex) {
+                    Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                    removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
+                }
+                if (id->m_needsRun) {
+                    ((void (*)(size_t, void*, void*))id->m_fn)(
+                        (size_t)id, id->m_data, id->m_data1);
+                }
+            }
 
-                    id->m_ml = nullptr;
-                    delete id;
-                    return G_SOURCE_REMOVE;
-                },
-                data);
+            id->m_ml = nullptr;
+            delete id;
             return G_SOURCE_REMOVE;
         },
         id, NULL);
