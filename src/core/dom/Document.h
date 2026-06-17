@@ -418,6 +418,7 @@ public:
 
     String* cookie();
     void setCookie(String* cookie);
+    bool isCookieAverse() const;
 
     void init(ReferrerURL* referrerURL);
     void dispose();

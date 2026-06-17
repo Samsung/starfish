@@ -205,6 +205,15 @@ static String* transformetoNetscapeCookieFormat(
     if (!value->containsOnlyASCIIChars()) {
         return String::emptyString;
     }
+    // RFC6265: cookie-octet excludes control characters. A cookie-string that
+    // contains a control character (e.g. NUL) is not a valid cookie and must be
+    // ignored rather than silently truncated at the control character.
+    for (size_t i = 0; i < value->length(); ++i) {
+        const char32_t c = value->charAt(i);
+        if (c <= 0x1F || c == 0x7F) {
+            return String::emptyString;
+        }
+    }
     GCVector<StringView> tokens;
     StringUtils::tokenize(value, ";", 1, tokens);
     String* cookieName = String::emptyString;
@@ -222,6 +231,7 @@ static String* transformetoNetscapeCookieFormat(
         cookieName = new StringView(tokens[0]);
     }
     int64_t expires = 0;
+    bool hasExpiry = false;
     String* domain = url->hostname();
     String* path = url->pathname();
     size_t idx = path->lastIndexOf('/');
@@ -243,6 +253,7 @@ static String* transformetoNetscapeCookieFormat(
                 //               cookie date, ignore it
                 if (!std::isnan(parsedDate)) {
                     expires = parsedDate / 1000.0;
+                    hasExpiry = true;
                 }
             } else if (key->equals("max-age")) {
                 String* value = pair[1].trim();
@@ -251,6 +262,7 @@ static String* transformetoNetscapeCookieFormat(
                 if (parsedValue > 0 &&
                     (USER_AGENT_MAXIMUM_DATE_VALUE - current) >= parsedValue) {
                     expires = current + parsedValue;
+                    hasExpiry = true;
                 }
             } else if (key->equals("domain")) {
                 String* value = (new StringView(pair[1]))->trim();
@@ -265,6 +277,14 @@ static String* transformetoNetscapeCookieFormat(
                 secure = "TRUE";
             }
         }
+    }
+    // A cookie with an explicit expiry in the past must be deleted, not kept.
+    // The Netscape format reserves an expiry of 0 for session cookies, so a
+    // past/epoch expiry is clamped to a non-zero past timestamp; this makes the
+    // cookie expired on both write and read (see appendMatchingCookie) instead
+    // of being misinterpreted as a never-expiring session cookie.
+    if (hasExpiry && expires <= 0) {
+        expires = 1;
     }
     const char* allowSubDomain = domain->startsWith(".") ? "TRUE" : "FALSE";
     String* expiresStr = String::fromInt64(expires);
