@@ -274,7 +274,6 @@ static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_needsRGBShuffle = true;
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
-static bool g_isSupportStandardDerivatives = false;
 
 #ifndef MIN_MAX_TEXTURE_SIZE
 #define MIN_MAX_TEXTURE_SIZE 2048
@@ -497,18 +496,15 @@ struct CanvasSurfaceTextureInfo {
 class CompositorContextGL : public CompositorContext {
 public:
     GLuint m_polygonVertexShader;
+    GLuint m_polygonFragmentShader;
     GLuint m_polygonShaderProgram;
     GLint m_polygonShaderProgramPosition;
+    GLint m_polygonShaderProgramCoverage;
     GLint m_polygonShaderProgramColor;
 
-    // Anti-aliased line shader for polygon outlines
-    GLuint m_lineVertexShader;
-    GLuint m_lineFragmentShader;
-    GLuint m_lineShaderProgram;
-    GLint m_lineShaderProgramPosition;
-    GLint m_lineShaderProgramColor;
-    GLint m_lineShaderProgramEdgeDistance;
-    GLint m_lineShaderProgramLineWidth;
+    // Streaming VBO for polygon fill + AA outline (avoid client-side arrays)
+    GLuint m_polygonPosBuffer;
+    size_t m_polygonPosBufferCapacity;
 
     GLuint m_rectVertexShader;
     GLuint m_pixelFragmentShader;
@@ -755,6 +751,11 @@ public:
         clearGLProgramVariables();
 
         m_texIdxBuffer = m_texTexPosBuffer = 0;
+        // Generated once by the factory and kept across program rebuilds, so
+        // (like the tex buffers) zero the handle only here, not in
+        // clearGLProgramVariables().
+        m_polygonPosBuffer = 0;
+        m_polygonPosBufferCapacity = 0;
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         m_mainViewTexture = 0;
         m_mainViewFBO = 0;
@@ -770,15 +771,11 @@ public:
     void clearGLProgramVariables()
     {
         m_polygonVertexShader = m_polygonShaderProgram = m_texShaderProgram = 0;
+        m_polygonFragmentShader = 0;
         m_polygonShaderProgramPosition = 0;
+        m_polygonShaderProgramCoverage = 0;
         m_polygonShaderProgramColor = 0;
 
-        // Anti-aliased line shader
-        m_lineVertexShader = m_lineFragmentShader = m_lineShaderProgram = 0;
-        m_lineShaderProgramPosition = 0;
-        m_lineShaderProgramColor = 0;
-        m_lineShaderProgramEdgeDistance = 0;
-        m_lineShaderProgramLineWidth = 0;
         m_rectVertexShader = m_pixelFragmentShader = m_rectShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
         m_rectShaderProgramColor = 0;
@@ -881,6 +878,7 @@ public:
 
         gl()->deleteBuffers(1, &m_texTexPosBuffer);
         gl()->deleteBuffers(1, &m_texIdxBuffer);
+        gl()->deleteBuffers(1, &m_polygonPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         if (m_mainViewRBO) {
@@ -947,9 +945,10 @@ public:
 
         if (m_polygonShaderProgram) {
             gl()->detachShader(m_polygonShaderProgram, m_polygonVertexShader);
-            gl()->detachShader(m_polygonShaderProgram, m_pixelFragmentShader);
+            gl()->detachShader(m_polygonShaderProgram, m_polygonFragmentShader);
             gl()->deleteProgram(m_polygonShaderProgram);
             gl()->deleteShader(m_polygonVertexShader);
+            gl()->deleteShader(m_polygonFragmentShader);
         }
 
         if (m_rectShaderProgram) {
@@ -1285,24 +1284,61 @@ public:
     GLuint polygonProgram()
     {
         if (!m_polygonShaderProgram) {
+            // Per-vertex coverage drives both the solid fill (coverage == 1)
+            // and the anti-aliased outline ring (coverage fades 1 -> 0
+            // outward), so fill and AA are rendered in a single pass.
             GLchar polygonVertexSource[] =
                 "attribute vec2 aPosition;\n"
+                "attribute float aCoverage;\n"
+                "varying float vCoverage;\n"
                 "void main() {\n"
                 "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
+                "  vCoverage = aCoverage;\n"
                 "}";
 
             m_polygonVertexShader =
                 loadShader(gl(), GL_VERTEX_SHADER, polygonVertexSource);
             checkError(gl());
 
-            ensurePixelFragmentShader();
+            // Premultiplied output (matches GL_ONE / GL_ONE_MINUS_SRC_ALPHA):
+            // scaling all four channels by coverage keeps it premultiplied.
+            const GLchar* polygonFragmentSource =
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform vec4 uColor;\n"
+                "varying float vCoverage;\n"
+                "void main(void)\n"
+                "{\n"
+                "  gl_FragColor = uColor * vCoverage;\n"
+                "}";
+
+            if (g_needsRGBShuffle) {
+                polygonFragmentSource =
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform vec4 uColor;\n"
+                    "varying float vCoverage;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  gl_FragColor.r = uColor[2] * vCoverage;\n"
+                    "  gl_FragColor.g = uColor[1] * vCoverage;\n"
+                    "  gl_FragColor.b = uColor[0] * vCoverage;\n"
+                    "  gl_FragColor.a = uColor[3] * vCoverage;\n"
+                    "}";
+            }
+
+            m_polygonFragmentShader =
+                loadShader(gl(), GL_FRAGMENT_SHADER, polygonFragmentSource);
+            checkError(gl());
 
             m_polygonShaderProgram = gl()->createProgram();
             checkError(gl());
 
             gl()->attachShader(m_polygonShaderProgram, m_polygonVertexShader);
             checkError(gl());
-            gl()->attachShader(m_polygonShaderProgram, m_pixelFragmentShader);
+            gl()->attachShader(m_polygonShaderProgram, m_polygonFragmentShader);
             checkError(gl());
 
             gl()->linkProgram(m_polygonShaderProgram);
@@ -1313,6 +1349,8 @@ public:
 
             m_polygonShaderProgramPosition =
                 gl()->getAttribLocation(m_polygonShaderProgram, "aPosition");
+            m_polygonShaderProgramCoverage =
+                gl()->getAttribLocation(m_polygonShaderProgram, "aCoverage");
             m_polygonShaderProgramColor =
                 gl()->getUniformLocation(m_polygonShaderProgram, "uColor");
         } else {
@@ -1323,116 +1361,6 @@ public:
         }
 
         return m_polygonShaderProgram;
-    }
-
-    // Anti-aliased line shader for polygon outlines
-    GLuint lineProgram()
-    {
-        if (!m_lineShaderProgram) {
-            // Vertex shader with edge distance for anti-aliased lines
-            GLchar lineVertexSource[] =
-                "attribute vec2 aPosition;\n"
-                "attribute float aEdgeDistance;\n"
-                "varying float vEdgeDistance;\n"
-                "void main() {\n"
-                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
-                "  vEdgeDistance = aEdgeDistance;\n"
-                "}";
-
-            m_lineVertexShader =
-                loadShader(gl(), GL_VERTEX_SHADER, lineVertexSource);
-            checkError(gl());
-
-            // Fragment shader with anti-aliasing using fwidth()
-            // vEdgeDistance: 0 = center, negative = left edge, positive = right
-            // edge Smooth falloff on both sides for softer anti-aliasing
-            const GLchar* lineFragmentSource =
-                "#ifdef GL_ES\n"
-                "  #extension GL_OES_standard_derivatives : enable\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform vec4 uColor;\n"
-                "uniform float uLineWidth;\n"
-                "varying float vEdgeDistance;\n"
-                "void main(void)\n"
-                "{\n"
-                "#ifdef GL_OES_standard_derivatives\n"
-                "  float halfWidth = uLineWidth * 0.5;\n"
-                "  float dist = abs(vEdgeDistance - halfWidth);\n"
-                "  float fw = fwidth(vEdgeDistance);\n"
-                "  // Wider feathering range (1.5x) for smoother curves\n"
-                "  float feather = fw * 1.5;\n"
-                "  float edgeAlpha = 1.0 - smoothstep(halfWidth - feather, "
-                "halfWidth + feather * 0.5, dist);\n"
-                "#else\n"
-                "  float edgeAlpha = 1.0;\n"
-                "#endif\n"
-                "  gl_FragColor = uColor * edgeAlpha;\n"
-                "}";
-
-            if (g_needsRGBShuffle) {
-                lineFragmentSource =
-                    "#ifdef GL_ES\n"
-                    "  #extension GL_OES_standard_derivatives : enable\n"
-                    "  precision mediump float;\n"
-                    "#endif\n"
-                    "uniform vec4 uColor;\n"
-                    "uniform float uLineWidth;\n"
-                    "varying float vEdgeDistance;\n"
-                    "void main(void)\n"
-                    "{\n"
-                    "#ifdef GL_OES_standard_derivatives\n"
-                    "  float halfWidth = uLineWidth * 0.5;\n"
-                    "  float dist = abs(vEdgeDistance - halfWidth);\n"
-                    "  float fw = fwidth(vEdgeDistance);\n"
-                    "  // Wider feathering range (1.5x) for smoother curves\n"
-                    "  float feather = fw * 1.5;\n"
-                    "  float edgeAlpha = 1.0 - smoothstep(halfWidth - feather, "
-                    "halfWidth + feather * 0.5, dist);\n"
-                    "#else\n"
-                    "  float edgeAlpha = 1.0;\n"
-                    "#endif\n"
-                    "  gl_FragColor.r = uColor[2] * edgeAlpha;\n"
-                    "  gl_FragColor.g = uColor[1] * edgeAlpha;\n"
-                    "  gl_FragColor.b = uColor[0] * edgeAlpha;\n"
-                    "  gl_FragColor.a = uColor[3] * edgeAlpha;\n"
-                    "}";
-            }
-
-            m_lineFragmentShader =
-                loadShader(gl(), GL_FRAGMENT_SHADER, lineFragmentSource);
-            checkError(gl());
-
-            m_lineShaderProgram = gl()->createProgram();
-            checkError(gl());
-
-            gl()->attachShader(m_lineShaderProgram, m_lineVertexShader);
-            checkError(gl());
-            gl()->attachShader(m_lineShaderProgram, m_lineFragmentShader);
-            checkError(gl());
-
-            gl()->linkProgram(m_lineShaderProgram);
-            checkError(gl());
-
-            m_lastProgram = m_lineShaderProgram;
-            gl()->useProgram(m_lineShaderProgram);
-
-            m_lineShaderProgramPosition =
-                gl()->getAttribLocation(m_lineShaderProgram, "aPosition");
-            m_lineShaderProgramColor =
-                gl()->getUniformLocation(m_lineShaderProgram, "uColor");
-            m_lineShaderProgramEdgeDistance =
-                gl()->getAttribLocation(m_lineShaderProgram, "aEdgeDistance");
-            m_lineShaderProgramLineWidth =
-                gl()->getUniformLocation(m_lineShaderProgram, "uLineWidth");
-        } else {
-            if (m_lastProgram != m_lineShaderProgram) {
-                m_lastProgram = m_lineShaderProgram;
-                gl()->useProgram(m_lineShaderProgram);
-            }
-        }
-
-        return m_lineShaderProgram;
     }
 
     GLuint rectProgram()
@@ -1510,6 +1438,22 @@ public:
         }
         gl()->vertexAttribPointer(texPos, 2, GL_FLOAT, false, 0, 0);
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    // Stream-upload vertex data into a GL_STREAM_DRAW VBO. Orphans the previous
+    // allocation (buffer respecification) to avoid CPU/GPU sync stalls when the
+    // same buffer is reused many times per frame. Leaves the buffer bound.
+    void streamArrayBuffer(GLuint buffer, size_t& capacity, const void* data,
+                           size_t bytes)
+    {
+        gl()->bindBuffer(GL_ARRAY_BUFFER, buffer);
+        if (bytes > capacity) {
+            capacity = bytes;
+            gl()->bufferData(GL_ARRAY_BUFFER, bytes, NULL, GL_STREAM_DRAW);
+        } else {
+            gl()->bufferData(GL_ARRAY_BUFFER, capacity, NULL, GL_STREAM_DRAW);
+        }
+        gl()->bufferSubData(GL_ARRAY_BUFFER, 0, bytes, data);
     }
 
     GLuint texVertexShader()
@@ -2424,8 +2368,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
                 strstr(ex, "GL_EXT_texture_format_BGRA8888") != nullptr;
             g_isSupportTextureSwizzle =
                 strstr(ex, "GL_ARB_texture_swizzle") != nullptr;
-            g_isSupportStandardDerivatives =
-                strstr(ex, "GL_OES_standard_derivatives") != nullptr;
         } else {
             STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...");
         }
@@ -2459,10 +2401,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
             g_isSupportBGRATexture = false;
         }
 
-        if (g_isSupportStandardDerivatives) {
-            STARFISH_LOG_INFO("support GL_OES_standard_derivatives!");
-        }
-
 #if defined(PORT_PIXEL_ORDER_BGRA)
         if (g_isSupportTextureSwizzle || g_isSupportBGRATexture) {
             g_needsRGBShuffle = false;
@@ -2489,6 +2427,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
 
     gl->genBuffers(1, &compositorContext->m_texTexPosBuffer);
     gl->genBuffers(1, &compositorContext->m_texIdxBuffer);
+    gl->genBuffers(1, &compositorContext->m_polygonPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     gl->genFramebuffers(1, &compositorContext->m_mainViewFBO);
@@ -3749,11 +3688,7 @@ public:
     {
         m_compositorContext->polygonProgram();
         size_t count = 0;
-        std::vector<std::pair<N, N>> pointPerIndex;
         for (size_t i = 0; i < paths.size(); i++) {
-            for (size_t j = 0; j < paths[i].size(); j++) {
-                pointPerIndex.push_back({ i, j });
-            }
             count += paths[i].size();
         }
 
@@ -3765,221 +3700,189 @@ public:
 
         std::vector<N> indices = mapbox::earcut<N>(paths);
 
-        std::vector<float> position;
-        position.reserve((indices.size() / 3) * 6);
-
         // Use custom parameters if provided, otherwise use defaults
         const SkMatrix& screenMatrix =
             customScreenMatrix ? *customScreenMatrix : m_screenMatrix;
         size_t sw = customScreenWidth ? customScreenWidth : screenWidth();
         size_t sh = customScreenHeight ? customScreenHeight : screenHeight();
 
-        size_t triangleCount = 0;
-        for (size_t i = 0; i < indices.size(); i += 3) {
-            const auto& p1 = pointPerIndex[indices[i]];
-            const auto& p2 = pointPerIndex[indices[i + 1]];
-            const auto& p3 = pointPerIndex[indices[i + 2]];
+        const float hw = 2.f / sw;
+        const float hh = -2.f / sh;
 
-            float trianglePoints[6] = { (float)paths[p1.first][p1.second].x,
-                                        (float)paths[p1.first][p1.second].y,
-                                        (float)paths[p2.first][p2.second].x,
-                                        (float)paths[p2.first][p2.second].y,
-                                        (float)paths[p3.first][p3.second].x,
-                                        (float)paths[p3.first][p3.second].y };
-
-            // Map points using the appropriate screen matrix
-            float x, y;
-            x = trianglePoints[0];
-            y = trianglePoints[1];
-            mapPointsByMatrix(x, y, screenMatrix);
-            trianglePoints[0] = x;
-            trianglePoints[1] = y;
-
-            x = trianglePoints[2];
-            y = trianglePoints[3];
-            mapPointsByMatrix(x, y, screenMatrix);
-            trianglePoints[2] = x;
-            trianglePoints[3] = y;
-
-            x = trianglePoints[4];
-            y = trianglePoints[5];
-            mapPointsByMatrix(x, y, screenMatrix);
-            trianglePoints[4] = x;
-            trianglePoints[5] = y;
-
-            float hw = 2.f / sw;
-            float hh = -2.f / sh;
-            position.push_back(trianglePoints[0] * hw - 1);
-            position.push_back(trianglePoints[1] * hh + 1);
-            position.push_back(trianglePoints[2] * hw - 1);
-            position.push_back(trianglePoints[3] * hh + 1);
-            position.push_back(trianglePoints[4] * hw - 1);
-            position.push_back(trianglePoints[5] * hh + 1);
-            triangleCount += 3;
+        // Map every path point to screen space once (shared by the fill and
+        // the AA outline ring), remembering where each contour starts.
+        std::vector<float> screenX(count), screenY(count);
+        std::vector<size_t> pathOffset(paths.size());
+        {
+            size_t k = 0;
+            for (size_t i = 0; i < paths.size(); i++) {
+                pathOffset[i] = k;
+                for (size_t j = 0; j < paths[i].size(); j++) {
+                    float x = (float)paths[i][j].x;
+                    float y = (float)paths[i][j].y;
+                    mapPointsByMatrix(x, y, screenMatrix);
+                    screenX[k] = x;
+                    screenY[k] = y;
+                    k++;
+                }
+            }
         }
 
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        // Interleaved vertex stream: x, y, coverage. The fill (coverage 1) and
+        // the AA outline ring (coverage 1 -> 0 outward) are drawn together in a
+        // single pass.
+        std::vector<float> verts;
+        verts.reserve(indices.size() * 3 + count * 6 * 3);
+
+        auto emit = [&](float sx, float sy, float coverage) {
+            verts.push_back(sx * hw - 1.f);
+            verts.push_back(sy * hh + 1.f);
+            verts.push_back(coverage);
+        };
+
+        // Solid fill: coverage == 1 everywhere.
+        for (size_t i = 0; i < indices.size(); i++) {
+            emit(screenX[indices[i]], screenY[indices[i]], 1.f);
+        }
+
+        // Anti-aliased outline: a 1px ring extruded outward from each contour
+        // edge, coverage 1 (on the boundary) -> 0 (outer edge). Extruding only
+        // outward (instead of straddling the edge) avoids blending the feather
+        // over the already-filled interior, which previously darkened edges
+        // when opacity < 1.
+        if (drawOutline) {
+            const float feather = 1.0f;    // ring width in screen pixels
+            const float miterLimit = 4.0f; // clamp spikes at sharp corners
+            for (size_t i = 0; i < paths.size(); i++) {
+                size_t len = paths[i].size();
+                if (len < 3)
+                    continue;
+                size_t base = pathOffset[i];
+
+                // Signed area in screen space -> winding sign, so the outward
+                // normal is consistent for outer contours and holes alike.
+                double area2 = 0.0;
+                for (size_t v = 0; v < len; v++) {
+                    size_t w = (v + 1) % len;
+                    area2 += (double)screenX[base + v] * screenY[base + w] -
+                             (double)screenX[base + w] * screenY[base + v];
+                }
+                if (area2 == 0.0)
+                    continue;
+                float s = area2 > 0.0 ? 1.f : -1.f;
+
+                // Outward unit normal of each edge v -> v+1.
+                std::vector<float> enx(len), eny(len);
+                for (size_t v = 0; v < len; v++) {
+                    size_t w = (v + 1) % len;
+                    float dx = screenX[base + w] - screenX[base + v];
+                    float dy = screenY[base + w] - screenY[base + v];
+                    float l = sqrt(dx * dx + dy * dy);
+                    if (l < 1e-4f) {
+                        enx[v] = eny[v] = 0.f;
+                        continue;
+                    }
+                    dx /= l;
+                    dy /= l;
+                    enx[v] = s * dy;
+                    eny[v] = s * -dx;
+                }
+
+                // Per-vertex outward miter offset (joins edges without gaps).
+                std::vector<float> ox(len), oy(len);
+                for (size_t v = 0; v < len; v++) {
+                    size_t pe = (v + len - 1) % len; // incoming edge
+                    float mx = enx[pe] + enx[v];
+                    float my = eny[pe] + eny[v];
+                    float ml = sqrt(mx * mx + my * my);
+                    if (ml < 1e-4f) {
+                        // ~180deg reversal: fall back to a valid edge normal.
+                        if (enx[v] != 0.f || eny[v] != 0.f) {
+                            mx = enx[v];
+                            my = eny[v];
+                        } else {
+                            mx = enx[pe];
+                            my = eny[pe];
+                        }
+                        ml = sqrt(mx * mx + my * my);
+                        if (ml < 1e-4f) {
+                            ox[v] = oy[v] = 0.f;
+                            continue;
+                        }
+                    }
+                    mx /= ml;
+                    my /= ml;
+                    // Distance along the miter that reaches `feather` of
+                    // perpendicular offset.
+                    float cosHalf = mx * enx[v] + my * eny[v];
+                    if (fabs(cosHalf) < 1e-3f)
+                        cosHalf = cosHalf < 0.f ? -1e-3f : 1e-3f;
+                    float scale = feather / cosHalf;
+                    float maxScale = feather * miterLimit;
+                    if (scale > maxScale)
+                        scale = maxScale;
+                    else if (scale < -maxScale)
+                        scale = -maxScale;
+                    ox[v] = mx * scale;
+                    oy[v] = my * scale;
+                }
+
+                // Extrude each edge into two triangles.
+                for (size_t v = 0; v < len; v++) {
+                    size_t w = (v + 1) % len;
+                    float ivx = screenX[base + v], ivy = screenY[base + v];
+                    float iwx = screenX[base + w], iwy = screenY[base + w];
+                    float ovx = ivx + ox[v], ovy = ivy + oy[v];
+                    float owx = iwx + ox[w], owy = iwy + oy[w];
+
+                    emit(ivx, ivy, 1.f);
+                    emit(ovx, ovy, 0.f);
+                    emit(iwx, iwy, 1.f);
+
+                    emit(ovx, ovy, 0.f);
+                    emit(owx, owy, 0.f);
+                    emit(iwx, iwy, 1.f);
+                }
+            }
+        }
+
+        size_t vertexCount = verts.size() / 3;
+        if (vertexCount == 0)
+            return;
+
+        m_compositorContext->streamArrayBuffer(
+            m_compositorContext->m_polygonPosBuffer,
+            m_compositorContext->m_polygonPosBufferCapacity, verts.data(),
+            verts.size() * sizeof(float));
+        // Data is copied into the VBO by streamArrayBuffer; release the
+        // client-side staging buffer now to keep peak memory low.
+        std::vector<float>().swap(verts);
+
+        const GLsizei stride = (GLsizei)(3 * sizeof(float));
         gl()->vertexAttribPointer(
             m_compositorContext->m_polygonShaderProgramPosition, 2, GL_FLOAT,
-            false, 0, position.data());
+            false, stride, 0);
         gl()->enableVertexAttribArray(
             m_compositorContext->m_polygonShaderProgramPosition);
+        gl()->vertexAttribPointer(
+            m_compositorContext->m_polygonShaderProgramCoverage, 1, GL_FLOAT,
+            false, stride, (const void*)(2 * sizeof(float)));
+        gl()->enableVertexAttribArray(
+            m_compositorContext->m_polygonShaderProgramCoverage);
 
         gl()->uniform4f(m_compositorContext->m_polygonShaderProgramColor,
                         opacity * color.R(), opacity * color.G(),
                         opacity * color.B(), opacity * color.A());
 
-        gl()->drawArrays(GL_TRIANGLES, 0, triangleCount);
+        gl()->drawArrays(GL_TRIANGLES, 0, vertexCount);
 
         gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
 
         checkError(gl());
         gl()->disableVertexAttribArray(
             m_compositorContext->m_polygonShaderProgramPosition);
-
-        if (drawOutline && g_isSupportStandardDerivatives) {
-            drawPolygonOutlineAA(paths, color, opacity, customScreenMatrix,
-                                 customScreenWidth, customScreenHeight);
-        }
-    }
-
-    // Draw anti-aliased lines along polygon outline edges
-    void drawPolygonOutlineAA(const Clipper2Lib::PathsD& paths,
-                              const Unit::Color& color, float opacity,
-                              const SkMatrix* customScreenMatrix = nullptr,
-                              size_t customScreenWidth = 0,
-                              size_t customScreenHeight = 0)
-    {
-        m_compositorContext->lineProgram();
-
-        std::vector<float> position;
-        std::vector<float> edgeDistances;
-
-        // Line thickness in pixels (for anti-aliasing)
-        float lineWidth = 1.0f;
-
-        // Use custom parameters if provided, otherwise use defaults
-        const SkMatrix& screenMatrix =
-            customScreenMatrix ? *customScreenMatrix : m_screenMatrix;
-        size_t sw = customScreenWidth ? customScreenWidth : screenWidth();
-        size_t sh = customScreenHeight ? customScreenHeight : screenHeight();
-
-        for (const auto& path : paths) {
-            if (path.size() < 2)
-                continue;
-
-            for (size_t i = 0; i < path.size(); i++) {
-                size_t nextIdx = (i + 1) % path.size();
-
-                float x1 = (float)path[i].x;
-                float y1 = (float)path[i].y;
-                float x2 = (float)path[nextIdx].x;
-                float y2 = (float)path[nextIdx].y;
-
-                // Map points using the appropriate screen matrix
-                mapPointsByMatrix(x1, y1, screenMatrix);
-                mapPointsByMatrix(x2, y2, screenMatrix);
-
-                // Calculate line direction
-                float dx = x2 - x1;
-                float dy = y2 - y1;
-                float len = sqrt(dx * dx + dy * dy);
-                if (len < 0.001f)
-                    continue;
-
-                // Normalize direction
-                dx /= len;
-                dy /= len;
-
-                // Calculate normal (perpendicular) vector
-                float nx = -dy;
-                float ny = dx;
-
-                // Extend line endpoints to cover corners
-                float extend = lineWidth * 0.5f;
-                float ex1 = x1 - dx * extend;
-                float ey1 = y1 - dy * extend;
-                float ex2 = x2 + dx * extend;
-                float ey2 = y2 + dy * extend;
-
-                float halfWidth = lineWidth * 0.5f;
-
-                float hw = 2.f / sw;
-                float hh = -2.f / sh;
-
-                float v0x = (ex1 - nx * halfWidth) * hw - 1;
-                float v0y = (ey1 - ny * halfWidth) * hh + 1;
-                float v1x = (ex1 + nx * halfWidth) * hw - 1;
-                float v1y = (ey1 + ny * halfWidth) * hh + 1;
-                float v2x = (ex2 - nx * halfWidth) * hw - 1;
-                float v2y = (ey2 - ny * halfWidth) * hh + 1;
-                float v3x = (ex2 + nx * halfWidth) * hw - 1;
-                float v3y = (ey2 + ny * halfWidth) * hh + 1;
-
-                // Triangle 1: v0, v1, v2
-                position.push_back(v0x);
-                position.push_back(v0y);
-                edgeDistances.push_back(0.0f);
-
-                position.push_back(v1x);
-                position.push_back(v1y);
-                edgeDistances.push_back(lineWidth);
-
-                position.push_back(v2x);
-                position.push_back(v2y);
-                edgeDistances.push_back(0.0f);
-
-                // Triangle 2: v1, v3, v2
-                position.push_back(v1x);
-                position.push_back(v1y);
-                edgeDistances.push_back(lineWidth);
-
-                position.push_back(v3x);
-                position.push_back(v3y);
-                edgeDistances.push_back(lineWidth);
-
-                position.push_back(v2x);
-                position.push_back(v2y);
-                edgeDistances.push_back(0.0f);
-            }
-        }
-
-        if (position.empty())
-            return;
-
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Position attribute
-        gl()->vertexAttribPointer(
-            m_compositorContext->m_lineShaderProgramPosition, 2, GL_FLOAT,
-            false, 0, position.data());
-        gl()->enableVertexAttribArray(
-            m_compositorContext->m_lineShaderProgramPosition);
-
-        // Edge distance attribute
-        gl()->vertexAttribPointer(
-            m_compositorContext->m_lineShaderProgramEdgeDistance, 1, GL_FLOAT,
-            false, 0, edgeDistances.data());
-        gl()->enableVertexAttribArray(
-            m_compositorContext->m_lineShaderProgramEdgeDistance);
-
-        // Set color
-        gl()->uniform4f(m_compositorContext->m_lineShaderProgramColor,
-                        opacity * color.R(), opacity * color.G(),
-                        opacity * color.B(), opacity * color.A());
-
-        // Set line width uniform
-        gl()->uniform1f(m_compositorContext->m_lineShaderProgramLineWidth,
-                        lineWidth);
-
-        // Draw
-        gl()->drawArrays(GL_TRIANGLES, 0, position.size() / 2);
-
-        checkError(gl());
         gl()->disableVertexAttribArray(
-            m_compositorContext->m_lineShaderProgramPosition);
-        gl()->disableVertexAttribArray(
-            m_compositorContext->m_lineShaderProgramEdgeDistance);
+            m_compositorContext->m_polygonShaderProgramCoverage);
     }
 
     virtual void drawRect(const LayoutRect& rt) override
