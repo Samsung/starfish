@@ -71,7 +71,7 @@ jobs:
   test_unit_test:
     needs: build_x64
     timeout-minutes: 60
-    runs-on: [ runner-type3 ]
+    runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -114,7 +114,7 @@ jobs:
   test_internal_test:
     needs: build_x64
     timeout-minutes: 60
-    runs-on: [ runner-type3 ]
+    runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -166,7 +166,7 @@ jobs:
   test_reftest_all:
     needs: build_x64
     timeout-minutes: 60
-    runs-on: [ runner-type3 ]
+    runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -218,7 +218,7 @@ jobs:
   test_wpt_serve_all:
     needs: build_x64
     timeout-minutes: 60
-    runs-on: [ runner-type3 ]
+    runs-on: [ code-linux, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04_python3.9
       credentials:
