@@ -152,7 +152,7 @@ def vendor_test():
 
 
 def wpt_css_css21():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css21_dev_basic.res", "basic"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css21_dev_basic.res", "basic"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css21_dev_pixel.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css21_dev_manual.res", "cairo", "--font-dep"])
 
@@ -167,7 +167,7 @@ def wpt_css_color():
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res", "cairo"])
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res", "cairo", "--font-dep"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res", "cairo"])
 
 
@@ -199,7 +199,7 @@ def wpt_mediaqueries():
 def wpt_selectors():
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res", "cairo"])
-    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res", "cairo"])  # migrated to wpt_serve
     run_test(["csswg", "tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res", "cairo"])
 
 
