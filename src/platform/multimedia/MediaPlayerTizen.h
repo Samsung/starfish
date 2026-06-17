@@ -24,6 +24,10 @@
 
 #include "platform/multimedia/MediaPlayer.h"
 
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+
 #include <media/player.h>
 
 #if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
@@ -240,11 +244,30 @@ public:
 
     ResourceURL* m_currentURL;
 
+    Mutex* m_setNeedsCompositeEventIdlerHandleMutex;
+    volatile size_t m_setNeedsCompositeEventIdlerHandle;
+
     player_h m_nativePlayer;
 #if defined(STARFISH_RUN_MSE_THREAD)
     Thread* m_mseThread;
 #endif
     volatile bool* m_playerDeadFlag;
+#if defined(STARFISH_RUN_MSE_THREAD)
+    // Leaf-level wake channel for the MSE feed thread. Never hold
+    // m_mseWakeMutex while taking m_fillBufferMutex or any stream mutex.
+    std::mutex m_mseWakeMutex;
+    std::condition_variable m_mseWakeCv;
+    bool m_mseWakePending{ false };
+
+    void wakeMseThread()
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_mseWakeMutex);
+            m_mseWakePending = true;
+        }
+        m_mseWakeCv.notify_one();
+    }
+#endif
     MediaPlayerSourceStream* m_audioStream;
     MediaPlayerSourceStream* m_videoStream;
 
@@ -272,6 +295,9 @@ protected:
     void setNativePlayerDisplayMode();
     void setNativePlayerDisplayModeWithGL();
     void setPlayerDisplayVideoAtPausedState(int& ret);
+    // HW video overlay output is controlled at runtime via the public LWE
+    // Settings (Settings::SetVideoOverlayEnabled), read off the WebView.
+    bool videoOverlayEnabled();
     void punchHole(Compositor* canvas, const LayoutRect& videoRect,
                    const LayoutRect& absVideoRect);
     void setMediaFormatExtraForVideo(media_format_h& mediaFormat,

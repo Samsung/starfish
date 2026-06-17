@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>sf-mse2</title></head>
+<body>
+<video id="v" muted></video>
+<script>
+var results = [];
+function report(n, ok, d) { results.push(n + "=" + (ok ? "PASS" : "FAIL") + (d ? "(" + d + ")" : "")); }
+function send(tag) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/result", false);
+    try { x.send(tag + ": " + results.join("; ")); } catch (e) {}
+}
+function fetchBin(url, cb) {
+    var x = new XMLHttpRequest();
+    x.open("GET", url);
+    x.responseType = "arraybuffer";
+    x.onload = function () { cb(x.response); };
+    x.onerror = function () { cb(null); };
+    x.send();
+}
+
+var ms = new MediaSource();
+var v = document.getElementById("v");
+var t0 = Date.now();
+var appendLatencies = [];
+
+ms.addEventListener("sourceopen", function () {
+    var sb;
+    try { sb = ms.addSourceBuffer('video/webm; codecs="vp9"'); }
+    catch (e) { report("addSourceBuffer", false, String(e)); return send("DONE"); }
+    report("addSourceBuffer", true);
+
+    var testDone = false;
+    var urls = ["/init.webm", "/seg0.webm", "/seg1.webm", "/seg2.webm", "/seg3.webm", "/seg4.webm"];
+    var idx = 0;
+    var tAppend = 0;
+
+    sb.addEventListener("updateend", function () {
+        appendLatencies.push(Date.now() - tAppend);
+        next();
+    });
+    sb.addEventListener("error", function () {
+        report("append_" + (idx - 1), false, "sb-error");
+        finish();
+    });
+
+    function next() {
+        if (idx >= urls.length) return finish();
+        var u = urls[idx++];
+        fetchBin(u, function (buf) {
+            if (!buf) { report("fetch_" + u, false); return finish(); }
+            tAppend = Date.now();
+            try { sb.appendBuffer(buf); }
+            catch (e) { report("appendThrow_" + u, false, String(e)); finish(); }
+        });
+    }
+
+    function finish() {
+        if (testDone) return;
+        testDone = true;
+        var r = sb.buffered;
+        var rangeStr = "";
+        for (var i = 0; i < r.length; i++) {
+            rangeStr += "[" + r.start(i).toFixed(2) + "-" + r.end(i).toFixed(2) + "]";
+        }
+        report("appends_done", idx === urls.length, idx + "/" + urls.length);
+        report("buffered_ranges", r.length === 1, rangeStr || "empty");
+        var covered = r.length > 0 && r.end(r.length - 1) >= 4.5;
+        report("buffered_coverage", covered, r.length ? r.end(r.length - 1).toFixed(2) + "s" : "0");
+        var sum = 0;
+        for (var j = 1; j < appendLatencies.length; j++) sum += appendLatencies[j];
+        var avg = appendLatencies.length > 1 ? (sum / (appendLatencies.length - 1)).toFixed(1) : "n/a";
+        report("avg_append_to_updateend_ms", true, avg);
+        // remove() exercises rangeRemoval paths
+        try {
+            sb.remove(0, 1.0);
+            sb.addEventListener("updateend", function onRm() {
+                sb.removeEventListener("updateend", onRm);
+                var r2 = sb.buffered;
+                var s = r2.length ? r2.start(0).toFixed(2) : "empty";
+                report("remove_front", r2.length === 1 && r2.start(0) >= 0.9, s);
+                send("DONE");
+            });
+        } catch (e) {
+            report("remove_front", false, String(e));
+            send("DONE");
+        }
+    }
+
+    next();
+});
+v.src = URL.createObjectURL(ms);
+setTimeout(function () { send("TIMEOUT"); }, 20000);
+</script>
+</body>
+</html>

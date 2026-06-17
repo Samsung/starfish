@@ -35,6 +35,7 @@
 #include <mutex>
 #include <thread>
 #include <utility>
+#include <vector>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -352,6 +353,22 @@ public:
     Thread* m_mseThread;
 #endif
     volatile bool* m_playerDeadFlag;
+#if defined(STARFISH_RUN_MSE_THREAD)
+    // Leaf-level wake channel for the MSE feed thread. Never hold
+    // m_mseWakeMutex while taking m_fillBufferMutex or any stream mutex.
+    std::mutex m_mseWakeMutex;
+    std::condition_variable m_mseWakeCv;
+    bool m_mseWakePending{ false };
+
+    void wakeMseThread()
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_mseWakeMutex);
+            m_mseWakePending = true;
+        }
+        m_mseWakeCv.notify_one();
+    }
+#endif
     MediaPlayerSourceStream* m_audioStream;
     MediaPlayerSourceStream* m_videoStream;
 
@@ -381,6 +398,21 @@ public:
         LinuxMediaPacket* packet;
     };
     std::deque<DecodedVideoFrame> m_decodedVideoQueue;
+
+    // Recycled decoded-frame packets (LinuxMediaPacket header + RGBA buffer).
+    // Guarded by m_decodedVideoFrameMutex. All entries match
+    // m_framePoolWidth/Height; the producer re-tags and flushes the pool when
+    // the sws context is recreated (resolution change).
+    static const size_t kMaxPooledFramePackets = 4;
+    std::vector<LinuxMediaPacket*> m_framePool;
+    int m_framePoolWidth;
+    int m_framePoolHeight;
+
+    // All require m_decodedVideoFrameMutex held.
+    LinuxMediaPacket* takePooledFramePacketLocked(int width, int height);
+    void releaseFramePacketLocked(LinuxMediaPacket* packet);
+    void freeFramePacketLocked(LinuxMediaPacket* packet);
+    void flushFramePoolLocked(int newWidth, int newHeight);
 
     SwsContext* m_swsCtx;
     int m_swsCtxWidth;

@@ -114,7 +114,10 @@ struct MediaPacketGroup {
     }
 };
 
-typedef GCVector<uint8_t> SourceBufferDataVector;
+// Atomic (unscanned) GC allocation: holds pure media bytes, so the
+// conservative GC must not scan it. NOTE resize() does not zero new
+// regions — always write (memcpy) before reading them.
+typedef GCAtomicVector<uint8_t> SourceBufferDataVector;
 
 class SourceBuffer : public EventTarget, public DocumentHoldable {
 public:
@@ -294,6 +297,10 @@ protected:
     {
         m_buffered = nullptr;
     }
+    void setMaxBufferSizeNeedsUpdate()
+    {
+        m_maxBufferSizeCache = 0;
+    }
 
     AppendMode m_mode;
     bool m_isAttachedToParent;
@@ -314,6 +321,15 @@ protected:
     GCVector<GCVector<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroups;
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
+    // Max m_groupTimestampEnd per stream; UINT64_MAX = invalid, recompute
+    // lazily in lastBufferedTimestamp(). Guarded by m_packetGroupsMutex.
+    GCVector<uint64_t> m_lastBufferedTimestampCachePerStream;
+    // Memoized video-resolution-based max buffer size computed in
+    // codedFrameEviction(). 0 = invalid, recompute on next eviction.
+    // Main thread only: read in codedFrameEviction(), invalidated in
+    // postBufferAppend() where m_streamInfo grows; both serialized by
+    // m_updating.
+    size_t m_maxBufferSizeCache;
     Mutex* m_packetGroupsMutex;
 };
 } // namespace Starfish

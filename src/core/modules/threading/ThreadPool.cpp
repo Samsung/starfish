@@ -21,13 +21,21 @@
 #include "ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
+#include <chrono>
+
+namespace {
+// MSE appendBuffer demux work arrives every ~100-500ms during YouTube
+// playback; 2s covers >= 4x the worst-case cadence plus ABR/network jitter,
+// while still releasing threads ~2s after playback stops or page goes idle.
+const std::chrono::milliseconds kWorkerLingerDuration(2000);
+} // namespace
+
 namespace Starfish {
 
 ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     : m_isClosed(false)
     , m_messageLoop(ml)
 {
-    m_workerQueueMutex = new Mutex();
     for (size_t i = 0; i < maxThreadCount; i++) {
         m_activePooledThreads.push_back(new Thread(this));
     }
@@ -36,16 +44,18 @@ ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
 void ThreadPool::destroy()
 {
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
-
-    m_isClosed = true;
+    {
+        std::lock_guard<std::mutex> lock(m_workerQueueMutex);
+        m_isClosed = true;
+        clearWorkLocked(nullptr);
+    }
+    m_workerQueueCondition.notify_all();
 
     // Finish unpooled thread
     GCVector<Thread*> copies = m_activeUnPooledThreads;
     for (auto const& thread : copies) {
         thread->finishUnjoined();
     }
-
-    clearWork(nullptr);
 }
 
 MessageLoop* ThreadPool::messageLoop()
@@ -79,14 +89,22 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
         return;
     }
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
-    m_workerQueueMutex->lock();
-    WorkerData* r = new (NoGC) WorkerData;
-    r->dataPointerComesFromNoGC = dataPointerComesFromNoGC;
-    r->data = data;
-    r->ctx = ctx;
-    m_workerQueue.push_back(std::make_pair(fn, r));
-    m_workerQueueMutex->unlock();
-
+    {
+        std::lock_guard<std::mutex> lock(m_workerQueueMutex);
+        WorkerData* r = new (NoGC) WorkerData;
+        r->dataPointerComesFromNoGC = dataPointerComesFromNoGC;
+        r->data = data;
+        r->ctx = ctx;
+        m_workerQueue.push_back(std::make_pair(fn, r));
+        if (m_idleWaiterCount > 0) {
+            // A lingering worker is parked on the condition variable; the
+            // enqueue above happened under the same mutex its predicate
+            // runs under, so the wakeup cannot be lost.
+            m_workerQueueCondition.notify_one();
+            return;
+        }
+    }
+    // No idle waiter: spawn a worker on a free Thread slot, as before.
     for (size_t i = 0; i < m_activePooledThreads.size(); i++) {
         if (!m_activePooledThreads[i]->isAlive()) {
             struct Rooter {
@@ -97,36 +115,56 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
 
             ThreadWorker worker = [](void* data) -> void* {
                 Rooter* rooter = (Rooter*)data;
+                ThreadPool* pool = rooter->pool;
                 // STARFISH_LOG_INFO("threadPool worker start");
-                while (true) {
-                    rooter->pool->m_workerQueueMutex->lock();
-                    if (!rooter->pool->m_workerQueue.size()) {
-                        rooter->pool->m_workerQueueMutex->unlock();
-                        break;
-                    }
-                    std::pair<ThreadWorker, WorkerData*> first =
-                        rooter->pool->m_workerQueue.front();
-                    rooter->pool->m_workerQueue.erase(
-                        rooter->pool->m_workerQueue.begin());
-                    rooter->pool->m_workerQueueMutex->unlock();
+                {
+                    std::unique_lock<std::mutex> lock(pool->m_workerQueueMutex);
+                    while (true) {
+                        if (!pool->m_workerQueue.empty()) {
+                            std::pair<ThreadWorker, WorkerData*> first =
+                                pool->m_workerQueue.front();
+                            pool->m_workerQueue.pop_front();
+                            lock.unlock();
 
-                    WorkerData* r = first.second;
-                    first.first(r->data);
-                    rooter->pool->m_messageLoop
-                        ->addIdlerWithNoGCRootingInOtherThread(
-                            nullptr,
-                            [](size_t handle, void* data) { GC_FREE(data); },
-                            r);
+                            WorkerData* r = first.second;
+                            first.first(r->data);
+                            pool->m_messageLoop
+                                ->addIdlerWithNoGCRootingInOtherThread(
+                                    nullptr,
+                                    [](size_t handle, void* data) {
+                                        GC_FREE(data);
+                                    },
+                                    r);
+
+                            lock.lock();
+                            continue;
+                        }
+                        if (pool->m_isClosed) {
+                            break;
+                        }
+                        // Queue empty and pool open: linger instead of exiting,
+                        // so the next demux/decode job reuses this OS thread
+                        // rather than paying pthread creation again.
+                        pool->m_idleWaiterCount++;
+                        bool hasWorkOrClosed =
+                            pool->m_workerQueueCondition.wait_for(
+                                lock, kWorkerLingerDuration, [pool] {
+                                    return !pool->m_workerQueue.empty() ||
+                                           pool->m_isClosed;
+                                });
+                        pool->m_idleWaiterCount--;
+                        if (!hasWorkOrClosed) {
+                            break;
+                        }
+                    }
                 }
 #ifdef STARFISH_MESSAGELOOP_DEBUG
-                rooter->pool->m_messageLoop->decreaseRunningPoolWorkerCount();
+                pool->m_messageLoop->decreaseRunningPoolWorkerCount();
 #endif
                 // STARFISH_LOG_INFO("threadPool worker end");
-                rooter->pool->m_messageLoop
-                    ->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
-                        [](size_t handle, void* data) { GC_FREE(data); },
-                        rooter);
+                pool->m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                    nullptr, [](size_t handle, void* data) { GC_FREE(data); },
+                    rooter);
                 return NULL;
             };
 #ifdef STARFISH_MESSAGELOOP_DEBUG
@@ -141,8 +179,12 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data,
 void ThreadPool::clearWork(ExecutionContext* ctx)
 {
     STARFISH_ASSERT(m_messageLoop->calledOnValidThread());
-    m_workerQueueMutex->lock();
+    std::lock_guard<std::mutex> lock(m_workerQueueMutex);
+    clearWorkLocked(ctx);
+}
 
+void ThreadPool::clearWorkLocked(ExecutionContext* ctx)
+{
     auto iter = m_workerQueue.begin();
     while (iter != m_workerQueue.end()) {
         if ((iter->second)->ctx == ctx || ctx == nullptr) {
@@ -155,8 +197,6 @@ void ThreadPool::clearWork(ExecutionContext* ctx)
             iter++;
         }
     }
-
-    m_workerQueueMutex->unlock();
 }
 
 } // namespace Starfish

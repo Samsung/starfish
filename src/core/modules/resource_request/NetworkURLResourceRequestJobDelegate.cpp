@@ -85,6 +85,7 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
                                ? new (NoGC) CurlMultiRequestData(new Mutex())
                                : nullptr)
     , httpTransaction(HTTPTransaction::create(curlMultiRequestData))
+    , responseSpaceReserved(false)
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , cachedEntry(nullptr)
 #endif
@@ -108,6 +109,46 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
     if (curlMultiRequestData) {
         delete curlMultiRequestData;
     }
+}
+
+static const size_t kMaxResponseReserveBytes = 64 * 1024 * 1024;
+
+// Caller must hold request->m_mutex.
+static void reserveResponseSpaceOnce(NetworkURLWorkerData* nwd,
+                                     std::vector<char>& target)
+{
+    if (nwd->responseSpaceReserved) {
+        return;
+    }
+    nwd->responseSpaceReserved = true;
+
+    const HeaderMap& headers = nwd->request->responseHeaderMap();
+    auto it = headers.find(HTTPHeaderMap::kContentLength);
+    if (it == headers.end()) {
+        return;
+    }
+
+    errno = 0;
+    char* end = nullptr;
+    unsigned long long contentLength = strtoull(it->second.c_str(), &end, 10);
+    if (errno != 0 || end == it->second.c_str() || contentLength == 0) {
+        return;
+    }
+    target.reserve(
+        std::min(static_cast<size_t>(contentLength), kMaxResponseReserveBytes));
+}
+
+// Caller must hold request->m_mutex.
+static void flushPendingResponseData(NetworkURLWorkerData* nwd)
+{
+    auto& response = nwd->request->response();
+    if (response.empty()) {
+        response = std::move(nwd->pendingResponseData);
+    } else {
+        response.insert(response.end(), nwd->pendingResponseData.begin(),
+                        nwd->pendingResponseData.end());
+    }
+    nwd->pendingResponseData.clear();
 }
 
 void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
@@ -250,10 +291,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             MessageLoopInvalidID) {
             ResourceRequest* request = nwd->request;
             if (!request->isSync()) {
-                request->response().insert(request->response().end(),
-                                           nwd->pendingResponseData.begin(),
-                                           nwd->pendingResponseData.end());
-                nwd->pendingResponseData.clear();
+                flushPendingResponseData(nwd);
             }
             request->changeReadyState(ReadyState::Loading, true);
             request->changeProgress(ProgressState::Progress, true);
@@ -758,8 +796,10 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     const char* memPtr = (const char*)ptr;
     if (request->isSync()) {
         auto& entityBody = request->response();
+        reserveResponseSpaceOnce(nwd, entityBody);
         entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
     } else {
+        reserveResponseSpaceOnce(nwd, nwd->pendingResponseData);
         nwd->pendingResponseData.insert(nwd->pendingResponseData.end(), memPtr,
                                         memPtr + realSize);
     }
@@ -807,11 +847,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                         MessageLoopInvalidID;
                                 }
                                 if (!request->isSync()) {
-                                    request->response().insert(
-                                        request->response().end(),
-                                        nwd->pendingResponseData.begin(),
-                                        nwd->pendingResponseData.end());
-                                    nwd->pendingResponseData.clear();
+                                    flushPendingResponseData(nwd);
                                 }
                             }
 

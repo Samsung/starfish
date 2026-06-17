@@ -48,6 +48,18 @@ namespace Starfish {
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
 
+// Render the video on a HW overlay plane (player_set_ecore_wl_display OVERLAY +
+// DST_ROI) with a punch-hole in the web content, instead of decode-to-texture +
+// GL compositing. The video then bypasses the web compositor entirely, so the
+// per-video-frame whole-page recomposite (the playback stutter) disappears.
+// Controlled at runtime via the public LWE Settings
+// (Settings::SetVideoOverlayEnabled), read off the owning WebView.
+bool MediaPlayerTizen::videoOverlayEnabled()
+{
+    return m_container && m_container->webView() &&
+           m_container->webView()->videoOverlayEnabled();
+}
+
 void MediaPlayerSourceStream::initFormatExtraForAudio()
 {
 }
@@ -81,6 +93,23 @@ void MediaPlayerTizen::disposePlayer()
 
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
+    if (videoOverlayEnabled()) {
+        // HW overlay plane + DST_ROI. The hole is punched (and ROI tracked) in
+        // didDrawVideo()/punchHole(). Compiled unconditionally so it works even
+        // in STARFISH_MM_OUTPUT_WITH_GL builds.
+        player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
+        m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
+        player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
+        void* ecoreWaylandHandle =
+            m_container->webView()->publicLayerUserDataMap()
+                ["__internalLWEWebViewEFLEcoreWaylandHandle"];
+        auto width = m_container->webView()->renderer()->width();
+        auto height = m_container->webView()->renderer()->height();
+        player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
+                                    ecoreWaylandHandle, 0, 0, width, height);
+        player_set_display_visible(m_nativePlayer, true);
+        return;
+    }
 #if defined(STARFISH_MM_OUTPUT_WITH_GL)
     setNativePlayerDisplayModeWithGL();
 #else
@@ -121,6 +150,13 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& absVideoRect)
 {
 #if !defined(STARFISH_MM_OUTPUT_WITH_GL)
+    bool doPunch = true;
+#else
+    bool doPunch = videoOverlayEnabled();
+#endif
+    if (!doPunch) {
+        return;
+    }
     canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
                                  videoRect.width(), videoRect.height()));
     if (m_lastAbsoluteROIArea != absVideoRect) {
@@ -130,7 +166,6 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
             absVideoRect.width().toInt(), absVideoRect.height().toInt());
         m_lastAbsoluteROIArea = absVideoRect;
     }
-#endif
 }
 
 void MediaPlayerTizen::updateAudioStreamInfo(MediaPlayerSourceStream* audio,

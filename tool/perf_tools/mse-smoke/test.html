@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>sf-smoke</title></head>
+<body>
+<video id="v" muted></video>
+<script>
+var results = [];
+function report(name, ok, detail) {
+    results.push(name + "=" + (ok ? "PASS" : "FAIL") + (detail ? (" (" + detail + ")") : ""));
+}
+function send(tag) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/result", false);
+    try { x.send(tag + ": " + results.join("; ")); } catch (e) {}
+}
+
+// Test 1: XHR arraybuffer (exercises ingress copies, Done-gated response)
+function t1(next) {
+    var x = new XMLHttpRequest();
+    x.open("GET", "/blob.bin");
+    x.responseType = "arraybuffer";
+    var sawNullDuringLoading = true;
+    x.onprogress = function () {
+        if (x.response !== null) sawNullDuringLoading = false;
+    };
+    x.onload = function () {
+        var buf = x.response;
+        var ok = buf && buf.byteLength === 1048576;
+        var view = new Uint8Array(buf);
+        var sum = 0;
+        for (var i = 0; i < 256; i++) sum += view[i];
+        report("xhr_arraybuffer_len", ok, buf ? buf.byteLength : "null");
+        report("xhr_first256_sum", sum === 32640, sum); // 0+1+...+255
+        report("xhr_null_during_loading", sawNullDuringLoading);
+        next();
+    };
+    x.onerror = function () { report("xhr_arraybuffer_len", false, "onerror"); next(); };
+    x.send();
+}
+
+// Test 2: MediaSource plumbing (open, addSourceBuffer, bad append -> events)
+function t2(next) {
+    if (typeof MediaSource === "undefined") {
+        report("mse_available", false);
+        return next();
+    }
+    report("mse_available", true);
+    var ms = new MediaSource();
+    var v = document.getElementById("v");
+    var done = false;
+    var finish = function (tag, ok, detail) {
+        if (done) return;
+        done = true;
+        report(tag, ok, detail);
+        next();
+    };
+    setTimeout(function () { finish("mse_append_events", false, "timeout"); }, 8000);
+    ms.addEventListener("sourceopen", function () {
+        report("mse_sourceopen", true);
+        var sb;
+        try {
+            sb = ms.addSourceBuffer('video/webm; codecs="vp9"');
+        } catch (e) {
+            try { sb = ms.addSourceBuffer('video/mp4; codecs="avc1.42E01E"'); } catch (e2) {
+                return finish("mse_addsourcebuffer", false, String(e2));
+            }
+        }
+        report("mse_addsourcebuffer", true);
+        var events = [];
+        ["updatestart", "update", "updateend", "error"].forEach(function (t) {
+            sb.addEventListener(t, function () { events.push(t); });
+        });
+        var junk = new Uint8Array(4096);
+        for (var i = 0; i < junk.length; i++) junk[i] = (i * 7) & 0xff;
+        try { sb.appendBuffer(junk); } catch (e) {
+            return finish("mse_append_events", false, "throw:" + String(e));
+        }
+        setTimeout(function () {
+            var gotEnd = events.indexOf("updateend") >= 0;
+            var startFirst = events[0] === "updatestart";
+            finish("mse_append_events", gotEnd && startFirst,
+                events.join(",") + "|updating=" + sb.updating
+                + "|buffered.length=" + sb.buffered.length);
+        }, 3000);
+    });
+    v.src = URL.createObjectURL(ms);
+}
+
+// Test 3: timeupdate listener registration (exercises listener-gated dispatch path)
+function t3(next) {
+    var v = document.getElementById("v");
+    var fired = false;
+    v.addEventListener("timeupdate", function () { fired = true; });
+    v.ontimeupdate = function () { fired = true; };
+    report("timeupdate_listener_attach", true);
+    next();
+}
+
+t1(function () { t2(function () { t3(function () { send("DONE"); }); }); });
+setTimeout(function () { send("TIMEOUT"); }, 15000);
+</script>
+</body>
+</html>

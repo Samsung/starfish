@@ -38,7 +38,13 @@
 
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_SIZE 12
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 0.5
-#define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.25
+// Media streaming fetches the next segment every 1-5s from the same host;
+// a sub-second idle limit evicted the handle (closing its TCP connection)
+// between every pair of segments, forcing a fresh TCP+TLS round trip each
+// time. 60s keeps connections warm across segment gaps; libcurl itself
+// refuses to reuse connections older than its default 118s max age, and
+// the cache size cap still bounds total open handles.
+#define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 60
 
 namespace Starfish {
 

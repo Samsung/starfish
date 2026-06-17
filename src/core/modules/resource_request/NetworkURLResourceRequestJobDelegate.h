@@ -57,6 +57,7 @@ struct NetworkURLWorkerData {
     CurlMultiRequestData* curlMultiRequestData;
     std::unique_ptr<HTTPTransaction> httpTransaction;
     std::vector<char> pendingResponseData;
+    bool responseSpaceReserved;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCacheEntry* cachedEntry;
 #endif

@@ -1127,9 +1127,10 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
         // Finish "seek"
         m_isSeeking = false;
         mediaPlayerNotifyUpdateReadyStateItsContainer(HAVE_ENOUGH_DATA);
+        // Spec order for seek completion: one timeupdate, then seeked
+        // (https://html.spec.whatwg.org/multipage/media.html#seeking).
         dispatchTimeupdateEvent();
         dispatchSeekedEvent();
-        dispatchTimeupdateEvent();
         if (!m_isPaused) {
             setPlayStartPos(m_officialPlaybackPosition);
         }
@@ -1178,6 +1179,39 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
         new MediaOperationQueueDataRequestDispatchEvent(this, t, e));
 }
 
+// Mirrors the event-path construction in EventTarget::dispatchEvent
+// (element -> ancestors -> document -> window): capture-phase listeners
+// on ancestors fire even for non-bubbling events, so the whole chain
+// must be consulted. NOTE: removeEventListener leaves an empty vector
+// behind, so size() must be checked, not just entry presence.
+static bool hasEventListenerInDispatchPath(EventTarget* origin,
+                                           String* eventType)
+{
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
+    EventTarget* target = origin;
+    while (target) {
+        auto listeners = target->getEventListeners(eventType);
+        if (listeners && listeners->size()) {
+            return true;
+        }
+        if (target->isNode()) {
+            Node* node = target->asNode();
+            if (node->isDocument()) {
+                target = node->asDocument()->window();
+            } else {
+                target = node->parentNode();
+            }
+        } else {
+            break;
+        }
+    }
+    return false;
+#else
+    auto listeners = origin->getEventListeners(eventType);
+    return listeners && listeners->size();
+#endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
+}
+
 #define ADD_DISPATCH_EVENT_DEF(name, Name)                                     \
     void HTMLMediaElement::dispatch##Name##EventNow()                          \
     {                                                                          \
@@ -1194,7 +1228,35 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
         addEventToOperationQueue(this, e);                                     \
     }
 
-ADD_DISPATCH_EVENT_DEF(progress, Progress);
+// Variant for high-frequency repeating events ONLY (timeupdate, progress).
+// Skips Event allocation + operation-queue traffic when nothing can observe
+// the event. The check runs on every call, so a listener added mid-playback
+// takes effect on the next tick. NEVER use this for one-shot events
+// (seeked, ended, canplay, ...): a listener registered between queueing and
+// dispatch would miss them permanently.
+#define ADD_DISPATCH_EVENT_DEF_IF_LISTENED(name, Name)                         \
+    void HTMLMediaElement::dispatch##Name##EventNow()                          \
+    {                                                                          \
+        String* eventType = starfish()->staticStrings()->m_##name.localName(); \
+        if (!hasEventListenerInDispatchPath(this, eventType)) {                \
+            return;                                                            \
+        }                                                                      \
+        Event* e =                                                             \
+            new Event(executionContext(), eventType, EventInit(false, false)); \
+        dispatchEventByUA(e);                                                  \
+    }                                                                          \
+    void HTMLMediaElement::dispatch##Name##Event()                             \
+    {                                                                          \
+        String* eventType = starfish()->staticStrings()->m_##name.localName(); \
+        if (!hasEventListenerInDispatchPath(this, eventType)) {                \
+            return;                                                            \
+        }                                                                      \
+        Event* e =                                                             \
+            new Event(executionContext(), eventType, EventInit(false, false)); \
+        addEventToOperationQueue(this, e);                                     \
+    }
+
+ADD_DISPATCH_EVENT_DEF_IF_LISTENED(progress, Progress);
 ADD_DISPATCH_EVENT_DEF(suspend, Suspend);
 ADD_DISPATCH_EVENT_DEF(abort, Abort);
 ADD_DISPATCH_EVENT_DEF(error, Error);
@@ -1211,17 +1273,19 @@ ADD_DISPATCH_EVENT_DEF(seeking, Seeking);
 ADD_DISPATCH_EVENT_DEF(seeked, Seeked);
 ADD_DISPATCH_EVENT_DEF(ended, Ended);
 ADD_DISPATCH_EVENT_DEF(durationchange, Durationchange);
-ADD_DISPATCH_EVENT_DEF(timeupdate, Timeupdate);
+ADD_DISPATCH_EVENT_DEF_IF_LISTENED(timeupdate, Timeupdate);
 ADD_DISPATCH_EVENT_DEF(play, Play);
 ADD_DISPATCH_EVENT_DEF(pause, Pause);
 ADD_DISPATCH_EVENT_DEF(ratechange, Ratechange);
 ADD_DISPATCH_EVENT_DEF(volumechange, Volumechange);
 #undef ADD_DISPATCH_EVENT_DEF
+#undef ADD_DISPATCH_EVENT_DEF_IF_LISTENED
 
 void HTMLMediaElement::abortEveryPendingOperation(
     DOMException* exceptionForPlayPromise)
 {
     MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::abortEveryPendingOperation()");
+    m_operationQueueAbortGeneration++;
     if (m_currentOperation) {
         m_currentOperation->cancelOperation();
         m_currentOperation = nullptr;
@@ -1264,6 +1328,24 @@ void HTMLMediaElement::processNextOperationQueue()
         MediaOperationQueueData* next = m_operationQueue.front();
         STARFISH_ASSERT(!next->isPlayRequest());
         m_operationQueue.erase(m_operationQueue.begin());
+
+        const size_t kMaxBatchedEventDispatch = 4;
+        if (next->isEventDispatchRequest() && m_operationQueue.size() &&
+            m_operationQueue.front()->isEventDispatchRequest()) {
+            MediaOperationQueueDataBatchedDispatchEvent* batch =
+                new MediaOperationQueueDataBatchedDispatchEvent(this);
+            batch->m_ops.push_back(
+                (MediaOperationQueueDataRequestDispatchEvent*)next);
+            while (batch->m_ops.size() < kMaxBatchedEventDispatch &&
+                   m_operationQueue.size() &&
+                   m_operationQueue.front()->isEventDispatchRequest()) {
+                batch->m_ops.push_back(
+                    (MediaOperationQueueDataRequestDispatchEvent*)
+                        m_operationQueue.front());
+                m_operationQueue.erase(m_operationQueue.begin());
+            }
+            next = batch;
+        }
 
         m_currentPendingOperationHandle = webView()->messageLoop()->addIdler(
             window(),
@@ -1615,6 +1697,24 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     //     s.data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEventByUA(m_event);
+}
+
+void MediaOperationQueueDataBatchedDispatchEvent::processOperationQueue()
+{
+    HTMLMediaElement* self = m_mediaElement;
+    // Identical protocol to the single-event op: hand the queue back first.
+    self->processNextOperationQueue();
+    size_t generation = self->m_operationQueueAbortGeneration;
+    for (size_t i = 0; i < m_ops.size(); i++) {
+        m_ops[i]->m_target->dispatchEventByUA(m_ops[i]->m_event);
+        // A handler may have run abortEveryPendingOperation (load(), src
+        // change, MSE failure) or dispose(). The remaining batched events
+        // are exactly the queue entries abort would have cleared.
+        if (self->m_operationQueueAbortGeneration != generation ||
+            !self->starfish()->isAlive()) {
+            return;
+        }
+    }
 }
 
 MediaOperationQueueDataRequestPlay::MediaOperationQueueDataRequestPlay(

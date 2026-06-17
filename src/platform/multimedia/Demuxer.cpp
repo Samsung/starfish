@@ -22,7 +22,16 @@
 #include "StarfishConfig.h"
 #include "Demuxer.h"
 
+#include <cstddef>
+#include <type_traits>
+
 namespace Starfish {
+
+static_assert(std::is_trivially_destructible<MediaPacket>::value,
+              "MediaPacket must stay trivially destructible for "
+              "MediaPacket::destroy");
+static_assert(alignof(MediaPacket) <= alignof(std::max_align_t),
+              "combined block relies on operator new[] alignment");
 
 Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
 {

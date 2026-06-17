@@ -23,6 +23,7 @@
 #include "binding/generated/Interfaces.h"
 #include "StarfishBase.h" // ASSERT, UNLIKELY, RELEASE_ASSERT_SHOULD_NOT_BE_HERE
 #include <GCUtil.h>       // gc
+#include <vector>
 
 namespace Escargot {
 class VMInstanceRef;
@@ -287,6 +288,8 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           void* bufferSrc, size_t len);
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           size_t len);
+ScriptArrayBuffer createScriptArrayBufferAdoptingVector(
+    ScriptBindingInstance* instance, std::vector<char>&& source);
 
 ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
                                         void* scriptFreeableBuffer, size_t len);

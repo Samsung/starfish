@@ -106,6 +106,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
                            std::numeric_limits<float>::quiet_NaN())
     , m_activeNodeTarget(nullptr)
     , m_documentVersionWhenComputingActiveNodeSet(0)
+    , m_pointerCaptureTarget(nullptr)
     , m_hoveredNodeTarget(nullptr)
     , m_documentVersionWhenComputingHoveredNodeSet(0)
     , m_focusedNode(nullptr)
@@ -558,6 +559,7 @@ void BrowsingContext::dispose()
 
     m_activeNodeSet.clear();
     m_activeNodeTarget = nullptr;
+    m_pointerCaptureTarget = nullptr;
     m_documentVersionWhenComputingActiveNodeSet = 0;
 
     m_hoveredNodeSet.clear();
@@ -1337,6 +1339,18 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     String* name = String::emptyString;
     Node* t = targetNode->nearestParentElement();
     t = t ? t : document();
+
+    // Pointer capture: once an element captures the pointer (setPointerCapture
+    // inside a pointerdown handler), subsequent move/up events are retargeted
+    // to it regardless of the fresh hit-test, so a drag keeps reaching the
+    // captor after the pointer leaves its box (e.g. a thin slider thumb such
+    // as the YouTube seek bar).
+    // https://w3c.github.io/pointerevents/#pointer-capture
+    if (m_pointerCaptureTarget && m_pointerCaptureTarget->isConnected() &&
+        (kind == MouseEventKind::MouseEventMove ||
+         kind == MouseEventKind::MouseEventUp)) {
+        t = m_pointerCaptureTarget;
+    }
     switch (kind) {
     case MouseEventKind::MouseEventDown: {
         // Dispatch mousedown event
@@ -1375,6 +1389,9 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
             document(), starfish()->staticStrings()->m_pointerup.localName(),
             upData);
         document()->window()->dispatchEventByUA(t, pe);
+
+        // Implicit pointer capture release on pointerup.
+        m_pointerCaptureTarget = nullptr;
 
         if (clickableEvent) {
             // Dispatch click event

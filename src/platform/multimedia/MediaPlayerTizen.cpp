@@ -396,6 +396,8 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_decodedVideoFrameMutex(new Mutex())
     , m_lastDecodedVideoPacket(nullptr)
     , m_currentURL(nullptr)
+    , m_setNeedsCompositeEventIdlerHandleMutex(new Mutex())
+    , m_setNeedsCompositeEventIdlerHandle(MessageLoopInvalidID)
 #if defined(STARFISH_RUN_MSE_THREAD)
     , m_mseThread(nullptr)
 #endif
@@ -451,6 +453,7 @@ void MediaPlayerTizen::fillBufferIfNeeded(StreamType type)
     }
 #ifdef STARFISH_RUN_MSE_THREAD
     stream->setWaitingDemuxer(false);
+    wakeMseThread();
 #else
     if (stream->waitingDemuxer() == true) {
         stream->setWaitingDemuxer(false);
@@ -726,12 +729,15 @@ static void updateTimeCallback(void* data)
         // Do not update time while seeking
         return;
     }
+    // player_get_play_position is an IPC round trip to the player daemon;
+    // query once per tick instead of once per branch.
+    double position = self->currentTime();
     if (self->isMSE() == true &&
-        self->currentTime() == self->container()->officialPlaybackPosition() &&
+        position == self->container()->officialPlaybackPosition() &&
         self->isMSEBufferEOS() == true) {
         self->handleEnded();
     } else {
-        self->container()->setOfficialPlaybackPosition(self->currentTime());
+        self->container()->setOfficialPlaybackPosition(position);
     }
 }
 
@@ -799,16 +805,40 @@ void MediaPlayerTizen::setNativePlayerDisplayModeWithGL()
                     media_packet_destroy(oldPacket);
                 }
             }
-            player->window()
-                ->webView()
-                ->messageLoop()
-                ->addIdlerWithNoGCRootingInOtherThread(
-                    player->window(),
-                    [](size_t, void* data) {
-                        BrowsingContext* b = (BrowsingContext*)data;
-                        b->setNeedsComposite();
-                    },
-                    player->window()->browsingContext());
+            // Mirror MediaPlayerLinux::publishDecodedFrame: coalesce
+            // per-frame composite idlers; at most one pending.
+            {
+                Locker<Mutex> locker(
+                    *player->m_setNeedsCompositeEventIdlerHandleMutex);
+                if (player->m_setNeedsCompositeEventIdlerHandle ==
+                    MessageLoopInvalidID) {
+                    player->m_setNeedsCompositeEventIdlerHandle =
+                        player->window()
+                            ->webView()
+                            ->messageLoop()
+                            ->addIdlerWithNoGCRootingInOtherThread(
+                                player->window(),
+                                [](size_t, void* data) {
+                                    MediaPlayerTizen* self =
+                                        (MediaPlayerTizen*)data;
+                                    // Clear handle first so dedup never sticks
+                                    // when bailing out below.
+                                    {
+                                        Locker<Mutex> locker(
+                                            *self->m_setNeedsCompositeEventIdlerHandleMutex);
+                                        self->m_setNeedsCompositeEventIdlerHandle =
+                                            MessageLoopInvalidID;
+                                    }
+                                    if (self->alive() == false) {
+                                        return;
+                                    }
+                                    self->window()
+                                        ->browsingContext()
+                                        ->setNeedsComposite();
+                                },
+                                player);
+                }
+            }
         },
         this);
     player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_FULL_SCREEN);
@@ -1051,6 +1081,14 @@ void MediaPlayerTizen::dispose()
     if (m_container != nullptr) {
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_NOTHING);
+
+        Locker<Mutex> locker(*m_setNeedsCompositeEventIdlerHandleMutex);
+        if (m_setNeedsCompositeEventIdlerHandle != MessageLoopInvalidID) {
+            MessageLoop* msgLoop = m_container->webView()->messageLoop();
+            msgLoop->removeIdlerWithNoGCRooting(
+                m_setNeedsCompositeEventIdlerHandle);
+            m_setNeedsCompositeEventIdlerHandle = MessageLoopInvalidID;
+        }
     }
     if (m_canvasSurface != nullptr) {
         m_canvasSurface->detachNativeBuffer();
@@ -1059,6 +1097,7 @@ void MediaPlayerTizen::dispose()
     if (m_playerDeadFlag != nullptr) {
         *m_playerDeadFlag = true;
 #if defined(STARFISH_RUN_MSE_THREAD)
+        wakeMseThread();
         m_mseThread->joinIfNeeds();
         m_mseThread = nullptr;
 #endif
@@ -1113,7 +1152,9 @@ void MediaPlayerTizen::willDrawVideo(Compositor* canvas,
     canvas->setFillColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
 #if defined(STARFISH_MM_OUTPUT_WITH_GL)
-    {
+    // Overlay mode: video is on a HW plane; skip compositing the decoded
+    // texture (didDrawVideo punches the hole instead).
+    if (!videoOverlayEnabled()) {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);
         tbm_surface_h tbm;
         if (m_lastDecodedVideoPacket != nullptr &&
@@ -1132,7 +1173,13 @@ void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
     if (alive() == false) {
         return;
     }
-#if !defined(STARFISH_TIZEN_HEADLESS) && !defined(STARFISH_MM_OUTPUT_WITH_GL)
+#if !defined(STARFISH_TIZEN_HEADLESS)
+#if defined(STARFISH_MM_OUTPUT_WITH_GL)
+    // In a GL-output build, only punch the hole when overlay mode is on.
+    if (!videoOverlayEnabled()) {
+        return;
+    }
+#endif
     player_state_e state = PLAYER_STATE_NONE;
     player_get_state(m_nativePlayer, &state);
     if (state < PLAYER_STATE_READY) {
@@ -1177,7 +1224,14 @@ static void* threadFillingBuffer(void* data)
 #ifndef STARFISH_RUN_MSE_THREAD_WAIT_TIME
 #define STARFISH_RUN_MSE_THREAD_WAIT_TIME 1000 * 25 // 25ms
 #endif
-        usleep(STARFISH_RUN_MSE_THREAD_WAIT_TIME);
+        {
+            std::unique_lock<std::mutex> lock(self->m_mseWakeMutex);
+            self->m_mseWakeCv.wait_for(
+                lock,
+                std::chrono::microseconds(STARFISH_RUN_MSE_THREAD_WAIT_TIME),
+                [&]() { return *playerDeadFlag || self->m_mseWakePending; });
+            self->m_mseWakePending = false;
+        }
     }
     PLAYER_LOGI("Close fillingBuffer thread");
     return nullptr;
@@ -1369,6 +1423,10 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
                                bufferStateString(prevState),
                                bufferStateString(state));
         stream->setBufferState(state);
+        if (state == MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET ||
+            state == MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN) {
+            wakeMseThread();
+        }
         if (prevState == MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN) {
             exitUnderrunState();
         } else if (prevState > MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN &&

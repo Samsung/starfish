@@ -206,17 +206,21 @@ public:
                         }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Json) {
-                        TextConverter cvt(
-                            mimeString, String::fromUTF8("UTF-8"),
-                            m_xhr->m_resourceRequest->response().data(),
-                            m_xhr->m_resourceRequest->response().size());
-                        String* text = cvt.convert(
-                            m_xhr->m_resourceRequest->response().data(),
-                            m_xhr->m_resourceRequest->response().size(), true);
+                        // Per XHR spec, response is null until DONE for json.
+                        if (request->readyState() == ReadyState::Done) {
+                            TextConverter cvt(
+                                mimeString, String::fromUTF8("UTF-8"),
+                                m_xhr->m_resourceRequest->response().data(),
+                                m_xhr->m_resourceRequest->response().size());
+                            String* text = cvt.convert(
+                                m_xhr->m_resourceRequest->response().data(),
+                                m_xhr->m_resourceRequest->response().size(),
+                                true);
 
-                        m_xhr->m_responseJsonObject =
-                            parseJSONStringToScriptValueOrNull(
-                                m_xhr->scriptBindingInstance(), text);
+                            m_xhr->m_responseJsonObject =
+                                parseJSONStringToScriptValueOrNull(
+                                    m_xhr->scriptBindingInstance(), text);
+                        }
                     } else if (m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Empty ||
                                m_xhr->m_responseType ==
@@ -235,35 +239,34 @@ public:
                         }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Blob) {
-                        void* buffer =
-                            malloc(m_xhr->m_resourceRequest->response().size());
-                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
-                        memcpy(buffer,
-                               m_xhr->m_resourceRequest->response().data(),
-                               m_xhr->m_resourceRequest->response().size());
-                        m_xhr->m_responseBlob = new ::Starfish::Blob(
-                            m_xhr->executionContext(),
-                            m_xhr->m_resourceRequest->response().size(),
-                            mimeString, buffer, false, false, true);
+                        // Per XHR spec, response is null until DONE for blob.
                         if (request->readyState() == ReadyState::Done) {
+                            void* buffer = malloc(
+                                m_xhr->m_resourceRequest->response().size());
+                            STARFISH_RELEASE_ASSERT(buffer != nullptr);
+                            memcpy(buffer,
+                                   m_xhr->m_resourceRequest->response().data(),
+                                   m_xhr->m_resourceRequest->response().size());
+                            m_xhr->m_responseBlob = new ::Starfish::Blob(
+                                m_xhr->executionContext(),
+                                m_xhr->m_resourceRequest->response().size(),
+                                mimeString, buffer, false, false, true);
                             m_xhr->m_resourceRequest->response().clear();
                             m_xhr->m_resourceRequest->response()
                                 .shrink_to_fit();
                         }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::ArrayBuffer) {
-                        void* buffer =
-                            malloc(m_xhr->m_resourceRequest->response().size());
-                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
-                        memcpy(buffer,
-                               m_xhr->m_resourceRequest->response().data(),
-                               m_xhr->m_resourceRequest->response().size());
-                        auto scriptArrayBuffer = createScriptArrayBuffer(
-                            m_xhr->scriptBindingInstance(), buffer,
-                            m_xhr->m_resourceRequest->response().size());
-                        m_xhr->m_responseArrayBuffer =
-                            createScriptValue(scriptArrayBuffer);
+                        // Per XHR spec, response is null until DONE for
+                        // arraybuffer.
                         if (request->readyState() == ReadyState::Done) {
+                            auto scriptArrayBuffer =
+                                createScriptArrayBufferAdoptingVector(
+                                    m_xhr->scriptBindingInstance(),
+                                    std::move(
+                                        m_xhr->m_resourceRequest->response()));
+                            m_xhr->m_responseArrayBuffer =
+                                createScriptValue(scriptArrayBuffer);
                             m_xhr->m_resourceRequest->response().clear();
                             m_xhr->m_resourceRequest->response()
                                 .shrink_to_fit();

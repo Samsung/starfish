@@ -39,8 +39,10 @@ public:
     {
     }
 
+    // On success, packet points to a MediaPacket::create()-allocated
+    // packet owned by the caller. On failure, packet is set to nullptr.
     virtual bool generate(DemuxerSource* from, size_t validLength,
-                          MediaPacket& packet) = 0;
+                          MediaPacket*& packet) = 0;
     bool isCodec(MediaCodec codec)
     {
         return codec == m_codec;
@@ -65,7 +67,7 @@ class MP4PacketGenerator : public PacketGenerator {
 public:
     MP4PacketGenerator();
     bool generate(DemuxerSource* from, size_t validLength,
-                  MediaPacket& packet) override;
+                  MediaPacket*& packet) override;
 
     // AVC(H264)
     void setAVCExtraData(H264SPSVector& spsVector, H264PPSVector& ppsVector);
@@ -79,16 +81,21 @@ public:
 
 protected:
     bool generateForAVC(DemuxerSource* from, size_t validLength,
-                        MediaPacket& packet);
+                        MediaPacket*& packet);
     bool generateForHEVC(DemuxerSource* from, size_t validLength,
-                         MediaPacket& packet);
+                         MediaPacket*& packet);
     bool generateForAV1(DemuxerSource* from, size_t validLength,
-                        MediaPacket& packet);
+                        MediaPacket*& packet);
     bool generateDefault(DemuxerSource* from, size_t validLength,
-                         MediaPacket& packet);
+                         MediaPacket*& packet);
 
 protected:
     std::vector<uint8_t> m_extraData;
+    std::vector<uint8_t> m_sampleBuffer; // reused across generateForAVC calls
+    // NALU boundaries (startPos, size) recorded by the generateForAVC scan
+    // pass and replayed by the copy pass, so the sample is walked once.
+    // Reused across calls to avoid per-frame allocation.
+    std::vector<std::pair<size_t, size_t>> m_naluScratch;
     unsigned char m_H264NalSizeLength;
 };
 } // namespace Starfish

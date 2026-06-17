@@ -206,6 +206,23 @@ public:
     void setFocusedNode(Node* n, bool byMouseEvent);
     void releaseFocusedNode(Node* n, bool resetActiveElement = true);
     Element* activeElement();
+
+    // Pointer capture (https://w3c.github.io/pointerevents/#pointer-capture).
+    // Single active pointer is assumed, so pointerId is ignored.
+    Node* pointerCaptureTarget()
+    {
+        return m_pointerCaptureTarget;
+    }
+    void setPointerCaptureTarget(Node* n)
+    {
+        m_pointerCaptureTarget = n;
+    }
+    void releasePointerCaptureTarget(Node* n)
+    {
+        if (m_pointerCaptureTarget == n) {
+            m_pointerCaptureTarget = nullptr;
+        }
+    }
     Node* imageAreaForImage(Frame* cb, float x, float y);
 
     void setKeydownEventDefaultPrevented(bool b)
@@ -337,6 +354,11 @@ private:
     GCUnorderedSet<Node*> m_activeNodeSet;
     Node* m_activeNodeTarget;
     size_t m_documentVersionWhenComputingActiveNodeSet;
+
+    // Element that captured the pointer; retargets move/up events during a
+    // drag. nullptr = no capture. Conservatively scanned (BrowsingContext is
+    // a gc object), so no explicit trace needed.
+    Node* m_pointerCaptureTarget;
 
     GCUnorderedSet<Node*> m_hoveredNodeSet;
     Node* m_hoveredNodeTarget;

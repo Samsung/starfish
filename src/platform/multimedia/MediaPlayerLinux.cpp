@@ -42,6 +42,7 @@
 #include "core/page/Window.h"
 #include "platform/multimedia/MediaPlayerLinux.h"
 
+#include <chrono>
 #include <dlfcn.h>
 #include <time.h>
 
@@ -136,6 +137,29 @@ namespace Starfish {
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
 #define STARFISH_MSE_MIN_MARGIN_IN_MS 3000
+
+// How far ahead of the playback clock the decode pipeline may run, in ms.
+// Each queued frame is a full-resolution RGBA buffer (e.g. 1080x1920 ~= 8MB),
+// so a wide window keeps that many decoded frames resident -> memory pressure
+// and GC churn (the main cause of bursty mid-playback stalls at high
+// resolutions). Default 400ms; override at runtime via the
+// STARFISH_DECODE_LOOKAHEAD_MS env var for A/B tuning without a rebuild.
+#define STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT 400
+
+static uint64_t decodeLookaheadMs()
+{
+    static const uint64_t value = []() -> uint64_t {
+        const char* e = getenv("STARFISH_DECODE_LOOKAHEAD_MS");
+        if (e != nullptr) {
+            int v = atoi(e);
+            if (v > 0) {
+                return (uint64_t)v;
+            }
+        }
+        return STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT;
+    }();
+    return value;
+}
 
 #define RETURN_WHEN_PLAYER_ERROR(...) \
     if (ret != PLAYER_ERROR_NONE) {   \
@@ -854,6 +878,8 @@ MediaPlayerLinux::MediaPlayerLinux(HTMLMediaElement* element)
     , m_playerDeadFlag(nullptr)
     , m_audioStream(nullptr)
     , m_videoStream(nullptr)
+    , m_framePoolWidth(0)
+    , m_framePoolHeight(0)
     , m_swsCtx(nullptr)
     , m_swsCtxWidth(0)
     , m_swsCtxHeight(0)
@@ -908,6 +934,7 @@ void MediaPlayerLinux::fillBufferIfNeeded(StreamType type)
     }
 #ifdef STARFISH_RUN_MSE_THREAD
     stream->setWaitingDemuxer(false);
+    wakeMseThread();
 #else
     if (stream->waitingDemuxer() == true) {
         stream->setWaitingDemuxer(false);
@@ -1073,12 +1100,13 @@ static void updateTimeCallback(void* data)
         // Do not update time while seeking
         return;
     }
+    double position = self->currentTime();
     if (self->isMSE() == true &&
-        self->currentTime() == self->container()->officialPlaybackPosition() &&
+        position == self->container()->officialPlaybackPosition() &&
         self->isMSEBufferEOS() == true) {
         self->handleEnded();
     } else {
-        self->container()->setOfficialPlaybackPosition(self->currentTime());
+        self->container()->setOfficialPlaybackPosition(position);
     }
     // Drive the compositor at the timer cadence so the MSE/FFmpeg video
     // pipeline stays animating even if the per-frame setTimeout chain or
@@ -1378,6 +1406,7 @@ void MediaPlayerLinux::dispose()
     if (m_playerDeadFlag != nullptr) {
         *m_playerDeadFlag = true;
 #if defined(STARFISH_RUN_MSE_THREAD)
+        wakeMseThread();
         m_mseThread->joinIfNeeds();
         m_mseThread = nullptr;
 #endif
@@ -1397,15 +1426,16 @@ void MediaPlayerLinux::dispose()
     {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);
         if (m_lastDecodedVideoPacket != nullptr) {
-            free(m_lastDecodedVideoPacket->buffer());
+            freeFramePacketLocked(m_lastDecodedVideoPacket);
             m_lastDecodedVideoPacket = nullptr;
         }
         for (auto& entry : m_decodedVideoQueue) {
             if (entry.packet != nullptr) {
-                free(entry.packet->buffer());
+                freeFramePacketLocked(entry.packet);
             }
         }
         m_decodedVideoQueue.clear();
+        flushFramePoolLocked(0, 0);
     }
     if (m_swsCtx != nullptr) {
         sws_freeContext(m_swsCtx);
@@ -1544,19 +1574,37 @@ static void* threadFillingBuffer(void* data)
             // audio kept playing (audio used the same path but its source
             // buffer cycled through NEED_PACKET more often due to its
             // smaller maxBufferSize).
-            if (audioStream != nullptr &&
-                audioStream->waitingDemuxer() == false) {
+            // Always attempt to feed each active stream. waitingDemuxer is a
+            // hint that the source buffer had no packet at the submission
+            // pointer on the previous pass, NOT a hard gate: it was only ever
+            // cleared by activeSourceBufferUpdated() (the append-notify path,
+            // further gated by activeSourceBuffer(type) == s). If that notify
+            // is missed or targets a non-active SourceBuffer, the latch never
+            // clears and the feed thread -- though it keeps waking every 25ms
+            // -- skips the stream forever, freezing playback mid-stream.
+            // fillBufferWithoutGuard re-arms waitingDemuxer when the buffer is
+            // still empty, and the lookahead throttle (lastDTS > currentMs +
+            // decodeLookaheadMs()) prevents over-feeding, so re-checking every
+            // wake is cheap
+            // (one access-cached findProperMediaPacket) and self-limiting.
+            if (audioStream != nullptr) {
                 self->fillBuffer(audioStream);
             }
-            if (videoStream != nullptr &&
-                videoStream->waitingDemuxer() == false) {
+            if (videoStream != nullptr) {
                 self->fillBuffer(videoStream);
             }
         }
 #ifndef STARFISH_RUN_MSE_THREAD_WAIT_TIME
 #define STARFISH_RUN_MSE_THREAD_WAIT_TIME 1000 * 25 // 25ms
 #endif
-        usleep(STARFISH_RUN_MSE_THREAD_WAIT_TIME);
+        {
+            std::unique_lock<std::mutex> lock(self->m_mseWakeMutex);
+            self->m_mseWakeCv.wait_for(
+                lock,
+                std::chrono::microseconds(STARFISH_RUN_MSE_THREAD_WAIT_TIME),
+                [&]() { return *playerDeadFlag || self->m_mseWakePending; });
+            self->m_mseWakePending = false;
+        }
     }
     PLAYER_LOGI("Close fillingBuffer thread");
     return nullptr;
@@ -1781,20 +1829,26 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
         sizeUpTo = 256 * 1024;
     }
 
-    // Throttle: do not let the decode pipeline race more than ~1 second
-    // ahead of the current playback clock, otherwise we eat memory storing
-    // pre-decoded RGBA frames. The check runs per packet so a single
-    // fillBuffer call cannot dump ~sizeUpTo (often >1MB / >1s of video)
-    // worth of frames in one shot.
+    // Throttle: do not let the decode pipeline race more than
+    // decodeLookaheadMs() ahead of the current playback clock, otherwise we
+    // eat memory storing pre-decoded RGBA frames. The check runs per packet
+    // so a single fillBuffer call cannot dump ~sizeUpTo (often >1MB / >1s of
+    // video) worth of frames in one shot.
+    // The playback position is sampled once per call: within one call the
+    // clock advances only by the loop duration (ms) against the lookahead
+    // window, and a stale (smaller) value only trips the gate earlier
+    // (under-fill, never over-fill); the feed thread re-runs within ~25ms.
+    // The >500ms gap-skip below refreshes currentMs explicitly when it
+    // rewrites the soft clock.
+    const uint64_t lookaheadMs = decodeLookaheadMs();
     uint64_t currentMs = (uint64_t)(currentTime() * 1000.0);
-    if (lastDTS > currentMs + 1000) {
+    if (lastDTS > currentMs + lookaheadMs) {
         return;
     }
 
     size_t submitBytes = 0;
     while (submitBytes < sizeUpTo) {
-        currentMs = (uint64_t)(currentTime() * 1000.0);
-        if (lastDTS > currentMs + 1000) {
+        if (lastDTS > currentMs + lookaheadMs) {
             break;
         }
         std::pair<MediaPacket*, size_t> packet =
@@ -1827,7 +1881,7 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             // the next available packet, and on the video stream, also
             // advance our wall-clock so currentTime() catches up. Without
             // the wall-clock advance, the decode-lookahead gate prevents
-            // further decoding (lastDTS already > currentMs+1000) and the
+            // further decoding (lastDTS already > currentMs+lookahead) and the
             // queued frames sit unpresented until wall-clock organically
             // reaches packet.dts — manifesting as multi-second freezes
             // every time the source buffer evicts. (MediaPlayerTizen does
@@ -1847,6 +1901,8 @@ void MediaPlayerLinux::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             lastDTS = packet.first->m_dts;
         }
         decodeAndDeliverPacket(stream, packet.first);
+        // Data is flowing again; clear the wait latch so it reflects reality.
+        stream->setWaitingDemuxer(false);
         submitBytes += packet.first->m_dataSize;
         lastDTS = packet.first->m_dts + packet.first->m_duration;
     }
@@ -1983,6 +2039,45 @@ void MediaPlayerLinux::destroyDecoderForStream(MediaPlayerSourceStream* stream)
     }
 }
 
+LinuxMediaPacket* MediaPlayerLinux::takePooledFramePacketLocked(int width,
+                                                                int height)
+{
+    if (width == m_framePoolWidth && height == m_framePoolHeight &&
+        !m_framePool.empty()) {
+        LinuxMediaPacket* p = m_framePool.back();
+        m_framePool.pop_back();
+        return p;
+    }
+    return nullptr;
+}
+
+void MediaPlayerLinux::freeFramePacketLocked(LinuxMediaPacket* packet)
+{
+    free(packet->buffer());
+    delete packet;
+}
+
+void MediaPlayerLinux::releaseFramePacketLocked(LinuxMediaPacket* packet)
+{
+    if (packet->width() == m_framePoolWidth &&
+        packet->height() == m_framePoolHeight &&
+        m_framePool.size() < kMaxPooledFramePackets) {
+        m_framePool.push_back(packet);
+    } else {
+        freeFramePacketLocked(packet);
+    }
+}
+
+void MediaPlayerLinux::flushFramePoolLocked(int newWidth, int newHeight)
+{
+    for (size_t i = 0; i < m_framePool.size(); i++) {
+        freeFramePacketLocked(m_framePool[i]);
+    }
+    m_framePool.clear();
+    m_framePoolWidth = newWidth;
+    m_framePoolHeight = newHeight;
+}
+
 void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
 {
     if (frame == nullptr || frame->width <= 0 || frame->height <= 0) {
@@ -2007,19 +2102,29 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                 "MediaPlayerLinux::publishDecodedFrame sws_getContext failed");
             return;
         }
+        {
+            Locker<Mutex> l(*m_decodedVideoFrameMutex);
+            flushFramePoolLocked(width, height);
+        }
     }
 
-    uint8_t* buffer = (uint8_t*)malloc(stride * height);
-    if (buffer == nullptr) {
-        return;
+    LinuxMediaPacket* mediaPacket = nullptr;
+    {
+        Locker<Mutex> l(*m_decodedVideoFrameMutex);
+        mediaPacket = takePooledFramePacketLocked(width, height);
     }
-    uint8_t* dest[4] = { buffer, nullptr, nullptr, nullptr };
+    if (mediaPacket == nullptr) {
+        uint8_t* buffer = (uint8_t*)malloc((size_t)stride * height);
+        if (buffer == nullptr) {
+            return;
+        }
+        mediaPacket = new LinuxMediaPacket(width, height, stride);
+        mediaPacket->setBuffer(buffer);
+    }
+    uint8_t* dest[4] = { mediaPacket->buffer(), nullptr, nullptr, nullptr };
     int destLinesize[4] = { stride, 0, 0, 0 };
     sws_scale(m_swsCtx, frame->data, frame->linesize, 0, height, dest,
               destLinesize);
-
-    LinuxMediaPacket* mediaPacket = new LinuxMediaPacket(width, height, stride);
-    mediaPacket->setBuffer(buffer);
 
     int64_t pts = frame->best_effort_timestamp;
     if (pts == AV_NOPTS_VALUE) {
@@ -2075,7 +2180,7 @@ void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
             break;
         }
         if (picked != nullptr) {
-            free(picked->buffer());
+            releaseFramePacketLocked(picked);
         }
         picked = head.packet;
         m_decodedVideoQueue.pop_front();
@@ -2093,7 +2198,7 @@ void MediaPlayerLinux::promoteVideoFrameForCurrentTime()
 
     if (picked != nullptr) {
         if (m_lastDecodedVideoPacket != nullptr) {
-            free(m_lastDecodedVideoPacket->buffer());
+            releaseFramePacketLocked(m_lastDecodedVideoPacket);
         }
         m_lastDecodedVideoPacket = picked;
     }

@@ -25,6 +25,9 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadClient.h"
 
+#include <condition_variable>
+#include <mutex>
+
 namespace Starfish {
 
 class ExecutionContext;
@@ -67,8 +70,13 @@ private:
         ExecutionContext* ctx;
     };
 
+    void clearWorkLocked(
+        ExecutionContext* ctx); // caller holds m_workerQueueMutex
+
     std::list<std::pair<ThreadWorker, WorkerData*>> m_workerQueue;
-    Mutex* m_workerQueueMutex;
+    std::mutex m_workerQueueMutex;
+    std::condition_variable m_workerQueueCondition;
+    size_t m_idleWaiterCount{ 0 }; // guarded by m_workerQueueMutex
 };
 } // namespace Starfish
 

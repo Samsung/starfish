@@ -114,6 +114,7 @@ SettingsImpl::SettingsImpl(const std::string& default_ua, const std::string& ua)
                   std::to_string(::LWE::IdleModeCheckDefaultIntervalInMS));
     UpdateSetting("needsDownloadWebFontsEarly", "False");
     UpdateSetting("useHttp2", "False");
+    UpdateSetting("videoOverlayEnabled", "False");
     UpdateSetting("needsDownScaleImageResourceLargerThan", "0");
     UpdateSetting("scrollbarVisible", "True");
     UpdateSetting("useExternalPopup", "False");

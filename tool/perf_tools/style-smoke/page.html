@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>sf-style-smoke</title>
+<style>
+  #box { position: absolute; top: 0; left: 0; width: 600px; }
+  .item { color: rgb(10, 10, 10); font-weight: 400;
+          background-color: rgb(250, 250, 250);
+          height: 20px; display: block; }
+  /* class change on self */
+  .item.active { color: rgb(200, 0, 0); font-weight: 700; }
+  /* adjacent sibling combinator: only the item right after .active */
+  .item.active + .item { background-color: rgb(0, 200, 0); }
+  /* general sibling combinator: every item after .active */
+  .item.active ~ .item { font-weight: 600; }
+  /* descendant via ancestor class */
+  .sel .label { color: rgb(128, 0, 128); }
+  /* descendant via attribute */
+  .item[data-mark="1"] .label { font-weight: 900; }
+</style>
+</head>
+<body>
+<div id="box"></div>
+<script>
+var N = 20;
+
+function send(msg) {
+    var x = new XMLHttpRequest();
+    x.open("POST", "/result", false);
+    try { x.send(msg); } catch (e) {}
+}
+
+// deterministic rolling hash of a string (FNV-1a-ish, 32-bit)
+function mix(h, s) {
+    for (var i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = (h * 16777619) >>> 0;
+    }
+    return h >>> 0;
+}
+
+var box = document.getElementById("box");
+function build() {
+    box.innerHTML = "";
+    for (var i = 0; i < N; i++) {
+        var row = document.createElement("div");
+        row.className = "item";
+        row.setAttribute("data-mark", "0");
+        var label = document.createElement("span");
+        label.className = "label";
+        label.appendChild(document.createTextNode("row " + i));
+        row.appendChild(label);
+        box.appendChild(row);
+    }
+}
+
+// fold the rendered state of every item + its label into the hash
+function snapshot(h, tag) {
+    h = mix(h, "|" + tag + "|");
+    var items = document.querySelectorAll(".item");
+    for (var i = 0; i < items.length; i++) {
+        var cs = window.getComputedStyle(items[i]);
+        h = mix(h, cs.color + ";" + cs.fontWeight + ";" + cs.backgroundColor);
+        var lbl = items[i].firstChild;
+        if (lbl && lbl.nodeType === 1) {
+            var ls = window.getComputedStyle(lbl);
+            h = mix(h, "/" + ls.color + ";" + ls.fontWeight);
+        }
+        var r = items[i].getBoundingClientRect();
+        h = mix(h, ":" + r.top + "," + r.left + "," + r.width + "," + r.height);
+    }
+    return h;
+}
+
+function clearActive() {
+    var items = document.querySelectorAll(".item");
+    for (var i = 0; i < items.length; i++) items[i].classList.remove("active");
+}
+
+try {
+    var h = 2166136261;
+    var steps = 0;
+
+    build();
+    h = snapshot(h, "init"); steps++;
+
+    // simulate remote focus walking the list: toggle .active down the rows.
+    // exercises sibling-combinator invalidation (.active + / .active ~) on
+    // every move.
+    for (var k = 0; k < N; k++) {
+        clearActive();
+        document.querySelectorAll(".item")[k].classList.add("active");
+        h = snapshot(h, "focus" + k); steps++;
+    }
+    clearActive();
+
+    // attribute mutation driving a descendant rule
+    var items = document.querySelectorAll(".item");
+    for (var k = 0; k < N; k += 3) {
+        items[k].setAttribute("data-mark", "1");
+        h = snapshot(h, "mark" + k); steps++;
+    }
+
+    // ancestor class toggle driving a descendant rule on all labels
+    box.classList.add("sel");
+    h = snapshot(h, "sel-on"); steps++;
+    box.classList.remove("sel");
+    h = snapshot(h, "sel-off"); steps++;
+
+    // structural mutation: remove every 4th item, then re-add a few
+    for (var k = items.length - 1; k >= 0; k -= 4) {
+        items[k].parentNode.removeChild(items[k]);
+    }
+    h = snapshot(h, "removed"); steps++;
+    for (var k = 0; k < 3; k++) {
+        var row = document.createElement("div");
+        row.className = "item active";
+        var label = document.createElement("span");
+        label.className = "label";
+        label.appendChild(document.createTextNode("new " + k));
+        row.appendChild(label);
+        box.appendChild(row);
+        h = snapshot(h, "add" + k); steps++;
+    }
+
+    send("STYLE-DONE sig=" + (h >>> 0) + " steps=" + steps +
+         " items=" + document.querySelectorAll(".item").length);
+} catch (e) {
+    send("STYLE-ERROR " + (e && e.message ? e.message : e));
+}
+setTimeout(function () { send("STYLE-TIMEOUT"); }, 30000);
+</script>
+</body>
+</html>

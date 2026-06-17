@@ -100,6 +100,11 @@ void HTTPTransaction::preprocess()
     } else {
         curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
     }
+    // Keep idle media-streaming connections alive between segment fetches
+    // so the kernel doesn't silently lose them behind NATs/firewalls.
+    curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPIDLE, 60L);
+    curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPINTVL, 30L);
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     if (m_timeout) {
         curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);

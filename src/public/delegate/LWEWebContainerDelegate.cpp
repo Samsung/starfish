@@ -1050,6 +1050,9 @@ void WebContainerImpl::SetSettings(const Settings* settings)
             m_webView->setNeedsDownloadWebFontsEarly(
                 settings->NeedsDownloadWebFontsEarly());
             m_webView->setUseHttp2(settings->UseHttp2());
+            m_webView->setVideoOverlayEnabled(
+                settings->GetSetting("videoOverlayEnabled").compare("True") ==
+                0);
             m_webView->setNeedsDownScaleImageResourceLargerThan(
                 settings->NeedsDownScaleImageResourceLargerThan());
             m_webView->setScrollbarVisible(settings->ScrollbarVisible());
