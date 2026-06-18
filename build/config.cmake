@@ -479,7 +479,14 @@ IF (${WEBRTC} STREQUAL "1" AND ${HOST} STREQUAL "linux")
 ENDIF()
 
 IF (${BACKEND} STREQUAL "glib_cairo_gl" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas glesv2)
+    # EFL libs are only used by EFL-based shells (sources guarded by
+    # STARFISH_SHELL_EFL / STARFISH_SHELL_ECORE_X). Non-EFL shells (e.g. x11)
+    # must not require them.
+    IF (${SHELL} STREQUAL "efl" OR ${SHELL} STREQUAL "ecore_x" OR ${SHELL} STREQUAL "ecore_wl2")
+        pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas glesv2)
+    ELSE()
+        pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz glesv2)
+    ENDIF()
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
