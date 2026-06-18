@@ -40,7 +40,7 @@ jobs:
         run: |
           cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
             -DMODE=debug -DBACKEND=glib_cairo_gl -DSHELL=x11 -DENABLE_DYNAMIC_LOADER=1 \
-            -DWEBGL=1 -DWORKER=1 -DIDB=1
+            -DWEBGL=1 -DWORKER=1 -DIDB=1 -DENABLE_WASM=1
           ninja starfish.executable
 
       - name: Upload build artifact
