@@ -178,6 +178,33 @@ void FlexFormattingContext::computeMainSize()
                                                  m_availableCrossSize);
             bool parentHasFixedHeight =
                 m_layoutContext.parentHasFixedHeight(flexItem);
+
+            // CSS Flexbox §4.5: the automatic minimum size (min-height:auto) of
+            // a column flex item is derived from its content via its content
+            // height and line boxes (heightAfterApplyingMinMaxHeights() ->
+            // LayoutContext::lookupFirstLineOrDefiniteHeight). An item with a
+            // definite flex-basis is resolved by basisSize() case A without
+            // being laid out, so it has neither a content height nor line boxes
+            // yet and the content-based minimum would be lost, collapsing the
+            // item (and an indefinite container) to zero main size. Lay it out
+            // once at its auto main size so the minimum can be measured. Items
+            // with a content/auto basis were already laid out by basisSize()
+            // (case E), so the lookup succeeds and this extra layout is
+            // skipped.
+            if (!flexItem->style()->minHeight().isSpecified() &&
+                !m_container->shouldApplyLineClamp(flexItem) &&
+                flexItem->appliedOverflowY() == VisibleOverflow &&
+                !m_layoutContext.lookupFirstLineOrDefiniteHeight(flexItem)) {
+                Length heightBackup = flexItem->style()->height();
+                flexItem->markNeedsLayout();
+                flexItem->style()->setHeight(Length());
+                flexItem->layout(m_layoutContext,
+                                 Frame::LayoutWantToResolve::ResolveWidth);
+                flexItem->layout(m_layoutContext,
+                                 Frame::LayoutWantToResolve::ResolveHeight);
+                flexItem->style()->setHeight(heightBackup);
+            }
+
             flexItem->setContentHeightConsideringMinMaxHeights(
                 m_layoutContext, mainSize, m_availableMainSize,
                 parentHasFixedHeight);
