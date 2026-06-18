@@ -8078,9 +8078,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             if (hsrResult.seenCombinator) {
                 ret->setStyleDamageSource(hsrResult.styleDamageFrom);
             } else {
-                ret->setStyleDamageSource(
-                    (StyleDamageSource)(hsrResult.styleDamageFrom &
-                                       ~StyleDamageFromDOMTree));
+                ret->setStyleDamageSource((StyleDamageSource)(
+                    hsrResult.styleDamageFrom & ~StyleDamageFromDOMTree));
             }
             ret->setStyleDamageSourceNodeStateMap(
                 hsrResult.styleDamageSourceNodeStateMap);
@@ -10281,8 +10280,8 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
     }
 }
 
-void StyleResolver::addHostScopedRule(
-    std::pair<StyleRule*, ResourceURL*> rule, Element* host)
+void StyleResolver::addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
+                                      Element* host)
 {
     rule.first->initFlagsRelatedWithSelectorList();
 
@@ -10323,7 +10322,8 @@ void StyleResolver::addHostScopedRule(
 
     size_t order = nextRuleSetOrder();
     rule.first->setOrder(order);
-    m_hostScopedRules.push_back(HostScopedRule{ rule.first, rule.second, host });
+    m_hostScopedRules.push_back(
+        HostScopedRule{ rule.first, rule.second, host });
 }
 
 void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
