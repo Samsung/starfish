@@ -3587,6 +3587,33 @@ public:
         m_state.pop_back();
     }
 
+    // Lazily toggles GL_BLEND, skipping the call when already in the
+    // requested state. Used to disable blending for fully opaque fills, which
+    // lets the GPU skip the destination read/blend in the ROP stage - a win on
+    // fill-rate bound low-end ARM GPUs.
+    void setBlendEnabled(bool enabled)
+    {
+        if (m_compositorContext->m_blendEnabled == enabled) {
+            return;
+        }
+        m_compositorContext->m_blendEnabled = enabled;
+        if (enabled) {
+            gl()->enable(GL_BLEND);
+        } else {
+            gl()->disable(GL_BLEND);
+        }
+    }
+
+    // A fill is safe to draw with blending disabled only when its effective
+    // alpha is exactly 1.0 and it uses the default SrcOver blend mode. Under
+    // premultiplied SrcOver (src + dst*(1-srcAlpha)), srcAlpha == 1 makes the
+    // dst term vanish, so the result is identical to blending turned off.
+    bool isOpaqueFill(const Unit::Color& color, float opacity)
+    {
+        return m_state.back().blendMode == BlendMode::Normal &&
+               opacity >= 1.0f && color.a() == 255;
+    }
+
     void updateBlendMode()
     {
         BlendMode blendMode = m_state.back().blendMode;
@@ -3797,8 +3824,10 @@ public:
 
             gl()->enableVertexAttribArray(
                 m_compositorContext->m_rectShaderProgramTexIdx);
+            setBlendEnabled(!isOpaqueFill(currentColor, lastState.opacity));
             gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError(gl());
+            setBlendEnabled(true);
         } else {
             auto result = computeClippath(dest);
             if (result.size()) {
@@ -3836,8 +3865,11 @@ public:
 
                     gl()->enableVertexAttribArray(
                         m_compositorContext->m_rectShaderProgramTexIdx);
+                    setBlendEnabled(
+                        !isOpaqueFill(currentColor, lastState.opacity));
                     gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
                     checkError(gl());
+                    setBlendEnabled(true);
                 } else {
                     drawTessellatedPolygon(result, currentColor,
                                            lastState.opacity, true);
