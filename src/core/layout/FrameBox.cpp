@@ -4075,7 +4075,18 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     } else if (isFrameReplaced() &&
                asFrameReplaced()->isFrameReplacedIFrame() &&
                !drawableContentsInStyle) {
-        if (node()->asHTMLIFrameElement()->browsingContext()) {
+        if (ctx.sourceStackingContext &&
+            this == ctx.sourceStackingContext->owner()) {
+            // We are computing this iframe's OWN graphics-buffer extent. The
+            // buffer must span the iframe box so the child document (whose root
+            // stacking context may itself be composited) has a backing region
+            // to be drawn into/under. Treating the iframe as having no drawable
+            // contents here lets its visible rect collapse to 0, yielding a
+            // 0x0 graphics buffer and a blank iframe -- observed as the answer
+            // card being cut off / blank while a streaming/entry transform or
+            // opacity animation forces the iframe to be composited.
+            boxHasDrawableContents = true;
+        } else if (node()->asHTMLIFrameElement()->browsingContext()) {
             if (node()
                     ->asHTMLIFrameElement()
                     ->browsingContext()
