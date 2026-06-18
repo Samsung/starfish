@@ -10,7 +10,7 @@ P /.circleci
 + /build/windows
 - /build/android
 - /third_party/android
-- /third_party/googletest
++ /third_party/googletest
 + /third_party/windows
 + /compat
 - /test

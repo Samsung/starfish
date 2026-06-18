@@ -34,7 +34,7 @@ P /.circleci
 - /third_party/escargot/tools/visualize_heap_usage.py
 + /third_party/libwebsockets
 - /third_party/openssl
-- /third_party/googletest
++ /third_party/googletest
 - /third_party/libwebp
 - /third_party/webrtc/src/resources
 + /third_party/webrtc/src/test
