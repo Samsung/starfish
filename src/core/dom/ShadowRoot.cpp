@@ -40,7 +40,7 @@ ShadowRoot::ShadowRoot(Document* document, ShadowRootMode mode, Element* host)
     , m_availableToElementInternals(false)
     , m_declarative(false)
     , m_host(host)
-    , m_styleResolver(new StyleResolver(m_document))
+    , m_styleResolver(new StyleResolver(m_document, this))
     , m_adoptedStyleSheetsProxy(nullptr)
 {
     // add ua sheet

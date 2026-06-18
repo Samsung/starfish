@@ -54,6 +54,7 @@ class StyleRuleImport;
 class StyleRuleBase;
 class Document;
 class Element;
+class ShadowRoot;
 class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
@@ -3347,7 +3348,16 @@ public:
         Optional<Node*> scope;
     };
 
-    StyleResolver(Document* document);
+    StyleResolver(Document* document, ShadowRoot* ownerShadowRoot = nullptr);
+
+    // True when this resolver was created for a ShadowRoot rather than for the
+    // document.  Used to gate :host promotion and to identify the origin host.
+    bool isShadowResolver() const
+    {
+        return m_ownerShadowRoot != nullptr;
+    }
+    Element* ownerHost() const;
+
     void setNeedsRecalcRuleSet()
     {
         m_needsRecalcRuleSet = true;
@@ -3361,6 +3371,16 @@ public:
     // holds <style>/<link> sheets in tree order) and folded into the rule set
     // during recalc; per CSSOM they cascade after the tree's own sheets.
     void setAdoptedSheets(const GCVector<CSSStyleSheet*>& sheets);
+
+    // A :host rule promoted from a shadow resolver carries the host element as
+    // its scope so the document resolver can restrict matching to that element.
+    struct HostScopedRule {
+        StyleRule*   rule;
+        ResourceURL* url;
+        Element*     host; // ShadowRoot::host() of the originating shadow tree
+    };
+    void addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
+                           Element* host);
 
     GCVector<CSSStyleSheet*>& sheets()
     {
@@ -3494,8 +3514,12 @@ protected:
     bool m_needsRecalcRuleSet;
     bool m_hasSimplePseudoClassHostSelector;
     uint32_t m_mediumFontSize;
+    ShadowRoot* m_ownerShadowRoot; // non-null only for shadow resolvers
     GCVector<CSSStyleSheet*> m_sheets;
     GCVector<CSSStyleSheet*> m_adoptedSheets;
+    // :host rules promoted from shadow resolvers, stored with the origin host
+    // so the document resolver can scope matching to the correct element.
+    GCVector<HostScopedRule> m_hostScopedRules;
     GCVector<std::pair<CSSStyleDeclaration*, ResourceURL*>> m_webFonts;
     MediaQueryEvaluator* m_mediaQueryEvaluator;
     MediaQueryResultList m_viewportDependentMediaQueryResults;
