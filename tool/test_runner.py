@@ -230,12 +230,13 @@ def wpt_others():
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_parsing_basic.res", "cairo"])  # migrated to wpt_serve_dom
 #    run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_xpath_basic.res", "cairo"])
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/page_visibility_basic.res", "cairo"])  # migrated to wpt_serve_others
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/x-frame-options.res", "cairo"])
+    # run_test(["multi_basic", "tool/reftest/cairo/wpt/x-frame-options.res", "cairo"])  # migrated to wpt_serve_others
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/csp.res", "cairo"])  # migrated to wpt_serve_others
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])  # migrated to wpt_serve_others
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/cors.res", "cairo"])  # migrated to wpt_serve_others
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/cookies.res", "cairo"])  # migrated to wpt_serve_others
     # run_test(["multi_basic", "tool/reftest/cairo/wpt/fileAPI.res", "cairo"])  # migrated to wpt_serve_others
+    pass
 
 
 def wpt_canvas():
@@ -377,7 +378,7 @@ def wpt_serve_svg():
 
 def wpt_serve_others():
     _wpt_serve_run("battery_status.res", "cookies.res", "cors.res", "csp.res",
-                   "fileAPI.res", "page_visibility_basic.res", "webstorage.res")
+                   "fileAPI.res", "page_visibility_basic.res", "webstorage.res", "x-frame-options.res")
 
 
 def wpt_serve_all():

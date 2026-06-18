@@ -179,31 +179,40 @@ public:
         if (it != headers.end()) {
             String* value =
                 String::createASCIIString(it->second.data(), it->second.size());
-            if (value->equalsIgnoreCase("deny")) {
-                m_isAllowedResponse = false;
-            } else if (value->equalsIgnoreCase("sameorigin")) {
-                if (!origin->isSameOrigin(parentOrigin)) {
-                    m_isAllowedResponse = false;
-                }
-            } else {
-                GCVector<StringView> tokens;
-                StringUtils::tokenize(value, " ", 1, tokens);
-                if (tokens.size() > 1) {
-                    if (tokens[0].string()->equalsIgnoreCase("allow-from")) {
-                        m_isAllowedResponse = false;
-                        for (int i = 1; i < static_cast<int>(tokens.size());
-                             ++i) {
-                            WebOrigin* allowedOrigin =
-                                WebOrigin::createDocumentOrigin(
-                                    new ResourceURL(tokens[i].string()));
-                            if (allowedOrigin->isSameOrigin(parentOrigin)) {
-                                m_isAllowedResponse = true;
-                                break;
-                            }
-                        }
-                    }
+            // Multiple X-Frame-Options headers are joined with ", " by
+            // HTTPHeaderMap. Split on comma and evaluate each token.
+            GCVector<StringView> tokens;
+            StringUtils::tokenize(value, ",", 1, tokens);
+            bool hasDeny = false;
+            bool hasSameOrigin = false;
+            bool hasAllowAll = false;
+            bool hasInvalid = false;
+            for (size_t i = 0; i < tokens.size(); i++) {
+                String* token = tokens[i].substring()->trim();
+                if (token->equalsIgnoreCase("deny")) {
+                    hasDeny = true;
+                } else if (token->equalsIgnoreCase("sameorigin")) {
+                    hasSameOrigin = true;
+                } else if (token->equalsIgnoreCase("allowall")) {
+                    hasAllowAll = true;
+                } else {
+                    hasInvalid = true;
                 }
             }
+            if (hasDeny) {
+                m_isAllowedResponse = false;
+            } else if (hasSameOrigin) {
+                // SAMEORIGIN is only valid when all values are SAMEORIGIN.
+                if (hasAllowAll || hasInvalid) {
+                    m_isAllowedResponse = false;
+                } else if (!origin->isSameOrigin(parentOrigin)) {
+                    m_isAllowedResponse = false;
+                }
+            } else if (hasAllowAll && hasInvalid) {
+                // Mixed allowall and unrecognized tokens → blocked.
+                m_isAllowedResponse = false;
+            }
+            // All allowall, all invalid, or empty → allow
         }
         if (!m_isAllowedResponse) {
             browsingContext->sourceElement()->markContentDocumentDisabled();
