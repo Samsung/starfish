@@ -3354,7 +3354,7 @@ public:
     // document.  Used to gate :host promotion and to identify the origin host.
     bool isShadowResolver() const
     {
-        return m_ownerShadowRoot != nullptr;
+        return m_ownerShadowRoot.hasValue();
     }
     Element* ownerHost() const;
 
@@ -3514,7 +3514,7 @@ protected:
     bool m_needsRecalcRuleSet;
     bool m_hasSimplePseudoClassHostSelector;
     uint32_t m_mediumFontSize;
-    ShadowRoot* m_ownerShadowRoot; // non-null only for shadow resolvers
+    Optional<ShadowRoot*> m_ownerShadowRoot;
     GCVector<CSSStyleSheet*> m_sheets;
     GCVector<CSSStyleSheet*> m_adoptedSheets;
     // :host rules promoted from shadow resolvers, stored with the origin host
