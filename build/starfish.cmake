@@ -242,7 +242,7 @@ SET (STARFISH_DEPENDENCIES_COMMON
 IF (NOT ${CUSTOM} MATCHES "wearable")
     SET (STARFISH_DEPENDENCIES_CUSTOM mp4parse webm)
 ENDIF()
-IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
+IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable")
     SET (STARFISH_DEPENDENCIES_CUSTOM libwebsockets)
 ENDIF()
 
