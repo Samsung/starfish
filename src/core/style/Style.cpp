@@ -2656,16 +2656,22 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
     return false;
 }
 
-StyleResolver::StyleResolver(Document* document)
+StyleResolver::StyleResolver(Document* document, ShadowRoot* ownerShadowRoot)
     : DocumentHoldable(document)
     , m_usesFirstLineRule(false)
     , m_needsRecalcRuleSet(true)
     , m_hasSimplePseudoClassHostSelector(false)
     , m_mediumFontSize(document->webView()->defaultFontSize())
+    , m_ownerShadowRoot(ownerShadowRoot)
     , m_mediaQueryEvaluator(nullptr)
     , m_ruleSet(new RuleSet())
     , m_nextRuleSetOrder(0)
 {
+}
+
+Element* StyleResolver::ownerHost() const
+{
+    return m_ownerShadowRoot ? m_ownerShadowRoot->host() : nullptr;
 }
 
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* document)
@@ -8049,6 +8055,40 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             pseudoElementType);
     }
 
+    // Match :host / :host() rules that were promoted from shadow resolvers.
+    // Each entry carries the origin host element; only the matching host is
+    // considered so that rules from different shadow trees do not cross-apply.
+    if (UNLIKELY(m_hasSimplePseudoClassHostSelector) &&
+        element->isShadowRootHost()) {
+        for (size_t i = 0; i < m_hostScopedRules.size(); i++) {
+            const HostScopedRule& hsr = m_hostScopedRules[i];
+            if (hsr.host != element) {
+                continue;
+            }
+            MatchResult hsrResult(element); // scope = origin host
+            if (matchSelector(element, elementName, elementId, elementClasses,
+                              hsr.rule->selectorList(), 0,
+                              hsrResult) == Match::SelectorMatches) {
+                matchedRules.push_back(std::make_pair(hsr.rule, hsr.url));
+            }
+            // Propagate damage-source flags so that attribute/state changes
+            // that affect :host() conditions correctly invalidate the cache,
+            // mirroring the same propagation done in
+            // collectMatchingRulesFromAuthorSheet.
+            if (hsrResult.seenCombinator) {
+                ret->setStyleDamageSource(hsrResult.styleDamageFrom);
+            } else {
+                ret->setStyleDamageSource(
+                    (StyleDamageSource)(hsrResult.styleDamageFrom &
+                                       ~StyleDamageFromDOMTree));
+            }
+            ret->setStyleDamageSourceNodeStateMap(
+                hsrResult.styleDamageSourceNodeStateMap);
+            ret->setStyleDamageSourceNodeStateDOMTreeMap(
+                hsrResult.styleDamageSourceNodeStateDOMTreeMap);
+        }
+    }
+
     auto begin = &matchedRules[0];
     auto end = matchedRules.data() + matchedRules.size();
 
@@ -8748,10 +8788,21 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return false;
     }
     case CSSSelector::PseudoType::PseudoHost: {
-        return element->isShadowRootHost();
+        if (!element->isShadowRootHost()) {
+            return false;
+        }
+        // When a scope is set the rule came from m_hostScopedRules and must
+        // only match the exact host element it was promoted from.
+        if (result.scope && result.scope.getValue() != element) {
+            return false;
+        }
+        return true;
     }
     case CSSSelector::PseudoType::PseudoHostFunction: {
         if (!element->isShadowRootHost()) {
+            return false;
+        }
+        if (result.scope && result.scope.getValue() != element) {
             return false;
         }
 
@@ -9862,7 +9913,7 @@ void StyleResolver::setAdoptedSheets(const GCVector<CSSStyleSheet*>& sheets)
     // rule lingers after the adopted sheet is replaced or removed. The document
     // rebuild re-marks every shadow resolver (removeAllRules), and the recalc
     // order (document first, then shadow) re-promotes the current rules.
-    if (&document()->styleResolver() != this) {
+    if (isShadowResolver()) {
         document()->styleResolver().setNeedsRecalcRuleSet();
     }
     document()->browsingContext()->setNeedsStyleSheetsRecalc();
@@ -9872,6 +9923,7 @@ void StyleResolver::removeAllRules()
 {
     m_ruleSet->clear();
     m_ruleSetAttrFilter.clear();
+    m_hostScopedRules.clear();
 
     if (m_hasSimplePseudoClassHostSelector) {
         Traverse::traverseIncludingShadowDOM(document(), [](Node* node) {
@@ -10207,14 +10259,15 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
     size_t rules = sheet->styleRules().size();
     for (size_t j = 0; j < rules; j++) {
         StyleRule* rule = sheet->styleRules()[j].first;
-        // If a styleRule has a simple pseudo class host, add a
-        // styleRule to rule set of parent. if not, add a styleRule to
-        // this rule set to support Combinators.
+        // If a styleRule has a simple pseudo class host, promote it to the
+        // document resolver together with the origin host element so that
+        // matching can be restricted to the correct shadow tree.
+        // A shadow resolver is identified by isShadowResolver() (i.e. it was
+        // created for a ShadowRoot rather than the document).
         if (UNLIKELY(rule->isSimplePseudoClassHostSelector() &&
-                     &m_document->styleResolver() != this)) {
-            // `m_document->styleResolver() != this` means that
-            // this style resolver is for shadow-dom.
-            m_document->styleResolver().addToRuleSet(sheet->styleRules()[j]);
+                     isShadowResolver())) {
+            m_document->styleResolver().addHostScopedRule(
+                sheet->styleRules()[j], ownerHost());
             m_document->styleResolver().m_hasSimplePseudoClassHostSelector =
                 true;
         } else {
@@ -10226,6 +10279,51 @@ void StyleResolver::addToRuleSet(CSSStyleSheet* sheet)
     for (size_t k = 0; k < keyframes; k++) {
         addToKeyframesRule(sheet->keyframes()[k]);
     }
+}
+
+void StyleResolver::addHostScopedRule(
+    std::pair<StyleRule*, ResourceURL*> rule, Element* host)
+{
+    rule.first->initFlagsRelatedWithSelectorList();
+
+    // Register any attribute selectors inside :host() in the attr filter so
+    // that attribute mutations on the host element correctly trigger a restyle.
+    // This mirrors the same loop in addToRuleSet(pair).
+    auto selectorList = rule.first->selectorList();
+    size_t size = selectorList.size();
+    for (size_t i = 0; i < size; i++) {
+        CSSSelector* selector = selectorList[i].m_selector;
+        CSSSelector* currentSelector = selector;
+        size_t subSelectorIndex = 0;
+        size_t subSelectorSize =
+            UNLIKELY(selector->type() == CSSSelector::Type::PseudoClass)
+                ? selector->asCSSPseudoSelector()->pseudoSelectorList().size()
+                : 0;
+        while (currentSelector) {
+            if (currentSelector->isAttributeSelector()) {
+                if (!mayHaveAttrSelectorWithName(
+                        currentSelector->asCSSAttributeSelector()
+                            ->attribute()
+                            .localNameAtomic())) {
+                    m_ruleSetAttrFilter.push_back(
+                        currentSelector->asCSSAttributeSelector()
+                            ->attribute()
+                            .localNameAtomic());
+                }
+            }
+            if (UNLIKELY(subSelectorIndex < subSelectorSize)) {
+                currentSelector = selector->asCSSPseudoSelector()
+                                      ->pseudoSelectorList()[subSelectorIndex++]
+                                      .m_selector;
+            } else {
+                currentSelector = nullptr;
+            }
+        }
+    }
+
+    size_t order = nextRuleSetOrder();
+    rule.first->setOrder(order);
+    m_hostScopedRules.push_back(HostScopedRule{ rule.first, rule.second, host });
 }
 
 void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
