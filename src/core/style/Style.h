@@ -3375,9 +3375,9 @@ public:
     // A :host rule promoted from a shadow resolver carries the host element as
     // its scope so the document resolver can restrict matching to that element.
     struct HostScopedRule {
-        StyleRule*   rule;
+        StyleRule* rule;
         ResourceURL* url;
-        Element*     host; // ShadowRoot::host() of the originating shadow tree
+        Element* host; // ShadowRoot::host() of the originating shadow tree
     };
     void addHostScopedRule(std::pair<StyleRule*, ResourceURL*> rule,
                            Element* host);
