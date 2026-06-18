@@ -45,6 +45,14 @@ public:
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce);
     bool allowEval(CSPDirectives directive);
+    // Checks frame-ancestors against all ancestor URLs. No default-src
+    // fallback. Returns true if no frame-ancestors directive is set.
+    bool allowAncestors(const GCVector<ResourceURL*>& ancestorURLs);
+
+    bool hasFrameAncestors() const
+    {
+        return m_frameAncestors != nullptr;
+    }
 
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
@@ -68,6 +76,7 @@ private:
     ContentSecurityPolicySourceListDirective* m_childSrc;
     ContentSecurityPolicySourceListDirective* m_defaultSrc;
     ContentSecurityPolicySourceListDirective* m_formAction;
+    ContentSecurityPolicySourceListDirective* m_frameAncestors;
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_mediaSrc;
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
@@ -93,6 +102,8 @@ private:
                                         m_defaultSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_formAction));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_frameAncestors));
         GC_set_bit(
             desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,

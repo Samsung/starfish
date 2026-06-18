@@ -37,6 +37,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_childSrc(nullptr)
     , m_defaultSrc(nullptr)
     , m_formAction(nullptr)
+    , m_frameAncestors(nullptr)
     , m_imgSrc(nullptr)
     , m_mediaSrc(nullptr)
     , m_scriptSrc(nullptr)
@@ -105,6 +106,8 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* value)
         setDirective(m_defaultSrc, name, tokens);
     } else if (name->equalsIgnoreCase("form-action")) {
         setDirective(m_formAction, name, tokens);
+    } else if (name->equalsIgnoreCase("frame-ancestors")) {
+        setDirective(m_frameAncestors, name, tokens);
     } else if (name->equalsIgnoreCase("frame-src")) {
         STARFISH_LOG_INFO(
             "'frame-src' is deprecated. Using 'child-src' is recommended "
@@ -146,6 +149,8 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
         return m_defaultSrc;
     case CSPDirectives::FormAction:
         return m_formAction;
+    case CSPDirectives::FrameAncestors:
+        return m_frameAncestors;
     case CSPDirectives::ImgSrc:
         return m_imgSrc;
     case CSPDirectives::MediaSrc:
@@ -278,5 +283,24 @@ bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
         return true;
     }
     return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowAncestors(
+    const GCVector<ResourceURL*>& ancestorURLs)
+{
+    // frame-ancestors is not a fetch directive: no default-src fallback.
+    if (!m_frameAncestors) {
+        return true;
+    }
+    for (size_t i = 0; i < ancestorURLs.size(); i++) {
+        ResourceURL* url = ancestorURLs[i];
+        if (!isMatchingStar(m_frameAncestors, url) &&
+            !isMatchingSelf(m_frameAncestors, url) &&
+            !m_frameAncestors->allowScheme(url) &&
+            !m_frameAncestors->allowHost(url)) {
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace Starfish
