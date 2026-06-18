@@ -80,6 +80,8 @@ static String* getDirectiveName(CSPDirectives directive)
         return String::createASCIIString("default-src");
     case CSPDirectives::FormAction:
         return String::createASCIIString("form-action");
+    case CSPDirectives::FrameAncestors:
+        return String::createASCIIString("frame-ancestors");
     case CSPDirectives::ChildSrc:
         return String::createASCIIString("frame-src");
     case CSPDirectives::ImgSrc:
@@ -184,6 +186,30 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
         }
     }
     return isAllowed;
+}
+
+bool ContentSecurityPolicy::hasFrameAncestorsDirective()
+{
+    for (auto policy : m_policies) {
+        if (policy->hasFrameAncestors()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ContentSecurityPolicy::allowAncestors(
+    const GCVector<ResourceURL*>& ancestorURLs)
+{
+    if (s_bypass) {
+        return true;
+    }
+    for (auto policy : m_policies) {
+        if (!policy->allowAncestors(ancestorURLs)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void ContentSecurityPolicy::dispatchViolationEvent(

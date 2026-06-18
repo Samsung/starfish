@@ -155,69 +155,83 @@ public:
                 ->m_responseStart = timestamp();
         }
 
+        auto documentCSP =
+            m_resource->loader()->document()->contentSecurityPolicy();
+        auto cspHeaderIt = headers.find("Content-Security-Policy");
+        if (cspHeaderIt != headers.end()) {
+            String* v = String::createASCIIString(cspHeaderIt->second.data(),
+                                                  cspHeaderIt->second.size());
+            documentCSP->didReceiveHeader(
+                v, ContentSecurityPolicyHeaderType::Enforce,
+                ContentSecurityPolicyHeaderSource::HTTP);
+        }
+
         if (browsingContext->isTopLevelBrowsingContext()) {
-            // TODO: In 'iframe' case also, check CSP
-            auto csp = headers.find("Content-Security-Policy");
-            if (csp != headers.end()) {
-                String* value = String::createASCIIString(csp->second.data(),
-                                                          csp->second.size());
-                m_resource->loader()
-                    ->document()
-                    ->contentSecurityPolicy()
-                    ->didReceiveHeader(value,
-                                       ContentSecurityPolicyHeaderType::Enforce,
-                                       ContentSecurityPolicyHeaderSource::HTTP);
-            }
             return;
         }
+
         auto origin = browsingContext->document()->webOrigin();
         auto parentOrigin =
             browsingContext->parentBrowsingContext()->document()->webOrigin();
 
-        auto it = headers.find(HTTPHeaderMap::kXFrameOptions);
         m_isAllowedResponse = true;
-        if (it != headers.end()) {
-            String* value =
-                String::createASCIIString(it->second.data(), it->second.size());
-            // Multiple X-Frame-Options headers are joined with ", " by
-            // HTTPHeaderMap. Split on comma and evaluate each token.
-            GCVector<StringView> tokens;
-            StringUtils::tokenize(value, ",", 1, tokens);
-            bool hasDeny = false;
-            bool hasSameOrigin = false;
-            bool hasAllowAll = false;
-            bool hasInvalid = false;
-            for (size_t i = 0; i < tokens.size(); i++) {
-                String* token = tokens[i].substring()->trim();
-                if (token->equalsIgnoreCase("deny")) {
-                    hasDeny = true;
-                } else if (token->equalsIgnoreCase("sameorigin")) {
-                    hasSameOrigin = true;
-                } else if (token->equalsIgnoreCase("allowall")) {
-                    hasAllowAll = true;
-                } else {
-                    hasInvalid = true;
+        // HTML spec: frame-ancestors overrides X-Frame-Options when present.
+        if (documentCSP->hasFrameAncestorsDirective()) {
+            GCVector<ResourceURL*> ancestors;
+            for (auto bc = browsingContext->parentBrowsingContext();
+                 bc != nullptr; bc = bc->parentBrowsingContext()) {
+                auto u = bc->document()->webOrigin()->url();
+                if (u.hasValue()) {
+                    ancestors.push_back(u.value());
                 }
             }
-            if (hasDeny) {
-                m_isAllowedResponse = false;
-            } else if (hasSameOrigin) {
-                // SAMEORIGIN is only valid when all values are SAMEORIGIN.
-                if (hasAllowAll || hasInvalid) {
+            m_isAllowedResponse = documentCSP->allowAncestors(ancestors);
+        } else {
+            auto it = headers.find(HTTPHeaderMap::kXFrameOptions);
+            if (it != headers.end()) {
+                String* value = String::createASCIIString(it->second.data(),
+                                                          it->second.size());
+                // Multiple X-Frame-Options headers are joined with ", " by
+                // HTTPHeaderMap. Split on comma and evaluate each token.
+                GCVector<StringView> tokens;
+                StringUtils::tokenize(value, ",", 1, tokens);
+                bool hasDeny = false;
+                bool hasSameOrigin = false;
+                bool hasAllowAll = false;
+                bool hasInvalid = false;
+                for (size_t i = 0; i < tokens.size(); i++) {
+                    String* token = tokens[i].substring()->trim();
+                    if (token->equalsIgnoreCase("deny")) {
+                        hasDeny = true;
+                    } else if (token->equalsIgnoreCase("sameorigin")) {
+                        hasSameOrigin = true;
+                    } else if (token->equalsIgnoreCase("allowall")) {
+                        hasAllowAll = true;
+                    } else {
+                        hasInvalid = true;
+                    }
+                }
+                if (hasDeny) {
                     m_isAllowedResponse = false;
-                } else if (!origin->isSameOrigin(parentOrigin)) {
+                } else if (hasSameOrigin) {
+                    // SAMEORIGIN is only valid when all values are SAMEORIGIN.
+                    if (hasAllowAll || hasInvalid) {
+                        m_isAllowedResponse = false;
+                    } else if (!origin->isSameOrigin(parentOrigin)) {
+                        m_isAllowedResponse = false;
+                    }
+                } else if (hasAllowAll && hasInvalid) {
+                    // Mixed allowall and unrecognized tokens → blocked.
                     m_isAllowedResponse = false;
                 }
-            } else if (hasAllowAll && hasInvalid) {
-                // Mixed allowall and unrecognized tokens → blocked.
-                m_isAllowedResponse = false;
+                // All allowall, all invalid, or empty → allow
             }
-            // All allowall, all invalid, or empty → allow
         }
         if (!m_isAllowedResponse) {
             browsingContext->sourceElement()->markContentDocumentDisabled();
             STARFISH_LOG_WARN(
-                "Refused to display in iframe according to X-Frame-Options");
+                "Refused to display in iframe according to "
+                "X-Frame-Options or CSP frame-ancestors");
         }
 #if defined(STARFISH_WEBWORKER_NOT_HOST)
         auto request = m_resource->resourceRequest();

@@ -39,6 +39,7 @@ enum class CSPDirectives {
     ChildSrc,
     DefaultSrc,
     FormAction,
+    FrameAncestors,
     ImgSrc,
     MediaSrc,
     ObjectSrc,
@@ -68,6 +69,13 @@ public:
     bool allowEval(CSPDirectives directive);
     bool allowNonceOrSource(CSPDirectives directive, String* nonce,
                             ResourceURL* resUrl);
+    // Returns true if any policy has a frame-ancestors directive.
+    bool hasFrameAncestorsDirective();
+    // Checks each policy's frame-ancestors against all ancestor URLs.
+    // Policies without frame-ancestors are treated as allowing.
+    // No default-src fallback (spec: frame-ancestors is not a fetch
+    // directive).
+    bool allowAncestors(const GCVector<ResourceURL*>& ancestorURLs);
 
     void dispatchViolationEvent(
         String* name, String* blockedURI = String::emptyString,
