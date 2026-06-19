@@ -35,6 +35,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/HTMLTemplateElement.h"
 #include "core/dom/MutationObserver.h"
 #include "core/dom/MutationObservationScope.h"
 #include "core/dom/NodeList.h"
@@ -484,6 +485,19 @@ Node* Node::cloneNode(bool deep)
             Node* newChild = child->cloneNode(true);
             STARFISH_ASSERT(newChild);
             newNode->appendChild(newChild);
+        }
+        // A <template>'s children live in its content fragment, not in the
+        // node's own child list, so the loop above does not reach them. Per
+        // the HTML "cloning steps for template", clone the content children
+        // only when the clone-children (deep) flag is set.
+        if (isHTMLTemplateElement()) {
+            DocumentFragment* srcContent = asHTMLTemplateElement()->content();
+            DocumentFragment* dstContent =
+                newNode->asHTMLTemplateElement()->content();
+            for (Node* c = srcContent->firstChild(); c != nullptr;
+                 c = c->nextSibling()) {
+                dstContent->appendChild(c->cloneNode(true));
+            }
         }
     }
     return newNode;
