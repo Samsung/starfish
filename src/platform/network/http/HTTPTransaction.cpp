@@ -323,27 +323,6 @@ void HTTPTransaction::startPreFlightRequest()
     postprocess();
 }
 
-// HTTP field values arrive from curl with a trailing CRLF and may carry
-// leading/trailing OWS. Strip only HTTP whitespace (SP, HTAB, CR, LF). Unlike
-// StringUtils::trim()'s isspace(), this preserves U+000B and U+000C so callers
-// such as the X-Frame-Options "get, decode, and split" check classify those
-// bytes as part of the value, per spec.
-static void trimHTTPHeaderValue(std::string& s)
-{
-    auto isHTTPWhitespace = [](char c) -> bool {
-        return c == 0x09 || c == 0x0A || c == 0x0D || c == 0x20;
-    };
-    size_t start = 0;
-    size_t end = s.size();
-    while (start < end && isHTTPWhitespace(s[start])) {
-        start++;
-    }
-    while (end > start && isHTTPWhitespace(s[end - 1])) {
-        end--;
-    }
-    s = s.substr(start, end - start);
-}
-
 void HTTPTransaction::didReceiveHeader(const std::string& header)
 {
     size_t pos = header.find(":");
@@ -351,8 +330,10 @@ void HTTPTransaction::didReceiveHeader(const std::string& header)
         std::string key = header.substr(0, pos);
         std::string value = header.substr(pos + 1);
 
+        // Field values keep U+000B/U+000C as content, so trim only HTTP
+        // whitespace (the X-Frame-Options check depends on this); see spec.
         StringUtils::trim(key);
-        trimHTTPHeaderValue(value);
+        StringUtils::trimHTTPWhitespace(value);
 
         std::string converted = HTTPUtil::tryToConvertToHeaderMapString(key);
         m_httpResponse->headers().append(converted, value);

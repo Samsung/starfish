@@ -69,12 +69,8 @@ public:
     bool allowEval(CSPDirectives directive);
     bool allowNonceOrSource(CSPDirectives directive, String* nonce,
                             ResourceURL* resUrl);
-    // Returns true if any policy has a frame-ancestors directive.
     bool hasFrameAncestorsDirective();
-    // Checks each policy's frame-ancestors against all ancestor URLs.
-    // Policies without frame-ancestors are treated as allowing.
-    // No default-src fallback (spec: frame-ancestors is not a fetch
-    // directive).
+    // frame-ancestors is not a fetch directive, so no default-src fallback.
     bool allowAncestors(const GCVector<ResourceURL*>& ancestorURLs);
 
     void dispatchViolationEvent(
