@@ -879,6 +879,8 @@ test/cairo/internal-test/shadowdom/shadowdom5.html
 test/cairo/internal-test/shadowdom/slot_text.html
 test/cairo/internal-test/shadowdom/template-innerhtml.html
 test/cairo/internal-test/shadowdom/shadowdom-svg-use.html
+test/cairo/internal-test/shadowdom/slot-fallback-layout.html
+test/cairo/internal-test/shadowdom/template-deep-clone.html
 #test/cairo/internal-test/web-animation/element_animate_01.html // please update this test after add an AnimationPlaybackEvent.
 test/cairo/internal-test/form/input-checkbox-click.html
 test/cairo/internal-test/fe-framework-test/react-19-1-releasebuild/index.html
