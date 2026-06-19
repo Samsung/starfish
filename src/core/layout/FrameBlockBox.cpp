@@ -185,7 +185,7 @@ void FrameBlockBox::addToRelativePositionedBoxesIfNeeded(LayoutContext& ctx)
 
     if (node() && node()->parentElement()) {
         Node* nd = node()->parentElement();
-        if (nd->frame()->isFrameInline() &&
+        if (nd->frame() != nullptr && nd->frame()->isFrameInline() &&
             nd->style()->position() == RelativePositionValue) {
             ctx.addToRelativePositionedBoxes(this, false);
         }
