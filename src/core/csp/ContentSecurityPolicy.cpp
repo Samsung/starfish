@@ -48,6 +48,12 @@ ContentSecurityPolicy::ContentSecurityPolicy(ExecutionContext* executionContext)
 void ContentSecurityPolicy::copyFrom(ContentSecurityPolicy* source)
 {
     for (auto& policy : source->m_policies) {
+        // A policy parsed from a blank header holds no directives and leaves
+        // its header null; there is nothing to inherit, and re-parsing a null
+        // header would crash. Skip it.
+        if (policy->header() == nullptr) {
+            continue;
+        }
         didReceiveHeader(const_cast<String*>(policy->header()),
                          policy->headerType(),
                          ContentSecurityPolicyHeaderSource::Inherited);
