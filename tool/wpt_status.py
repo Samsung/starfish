@@ -187,6 +187,23 @@ def verdict(result):
     return True, "OK"
 
 
+def score(result):
+    """Return (passing, total) subtest counts using wpt.fyi's summary rule.
+
+    wpt.fyi (results-processor) scores each test at the *subtest* level so its
+    numbers are comparable across browsers:
+      - with subtests: total = #subtests, passing = #PASS subtests
+        (the harness status itself is not counted separately);
+      - without subtests (single-page test, or harness ERROR/TIMEOUT that
+        produced none): total = 1, passing = 1 if the harness status is OK,
+        else 0.
+    """
+    subs = result["subtests"]
+    if subs:
+        return sum(1 for s in subs if s["status"] == "PASS"), len(subs)
+    return (1, 1) if result["status"] in ("OK", "PASS") else (0, 1)
+
+
 def run_all(tasks, jobs, timeout):
     """tasks: [(category, url)]; returns list of result dicts with verdicts."""
     results = []
@@ -217,6 +234,7 @@ HTML_HEAD = """<!DOCTYPE html>
  .bar{height:14px;border-radius:7px;background:#e33;overflow:hidden;margin:.5rem 0}
  .bar>span{display:block;height:100%;background:#2a2}
  details{border:1px solid #ddd;border-radius:6px;margin:.4rem 0}
+ details details{margin:.4rem .4rem .4rem 1rem;border-left:3px solid #eee}
  summary{cursor:pointer;padding:.5rem .75rem;font-weight:600;
          display:flex;justify-content:space-between;gap:1rem}
  summary .n{font-weight:400;color:#666}
@@ -228,6 +246,7 @@ HTML_HEAD = """<!DOCTYPE html>
  .sub{color:#888;white-space:nowrap}
  .toggle{margin-bottom:1rem}
  body.failonly tr.pass{display:none}
+ body.failonly details.allpass{display:none}
 </style>
 <script>
  function failOnly(cb){document.body.classList.toggle('failonly',cb.checked)}
@@ -236,46 +255,93 @@ HTML_HEAD = """<!DOCTYPE html>
 """
 
 
-def render_html(results, generated_at, missing):
-    by_cat = {}
+def build_tree(results):
+    """Group results into a nested directory tree keyed on the test URL path.
+
+    Mirrors wpt.fyi's drill-down: /css/selectors/foo.html becomes
+    css -> selectors -> foo.html, with each directory aggregating the subtest
+    counts of everything beneath it. A node is {"dirs": {name: node},
+    "tests": [result], "pass": int, "total": int}; a directory may hold both
+    subdirectories and its own direct test files.
+    """
+    root = {"dirs": {}, "tests": [], "pass": 0, "total": 0}
     for r in results:
-        by_cat.setdefault(r["category"], []).append(r)
-    total = len(results)
-    passed = sum(1 for r in results if r["ok"])
+        parts = r["url"][len(SERVER):].strip("/").split("/")
+        node = root
+        for part in parts[:-1]:
+            node = node["dirs"].setdefault(
+                part, {"dirs": {}, "tests": [], "pass": 0, "total": 0})
+        node["tests"].append(r)
+    _accumulate(root)
+    return root
+
+
+def _accumulate(node):
+    """Sum subtest (pass, total) bottom-up into each node; return its totals."""
+    p = sum(score(r)[0] for r in node["tests"])
+    t = sum(score(r)[1] for r in node["tests"])
+    for child in node["dirs"].values():
+        cp, ct = _accumulate(child)
+        p += cp
+        t += ct
+    node["pass"], node["total"] = p, t
+    return p, t
+
+
+def render_node(name, node, parts):
+    """Render a directory node as a nested <details>, recursing into subdirs."""
+    p, t = node["pass"], node["total"]
+    allpass = " allpass" if p == t else ""
+    # Collapsed by default (like wpt.fyi); the reader expands what they want.
+    parts.append('<details class="dir%s"><summary>%s/'
+                 '<span class="n">%d/%d</span></summary>'
+                 % (allpass, escape(name), p, t))
+    for sub in sorted(node["dirs"]):
+        render_node(sub, node["dirs"][sub], parts)
+    tests = sorted(node["tests"], key=lambda r: r["url"])
+    if tests:
+        parts.append("<table>")
+        for r in tests:
+            cls = "pass" if r["ok"] else "fail"
+            np, nt = score(r)
+            detail = "%d/%d subtests" % (np, nt)
+            if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
+                detail = r["reason"]
+            leaf = r["url"][len(SERVER):].rstrip("/").rsplit("/", 1)[-1]
+            parts.append('<tr class="%s"><td class="s">%s</td>'
+                         '<td class="u">%s</td><td class="sub">%s</td></tr>'
+                         % (cls, "PASS" if r["ok"] else "FAIL",
+                            escape(leaf), escape(detail)))
+        parts.append("</table>")
+    parts.append("</details>")
+
+
+def render_html(results, generated_at, missing):
+    # Subtest-level totals, matching wpt.fyi's classification (see score()).
+    passed = sum(score(r)[0] for r in results)
+    total = sum(score(r)[1] for r in results)
     pct = (100.0 * passed / total) if total else 0.0
 
     parts = [HTML_HEAD]
     parts.append("<h1>Starfish WPT status</h1>")
-    parts.append('<div class="meta">Generated %s &middot; %d/%d passed '
-                 "(%.1f%%)</div>" % (escape(generated_at), passed, total, pct))
+    parts.append('<div class="meta">Generated %s &middot; %d/%d subtests '
+                 "passed (%.1f%%) &middot; comparable to wpt.fyi</div>"
+                 % (escape(generated_at), passed, total, pct))
     parts.append('<div class="bar"><span style="width:%.2f%%"></span></div>'
                  % pct)
+    parts.append('<div class="meta">Counts <strong>testharness</strong> '
+                 "subtests only (reftest / crashtest / wdspec excluded), so "
+                 "the total test count looks smaller than wpt.fyi's full set; "
+                 "read the comparison at the subtest level.</div>")
     if missing:
         parts.append('<div class="meta">Not in manifest (skipped): %s</div>'
                      % escape(", ".join(missing)))
     parts.append('<label class="toggle"><input type="checkbox" '
                  'onchange="failOnly(this)"> Show failures only</label>')
 
-    for cat in sorted(by_cat):
-        rows = sorted(by_cat[cat], key=lambda r: (r["ok"], r["url"]))
-        cp = sum(1 for r in rows if r["ok"])
-        parts.append("<details%s><summary>%s"
-                     '<span class="n">%d/%d</span></summary><table>'
-                     % (" open" if cp < len(rows) else "",
-                        escape(cat), cp, len(rows)))
-        for r in rows:
-            cls = "pass" if r["ok"] else "fail"
-            np = sum(1 for s in r["subtests"] if s["status"] == "PASS")
-            nf = sum(1 for s in r["subtests"] if s["status"] == "FAIL")
-            detail = "PASS:%d FAIL:%d" % (np, nf)
-            if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
-                detail = r["reason"]
-            path = r["url"][len(SERVER):]
-            parts.append('<tr class="%s"><td class="s">%s</td>'
-                         '<td class="u">%s</td><td class="sub">%s</td></tr>'
-                         % (cls, "PASS" if r["ok"] else "FAIL",
-                            escape(path), escape(detail)))
-        parts.append("</table></details>")
+    root = build_tree(results)
+    for name in sorted(root["dirs"]):
+        render_node(name, root["dirs"][name], parts)
     parts.append("</body></html>")
     return "".join(parts)
 
@@ -283,14 +349,25 @@ def render_html(results, generated_at, missing):
 def extract_metrics(results, now=None):
     """Extract metrics from test results for dashboard JSON.
 
-    Returns a dict with date, time, timestamp, passed, failed, total, rate.
+    passed/failed/total/rate are at the *subtest* level (see score()), so the
+    dashboard numbers are comparable to wpt.fyi. files_passed/files_total keep
+    the per-test-file view for our own diagnostics, and categories holds the
+    per-spec-dir [passed, total] subtest breakdown (used by the browser
+    comparison in Phase 2).
+
     now: datetime to use (defaults to datetime.now()); pass the same value
     used for the HTML report so timestamps are consistent.
     """
     if now is None:
         now = datetime.now()
-    passed = sum(1 for r in results if r["ok"])
-    total = len(results)
+    passed = sum(score(r)[0] for r in results)
+    total = sum(score(r)[1] for r in results)
+    categories = {}
+    for r in results:
+        p, t = score(r)
+        agg = categories.setdefault(r["category"], [0, 0])
+        agg[0] += p
+        agg[1] += t
     return {
         "date": now.strftime("%Y-%m-%d"),
         "time": now.strftime("%H:%M:%S"),
@@ -298,7 +375,10 @@ def extract_metrics(results, now=None):
         "passed": passed,
         "failed": total - passed,
         "total": total,
-        "rate": round(100.0 * passed / total, 1) if total else 0.0
+        "rate": round(100.0 * passed / total, 1) if total else 0.0,
+        "files_passed": sum(1 for r in results if r["ok"]),
+        "files_total": len(results),
+        "categories": categories,
     }
 
 
@@ -359,8 +439,11 @@ def main(argv):
     with open(args.output, "w") as fp:
         fp.write(html)
 
-    passed = sum(1 for r in results if r["ok"])
-    print("\nWrote %s  (%d/%d passed)" % (args.output, passed, len(results)))
+    sub_pass = sum(score(r)[0] for r in results)
+    sub_total = sum(score(r)[1] for r in results)
+    files_pass = sum(1 for r in results if r["ok"])
+    print("\nWrote %s  (%d/%d subtests passed; %d/%d files all-pass)"
+          % (args.output, sub_pass, sub_total, files_pass, len(results)))
 
     if args.output_json:
         metrics = extract_metrics(results, generated_at_dt)

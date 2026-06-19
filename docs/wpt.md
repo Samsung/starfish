@@ -178,3 +178,40 @@ Measured at the initial pin (WPT `1c4810772`, 2026-06-08): of 1919 testharness
 tests, **78.1% pass**. Coverage of the legacy curated set after rename recovery
 is 95.4% (1930/2024). Weak areas (engine-gap signal): webrtc, websockets, svg,
 html/syntax, html/rendering, cors. Strong: css, dom, html/canvas, workers, xhr.
+
+## Status board (wpt.fyi-comparable)
+
+The nightly status board at <https://pages.github.sec.samsung.net/lws/starfish/>
+runs *un-curated* spec directories (`tool/wpt_status_targets.txt`) to reveal
+where Starfish is strong or weak per spec area — unlike the CI gate above, which
+runs the curated `.res` lists at ~100% by design.
+
+Counting matches **wpt.fyi**, so the numbers compare directly with the major
+browsers. Each test is scored at the **subtest** level (`wpt_status.py:score`):
+a test with subtests contributes `passing / total` subtests; a test with none
+(single-page test, or a harness error that produced none) counts as `1` total,
+passing only if the harness status is OK. The aggregate is the sum across tests.
+
+> **Scope caveat:** the board counts **testharness** subtests only (reftest /
+> crashtest / wdspec excluded), so its total test count looks smaller than
+> wpt.fyi's full set. Read the comparison at the subtest level, not by raw
+> totals.
+
+Pipeline (`.github/workflows/wpt_status_nightly.yml`, nightly):
+
+    wpt_status.py ──▶ report-YYYYMMDD.html  (per-category, subtest counts)
+                 └──▶ metrics.json          (subtest passed/total/rate;
+                                             files_passed/total + per-category
+                                             breakdown for diagnostics)
+    metrics.json ──wpt_update_data.py──▶ data.json ──wpt_generate_dashboard.py──▶ index.html
+
+Run it locally:
+
+```sh
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt_status.py \
+  --only css/selectors --limit 30 -o report.html --output-json metrics.json
+```
+
+Because the metric definition is subtest-level (not the earlier per-file count),
+the cumulative `data.json` history must be reset once when this lands — trigger
+the workflow with `reset_history: true`.
