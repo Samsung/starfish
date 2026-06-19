@@ -19,6 +19,8 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include <set>
+#include <string>
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
@@ -189,42 +191,69 @@ public:
         } else {
             auto it = headers.find(HTTPHeaderMap::kXFrameOptions);
             if (it != headers.end()) {
-                String* value = String::createASCIIString(it->second.data(),
-                                                          it->second.size());
+                // HTML "X-Frame-Options" check: get, decode, and split the
+                // header value on U+002C (,), strip leading/trailing HTTP
+                // whitespace (TAB/LF/CR/SPACE only) from each token, ASCII
+                // lowercase it, and collect the DISTINCT values into a set.
                 // Multiple X-Frame-Options headers are joined with ", " by
-                // HTTPHeaderMap. Split on comma and evaluate each token.
-                GCVector<StringView> tokens;
-                StringUtils::tokenize(value, ",", 1, tokens);
-                bool hasDeny = false;
-                bool hasSameOrigin = false;
-                bool hasAllowAll = false;
-                bool hasInvalid = false;
-                for (size_t i = 0; i < tokens.size(); i++) {
-                    String* token = tokens[i].substring()->trim();
-                    if (token->equalsIgnoreCase("deny")) {
-                        hasDeny = true;
-                    } else if (token->equalsIgnoreCase("sameorigin")) {
-                        hasSameOrigin = true;
-                    } else if (token->equalsIgnoreCase("allowall")) {
-                        hasAllowAll = true;
+                // HTTPHeaderMap, so the comma split also covers them. The
+                // managed directives are "deny", "sameorigin" and "allowall":
+                // if the set holds more than one distinct value AND any managed
+                // directive is among them, the directives conflict and framing
+                // is blocked. A lone unrecognized value (or several distinct
+                // unrecognized values, e.g. "INVALID" plus an empty header) is
+                // not a managed directive, so framing is allowed.
+                const std::string& raw = it->second;
+                std::set<std::string> distinctValues;
+                std::string token;
+                auto isHTTPWhitespace = [](char c) -> bool {
+                    return c == 0x09 || c == 0x0A || c == 0x0D || c == 0x20;
+                };
+                auto flushToken = [&]() {
+                    size_t start = 0;
+                    size_t end = token.size();
+                    while (start < end && isHTTPWhitespace(token[start])) {
+                        start++;
+                    }
+                    while (end > start && isHTTPWhitespace(token[end - 1])) {
+                        end--;
+                    }
+                    std::string lowered;
+                    lowered.reserve(end - start);
+                    for (size_t i = start; i < end; i++) {
+                        char c = token[i];
+                        if (c >= 'A' && c <= 'Z') {
+                            c = static_cast<char>(c - 'A' + 'a');
+                        }
+                        lowered.push_back(c);
+                    }
+                    distinctValues.insert(lowered);
+                };
+                for (size_t i = 0; i < raw.size(); i++) {
+                    if (raw[i] == ',') {
+                        flushToken();
+                        token.clear();
                     } else {
-                        hasInvalid = true;
+                        token.push_back(raw[i]);
                     }
                 }
-                if (hasDeny) {
+                flushToken();
+
+                bool hasDeny = distinctValues.count("deny") != 0;
+                bool hasSameOrigin = distinctValues.count("sameorigin") != 0;
+                bool hasAllowAll = distinctValues.count("allowall") != 0;
+                bool hasManaged = hasDeny || hasSameOrigin || hasAllowAll;
+                if (distinctValues.size() > 1 && hasManaged) {
+                    // Conflicting managed directives → blocked.
+                    m_isAllowedResponse = false;
+                } else if (hasDeny) {
                     m_isAllowedResponse = false;
                 } else if (hasSameOrigin) {
-                    // SAMEORIGIN is only valid when all values are SAMEORIGIN.
-                    if (hasAllowAll || hasInvalid) {
-                        m_isAllowedResponse = false;
-                    } else if (!origin->isSameOrigin(parentOrigin)) {
+                    if (!origin->isSameOrigin(parentOrigin)) {
                         m_isAllowedResponse = false;
                     }
-                } else if (hasAllowAll && hasInvalid) {
-                    // Mixed allowall and unrecognized tokens → blocked.
-                    m_isAllowedResponse = false;
                 }
-                // All allowall, all invalid, or empty → allow
+                // Lone "allowall", unrecognized, or empty values → allow.
             }
         }
         if (!m_isAllowedResponse) {
