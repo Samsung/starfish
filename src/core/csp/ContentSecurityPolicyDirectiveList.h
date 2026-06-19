@@ -67,6 +67,11 @@ public:
         return m_headerType;
     }
 
+    ContentSecurityPolicyHeaderSource headerSource() const
+    {
+        return m_headerSource;
+    }
+
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;
@@ -84,6 +89,7 @@ private:
 
     String* m_header;
     ContentSecurityPolicyHeaderType m_headerType;
+    ContentSecurityPolicyHeaderSource m_headerSource;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {

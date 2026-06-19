@@ -378,7 +378,8 @@ def wpt_serve_svg():
 
 def wpt_serve_others():
     _wpt_serve_run("battery_status.res", "cookies.res", "cors.res", "csp.res",
-                   "fileAPI.res", "page_visibility_basic.res", "webstorage.res", "x-frame-options.res")
+                   "fileAPI.res", "frame-ancestors.res", "page_visibility_basic.res",
+                   "webstorage.res", "x-frame-options.res")
 
 
 def wpt_serve_all():

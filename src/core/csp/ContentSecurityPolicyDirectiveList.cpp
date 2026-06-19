@@ -45,6 +45,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_header(nullptr)
 {
     m_headerType = type;
+    m_headerSource = source;
     size_t end = policy->length();
     if (end == 0)
         return;

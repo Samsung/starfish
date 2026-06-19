@@ -191,6 +191,12 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
 bool ContentSecurityPolicy::hasFrameAncestorsDirective()
 {
     for (auto policy : m_policies) {
+        // frame-ancestors is enforced only from a policy delivered with the
+        // response (HTTP header source), not from inherited or <meta> policies,
+        // per the CSP spec.
+        if (policy->headerSource() != ContentSecurityPolicyHeaderSource::HTTP) {
+            continue;
+        }
         if (policy->hasFrameAncestors()) {
             return true;
         }
@@ -205,6 +211,12 @@ bool ContentSecurityPolicy::allowAncestors(
         return true;
     }
     for (auto policy : m_policies) {
+        // frame-ancestors is enforced only from a policy delivered with the
+        // response (HTTP header source); inherited or <meta> policies must not
+        // block, per the CSP spec.
+        if (policy->headerSource() != ContentSecurityPolicyHeaderSource::HTTP) {
+            continue;
+        }
         if (!policy->allowAncestors(ancestorURLs)) {
             return false;
         }
