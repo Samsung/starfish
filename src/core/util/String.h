@@ -1565,6 +1565,7 @@ public:
     static void ltrim(std::string& s);
     static void rtrim(std::string& s);
     static void trim(std::string& s);
+    static void trimHTTPWhitespace(std::string& s);
     static std::string ltrimmed(std::string s);
     static std::string rtrimmed(std::string s);
     static std::string trimmed(std::string s);

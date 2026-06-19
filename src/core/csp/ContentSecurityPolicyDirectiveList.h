@@ -72,6 +72,13 @@ public:
         return m_headerSource;
     }
 
+    // frame-ancestors is enforced only from a policy delivered with the
+    // response; inherited and <meta> policies must not block, per the CSP spec.
+    bool isFrameAncestorsEnforceable() const
+    {
+        return m_headerSource == ContentSecurityPolicyHeaderSource::HTTP;
+    }
+
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;

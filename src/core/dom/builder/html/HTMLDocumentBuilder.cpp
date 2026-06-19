@@ -206,28 +206,9 @@ public:
                 const std::string& raw = it->second;
                 std::set<std::string> distinctValues;
                 std::string token;
-                auto isHTTPWhitespace = [](char c) -> bool {
-                    return c == 0x09 || c == 0x0A || c == 0x0D || c == 0x20;
-                };
                 auto flushToken = [&]() {
-                    size_t start = 0;
-                    size_t end = token.size();
-                    while (start < end && isHTTPWhitespace(token[start])) {
-                        start++;
-                    }
-                    while (end > start && isHTTPWhitespace(token[end - 1])) {
-                        end--;
-                    }
-                    std::string lowered;
-                    lowered.reserve(end - start);
-                    for (size_t i = start; i < end; i++) {
-                        char c = token[i];
-                        if (c >= 'A' && c <= 'Z') {
-                            c = static_cast<char>(c - 'A' + 'a');
-                        }
-                        lowered.push_back(c);
-                    }
-                    distinctValues.insert(lowered);
+                    StringUtils::trimHTTPWhitespace(token);
+                    distinctValues.insert(StringUtils::toLowerCase(token));
                 };
                 for (size_t i = 0; i < raw.size(); i++) {
                     if (raw[i] == ',') {

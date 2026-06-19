@@ -1438,6 +1438,26 @@ void StringUtils::trim(std::string& s)
     rtrim(s);
 }
 
+// Per RFC 7230 a field value's optional whitespace is only SP and HTAB (with
+// the line terminator CR/LF). U+000B and U+000C are part of the value, so this
+// preserves them unlike trim()'s isspace(). Required by the X-Frame-Options
+// "get, decode, and split" check, which must classify those bytes as content.
+void StringUtils::trimHTTPWhitespace(std::string& s)
+{
+    auto isHTTPWhitespace = [](char c) -> bool {
+        return c == 0x09 || c == 0x0A || c == 0x0D || c == 0x20;
+    };
+    size_t start = 0;
+    size_t end = s.size();
+    while (start < end && isHTTPWhitespace(s[start])) {
+        start++;
+    }
+    while (end > start && isHTTPWhitespace(s[end - 1])) {
+        end--;
+    }
+    s = s.substr(start, end - start);
+}
+
 // trim from start (copying)
 std::string StringUtils::ltrimmed(std::string s)
 {

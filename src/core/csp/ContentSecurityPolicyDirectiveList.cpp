@@ -290,7 +290,7 @@ bool ContentSecurityPolicyDirectiveList::allowAncestors(
     const GCVector<ResourceURL*>& ancestorURLs)
 {
     // frame-ancestors is not a fetch directive: no default-src fallback.
-    if (!m_frameAncestors) {
+    if (m_frameAncestors == nullptr) {
         return true;
     }
     for (size_t i = 0; i < ancestorURLs.size(); i++) {
