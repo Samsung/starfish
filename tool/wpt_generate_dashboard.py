@@ -84,7 +84,7 @@ def generate_html(data):
         latest_html = (
             '<p>Generated: <strong>%s %s</strong></p>'
             '<p style="font-size: 18px; font-weight: bold; color: #2a2;">'
-            'Pass Rate: %.1f%% (%d/%d)</p>'
+            'Subtest Pass Rate: %.1f%% (%d/%d subtests)</p>'
             % (
                 escape(latest.get("date", "")),
                 escape(latest.get("time", "")),
@@ -165,11 +165,21 @@ def generate_html(data):
       text-align: center;
       color: #999;
     }
+    .note {
+      margin: 0.75rem 0 0;
+      padding: 0.75rem 1rem;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #5d4037;
+    }
   </style>
 </head>
 <body>
   <h1>Starfish WPT Status Dashboard</h1>
-  <div class="meta">Web Platform Tests (WPT) status tracking for Starfish browser engine</div>
+  <div class="meta">Web Platform Tests (WPT) status for Starfish &mdash; counted at the subtest level, comparable to wpt.fyi.</div>
+  <div class="note"><strong>Scope:</strong> only <strong>testharness</strong> tests are counted (reftest / crashtest / wdspec excluded), so the total test count is smaller than wpt.fyi's full set. Compare at the subtest level, not by raw totals.</div>
 
   <div class="section">
     <h2>Latest Metrics</h2>
@@ -177,14 +187,14 @@ def generate_html(data):
   </div>
 
   <div class="section">
-    <h2>Pass Rate Trend (Last 30 Days)</h2>
+    <h2>Subtest Pass Rate Trend (Last 30 Days)</h2>
     <div class="chart-container">
       <canvas id="rateChart"></canvas>
     </div>
   </div>
 
   <div class="section">
-    <h2>Passed/Failed Count Trend</h2>
+    <h2>Passed/Failed Subtest Count Trend</h2>
     <div class="chart-container">
       <canvas id="countChart"></canvas>
     </div>
@@ -196,8 +206,8 @@ def generate_html(data):
       <thead>
         <tr>
           <th>Date</th>
-          <th>Pass Rate</th>
-          <th>Passed / Total</th>
+          <th>Subtest Pass Rate</th>
+          <th>Subtests passed / total</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -227,7 +237,7 @@ def generate_html(data):
           data: {
             labels: WPT_DATA.map(d => d.date),
             datasets: [{
-              label: 'Pass Rate (%)',
+              label: 'Subtest Pass Rate (%)',
               data: WPT_DATA.map(d => d.rate),
               borderColor: '#2a2',
               backgroundColor: 'rgba(42, 170, 42, 0.1)',
