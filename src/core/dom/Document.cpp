@@ -56,6 +56,7 @@
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/HTMLTemplateElement.h"
@@ -2019,6 +2020,73 @@ bool Document::hasFocus() const
             });
     }
     return hasFocus;
+}
+
+// https://fullscreen.spec.whatwg.org/
+// Minimal fullscreen support: track the fullscreen element, force a style
+// recalc so the :fullscreen pseudo-class re-matches (the page CSS typically
+// grows the element to fill the viewport), and fire fullscreenchange.
+static void dispatchFullscreenChange(Document* document)
+{
+    StaticStrings* ss = document->starfish()->staticStrings();
+    String* t1 = ss->m_fullscreenchange.localName();
+    document->dispatchEventByUA(
+        new Event(document->executionContext(), t1, EventInit(true, false)));
+    String* t2 = ss->m_webkitfullscreenchange.localName();
+    document->dispatchEventByUA(
+        new Event(document->executionContext(), t2, EventInit(true, false)));
+}
+
+// Fullscreen spec: when the requesting element lives in a nested browsing
+// context, every ancestor document up the chain also gets a fullscreen
+// element -- the <iframe> that embeds the child. Without this only the
+// iframe's own internal layout grows; the parent page's <iframe> box keeps
+// its original (small) size, so an in-frame fullscreen request (e.g. the
+// YouTube native control-bar fullscreen button) only fills the embed
+// rectangle instead of the screen.
+static Element* ownerIFrameOf(Document* document)
+{
+    BrowsingContext* bc = document->browsingContext();
+    if (!bc || bc->isTopLevelBrowsingContext()) {
+        return nullptr;
+    }
+    return bc->sourceElement();
+}
+
+void Document::enterFullscreen(Element* element)
+{
+    if (m_fullscreenElement == element) {
+        return;
+    }
+    Element* previous = m_fullscreenElement;
+    m_fullscreenElement = element;
+    if (previous) {
+        previous->setNeedsStyleRecalc();
+    }
+    if (element) {
+        element->setNeedsStyleRecalc();
+    }
+    // Propagate up the iframe chain so each containing <iframe> becomes the
+    // fullscreen element of its own document and is grown to fill the screen.
+    if (Element* owner = ownerIFrameOf(this)) {
+        owner->document()->enterFullscreen(owner);
+    }
+    dispatchFullscreenChange(this);
+}
+
+void Document::exitFullscreen()
+{
+    if (!m_fullscreenElement) {
+        return;
+    }
+    Element* previous = m_fullscreenElement;
+    m_fullscreenElement = nullptr;
+    previous->setNeedsStyleRecalc();
+    // Clear the same iframe chain that enterFullscreen() set.
+    if (Element* owner = ownerIFrameOf(this)) {
+        owner->document()->exitFullscreen();
+    }
+    dispatchFullscreenChange(this);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#designMode

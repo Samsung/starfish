@@ -2179,13 +2179,19 @@ void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            // A listener may remove itself (only itself) during
+            // onGlobalPointingEvent (Scrolling::stopScrolling). Detect that via
+            // an O(1) size delta instead of an O(n) std::find, keeping the
+            // whole loop O(n) per event.
+            size_t sizeBefore = m_globalPointingEventListener.size();
             EventTarget* nd = m_globalPointingEventListener[i];
             nd->onGlobalPointingEvent(x, y, touches[0].timeStamp(), newKind);
-            if (std::find(m_globalPointingEventListener.begin(),
-                          m_globalPointingEventListener.end(),
-                          nd) != m_globalPointingEventListener.end()) {
+            if (m_globalPointingEventListener.size() >= sizeBefore) {
+                // No self-removal: advance to next listener.
                 i++;
             }
+            // else: nd removed itself; later elements shifted down into index
+            // i, so re-process the same index without advancing.
         }
 
         if (kind == TouchEventKind::TouchEventEnd) {
@@ -2227,13 +2233,19 @@ void WebView::dispatchMouseEvent(MouseEventKind kind, MouseData data)
             newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            // A listener may remove itself (only itself) during
+            // onGlobalPointingEvent (Scrolling::stopScrolling). Detect that via
+            // an O(1) size delta instead of an O(n) std::find, keeping the
+            // whole loop O(n) per event.
+            size_t sizeBefore = m_globalPointingEventListener.size();
             EventTarget* nd = m_globalPointingEventListener[i];
             nd->onGlobalPointingEvent(x, y, data.timeStamp(), newKind);
-            if (std::find(m_globalPointingEventListener.begin(),
-                          m_globalPointingEventListener.end(),
-                          nd) != m_globalPointingEventListener.end()) {
+            if (m_globalPointingEventListener.size() >= sizeBefore) {
+                // No self-removal: advance to next listener.
                 i++;
             }
+            // else: nd removed itself; later elements shifted down into index
+            // i, so re-process the same index without advancing.
         }
 
         if (kind == MouseEventKind::MouseEventUp) {

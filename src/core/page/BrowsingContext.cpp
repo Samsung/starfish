@@ -1066,6 +1066,23 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
         return;
     }
 
+    // Fast path: pointer stayed over the same hover target and the DOM has
+    // not mutated since the hover set was last computed. In that case
+    // setHoveredNode() would rebuild an identical set and the enter/over/
+    // out/leave dispatch below is fully gated on (newTarget != oldTarget),
+    // so it can produce no observable effect. Skip the redundant work.
+    // This mirrors exactly the two conditions in updateEventNodeSet that
+    // would otherwise leave the set unchanged; the third sub-condition there
+    // (set.find(t) != set.end()) is the spurious one that forces a per-frame
+    // rebuild, which we intentionally do not replicate. This is the common
+    // case during a seek-bar drag (mousemove with button held while the
+    // pointer stays on the same slider thumb).
+    if (m_hoveredNodeTarget == targetNode &&
+        m_documentVersionWhenComputingHoveredNodeSet ==
+            document()->domVersion()) {
+        return;
+    }
+
     GCUnorderedSet<Node*> oldhoveredNodeSet;
     Node* oldTarget = m_hoveredNodeTarget;
     if (setHoveredNode(targetNode, &oldhoveredNodeSet)) {
@@ -1289,16 +1306,44 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     // (int)kind, data.clientX(), data.clientY(), (int)data.buttons());
 
     // https://drafts.csswg.org/cssom-view/#ref-for-dom-mouseevent-pagex
-    data.setPageX(data.clientX() + window()->scrollX(false));
-    data.setPageY(data.clientY() + window()->scrollY(false));
+    // Cache the scroll offset: window()->scrollX/scrollY(false) traverses
+    // frameDocument->scrollLeft()/scrollTop() on each call and returns the same
+    // value for all four uses here. Reading once each halves the
+    // accessor/frame- traversal cost per (coalesced) mousemove.
+    // clientX()/clientY() are read BEFORE the setters mutate them, preserving
+    // the original two-line semantics.
+    const double scrollOffsetX = window()->scrollX(false);
+    const double scrollOffsetY = window()->scrollY(false);
+    const double baseClientX = data.clientX();
+    const double baseClientY = data.clientY();
+    data.setPageX(baseClientX + scrollOffsetX);
+    data.setPageY(baseClientY + scrollOffsetY);
 
-    data.setClientX(data.clientX() + window()->scrollX(false));
-    data.setClientY(data.clientY() + window()->scrollY(false));
+    data.setClientX(baseClientX + scrollOffsetX);
+    data.setClientY(baseClientY + scrollOffsetY);
 
-    // Hit test to validate event position
-    Node* targetNode = hitTest((float)data.clientX(), (float)data.clientY());
-    if (!targetNode) {
-        return false;
+    // Pointer-capture fast path for moves: when an element has captured the
+    // pointer (e.g. the YouTube seek-bar thumb), a mousemove's hit-test result
+    // is unconditionally discarded in favour of m_pointerCaptureTarget (see the
+    // override below) and handleActiveAndFocus()/handleHover() are driven from
+    // that captor, not from the hit-tested node. The only other consumer of the
+    // hit-test on a move is the iframe-delegation check below, which still runs
+    // when the captor is itself an iframe. So skip hitTest() here and avoid its
+    // layoutIfNeeded() pass, which otherwise runs for every coalesced mousemove
+    // during a drag. mouseup remains authoritative (it still hit-tests below),
+    // so the final cursor/drag position is unaffected.
+    bool usedPointerCaptureTarget =
+        (kind == MouseEventKind::MouseEventMove && m_pointerCaptureTarget &&
+         m_pointerCaptureTarget->isConnected());
+    Node* targetNode;
+    if (usedPointerCaptureTarget) {
+        targetNode = m_pointerCaptureTarget;
+    } else {
+        // Hit test to validate event position
+        targetNode = hitTest((float)data.clientX(), (float)data.clientY());
+        if (!targetNode) {
+            return false;
+        }
     }
     double targetX = data.clientX();
     double targetY = data.clientY();
@@ -1310,8 +1355,15 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
                           (targetNode == m_activeNodeTarget ||
                            targetNode->isDescendantOf(m_activeNodeTarget));
 
-    // Handle event inside iframe
-    if (isInnerIFrameEvent(targetNode, newX, newY)) {
+    // Handle event inside iframe. When the move was retargeted to a captured
+    // element, skip the iframe-delegation check unless the captor is itself an
+    // iframe (an iframe can capture the pointer via
+    // Element::setPointerCapture). For the common non-iframe captor (e.g. a
+    // seek-bar thumb) this elides one virtual isHTMLIFrameElement() call per
+    // coalesced move; if an iframe is captured, delegation into the inner
+    // browsing context is preserved.
+    if ((!usedPointerCaptureTarget || targetNode->isHTMLIFrameElement()) &&
+        isInnerIFrameEvent(targetNode, newX, newY)) {
         clickableEvent = false;
         handleActiveAndFocus(kind, targetNode, targetX, targetY);
         handleHover(kind, targetNode, data.button(), data.buttons(), targetX,
@@ -1378,14 +1430,22 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     case MouseEventKind::MouseEventMove: {
         // Dispatch mousemove event
         name = starfish()->staticStrings()->m_mousemove.localName();
-        MouseData mvData(data);
-        mvData.setRelatedTarget(nullptr);
-        Event* me = createMouseEvent(document(), name, mvData);
+        // Reuse the by-value `data` local instead of allocating a separate
+        // MouseData copy per (throttled, high-frequency) move. relatedTarget
+        // is never read again after this branch, so mutating it here is safe.
+        data.setRelatedTarget(nullptr);
+        Event* me = createMouseEvent(document(), name, data);
         returnValue = !document()->window()->dispatchEventByUA(t, me);
-        Event* pe = createPointerEvent(
-            document(), starfish()->staticStrings()->m_pointermove.localName(),
-            mvData);
-        document()->window()->dispatchEventByUA(t, pe);
+        // Only dispatch the high-frequency pointermove if some node on the
+        // (possibly captured) event path actually listens for it; otherwise
+        // skip the redundant second full 3-phase dispatch per move.
+        if (t->hasListenerForTypeOnPath(
+                starfish()->staticStrings()->m_pointermove.localName())) {
+            Event* pe = createPointerEvent(
+                document(),
+                starfish()->staticStrings()->m_pointermove.localName(), data);
+            document()->window()->dispatchEventByUA(t, pe);
+        }
         break;
     }
     case MouseEventKind::MouseEventUp: {

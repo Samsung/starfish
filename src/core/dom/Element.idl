@@ -97,6 +97,11 @@ interface Element : Node {
   void setPointerCapture (long pointerId);
   void releasePointerCapture (long pointerId);
   boolean hasPointerCapture (long pointerId);
+
+  // https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
+  Promise<void> requestFullscreen();
+  [Rename=requestFullscreen] Promise<void> webkitRequestFullscreen();
+  [Rename=requestFullscreen] Promise<void> webkitRequestFullScreen();
 };
 
 Element implements ParentNode;

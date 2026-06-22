@@ -121,7 +121,9 @@ Optional<GCVector<EventListener*>*> EventTarget::getEventListeners(
 {
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end();
          ++it) {
-        if (it->first->equals(eventType)) {
+        // Fast path: event types are usually interned (StaticStrings) so a
+        // pointer compare hits before the byte-wise equals().
+        if (it->first == eventType || it->first->equals(eventType)) {
             return it->second;
         }
     }
@@ -142,7 +144,7 @@ bool EventTarget::addEventListener(const String* eventType,
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end();
          ++it) {
-        if (it->first->equals(eventType)) {
+        if (it->first == eventType || it->first->equals(eventType)) {
             v = it->second;
             hasEvent = true;
             break;
@@ -180,7 +182,7 @@ bool EventTarget::removeEventListener(const String* eventType,
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end();
          ++it) {
-        if (it->first->equals(eventType)) {
+        if (it->first == eventType || it->first->equals(eventType)) {
             listener->setCapture(useCapture);
             v = it->second;
             hasEvent = true;
@@ -198,6 +200,7 @@ bool EventTarget::removeEventListener(const String* eventType,
             // STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed
             // \"%s[%lu]\"", eventType.string()->toUTF8NonGCString().data(), i
             // - v->begin());
+            (*i)->markRemoved();
             v->erase(i);
             return true;
         }
@@ -283,6 +286,56 @@ bool EventTarget::dispatchEvent(Event* event)
     // https://www.w3.org/TR/dom/#dom-eventtarget-dispatchevent
     event->setIsTrusted(false);
     return dispatchEvent(this, event);
+}
+
+bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
+{
+    // Walk the ancestor chain dispatchEvent() builds for the event path
+    // (self -> ancestors -> document -> window) and return true as soon as any
+    // node on that path has a non-empty listener vector for eventType. No
+    // vector copies, no listener invocations.
+    //
+    // This is purely an optimization that lets a caller skip a redundant
+    // dispatch when nothing listens, so it MUST be conservative: only return
+    // false when the whole path was resolved and genuinely has no listener.
+    // In any ambiguous case (unexpected node type, a node detached from its
+    // document, a shadow-tree boundary parentNode() does not cross, etc.) we
+    // return true so the dispatch still happens. Returning false here when a
+    // listener actually exists -- e.g. a drag handler bound on document/window
+    // by a page that mounts its controls in shadow DOM, like the YouTube
+    // embedded player's seek bar -- would silently drop the event.
+    EventTarget* eventTarget = this;
+    size_t guard = 0;
+    while (eventTarget && guard++ < 8192) {
+        auto listeners = eventTarget->getEventListeners(eventType);
+        if (listeners && !listeners->empty()) {
+            return true;
+        }
+        if (eventTarget->isWindow()) {
+            // Reached the top of the path with nothing found.
+            return false;
+        }
+        if (!eventTarget->isNode()) {
+            // Unknown target type: cannot prove absence -> dispatch to be safe.
+            return true;
+        }
+        Node* node = eventTarget->asNode();
+        if (node->isDocument()) {
+            EventTarget* window = node->asDocument()->window();
+            auto windowListeners = window->getEventListeners(eventType);
+            return windowListeners && !windowListeners->empty();
+        }
+        Node* parent = node->parentNode();
+        if (!parent) {
+            // Detached from the document, or a shadow-tree node whose host
+            // chain we cannot follow here: be safe and allow the dispatch.
+            return true;
+        }
+        eventTarget = parent;
+    }
+    // Ran out of nodes (or hit the guard) without conclusively reaching the
+    // window: do not risk skipping the dispatch.
+    return true;
 }
 
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
@@ -375,9 +428,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 if (event->stopImmediatePropagationValue()) {
                     break;
                 }
-                if (listener->capture() &&
-                    std::find(originals->begin(), originals->end(), listener) !=
-                        originals->end()) {
+                if (listener->capture() && !listener->isRemoved()) {
                     // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s",
                     // node->localName()->toUTF8NonGCString().data());
                     event->setCurrentTarget(eventTarget);
@@ -403,8 +454,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 if (event->stopImmediatePropagationValue()) {
                     break;
                 }
-                if (std::find(originals->begin(), originals->end(), listener) !=
-                    originals->end()) {
+                if (!listener->isRemoved()) {
                     // STARFISH_LOG_INFO("[AT_TARGET] node: %s",
                     // origin->localName()->toUTF8NonGCString().data());
                     event->setCurrentTarget(origin);
@@ -437,9 +487,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     if (event->stopImmediatePropagationValue()) {
                         break;
                     }
-                    if (!listener->capture() &&
-                        std::find(originals->begin(), originals->end(),
-                                  listener) != originals->end()) {
+                    if (!listener->capture() && !listener->isRemoved()) {
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s",
                         // node->localName()->toUTF8NonGCString().data());
                         event->setCurrentTarget(eventTarget);
@@ -522,8 +570,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
                 if (event->stopImmediatePropagationValue()) {
                     break;
                 }
-                if (std::find(originals->begin(), originals->end(), listener) !=
-                    originals->end()) {
+                if (!listener->isRemoved()) {
                     event->setCurrentTarget(this);
                     listener->call(event);
                 }

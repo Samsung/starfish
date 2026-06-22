@@ -49,6 +49,7 @@
 #include "platform/loader/ResourceLoader.h"
 
 #include <EscargotPublic.h>
+#include <mutex>
 
 #define LWE_DEFAULT_FONT_SIZE 16
 #define LWE_MIN_FONT_SIZE 1
@@ -355,6 +356,19 @@ private:
     }
 
     Starfish::WebView* m_webView = nullptr;
+
+    // Mouse-move coalescing. A burst of native motion events (e.g. dragging the
+    // seek bar) would otherwise post one async task each, and every task forces
+    // a hit-test + layoutIfNeeded on the LWE thread. We instead keep only the
+    // newest position and post a single task while one is still pending, so a
+    // fast drag collapses to one dispatch per drained queue. UA coalescing of
+    // mousemove is permitted by the spec.
+    std::mutex m_mouseMoveLock;
+    bool m_mouseMovePending = false;
+    ::LWE::MouseButtonValue m_mouseMoveButton = ::LWE::MouseButtonValue();
+    ::LWE::MouseButtonsValue m_mouseMoveButtons = ::LWE::MouseButtonsValue();
+    double m_mouseMoveX = 0;
+    double m_mouseMoveY = 0;
 };
 
 WebContainer* WebContainer::CreateWithBuffer(void* buffer, unsigned width,
@@ -1467,12 +1481,42 @@ void WebContainerImpl::DispatchMouseMoveEvent(MouseButtonValue button,
                                               MouseButtonsValue buttons,
                                               double x, double y)
 {
+    bool needPost = false;
+    {
+        std::lock_guard<std::mutex> guard(m_mouseMoveLock);
+        // Always remember the newest position so the eventual dispatch uses it.
+        m_mouseMoveButton = button;
+        m_mouseMoveButtons = buttons;
+        m_mouseMoveX = x;
+        m_mouseMoveY = y;
+        // Only post a task if none is already in flight; an in-flight task will
+        // pick up the position we just stored.
+        if (!m_mouseMovePending) {
+            m_mouseMovePending = true;
+            needPost = true;
+        }
+    }
+
+    if (!needPost) {
+        return;
+    }
+
     ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadAsync(
-        m_webView->messageLoop(), [=]() -> void {
+        m_webView->messageLoop(), [this]() -> void {
+            MouseButtonValue b;
+            MouseButtonsValue bs;
+            double mx, my;
+            {
+                std::lock_guard<std::mutex> guard(m_mouseMoveLock);
+                b = m_mouseMoveButton;
+                bs = m_mouseMoveButtons;
+                mx = m_mouseMoveX;
+                my = m_mouseMoveY;
+                m_mouseMovePending = false;
+            }
             m_webView->renderer()->dispatchMouseEvent(
                 ::Starfish::MouseEventKind::MouseEventMove,
-                ::Starfish::MouseData(button, buttons, x, y, 0,
-                                      Starfish::timestamp()));
+                ::Starfish::MouseData(b, bs, mx, my, 0, Starfish::timestamp()));
         });
 }
 

@@ -147,6 +147,8 @@ public:
     void setMemoryBuffer(void* buffer, int size);
     player_state_e getState();
     int getPlayPosition();
+    // Stream duration in seconds, or NaN if unknown.
+    double getDuration();
 
     ResourceURL* m_url;
     AVFormatContext* m_fmtCtx;
@@ -183,6 +185,19 @@ private:
     // Audio controls
     std::atomic<bool> m_muted;
     std::atomic<float> m_volume;
+
+    // Playhead in milliseconds, updated by the decoding thread as each video
+    // frame is presented. getPlayPosition() returns this so HTMLMediaElement's
+    // currentTime advances during progressive (non-MSE) playback.
+    std::atomic<uint64_t> m_currentPositionMs;
+
+    // Deferred seek. setPlayPosition() only records the request; the decoding
+    // thread performs av_seek_frame so the demuxer (m_fmtCtx) is touched from a
+    // single thread. The completion callback fires from the decoding thread.
+    std::atomic<bool> m_seekRequested;
+    std::atomic<int64_t> m_seekTargetMs;
+    std::function<void(void* data)> m_seekCompleteCallback;
+    void* m_seekCompleteData;
 };
 
 class MediaPlayerSourceStream : public gc {

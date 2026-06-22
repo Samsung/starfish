@@ -1688,10 +1688,32 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
     if (!frameObject) {
         return;
     }
+
+    // getBoundingClientRect()/getClientRects() are defined relative to the
+    // element's OWN document viewport. computeScreenMatrix() maps into the top
+    // (screen) space, which for an element inside an iframe also includes the
+    // iframe's offset within the embedding page. That is inconsistent with
+    // pointer-event clientX, which IS iframe-viewport-relative, so a page that
+    // computes a hit ratio as (event.clientX - rect.left) / rect.width -- e.g.
+    // the YouTube embedded player's seek bar -- lands at the wrong position.
+    // Subtract the document's own viewport origin so in-iframe rects are
+    // iframe-viewport-relative. No-op for the top-level document (origin 0,0).
+    float docOriginX = 0, docOriginY = 0;
+    if (document()->browsingContext() &&
+        !document()->browsingContext()->isTopLevelBrowsingContext() &&
+        document()->frame() && document()->frame()->isFrameBox()) {
+        SkMatrix dm = document()->frame()->asFrameBox()->computeScreenMatrix();
+        SkPoint o[1] = { { 0, 0 } };
+        dm.mapPoints(o, 1);
+        docOriginX = o[0].x();
+        docOriginY = o[0].y();
+    }
+
     if (frameObject->isFrameBox()) {
         auto frameBox = frameObject->asFrameBox();
         auto frameRect = frameBox->frameRect();
         SkMatrix m = frameBox->computeScreenMatrix();
+        m.postTranslate(-docOriginX, -docOriginY);
         LayoutRect rect;
         rect.setWidth(frameRect.width());
         rect.setHeight(frameRect.height());
@@ -1712,6 +1734,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                     asSVGElement()->viewportElement()->frame()->asFrameBox();
                 auto viewportScreenMatrix =
                     viewportFrame->computeScreenMatrix();
+                viewportScreenMatrix.postTranslate(-docOriginX, -docOriginY);
                 auto fillRect = path->fillBoundingRect();
                 if (fillRect.isEmpty()) {
                     // fallback
@@ -1754,6 +1777,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                         this) {
                         SkMatrix m =
                             childBox->asFrameBox()->computeScreenMatrix();
+                        m.postTranslate(-docOriginX, -docOriginY);
                         LayoutRect rect;
                         rect.setWidth(childBox->asFrameBox()->width());
                         rect.setHeight(childBox->asFrameBox()->height());
@@ -2717,6 +2741,19 @@ bool Element::hasPointerCapture(int32_t param)
 {
     BrowsingContext* bc = document()->browsingContext();
     return bc && bc->pointerCaptureTarget() == this;
+}
+
+Promise* Element::requestFullscreen()
+{
+    // Spec returns Promise<void>. Players (e.g. YouTube) chain .then()/.catch()
+    // on the result, so a void return would throw and abort fullscreen.
+    Promise* promise = new Promise(document()->scriptBindingInstance());
+    // Requesting fullscreen for a disconnected element is a no-op.
+    if (isConnected()) {
+        document()->enterFullscreen(this);
+    }
+    promise->fulfill(scriptUndefined());
+    return promise;
 }
 
 bool Element::isSVGDescendantElement()

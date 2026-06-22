@@ -107,6 +107,14 @@ interface Document : Node {
   [Custom=Getter] readonly attribute WindowProxy? defaultView;
   readonly attribute Element? activeElement;
   boolean hasFocus();
+
+  // https://fullscreen.spec.whatwg.org/#api
+  readonly attribute Element? fullscreenElement;
+  readonly attribute boolean fullscreenEnabled;
+  void exitFullscreen();
+  [Rename=fullscreenElement] readonly attribute Element? webkitFullscreenElement;
+  [Rename=fullscreenEnabled] readonly attribute boolean webkitFullscreenEnabled;
+  [Rename=exitFullscreen] void webkitExitFullscreen();
   [CEReactions] attribute DOMString designMode;
   [Unimplemented, CEReactions] boolean execCommand(DOMString commandId, optional boolean showUI = false, optional DOMString value = "");
   [Unimplemented] boolean queryCommandEnabled(DOMString commandId);

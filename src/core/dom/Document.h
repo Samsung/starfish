@@ -523,6 +523,20 @@ public:
     Element* activeElement();
     bool hasFocus() const;
 
+    /* Fullscreen API (https://fullscreen.spec.whatwg.org/) */
+    Element* fullscreenElement()
+    {
+        return m_fullscreenElement;
+    }
+    bool fullscreenEnabled()
+    {
+        return true;
+    }
+    // Enter: make element the fullscreen element. Called by
+    // Element::requestFullscreen().
+    void enterFullscreen(Element* element);
+    void exitFullscreen();
+
     String* designMode();
     void setDesignMode(String* value);
 
@@ -866,6 +880,9 @@ protected:
 
     ExecutionContext* m_executionContext;
     Window* m_window;
+    // Fullscreen element. Document is a GC object, so this raw pointer is
+    // traced conservatively (no explicit trace needed).
+    Element* m_fullscreenElement = nullptr;
     ResourceURL* m_baseElementURL;
     String* m_baseTarget;
     String* m_contentType;

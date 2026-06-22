@@ -42,6 +42,10 @@
 #include "core/modules/profiling/Profiling.h"
 
 #define MOUSE_MOVE_EVENT_THRESHOLD 100
+// While a button is held (e.g. dragging the seek bar) we still rate-limit
+// mousemove, but at ~60fps instead of dropping the throttle entirely, so the
+// drag stays smooth while capping the per-move hit-test + layout + paint cost.
+#define MOUSE_MOVE_DRAG_EVENT_THRESHOLD 16
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -197,7 +201,14 @@ void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data,
         bool isHoldingDowngLButton =
             data.buttons() & MouseButtonsValue::LeftButtonDown;
         uint64_t dt = timestamp() - m_lastMouseMoveEventFiredTime;
-        if (!isHoldingDowngLButton && (dt < MOUSE_MOVE_EVENT_THRESHOLD)) {
+        // Hover moves are throttled coarsely; drag moves (button held) are
+        // throttled at ~60fps rather than processed unconditionally. The final
+        // position is still delivered by the mouseup, so dropping intermediate
+        // drag moves only reduces redundant work, it does not lose the target.
+        uint64_t threshold = isHoldingDowngLButton
+                                 ? MOUSE_MOVE_DRAG_EVENT_THRESHOLD
+                                 : MOUSE_MOVE_EVENT_THRESHOLD;
+        if (dt < threshold) {
             return;
         }
     }
@@ -213,12 +224,13 @@ void Renderer::dispatchMouseEvent(MouseEventKind kind, MouseData data,
         m_lastMouseMoveX = data.screenX();
         m_lastMouseMoveY = data.screenY();
     }
-    data.setScreenX(data.screenX() / webView()->screenInfo().devicePixelRatio);
-    data.setScreenY(data.screenY() / webView()->screenInfo().devicePixelRatio);
-    data.setClientX(data.clientX() / webView()->screenInfo().devicePixelRatio);
-    data.setClientY(data.clientY() / webView()->screenInfo().devicePixelRatio);
-    data.setPageX(data.pageX() / webView()->screenInfo().devicePixelRatio);
-    data.setPageY(data.pageY() / webView()->screenInfo().devicePixelRatio);
+    const float dpr = webView()->screenInfo().devicePixelRatio;
+    data.setScreenX(data.screenX() / dpr);
+    data.setScreenY(data.screenY() / dpr);
+    data.setClientX(data.clientX() / dpr);
+    data.setClientY(data.clientY() / dpr);
+    data.setPageX(data.pageX() / dpr);
+    data.setPageY(data.pageY() / dpr);
     webView()->dispatchMouseEvent(kind, data);
 
     if (isMouseEventMove) {

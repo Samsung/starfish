@@ -927,6 +927,13 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
         !pseudoName.string()->containsOnlyASCIIChars()) {
         return CSSSelector::PseudoNone;
     }
+    // WebKit-prefixed alias for :fullscreen. Pages commonly list it alongside
+    // :fullscreen (e.g. `el:fullscreen, el:-webkit-full-screen`); without this
+    // the unknown pseudo would invalidate the whole selector list and drop the
+    // rule.
+    if (pseudoName.string()->equalsIgnoreCase("-webkit-full-screen")) {
+        return CSSSelector::PseudoType::PseudoFullScreen;
+    }
     StaticStrings* sstrs = starfish->staticStrings();
     if (false) {
     }
@@ -2776,6 +2783,25 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
         new (ctx.allocateComputedStyle()) ComputedStyle(parent);
 
     matchAllRules(ctx, element, style, parent);
+
+    // UA fullscreen sizing. The fullscreen element must fill the viewport
+    // regardless of author rules. Browsers do this via a top-layer + UA
+    // !important :fullscreen rule; starfish has no UA stylesheet, so force it
+    // here after author rules are matched. Needed because pages that embed a
+    // fullscreen-capable iframe (e.g. YouTube) size the <iframe> for its
+    // in-flow box (`position:absolute; inset:0`) and have no :fullscreen rule
+    // for it -- without this override the iframe would stay inside its small
+    // embed rectangle when its content goes fullscreen.
+    if (element == element->document()->fullscreenElement()) {
+        style->setPosition(PositionValue::FixedPositionValue);
+        style->setLeft(Length(Length::Fixed, 0));
+        style->setTop(Length(Length::Fixed, 0));
+        style->setWidth(Length(Length::Percent, 1.0));
+        style->setHeight(Length(Length::Percent, 1.0));
+        // Emulate the top layer: paint above all normally-stacked content.
+        style->setZIndex(2147483647);
+    }
+
     style->loadResources(element, element->style());
     style->arrangeStyleValues(parent, element);
     return style;
@@ -8626,6 +8652,13 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         return element == element->document()->documentElement();
+    case CSSSelector::PseudoType::PseudoFullScreen:
+        // Matching is driven explicitly:
+        // Document::enterFullscreen/exitFullscreen force a style recalc on the
+        // affected element when this changes.
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
+        return element == element->document()->fullscreenElement();
     case CSSSelector::PseudoType::PseudoScope: {
         Node* scope = result.scope ? result.scope.getValue()
                                    : element->document()->documentElement();

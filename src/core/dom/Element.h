@@ -212,6 +212,9 @@ public:
     void releasePointerCapture(int32_t param);
     bool hasPointerCapture(int32_t param);
 
+    // https://fullscreen.spec.whatwg.org/#dom-element-requestfullscreen
+    Promise* requestFullscreen();
+
     bool isSVGDescendantElement();
 
 protected:
