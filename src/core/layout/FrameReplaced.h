@@ -176,7 +176,7 @@ protected:
                    GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_lastChild));
     }
 
-    virtual bool hasFrameTreeItemModel() override
+    virtual bool hasFrameTreeItemModel() const override
     {
         return true;
     }

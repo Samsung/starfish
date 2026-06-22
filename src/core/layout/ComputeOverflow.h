@@ -592,8 +592,14 @@ public:
 
         m_opacity = opacity;
         if (m_opacity != 1) {
-            compositor->beginOpacityLayer(m_opacity,
-                                          childStackingContext->visibleRect());
+            if (childStackingContext->isOwnerBackgroundDrawnByCompositor()) {
+                compositor->beginOpacityLayer(
+                    m_opacity,
+                    childFrameBox->makeRect(BoxValue::PaddingBoxBoxValue));
+            } else {
+                compositor->beginOpacityLayer(
+                    m_opacity, childStackingContext->visibleRect());
+            }
         }
     }
 

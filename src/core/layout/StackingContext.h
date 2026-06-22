@@ -273,6 +273,18 @@ public:
         return needsGraphicsBuffer() && inScrollActive();
     }
 
+    // True when this layer's own background-color may be drawn by the
+    // compositor (as a full border-box fill, rounded when border-radius is
+    // present) instead of being baked into the graphics buffer, so the buffer
+    // can be sized to content only. Must be consistent across visibleRect
+    // sizing, background painting and composite.
+    bool isOwnerBackgroundDrawnByCompositor();
+    // Draws the owner's background-color directly with the compositor, filling
+    // a rounded path when the owner has border-radius. Used at the composite
+    // sites that elide the graphics buffer per
+    // isOwnerBackgroundDrawnByCompositor.
+    void drawOwnerBackgroundByCompositor(Compositor* compositor);
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
