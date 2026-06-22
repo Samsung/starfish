@@ -100,4 +100,4 @@ jobs:
 
       - name: Run Test
         run: |
-            xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_worker || exit 1
+            xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py wpt_worker -t 30 || exit 1
