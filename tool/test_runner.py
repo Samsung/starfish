@@ -278,6 +278,7 @@ def wpt_all():
     # wpt_xhr()  # migrated to wpt_serve_xhr
     # wpt_intersection_observer()  # migrated to wpt_serve_intersection_observer
     # wpt_idb()  # migrated to wpt_serve_idb
+    # wpt_serve_fullscreen()  # migrated to wpt_serve_fullscreen
 
 # WPT (testharness) via on-demand `wpt serve` -- see docs/wpt.md.
 # Runs the active (expected-pass) lists under tool/wpt/lists/; any active test
@@ -374,6 +375,10 @@ def wpt_serve_intersection_observer():
 
 def wpt_serve_svg():
     _wpt_serve_run("svg_*.res")
+
+
+def wpt_serve_fullscreen():
+    _wpt_serve_run("fullscreen.res")
 
 
 def wpt_serve_others():
