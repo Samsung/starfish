@@ -55,6 +55,31 @@ SERVER = "http://web-platform.test:8000"
 HARNESS_STATUS = {0: "OK", 1: "ERROR", 2: "TIMEOUT", 3: "PRECONDITION_FAILED"}
 
 
+def wpt_revision(wpt_root):
+    """Return a human-readable WPT version string for the checkout.
+
+    WPT publishes daily/weekly epoch tags (e.g. epochs/daily/2026-06-08_05H),
+    so `git describe` gives a readable version and the short hash pins it
+    exactly. Recording this per run means the dashboard can show which WPT
+    revision produced each number -- so a count that shifts after a submodule
+    bump is not mistaken for a regression. Returns "unknown" if git is
+    unavailable (e.g. a tarball checkout).
+    """
+    def git(*args):
+        return subprocess.run(
+            ["git", "-C", wpt_root] + list(args),
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        ).stdout.decode("utf-8", "replace").strip()
+    try:
+        tag = git("describe", "--tags", "--always")
+        sha = git("rev-parse", "--short", "HEAD")
+    except OSError:
+        return "unknown"
+    if tag and sha and tag != sha:
+        return "%s (%s)" % (tag, sha)
+    return tag or sha or "unknown"
+
+
 def read_targets(path):
     dirs = []
     with open(path) as fp:
@@ -250,6 +275,36 @@ HTML_HEAD = """<!DOCTYPE html>
 </style>
 <script>
  function failOnly(cb){document.body.classList.toggle('failonly',cb.checked)}
+ // Reorder directory <details> and test <tr> siblings at every tree level by
+ // the chosen key/direction. Preserves the tree (dirs first, table last) and
+ // each <details> open state, since we only re-append existing nodes.
+ function sortAll(){
+   var key=document.getElementById('sortKey').value;
+   var sign=document.getElementById('sortDir').value==='asc'?1:-1;
+   function val(el){return key==='name'?(el.getAttribute('data-name')||''):
+     parseFloat(el.getAttribute('data-rate'))||0}
+   function cmp(a,b){var x=val(a),y=val(b);
+     if(key==='name')return sign*String(x).localeCompare(String(y));
+     return sign*(x-y)}
+   function sortIn(container){
+     var kids=Array.prototype.slice.call(container.children);
+     var dets=kids.filter(function(e){return e.tagName==='DETAILS'&&
+       e.classList.contains('dir')});
+     var tables=kids.filter(function(e){return e.tagName==='TABLE'});
+     dets.sort(cmp);
+     dets.forEach(function(d){container.appendChild(d)});
+     tables.forEach(function(tb){
+       container.appendChild(tb);
+       // Browsers wrap bare <tr> in an implicit <tbody>, so match both and
+       // re-append to each row's actual parent.
+       var rows=Array.prototype.slice.call(
+         tb.querySelectorAll(':scope>tr, :scope>tbody>tr'));
+       rows.sort(cmp);
+       rows.forEach(function(r){r.parentNode.appendChild(r)})});
+     dets.forEach(sortIn);
+   }
+   sortIn(document.body);
+ }
 </script>
 </head><body>
 """
@@ -289,13 +344,20 @@ def _accumulate(node):
 
 
 def render_node(name, node, parts):
-    """Render a directory node as a nested <details>, recursing into subdirs."""
+    """Render a directory node as a nested <details>, recursing into subdirs.
+
+    Each node and test row carries data-name / data-pass / data-total /
+    data-rate so the client-side sort (sortAll() in HTML_HEAD) can reorder
+    siblings at every tree level without re-running anything.
+    """
     p, t = node["pass"], node["total"]
     allpass = " allpass" if p == t else ""
+    rate = (p / t) if t else 0.0
     # Collapsed by default (like wpt.fyi); the reader expands what they want.
-    parts.append('<details class="dir%s"><summary>%s/'
+    parts.append('<details class="dir%s" data-name="%s" data-pass="%d" '
+                 'data-total="%d" data-rate="%.6f"><summary>%s/'
                  '<span class="n">%d/%d</span></summary>'
-                 % (allpass, escape(name), p, t))
+                 % (allpass, escape(name), p, t, rate, escape(name), p, t))
     for sub in sorted(node["dirs"]):
         render_node(sub, node["dirs"][sub], parts)
     tests = sorted(node["tests"], key=lambda r: r["url"])
@@ -304,19 +366,23 @@ def render_node(name, node, parts):
         for r in tests:
             cls = "pass" if r["ok"] else "fail"
             np, nt = score(r)
+            rrate = (np / nt) if nt else 0.0
             detail = "%d/%d subtests" % (np, nt)
             if not r["ok"] and r["reason"] not in ("SUBTESTS_FAILED", "OK"):
                 detail = r["reason"]
             leaf = r["url"][len(SERVER):].rstrip("/").rsplit("/", 1)[-1]
-            parts.append('<tr class="%s"><td class="s">%s</td>'
+            parts.append('<tr class="%s" data-name="%s" data-pass="%d" '
+                         'data-total="%d" data-rate="%.6f">'
+                         '<td class="s">%s</td>'
                          '<td class="u">%s</td><td class="sub">%s</td></tr>'
-                         % (cls, "PASS" if r["ok"] else "FAIL",
+                         % (cls, escape(leaf), np, nt, rrate,
+                            "PASS" if r["ok"] else "FAIL",
                             escape(leaf), escape(detail)))
         parts.append("</table>")
     parts.append("</details>")
 
 
-def render_html(results, generated_at, missing):
+def render_html(results, generated_at, missing, revision=None):
     # Subtest-level totals, matching wpt.fyi's classification (see score()).
     passed = sum(score(r)[0] for r in results)
     total = sum(score(r)[1] for r in results)
@@ -324,9 +390,16 @@ def render_html(results, generated_at, missing):
 
     parts = [HTML_HEAD]
     parts.append("<h1>Starfish WPT status</h1>")
-    parts.append('<div class="meta">Generated %s &middot; %d/%d subtests '
-                 "passed (%.1f%%) &middot; comparable to wpt.fyi</div>"
-                 % (escape(generated_at), passed, total, pct))
+    # wpt.fyi-style "N tests (M subtests)" so the file count and subtest count
+    # are both visible (a smaller total here is scope, not a regression).
+    parts.append('<div class="meta">Generated {date} &middot; Showing '
+                 "{files:,} tests ({total:,} subtests) &middot; "
+                 "{passed:,}/{total:,} subtests passed ({pct:.1f}%) "
+                 "&middot; comparable to wpt.fyi</div>"
+                 .format(date=escape(generated_at), files=len(results),
+                         total=total, passed=passed, pct=pct))
+    parts.append('<div class="meta">WPT revision: <strong>%s</strong></div>'
+                 % escape(revision or "unknown"))
     parts.append('<div class="bar"><span style="width:%.2f%%"></span></div>'
                  % pct)
     parts.append('<div class="meta">Counts <strong>testharness</strong> '
@@ -338,6 +411,13 @@ def render_html(results, generated_at, missing):
                      % escape(", ".join(missing)))
     parts.append('<label class="toggle"><input type="checkbox" '
                  'onchange="failOnly(this)"> Show failures only</label>')
+    parts.append('<div class="toggle">Sort: '
+                 '<select id="sortKey" onchange="sortAll()">'
+                 '<option value="name">Directory name</option>'
+                 '<option value="rate">Pass rate</option></select> '
+                 '<select id="sortDir" onchange="sortAll()">'
+                 '<option value="asc">Ascending</option>'
+                 '<option value="desc">Descending</option></select></div>')
 
     root = build_tree(results)
     for name in sorted(root["dirs"]):
@@ -346,17 +426,20 @@ def render_html(results, generated_at, missing):
     return "".join(parts)
 
 
-def extract_metrics(results, now=None):
+def extract_metrics(results, now=None, revision=None):
     """Extract metrics from test results for dashboard JSON.
 
     passed/failed/total/rate are at the *subtest* level (see score()), so the
     dashboard numbers are comparable to wpt.fyi. files_passed/files_total keep
     the per-test-file view for our own diagnostics, and categories holds the
     per-spec-dir [passed, total] subtest breakdown (used by the browser
-    comparison in Phase 2).
+    comparison in Phase 2). wpt_revision records which WPT checkout produced
+    these numbers so historical entries stay interpretable across submodule
+    bumps.
 
     now: datetime to use (defaults to datetime.now()); pass the same value
     used for the HTML report so timestamps are consistent.
+    revision: WPT version string (see wpt_revision()).
     """
     if now is None:
         now = datetime.now()
@@ -379,6 +462,7 @@ def extract_metrics(results, now=None):
         "files_passed": sum(1 for r in results if r["ok"]),
         "files_total": len(results),
         "categories": categories,
+        "wpt_revision": revision or "unknown",
     }
 
 
@@ -433,9 +517,10 @@ def main(argv):
         with wpt_serve(args.wpt_root, verbose=True):
             results = go()
 
+    revision = wpt_revision(args.wpt_root)
     generated_at_dt = datetime.now()
     generated_at = generated_at_dt.strftime("%Y-%m-%d %H:%M:%S")
-    html = render_html(results, generated_at, missing)
+    html = render_html(results, generated_at, missing, revision)
     with open(args.output, "w") as fp:
         fp.write(html)
 
@@ -446,7 +531,7 @@ def main(argv):
           % (args.output, sub_pass, sub_total, files_pass, len(results)))
 
     if args.output_json:
-        metrics = extract_metrics(results, generated_at_dt)
+        metrics = extract_metrics(results, generated_at_dt, revision)
         with open(args.output_json, "w") as fp:
             json.dump(metrics, fp, indent=2)
         print("Wrote %s" % args.output_json)

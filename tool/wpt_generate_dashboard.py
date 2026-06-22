@@ -66,32 +66,44 @@ def generate_html(data):
     report_rows = ""
     for entry in reversed(data[-30:]):
         date_str = escape(entry.get("date", ""))
-        rate = entry.get("rate", 0.0)
-        passed = entry.get("passed", 0)
-        total = entry.get("total", 0)
         # Report filename: report-YYYYMMDD.html (remove dashes from date)
         report_file = "report-%s.html" % date_str.replace("-", "")
         report_rows += (
-            '<tr><td>%s</td><td>%.1f%%</td><td>%d/%d</td>'
-            '<td><a href="%s" target="_blank">View</a></td></tr>'
-            % (date_str, rate, passed, total, escape(report_file))
+            '<tr><td>{date}</td><td>{rev}</td><td>{fp:,}/{ft:,}</td>'
+            '<td>{rate:.1f}%</td><td>{passed:,}/{total:,}</td>'
+            '<td><a href="{file}" target="_blank">View</a></td></tr>'
+        ).format(
+            date=date_str,
+            rev=escape(entry.get("wpt_revision", "—")),
+            fp=entry.get("files_passed", 0),
+            ft=entry.get("files_total", 0),
+            rate=entry.get("rate", 0.0),
+            passed=entry.get("passed", 0),
+            total=entry.get("total", 0),
+            file=escape(report_file),
         )
 
-    # Latest metrics display
+    # Latest metrics display. wpt.fyi-style "N tests (M subtests)" makes the
+    # file count and subtest count both explicit, and the WPT revision pins
+    # which checkout produced them (so a shift after a submodule bump is not
+    # read as a regression).
     latest_html = ""
     if data:
         latest = data[-1]
         latest_html = (
-            '<p>Generated: <strong>%s %s</strong></p>'
+            '<p>Generated: <strong>{date} {time}</strong></p>'
+            '<p>WPT revision: <strong>{rev}</strong></p>'
             '<p style="font-size: 18px; font-weight: bold; color: #2a2;">'
-            'Subtest Pass Rate: %.1f%% (%d/%d subtests)</p>'
-            % (
-                escape(latest.get("date", "")),
-                escape(latest.get("time", "")),
-                latest.get("rate", 0.0),
-                latest.get("passed", 0),
-                latest.get("total", 0),
-            )
+            'Showing {files:,} tests ({total:,} subtests) &middot; '
+            'Subtest pass rate {rate:.1f}% ({passed:,}/{total:,} passing)</p>'
+        ).format(
+            date=escape(latest.get("date", "")),
+            time=escape(latest.get("time", "")),
+            rev=escape(latest.get("wpt_revision", "—")),
+            files=latest.get("files_total", 0),
+            total=latest.get("total", 0),
+            rate=latest.get("rate", 0.0),
+            passed=latest.get("passed", 0),
         )
 
     html = """<!DOCTYPE html>
@@ -187,6 +199,13 @@ def generate_html(data):
   </div>
 
   <div class="section">
+    <h2>Failing Subtest Count Trend (Last 30 Days)</h2>
+    <div class="chart-container">
+      <canvas id="failChart"></canvas>
+    </div>
+  </div>
+
+  <div class="section">
     <h2>Subtest Pass Rate Trend (Last 30 Days)</h2>
     <div class="chart-container">
       <canvas id="rateChart"></canvas>
@@ -206,6 +225,8 @@ def generate_html(data):
       <thead>
         <tr>
           <th>Date</th>
+          <th>WPT revision</th>
+          <th>Tests passed / total</th>
           <th>Subtest Pass Rate</th>
           <th>Subtests passed / total</th>
           <th>Action</th>
@@ -217,7 +238,7 @@ def generate_html(data):
     if report_rows:
         html += report_rows
     else:
-        html += '<tr><td colspan="4"><div class="no-data">No reports yet.</div></td></tr>'
+        html += '<tr><td colspan="6"><div class="no-data">No reports yet.</div></td></tr>'
 
     html += """
       </tbody>
@@ -229,6 +250,38 @@ def generate_html(data):
     const WPT_DATA = """ + data_json + """;
 
     if (WPT_DATA.length > 0) {
+      // Failing subtest count trend chart (mirrors wpt.fyi's top "Browser
+      // Specific Failures" graph; Starfish has no cross-browser data, so this
+      // tracks our own failing-subtest count over time).
+      const failCtx = document.getElementById('failChart');
+      if (failCtx) {
+        new Chart(failCtx, {
+          type: 'line',
+          data: {
+            labels: WPT_DATA.map(d => d.date),
+            datasets: [{
+              label: 'Failing Subtests',
+              data: WPT_DATA.map(d => d.failed),
+              borderColor: '#e33',
+              backgroundColor: 'rgba(227, 51, 51, 0.1)',
+              borderWidth: 2,
+              pointRadius: 4,
+              pointBackgroundColor: '#e33',
+              pointBorderColor: 'white',
+              pointBorderWidth: 2,
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+
       // Pass rate trend chart
       const rateCtx = document.getElementById('rateChart');
       if (rateCtx) {
