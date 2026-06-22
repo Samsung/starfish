@@ -777,6 +777,15 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     }
 
     pclose(fp);
+
+    // The screenshot captured by screenShot() is only needed for this
+    // comparison. On pass, remove it so reftests don't leave result PNGs
+    // behind in the (git-tracked) test directory. A failing diff keeps it
+    // alongside the generated *_diff.png for debugging before exit(-1) above.
+    std::string resultImgPath = path;
+    resultImgPath += argv[0]->toString(state)->toStdUTF8String().data();
+    remove(resultImgPath.c_str());
+
     return scriptUndefined();
 }
 
