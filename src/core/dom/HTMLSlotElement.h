@@ -67,6 +67,10 @@ public:
         return m_assignedNodes;
     }
 
+    // Drops all assigned slottables and marks them unslotted. Shared by the
+    // shadow-tree slot-assignment paths that rebuild or detach assignments.
+    void clearAssignedNodes();
+
     GCVector<Node*> assignedNodes(
         Optional<AssignedNodesOptions> options = nullptr);
     GCVector<Element*> assignedElements(

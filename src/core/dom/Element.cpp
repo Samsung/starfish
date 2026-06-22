@@ -723,6 +723,19 @@ void Element::didAttributeChanged(QualifiedName name, Optional<String*> old,
         }
         document()->invalidFocusRingCacheIfNeeded();
         document()->clearDialogsInShowModalCache();
+    } else if (name == ss->m_slot) {
+        // A slottable's slot= changed: re-run slot assignment in the shadow
+        // tree it is distributed into (its parent host's shadow root). The
+        // slot set is unchanged, so only reassignment is needed. Also covers
+        // a <slot> element that is itself slotted (its own slot= attribute),
+        // since HTMLSlotElement::didAttributeChanged chains here.
+        Element* parent = parentElement();
+        if (parent != nullptr) {
+            Optional<ShadowRoot*> shadowRoot = parent->internalShadowRoot();
+            if (shadowRoot) {
+                shadowRoot.value()->connectSlotWithSlottables();
+            }
+        }
     }
 
     if (styleResolver().mayHaveAttrSelectorWithName(name.localNameAtomic())) {
