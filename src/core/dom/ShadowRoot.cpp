@@ -93,10 +93,7 @@ void ShadowRoot::updateSlotElements(bool shouldConnectSlotWithSlottables)
                 if (iter == m_namedSlotElements.end()) {
                     m_namedSlotElements.insert(std::make_pair(slotName, slot));
                 }
-                for (auto n : slot->m_assignedNodes) {
-                    n->setIsSlotted(false);
-                }
-                slot->m_assignedNodes.clear();
+                slot->clearAssignedNodes();
             }
         });
     } else {
@@ -122,10 +119,7 @@ void ShadowRoot::connectSlotWithSlottables()
 
     // Clear existing assignments
     for (auto iter : m_namedSlotElements) {
-        for (auto n : iter.second->m_assignedNodes) {
-            n->setIsSlotted(false);
-        }
-        iter.second->m_assignedNodes.clear();
+        iter.second->clearAssignedNodes();
     }
 
     // Traverse host children and assign to appropriate slots
@@ -179,8 +173,16 @@ void ShadowRoot::didNodeRemoved(Node* parent, Node* oldChild)
 {
     DocumentFragment::didNodeRemoved(parent, oldChild);
 
-    Traverse::traverse(oldChild,
-                       [](Node* nd) { nd->setIsInShadowRoot(false); });
+    Traverse::traverse(oldChild, [](Node* nd) {
+        nd->setIsInShadowRoot(false);
+        // A <slot> detached from this tree holds no slottables. The document
+        // -tree cleanup that normally clears this (didNodeRemovedFromDocument
+        // Tree) is gated on isInDocumentScope() and is skipped for detached
+        // shadow trees, so clear here so assignedNodes() reflects removal.
+        if (nd->isHTMLSlotElement()) {
+            nd->asHTMLSlotElement()->clearAssignedNodes();
+        }
+    });
 
     updateSlotElements();
 

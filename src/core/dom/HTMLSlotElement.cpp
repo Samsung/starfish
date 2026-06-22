@@ -49,6 +49,14 @@ String* HTMLSlotElement::slotName()
     return getAttributeOrEmpty(starfish()->staticStrings()->m_name);
 }
 
+void HTMLSlotElement::clearAssignedNodes()
+{
+    for (auto n : m_assignedNodes) {
+        n->setIsSlotted(false);
+    }
+    m_assignedNodes.clear();
+}
+
 void HTMLSlotElement::didAttributeChanged(QualifiedName name,
                                           Optional<String*> old, String* value,
                                           bool attributeCreated,
