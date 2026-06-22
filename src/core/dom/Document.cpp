@@ -57,6 +57,7 @@
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLScriptElement.h"
+#include "core/dom/HTMLTemplateElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
@@ -1205,6 +1206,23 @@ Node* Document::importNode(Node* node, bool deep)
             STARFISH_ASSERT(newChild);
             newChild->setDocument(this);
             newNode->appendChild(newChild);
+        }
+        // A <template>'s children live in its content fragment, not in the
+        // node's own child list, so the loop above does not reach them. Per
+        // the HTML "cloning steps for template", import the content children
+        // only when the deep flag is set (mirrors Node::cloneNode).
+        if (node->isHTMLTemplateElement()) {
+            DocumentFragment* srcContent =
+                node->asHTMLTemplateElement()->content();
+            DocumentFragment* dstContent =
+                newNode->asHTMLTemplateElement()->content();
+            for (Node* c = srcContent->firstChild(); c != nullptr;
+                 c = c->nextSibling()) {
+                Node* newChild = importNode(c, true);
+                STARFISH_ASSERT(newChild);
+                newChild->setDocument(this);
+                dstContent->appendChild(newChild);
+            }
         }
     }
     return newNode;
