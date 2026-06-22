@@ -87,6 +87,16 @@ public:
         return m_isNeedToParse;
     }
 
+    bool isRemoved() const
+    {
+        return m_removed;
+    }
+
+    void markRemoved() const
+    {
+        m_removed = true;
+    }
+
     ScriptValue scriptValue() const;
     ScriptValue call(Event* event);
 
@@ -94,6 +104,7 @@ protected:
     bool m_isAttribute : 1;
     bool m_capture : 1;
     mutable bool m_isNeedToParse : 1;
+    mutable bool m_removed : 1;
 
     union {
         mutable AttributeStringEventFunctionData* m_scriptStringNeedToParse;
@@ -106,6 +117,7 @@ private:
         : m_isAttribute(isAttribute)
         , m_capture(useCapture)
         , m_isNeedToParse(false)
+        , m_removed(false)
         , m_listener(fn)
     {
     }
@@ -115,6 +127,7 @@ private:
         : m_isAttribute(isAttribute)
         , m_capture(useCapture)
         , m_isNeedToParse(true)
+        , m_removed(false)
         , m_scriptStringNeedToParse(
               new AttributeStringEventFunctionData(target, scriptString))
     {
@@ -135,6 +148,12 @@ public:
 
     Optional<GCVector<EventListener*>*> getEventListeners(
         const String* eventType);
+
+    // Cheap, allocation-free scan of the same ancestor chain that
+    // dispatchEvent() builds, returning true if any node on that path has at
+    // least one listener registered for eventType. Performs no vector copies
+    // and invokes no listeners, so it is strictly cheaper than one dispatch.
+    bool hasListenerForTypeOnPath(const String* eventType);
 
     bool addEventListener(const String* eventType, EventListener* listener,
                           bool useCapture = false);

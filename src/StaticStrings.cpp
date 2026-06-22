@@ -704,6 +704,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "resize"));
     m_onresize =
         QualifiedName(AtomicString::createAtomicString(starfish, "onresize"));
+    m_fullscreenchange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "fullscreenchange"));
+    m_webkitfullscreenchange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "webkitfullscreenchange"));
     m_message =
         QualifiedName(AtomicString::createAtomicString(starfish, "message"));
     m_onmessage =

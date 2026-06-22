@@ -688,6 +688,8 @@ public:
     QualifiedName m_reset;
     QualifiedName m_resize;
     QualifiedName m_onresize;
+    QualifiedName m_fullscreenchange;
+    QualifiedName m_webkitfullscreenchange;
     QualifiedName m_message;
     QualifiedName m_onmessage;
     QualifiedName m_messageerror;

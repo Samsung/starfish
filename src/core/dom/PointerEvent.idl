@@ -20,9 +20,9 @@ dictionary PointerEventInit : MouseEventInit {
 [Exposed=Window,Constructor(DOMString type, optional PointerEventInit eventInitDict), ConstructorCallWith=ExecutionContext]
 interface PointerEvent : MouseEvent {
     readonly        attribute long        pointerId;
-    [Unimplemented] readonly        attribute double      width;
-    [Unimplemented] readonly        attribute double      height;
-    [Unimplemented] readonly        attribute float       pressure;
+    readonly        attribute double      width;
+    readonly        attribute double      height;
+    readonly        attribute double      pressure;
     [Unimplemented] readonly        attribute float       tangentialPressure;
     [Unimplemented] readonly        attribute long        tiltX;
     [Unimplemented] readonly        attribute long        tiltY;
@@ -30,7 +30,7 @@ interface PointerEvent : MouseEvent {
     [Unimplemented] readonly        attribute double      altitudeAngle;
     [Unimplemented] readonly        attribute double      azimuthAngle;
     readonly        attribute DOMString   pointerType;
-    [Unimplemented] readonly        attribute boolean     isPrimary;
+    readonly        attribute boolean     isPrimary;
     [Unimplemented,SecureContext] sequence<PointerEvent> getCoalescedEvents();
     [Unimplemented] sequence<PointerEvent> getPredictedEvents();
 };

@@ -247,6 +247,10 @@ FfmpegWrapperPlayer::FfmpegWrapperPlayer()
     , m_state(State::STOPPED)
     , m_muted(false)
     , m_volume(1.0f)
+    , m_currentPositionMs(0)
+    , m_seekRequested(false)
+    , m_seekTargetMs(0)
+    , m_seekCompleteData(nullptr)
 {
     // Allocated via `new (PointerFreeGC)` (GC_MALLOC_ATOMIC), which is
     // allowed to hand back non-zeroed memory — especially when the GC
@@ -347,9 +351,20 @@ bool FfmpegWrapperPlayer::setPlayPosition(
     const std::function<void(void* data)>& seekCompleteCallback,
     void* user_data)
 {
-    std::lock_guard<std::mutex> lock(m_stateMutex);
-    STARFISH_UNIMPLEMENTED();
-    return false;
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        if (m_fmtCtx == nullptr || m_videoStreamIndex < 0) {
+            return false;
+        }
+        m_seekTargetMs.store(milliseconds < 0 ? 0 : milliseconds);
+        m_seekCompleteCallback = seekCompleteCallback;
+        m_seekCompleteData = user_data;
+        m_seekRequested.store(true);
+    }
+    // Wake the decoding thread so it picks up the seek promptly even if it is
+    // currently paused.
+    m_statecv.notify_all();
+    return true;
 }
 
 bool FfmpegWrapperPlayer::unprepare()
@@ -507,6 +522,7 @@ bool FfmpegWrapperPlayer::stop()
 
     m_state = State::STOPPED;
     m_stopRequested = true;
+    m_currentPositionMs.store(0);
     m_statecv.notify_all();
 
     return true;
@@ -559,7 +575,16 @@ player_state_e FfmpegWrapperPlayer::getState()
 
 int FfmpegWrapperPlayer::getPlayPosition()
 {
-    return 0;
+    return (int)m_currentPositionMs.load();
+}
+
+double FfmpegWrapperPlayer::getDuration()
+{
+    if (m_fmtCtx != nullptr && m_fmtCtx->duration != AV_NOPTS_VALUE &&
+        m_fmtCtx->duration > 0) {
+        return (double)m_fmtCtx->duration / (double)AV_TIME_BASE;
+    }
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 void FfmpegWrapperPlayer::decodingThread()
@@ -583,6 +608,35 @@ void FfmpegWrapperPlayer::decodingThread()
 
             if (m_stopRequested) {
                 break;
+            }
+        }
+
+        // Perform a pending seek here so the demuxer is only ever touched from
+        // this thread.
+        if (m_seekRequested.exchange(false)) {
+            int64_t targetMs = m_seekTargetMs.load();
+            AVRational tb = m_fmtCtx->streams[m_videoStreamIndex]->time_base;
+            int64_t ts = (int64_t)((targetMs / 1000.0) / av_q2d(tb));
+            av_seek_frame(m_fmtCtx, m_videoStreamIndex, ts,
+                          AVSEEK_FLAG_BACKWARD);
+            avcodec_flush_buffers(m_codecCtx);
+            m_currentPositionMs.store((uint64_t)targetMs);
+
+            // Drop frames decoded before the seek.
+            for (AVFrame* f : frames) {
+                av_frame_free(&f);
+            }
+            frames.clear();
+
+            std::function<void(void* data)> cb;
+            void* cbData = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(m_stateMutex);
+                cb = m_seekCompleteCallback;
+                cbData = m_seekCompleteData;
+            }
+            if (cb) {
+                cb(cbData);
             }
         }
 
@@ -655,6 +709,23 @@ void FfmpegWrapperPlayer::decodingThread()
                 sws_scale(swsCtx, frame->data, frame->linesize, 0, height_,
                           dest, dest_linesize);
                 packet->setBuffer(buffer);
+
+                // Advance the playhead to this frame's presentation time so
+                // getPlayPosition() (and thus HTMLMediaElement.currentTime)
+                // tracks progressive playback.
+                int64_t framePts = frame->best_effort_timestamp;
+                if (framePts == AV_NOPTS_VALUE) {
+                    framePts = frame->pts;
+                }
+                if (framePts != AV_NOPTS_VALUE && m_fmtCtx != nullptr &&
+                    m_videoStreamIndex >= 0) {
+                    AVRational tb =
+                        m_fmtCtx->streams[m_videoStreamIndex]->time_base;
+                    double sec = (double)framePts * av_q2d(tb);
+                    if (sec >= 0) {
+                        m_currentPositionMs.store((uint64_t)(sec * 1000.0));
+                    }
+                }
 
                 if (m_framedecodedCallback != nullptr &&
                     m_framedecodedCallbackData != nullptr) {
@@ -1014,19 +1085,49 @@ void MediaPlayerLinux::seek(double time)
 void MediaPlayerLinux::seekOperation(int timeInMS)
 {
     PLAYER_LOGI("MediaPlayerLinux::seekOperation() (time: %d)", timeInMS);
-    STARFISH_UNIMPLEMENTED();
+    if (isMSE()) {
+        // MSE seek is driven by the demuxer feed; not handled here.
+        return;
+    }
+    if (!m_nativePlayer) {
+        return;
+    }
+    // setPlayPosition's completion callback runs on the decoding thread; hop
+    // back to the main thread before touching the container / timers.
+    m_nativePlayer->setPlayPosition(
+        timeInMS, true,
+        [](void* data) {
+            MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+            MessageLoop* msgLoop = self->container()->webView()->messageLoop();
+            msgLoop->addIdlerWithNoGCRootingInOtherThread(
+                self->container()->window(),
+                [](size_t, void* d) { ((MediaPlayerLinux*)d)->handleSeeked(); },
+                self);
+        },
+        this);
 }
 
 void MediaPlayerLinux::handleSeeked()
 {
     PLAYER_LOGI("MediaPlayerLinux::handleSeeked\n");
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_ASSERT(isMainThread());
+    if (m_seekState == SEEKSTATE_NO_SEEK) {
+        return;
+    }
+    if (m_seekingTimer != TimerInvalidID) {
+        m_container->window()->clearTimeout(m_seekingTimer);
+        m_seekingTimer = TimerInvalidID;
+    }
+    m_seekState = SEEKSTATE_NO_SEEK;
+    m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
 }
 
 void MediaPlayerLinux::handleSeekTimeout()
 {
     PLAYER_LOGI("MediaPlayerLinux::handleSeekTimeout\n");
-    STARFISH_UNIMPLEMENTED();
+    // Treat a timed-out seek as completed so the element does not stay stuck in
+    // the seeking state.
+    handleSeeked();
 }
 
 void MediaPlayerLinux::handleEnded()
@@ -1088,6 +1189,9 @@ double MediaPlayerLinux::duration()
     PLAYER_LOGI("MediaPlayerLinux::duration\n");
     if (m_activeMediaSource != nullptr) {
         return m_activeMediaSource->duration();
+    }
+    if (m_nativePlayer != nullptr) {
+        return m_nativePlayer->getDuration();
     }
     return std::numeric_limits<double>::quiet_NaN();
 }

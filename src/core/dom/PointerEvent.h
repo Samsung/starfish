@@ -33,7 +33,7 @@ class PointerData {
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
     PointerData()
-        : m_pointerId(0)
+        : m_pointerId(1)
         , m_pointerType(String::createASCIIString("mouse"))
     {
     }
@@ -130,6 +130,33 @@ public:
     String* pointerType() const
     {
         return m_pointerData.pointerType();
+    }
+
+    // A single active mouse pointer is assumed (see
+    // Element::setPointerCapture), so the pointer is always the primary one.
+    // Pages such as the YouTube embedded player gate their seek-bar drag on
+    // `event.isPrimary`; leaving it unimplemented (undefined in JS) made that
+    // guard fail and scrubbing do nothing.
+    bool isPrimary() const
+    {
+        return true;
+    }
+
+    // Per spec, for a mouse the pressure is 0.5 while a button is held and 0
+    // otherwise.
+    double pressure() const
+    {
+        return buttons() ? 0.5 : 0.0;
+    }
+
+    double width() const
+    {
+        return 1.0;
+    }
+
+    double height() const
+    {
+        return 1.0;
     }
 
 private:

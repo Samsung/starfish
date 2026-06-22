@@ -516,8 +516,14 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
     if (m_currentTotalSizeOfBlocks + reserve > m_cacheSizeLimit) {
         auto iter = m_cacheLRUList.begin();
         while (iter != m_cacheLRUList.end() && removedSize < reserve) {
-            HTTPCacheEntry* cacheEntry =
-                findEntryInCacheEntryTable(*iter).value();
+            auto found = findEntryInCacheEntryTable(*iter);
+            if (!found.hasValue()) {
+                // Defensive: drop a stale LRU item with no table entry instead
+                // of dereferencing an empty Optional.
+                iter = m_cacheLRUList.erase(iter);
+                continue;
+            }
+            HTTPCacheEntry* cacheEntry = found.value();
 
             if (cacheEntry->refCount() > 1) {
                 iter++;
@@ -595,6 +601,12 @@ void HTTPCache::expire()
                 size_t size = calcBlocksSize(
                     entryIter->get()->entryFileInfo().byteLength);
                 m_currentTotalSizeOfBlocks -= size;
+                // Keep the LRU list in sync with the entry table. Without this
+                // the expired entry's urlString lingers in m_cacheLRUList, and
+                // a later traversal (calcBlocksSizeOfIndexFile /
+                // pruneAsNeededForCacheSpace) dereferences the now-empty
+                // Optional returned by findEntryInCacheEntryTable and crashes.
+                removeItemInLRUList(entryIter->get()->url()->urlString());
                 entryIter = it.value().erase(entryIter);
             } else {
                 entryIter++;
@@ -670,6 +682,12 @@ size_t HTTPCache::calcBlocksSizeOfIndexFile()
     size_t bytes = 0;
     for (auto it : m_cacheLRUList) {
         auto entry = findEntryInCacheEntryTable(it);
+        // The LRU list and the entry table can fall out of sync (e.g. an item
+        // lingering in the LRU list after its table entry was pruned). Skip
+        // such stale items instead of dereferencing an empty Optional.
+        if (!entry.hasValue()) {
+            continue;
+        }
         bytes += entry->toString()->toUTF8NonGCString().size() + 1;
     }
     return calcBlocksSize(bytes);
