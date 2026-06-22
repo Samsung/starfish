@@ -6,7 +6,7 @@ from . import utils
 from subprocess import Popen, PIPE
 import time
 import fcntl
-import threading
+import signal
 from basics.constants import ENVOPTS
 
 try:
@@ -56,31 +56,27 @@ class __BasicTestOpts():
 
 
 def open_subprocess(command, timeout=None):
-    cmd = command
-    process = None
-    stdout = None
-    stderr = None
-
     start_time = time.time()
 
-    if timeout:
-
-        def target():
-            nonlocal process, stdout, stderr
-            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = process.communicate()
-
-        # Set timeout in process.communicate if v3.3 is available. Here uses a
-        # separate thread as a workaround.
-        thread = threading.Thread(target=target)
-        thread.start()
-        thread.join(timeout)
-        if thread.is_alive():
-            process.terminate()
-            thread.join()
-    else:
-        process = Popen(command, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
+    # Own a process group only when a timeout is set: that is the only path that
+    # may need to SIGKILL the whole tree Starfish spawns. Without a timeout the
+    # call behaves exactly as before (no session change), so the common,
+    # no-timeout path used by almost every test is untouched.
+    process = Popen(command, stdout=PIPE, stderr=PIPE,
+                    start_new_session=bool(timeout))
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # SIGKILL the entire process group, then reap to release the pipes.
+        # The second communicate() returns immediately since the tree is dead.
+        # ProcessLookupError: the tree already exited in the timeout race; the
+        # pipes are then already closed, so just reap and report the timeout.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate()
+        raise TimeoutError
 
     return stdout, stderr, time.time() - start_time
 
@@ -98,6 +94,9 @@ def case_runner(tc):
 
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
+    # Bind before the try so the except handler stays safe even when
+    # open_subprocess raises before returning (e.g. Popen fails to launch).
+    starfish_output = starfish_err = b""
     try:
         starfish_output, starfish_err, elapsed_time = open_subprocess(starfish_command, timeout)
         starfish_output = str(starfish_output, 'utf-8')
