@@ -1688,7 +1688,7 @@ public:
 
     bool hasChildren() const
     {
-        if (frameTreeItemModel() && frameTreeItemModel()->m_firstChild) {
+        if (hasFrameTreeItemModel() && frameTreeItemModel()->m_firstChild) {
             return true;
         }
         return false;
@@ -2352,7 +2352,7 @@ protected:
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Frame, m_node));
     }
 
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() const
     {
         return false;
     }

@@ -1690,6 +1690,11 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
         } else if (box->stackingContext() &&
                    box->stackingContext()->inScrollWithGraphicsBufferActive()) {
             // skip painting. compositor will draw color
+        } else if (box->stackingContext() &&
+                   box->stackingContext()->owner() == box &&
+                   box->stackingContext()
+                       ->isOwnerBackgroundDrawnByCompositor()) {
+            // skip painting. compositor draws bg-color before tiles
         } else {
             canvas->save();
             Unit::Rect paintingRect;
@@ -4064,6 +4069,14 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             // there is only background-color on video or canvas element, we
             // should not make graphics buffer since we can draw background
             // color property with compositor
+            shouldCareBackgroundColor = false;
+        } else if (!isScrollingPurpose && ctx.sourceStackingContext &&
+                   ctx.sourceStackingContext->owner() == this &&
+                   ctx.sourceStackingContext
+                       ->isOwnerBackgroundDrawnByCompositor()) {
+            // stacking context owner: compositor draws bg-color directly
+            // (before tiles or via drawRect when buffer is empty), so exclude
+            // it from visibleRect — buffer is sized to content only
             shouldCareBackgroundColor = false;
         }
 

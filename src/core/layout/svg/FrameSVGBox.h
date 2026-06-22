@@ -154,7 +154,7 @@ protected:
                    GC_WORD_OFFSET(FrameSVGBox, m_unadjustedFrameRectByFilter));
     }
 
-    virtual bool hasFrameTreeItemModel() override
+    virtual bool hasFrameTreeItemModel() const override
     {
         return true;
     }

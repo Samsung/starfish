@@ -1062,6 +1062,58 @@ static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc,
     return CanvasSurface::PlainElement;
 }
 
+bool StackingContext::isOwnerBackgroundDrawnByCompositor()
+{
+    if (!needsGraphicsBuffer()) {
+        return false;
+    }
+    if (inScrollWithGraphicsBufferActive()) {
+        return false;
+    }
+    // Only a leaf whose sole paint is a solid background-color (optionally with
+    // border-radius, which the compositor reproduces by filling a rounded
+    // path): no children, and nothing else the compositor's solid fill cannot
+    // reproduce (border / outline / box-shadow / background-image). This is
+    // exactly the case whose visibleRect collapses to empty once the bg-color
+    // is excluded, so it is a purely structural test that needs no visibleRect
+    // (avoiding the chicken-and-egg with tryUniteVisibleRect, which builds
+    // visibleRect). All three call sites can therefore share this identical
+    // predicate.
+    if (owner()->hasChildren()) {
+        return false;
+    }
+    ComputedStyle* s = owner()->style();
+    if (s->backgroundColor().isTransparent()) {
+        return false;
+    }
+    auto border = s->border();
+    if (s->boxShadow() || s->backgroundLayerSize() ||
+        border.hasBorderImageData() || border.hasBorderStyle() ||
+        (s->outline() && s->outline()->isVisible())) {
+        return false;
+    }
+    return true;
+}
+
+void StackingContext::drawOwnerBackgroundByCompositor(Compositor* compositor)
+{
+    auto rect = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
+    compositor->setFillColor(m_owner->style()->backgroundColor());
+    if (m_owner->hasFrameBorderRadius()) {
+        // the compositor cannot fill an arbitrary path; clip to the rounded
+        // border-box then drawRect so the elided buffer's bg-color keeps its
+        // rounded corners when drawn directly by the compositor
+        compositor->save();
+        m_owner->applyBorderRadiusClippingIfNeeds(
+            compositor,
+            LayoutRect(rect.x(), rect.y(), rect.width(), rect.height()));
+        compositor->drawRect(rect);
+        compositor->restore();
+    } else {
+        compositor->drawRect(rect);
+    }
+}
+
 void StackingContext::applyStackingContextProperties(
     ComputeStackingContextContext& ctx)
 {
@@ -2729,6 +2781,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect stackingContextExtent =
         computeBoxExtent(visibleRect, screenMatrix);
+    // stacking context owner's bg-color is excluded from visibleRect so the
+    // buffer is sized to content only; compositor draws it directly
+    bool isOwnerBackgroundDrawnByCompositor =
+        this->isOwnerBackgroundDrawnByCompositor();
 
     if (!stackingContextExtent.intersects(screenRect)) {
         bool needsCompositeAnyWay = false;
@@ -2739,6 +2795,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
         }
         if (owner()->contentSurface()) {
+            needsCompositeAnyWay = true;
+        }
+        if (isOwnerBackgroundDrawnByCompositor) {
             needsCompositeAnyWay = true;
         }
         if (!needsCompositeAnyWay) {
@@ -2799,7 +2858,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     }
 
     auto contentSurface = owner()->contentSurface();
-    if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface) {
+    if (!thereIsNoBufferBecauseThereIsNoVisibleContent || contentSurface ||
+        isOwnerBackgroundDrawnByCompositor) {
         owner()->willCompositeStackingContext(compositor);
 
         bool hasFilterEffect = false;
@@ -2833,6 +2893,15 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
         if (m_rareData->m_graphicsBufferHolder) {
             compositor->save();
+
+            // bg-color was skipped in paintBackground; compositor draws it
+            // before tiles so the buffer only needs to hold content
+            if (isOwnerBackgroundDrawnByCompositor) {
+                compositor->save();
+                drawOwnerBackgroundByCompositor(compositor);
+                compositor->restore();
+            }
+
             if (m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow()) {
                 Unit::Rect fullRect;
 
@@ -2971,6 +3040,14 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
 
             compositor->restore();
+        }
+
+        // buffer-empty fallback: when a graphics buffer exists the bg-color was
+        // already drawn before the tiles above, so only draw here when there is
+        // no buffer (otherwise a semi-transparent bg-color would be doubled)
+        if (isOwnerBackgroundDrawnByCompositor &&
+            !m_rareData->m_graphicsBufferHolder) {
+            drawOwnerBackgroundByCompositor(compositor);
         }
 
         if (contentSurface) {
