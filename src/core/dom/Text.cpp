@@ -109,9 +109,11 @@ String* Text::wholeText()
 
 Optional<HTMLSlotElement*> Text::assignedSlot()
 {
+    // assignedSlot returns the result of "find a slot" with the open flag set:
+    // a slot inside a closed shadow tree must not be exposed to script, so use
+    // the public shadowRoot() getter which yields null for closed roots.
     Optional<ShadowRoot*> shadowRoot;
-    if (parentElement() &&
-        (shadowRoot = parentElement()->internalShadowRoot())) {
+    if (parentElement() && (shadowRoot = parentElement()->shadowRoot())) {
         // Text nodes are always assigned to default slot (empty name)
         return shadowRoot->assignedSlot(String::emptyString);
     }
