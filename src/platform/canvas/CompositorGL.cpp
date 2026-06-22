@@ -3772,9 +3772,13 @@ public:
     virtual void drawRect(const Unit::Rect& rt) override
     {
         INSTALL_PROFILE_TIMER("CompositorGL::drawRect");
+        auto& lastState = m_state.back();
+        auto currentColor = lastState.color;
+        if (currentColor.isTransparent() || lastState.opacity == 0) {
+            return;
+        }
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-        auto& lastState = m_state.back();
         dest[0][0] = rt.x();
         dest[0][1] = rt.y();
         mapPointsToLogicalScreen(dest[0][0], dest[0][1]);
@@ -3790,8 +3794,6 @@ public:
         dest[3][0] = rt.maxX();
         dest[3][1] = rt.maxY();
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
-
-        auto currentColor = lastState.color;
 
         if (lastState.matrixStaysInRect &&
             lastState.abbreviatedClipPaths.size() == 0) {
@@ -4706,6 +4708,9 @@ public:
         }
 
         auto& lastState = m_state.back();
+        if (lastState.opacity == 0) {
+            return;
+        }
 
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
