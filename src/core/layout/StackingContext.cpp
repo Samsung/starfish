@@ -228,6 +228,20 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         canSplitGraphicsBufferCond = false;
     }
 
+    // Tiling only pays off for layers that actually scroll. A layer that won't
+    // scroll gains nothing from being split and only multiplies draw calls, so
+    // keep it as a single surface as long as it still fits in one GL texture.
+    if (canSplitGraphicsBufferCond && !sc->inScrollWithGraphicsBufferActive()) {
+        uint32_t maxTextureSize =
+            Compositor::maximumTextureSize(sc->owner()->document()->starfish());
+        float effectiveWidth = bufferWidth * m_additionalPixelRatio;
+        float effectiveHeight = bufferHeight * m_additionalPixelRatio;
+        if (effectiveWidth <= maxTextureSize &&
+            effectiveHeight <= maxTextureSize) {
+            canSplitGraphicsBufferCond = false;
+        }
+    }
+
     // FIXME non-integer pixel ratio makes glitch between tiles
     if (m_additionalPixelRatio != 1) {
         canSplitGraphicsBufferCond = false;
@@ -1019,7 +1033,9 @@ static void computeVisibleRect(StackingContext* source, StackingContext* c,
     }
 }
 
-static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc)
+static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc,
+                                                           size_t tileWidth,
+                                                           size_t tileHeight)
 {
     if (sc->owner()->isFrameSVGSVGBox()) {
         return static_cast<CanvasSurface::CanvasSurfaceFlag>(
@@ -1029,6 +1045,19 @@ static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc)
     }
     if (sc->hasFilterEffect()) {
         return CanvasSurface::PreferUnitedTexture;
+    }
+    // A layer that won't scroll gains nothing from CanvasSurfaceGL splitting it
+    // into g_canvasSurfaceTileSize (128px) texture tiles: that only multiplies
+    // drawSurface blits at composite time. Use a single united texture so its
+    // composite is one draw call, as long as it fits in one GL texture.
+    if (!sc->inScrollWithGraphicsBufferActive()) {
+        float pr = sc->additionalPixelRatio();
+        uint32_t maxTextureSize =
+            Compositor::maximumTextureSize(sc->owner()->document()->starfish());
+        if (tileWidth * pr <= maxTextureSize &&
+            tileHeight * pr <= maxTextureSize) {
+            return CanvasSurface::PreferUnitedTexture;
+        }
     }
     return CanvasSurface::PlainElement;
 }
@@ -2056,7 +2085,8 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                     m_owner->document()->webView()->renderer(),
                                     tileDataWidth, tileDataHeight,
                                     additionalPixelRatio(),
-                                    computeSurfaceFlag(this));
+                                    computeSurfaceFlag(this, tileDataWidth,
+                                                       tileDataHeight));
                             Canvas* canvas = Canvas::create(
                                 m_owner->node()->webView(), canvasSurface);
 
@@ -2265,7 +2295,9 @@ bool StackingContext::fillGraphicsBufferContents(
                         CanvasSurface::create(
                             m_owner->document()->webView()->renderer(),
                             tileDataWidth, tileDataHeight,
-                            additionalPixelRatio(), computeSurfaceFlag(this));
+                            additionalPixelRatio(),
+                            computeSurfaceFlag(this, tileDataWidth,
+                                               tileDataHeight));
                     gotNewBuffer = true;
                 }
 
