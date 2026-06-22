@@ -122,3 +122,126 @@ jobs:
             cmake CMakeLists.txt -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless -DDOCKER=1 -G Ninja
             ninja starfish.executable
             ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console || exit 1
+
+  cross_aarch64_x11_glib_cairo_gl:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-cross-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Cross build (aarch64)
+        env:
+          S: /opt/sysroot/aarch64
+          T: aarch64-linux-gnu
+        run: |
+            export CC=$T-gcc CXX=$T-g++ LD=$T-ld AR=$T-ar RANLIB=$T-ranlib STRIP=$T-strip
+            export CFLAGS=" --sysroot=$S -I$S/usr/lib/$T/glib-2.0/include -I$S/usr/include/$T"
+            export CXXFLAGS="$CFLAGS"
+            export LDFLAGS="--sysroot=$S"
+            export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
+            export PKG_CONFIG_SYSROOT_DIR="$S"
+            cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
+              -DMODE=release -DHOST=linux -DARCH=aarch64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+              -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
+              -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \
+              -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+              -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+              -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+            ninja starfish.executable
+
+  cross_arm32_x11_glib_cairo_gl:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-cross-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Cross build (arm32)
+        env:
+          S: /opt/sysroot/arm
+          T: arm-linux-gnueabihf
+        run: |
+            export CC=$T-gcc CXX=$T-g++ LD=$T-ld AR=$T-ar RANLIB=$T-ranlib STRIP=$T-strip
+            export CFLAGS="--sysroot=$S -I$S/usr/lib/$T/glib-2.0/include -I$S/usr/include/$T"
+            export CXXFLAGS="$CFLAGS"
+            export LDFLAGS="--sysroot=$S"
+            export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
+            export PKG_CONFIG_SYSROOT_DIR="$S"
+            cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
+              -DMODE=release -DHOST=linux -DARCH=arm -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm \
+              -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
+              -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \
+              -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+              -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+              -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+            ninja starfish.executable
+
+  cross_x86_x11_glib_cairo_gl:
+    runs-on:  [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-cross-build:24.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: |
+            git clean -xdf
+      - name: Cross build (x86)
+        env:
+          S: /opt/sysroot/x86
+          T: i386-linux-gnu
+        run: |
+            export CC=i686-linux-gnu-gcc CXX=i686-linux-gnu-g++ LD=i686-linux-gnu-ld AR=i686-linux-gnu-ar RANLIB=i686-linux-gnu-ranlib STRIP=i686-linux-gnu-strip
+            export CFLAGS="-msse2 --sysroot=$S -I$S/usr/lib/$T/glib-2.0/include -I$S/usr/include/$T"
+            export CXXFLAGS="$CFLAGS"
+            export LDFLAGS="--sysroot=$S"
+            export PKG_CONFIG_LIBDIR="$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig"
+            export PKG_CONFIG_SYSROOT_DIR="$S"
+            cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
+              -DMODE=release -DHOST=linux -DARCH=x86 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DDOCKER=1 -DWEBGL=0 \
+              -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=x86 \
+              -DCMAKE_C_COMPILER=i686-linux-gnu-gcc -DCMAKE_CXX_COMPILER=i686-linux-gnu-g++ \
+              -DCMAKE_SYSROOT=$S -DCMAKE_FIND_ROOT_PATH=$S \
+              -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+              -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+              -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+            ninja starfish.executable

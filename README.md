@@ -5,7 +5,7 @@ Starfish is a lightweight Web browser engine for TV, mobile, headless and wearab
 ## Supported Platforms
 The following platforms are supported.
 
-* Ubuntu 18.04, 16.04, 14.04
+* Ubuntu 24.04 / 22.04 (x64 native, and aarch64 / armhf / x86 cross builds)
 * Tizen
 * Windows
 * Android
@@ -15,15 +15,26 @@ The following platforms are supported.
 ### Install required packages
 
 ```sh
-# Verified on Ubuntu 20.04.
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libturbojpeg libturbojpeg0-dev libgif-dev cmake autoconf automake libtool ninja libwebp-dev libx11-dev libglib2.0-dev
-
-sudo apt-get install python-pip
-pip install Jinja2
+# Verified on Ubuntu 24.04 (noble).
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential cmake ninja-build pkg-config git \
+    autoconf automake libtool patchelf clang-format \
+    python3 python3-jinja2 \
+    libglib2.0-dev libcairo2-dev libfreetype-dev libfontconfig-dev libharfbuzz-dev \
+    libx11-dev libxext-dev libxrender-dev libxi-dev \
+    libegl-dev libgles-dev libgl1-mesa-dev \
+    libpng-dev libturbojpeg0-dev libgif-dev libwebp-dev \
+    libcurl4-openssl-dev libssl-dev libicu-dev libcap-dev libasound2-dev zlib1g-dev
 
 # optional for zeromq.
-sudo apt-get install asciidoc xmlto
+sudo apt-get install -y asciidoc xmlto
 ```
+
+> Notes for newer Ubuntu (22.04+):
+> * `Jinja2` is installed via the distro package `python3-jinja2` (the old `python-pip` / `pip install Jinja2` no longer applies).
+> * `libfreetype-dev` / `libfontconfig-dev` are the current names (the `*6-dev` / `*1-dev` variants are transitional).
+> * `libegl-dev` / `libgles-dev` replace the old `libegl1-mesa-dev` / `libgles2-mesa-dev`.
 
 ### Download Starfish and compile third party libraries
 
@@ -70,8 +81,9 @@ Default values are in **bold**.
   Compile Starfish for either release or debug mode
 * -DBACKEND=[ **glib_cairo_gl** | uv_cairo_gl ]<br>
   Use either cairo or cairo_gl as the backend graphics library
-* -DARCH=[ **x64** | arm ]
-  Compile Starfish for either x64 or arm target
+* -DARCH=[ **x64** | aarch64 | arm | x86 ]<br>
+  Target architecture. `x64` is native; `aarch64` / `arm` (armhf) / `x86` (i386) are
+  cross targets (see "How to Cross-Compile: Linux").
 * -DLTO=[ **0** | 1 ]<br>
   Enable complier link time optimization
 * -DENABLE_DEBUGGER=[ **0** | 1 ]<br>
@@ -98,6 +110,70 @@ out
 ```sh
 ./out/release/lightweight-web-engine 'html/file/path'
 ```
+
+## How to Cross-Compile: Linux (aarch64 / armhf / x86)
+
+Cross builds target other Linux architectures (e.g. Raspberry Pi 5 = aarch64) from
+an x64 host. The key requirement is that **the cross toolchain's glibc must be the
+same or newer than the target's glibc** — otherwise linking against a target sysroot
+fails with errors like `undefined reference to '...@GLIBC_2.3x'`. Ubuntu 24.04 (noble)
+ships cross gcc-13 with glibc 2.39, which matches a noble (RPi5) sysroot.
+
+### Option A: Docker (recommended)
+
+A ready-to-use image bakes in all the cross toolchains and target sysroots under
+`/opt/sysroot/{aarch64,arm,x86}`. See [`Dockerfile.starfish`](Dockerfile.starfish),
+[`mk-sysroot.sh`](mk-sysroot.sh) and [`build_starfish_docker.sh`](build_starfish_docker.sh).
+
+```sh
+# Build the image once (or pull the pre-built one)
+DOCKER_BUILDKIT=1 docker build -f Dockerfile.starfish -t starfish-cross-build:24.04 .
+
+# Build for a target (writes to build/out_rpi5, build/out_linux_arm, build/out_linux_x86)
+./build_starfish_docker.sh aarch64        # RPi5
+./build_starfish_docker.sh arm32
+./build_starfish_docker.sh x86
+./build_starfish_docker.sh all            # native + all three
+```
+
+### Option B: Manual (host toolchain + sysroot)
+
+1. Install the cross toolchain and create a target sysroot (multiarch dev libs):
+
+```sh
+# aarch64 example
+sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+# A sysroot can be built with mk-sysroot.sh, debootstrap, or copied from the device.
+# It must contain the target dev libraries listed in the "Install required packages"
+# section above (cairo, glib, egl/glesv2, x11, turbojpeg, curl, cap, ...).
+```
+
+2. Point the build at the sysroot via env vars + CMake (`SYSROOT` = path to the sysroot):
+
+```sh
+export SYSROOT=/opt/sysroot/aarch64
+export T=aarch64-linux-gnu                       # arm-linux-gnueabihf | i386-linux-gnu
+export CC=$T-gcc CXX=$T-g++ AR=$T-ar RANLIB=$T-ranlib STRIP=$T-strip
+export CFLAGS="--sysroot=$SYSROOT -I$SYSROOT/usr/lib/$T/glib-2.0/include -I$SYSROOT/usr/include/$T"
+export CXXFLAGS="$CFLAGS"
+export LDFLAGS="--sysroot=$SYSROOT"
+export PKG_CONFIG_LIBDIR="$SYSROOT/usr/lib/$T/pkgconfig:$SYSROOT/usr/share/pkgconfig"
+export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
+
+cmake CMakeLists.txt -G Ninja -Bout/rpi5 -DTARGETNAME=Starfish \
+  -DMODE=release -DHOST=linux -DARCH=aarch64 -DBACKEND=glib_cairo_gl -DSHELL=x11 -DWEBGL=0 \
+  -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+  -DCMAKE_C_COMPILER=$T-gcc -DCMAKE_CXX_COMPILER=$T-g++ \
+  -DCMAKE_SYSROOT=$SYSROOT -DCMAKE_FIND_ROOT_PATH=$SYSROOT \
+  -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+  -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+  -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
+ninja -C out/rpi5 starfish.executable
+```
+
+`ARCH`/`CMAKE_SYSTEM_PROCESSOR` values per target: `aarch64`, `arm` (armhf, also add `-msse2`-free
+default flags), `x86` (i386, compiler `i686-linux-gnu-gcc`, add `-msse2`). `cmake.sh` contains the
+canonical per-target env blocks.
 
 ## How to Compile: Tizen
 ### GBS Build
