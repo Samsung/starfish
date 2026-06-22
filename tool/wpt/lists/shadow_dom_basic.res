@@ -85,7 +85,7 @@ http://web-platform.test:8000/shadow-dom/Range-prototype-insertNode.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-reconciliation-at-node-removal.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slots-fallback.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slots.html
+http://web-platform.test:8000/shadow-dom/slots.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slots-outside-shadow-dom.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Slottable-mixin.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/touch-event-retargeting-leak.html
