@@ -56,14 +56,22 @@ FlexFormattingContext::FlexFormattingContext(
     , m_mainGap(0)
     , m_crossGap(0)
 {
+    addNewLine(); // Add initial line.
+    computeAvailableSpace(availableWidth);
+
     LayoutUnit columnGap, rowGap;
     if (m_container->style()->columnGap().isSpecified()) {
         columnGap = m_container->style()->columnGap().specifiedValue(
             availableWidth, container->node());
     }
     if (m_container->style()->rowGap().isSpecified()) {
+        LayoutUnit blockSize = m_isMainAxisInInlineAxis ? m_availableCrossSize
+                                                        : m_availableMainSize;
+        if (blockSize == intMaxForLayoutUnit) {
+            blockSize = 0;
+        }
         rowGap = m_container->style()->rowGap().specifiedValue(
-            availableWidth, container->node());
+            blockSize, container->node());
     }
     if (m_isMainAxisInInlineAxis) {
         m_mainGap = columnGap;
@@ -72,9 +80,6 @@ FlexFormattingContext::FlexFormattingContext(
         m_mainGap = rowGap;
         m_crossGap = columnGap;
     }
-
-    addNewLine(); // Add initial line.
-    computeAvailableSpace(availableWidth);
 }
 
 void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
