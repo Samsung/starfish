@@ -902,7 +902,7 @@ void Document::dispose()
 
     m_isMutationObserverMicroTaskQueued = false;
     GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
-    m_signalSlots.clear();
+    GCVector<HTMLSlotElement*>().swap(m_signalSlots);
 }
 
 void Document::onIdle()
@@ -2681,7 +2681,7 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
             // made during MO callbacks defer to a fresh microtask instead of
             // coalescing into this one.
             GCVector<HTMLSlotElement*> slotSet = self->m_signalSlots;
-            self->m_signalSlots.clear();
+            GCVector<HTMLSlotElement*>().swap(self->m_signalSlots);
             for (auto* observer : notifySet) {
                 observer->notify();
             }
