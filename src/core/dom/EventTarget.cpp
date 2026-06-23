@@ -30,6 +30,8 @@
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Element.h"
+#include "core/dom/ShadowRoot.h"
+#include "core/dom/HTMLSlotElement.h"
 
 namespace Starfish {
 
@@ -338,6 +340,36 @@ bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
     return true;
 }
 
+// Flat-tree parent for event-path computation (WHATWG DOM "get the parent"):
+// a slottable assigned to a slot has that slot as its parent so bubbling events
+// traverse into the slot's tree; a shadow root's parent is its host only for
+// composed events. Closed shadow trees participate (events are not open-flag
+// restricted), so use internalShadowRoot rather than the scriptable getter.
+static Node* eventFlatTreeParent(Node* node, Event* event)
+{
+    if (node->isSlotted()) {
+        Node* parent = node->parentNode();
+        if (parent != nullptr && parent->isElement()) {
+            Optional<ShadowRoot*> sr =
+                parent->asElement()->internalShadowRoot();
+            if (sr) {
+                String* slotName = node->isElement()
+                                       ? node->asElement()->slot()
+                                       : String::emptyString;
+                Optional<HTMLSlotElement*> slot = sr.value()->assignedSlot(
+                    slotName->length() ? slotName : String::emptyString);
+                if (slot.hasValue() && slot.value() != nullptr) {
+                    return slot.value();
+                }
+            }
+        }
+    }
+    if (node->isShadowRoot()) {
+        return event->composed() ? node->asShadowRoot()->host() : nullptr;
+    }
+    return node->parentNode();
+}
+
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
     STARFISH_ASSERT(origin);
@@ -388,7 +420,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 eventPath.push_back(eventTarget->asDocument()->window());
                 break;
             }
-            eventTarget = node->parentNode();
+            eventTarget = eventFlatTreeParent(node, event);
         } else if (eventTarget->isWindow()) {
             eventPath.push_back(eventTarget);
             break;
