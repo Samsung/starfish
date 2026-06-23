@@ -299,7 +299,11 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     bool parentHasFixedHeight;
     bool hasAspectRatio;
 
-    parentContentWidth = cb->contentWidth() + cb->paddingWidth();
+    if (isAbsolutePositioned()) {
+        parentContentWidth = cb->contentWidth() + cb->paddingWidth();
+    } else {
+        parentContentWidth = cb->contentWidth();
+    }
     parentHasFixedHeight = ctx.parentHasFixedHeight(this);
     if (parentHasFixedHeight) {
         parentContentHeight = ctx.parentFixedHeight(this);
