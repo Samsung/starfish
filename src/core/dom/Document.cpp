@@ -38,6 +38,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMImplementation.h"
 #include "core/dom/Event.h"
+#include "core/dom/HTMLSlotElement.h"
 #include "core/dom/UIEvent.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/PointerEvent.h"
@@ -900,6 +901,7 @@ void Document::dispose()
 
     m_isMutationObserverMicroTaskQueued = false;
     GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
+    GCUnorderedSet<HTMLSlotElement*>().swap(m_signalSlots);
 }
 
 void Document::onIdle()
@@ -2575,7 +2577,20 @@ bool Document::hasMutationObservers() const
 void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 {
     m_activeMuationObservers.insert(observer);
+    ensureMutationAndSlotMicrotaskQueued();
+}
 
+void Document::signalSlotChange(HTMLSlotElement* slot)
+{
+    // WHATWG DOM "signal a slot change": queue the slot for a slotchange event
+    // and schedule the microtask. The event fires from the same checkpoint,
+    // after mutation observers are notified.
+    m_signalSlots.insert(slot);
+    ensureMutationAndSlotMicrotaskQueued();
+}
+
+void Document::ensureMutationAndSlotMicrotaskQueued()
+{
     if (m_isMutationObserverMicroTaskQueued) {
         return;
     }
@@ -2588,8 +2603,24 @@ void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
             self->m_isMutationObserverMicroTaskQueued = false;
             GCUnorderedSet<MutationObserver*> notifySet;
             notifySet.swap(self->m_activeMuationObservers);
+            // Capture (and empty) the signal-slots set up front, before
+            // delivering mutation records. Per WHATWG DOM "notify mutation
+            // observers", signalSet is cloned at the start, so slot changes
+            // made during MO callbacks defer to a fresh microtask instead of
+            // coalescing into this one.
+            GCUnorderedSet<HTMLSlotElement*> slotSet;
+            slotSet.swap(self->m_signalSlots);
             for (auto* observer : notifySet) {
                 observer->notify();
+            }
+            // Fire slotchange after mutation observers are notified, within the
+            // same microtask checkpoint (WHATWG DOM "signal a slot change").
+            for (auto* slot : slotSet) {
+                Event* e = new Event(
+                    self->executionContext(),
+                    self->staticStrings()->m_slotchange.localName(),
+                    EventInit(true, false));
+                slot->dispatchEventByUA(e);
             }
         },
         this);

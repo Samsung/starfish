@@ -97,6 +97,8 @@ enum DocumentReadyState ENSURE_ENUM_UNSIGNED {
 
 typedef HTMLScriptElementOrSVGScriptElement HTMLOrSVGScriptElement;
 
+class HTMLSlotElement;
+
 class Document : public Node {
     friend class DOMImplementation;
     friend class Window;
@@ -665,6 +667,10 @@ public:
     bool hasMutationObserversOfType(MutationObserverOptionType type) const;
     bool hasMutationObservers() const;
     void enqueueMutationObserverMicroTask(MutationObserver* observer);
+    void signalSlotChange(HTMLSlotElement* slot);
+    // Schedules the shared microtask that notifies mutation observers and then
+    // fires queued slotchange events. Idempotent (coalesced via a flag).
+    void ensureMutationAndSlotMicrotaskQueued();
 
     void updateObservation();
     void updateIntersectionObservation();
@@ -829,6 +835,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
         markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
+        markHashTable(desc, GC_WORD_OFFSET(Document, m_signalSlots));
 
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_svgPaintClientElements));
 
@@ -913,6 +920,9 @@ protected:
     GCVector<ResizeObserver*> m_resizeObservers;
     MutationObserverOptionType m_mutationTypes;
     GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
+    // Slots queued for a slotchange event, fired from the mutation-observer
+    // microtask checkpoint after observers are notified (WHATWG DOM).
+    GCUnorderedSet<HTMLSlotElement*> m_signalSlots;
 
     GCVector<std::pair<AtomicString, GCVector<SVGElement*>>>
         m_svgPaintClientElements;

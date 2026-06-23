@@ -93,7 +93,10 @@ void ShadowRoot::updateSlotElements(bool shouldConnectSlotWithSlottables)
                 if (iter == m_namedSlotElements.end()) {
                     m_namedSlotElements.insert(std::make_pair(slotName, slot));
                 }
-                slot->clearAssignedNodes();
+                // Assignments are cleared by connectSlotWithSlottables()
+                // below, which also snapshots them first to detect
+                // slotchange. Clearing here would lose that snapshot on the
+                // name=/slot-set-change path.
             }
         });
     } else {
@@ -117,6 +120,20 @@ void ShadowRoot::connectSlotWithSlottables()
     // Elements with slot="name" go to matching named slot; others go to default
     // slot. Text nodes always go to default slot (empty string key).
 
+    // Snapshot each slot's assigned nodes before reassigning so we can detect
+    // changes and "signal a slot change" (WHATWG DOM): slotchange fires only
+    // for slots whose assigned-node list actually changes. Raw Node* live in a
+    // std::vector (not a GC root) only for identity comparison; the nodes stay
+    // reachable through the DOM tree, so none is collected here.
+    std::vector<HTMLSlotElement*> slots;
+    std::vector<std::vector<Node*>> oldAssignedNodes;
+    for (auto iter : m_namedSlotElements) {
+        slots.push_back(iter.second);
+        oldAssignedNodes.push_back(
+            std::vector<Node*>(iter.second->m_assignedNodes.begin(),
+                               iter.second->m_assignedNodes.end()));
+    }
+
     // Clear existing assignments
     for (auto iter : m_namedSlotElements) {
         iter.second->clearAssignedNodes();
@@ -124,7 +141,7 @@ void ShadowRoot::connectSlotWithSlottables()
 
     // Traverse host children and assign to appropriate slots
     Node* node = host()->firstChild();
-    while (node) {
+    while (node != nullptr) {
         if (node->isElement()) {
             auto slotName = node->asElement()->slot();
             // Named slot: element has slot attribute
@@ -144,6 +161,21 @@ void ShadowRoot::connectSlotWithSlottables()
             }
         }
         node = node->nextSibling();
+    }
+
+    // Signal a slot change for each slot whose assignment differs from before.
+    for (size_t i = 0; i < slots.size(); i++) {
+        const std::vector<Node*>& oldNodes = oldAssignedNodes[i];
+        const GCVector<Node*>& newNodes = slots[i]->m_assignedNodes;
+        bool changed = oldNodes.size() != newNodes.size();
+        for (size_t j = 0; !changed && j < oldNodes.size(); j++) {
+            if (oldNodes[j] != newNodes[j]) {
+                changed = true;
+            }
+        }
+        if (changed) {
+            document()->signalSlotChange(slots[i]);
+        }
     }
 }
 
