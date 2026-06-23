@@ -340,27 +340,16 @@ bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
     return true;
 }
 
+#if defined(STARFISH_WEBWORKER_NOT_HOST)
 // Flat-tree parent for event-path computation (WHATWG DOM "get the parent"):
 // a slottable assigned to a slot has that slot as its parent so bubbling events
 // traverse into the slot's tree; a shadow root's parent is its host only for
-// composed events. Closed shadow trees participate (events are not open-flag
-// restricted), so use internalShadowRoot rather than the scriptable getter.
+// composed events. Used only by the flat-tree event path in dispatchEvent.
 static Node* eventFlatTreeParent(Node* node, Event* event)
 {
     if (node->isSlotted()) {
-        Node* parent = node->parentNode();
-        if (parent != nullptr && parent->isElement()) {
-            Optional<ShadowRoot*> sr =
-                parent->asElement()->internalShadowRoot();
-            if (sr) {
-                String* slotName = node->isElement() ? node->asElement()->slot()
-                                                     : String::emptyString;
-                Optional<HTMLSlotElement*> slot = sr.value()->assignedSlot(
-                    slotName->length() ? slotName : String::emptyString);
-                if (slot.hasValue() && slot.value() != nullptr) {
-                    return slot.value();
-                }
-            }
+        if (HTMLSlotElement* slot = node->assignedSlotInternal()) {
+            return slot;
         }
     }
     if (node->isShadowRoot()) {
@@ -368,6 +357,7 @@ static Node* eventFlatTreeParent(Node* node, Event* event)
     }
     return node->parentNode();
 }
+#endif /* defined(STARFISH_WEBWORKER_NOT_HOST) */
 
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
