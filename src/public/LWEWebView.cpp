@@ -29,6 +29,8 @@
 #include "public/delegate/LWEWebViewDelegate.h"
 #endif
 
+#include "APIRecorder.h"
+
 #include <assert.h>
 #include <iostream>
 
@@ -65,6 +67,7 @@ void LWE::SetVersionPreference(bool preferUpdatedVersion)
 
 void LWE::Initialize(const char* storageDirectoryPath)
 {
+    STARFISH_API_RECORD_INIT();
 #ifdef STARFISH_API_ENABLE_LOADER
     if (!LWEDelegateLoader::getInstance()->load()) {
         LWE_ASSERT(false);
@@ -109,6 +112,8 @@ unsigned char LWE::GetGCFrequency()
 
 void LWE::SetGCFrequency(unsigned char freq)
 {
+    STARFISH_API_RECORD_EVENT_FMT("SetGCFrequency", "{\"freq\":%u}",
+                                  (unsigned)freq);
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegateLoader::getSafeInstance()->kLWEProcTable.SetGCFrequency(freq);
 #else
@@ -461,6 +466,7 @@ bool CookieManager::HasCookies()
 
 void CookieManager::ClearCookies()
 {
+    STARFISH_API_RECORD_EVENT("ClearCookies", "{}");
     toImpl<LWEDelegate::CookieManager>(m_delegate.get())->ClearCookies();
 }
 
@@ -534,6 +540,8 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    const char* defaultFontName,
                                    const char* locale, const char* timezoneID)
 {
+    STARFISH_API_RECORD_HEADER(width, height, devicePixelRatio, defaultFontName,
+                               locale, timezoneID);
     WebContainer* instance = new WebContainer();
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
@@ -557,6 +565,9 @@ WebContainer* WebContainer::CreateWithPlatformImage(
     const std::function<ExternalImageInfo(void)>& prepareImageCb,
     const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
 {
+    STARFISH_API_RECORD_HEADER(args.width, args.height, args.devicePixelRatio,
+                               args.defaultFontName, args.locale,
+                               args.timezoneID);
     LWEDelegate::WebContainer::WebContainerArguments arguments{
         args.width,           args.height, args.devicePixelRatio,
         args.defaultFontName, args.locale, args.timezoneID
@@ -595,6 +606,9 @@ WebContainer* WebContainer::CreateWithPlatformImage(
 WebContainer* WebContainer::CreateGL(const WebContainerArguments& args,
                                      const RendererGLConfiguration& config)
 {
+    STARFISH_API_RECORD_HEADER(args.width, args.height, args.devicePixelRatio,
+                               args.defaultFontName, args.locale,
+                               args.timezoneID);
     WebContainer* instance = new WebContainer();
     LWEDelegate::WebContainer::WebContainerArguments arguments{
         args.width,           args.height, args.devicePixelRatio,
@@ -714,6 +728,9 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     const std::function<ExternalImageInfo(void)>& prepareImageCb,
     const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
 {
+    STARFISH_API_RECORD_HEADER(args.width, args.height, args.devicePixelRatio,
+                               args.defaultFontName, args.locale,
+                               args.timezoneID);
     WebContainer* instance = new WebContainer();
 
     LWEDelegate::WebContainer::WebContainerArguments arguments{
@@ -844,6 +861,8 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
                                            const char* locale,
                                            const char* timezoneID)
 {
+    STARFISH_API_RECORD_HEADER(width, height, devicePixelRatio, defaultFontName,
+                               locale, timezoneID);
     WebContainer* instance = new WebContainer();
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebContainer*>(
@@ -961,6 +980,7 @@ Settings WebContainer::GetSettings()
 
 void WebContainer::LoadURL(const std::string& url)
 {
+    STARFISH_API_RECORD_EVENT_STR("LoadURL", "url", url);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->LoadURL(url);
 }
 
@@ -971,26 +991,31 @@ std::string WebContainer::GetURL()
 
 void WebContainer::LoadData(const std::string& data)
 {
+    STARFISH_API_RECORD_EVENT_STR("LoadData", "data", data);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->LoadData(data);
 }
 
 void WebContainer::Reload()
 {
+    STARFISH_API_RECORD_EVENT("Reload", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Reload();
 }
 
 void WebContainer::StopLoading()
 {
+    STARFISH_API_RECORD_EVENT("StopLoading", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->StopLoading();
 }
 
 void WebContainer::GoBack()
 {
+    STARFISH_API_RECORD_EVENT("GoBack", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GoBack();
 }
 
 void WebContainer::GoForward()
 {
+    STARFISH_API_RECORD_EVENT("GoForward", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->GoForward();
 }
 
@@ -1008,12 +1033,19 @@ void WebContainer::AddJavaScriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName,
     std::function<std::string(const std::string&)> cb)
 {
+    // The native callback cannot be serialized; only the registered names are
+    // recorded. Replay registers an echo stub so the JS object/function still
+    // exists (return values will not match the original handler).
+    STARFISH_API_RECORD_EVENT_STR2("AddJavaScriptInterface", "object",
+                                   exposedObjectName, "function",
+                                   jsFunctionName);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->AddJavaScriptInterface(exposedObjectName, jsFunctionName, cb);
 }
 
 std::string WebContainer::EvaluateJavaScript(const std::string& script)
 {
+    STARFISH_API_RECORD_EVENT_STR("EvaluateJavaScript", "script", script);
     return toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->EvaluateJavaScript(script);
 }
@@ -1021,12 +1053,14 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
 void WebContainer::EvaluateJavaScript(
     const std::string& script, std::function<void(const std::string&)> cb)
 {
+    STARFISH_API_RECORD_EVENT_STR("EvaluateJavaScript", "script", script);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->EvaluateJavaScript(script, cb);
 }
 
 void WebContainer::ClearHistory()
 {
+    STARFISH_API_RECORD_EVENT("ClearHistory", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ClearHistory();
 }
 
@@ -1039,32 +1073,56 @@ void WebContainer::Destroy()
 
 void WebContainer::Pause()
 {
+    STARFISH_API_RECORD_EVENT("Pause", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Pause();
 }
 
 void WebContainer::Resume()
 {
+    STARFISH_API_RECORD_EVENT("Resume", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Resume();
 }
 
 void WebContainer::ResizeTo(size_t width, size_t height)
 {
+    STARFISH_API_RECORD_EVENT_FMT("ResizeTo", "{\"w\":%zu,\"h\":%zu}", width,
+                                  height);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->ResizeTo(width, height);
 }
 
 void WebContainer::Focus()
 {
+    STARFISH_API_RECORD_EVENT("Focus", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Focus();
 }
 
 void WebContainer::Blur()
 {
+    STARFISH_API_RECORD_EVENT("Blur", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->Blur();
 }
 
 void WebContainer::SetSettings(const Settings& settings)
 {
+#if defined(STARFISH_ENABLE_TEST)
+    if (LWERecord::APIRecorder::instance().isRecording()) {
+        // Serialize all key/value settings into a single JSON object.
+        std::string args = "{";
+        bool first = true;
+        settings.IterateSettings(
+            [&args, &first](const std::string& key, const std::string& value) {
+                if (!first)
+                    args += ",";
+                first = false;
+                args += "\"" + LWERecord::escapeJsonString(key) + "\":\"" +
+                        LWERecord::escapeJsonString(value) + "\"";
+            });
+        args += "}";
+        LWERecord::APIRecorder::instance().recordEvent("SetSettings",
+                                                       args.c_str());
+    }
+#endif
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
         LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.CreateEmpty());
@@ -1082,12 +1140,16 @@ void WebContainer::SetSettings(const Settings& settings)
 void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
+    STARFISH_API_RECORD_EVENT_STR2("RemoveJavascriptInterface", "object",
+                                   exposedObjectName, "function",
+                                   jsFunctionName);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->RemoveJavascriptInterface(exposedObjectName, jsFunctionName);
 }
 
 void WebContainer::ClearCache()
 {
+    STARFISH_API_RECORD_EVENT("ClearCache", "{}");
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ClearCache();
 }
 
@@ -1283,6 +1345,7 @@ void WebContainer::CallHandler(const std::string& handler, void* param)
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
+    STARFISH_API_RECORD_EVENT_STR("SetUserAgentString", "ua", userAgent);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->SetUserAgentString(userAgent);
 }
@@ -1295,6 +1358,7 @@ std::string WebContainer::GetUserAgentString()
 
 void WebContainer::SetCacheMode(int mode)
 {
+    STARFISH_API_RECORD_EVENT_FMT("SetCacheMode", "{\"mode\":%d}", mode);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->SetCacheMode(mode);
 }
 
@@ -1305,6 +1369,7 @@ int WebContainer::GetCacheMode()
 
 void WebContainer::SetDefaultFontSize(uint32_t size)
 {
+    STARFISH_API_RECORD_EVENT_FMT("SetDefaultFontSize", "{\"size\":%u}", size);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->SetDefaultFontSize(size);
 }
@@ -1319,6 +1384,10 @@ void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
                                           double y)
 {
+    STARFISH_API_RECORD_EVENT_FMT(
+        "DispatchMouseMoveEvent",
+        "{\"button\":%d,\"buttons\":%d,\"x\":%.1f,\"y\":%.1f}", (int)button,
+        (int)buttons, x, y);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchMouseMoveEvent(button, buttons, x, y);
 }
@@ -1327,6 +1396,10 @@ void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
                                           double y)
 {
+    STARFISH_API_RECORD_EVENT_FMT(
+        "DispatchMouseDownEvent",
+        "{\"button\":%d,\"buttons\":%d,\"x\":%.1f,\"y\":%.1f}", (int)button,
+        (int)buttons, x, y);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchMouseDownEvent(button, buttons, x, y);
 }
@@ -1335,30 +1408,43 @@ void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
                                         MouseButtonsValue buttons, double x,
                                         double y)
 {
+    STARFISH_API_RECORD_EVENT_FMT(
+        "DispatchMouseUpEvent",
+        "{\"button\":%d,\"buttons\":%d,\"x\":%.1f,\"y\":%.1f}", (int)button,
+        (int)buttons, x, y);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchMouseUpEvent(button, buttons, x, y);
 }
 
 void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
 {
+    STARFISH_API_RECORD_EVENT_FMT("DispatchMouseWheelEvent",
+                                  "{\"x\":%.1f,\"y\":%.1f,\"delta\":%d}", x, y,
+                                  delta);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchMouseWheelEvent(x, y, delta);
 }
 
 void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
 {
+    STARFISH_API_RECORD_EVENT_FMT("DispatchKeyDownEvent", "{\"key\":%d}",
+                                  (int)keyCode);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchKeyDownEvent(keyCode);
 }
 
 void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
 {
+    STARFISH_API_RECORD_EVENT_FMT("DispatchKeyPressEvent", "{\"key\":%d}",
+                                  (int)keyCode);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchKeyPressEvent(keyCode);
 }
 
 void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
 {
+    STARFISH_API_RECORD_EVENT_FMT("DispatchKeyUpEvent", "{\"key\":%d}",
+                                  (int)keyCode);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchKeyUpEvent(keyCode);
 }
@@ -1366,6 +1452,8 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
 void WebContainer::DispatchCompositionStartEvent(
     const std::string& currentCompositionString)
 {
+    STARFISH_API_RECORD_EVENT_STR("DispatchCompositionStartEvent", "text",
+                                  currentCompositionString);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchCompositionStartEvent(currentCompositionString);
 }
@@ -1373,6 +1461,8 @@ void WebContainer::DispatchCompositionStartEvent(
 void WebContainer::DispatchCompositionUpdateEvent(
     const std::string& currentCompositionString)
 {
+    STARFISH_API_RECORD_EVENT_STR("DispatchCompositionUpdateEvent", "text",
+                                  currentCompositionString);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchCompositionUpdateEvent(currentCompositionString);
 }
@@ -1380,6 +1470,8 @@ void WebContainer::DispatchCompositionUpdateEvent(
 void WebContainer::DispatchCompositionEndEvent(
     const std::string& currentCompositionString)
 {
+    STARFISH_API_RECORD_EVENT_STR("DispatchCompositionEndEvent", "text",
+                                  currentCompositionString);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->DispatchCompositionEndEvent(currentCompositionString);
 }
@@ -1428,11 +1520,13 @@ std::string WebContainer::GetTitle()
 
 void WebContainer::ScrollTo(int x, int y)
 {
+    STARFISH_API_RECORD_EVENT_FMT("ScrollTo", "{\"x\":%d,\"y\":%d}", x, y);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ScrollTo(x, y);
 }
 
 void WebContainer::ScrollBy(int x, int y)
 {
+    STARFISH_API_RECORD_EVENT_FMT("ScrollBy", "{\"x\":%d,\"y\":%d}", x, y);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())->ScrollBy(x, y);
 }
 
@@ -1473,6 +1567,7 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
 
 void WebContainer::SetDevicePixelRatio(float dpr)
 {
+    STARFISH_API_RECORD_EVENT_FMT("SetDevicePixelRatio", "{\"dpr\":%.3f}", dpr);
     toImpl<LWEDelegate::WebContainer>(m_delegate.get())
         ->SetDevicePixelRatio(dpr);
 }
@@ -1506,6 +1601,8 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          const char* defaultFontName, const char* locale,
                          const char* timezoneID)
 {
+    STARFISH_API_RECORD_HEADER(width, height, devicePixelRatio, defaultFontName,
+                               locale, timezoneID);
 #ifdef STARFISH_API_ENABLE_LOADER
     auto delegate = reinterpret_cast<LWEDelegate::WebView*>(
         LWEDelegateLoader::getSafeInstance()->kWebViewProcTable.Create(
@@ -1549,6 +1646,7 @@ Settings WebView::GetSettings()
 
 void WebView::LoadURL(const std::string& url)
 {
+    STARFISH_API_RECORD_EVENT_STR("LoadURL", "url", url);
     toImpl<LWEDelegate::WebView>(m_delegate.get())->LoadURL(url);
 }
 
@@ -1559,26 +1657,31 @@ std::string WebView::GetURL()
 
 void WebView::LoadData(const std::string& data)
 {
+    STARFISH_API_RECORD_EVENT_STR("LoadData", "data", data);
     toImpl<LWEDelegate::WebView>(m_delegate.get())->LoadData(data);
 }
 
 void WebView::Reload()
 {
+    STARFISH_API_RECORD_EVENT("Reload", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->Reload();
 }
 
 void WebView::StopLoading()
 {
+    STARFISH_API_RECORD_EVENT("StopLoading", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->StopLoading();
 }
 
 void WebView::GoBack()
 {
+    STARFISH_API_RECORD_EVENT("GoBack", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->GoBack();
 }
 
 void WebView::GoForward()
 {
+    STARFISH_API_RECORD_EVENT("GoForward", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->GoForward();
 }
 
@@ -1596,12 +1699,16 @@ void WebView::AddJavaScriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName,
     std::function<std::string(const std::string&)> cb)
 {
+    STARFISH_API_RECORD_EVENT_STR2("AddJavaScriptInterface", "object",
+                                   exposedObjectName, "function",
+                                   jsFunctionName);
     toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->AddJavaScriptInterface(exposedObjectName, jsFunctionName, cb);
 }
 
 std::string WebView::EvaluateJavaScript(const std::string& script)
 {
+    STARFISH_API_RECORD_EVENT_STR("EvaluateJavaScript", "script", script);
     return toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->EvaluateJavaScript(script);
 }
@@ -1609,12 +1716,14 @@ std::string WebView::EvaluateJavaScript(const std::string& script)
 void WebView::EvaluateJavaScript(const std::string& script,
                                  std::function<void(const std::string&)> cb)
 {
+    STARFISH_API_RECORD_EVENT_STR("EvaluateJavaScript", "script", script);
     return toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->EvaluateJavaScript(script, cb);
 }
 
 void WebView::ClearHistory()
 {
+    STARFISH_API_RECORD_EVENT("ClearHistory", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->ClearHistory();
 }
 
@@ -1627,6 +1736,23 @@ void WebView::Destroy()
 
 void WebView::SetSettings(const Settings& settings)
 {
+#if defined(STARFISH_ENABLE_TEST)
+    if (LWERecord::APIRecorder::instance().isRecording()) {
+        std::string args = "{";
+        bool first = true;
+        settings.IterateSettings(
+            [&args, &first](const std::string& key, const std::string& value) {
+                if (!first)
+                    args += ",";
+                first = false;
+                args += "\"" + LWERecord::escapeJsonString(key) + "\":\"" +
+                        LWERecord::escapeJsonString(value) + "\"";
+            });
+        args += "}";
+        LWERecord::APIRecorder::instance().recordEvent("SetSettings",
+                                                       args.c_str());
+    }
+#endif
 #ifdef STARFISH_API_ENABLE_LOADER
     LWEDelegate::Settings* delegate = reinterpret_cast<LWEDelegate::Settings*>(
         LWEDelegateLoader::getSafeInstance()->kSettingsProcTable.CreateEmpty());
@@ -1644,12 +1770,16 @@ void WebView::SetSettings(const Settings& settings)
 void WebView::RemoveJavascriptInterface(const std::string& exposedObjectName,
                                         const std::string& jsFunctionName)
 {
+    STARFISH_API_RECORD_EVENT_STR2("RemoveJavascriptInterface", "object",
+                                   exposedObjectName, "function",
+                                   jsFunctionName);
     toImpl<LWEDelegate::WebView>(m_delegate.get())
         ->RemoveJavascriptInterface(exposedObjectName, jsFunctionName);
 }
 
 void WebView::ClearCache()
 {
+    STARFISH_API_RECORD_EVENT("ClearCache", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->ClearCache();
 }
 
@@ -1711,11 +1841,13 @@ void WebView::RegisterOnLoadResourceHandler(
 
 void WebView::Pause()
 {
+    STARFISH_API_RECORD_EVENT("Pause", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->Pause();
 }
 
 void WebView::Resume()
 {
+    STARFISH_API_RECORD_EVENT("Resume", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->Resume();
 }
 
@@ -1764,11 +1896,13 @@ std::string WebView::GetTitle()
 
 void WebView::ScrollTo(int x, int y)
 {
+    STARFISH_API_RECORD_EVENT_FMT("ScrollTo", "{\"x\":%d,\"y\":%d}", x, y);
     toImpl<LWEDelegate::WebView>(m_delegate.get())->ScrollTo(x, y);
 }
 
 void WebView::ScrollBy(int x, int y)
 {
+    STARFISH_API_RECORD_EVENT_FMT("ScrollBy", "{\"x\":%d,\"y\":%d}", x, y);
     toImpl<LWEDelegate::WebView>(m_delegate.get())->ScrollBy(x, y);
 }
 
@@ -1789,16 +1923,19 @@ void* WebView::Unwrap()
 
 void WebView::Focus()
 {
+    STARFISH_API_RECORD_EVENT("Focus", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->Focus();
 }
 
 void WebView::Blur()
 {
+    STARFISH_API_RECORD_EVENT("Blur", "{}");
     toImpl<LWEDelegate::WebView>(m_delegate.get())->Blur();
 }
 
 void WebView::SetDevicePixelRatio(float dpr)
 {
+    STARFISH_API_RECORD_EVENT_FMT("SetDevicePixelRatio", "{\"dpr\":%.3f}", dpr);
     toImpl<LWEDelegate::WebView>(m_delegate.get())->SetDevicePixelRatio(dpr);
 }
 

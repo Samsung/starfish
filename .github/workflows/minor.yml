@@ -123,6 +123,79 @@ jobs:
             ninja starfish.executable
             ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console || exit 1
 
+  test_api_record_replay:
+    runs-on: [ code-linux, code-2xlarge ]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: true
+          repository: mh-byun/starfish_window_build
+          ref: ${{ inputs.pr_number }}
+      - name: Clean workspace
+        run: git clean -xdf
+      - name: Build (glib_headless + ENABLE_TEST)
+        run: |
+            cmake CMakeLists.txt \
+              -DMODE=debug -DBACKEND=glib_headless -DSHELL=glib_headless \
+              -DDOCKER=1 -DENABLE_TEST=1 -G Ninja
+            ninja starfish.executable
+
+      - name: Unit tests (Google Test — APIRecorderTest + APIReplayerParserTest)
+        run: |
+            ./Starfish unit-test || exit 1
+
+      - name: Integration — env var recording
+        run: |
+            rm -f /tmp/repro.jsonl
+            STARFISH_API_RECORD=/tmp/repro.jsonl \
+              ./Starfish about:blank --disable-console --timeout=3 || exit 1
+            test -s /tmp/repro.jsonl \
+              || (echo "ERROR: recording file not created" && exit 1)
+            grep -q '"type":"header"' /tmp/repro.jsonl \
+              || (echo "ERROR: header event missing" && exit 1)
+            grep -q '"type":"LoadURL"' /tmp/repro.jsonl \
+              || (echo "ERROR: LoadURL event missing" && exit 1)
+            echo "Recording OK — $(wc -l < /tmp/repro.jsonl) events"
+
+      - name: Integration — file trigger recording
+        run: |
+            rm -f /tmp/repro_trigger.jsonl /tmp/starfish_api_record
+            echo "/tmp/repro_trigger.jsonl" > /tmp/starfish_api_record
+            ./Starfish about:blank --disable-console --timeout=3 || exit 1
+            rm -f /tmp/starfish_api_record
+            test -s /tmp/repro_trigger.jsonl \
+              || (echo "ERROR: trigger recording file not created" && exit 1)
+            echo "File-trigger recording OK"
+
+      - name: Integration — no-permission trigger file does not crash
+        run: |
+            rm -f /tmp/starfish_api_record
+            # Non-existent trigger — must not crash
+            ./Starfish about:blank --disable-console --timeout=2 || exit 1
+            # Unreadable trigger file — must not crash
+            echo "/tmp/repro_noperm.jsonl" > /tmp/starfish_api_record
+            chmod 000 /tmp/starfish_api_record
+            ./Starfish about:blank --disable-console --timeout=2 || exit 1
+            chmod 644 /tmp/starfish_api_record
+            rm -f /tmp/starfish_api_record
+            echo "No-permission graceful handling OK"
+
+      - name: Integration — replay subcommand
+        run: |
+            STARFISH_API_RECORD=/tmp/repro_replay.jsonl \
+              ./Starfish about:blank --disable-console --timeout=3 || exit 1
+            ./Starfish replay /tmp/repro_replay.jsonl --timeout=5 || exit 1
+            echo "Replay OK"
+
   cross_aarch64_x11_glib_cairo_gl:
     runs-on:  [ code-linux, code-2xlarge ]
     container:

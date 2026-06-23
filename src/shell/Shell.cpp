@@ -24,6 +24,9 @@
 #include "LWEWebView.h"
 #include "MiniBrowser.h"
 #include "UnitTestRunner.h"
+#if defined(STARFISH_ENABLE_TEST)
+#include "APIReplayer.h"
+#endif
 
 #if defined(SHELL_ENABLE_BACKTRACE)
 #include <execinfo.h>
@@ -81,6 +84,11 @@ int Shell::run(int argc, char* argv[])
     } else if (argv1 == "create-destroy-test") {
         // Usage: ./Starfish create-destroy-test {repeat-count} {interval} {URL}
         return runCreateDestroyTest(argc, argv);
+#if defined(STARFISH_ENABLE_TEST)
+    } else if (argv1 == "replay") {
+        // Usage: ./Starfish replay <recording.jsonl> [--speed=<factor>]
+        return runReplay(argc, argv);
+#endif
     } else {
         return runMiniBrowser(argc, argv);
     }
@@ -286,6 +294,52 @@ int Shell::getExitCode()
     }
     return exitCode;
 }
+
+#if defined(STARFISH_ENABLE_TEST)
+int Shell::runReplay(int argc, char* argv[])
+{
+    // Usage: ./Starfish replay <recording.jsonl> [--speed=<factor>]
+    // [MiniBrowser options...]
+    if (argc < 3) {
+        printf(
+            "Usage: ./Starfish replay <recording.jsonl> "
+            "[--speed=<factor>] [--timeout=<sec>] ...\n");
+        return false;
+    }
+
+    float speedFactor = 1.0f;
+    std::vector<const char*> extraArgs;
+
+    for (int i = 3; i < argc; i++) {
+        if (strstr(argv[i], "--speed=") == argv[i])
+            speedFactor = std::atof(argv[i] + strlen("--speed="));
+        else
+            extraArgs.push_back(
+                argv[i]); // forward to MiniBrowser (e.g. --timeout=)
+    }
+
+    // Pass the recording path via env var so MiniBrowser::createLWE can pick
+    // it up after the WebContainer is ready.
+    setenv("STARFISH_API_REPLAY", argv[2], 1);
+
+    char speedBuf[32];
+    snprintf(speedBuf, sizeof(speedBuf), "%.6f", (double)speedFactor);
+    setenv("STARFISH_API_REPLAY_SPEED", speedBuf, 1);
+
+    // Use about:blank as the initial URL; the replay will issue LoadURL itself.
+    std::vector<const char*> replayArgv;
+    replayArgv.push_back(argv[0]);
+    replayArgv.push_back("about:blank");
+    replayArgv.push_back("--disable-console");
+    for (const char* arg : extraArgs)
+        replayArgv.push_back(arg);
+    replayArgv.push_back(nullptr);
+
+    return runMiniBrowser((int)replayArgv.size() - 1,
+                          const_cast<char**>(replayArgv.data()));
+}
+#endif
+
 } // namespace StarfishShell
 
 using namespace StarfishShell;
