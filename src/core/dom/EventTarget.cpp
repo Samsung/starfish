@@ -353,9 +353,8 @@ static Node* eventFlatTreeParent(Node* node, Event* event)
             Optional<ShadowRoot*> sr =
                 parent->asElement()->internalShadowRoot();
             if (sr) {
-                String* slotName = node->isElement()
-                                       ? node->asElement()->slot()
-                                       : String::emptyString;
+                String* slotName = node->isElement() ? node->asElement()->slot()
+                                                     : String::emptyString;
                 Optional<HTMLSlotElement*> slot = sr.value()->assignedSlot(
                     slotName->length() ? slotName : String::emptyString);
                 if (slot.hasValue() && slot.value() != nullptr) {
