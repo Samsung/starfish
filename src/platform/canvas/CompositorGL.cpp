@@ -3525,6 +3525,7 @@ public:
         webView->renderer()->makeCurrent();
 
         m_seenFBOUsage = false;
+        m_pendingClear = false;
         m_webView = webView;
         m_globalScale = m_webView->glCompositorScale();
         m_screenWidth = m_webView->renderer()->width();
@@ -3537,6 +3538,7 @@ public:
         setViewport();
 
         gl()->disable(GL_CULL_FACE);
+        gl()->disable(GL_DEPTH_TEST);
 
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
@@ -3553,6 +3555,10 @@ public:
 
     ~CompositorImplGL()
     {
+        // Commit any clear that was deferred and never overwritten (e.g. a
+        // blank frame), so the screen is still cleared at pass end.
+        flushPendingClear();
+
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
         STARFISH_ASSERT(m_fboState.size() == 0);
@@ -3570,9 +3576,39 @@ public:
 
     virtual void clearColor(const Unit::Color& clr) override
     {
-        // LongTaskFinder p("CompositorImplGL::clearColor", 1);
-        gl()->clearColor(clr.R(), clr.G(), clr.B(), clr.A());
+        // A clear targeting a bound FBO must happen now (deferral only applies
+        // to the default framebuffer).
+        if (m_fboState.size() != 0) {
+            gl()->clearColor(clr.R(), clr.G(), clr.B(), clr.A());
+            gl()->clear(GL_COLOR_BUFFER_BIT);
+            return;
+        }
+        // Defer the clear. A later clearColor supersedes a pending one, and a
+        // following full-screen Normal(SrcOver) drawRect folds into it (its
+        // result is a constant color) instead of being drawn (a leading clear
+        // before a full cover is not free, and skipping it has no load-op
+        // penalty).
+        m_pendingClear = true;
+        m_pendingClearColor = clr;
+    }
+
+    void emitPendingClear()
+    {
+        gl()->clearColor(m_pendingClearColor.R(), m_pendingClearColor.G(),
+                         m_pendingClearColor.B(), m_pendingClearColor.A());
         gl()->clear(GL_COLOR_BUFFER_BIT);
+        m_pendingClear = false;
+    }
+
+    // Commit a pending clear before an op that does not provably overwrite it.
+    // Only acts on the default framebuffer (m_pendingClear is screen-only); a
+    // pending clear is left untouched while an FBO is bound and committed by
+    // the next screen op.
+    void flushPendingClear()
+    {
+        if (m_pendingClear && m_fboState.size() == 0) {
+            emitPendingClear();
+        }
     }
 
     // state
@@ -3801,6 +3837,52 @@ public:
             Unit::Rect drawRect = lastState.clipRect;
             drawRect.intersect(toRect(dest));
 
+            // Lazy clear: if this rect fully covers the screen with a Normal
+            // (SrcOver) fill, the whole framebuffer becomes a constant, so fold
+            // the fill into the deferred clear color and skip the draw entirely
+            // (opaque is just the a==1 case). Otherwise commit the clear first.
+            // drawRect is already in logical screen coords and clipped to
+            // clipRect, which starts as the full logical viewport
+            // (0,0,screenWidth,screenHeight). The screen matrix maps that whole
+            // viewport onto the whole framebuffer, so covering it in logical
+            // space == covering the device framebuffer regardless of screen
+            // rotation/scale — no need to map through the screen matrix.
+            if (m_pendingClear && m_fboState.size() == 0) {
+                const float eps = 0.5f; // absorb sub-pixel rounding
+                bool fullCover =
+                    drawRect.x() <= eps && drawRect.y() <= eps &&
+                    drawRect.maxX() >= (float)screenWidth() - eps &&
+                    drawRect.maxY() >= (float)screenHeight() - eps;
+                if (fullCover && lastState.blendMode == BlendMode::Normal) {
+                    // Premultiplied SrcOver (GL_ONE, GL_ONE_MINUS_SRC_ALPHA),
+                    // src = opacity * color (matches the rect shader uniform):
+                    //   out = opacity*color + clear*(1 - opacity*color.a)
+                    // Round each fold to 8-bit to match the GPU's per-op write.
+                    double op = lastState.opacity;
+                    double sa = op * currentColor.A();
+                    double inv = 1.0 - sa;
+                    auto q = [](double v) -> unsigned char {
+                        v = v * 255.0 + 0.5;
+                        if (v < 0.0)
+                            v = 0.0;
+                        if (v > 255.0)
+                            v = 255.0;
+                        return (unsigned char)v;
+                    };
+                    m_pendingClearColor =
+                        Unit::Color(q(op * currentColor.R() +
+                                      m_pendingClearColor.R() * inv),
+                                    q(op * currentColor.G() +
+                                      m_pendingClearColor.G() * inv),
+                                    q(op * currentColor.B() +
+                                      m_pendingClearColor.B() * inv),
+                                    q(op * currentColor.A() +
+                                      m_pendingClearColor.A() * inv));
+                    return; // fill absorbed into the deferred clear
+                }
+                emitPendingClear();
+            }
+
             float minX = drawRect.x();
             float minY = drawRect.y();
             float maxX = drawRect.maxX();
@@ -3831,6 +3913,7 @@ public:
             checkError(gl());
             setBlendEnabled(true);
         } else {
+            flushPendingClear(); // clipped/transformed: cannot prove full cover
             auto result = computeClippath(dest);
             if (result.size()) {
                 if (lastState.matrixStaysInRect &&
@@ -4712,6 +4795,10 @@ public:
             return;
         }
 
+        // A textured blit cannot be proven to opaquely cover the screen, so
+        // commit any deferred clear before it.
+        flushPendingClear();
+
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
@@ -5430,6 +5517,13 @@ protected:
     Clipper2Lib::PathD m_abbreviatedPath;
     std::vector<CompositorImplGLState::PathCommand> m_pathCommands;
     SkMatrix m_screenMatrix;
+
+    // Lazy full-screen clear: clearColor() defers the glClear; it is dropped if
+    // the next screen op is a full-screen opaque rect that fully covers it
+    // (the clear would be redundant), otherwise flushed before that op. Only
+    // ever a default-framebuffer clear (FBO clears use gl()->clear directly).
+    bool m_pendingClear;
+    Unit::Color m_pendingClearColor;
 };
 
 Compositor* CompositorFactory::create3dGl(WebView* webView,
