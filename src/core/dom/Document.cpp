@@ -2616,10 +2616,10 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
             // Fire slotchange after mutation observers are notified, within the
             // same microtask checkpoint (WHATWG DOM "signal a slot change").
             for (auto* slot : slotSet) {
-                Event* e = new Event(
-                    self->executionContext(),
-                    self->staticStrings()->m_slotchange.localName(),
-                    EventInit(true, false));
+                Event* e =
+                    new Event(self->executionContext(),
+                              self->staticStrings()->m_slotchange.localName(),
+                              EventInit(true, false));
                 slot->dispatchEventByUA(e);
             }
         },
