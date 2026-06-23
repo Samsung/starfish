@@ -520,37 +520,50 @@ Node* Node::getRootNode(GetRootNodeOptions options)
     }
 }
 
+HTMLSlotElement* Node::assignedSlotInternal() const
+{
+    // "find a slot" for this node, closed-shadow aware via internalShadowRoot
+    // (not subject to the scriptable assignedSlot's open-flag restriction).
+    // Only elements and text are slottable; an element uses its slot= name (or
+    // the default slot), text always uses the default slot.
+    Node* nd = parentNode();
+    if (!nd || !nd->isElement()) {
+        return nullptr;
+    }
+    Optional<ShadowRoot*> sr = nd->asElement()->internalShadowRoot();
+    if (!sr) {
+        return nullptr;
+    }
+    String* slotName;
+    if (isElement()) {
+        slotName = asElement()->slot();
+        if (!slotName->length()) {
+            slotName = String::emptyString;
+        }
+    } else if (isText()) {
+        slotName = String::emptyString;
+    } else {
+        return nullptr;
+    }
+    Optional<HTMLSlotElement*> slot = sr.value()->assignedSlot(slotName);
+    if (slot.hasValue() && slot.value()) {
+        return slot.value();
+    }
+    return nullptr;
+}
+
 Node* Node::renderingParentNode() const
 {
     // Returns the parent node in rendering tree, considering shadow DOM slot
     // assignment. If parent has shadow root and this node is assigned to a
     // slot, returns slot's parent.
 
-    auto nd = parentNode();
-
-    // Handle shadow DOM: find assigned slot if parent has shadow root
-    if (nd && nd->isElement()) {
-        Element* e = nd->asElement();
-        auto sr = e->internalShadowRoot();
-        if (sr) {
-            Optional<HTMLSlotElement*> slotElement;
-            if (isElement()) {
-                // Element with slot attribute -> named slot, otherwise ->
-                // default slot
-                String* slotName = asElement()->slot();
-                slotElement = sr->assignedSlot(
-                    slotName->length() ? slotName : String::emptyString);
-            } else if (isText()) {
-                // Text nodes always go to default slot
-                slotElement = sr->assignedSlot(String::emptyString);
-            }
-            if (slotElement.hasValue() && slotElement.value()) {
-                return slotElement.value()->renderingParentNode();
-            }
-        }
+    if (HTMLSlotElement* slot = assignedSlotInternal()) {
+        return slot->renderingParentNode();
     }
 
     // Shadow root boundary: return host element
+    Node* nd = parentNode();
     if (UNLIKELY(nd && nd->isShadowRoot())) {
         return nd->asShadowRoot()->host();
     }

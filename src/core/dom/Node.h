@@ -36,6 +36,7 @@ class Element;
 class Frame;
 class HTMLCollection;
 class HTMLCustomElement;
+class HTMLSlotElement;
 class HTMLFormControl;
 class HTMLTextEditable;
 class HTMLListContainer;
@@ -297,6 +298,10 @@ public:
     Node* getRootNode(GetRootNodeOptions options);
 
     Node* renderingParentNode() const;
+    // The slot this node is assigned to (flat-tree / "find a slot"), or null.
+    // Closed-shadow aware (uses internalShadowRoot); only elements and text are
+    // slottable. Shared by rendering and event-path traversal.
+    HTMLSlotElement* assignedSlotInternal() const;
     Node* parentNode() const
     {
         return m_parentNode;

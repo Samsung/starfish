@@ -2680,8 +2680,8 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
             // observers", signalSet is cloned at the start, so slot changes
             // made during MO callbacks defer to a fresh microtask instead of
             // coalescing into this one.
-            GCVector<HTMLSlotElement*> slotSet = self->m_signalSlots;
-            GCVector<HTMLSlotElement*>().swap(self->m_signalSlots);
+            GCVector<HTMLSlotElement*> slotSet;
+            slotSet.swap(self->m_signalSlots);
             for (auto* observer : notifySet) {
                 observer->notify();
             }
