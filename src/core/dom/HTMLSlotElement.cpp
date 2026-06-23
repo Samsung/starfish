@@ -76,6 +76,37 @@ void HTMLSlotElement::didAttributeChanged(QualifiedName name,
     }
 }
 
+void HTMLSlotElement::signalSlotChangeForFallbackMutation()
+{
+    // WHATWG DOM "insert"/"remove": when a node is inserted into or removed
+    // from a slot whose assigned nodes is empty, signal a slot change for the
+    // slot (it is rendering its fallback content). Ancestor slots showing
+    // fallback are reached by slotchange bubbling, so only the directly mutated
+    // slot is signaled here.
+    if (!isInShadowRoot() || immutableAssignedNodes().size()) {
+        return;
+    }
+    document()->signalSlotChange(this);
+}
+
+void HTMLSlotElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    // The insertion dispatch walks this up the ancestor chain with parent fixed
+    // to the insertion point; act only on a direct child insertion into this.
+    if (parent == this) {
+        signalSlotChangeForFallbackMutation();
+    }
+}
+
+void HTMLSlotElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    HTMLElement::didNodeRemoved(parent, oldChild);
+    if (parent == this) {
+        signalSlotChangeForFallbackMutation();
+    }
+}
+
 GCVector<Node*> HTMLSlotElement::assignedNodes(
     Optional<AssignedNodesOptions> options)
 {

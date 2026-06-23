@@ -55,6 +55,9 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+
     virtual void didNodeRemovedFromDocumentTree() override
     {
         m_assignedNodes.clear();
@@ -77,6 +80,10 @@ public:
         Optional<AssignedNodesOptions> options = nullptr);
 
 private:
+    // Signal slotchange after this slot's fallback content (its own children)
+    // is mutated while it has no assigned nodes. See .cpp for spec rationale.
+    void signalSlotChangeForFallbackMutation();
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         HTMLElement::fillGCDescriptor(desc);
