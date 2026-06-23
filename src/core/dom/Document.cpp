@@ -902,7 +902,7 @@ void Document::dispose()
 
     m_isMutationObserverMicroTaskQueued = false;
     GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
-    GCUnorderedSet<HTMLSlotElement*>().swap(m_signalSlots);
+    m_signalSlots.clear();
 }
 
 void Document::onIdle()
@@ -2650,10 +2650,14 @@ void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 
 void Document::signalSlotChange(HTMLSlotElement* slot)
 {
-    // WHATWG DOM "signal a slot change": queue the slot for a slotchange event
-    // and schedule the microtask. The event fires from the same checkpoint,
-    // after mutation observers are notified.
-    m_signalSlots.insert(slot);
+    // WHATWG DOM "signal a slot change": append the slot to the signal slots
+    // (ordered + deduped) and schedule the microtask. It fires from the same
+    // checkpoint, after mutation observers are notified; order matters because
+    // slotchange dispatch order is observable for nested slots.
+    if (std::find(m_signalSlots.begin(), m_signalSlots.end(), slot) ==
+        m_signalSlots.end()) {
+        m_signalSlots.push_back(slot);
+    }
     ensureMutationAndSlotMicrotaskQueued();
 }
 
@@ -2676,8 +2680,8 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
             // observers", signalSet is cloned at the start, so slot changes
             // made during MO callbacks defer to a fresh microtask instead of
             // coalescing into this one.
-            GCUnorderedSet<HTMLSlotElement*> slotSet;
-            slotSet.swap(self->m_signalSlots);
+            GCVector<HTMLSlotElement*> slotSet = self->m_signalSlots;
+            self->m_signalSlots.clear();
             for (auto* observer : notifySet) {
                 observer->notify();
             }

@@ -67,7 +67,7 @@ http://web-platform.test:8000/shadow-dom/Range-prototype-insertNode.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/ShadowRoot-interface.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/shadow-style-invalidation-vw-units.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slotchange-customelements.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slotchange-event.html
+http://web-platform.test:8000/shadow-dom/slotchange-event.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slotchange.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-crash.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-dir-attach-child-details-crash.html
