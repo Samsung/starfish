@@ -39,6 +39,9 @@ private:
     int runMiniBrowser(int argc, char* argv[]);
     int runUnitTest(int argc, char* argv[]);
     int runCreateDestroyTest(int argc, char* argv[]);
+#if defined(STARFISH_ENABLE_TEST)
+    int runReplay(int argc, char* argv[]);
+#endif
 
 #if defined(SHELL_ENABLE_BACKTRACE)
     void setBacktraceHandler();

@@ -23,6 +23,9 @@
 #include "Window.h"
 
 #include "Console.h"
+#if defined(STARFISH_ENABLE_TEST)
+#include "APIReplayer.h"
+#endif
 
 #include <cstring>
 
@@ -460,6 +463,39 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
         initOption.geometry.width, initOption.geometry.height,
         initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
 #endif
+
+#if defined(STARFISH_ENABLE_TEST) &&             \
+    (defined(STARFISH_SHELL_X11_WEBCONTAINER) || \
+     defined(STARFISH_SHELL_EFL_HEADLESS) ||     \
+     defined(STARFISH_SHELL_TCORE_HEADLESS) ||   \
+     defined(STARFISH_SHELL_GLIB_HEADLESS))
+    {
+        const char* replayPath = getenv("STARFISH_API_REPLAY");
+        if (replayPath && replayPath[0] != '\0') {
+            float speedFactor = 1.0f;
+            const char* speedStr = getenv("STARFISH_API_REPLAY_SPEED");
+            if (speedStr && speedStr[0] != '\0')
+                speedFactor = std::atof(speedStr);
+
+            struct ReplayStartCtx {
+                LWE::WebContainer* wc;
+                std::string path;
+                float speed;
+            };
+            auto* ctx = new ReplayStartCtx{ m_lwe, replayPath, speedFactor };
+            m_lwe->AddTimeout(
+                [](void* data) {
+                    auto* ctx = static_cast<ReplayStartCtx*>(data);
+                    StarfishShell::APIReplayer replayer;
+                    if (replayer.load(ctx->path.c_str()))
+                        replayer.startReplay(ctx->wc, ctx->speed);
+                    delete ctx;
+                },
+                ctx, 100);
+        }
+    }
+#endif
+
     return true;
 }
 
