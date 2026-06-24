@@ -2748,10 +2748,15 @@ Promise* Element::requestFullscreen()
     // Spec returns Promise<void>. Players (e.g. YouTube) chain .then()/.catch()
     // on the result, so a void return would throw and abort fullscreen.
     Promise* promise = new Promise(document()->scriptBindingInstance());
-    // Requesting fullscreen for a disconnected element is a no-op.
-    if (isConnected()) {
-        document()->enterFullscreen(this);
+    // Per the Fullscreen spec, reject with a TypeError when the element is not
+    // connected to a document; only enter fullscreen and fulfill otherwise.
+    if (!isConnected()) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::SCRIPT_TYPE_ERR, "TypeError");
+        promise->reject(exception->scriptValue());
+        return promise;
     }
+    document()->enterFullscreen(this);
     promise->fulfill(scriptUndefined());
     return promise;
 }

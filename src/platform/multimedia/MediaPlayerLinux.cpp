@@ -617,16 +617,26 @@ void FfmpegWrapperPlayer::decodingThread()
             int64_t targetMs = m_seekTargetMs.load();
             AVRational tb = m_fmtCtx->streams[m_videoStreamIndex]->time_base;
             int64_t ts = (int64_t)((targetMs / 1000.0) / av_q2d(tb));
-            av_seek_frame(m_fmtCtx, m_videoStreamIndex, ts,
-                          AVSEEK_FLAG_BACKWARD);
-            avcodec_flush_buffers(m_codecCtx);
-            m_currentPositionMs.store((uint64_t)targetMs);
+            int seekRet = av_seek_frame(m_fmtCtx, m_videoStreamIndex, ts,
+                                        AVSEEK_FLAG_BACKWARD);
+            if (seekRet < 0) {
+                // Seek failed: the demuxer position is unchanged, so do not
+                // advertise the target as the current position or drop frames.
+                // Still fire the completion callback below so the player does
+                // not wait forever for a seek that will never complete.
+                STARFISH_LOG_ERROR(
+                    "av_seek_frame failed (%d) for target %ld ms\n", seekRet,
+                    (long)targetMs);
+            } else {
+                avcodec_flush_buffers(m_codecCtx);
+                m_currentPositionMs.store((uint64_t)targetMs);
 
-            // Drop frames decoded before the seek.
-            for (AVFrame* f : frames) {
-                av_frame_free(&f);
+                // Drop frames decoded before the seek.
+                for (AVFrame* f : frames) {
+                    av_frame_free(&f);
+                }
+                frames.clear();
             }
-            frames.clear();
 
             std::function<void(void* data)> cb;
             void* cbData = nullptr;

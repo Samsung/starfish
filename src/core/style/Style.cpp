@@ -2786,18 +2786,23 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
 
     // UA fullscreen sizing. The fullscreen element must fill the viewport
     // regardless of author rules. Browsers do this via a top-layer + UA
-    // !important :fullscreen rule; starfish has no UA stylesheet, so force it
-    // here after author rules are matched. Needed because pages that embed a
-    // fullscreen-capable iframe (e.g. YouTube) size the <iframe> for its
-    // in-flow box (`position:absolute; inset:0`) and have no :fullscreen rule
-    // for it -- without this override the iframe would stay inside its small
-    // embed rectangle when its content goes fullscreen.
+    // !important :fullscreen rule. starfish's UA stylesheet forbids !important
+    // (see Document.cpp), and a normal UA rule loses the cascade to author
+    // rules, so force it imperatively here after author rules are matched.
+    // Needed because pages that embed a fullscreen-capable iframe (e.g.
+    // YouTube) size the <iframe> for its in-flow box (`position:absolute;
+    // inset:0`) and have no :fullscreen rule for it -- without this override
+    // the iframe would stay inside its small embed rectangle when its content
+    // goes fullscreen. This is the single source of truth for :fullscreen
+    // styling; there is intentionally no matching rule in the UA stylesheet.
     if (element == element->document()->fullscreenElement()) {
         style->setPosition(PositionValue::FixedPositionValue);
         style->setLeft(Length(Length::Fixed, 0));
         style->setTop(Length(Length::Fixed, 0));
         style->setWidth(Length(Length::Percent, 1.0));
         style->setHeight(Length(Length::Percent, 1.0));
+        // Opaque black backdrop behind the fullscreen content.
+        style->setBackgroundColor(Unit::Color(0, 0, 0, 255));
         // Emulate the top layer: paint above all normally-stacked content.
         style->setZIndex(2147483647);
     }
