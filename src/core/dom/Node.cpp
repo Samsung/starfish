@@ -520,7 +520,7 @@ Node* Node::getRootNode(GetRootNodeOptions options)
     }
 }
 
-HTMLSlotElement* Node::assignedSlotInternal() const
+Optional<HTMLSlotElement*> Node::assignedSlotInternal() const
 {
     // "find a slot" for this node, closed-shadow aware via internalShadowRoot
     // (not subject to the scriptable assignedSlot's open-flag restriction).
@@ -528,11 +528,11 @@ HTMLSlotElement* Node::assignedSlotInternal() const
     // the default slot), text always uses the default slot.
     Node* nd = parentNode();
     if (!nd || !nd->isElement()) {
-        return nullptr;
+        return NullOption;
     }
     Optional<ShadowRoot*> sr = nd->asElement()->internalShadowRoot();
     if (!sr) {
-        return nullptr;
+        return NullOption;
     }
     String* slotName;
     if (isElement()) {
@@ -543,13 +543,13 @@ HTMLSlotElement* Node::assignedSlotInternal() const
     } else if (isText()) {
         slotName = String::emptyString;
     } else {
-        return nullptr;
+        return NullOption;
     }
     Optional<HTMLSlotElement*> slot = sr.value()->assignedSlot(slotName);
     if (slot.hasValue() && slot.value()) {
         return slot.value();
     }
-    return nullptr;
+    return NullOption;
 }
 
 Node* Node::renderingParentNode() const
@@ -558,8 +558,8 @@ Node* Node::renderingParentNode() const
     // assignment. If parent has shadow root and this node is assigned to a
     // slot, returns slot's parent.
 
-    if (HTMLSlotElement* slot = assignedSlotInternal()) {
-        return slot->renderingParentNode();
+    if (Optional<HTMLSlotElement*> slot = assignedSlotInternal()) {
+        return slot.value()->renderingParentNode();
     }
 
     // Shadow root boundary: return host element

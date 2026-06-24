@@ -348,8 +348,8 @@ bool EventTarget::hasListenerForTypeOnPath(const String* eventType)
 static Node* eventFlatTreeParent(Node* node, Event* event)
 {
     if (node->isSlotted()) {
-        if (HTMLSlotElement* slot = node->assignedSlotInternal()) {
-            return slot;
+        if (Optional<HTMLSlotElement*> slot = node->assignedSlotInternal()) {
+            return slot.value();
         }
     }
     if (node->isShadowRoot()) {
