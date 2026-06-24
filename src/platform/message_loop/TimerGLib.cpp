@@ -31,8 +31,6 @@
 
 namespace Starfish {
 
-unsigned TimerGLib::s_animationFrameInterval = 16; // Default 60fps
-
 TimerGLib::TimerGLib(WebBase* webBase)
     : Timer(webBase)
 {
@@ -131,7 +129,7 @@ size_t TimerGLib::addAnimator(GlobalScope* globalScope,
     ad->m_handler = handler;
     ad->m_globalScope = globalScope;
     ad->m_timerID = g_timeout_add(
-        s_animationFrameInterval,
+        0,
         [](gpointer data) -> gboolean {
             AnimationTickData* ad = (AnimationTickData*)data;
             auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
@@ -239,16 +237,6 @@ void TimerGLib::destroy()
         aniIter2++;
     }
     m_animationHandler.clear();
-}
-
-void TimerGLib::setAnimationFrameInterval(unsigned intervalMs)
-{
-    s_animationFrameInterval = intervalMs;
-}
-
-unsigned TimerGLib::animationFrameInterval()
-{
-    return s_animationFrameInterval;
 }
 
 } // namespace Starfish
