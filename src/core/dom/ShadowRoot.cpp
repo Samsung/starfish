@@ -120,23 +120,34 @@ void ShadowRoot::connectSlotWithSlottables()
     // Elements with slot="name" go to matching named slot; others go to default
     // slot. Text nodes always go to default slot (empty string key).
 
+    // Gather every <slot> in this shadow tree (tree order). When several slots
+    // share a name only the first in tree order is assigned slottables (the
+    // winner, recorded in m_namedSlotElements); the rest are left empty. We
+    // must still snapshot, clear, and check those losers for slotchange,
+    // because inserting/removing a slot can shift which one wins and a slot
+    // that loses its slottables fires slotchange too.
+    std::vector<HTMLSlotElement*> slots;
+    Traverse::traverse(this, [&](Node* node) {
+        if (node->isHTMLSlotElement()) {
+            slots.push_back(node->asHTMLSlotElement());
+        }
+    });
+
     // Snapshot each slot's assigned nodes before reassigning so we can detect
     // changes and "signal a slot change" (WHATWG DOM): slotchange fires only
     // for slots whose assigned-node list actually changes. Raw Node* live in a
     // std::vector (not a GC root) only for identity comparison; the nodes stay
     // reachable through the DOM tree, so none is collected here.
-    std::vector<HTMLSlotElement*> slots;
     std::vector<std::vector<Node*>> oldAssignedNodes;
-    for (auto iter : m_namedSlotElements) {
-        slots.push_back(iter.second);
-        oldAssignedNodes.push_back(
-            std::vector<Node*>(iter.second->m_assignedNodes.begin(),
-                               iter.second->m_assignedNodes.end()));
+    oldAssignedNodes.reserve(slots.size());
+    for (auto* slot : slots) {
+        oldAssignedNodes.push_back(std::vector<Node*>(
+            slot->m_assignedNodes.begin(), slot->m_assignedNodes.end()));
     }
 
     // Clear existing assignments
-    for (auto iter : m_namedSlotElements) {
-        iter.second->clearAssignedNodes();
+    for (auto* slot : slots) {
+        slot->clearAssignedNodes();
     }
 
     // Traverse host children and assign to appropriate slots
