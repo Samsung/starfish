@@ -82,9 +82,9 @@ http://web-platform.test:8000/shadow-dom/slotchange.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-006.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-007.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slot-fallback-content-008.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slot-reconciliation-at-node-removal.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slots-fallback.html
-# [auto-fail] http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
+http://web-platform.test:8000/shadow-dom/slot-reconciliation-at-node-removal.html
+http://web-platform.test:8000/shadow-dom/slots-fallback.html
+http://web-platform.test:8000/shadow-dom/slots-fallback-in-document.html
 http://web-platform.test:8000/shadow-dom/slots.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/slots-outside-shadow-dom.html
 # [auto-fail] http://web-platform.test:8000/shadow-dom/Slottable-mixin.html
