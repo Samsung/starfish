@@ -3810,7 +3810,8 @@ public:
         INSTALL_PROFILE_TIMER("CompositorGL::drawRect");
         auto& lastState = m_state.back();
         auto currentColor = lastState.color;
-        if (currentColor.isTransparent() || lastState.opacity == 0) {
+        if (lastState.blendMode == BlendMode::Normal &&
+            (currentColor.isTransparent() || lastState.opacity == 0)) {
             return;
         }
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
@@ -4791,7 +4792,8 @@ public:
         }
 
         auto& lastState = m_state.back();
-        if (lastState.opacity == 0) {
+        if (lastState.blendMode == BlendMode::Normal &&
+            lastState.opacity == 0) {
             return;
         }
 
