@@ -298,11 +298,13 @@ public:
     Node* getRootNode(GetRootNodeOptions options);
 
     Node* renderingParentNode() const;
-    // The slot this node is assigned to (flat-tree / "find a slot"), or an empty
-    // Optional when unassigned. Closed-shadow aware (uses internalShadowRoot);
-    // only elements and text are slottable. When present the value is non-null.
-    // Shared by rendering and event-path traversal.
+
+    // The slot this node is assigned to (flat-tree / "find a slot"), or an
+    // empty Optional when unassigned. Closed-shadow aware (uses
+    // internalShadowRoot); only elements and text are slottable. When present
+    // the value is non-null. Shared by rendering and event-path traversal.
     Optional<HTMLSlotElement*> assignedSlotInternal() const;
+
     Node* parentNode() const
     {
         return m_parentNode;
