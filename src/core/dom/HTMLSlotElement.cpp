@@ -107,26 +107,49 @@ void HTMLSlotElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+void HTMLSlotElement::findFlattenedSlottables(GCVector<Node*>& result)
+{
+    // WHATWG DOM "find flattened slottables": a slot whose root is not a shadow
+    // root contributes nothing (e.g. a slot detached from its tree).
+    if (!isInShadowRoot()) {
+        return;
+    }
+
+    // Slottables are the assigned nodes, or — when none are assigned — this
+    // slot's own slottable children (its fallback content), in tree order.
+    // A slottable is an Element or a Text node.
+    auto append = [&](Node* nd) {
+        // A slotted child that is itself a slot is expanded in place; any other
+        // node (including a slot in a non-shadow root) is appended as-is.
+        if (nd->isHTMLSlotElement() && nd->isInShadowRoot()) {
+            nd->asHTMLSlotElement()->findFlattenedSlottables(result);
+        } else {
+            result.push_back(nd);
+        }
+    };
+
+    if (m_assignedNodes.size()) {
+        for (Node* nd : m_assignedNodes) {
+            append(nd);
+        }
+    } else {
+        for (Node* child = firstChild(); child; child = child->nextSibling()) {
+            if (child->isElement() || child->isText()) {
+                append(child);
+            }
+        }
+    }
+}
+
 GCVector<Node*> HTMLSlotElement::assignedNodes(
     Optional<AssignedNodesOptions> options)
 {
     if (options && options.value().flatten()) {
-        GCVector<Node*> result = m_assignedNodes;
-        for (size_t i = 0; i < result.size(); i++) {
-            Node* nd = result[i];
-            if (nd->isHTMLSlotElement()) {
-                auto subNodes = nd->asHTMLSlotElement()->assignedNodes(options);
-                result.erase(i);
-                for (size_t j = 0; j < subNodes.size(); j++) {
-                    result.insert(i + j, subNodes[j]);
-                }
-                i--;
-            }
-        }
+        GCVector<Node*> result;
+        findFlattenedSlottables(result);
         return result;
-    } else {
-        return m_assignedNodes;
     }
+    return m_assignedNodes;
 }
 
 GCVector<Element*> HTMLSlotElement::assignedElements(
