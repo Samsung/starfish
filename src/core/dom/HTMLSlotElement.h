@@ -84,6 +84,11 @@ private:
     // is mutated while it has no assigned nodes. See .cpp for spec rationale.
     void signalSlotChangeForFallbackMutation();
 
+    // WHATWG DOM "find flattened slottables": the flat-tree distribution used by
+    // assignedNodes({flatten:true}). Recursively resolves slotted slots and
+    // falls back to this slot's own slottable children when nothing is assigned.
+    void findFlattenedSlottables(GCVector<Node*>& result);
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         HTMLElement::fillGCDescriptor(desc);
