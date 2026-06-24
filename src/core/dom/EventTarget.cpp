@@ -404,6 +404,12 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             Node* node = eventTarget->asNode();
             if (node->isHTMLElement() || node->isSVGElement()) {
                 eventPath.push_back(eventTarget);
+            } else if (node->isShadowRoot()) {
+                // A shadow root is an ancestor in the (flat) tree, so it must
+                // participate in the event path; otherwise bubbling events such
+                // as slotchange never reach listeners (or the onslotchange
+                // attribute handler) registered on the shadow root.
+                eventPath.push_back(eventTarget);
             } else if (node->isDocument()) {
                 eventPath.push_back(eventTarget);
                 eventPath.push_back(eventTarget->asDocument()->window());
