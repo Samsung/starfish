@@ -129,8 +129,9 @@ void ShadowRoot::connectSlotWithSlottables()
     //
     // These locals retain GC pointers (slots, and the snapshot below) across
     // reassignment, which allocates and may trigger GC. Use GC-tracked vectors
-    // so their contents are scanned and stay alive — a std::vector's heap buffer
-    // is not scanned by the collector, so it cannot keep its elements reachable.
+    // so their contents are scanned and stay alive — a std::vector's heap
+    // buffer is not scanned by the collector, so it cannot keep its elements
+    // reachable.
     GCVector<HTMLSlotElement*> slots;
     Traverse::traverse(this, [&](Node* node) {
         if (node->isHTMLSlotElement()) {
