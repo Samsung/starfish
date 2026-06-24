@@ -126,7 +126,12 @@ void ShadowRoot::connectSlotWithSlottables()
     // must still snapshot, clear, and check those losers for slotchange,
     // because inserting/removing a slot can shift which one wins and a slot
     // that loses its slottables fires slotchange too.
-    std::vector<HTMLSlotElement*> slots;
+    //
+    // These locals retain GC pointers (slots, and the snapshot below) across
+    // reassignment, which allocates and may trigger GC. Use GC-tracked vectors
+    // so their contents are scanned and stay alive — a std::vector's heap buffer
+    // is not scanned by the collector, so it cannot keep its elements reachable.
+    GCVector<HTMLSlotElement*> slots;
     Traverse::traverse(this, [&](Node* node) {
         if (node->isHTMLSlotElement()) {
             slots.push_back(node->asHTMLSlotElement());
@@ -135,14 +140,11 @@ void ShadowRoot::connectSlotWithSlottables()
 
     // Snapshot each slot's assigned nodes before reassigning so we can detect
     // changes and "signal a slot change" (WHATWG DOM): slotchange fires only
-    // for slots whose assigned-node list actually changes. Raw Node* live in a
-    // std::vector (not a GC root) only for identity comparison; the nodes stay
-    // reachable through the DOM tree, so none is collected here.
-    std::vector<std::vector<Node*>> oldAssignedNodes;
+    // for slots whose assigned-node list actually changes.
+    GCVector<GCVector<Node*>> oldAssignedNodes;
     oldAssignedNodes.reserve(slots.size());
     for (auto* slot : slots) {
-        oldAssignedNodes.push_back(std::vector<Node*>(
-            slot->m_assignedNodes.begin(), slot->m_assignedNodes.end()));
+        oldAssignedNodes.push_back(slot->m_assignedNodes);
     }
 
     // Clear existing assignments
@@ -176,7 +178,7 @@ void ShadowRoot::connectSlotWithSlottables()
 
     // Signal a slot change for each slot whose assignment differs from before.
     for (size_t i = 0; i < slots.size(); i++) {
-        const std::vector<Node*>& oldNodes = oldAssignedNodes[i];
+        const GCVector<Node*>& oldNodes = oldAssignedNodes[i];
         const GCVector<Node*>& newNodes = slots[i]->m_assignedNodes;
         bool changed = oldNodes.size() != newNodes.size();
         for (size_t j = 0; !changed && j < oldNodes.size(); j++) {
