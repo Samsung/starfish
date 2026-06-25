@@ -129,7 +129,7 @@ ENDIF()
 # LIBWEBSOCKETS
 #######################################################
 
-IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable")
+IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable"  OR ${CUSTOM} STREQUAL "flutter")
     SET(LIBWEBSOCKETS_SOURCE_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
     SET(LIBWEBSOCKETS_BUILD_DIR ${OUTPUT_DIRECTORY}/libwebsockets/)
     SET(LIBWEBSOCKETS_BUILD_OUTDIR ${OUTPUT_DIRECTORY}/libwebsockets/build/${HOST}/${ARCH}/${MODE})
