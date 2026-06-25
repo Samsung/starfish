@@ -564,15 +564,15 @@ SET (STARFISH_LIBRARIES_DEFAULT
 )
 
 # library for public bridge
-IF (${SHELL} STREQUAL "x11")
+IF ("${SHELL}" STREQUAL "x11")
     pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED glib-2.0 x11 egl)
-ELSEIF (${SHELL} STREQUAL "ecore_x")
+ELSEIF ("${SHELL}" STREQUAL "ecore_x")
     pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED ecore ecore-x ecore-input ecore-imf)
-ELSEIF (${SHELL} STREQUAL "ecore_wl2")
+ELSEIF ("${SHELL}" STREQUAL "ecore_wl2")
     pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED ecore ecore-wl2 ecore-input ecore-imf wayland-client)
-ELSEIF (${SHELL} STREQUAL "tcore_wl")
+ELSEIF ("${SHELL}" STREQUAL "tcore_wl")
     pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED tizen-core tizen-core-wl tizen-core-imf glib-2.0 wayland-client)
-ELSEIF (${SHELL} STREQUAL "efl")
+ELSEIF ("${SHELL}" STREQUAL "efl")
     pkg_check_modules (STARFISH_LIBRARIES_SHELL REQUIRED elementary)
 ENDIF()
 
@@ -630,7 +630,7 @@ IF (${HOST} STREQUAL "tizen")
     )
 ENDIF()
 
-IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
+IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile" OR ${CUSTOM} STREQUAL "unified_wearable")
     SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets_lwe)
 ENDIF()
 
