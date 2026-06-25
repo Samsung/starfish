@@ -322,6 +322,7 @@ test/cairo/internal-test/css/minmaxwidthheight/minwidth_mincontent_sample.html
 test/cairo/internal-test/css/text/text-indent-basic.html
 test/cairo/internal-test/css/text/text-align-001.html
 test/cairo/internal-test/css/width/dont-break-line.html
+test/cairo/internal-test/css/width/replaced_percent_width_resolves_against_content_width.html
 test/cairo/internal-test/css/text/word-concatenating.html
 test/cairo/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 test/cairo/internal-test/css/length/simple_calc.html
@@ -671,6 +672,8 @@ test/cairo/internal-test/css/flex/flex_flex_left_right_abs_pos.html
 test/cairo/internal-test/css/flex/flex_flex_top_bottom_abs_pos.html
 test/cairo/internal-test/css/flex/overflow-hidden-flexitem-height-shrink.html
 test/cairo/internal-test/css/flex/flex-item-minheight.html
+test/cairo/internal-test/css/flex/flex_row-gap_axis_role.html
+test/cairo/internal-test/css/flex/flex_row-gap_percentage_block_size.html
 test/cairo/internal-test/svg/animation/animate_begin_endEvent.html
 test/cairo/internal-test/svg/animation/animate_beginElement_01.html
 test/cairo/internal-test/svg/animation/animate_keySplines_computedStyle.html
