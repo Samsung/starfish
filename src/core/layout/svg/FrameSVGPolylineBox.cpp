@@ -54,7 +54,6 @@ Optional<Path*> FrameSVGPolylineBox::path()
         for (size_t i = 1; i < points.size(); i++) {
             path->lineTo(points[i].first, points[i].second);
         }
-        path->closePath();
         return path;
     }
     return nullptr;

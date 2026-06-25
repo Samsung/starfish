@@ -740,6 +740,7 @@ test/cairo/internal-test/svg/svg_stroke_linejoin_01.html
 test/cairo/internal-test/svg/svg_stroke_dashoffset_dasharray_getComputedStyle.html
 test/cairo/internal-test/svg/svg_stroke_dasharray_01.html
 test/cairo/internal-test/svg/svg_stroke_dashoffset_01.html
+test/cairo/internal-test/svg/svg_polyline_open_01.html
 test/cairo/internal-test/svg/svg_fill_opacity_01.html
 test/cairo/internal-test/svg/svg_stroke_opacity_01.html
 test/cairo/internal-test/svg/svg_image_crash.html
