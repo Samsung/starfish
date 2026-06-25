@@ -3525,7 +3525,10 @@ public:
         webView->renderer()->makeCurrent();
 
         m_seenFBOUsage = false;
+        m_gotBaseFBORBOId = false;
         m_pendingClear = false;
+        m_baseFBOId = 0;
+        m_baseRBOId = 0;
         m_webView = webView;
         m_globalScale = m_webView->glCompositorScale();
         m_screenWidth = m_webView->renderer()->width();
@@ -5407,6 +5410,15 @@ public:
     {
         m_seenFBOUsage = true;
 
+        if (!m_gotBaseFBORBOId) {
+            m_gotBaseFBORBOId = true;
+            GLint fbo = 0, rbo = 0;
+            gl()->getIntegerv(GL_FRAMEBUFFER_BINDING, &fbo);
+            gl()->getIntegerv(GL_RENDERBUFFER_BINDING, &rbo);
+            m_baseFBOId = static_cast<GLuint>(fbo);
+            m_baseRBOId = static_cast<GLuint>(rbo);
+        }
+
         FBOState newFBOState;
         newFBOState.textureFormat = textureFormat;
         newFBOState.textureSize = Unit::IntSize(width, height);
@@ -5481,19 +5493,10 @@ public:
             gl()->viewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
                            s.viewport.height());
         } else {
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            if (m_compositorContext->m_mainViewRBO) {
-                gl()->bindRenderbuffer(GL_RENDERBUFFER,
-                                       m_compositorContext->m_mainViewRBO);
+            if (m_baseRBOId) {
+                gl()->bindRenderbuffer(GL_RENDERBUFFER, m_baseRBOId);
             }
-            if (m_compositorContext->m_mainViewFBO) {
-                gl()->bindFramebuffer(GL_FRAMEBUFFER,
-                                      m_compositorContext->m_mainViewFBO);
-            }
-#else
-            gl()->bindRenderbuffer(GL_RENDERBUFFER, 0);
-            gl()->bindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
+            gl()->bindFramebuffer(GL_FRAMEBUFFER, m_baseFBOId);
             setViewport();
         }
 
@@ -5508,6 +5511,7 @@ public:
 
 protected:
     bool m_seenFBOUsage;
+    bool m_gotBaseFBORBOId;
     float m_globalScale;
     size_t m_screenWidth;
     size_t m_screenHeight;
@@ -5515,6 +5519,8 @@ protected:
     CompositorContextGL* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
     std::vector<FBOState> m_fboState;
+    GLuint m_baseFBOId;
+    GLuint m_baseRBOId;
 
     Clipper2Lib::PathD m_abbreviatedPath;
     std::vector<CompositorImplGLState::PathCommand> m_pathCommands;
