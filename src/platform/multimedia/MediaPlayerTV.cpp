@@ -146,28 +146,30 @@ void MediaPlayerTizen::initCanvasSurface()
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
     player_display_video_at_paused_state(m_nativePlayer, true);
-#if defined(STARFISH_MM_OUTPUT_WITH_GL)
-    setNativePlayerDisplayModeWithGL();
-#else
-    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
-    // NOTE: Do not edit `player_set_display_roi_area` parameter
-    m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
-    player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 
-    void* ecoreWaylandHandle =
-        m_container->webView()->publicLayerUserDataMap()
-            ["__internalLWEWebViewEFLEcoreWaylandHandle"];
+    if (videoOverlayEnabled()) {
+        player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
+        // NOTE: Do not edit `player_set_display_roi_area` parameter
+        m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
+        player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 
-    // This is need for displaying video
-    // ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle, false);
+        void* ecoreWaylandHandle =
+            m_container->webView()->publicLayerUserDataMap()
+                ["__internalLWEWebViewEFLEcoreWaylandHandle"];
 
-    auto width = m_container->webView()->renderer()->width();
-    auto height = m_container->webView()->renderer()->height();
+        // This is need for displaying video
+        // ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle,
+        // false);
 
-    player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
-                                ecoreWaylandHandle, 0, 0, width, height);
-    player_set_display_visible(m_nativePlayer, true);
-#endif
+        auto width = m_container->webView()->renderer()->width();
+        auto height = m_container->webView()->renderer()->height();
+
+        player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
+                                    ecoreWaylandHandle, 0, 0, width, height);
+        player_set_display_visible(m_nativePlayer, true);
+    } else {
+        setNativePlayerDisplayModeWithGL();
+    }
 }
 
 void MediaPlayerTizen::setPlayerDisplayVideoAtPausedState(int& ret)

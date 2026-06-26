@@ -95,8 +95,7 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
     if (videoOverlayEnabled()) {
         // HW overlay plane + DST_ROI. The hole is punched (and ROI tracked) in
-        // didDrawVideo()/punchHole(). Compiled unconditionally so it works even
-        // in STARFISH_MM_OUTPUT_WITH_GL builds.
+        // didDrawVideo()/punchHole().
         player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
         m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
@@ -116,38 +115,9 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
                                     ecoreWaylandHandle, 0, 0, width, height);
 #endif
         player_set_display_visible(m_nativePlayer, true);
-        return;
+    } else {
+        setNativePlayerDisplayModeWithGL();
     }
-#if defined(STARFISH_MM_OUTPUT_WITH_GL)
-    setNativePlayerDisplayModeWithGL();
-#else
-    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
-    // NOTE: Do not edit `player_set_display_roi_area` parameter
-    m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
-    player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
-
-#if defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
-    void* elmWindowHandle =
-        m_container->webView()->publicLayerUserDataMap()
-            ["__internalLWEWebViewEFLNativeWindowEvasObject"];
-
-    player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
-                       GET_DISPLAY(elmWindowHandle));
-#else
-    void* ecoreWaylandHandle =
-        m_container->webView()->publicLayerUserDataMap()
-            ["__internalLWEWebViewEFLEcoreWaylandHandle"];
-
-    // ecore_wl_window_alpha_set(ecoreWaylandHandle, false);
-
-    auto width = m_container->webView()->renderer()->width();
-    auto height = m_container->webView()->renderer()->height();
-
-    player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
-                                ecoreWaylandHandle, 0, 0, width, height);
-#endif
-    player_set_display_visible(m_nativePlayer, true);
-#endif
 }
 
 void MediaPlayerTizen::setPlayerDisplayVideoAtPausedState(int& ret)
@@ -157,22 +127,17 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
-#if !defined(STARFISH_MM_OUTPUT_WITH_GL)
-    bool doPunch = true;
-#else
-    bool doPunch = videoOverlayEnabled();
-#endif
-    if (!doPunch) {
-        return;
-    }
-    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
-                                 videoRect.width(), videoRect.height()));
-    if (m_lastAbsoluteROIArea != absVideoRect) {
-        // TODO consider LWE::WebView x, y
-        player_set_display_roi_area(
-            m_nativePlayer, absVideoRect.x().toInt(), absVideoRect.y().toInt(),
-            absVideoRect.width().toInt(), absVideoRect.height().toInt());
-        m_lastAbsoluteROIArea = absVideoRect;
+    if (videoOverlayEnabled()) {
+        canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
+                                     videoRect.width(), videoRect.height()));
+        if (m_lastAbsoluteROIArea != absVideoRect) {
+            // TODO consider LWE::WebView x, y
+            player_set_display_roi_area(
+                m_nativePlayer, absVideoRect.x().toInt(),
+                absVideoRect.y().toInt(), absVideoRect.width().toInt(),
+                absVideoRect.height().toInt());
+            m_lastAbsoluteROIArea = absVideoRect;
+        }
     }
 }
 

@@ -27,6 +27,9 @@
 #define STARFISH_ENABLE_PROFILE_TIMER
 
 #if defined(STARFISH_UV_CAIRO_GL)
+#ifndef STARFISH_TIZEN
+#error "you can enable mode on tizen"
+#endif
 // uv_cairo_gl backend: the engine runs on a dedicated LWE thread and renders
 // into TBM buffers via a private raw-EGL context (NOT EvasGL, which is bound to
 // the EFL main thread). Finished TBM buffers are presented on the main thread
@@ -831,7 +834,11 @@ public:
         , m_lastInputTime(0)
         , m_evasGlRotationDegrees(-1)
     {
-        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
+#if defined(STARFISH_UV_CAIRO_GL)
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL(uv)");
+#else
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL(glib)");
+#endif
         Evas_Object* win = (Evas_Object*)winArg;
 
         m_windowObject = win;

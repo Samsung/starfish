@@ -1151,7 +1151,6 @@ void MediaPlayerTizen::willDrawVideo(Compositor* canvas,
     STARFISH_ASSERT(canvas != nullptr);
     canvas->setFillColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
-#if defined(STARFISH_MM_OUTPUT_WITH_GL)
     // Overlay mode: video is on a HW plane; skip compositing the decoded
     // texture (didDrawVideo punches the hole instead).
     if (!videoOverlayEnabled()) {
@@ -1163,7 +1162,6 @@ void MediaPlayerTizen::willDrawVideo(Compositor* canvas,
             m_canvasSurface->attachPlatformExternalBuffer(tbm);
         }
     }
-#endif
 }
 
 void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
@@ -1174,12 +1172,6 @@ void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
         return;
     }
 #if !defined(STARFISH_TIZEN_HEADLESS)
-#if defined(STARFISH_MM_OUTPUT_WITH_GL)
-    // In a GL-output build, only punch the hole when overlay mode is on.
-    if (!videoOverlayEnabled()) {
-        return;
-    }
-#endif
     player_state_e state = PLAYER_STATE_NONE;
     player_get_state(m_nativePlayer, &state);
     if (state < PLAYER_STATE_READY) {
