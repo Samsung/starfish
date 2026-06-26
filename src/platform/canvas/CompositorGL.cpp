@@ -3804,8 +3804,14 @@ public:
     {
         save();
         setFillColor(Unit::Color(0, 0, 0, 0));
+        auto& lastState = m_state.back();
+        auto lastBlendMode = lastState.blendMode;
+        // set random blend mode other than Normal to avoid
+        // drawCall ignre check when opactiy is 0
+        lastState.blendMode = BlendMode::Saturation;
         gl()->blendFunc(GL_ONE, GL_ZERO);
         drawRect(rt);
+        lastState.blendMode = lastBlendMode;
         updateBlendMode();
         restore();
     }
