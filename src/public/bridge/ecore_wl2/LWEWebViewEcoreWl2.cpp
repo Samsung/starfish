@@ -353,6 +353,9 @@ public:
                     ecore_imf_context_focus_out(m_imfContext);
                 }
             });
+
+        m_webContainer->SetUserData("__internalLWEWebViewEFLEcoreWaylandHandle",
+                                    m_window);
     }
 
     ~WebViewEcoreWl2()
@@ -750,8 +753,6 @@ public:
                 if (configureEvent->win ==
                     (unsigned int)ecore_wl2_window_id_get(win->m_window)) {
                     if (win->m_eglSurface != EGL_NO_SURFACE) {
-                        eglMakeCurrent(win->m_eglDisplay, EGL_NO_SURFACE,
-                                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
                         eglDestroySurface(win->m_eglDisplay, win->m_eglSurface);
                         win->m_eglSurface = EGL_NO_SURFACE;
                     }
@@ -767,13 +768,6 @@ public:
                                           win->m_eglWindow)) {
                         STARFISH_LOG_ERROR(
                             "Failed to create new EGL surface after resize");
-                    } else {
-                        if (!eglMakeCurrent(
-                                win->m_eglDisplay, win->m_eglSurface,
-                                win->m_eglSurface, win->m_eglContext)) {
-                            STARFISH_LOG_ERROR(
-                                "Failed to make context current after resize");
-                        }
                     }
 
                     win->m_lastWidth = w;
