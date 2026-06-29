@@ -189,6 +189,14 @@ public:
             reallocAll(w, h);
         }
         eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        if (!m_buf[m_renderIdx].alloc) {
+            // The idle flush freed this slot. Reclaim ENGINE ownership and
+            // allocate a fresh TBM buffer before the engine writes into it.
+            pthread_mutex_lock(&m_lock);
+            m_owner[m_renderIdx] = ENGINE;
+            pthread_mutex_unlock(&m_lock);
+            allocBuffer(m_renderIdx);
+        }
         bindRenderFBO();
     }
 
@@ -213,6 +221,31 @@ public:
             ecore_animator_del(m_animator);
             m_animator = nullptr;
         }
+    }
+
+    // Called from the LWE idle handler. Destroys every TBM buffer that is not
+    // currently on screen (FREE, READY, and the ENGINE pre-alloc slot), keeping
+    // only the DISPLAYING buffer that Evas holds. onMakeCurrent() reallocates
+    // the ENGINE slot on the next wake.
+    void flushIdleBuffers()
+    {
+        if (m_ctx == EGL_NO_CONTEXT) {
+            return;
+        }
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        pthread_mutex_lock(&m_lock);
+        for (int i = 0; i < MAX_BUF; i++) {
+            if (m_owner[i] == DISPLAYING) {
+                continue;
+            }
+            if (m_buf[i].alloc) {
+                destroyBuffer(i);
+            }
+            m_owner[i] = FREE;
+            m_freeStreak[i] = 0;
+        }
+        m_latestReady = -1;
+        pthread_mutex_unlock(&m_lock);
     }
 
     // End of frame: ensure GPU finished, mark the just-rendered buffer READY
@@ -1629,6 +1662,11 @@ public:
 
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         SetWebContainer(webContainer);
+
+#if defined(STARFISH_UV_CAIRO_GL)
+        webContainer->RegisterOnIdleHandler(
+            [this](WebContainer*) { m_uvPresenter->flushIdleBuffers(); });
+#endif
 
 #if !defined(STARFISH_UV_CAIRO_GL)
         // Routes the engine's GL calls through EvasGL. uv intentionally omits
