@@ -32,6 +32,8 @@
 #include <Ecore_Input.h>
 #include <Ecore_IMF.h>
 #include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <pthread.h>
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 #include <uv.h>
@@ -60,7 +62,7 @@ bool initEGLDisplay(EGLDisplay eglDisplay, EGLConfig& config)
         EGLint configSize = 1;
         EGLint attributes[] = {
             EGL_SURFACE_TYPE,
-            EGL_WINDOW_BIT,
+            EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
             EGL_RED_SIZE,
             8,
             EGL_GREEN_SIZE,
@@ -161,6 +163,390 @@ static Ecore_IMF_Keyboard_Modifiers ecore_modifier_to_imf_modifier(
     return (Ecore_IMF_Keyboard_Modifiers)imf_modifiers;
 }
 
+// FboPresenter: engine thread renders to plain-GL FBO; a dedicated presenter
+// thread blits the finished texture to the EGL window surface and swaps.
+// This moves the buffer-dequeue vsync stall (which hits the first GL command
+// after a vsync miss) entirely onto the presenter thread, keeping the engine
+// render thread latency-free.
+//
+// Buffer ownership (latest-frame-wins, 3 slots):
+//   FREE      — available for reuse
+//   ENGINE    — engine is rendering into it (m_renderIdx)
+//   READY     — engine finished; presenter picks it up
+//   PRESENTING — presenter is blitting/displaying it
+//
+// Idle: after ~500ms with no new frame the presenter sets m_idleFlushPending;
+// the engine thread frees all non-PRESENTING GL objects on its next wake.
+
+class FboPresenter {
+public:
+    static const int N_BUF = 3;
+
+    struct Buf {
+        GLuint tex;
+        GLuint fbo;
+        bool alloc;
+    };
+    enum Owner { FREE, ENGINE, READY, PRESENTING };
+
+    FboPresenter(EGLDisplay dpy, EGLConfig cfg, EGLSurface winSurf,
+                 EGLContext presCtx, uint32_t w, uint32_t h)
+        : m_dpy(dpy)
+        , m_cfg(cfg)
+        , m_winSurf(winSurf)
+        , m_presCtx(presCtx)
+        , m_renderCtx(EGL_NO_CONTEXT)
+        , m_pbuf(EGL_NO_SURFACE)
+        , m_w(w)
+        , m_h(h)
+        , m_renderIdx(0)
+        , m_latestReady(-1)
+        , m_presentingIdx(-1)
+        , m_running(true)
+        , m_prog(0)
+        , m_vbo(0)
+    {
+        for (int i = 0; i < N_BUF; i++) {
+            m_buf[i] = { 0, 0, false };
+            m_owner[i] = FREE;
+        }
+        pthread_mutex_init(&m_lock, nullptr);
+        pthread_cond_init(&m_cond, nullptr);
+
+        EGLint ctxAttr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        m_renderCtx = eglCreateContext(dpy, cfg, presCtx, ctxAttr);
+
+        EGLint pbAttr[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+        m_pbuf = eglCreatePbufferSurface(dpy, cfg, pbAttr);
+
+        eglMakeCurrent(dpy, m_pbuf, m_pbuf, m_renderCtx);
+        allocBuffer(0);
+        m_owner[0] = ENGINE;
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+        pthread_create(&m_thread, nullptr, presenterEntry, this);
+    }
+
+    ~FboPresenter()
+    {
+        pthread_mutex_lock(&m_lock);
+        m_running = false;
+        pthread_cond_signal(&m_cond);
+        pthread_mutex_unlock(&m_lock);
+        pthread_join(m_thread, nullptr);
+
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_renderCtx);
+        for (int i = 0; i < N_BUF; i++) {
+            if (m_buf[i].alloc)
+                destroyBuffer(i);
+        }
+        eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (m_pbuf != EGL_NO_SURFACE)
+            eglDestroySurface(m_dpy, m_pbuf);
+        eglDestroyContext(m_dpy, m_renderCtx);
+
+        pthread_cond_destroy(&m_cond);
+        pthread_mutex_destroy(&m_lock);
+    }
+
+    // Engine thread: frame start
+    void onMakeCurrent(uint32_t w, uint32_t h)
+    {
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_renderCtx);
+
+        if (w != m_w || h != m_h)
+            reallocAll(w, h);
+
+        if (!m_buf[m_renderIdx].alloc)
+            allocBuffer(m_renderIdx);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, m_buf[m_renderIdx].fbo);
+        glViewport(0, 0, m_w, m_h);
+    }
+
+    // Engine thread: frame end
+    void onSwapBuffers()
+    {
+        glFinish(); // ensure GPU done before presenter samples the texture
+
+        pthread_mutex_lock(&m_lock);
+        int pub = m_renderIdx;
+        m_owner[pub] = READY;
+        m_latestReady = pub;
+
+        int next = pickNextLocked();
+        if (next < 0)
+            next = pub;
+        m_owner[next] = ENGINE;
+        m_renderIdx = next;
+        bool needAlloc = !m_buf[next].alloc;
+        pthread_cond_signal(&m_cond);
+        pthread_mutex_unlock(&m_lock);
+
+        if (needAlloc)
+            allocBuffer(next);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_buf[m_renderIdx].fbo);
+    }
+
+    bool clearCurrent()
+    {
+        return eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                              EGL_NO_CONTEXT);
+    }
+
+    uintptr_t createSharedContext()
+    {
+        EGLint attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        return reinterpret_cast<uintptr_t>(
+            eglCreateContext(m_dpy, m_cfg, m_renderCtx, attr));
+    }
+
+    bool destroySharedContext(uintptr_t c)
+    {
+        return eglDestroyContext(m_dpy, reinterpret_cast<EGLContext>(c));
+    }
+
+    bool makeCurrentWithContext(uintptr_t c)
+    {
+        return eglMakeCurrent(m_dpy, m_pbuf, m_pbuf,
+                              reinterpret_cast<EGLContext>(c));
+    }
+
+    // Called from the engine's idle handler (engine thread). Frees all
+    // non-PRESENTING GL objects so VRAM is released while the page is idle.
+    void flushIdleBuffers()
+    {
+        if (m_renderCtx == EGL_NO_CONTEXT)
+            return;
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_renderCtx);
+        pthread_mutex_lock(&m_lock);
+        for (int i = 0; i < N_BUF; i++) {
+            if (m_owner[i] == PRESENTING)
+                continue;
+            if (m_buf[i].alloc)
+                destroyBuffer(i);
+            m_owner[i] = FREE;
+        }
+        m_latestReady = -1;
+        pthread_mutex_unlock(&m_lock);
+        eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    EGLDisplay display() const
+    {
+        return m_dpy;
+    }
+    EGLConfig config() const
+    {
+        return m_cfg;
+    }
+    EGLContext renderContext() const
+    {
+        return m_renderCtx;
+    }
+
+private:
+    int pickNextLocked()
+    {
+        for (int i = 0; i < N_BUF; i++)
+            if (m_owner[i] == FREE && m_buf[i].alloc)
+                return i;
+        for (int i = 0; i < N_BUF; i++)
+            if (m_owner[i] == READY && i != m_latestReady)
+                return i;
+        for (int i = 0; i < N_BUF; i++)
+            if (m_owner[i] == FREE && !m_buf[i].alloc)
+                return i;
+        return -1;
+    }
+
+    void allocBuffer(int i)
+    {
+        glGenTextures(1, &m_buf[i].tex);
+        glBindTexture(GL_TEXTURE_2D, m_buf[i].tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_w, m_h, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glGenFramebuffers(1, &m_buf[i].fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_buf[i].fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, m_buf[i].tex, 0);
+        m_buf[i].alloc = true;
+    }
+
+    void destroyBuffer(int i)
+    {
+        if (m_buf[i].fbo) {
+            glDeleteFramebuffers(1, &m_buf[i].fbo);
+            m_buf[i].fbo = 0;
+        }
+        if (m_buf[i].tex) {
+            glDeleteTextures(1, &m_buf[i].tex);
+            m_buf[i].tex = 0;
+        }
+        m_buf[i].alloc = false;
+    }
+
+    void reallocAll(uint32_t w, uint32_t h)
+    {
+        pthread_mutex_lock(&m_lock);
+        for (int i = 0; i < N_BUF; i++) {
+            if (m_owner[i] == PRESENTING)
+                continue;
+            if (m_buf[i].alloc)
+                destroyBuffer(i);
+            m_owner[i] = FREE;
+        }
+        m_w = w;
+        m_h = h;
+        m_latestReady = -1;
+        m_renderIdx = 0;
+        m_owner[0] = ENGINE;
+        pthread_mutex_unlock(&m_lock);
+    }
+
+    // ---- Presenter thread ----
+
+    static void* presenterEntry(void* arg)
+    {
+        static_cast<FboPresenter*>(arg)->presenterLoop();
+        return nullptr;
+    }
+
+    void buildBlitShader()
+    {
+        static const char* VS =
+            "attribute vec2 aPos;\n"
+            "varying vec2 vTex;\n"
+            "void main() {\n"
+            "  vTex = aPos * 0.5 + 0.5;\n"
+            "  gl_Position = vec4(aPos, 0.0, 1.0);\n"
+            "}\n";
+        static const char* FS =
+            "precision mediump float;\n"
+            "uniform sampler2D uTex;\n"
+            "varying vec2 vTex;\n"
+            "void main() { gl_FragColor = texture2D(uTex, vTex); }\n";
+
+        auto mkShader = [](GLenum t, const char* src) {
+            GLuint s = glCreateShader(t);
+            glShaderSource(s, 1, &src, nullptr);
+            glCompileShader(s);
+            return s;
+        };
+        GLuint vs = mkShader(GL_VERTEX_SHADER, VS);
+        GLuint fs = mkShader(GL_FRAGMENT_SHADER, FS);
+        m_prog = glCreateProgram();
+        glAttachShader(m_prog, vs);
+        glAttachShader(m_prog, fs);
+        glBindAttribLocation(m_prog, 0, "aPos");
+        glLinkProgram(m_prog);
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        glUseProgram(m_prog);
+        glUniform1i(glGetUniformLocation(m_prog, "uTex"), 0);
+
+        const GLfloat quad[] = { -1, -1, 1, -1, -1, 1, 1, 1 };
+        glGenBuffers(1, &m_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    }
+
+    void blitFrame(GLuint tex, uint32_t w, uint32_t h)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, w, h);
+        glDisable(GL_BLEND);
+        glUseProgram(m_prog);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
+
+    void presenterLoop()
+    {
+        eglMakeCurrent(m_dpy, m_winSurf, m_winSurf, m_presCtx);
+        buildBlitShader();
+
+        while (true) {
+            pthread_mutex_lock(&m_lock);
+
+            while (m_latestReady < 0 && m_running)
+                pthread_cond_wait(&m_cond, &m_lock);
+
+            if (!m_running) {
+                pthread_mutex_unlock(&m_lock);
+                break;
+            }
+
+            int idx = m_latestReady;
+            bool hasFrame = (idx >= 0 && idx < N_BUF && m_owner[idx] == READY &&
+                             m_buf[idx].alloc);
+
+            if (!hasFrame) {
+                pthread_mutex_unlock(&m_lock);
+                continue;
+            }
+
+            // Latest-wins: discard superseded READY frames
+            for (int i = 0; i < N_BUF; i++)
+                if (i != idx && m_owner[i] == READY)
+                    m_owner[i] = FREE;
+            m_owner[idx] = PRESENTING;
+            m_latestReady = -1;
+            int old = m_presentingIdx;
+            m_presentingIdx = idx;
+            if (old >= 0 && old < N_BUF && old != idx &&
+                m_owner[old] == PRESENTING)
+                m_owner[old] = FREE;
+
+            uint32_t w = m_w, h = m_h;
+            GLuint tex = m_buf[idx].tex;
+            pthread_mutex_unlock(&m_lock);
+
+            blitFrame(tex, w, h);
+            eglSwapBuffers(m_dpy, m_winSurf);
+
+            pthread_mutex_lock(&m_lock);
+            if (m_owner[idx] == PRESENTING)
+                m_owner[idx] = FREE;
+            pthread_mutex_unlock(&m_lock);
+        }
+
+        if (m_prog) {
+            glDeleteProgram(m_prog);
+            glDeleteBuffers(1, &m_vbo);
+        }
+        eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    EGLDisplay m_dpy;
+    EGLConfig m_cfg;
+    EGLSurface m_winSurf;
+    EGLContext m_presCtx;
+    EGLContext m_renderCtx;
+    EGLSurface m_pbuf;
+    uint32_t m_w;
+    uint32_t m_h;
+    Buf m_buf[N_BUF];
+    Owner m_owner[N_BUF];
+    int m_renderIdx;
+    int m_latestReady;
+    int m_presentingIdx;
+    volatile bool m_running;
+    pthread_t m_thread;
+    pthread_mutex_t m_lock;
+    pthread_cond_t m_cond;
+    GLuint m_prog;
+    GLuint m_vbo;
+};
+
 } // namespace
 
 namespace LWEDelegate {
@@ -182,6 +568,7 @@ public:
         , m_eglContext(EGL_NO_CONTEXT)
         , m_lastWidth(width)
         , m_lastHeight(height)
+        , m_presenter(nullptr)
         , m_webContainer(nullptr)
         , m_imfContext(nullptr)
         , m_isImfInitialized(false)
@@ -238,6 +625,13 @@ public:
             return;
         }
 
+        // Hand m_eglContext (as presenter ctx) and m_eglSurface to
+        // FboPresenter. The presenter thread owns the window surface; the
+        // engine thread renders to FBO via the shared render context created
+        // inside FboPresenter.
+        m_presenter = new FboPresenter(m_eglDisplay, m_eglConfig, m_eglSurface,
+                                       m_eglContext, width, height);
+
         ecore_main_loop_glib_integrate();
 
         setupEventHandlers();
@@ -249,36 +643,25 @@ public:
         };
 
         WebContainer::RendererGLConfiguration config;
-        config.onMakeCurrent = [this](WebContainer* wc) { makeCurrent(); };
+        config.onMakeCurrent = [this](WebContainer* wc) {
+            m_presenter->onMakeCurrent(m_lastWidth, m_lastHeight);
+        };
         config.onSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
-            swapBuffers();
+            m_presenter->onSwapBuffers();
         };
         config.onCreateSharedContext = [this](WebContainer* wc) -> uintptr_t {
-            EGLContext sharedContext;
-            if (createGLContext(sharedContext, m_eglDisplay, m_eglConfig,
-                                m_eglContext)) {
-                return reinterpret_cast<uintptr_t>(sharedContext);
-            }
-            return UINTPTR_MAX;
+            return m_presenter->createSharedContext();
         };
         config.onDestroyContext = [this](WebContainer* wc,
                                          uintptr_t context) -> bool {
-            return eglDestroyContext(m_eglDisplay,
-                                     reinterpret_cast<EGLContext>(context));
+            return m_presenter->destroySharedContext(context);
         };
         config.onClearCurrentContext = [this](WebContainer* wc) -> bool {
-            return eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                  EGL_NO_CONTEXT);
+            return m_presenter->clearCurrent();
         };
         config.onMakeCurrentWithContext = [this](WebContainer* wc,
                                                  uintptr_t context) -> bool {
-            if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
-                                reinterpret_cast<EGLContext>(context))) {
-                printf("Failed to set current context (eglError: 0x%x)\n",
-                       eglGetError());
-                return false;
-            }
-            return true;
+            return m_presenter->makeCurrentWithContext(context);
         };
         config.onGetProcAddress = [this](WebContainer* wc,
                                          const char* name) -> void* {
@@ -293,6 +676,11 @@ public:
 
         m_webContainer = WebContainer::CreateGL(args, config);
         SetWebContainer(m_webContainer);
+
+        m_webContainer->RegisterOnIdleHandler([this](WebContainer*) {
+            if (m_presenter)
+                m_presenter->flushIdleBuffers();
+        });
 
         setResizeCallback(
             [this](int w, int h) { m_webContainer->ResizeTo(w, h); });
@@ -364,6 +752,10 @@ public:
             m_webContainer->Destroy();
             m_webContainer = nullptr;
         }
+
+        // Stop presenter thread before cleaning up EGL surface/context
+        delete m_presenter;
+        m_presenter = nullptr;
 
         cleanupIMF();
 
@@ -503,6 +895,10 @@ public:
 
     bool makeCurrent()
     {
+        if (m_presenter) {
+            m_presenter->onMakeCurrent(m_lastWidth, m_lastHeight);
+            return true;
+        }
         if (!eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface,
                             m_eglContext)) {
             printf("Failed to set current context (eglError: 0x%x)\n",
@@ -514,6 +910,10 @@ public:
 
     bool swapBuffers()
     {
+        if (m_presenter) {
+            m_presenter->onSwapBuffers();
+            return true;
+        }
         return eglSwapBuffers(m_eglDisplay, m_eglSurface);
     }
 
@@ -752,6 +1152,10 @@ public:
 
                 if (configureEvent->win ==
                     (unsigned int)ecore_wl2_window_id_get(win->m_window)) {
+                    // Stop presenter (releases window surface), then resize
+                    delete win->m_presenter;
+                    win->m_presenter = nullptr;
+
                     if (win->m_eglSurface != EGL_NO_SURFACE) {
                         eglDestroySurface(win->m_eglDisplay, win->m_eglSurface);
                         win->m_eglSurface = EGL_NO_SURFACE;
@@ -772,6 +1176,12 @@ public:
 
                     win->m_lastWidth = w;
                     win->m_lastHeight = h;
+
+                    // Restart presenter with new surface; reuse existing
+                    // presCtx
+                    win->m_presenter = new FboPresenter(
+                        win->m_eglDisplay, win->m_eglConfig, win->m_eglSurface,
+                        win->m_eglContext, w, h);
 
                     if (win->m_resizeCallback) {
                         win->m_resizeCallback(w, h);
@@ -877,13 +1287,15 @@ private:
     Ecore_Wl2_Window* m_window;
     Ecore_Wl2_Egl_Window* m_eglWindow;
     EGLDisplay m_eglDisplay;
-    EGLSurface m_eglSurface;
-    EGLContext m_eglContext;
+    EGLSurface m_eglSurface; // owned by presenter thread after construction
+    EGLContext m_eglContext; // used as presenter ctx; render ctx is inside
+                             // FboPresenter
     EGLConfig m_eglConfig;
     int m_lastWidth;
     int m_lastHeight;
     bool m_isMouseLbuttonDown = false;
 
+    FboPresenter* m_presenter;
     WebContainer* m_webContainer;
 
     ResizeCallback m_resizeCallback;
