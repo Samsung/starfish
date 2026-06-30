@@ -144,7 +144,8 @@ protected:
         return false;
     }
 
-    static bool parseDur(const String* durValue, CSSTime& duration);
+    static bool parseDur(const String* durValue, CSSTime& duration,
+                         bool allowNegative = false);
     static bool parseFill(const String* fillValue, SVGAnimationFill& fill);
     static bool parseRepeatCount(const String* repeatCountValue,
                                  float& repeatCount);

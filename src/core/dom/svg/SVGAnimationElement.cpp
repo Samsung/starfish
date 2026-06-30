@@ -153,7 +153,7 @@ void SVGAnimationElement::didAttributeChanged(QualifiedName name,
     }
     if (ss->m_begin == name) {
         CSSTime begin;
-        if (parseDur(value, begin)) {
+        if (parseDur(value, begin, true)) {
             if (!m_begin.hasValue() || m_begin.value() != begin) {
                 m_begin = begin;
             }
@@ -479,17 +479,22 @@ bool SVGAnimationElement::convertFallbackValues(
     return true;
 }
 
-bool SVGAnimationElement::parseDur(const String* durValue, CSSTime& duration)
+bool SVGAnimationElement::parseDur(const String* durValue, CSSTime& duration,
+                                   bool allowNegative)
 {
     CSSStyleValuePair temp;
     auto str = durValue->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, str.c_str(), str.length());
-    if (temp.updateValueTime(tokens, 0)) {
+    if (temp.updateValueTime(
+            tokens, allowNegative ? CSSPropertyParser::AllowNegative : 0)) {
         duration = temp.timeValue();
         return true;
-    } else if (temp.updateValueTime(tokens,
-                                    CSSPropertyParser::AllowWithoutUnit)) {
+    } else if (temp.updateValueTime(
+                   tokens, allowNegative
+                               ? CSSPropertyParser::AllowNegative |
+                                     CSSPropertyParser::AllowWithoutUnit
+                               : CSSPropertyParser::AllowWithoutUnit)) {
         duration = CSSTime(temp.timeValue().value() * 1000);
         return true;
     }
