@@ -65,7 +65,31 @@
 #ifndef EGL_IMAGE_PRESERVED_KHR
 #define EGL_IMAGE_PRESERVED_KHR 0x30D2
 #endif
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+#include <Ecore_Wl2.h>
+#else
+#include <Ecore_Wayland.h>
 #endif
+#endif
+
+#if !defined(STARFISH_UV_CAIRO_GL) && defined(STARFISH_TIZEN)
+// TBM + raw-EGL headers for glib-TBM mode (LWE_GLIB_TBM_RENDER env).
+// Must precede Elementary.h to avoid EGL/GL type-conflict (same reason as UV
+// path).
+#define EVAS_GL_NO_GL_H_CHECK
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
+#ifndef EGL_NATIVE_SURFACE_TIZEN
+#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+#endif
+#ifndef EGL_IMAGE_PRESERVED_KHR
+#define EGL_IMAGE_PRESERVED_KHR 0x30D2
+#endif
+#endif // !STARFISH_UV_CAIRO_GL && STARFISH_TIZEN
 
 #include <Elementary.h>
 #include <Ecore_Input.h>
@@ -75,6 +99,14 @@
 
 #if !defined(STARFISH_UV_CAIRO_GL)
 #include <Evas_GL.h>
+#endif
+
+#if !defined(STARFISH_UV_CAIRO_GL) && defined(STARFISH_TIZEN)
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+#include <Ecore_Wl2.h>
+#else
+#include <Ecore_Wayland.h>
+#endif
 #endif
 
 #ifdef STREAMLINE_PROFILE
@@ -374,7 +406,13 @@ private:
         if (m_ctx != EGL_NO_CONTEXT) {
             return;
         }
-        m_dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+        Ecore_Wl2_Display* wl2dpy = ecore_wl2_connected_display_get(NULL);
+        m_dpy =
+            eglGetDisplay((EGLNativeDisplayType)ecore_wl2_display_get(wl2dpy));
+#else
+        m_dpy = eglGetDisplay((EGLNativeDisplayType)ecore_wl_display_get());
+#endif
         eglInitialize(m_dpy, nullptr, nullptr);
         eglBindAPI(EGL_OPENGL_ES_API);
         EGLint cfgAttr[] = { EGL_SURFACE_TYPE,
@@ -600,6 +638,265 @@ private:
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_pImgTargetTex;
 };
 #endif
+
+#if !defined(STARFISH_UV_CAIRO_GL) && defined(STARFISH_TIZEN)
+// Ping-pong TBM rendering for the glib backend, using a private raw EGL
+// context (no EvasGL). Activated when LWE_GLIB_TBM_RENDER env var is set.
+// The EGL display is obtained from the Wayland display so TBM EGLImages
+// bind correctly. The engine uses GenericGL (raw GLES) because
+// __internalLWEWebViewEvasGLAPI is not set in this mode.
+class GlibTbmPresenter {
+public:
+    static const int NUM_BUF = 2;
+
+    struct Buf {
+        tbm_surface_h tbm;
+        EGLImageKHR img;
+        GLuint tex;
+        GLuint fbo;
+        bool alloc;
+    };
+
+    explicit GlibTbmPresenter(Evas_Object* win, Evas_Object* image)
+        : m_image(image)
+        , m_dpy(EGL_NO_DISPLAY)
+        , m_cfg(nullptr)
+        , m_ctx(EGL_NO_CONTEXT)
+        , m_pbuf(EGL_NO_SURFACE)
+        , m_w(0)
+        , m_h(0)
+        , m_renderIdx(0)
+        , m_displayingIdx(-1)
+        , m_pCreateImage(nullptr)
+        , m_pDestroyImage(nullptr)
+        , m_pImgTargetTex(nullptr)
+    {
+        for (int i = 0; i < NUM_BUF; i++) {
+            m_buf[i] = { nullptr, EGL_NO_IMAGE_KHR, 0, 0, false };
+        }
+        ensureContext(win);
+    }
+
+    ~GlibTbmPresenter()
+    {
+        if (m_ctx == EGL_NO_CONTEXT) {
+            return;
+        }
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        for (int i = 0; i < NUM_BUF; i++) {
+            if (m_buf[i].alloc) {
+                destroyBuffer(i);
+            }
+        }
+        eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroyContext(m_dpy, m_ctx);
+        eglDestroySurface(m_dpy, m_pbuf);
+        // Do NOT eglTerminate — the Wayland EGL display is shared with the
+        // system.
+    }
+
+    void onMakeCurrent(uint32_t w, uint32_t h)
+    {
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        if (w != m_w || h != m_h) {
+            reallocAll(w, h);
+        }
+        if (!m_buf[m_renderIdx].alloc) {
+            allocBuffer(m_renderIdx);
+        }
+        bindRenderFBO();
+    }
+
+    void onSwapBuffers()
+    {
+        glFinish();
+        int idx = m_renderIdx;
+        Evas_Native_Surface ns;
+        memset(&ns, 0, sizeof(ns));
+        ns.version = EVAS_NATIVE_SURFACE_VERSION;
+        ns.type = EVAS_NATIVE_SURFACE_TBM;
+        ns.data.tbm.buffer = m_buf[idx].tbm;
+        ns.data.tbm.rot = 0;
+        ns.data.tbm.ratio = 0;
+        ns.data.tbm.flip =
+            EVAS_IMAGE_FLIP_HORIZONTAL | EVAS_IMAGE_FLIP_VERTICAL;
+        evas_object_image_native_surface_set(m_image, &ns);
+        evas_object_image_pixels_dirty_set(m_image, EINA_TRUE);
+        m_displayingIdx = idx;
+        m_renderIdx = 1 - idx;
+    }
+
+    void flushIdleBuffers()
+    {
+        if (m_displayingIdx < 0) {
+            return;
+        }
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        for (int i = 0; i < NUM_BUF; i++) {
+            if (i == m_displayingIdx) {
+                continue;
+            }
+            if (m_buf[i].alloc) {
+                destroyBuffer(i);
+            }
+        }
+        m_renderIdx = 1 - m_displayingIdx;
+    }
+
+    // WebGL / shared-context plumbing (same thread as engine in glib mode)
+    uintptr_t createSharedContext()
+    {
+        EGLint attr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        return reinterpret_cast<uintptr_t>(
+            eglCreateContext(m_dpy, m_cfg, m_ctx, attr));
+    }
+    bool destroyContext(uintptr_t c)
+    {
+        eglDestroyContext(m_dpy, reinterpret_cast<EGLContext>(c));
+        return true;
+    }
+    bool clearCurrent()
+    {
+        return eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                              EGL_NO_CONTEXT);
+    }
+    bool makeCurrentWithContext(uintptr_t c)
+    {
+        return eglMakeCurrent(m_dpy, m_pbuf, m_pbuf,
+                              reinterpret_cast<EGLContext>(c));
+    }
+
+private:
+    void ensureContext(Evas_Object* win)
+    {
+        // Obtain the EGL display from the Wayland compositor display so that
+        // TBM EGLImages (which reference Wayland DRM buffers) bind correctly.
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+        Ecore_Wl2_Display* wl2dpy = ecore_wl2_connected_display_get(NULL);
+        m_dpy =
+            eglGetDisplay((EGLNativeDisplayType)ecore_wl2_display_get(wl2dpy));
+#else
+        m_dpy = eglGetDisplay((EGLNativeDisplayType)ecore_wl_display_get());
+#endif
+        eglInitialize(m_dpy, nullptr, nullptr);
+        eglBindAPI(EGL_OPENGL_ES_API);
+
+        EGLint cfgAttr[] = { EGL_SURFACE_TYPE,
+                             EGL_PBUFFER_BIT,
+                             EGL_RENDERABLE_TYPE,
+                             EGL_OPENGL_ES2_BIT,
+                             EGL_RED_SIZE,
+                             8,
+                             EGL_GREEN_SIZE,
+                             8,
+                             EGL_BLUE_SIZE,
+                             8,
+                             EGL_ALPHA_SIZE,
+                             8,
+                             EGL_NONE };
+        EGLint n = 0;
+        eglChooseConfig(m_dpy, cfgAttr, &m_cfg, 1, &n);
+
+        EGLint ctxAttr[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        m_ctx = eglCreateContext(m_dpy, m_cfg, EGL_NO_CONTEXT, ctxAttr);
+
+        EGLint pb[] = { EGL_WIDTH, 16, EGL_HEIGHT, 16, EGL_NONE };
+        m_pbuf = eglCreatePbufferSurface(m_dpy, m_cfg, pb);
+
+        eglMakeCurrent(m_dpy, m_pbuf, m_pbuf, m_ctx);
+        m_pCreateImage =
+            (PFNEGLCREATEIMAGEKHRPROC)eglGetProcAddress("eglCreateImageKHR");
+        m_pDestroyImage =
+            (PFNEGLDESTROYIMAGEKHRPROC)eglGetProcAddress("eglDestroyImageKHR");
+        m_pImgTargetTex =
+            (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress(
+                "glEGLImageTargetTexture2DOES");
+        eglMakeCurrent(m_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    void bindRenderFBO()
+    {
+        if (m_buf[m_renderIdx].fbo) {
+            glBindFramebuffer(GL_FRAMEBUFFER, m_buf[m_renderIdx].fbo);
+            glViewport(0, 0, m_w, m_h);
+        }
+    }
+
+    void allocBuffer(int i)
+    {
+        m_buf[i].tbm = tbm_surface_create(m_w, m_h, TBM_FORMAT_ARGB8888);
+        EGLint imgAttr[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+        if (m_pCreateImage) {
+            m_buf[i].img = m_pCreateImage(
+                m_dpy, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
+                (EGLClientBuffer)(intptr_t)m_buf[i].tbm, imgAttr);
+        }
+        glGenTextures(1, &m_buf[i].tex);
+        glBindTexture(GL_TEXTURE_2D, m_buf[i].tex);
+        if (m_buf[i].img != EGL_NO_IMAGE_KHR && m_pImgTargetTex) {
+            m_pImgTargetTex(GL_TEXTURE_2D, (GLeglImageOES)m_buf[i].img);
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glGenFramebuffers(1, &m_buf[i].fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_buf[i].fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, m_buf[i].tex, 0);
+        GLenum st = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (st != GL_FRAMEBUFFER_COMPLETE) {
+            STARFISH_LOG_ERROR("GlibTbmPresenter: FBO[%d] incomplete 0x%x", i,
+                               st);
+        }
+        m_buf[i].alloc = true;
+    }
+
+    void destroyBuffer(int i)
+    {
+        if (m_buf[i].fbo) {
+            glDeleteFramebuffers(1, &m_buf[i].fbo);
+        }
+        if (m_buf[i].tex) {
+            glDeleteTextures(1, &m_buf[i].tex);
+        }
+        if (m_buf[i].img != EGL_NO_IMAGE_KHR && m_pDestroyImage) {
+            m_pDestroyImage(m_dpy, m_buf[i].img);
+        }
+        if (m_buf[i].tbm) {
+            tbm_surface_destroy(m_buf[i].tbm);
+        }
+        m_buf[i] = { nullptr, EGL_NO_IMAGE_KHR, 0, 0, false };
+    }
+
+    void reallocAll(uint32_t w, uint32_t h)
+    {
+        for (int i = 0; i < NUM_BUF; i++) {
+            if (m_buf[i].alloc) {
+                destroyBuffer(i);
+            }
+        }
+        m_w = w;
+        m_h = h;
+        m_displayingIdx = -1;
+        m_renderIdx = 0;
+    }
+
+    Evas_Object* m_image;
+    EGLDisplay m_dpy;
+    EGLConfig m_cfg;
+    EGLContext m_ctx;
+    EGLSurface m_pbuf;
+    uint32_t m_w;
+    uint32_t m_h;
+    Buf m_buf[NUM_BUF];
+    int m_renderIdx;
+    int m_displayingIdx;
+    PFNEGLCREATEIMAGEKHRPROC m_pCreateImage;
+    PFNEGLDESTROYIMAGEKHRPROC m_pDestroyImage;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_pImgTargetTex;
+};
+#endif // !STARFISH_UV_CAIRO_GL && STARFISH_TIZEN
 
 const int g_arrowKeyDownMinimumDelayInMS = 150;
 static int g_arrowKeyDownTimestamp[4];
@@ -857,6 +1154,9 @@ public:
         , m_uvPresenter(nullptr)
 #else
         , m_glSync(nullptr)
+#if defined(STARFISH_TIZEN)
+        , m_glibTbmPresenter(nullptr)
+#endif
 #endif
         , m_lastMouseX(0)
         , m_lastMouseY(0)
@@ -920,10 +1220,21 @@ public:
         m_uvPresenter = new UvTbmPresenter(m_graphicsAdapter);
         evas_object_show(m_graphicsAdapter);
 #else
-        m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
-        // Set a surface config
-        m_glCfg = evas_gl_config_new();
-        m_glCfg->color_format = EVAS_GL_RGBA_8888;
+#if defined(STARFISH_TIZEN)
+        if (!!getenv("LWE_GLIB_TBM_RENDER")) {
+            // Pure-EGL TBM mode: skip EvasGL entirely. GlibTbmPresenter owns
+            // its own EGL context. The engine uses GenericGL because
+            // __internalLWEWebViewEvasGLAPI is not set.
+            STARFISH_LOG_INFO(
+                "WebViewEFL: glib TBM mode (LWE_GLIB_TBM_RENDER)");
+            m_glibTbmPresenter = new GlibTbmPresenter(win, m_graphicsAdapter);
+            evas_object_show(m_graphicsAdapter);
+        } else {
+#endif
+            m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
+            // Set a surface config
+            m_glCfg = evas_gl_config_new();
+            m_glCfg->color_format = EVAS_GL_RGBA_8888;
 
 // we need to set these secret flags reducing memory usage
 // see platform/upstream/efl/src/modules/evas/engines/gl_common/evas_gl_core.c
@@ -931,40 +1242,45 @@ public:
 // or ./src/modules/evas/engines/gl_common/evas_gl_core.c in efl git
 #define EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE (1 << 12)
 #define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
-        m_glCfg->options_bits = (Evas_GL_Options_Bits)(
-            EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
-            EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
-            EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
-        STARFISH_LOG_INFO("try to use EvasGL direct mode");
+            m_glCfg->options_bits = (Evas_GL_Options_Bits)(
+                EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
+                EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
+                EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
+            STARFISH_LOG_INFO("try to use EvasGL direct mode");
 
-        // Create a surface and context
-        m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
-        m_glCtx = evas_gl_context_version_create(
-            m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
-
-        if (m_glCtx == nullptr) {
-            STARFISH_LOG_ERROR(
-                "failed to create openGL 3.0 context... try to use 2.0 "
-                "instead");
+            // Create a surface and context
+            m_glSfc =
+                evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
             m_glCtx = evas_gl_context_version_create(
-                m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
-        }
-        if (m_glCtx == nullptr) {
-            STARFISH_LOG_ERROR("failed to create openGL 2.0 context...");
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
+                m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
 
-        m_glGlapi = evas_gl_context_api_get(m_glEvasgl, m_glCtx);
+            if (m_glCtx == nullptr) {
+                STARFISH_LOG_ERROR(
+                    "failed to create openGL 3.0 context... try to use 2.0 "
+                    "instead");
+                m_glCtx = evas_gl_context_version_create(
+                    m_glEvasgl, NULL,
+                    Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+            }
+            if (m_glCtx == nullptr) {
+                STARFISH_LOG_ERROR("failed to create openGL 2.0 context...");
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
 
-        Evas_Native_Surface ns;
-        evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
-        evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
+            m_glGlapi = evas_gl_context_api_get(m_glEvasgl, m_glCtx);
 
-        // This is how to set up evasgl's viewport correctly.
-        // This guide was received from efl team.
-        evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
-        evas_object_show(m_graphicsAdapter);
-        evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
+            Evas_Native_Surface ns;
+            evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
+            evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
+
+            // This is how to set up evasgl's viewport correctly.
+            // This guide was received from efl team.
+            evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+            evas_object_show(m_graphicsAdapter);
+            evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
+#if defined(STARFISH_TIZEN)
+        } // end else (non-TBM EvasGL path)
+#endif
 #endif
 
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
@@ -1220,14 +1536,29 @@ public:
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 #else
-            evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
-            evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
-            evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
-            Evas_Native_Surface ns;
-            wv->m_glSfc =
-                evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
-            evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
-            evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
+#if defined(STARFISH_TIZEN)
+            if (wv->m_glibTbmPresenter) {
+                // TBM mode: just clear the stale native surface and resize the
+                // image object. GlibTbmPresenter reallocates its TBM buffers
+                // on the next onMakeCurrent when it detects the size change.
+                evas_object_image_native_surface_set(wv->m_graphicsAdapter,
+                                                     NULL);
+                evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
+            } else {
+#endif
+                evas_object_image_native_surface_set(wv->m_graphicsAdapter,
+                                                     NULL);
+                evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
+                evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
+                wv->m_glSfc =
+                    evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
+                Evas_Native_Surface ns;
+                evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
+                evas_object_image_native_surface_set(wv->m_graphicsAdapter,
+                                                     &ns);
+#if defined(STARFISH_TIZEN)
+            } // end else (EvasGL mode)
+#endif
 #endif
             wv->m_isRenderedOnce = false;
 
@@ -1529,82 +1860,140 @@ public:
             return extensions && strstr(extensions, extension) != nullptr;
         };
 #else
-        config.onMakeCurrent = [this](WebContainer* wc) {
-            evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
-
-            if (m_glSync) {
-                Starfish::LongTaskFinder t("evasglWaitSync");
-                m_glGlapi->evasglClientWaitSync(
-                    m_glEvasgl, m_glSync, EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE,
-                    EVAS_GL_FOREVER);
-                m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
-                m_glSync = nullptr;
-            }
-        };
-        config.onSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
-        // Since tizen 9, we always needs glFence
-#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 9
-            mayNeedsSync = true;
-#endif
-            if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
-                int attr[] = { EVAS_GL_NONE };
-                m_glSync = m_glGlapi->evasglCreateSync(
-                    m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
-            }
-            if (m_lastInputTime) {
-                ANNOTATE_SETUP;
-                ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN, "response time");
+#if defined(STARFISH_TIZEN)
+        if (m_glibTbmPresenter) {
+            // Pure-EGL TBM mode: all callbacks go through GlibTbmPresenter.
+            // The engine uses GenericGL (raw GLES2) because EvasGLAPI is not
+            // set.
+            config.onMakeCurrent = [this](WebContainer* wc) {
+                m_glibTbmPresenter->onMakeCurrent(wc->Width(), wc->Height());
+            };
+            config.onSwapBuffers = [this](WebContainer* wc, bool) {
+                m_glibTbmPresenter->onSwapBuffers();
+                if (m_lastInputTime) {
+                    ANNOTATE_SETUP;
+                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                           "response time");
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
-                uint64_t end = Starfish::longTickCount();
-                float time = (float)((end - m_lastInputTime) / 1000.f);
-                STARFISH_LOG_INFO("response time is %f ms", time);
+                    uint64_t end = Starfish::longTickCount();
+                    float time = (float)((end - m_lastInputTime) / 1000.f);
+                    STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
-                m_lastInputTime = 0;
-                ANNOTATE_CHANNEL_END(3002);
-            }
-        };
-        config.onCreateSharedContext = [this](WebContainer* wc) -> uintptr_t {
-            Evas_GL_Context* sharedContext = nullptr;
-            sharedContext = evas_gl_context_version_create(
-                m_glEvasgl, m_glCtx, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
-            if (sharedContext == nullptr) {
+                    m_lastInputTime = 0;
+                    ANNOTATE_CHANNEL_END(3002);
+                }
+            };
+            config.onCreateSharedContext =
+                [this](WebContainer* wc) -> uintptr_t {
+                return m_glibTbmPresenter->createSharedContext();
+            };
+            config.onDestroyContext = [this](WebContainer* wc,
+                                             uintptr_t context) -> bool {
+                return m_glibTbmPresenter->destroyContext(context);
+            };
+            config.onClearCurrentContext = [this](WebContainer* wc) -> bool {
+                return m_glibTbmPresenter->clearCurrent();
+            };
+            config.onMakeCurrentWithContext =
+                [this](WebContainer* wc, uintptr_t context) -> bool {
+                return m_glibTbmPresenter->makeCurrentWithContext(context);
+            };
+            config.onGetProcAddress = [this](WebContainer* wc,
+                                             const char* name) -> void* {
+                return reinterpret_cast<void*>(eglGetProcAddress(name));
+            };
+            config.onIsSupportedExtension =
+                [this](WebContainer* wc, const char* extension) -> bool {
+                const char* extensions =
+                    reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+                return extensions && strstr(extensions, extension) != nullptr;
+            };
+        } else {
+#endif
+            // EvasGL (direct) mode
+            config.onMakeCurrent = [this](WebContainer* wc) {
+                evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+
+                if (m_glSync) {
+                    Starfish::LongTaskFinder t("evasglWaitSync");
+                    m_glGlapi->evasglClientWaitSync(
+                        m_glEvasgl, m_glSync,
+                        EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE, EVAS_GL_FOREVER);
+                    m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
+                    m_glSync = nullptr;
+                }
+            };
+            config.onSwapBuffers = [this](WebContainer* wc, bool mayNeedsSync) {
+            // Since tizen 9, we always needs glFence
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 9
+                mayNeedsSync = true;
+#endif
+                if (mayNeedsSync && m_glGlapi->evasglCreateSync && !m_glSync) {
+                    int attr[] = { EVAS_GL_NONE };
+                    m_glSync = m_glGlapi->evasglCreateSync(
+                        m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
+                }
+                if (m_lastInputTime) {
+                    ANNOTATE_SETUP;
+                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                           "response time");
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+                    uint64_t end = Starfish::longTickCount();
+                    float time = (float)((end - m_lastInputTime) / 1000.f);
+                    STARFISH_LOG_INFO("response time is %f ms", time);
+#endif
+                    m_lastInputTime = 0;
+                    ANNOTATE_CHANNEL_END(3002);
+                }
+            };
+            config.onCreateSharedContext =
+                [this](WebContainer* wc) -> uintptr_t {
+                Evas_GL_Context* sharedContext = nullptr;
                 sharedContext = evas_gl_context_version_create(
                     m_glEvasgl, m_glCtx,
-                    Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
-            }
-            STARFISH_ASSERT(sharedContext != nullptr);
-            return reinterpret_cast<uintptr_t>(sharedContext);
-        };
-        config.onDestroyContext = [this](WebContainer* wc,
-                                         uintptr_t context) -> bool {
-            evas_gl_context_destroy(
-                m_glEvasgl, reinterpret_cast<Evas_GL_Context*>(context));
-            return true;
-        };
-        config.onClearCurrentContext = [this](WebContainer* wc) -> bool {
-            return evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
-        };
-        config.onMakeCurrentWithContext = [this](WebContainer* wc,
-                                                 uintptr_t context) -> bool {
-            return evas_gl_make_current(
-                m_glEvasgl, m_glSfc,
-                reinterpret_cast<Evas_GL_Context*>(context));
-        };
-
-        config.onIsSupportedExtension = [this](WebContainer* wc,
-                                               const char* extension) -> bool {
-#if defined(STARFISH_TIZEN)
-            // The retuned string of evas_gl_string_query is never contain this
-            // extension. However, we should assume that Tizen supports this.
-            if (strncmp(extension, "EVAS_GL_TIZEN_image_native_surface", 34) ==
-                0) {
+                    Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
+                if (sharedContext == nullptr) {
+                    sharedContext = evas_gl_context_version_create(
+                        m_glEvasgl, m_glCtx,
+                        Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+                }
+                STARFISH_ASSERT(sharedContext != nullptr);
+                return reinterpret_cast<uintptr_t>(sharedContext);
+            };
+            config.onDestroyContext = [this](WebContainer* wc,
+                                             uintptr_t context) -> bool {
+                evas_gl_context_destroy(
+                    m_glEvasgl, reinterpret_cast<Evas_GL_Context*>(context));
                 return true;
-            }
+            };
+            config.onClearCurrentContext = [this](WebContainer* wc) -> bool {
+                return evas_gl_make_current(m_glEvasgl, nullptr, nullptr);
+            };
+            config.onMakeCurrentWithContext =
+                [this](WebContainer* wc, uintptr_t context) -> bool {
+                return evas_gl_make_current(
+                    m_glEvasgl, m_glSfc,
+                    reinterpret_cast<Evas_GL_Context*>(context));
+            };
+
+            config.onIsSupportedExtension =
+                [this](WebContainer* wc, const char* extension) -> bool {
+#if defined(STARFISH_TIZEN)
+                // The retuned string of evas_gl_string_query is never contain
+                // this extension. However, we should assume that Tizen supports
+                // this.
+                if (strncmp(extension, "EVAS_GL_TIZEN_image_native_surface",
+                            34) == 0) {
+                    return true;
+                }
 #endif
-            const char* extensions =
-                evas_gl_string_query(m_glEvasgl, EVAS_GL_EXTENSIONS);
-            return strstr(extensions, extension) != nullptr;
-        };
+                const char* extensions =
+                    evas_gl_string_query(m_glEvasgl, EVAS_GL_EXTENSIONS);
+                return strstr(extensions, extension) != nullptr;
+            };
+#if defined(STARFISH_TIZEN)
+        } // end else (EvasGL mode)
+#endif
 #endif
 
         WebContainer* webContainer = WebContainer::CreateGL(args, config);
@@ -1618,23 +2007,35 @@ public:
             }
         };
 #if !defined(STARFISH_UV_CAIRO_GL)
+
+        bool registerCallback = true;
+#if defined(STARFISH_TIZEN)
+        if (m_glibTbmPresenter) {
+            registerCallback = false;
+        }
+#endif
+
         // glib: rendering is pulled by Evas via the pixels-get callback. uv
         // does not register this, so the engine self-drives rendering on its
         // LWE thread; presentation happens via the TBM native surface set in
         // UvTbmPresenter::onTick (vsync animator, main thread).
 #if !(defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TEST))
-        webContainer->RegisterSetNeedsRenderingCallback(
-            [this](WebContainer* wc,
-                   const std::function<void()>& doRenderingFunction) {
-                evas_object_image_pixels_dirty_set(m_graphicsAdapter,
-                                                   EINA_TRUE);
-                evas_object_image_pixels_get_callback_set(
-                    m_graphicsAdapter, m_pixelDirtyCallback, this);
-                m_lastDoRenderingFunction = doRenderingFunction;
-            });
+        if (registerCallback) {
+            webContainer->RegisterSetNeedsRenderingCallback(
+                [this](WebContainer* wc,
+                       const std::function<void()>& doRenderingFunction) {
+                    evas_object_image_pixels_dirty_set(m_graphicsAdapter,
+                                                       EINA_TRUE);
+                    evas_object_image_pixels_get_callback_set(
+                        m_graphicsAdapter, m_pixelDirtyCallback, this);
+                    m_lastDoRenderingFunction = doRenderingFunction;
+                });
+        }
 #endif
-        evas_object_image_pixels_get_callback_set(m_graphicsAdapter,
-                                                  m_pixelDirtyCallback, this);
+        if (registerCallback) {
+            evas_object_image_pixels_get_callback_set(
+                m_graphicsAdapter, m_pixelDirtyCallback, this);
+        }
 #endif
 
         webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
@@ -1647,6 +2048,9 @@ public:
             [this](WebContainer*) -> WebContainer::TransformationMatrix {
 #if defined(STARFISH_UV_CAIRO_GL)
                 int degrees = 0;
+#elif defined(STARFISH_TIZEN)
+                int degrees =
+                    m_glibTbmPresenter ? 0 : evas_gl_rotation_get(m_glEvasgl);
 #else
                 int degrees = evas_gl_rotation_get(m_glEvasgl);
 #endif
@@ -1666,13 +2070,26 @@ public:
 #if defined(STARFISH_UV_CAIRO_GL)
         webContainer->RegisterOnIdleHandler(
             [this](WebContainer*) { m_uvPresenter->flushIdleBuffers(); });
+#elif defined(STARFISH_TIZEN)
+        if (m_glibTbmPresenter) {
+            webContainer->RegisterOnIdleHandler([this](WebContainer*) {
+                m_glibTbmPresenter->flushIdleBuffers();
+            });
+        }
 #endif
 
 #if !defined(STARFISH_UV_CAIRO_GL)
-        // Routes the engine's GL calls through EvasGL. uv intentionally omits
-        // this so GL::create falls back to GenericGL (raw GLES) on the LWE
-        // thread via config.onGetProcAddress.
-        webContainer->SetUserData("__internalLWEWebViewEvasGLAPI", m_glGlapi);
+        // Routes the engine's GL calls through EvasGL. Omitted in TBM mode so
+        // GL::create falls back to GenericGL (raw GLES via
+        // config.onGetProcAddress).
+#if defined(STARFISH_TIZEN)
+        if (!m_glibTbmPresenter) {
+#endif
+            webContainer->SetUserData("__internalLWEWebViewEvasGLAPI",
+                                      m_glGlapi);
+#if defined(STARFISH_TIZEN)
+        }
+#endif
 #endif
 
         webContainer->SetUserData(
@@ -1722,14 +2139,26 @@ public:
         // intentionally leaked here rather than torn down from the main thread
         // (cross-thread GL teardown would need an LWE-thread round-trip).
 #else
-        if (m_glSync) {
-            m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
-        }
-        evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
-        evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
-        evas_gl_context_destroy(m_glEvasgl, m_glCtx);
-        evas_gl_config_free(m_glCfg);
-        evas_gl_free(m_glEvasgl);
+#if defined(STARFISH_TIZEN)
+        if (m_glibTbmPresenter) {
+            // Pure-EGL TBM mode: presenter owns and cleans up its EGL/TBM
+            // resources.
+            evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
+            delete m_glibTbmPresenter;
+            m_glibTbmPresenter = nullptr;
+        } else {
+#endif
+            if (m_glSync) {
+                m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
+            }
+            evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
+            evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
+            evas_gl_context_destroy(m_glEvasgl, m_glCtx);
+            evas_gl_config_free(m_glCfg);
+            evas_gl_free(m_glEvasgl);
+#if defined(STARFISH_TIZEN)
+        } // end else (EvasGL mode)
+#endif
 #endif
 
         if (m_resizeHandler) {
@@ -1943,6 +2372,9 @@ protected:
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
     EvasGLSync m_glSync;
+#if defined(STARFISH_TIZEN)
+    GlibTbmPresenter* m_glibTbmPresenter;
+#endif
 #endif
     bool m_isRenderedOnce;
     void (*m_pixelDirtyCallback)(void* data, Evas_Object* o);
@@ -1954,6 +2386,13 @@ protected:
         // No EvasGL surface to clear; the engine will render the first frame
         // into a TBM buffer and present it. Nothing to do here.
 #else
+#if defined(STARFISH_TIZEN)
+        if (m_glibTbmPresenter) {
+            // TBM mode: the engine renders the first frame into a TBM buffer.
+            // There is no EvasGL surface to pre-clear.
+            return;
+        }
+#endif
         evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
         if (!m_isRenderedOnce) {
             evas_object_image_pixels_get_callback_set(
