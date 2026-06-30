@@ -851,22 +851,32 @@ ScriptValue createScriptValue(bool value)
     return ValueRef::create(value);
 }
 
-ScriptValue createScriptValue(int32_t value)
+ScriptValue createScriptValue(int value)
 {
     return ValueRef::create(value);
 }
 
-ScriptValue createScriptValue(uint32_t value)
-{
-    return ValueRef::create((unsigned long)value);
-}
-
-ScriptValue createScriptValue(int64_t value)
+ScriptValue createScriptValue(unsigned int value)
 {
     return ValueRef::create(value);
 }
 
-ScriptValue createScriptValue(uint64_t value)
+ScriptValue createScriptValue(long value)
+{
+    return ValueRef::create(value);
+}
+
+ScriptValue createScriptValue(unsigned long value)
+{
+    return ValueRef::create(value);
+}
+
+ScriptValue createScriptValue(long long value)
+{
+    return ValueRef::create(value);
+}
+
+ScriptValue createScriptValue(unsigned long long value)
 {
     return ValueRef::create(value);
 }
