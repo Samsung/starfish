@@ -2581,10 +2581,6 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
         g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
             renderer->isSupportedExtension(nativeSurfaceExtensionStr);
-#if defined(STARFISH_TIZEN) && \
-    (defined(STARFISH_SHELL_EFL) && defined(STARFISH_GLIB_CAIRO_GL))
-        STARFISH_RELEASE_ASSERT(g_isSupported_EGL_NATIVE_SURFACE_TIZEN);
-#endif
         g_needsCheckCompatibility = false;
         checkError(gl);
     }
