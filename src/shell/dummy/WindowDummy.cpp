@@ -49,6 +49,11 @@ public:
         }
     }
 
+    bool needsInitialize() const
+    {
+        return m_eglDisplay == EGL_NO_DISPLAY;
+    }
+
     bool initialize()
     {
         m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -191,12 +196,6 @@ public:
     {
         m_appLoop->init();
         m_renderer.reset(new RendererDelegateOffscreen());
-        if (!m_renderer->initialize()) {
-            printf(
-                "WindowDummy: offscreen EGL init failed, renderer will be "
-                "unavailable\n");
-            m_renderer.reset();
-        }
         return true;
     }
 
@@ -217,6 +216,13 @@ public:
 
     RendererDelegate* renderer() override
     {
+        if (m_renderer && m_renderer->needsInitialize() &&
+            !m_renderer->initialize()) {
+            printf(
+                "WindowDummy: offscreen EGL init failed, renderer will be "
+                "unavailable\n");
+            m_renderer.reset();
+        }
         return m_renderer.get();
     }
 
