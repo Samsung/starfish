@@ -241,7 +241,7 @@ ScriptValue WebGL2RenderingContext::getBufferParameter(GLenum target,
         if (hasNewGLError()) {
             return scriptNull();
         }
-        return createScriptValue(static_cast<int64_t>(value));
+        return createScriptValue(static_cast<GLsizeiptr>(value));
     }
     // GLenum
     case GL_BUFFER_USAGE: {
