@@ -69,6 +69,12 @@ void FrameDocument::layout(LayoutContext& ctx,
         }
         if (oh != h) {
             ctx.markViewportHeightDamaged();
+            // Viewport height changed (e.g. an iframe resize propagating a new
+            // window inner height). Force the root element to fully relayout so
+            // its and its descendants' viewport-relative sizes recompute; the
+            // incremental-layout skip would otherwise keep a stale size when
+            // the root/children have auto or flex-resolved heights.
+            firstChild()->markNeedsLayout();
         }
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
