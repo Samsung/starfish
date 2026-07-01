@@ -731,9 +731,17 @@ static void executeModule(Document* document,
                 data->source->markModuleLoadOrErrorEventFired();
             }
             for (auto* promise : data->promiseForDynamicLoadedModule) {
-                notifyDynamicLoadedModuleResult(
-                    document->scriptBindingInstance(), data->module.value(),
-                    promise);
+                // The module may have failed to load/parse, in which case
+                // data->module holds no value. Reject the dynamic import
+                // promise instead of dereferencing the empty Optional.
+                if (data->module.hasValue()) {
+                    notifyDynamicLoadedModuleResult(
+                        document->scriptBindingInstance(), data->module.value(),
+                        promise);
+                } else {
+                    notifyDynamicLoadedModuleError(
+                        document->scriptBindingInstance(), promise);
+                }
             }
             data->promiseForDynamicLoadedModule.clear();
         }

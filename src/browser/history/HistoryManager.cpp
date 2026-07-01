@@ -274,7 +274,16 @@ ResourceURL* HistoryManager::resolveURL(Document* document,
                                           document->baseURL()->baseURI());
         }
     } else {
-        resolvedURL = new ResourceURL(*(currentEntry()->url()));
+        // No URL given → use the document's current URL (per spec). The current
+        // history entry may be absent (e.g. a freshly-loaded iframe that calls
+        // history.replaceState before any entry is recorded), so fall back to
+        // the document URI instead of dereferencing a null entry.
+        HistoryEntry* cur = currentEntry();
+        if (cur && cur->url()) {
+            resolvedURL = new ResourceURL(*(cur->url()));
+        } else {
+            resolvedURL = new ResourceURL(*(document->documentURI()));
+        }
     }
     return resolvedURL;
 }
