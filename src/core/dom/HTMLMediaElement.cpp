@@ -81,6 +81,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
     , m_currentPendingOperationCount(0)
     , m_currentPendingOperationHandle(MessageLoopInvalidID)
     , m_resourceSelectionContext(nullptr)
+    , m_error(nullptr)
     , m_currentPlayStart(std::numeric_limits<double>::quiet_NaN())
     , m_controlsList(nullptr)
 {
@@ -302,6 +303,7 @@ void HTMLMediaElement::load()
     }
 
     // 8. Set the error attribute to null and the autoplaying flag to true.
+    m_error = nullptr;
     m_autoplayingFlag = true;
 
     // 9. Invoke the media element's resource selection algorithm.
@@ -375,8 +377,9 @@ void HTMLMediaElement::resourceSelection()
 
 void HTMLMediaElement::dedicatedMediaSourceFailure()
 {
-    // TODO Set the error attribute to a new MediaError object whose code
-    // attribute is set to MEDIA_ERR_SRC_NOT_SUPPORTED.
+    // Set the error attribute to a new MediaError object whose code
+    // attribute is set to MEDIA_ERR_SRC_NOT_SUPPORTED (= 4).
+    m_error = new MediaError(executionContext(), 4);
     // TODO Forget the media element's media-resource-specific tracks.
     // Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_networkState = NETWORK_NO_SOURCE;
@@ -400,8 +403,12 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 {
     if (shouldSetError) {
         // STARFISH_ASSERT(m_readyState > HAVE_NOTHING);
-        // TODO Set the error attribute to a new MediaError object whose code
-        // attribute is set to MEDIA_ERR_NETWORK / MEDIA_ERROR_DECODE
+        // Set the error attribute to a new MediaError object whose code
+        // attribute is set to MEDIA_ERR_NETWORK (= 2).
+        // NOTE minimal impl: network vs decode not distinguished here; the
+        // media pipeline does not surface the error kind (single m_foundError
+        // bool). Defaulting to MEDIA_ERR_NETWORK.
+        m_error = new MediaError(executionContext(), 2);
 
         // Set the element's networkState attribute to the NETWORK_IDLE value.
         m_networkState = NETWORK_IDLE;
@@ -1387,7 +1394,9 @@ void HTMLMediaElement::setPlayEndPos(double end)
 
 Optional<MediaError*> HTMLMediaElement::error()
 {
-    STARFISH_UNIMPLEMENTED();
+    if (m_error) {
+        return m_error;
+    }
     return nullptr;
 }
 

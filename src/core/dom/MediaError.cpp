@@ -23,22 +23,23 @@
 
 namespace Starfish {
 
-MediaError::MediaError(ExecutionContext* executionContext)
+MediaError::MediaError(ExecutionContext* executionContext, int32_t code,
+                       String* message)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_code(code)
+    , m_message(message)
 {
 }
 
 int32_t MediaError::code() const
 {
-    STARFISH_UNIMPLEMENTED();
-    return 0;
+    return m_code;
 }
 
 String* MediaError::message() const
 {
-    STARFISH_UNIMPLEMENTED();
-    return String::emptyString;
+    return m_message ? m_message : String::emptyString;
 }
 
 ScriptBindingInstance* MediaError::scriptBindingInstance()

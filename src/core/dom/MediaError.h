@@ -26,7 +26,8 @@ namespace Starfish {
 
 class MediaError : public ScriptWrappable {
 public:
-    MediaError(ExecutionContext* executionContext);
+    MediaError(ExecutionContext* executionContext, int32_t code = 0,
+               String* message = nullptr);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
@@ -37,6 +38,8 @@ public:
 
 protected:
     ScriptBindingInstance* m_scriptBindingInstance;
+    int32_t m_code;
+    String* m_message;
 };
 } // namespace Starfish
 

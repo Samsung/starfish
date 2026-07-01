@@ -432,6 +432,7 @@ protected:
     size_t m_currentPendingOperationHandle;
     size_t m_operationQueueAbortGeneration{ 0 };
     ResourceSelectionContext* m_resourceSelectionContext;
+    MediaError* m_error;
     double m_currentPlayStart;
     GCAtomicVector<TimeRange> m_pastPlayed;
 
