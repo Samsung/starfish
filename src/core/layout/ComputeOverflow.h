@@ -566,8 +566,7 @@ public:
                 }
 
                 if (childStackingContext->owner() == frameBox &&
-                    childStackingContext->inScrollActive() &&
-                    !childStackingContext->needsRepaintingWhenScrolling()) {
+                    childStackingContext->inScrollWithGraphicsBufferActive()) {
                     clipBorderRadiusIfNeeds(frameBox);
                 }
 
