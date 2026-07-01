@@ -370,21 +370,57 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
     return m_timingFunctions[m_frameIdx];
 }
 
+// Returns true iff no frame in the subtree rooted at |f| would paint anything
+// due to visibility. |visibility| inherits, so a subtree whose root computes to
+// `visibility: hidden` paints nothing unless some descendant overrides it back
+// to `visible`. Short-circuits on the first visible descendant.
+static bool isSubtreeVisibilityHidden(Frame* f)
+{
+    for (Frame* child = f->firstChild(); child; child = child->next()) {
+        ComputedStyle* cs = child->style();
+        // Frames without style (anonymous/text) inherit their parent's hidden
+        // visibility, so only an explicit `visible` can reveal content.
+        if (cs && cs->visibility() == VisibilityValue::VisibleVisibilityValue) {
+            return false;
+        }
+        if (!isSubtreeVisibilityHidden(child)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ActiveAnimationTask::needsContinuousRendering(uint64_t tick)
 {
-    bool b = !!m_targetElement->frame();
-    if (b) {
-        auto f = m_targetElement->frame();
-        f = f->parent();
-        while (f) {
-            if (f->style() && f->style()->opacity() == 0) {
-                return false;
-            }
-            f = f->layoutParent();
-        }
-        return true;
+    Frame* frame = m_targetElement->frame();
+    if (!frame) {
+        // display:none -> no frame -> nothing to render.
+        return false;
     }
-    return false;
+
+    // An ancestor with opacity 0 hides the whole subtree; animating it produces
+    // no visible change.
+    for (Frame* f = frame->parent(); f; f = f->layoutParent()) {
+        if (f->style() && f->style()->opacity() == 0) {
+            return false;
+        }
+    }
+
+    // If the animated element itself is hidden by `visibility: hidden` (whether
+    // set directly or inherited) and nothing in its subtree overrides it back to
+    // `visible`, the animation has no visible effect. Skip forcing continuous
+    // rendering so e.g. an offscreen/hidden buffering spinner does not keep the
+    // whole render pipeline running at 60fps. `property() != Visibility` guards
+    // the rare case of an animation that would itself reveal the element.
+    ComputedStyle* style = frame->style();
+    if (style &&
+        style->visibility() == VisibilityValue::HiddenVisibilityValue &&
+        property() != CSSStyleValuePair::KeyKind::Visibility &&
+        isSubtreeVisibilityHidden(frame)) {
+        return false;
+    }
+
+    return true;
 }
 
 double ActiveAnimationTask::computeProgress(double& fraction)
