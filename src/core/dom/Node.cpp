@@ -1886,6 +1886,15 @@ Node* Node::removeChild(Node* child)
             old->style()->display() == DisplayValue::BlockDisplayValue &&
             !child->nextSibling()) {
             frame()->removeChild(old);
+            child->setFrame(nullptr);
+            setNeedsLayout();
+        } else if (old->style() &&
+                   old->style()->display() == BlockDisplayValue &&
+                   old->isAbsolutePositioned() &&
+                   old->parent()->isFrameBlockBox() &&
+                   old->parent()->isAnonymous()) {
+            old->parent()->removeChild(old);
+            child->setFrame(nullptr);
             setNeedsLayout();
         } else {
             child->setNeedsFrameTreeBuild();
