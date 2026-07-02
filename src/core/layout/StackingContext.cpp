@@ -2799,6 +2799,20 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     LayoutUnit minY = visibleRect.y();
     LayoutUnit maxY = visibleRect.maxY();
 
+    // An SC with an empty visible rect has no tiles to draw; unless it
+    // composites through another channel (video/canvas contentSurface,
+    // compositor-drawn background, iframe child-document background or
+    // scrollbars, own scrollbars via shouldApplyOverflow), the rest of this
+    // function is pure setup overhead. Skip before the matrix computations.
+    static bool compSkip = getenv("STARFISH_COMP_SKIP") &&
+        *getenv("STARFISH_COMP_SKIP") == '1';
+    if (compSkip && visibleRect.isEmpty() && !owner()->contentSurface() &&
+        !isOwnerBackgroundDrawnByCompositor() &&
+        !isIFrameStackingContextOwner() &&
+        !(m_owner->isFrameBlockBox() && m_owner->shouldApplyOverflow())) {
+        return;
+    }
+
     auto screenMatrix = m_owner->computeScreenMatrix(true);
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect stackingContextExtent =
