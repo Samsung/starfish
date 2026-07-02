@@ -9501,6 +9501,7 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
                     }
                 } else {
                     bool needsToExecuteNormalPath = true;
+                    bool isElementAbsPositioned = style->isAbsolutePositioned();
                     if (e->style()->display() ==
                             DisplayValue::BlockDisplayValue &&
                         style->display() == DisplayValue::BlockDisplayValue &&
@@ -9529,6 +9530,37 @@ static ComputedStyleDamage applyStyleToElement(Element* element,
 
                             needsToExecuteNormalPath = false;
                         }
+                    } else if (isElementAbsPositioned && e->frame() &&
+                               e->frame()->style()->display() ==
+                                   BlockDisplayValue) {
+                        RenderingSiblingIterator iter(e->firstRenderingChild());
+                        bool seenAbs = false;
+                        while (true) {
+                            Optional<Node*> child = iter.next();
+                            if (!child) {
+                                break;
+                            }
+                            if (!seenAbs && child->style() &&
+                                child->style()->isAbsolutePositioned()) {
+                                seenAbs = true;
+                            }
+
+                            if (seenAbs && child->frame()) {
+                                FrameTreeBuilder::
+                                    needsFrameTreeBuildFromChildrenOfThisFrame(
+                                        child->frame());
+                                auto parent = child->frame()->parent();
+                                if (parent) {
+                                    parent->removeChild(child->frame());
+                                }
+                                child->markNeedsFrameTreeBuild();
+                                child->setFrame(nullptr);
+                            }
+                        }
+
+                        element->markNeedsFrameTreeBuild();
+                        e->propagateMarkChildNeedsFrameTreeBuild();
+                        needsToExecuteNormalPath = false;
                     }
 
                     if (needsToExecuteNormalPath) {
