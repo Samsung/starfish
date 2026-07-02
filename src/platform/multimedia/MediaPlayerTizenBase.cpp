@@ -22,6 +22,8 @@
 #if !defined(STARFISH_TIZEN_PROD_TV) || \
     defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
 
+#include <algorithm>
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/util/URL.h"
@@ -56,6 +58,15 @@ namespace Starfish {
 // (Settings::SetVideoOverlayEnabled), read off the owning WebView.
 bool MediaPlayerTizen::videoOverlayEnabled()
 {
+    // STARFISH_VIDEO_OVERLAY=1 (or =0) overrides the app setting, so the
+    // overlay path can be toggled per-device without an app update.
+    static int envOverride = []() {
+        const char* v = getenv("STARFISH_VIDEO_OVERLAY");
+        return v && *v ? (atoi(v) != 0 ? 1 : 0) : -1;
+    }();
+    if (envOverride >= 0) {
+        return envOverride == 1;
+    }
     return m_container && m_container->webView() &&
            m_container->webView()->videoOverlayEnabled();
 }
@@ -98,6 +109,7 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         // didDrawVideo()/punchHole().
         player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
         m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
+        m_lastVideoSourceROI = { { 0.0, 0.0, 1.0, 1.0 } };
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 #if defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
         void* elmWindowHandle =
@@ -127,16 +139,68 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
-    if (videoOverlayEnabled()) {
-        canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
-                                     videoRect.width(), videoRect.height()));
-        if (m_lastAbsoluteROIArea != absVideoRect) {
-            // TODO consider LWE::WebView x, y
-            player_set_display_roi_area(
-                m_nativePlayer, absVideoRect.x().toInt(),
-                absVideoRect.y().toInt(), absVideoRect.width().toInt(),
-                absVideoRect.height().toInt());
-            m_lastAbsoluteROIArea = absVideoRect;
+    if (!videoOverlayEnabled()) {
+        return;
+    }
+    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
+                                 videoRect.width(), videoRect.height()));
+
+    // The HW plane is not clipped by the page viewport, so a partially
+    // scrolled-out video must be handled here: crop the source to the
+    // on-screen part (player_set_video_roi_area, ratio-based) and shrink the
+    // display ROI to the visible intersection to match.
+    LayoutRect roiArea = absVideoRect;
+    std::array<double, 4> sourceROI{ { 0.0, 0.0, 1.0, 1.0 } };
+    if (!m_videoSourceROIUnsupported && absVideoRect.width() > 0 &&
+        absVideoRect.height() > 0) {
+        LayoutUnit visibleX = std::max(absVideoRect.x(), LayoutUnit(0));
+        LayoutUnit visibleY = std::max(absVideoRect.y(), LayoutUnit(0));
+        LayoutUnit visibleMaxX =
+            std::min(absVideoRect.maxX(),
+                     LayoutUnit(m_container->webView()->renderer()->width()));
+        LayoutUnit visibleMaxY =
+            std::min(absVideoRect.maxY(),
+                     LayoutUnit(m_container->webView()->renderer()->height()));
+        if (visibleMaxX <= visibleX || visibleMaxY <= visibleY) {
+            // Fully scrolled out: park the plane on a 1x1 dot instead of
+            // leaving the video painted outside the page.
+            roiArea = LayoutRect(0, 0, 1, 1);
+        } else {
+            roiArea = LayoutRect(visibleX, visibleY, visibleMaxX - visibleX,
+                                 visibleMaxY - visibleY);
+            double videoWidth = absVideoRect.width().toDouble();
+            double videoHeight = absVideoRect.height().toDouble();
+            sourceROI = {
+                { (visibleX - absVideoRect.x()).toDouble() / videoWidth,
+                  (visibleY - absVideoRect.y()).toDouble() / videoHeight,
+                  (visibleMaxX - visibleX).toDouble() / videoWidth,
+                  (visibleMaxY - visibleY).toDouble() / videoHeight }
+            };
+        }
+    }
+
+    if (!m_videoSourceROIUnsupported && sourceROI != m_lastVideoSourceROI) {
+        int ret =
+            player_set_video_roi_area(m_nativePlayer, sourceROI[0],
+                                      sourceROI[1], sourceROI[2], sourceROI[3]);
+        if (ret == PLAYER_ERROR_NONE) {
+            m_lastVideoSourceROI = sourceROI;
+        } else {
+            PLAYER_LOGE("**ERROR: player_set_video_roi_area %x -> ", ret);
+            m_videoSourceROIUnsupported = true;
+            roiArea = absVideoRect;
+        }
+    }
+
+    if (m_lastAbsoluteROIArea != roiArea) {
+        // TODO consider LWE::WebView x, y
+        int ret = player_set_display_roi_area(
+            m_nativePlayer, roiArea.x().toInt(), roiArea.y().toInt(),
+            roiArea.width().toInt(), roiArea.height().toInt());
+        if (ret == PLAYER_ERROR_NONE) {
+            m_lastAbsoluteROIArea = roiArea;
+        } else {
+            PLAYER_LOGE("**ERROR: player_set_display_roi_area %x -> ", ret);
         }
     }
 }
