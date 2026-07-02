@@ -37,6 +37,7 @@
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -397,6 +398,23 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     // Set the element's delaying-the-load-event flag to false. This stops
     // delaying the load event.
     m_delayingTheLoadEvent = false;
+}
+
+void HTMLMediaElement::setNeedsCompositeForVideoFrame()
+{
+    static int capFps = []() {
+        const char* v = getenv("STARFISH_VIDEO_COMPOSITE_FPS_CAP");
+        return v ? atoi(v) : 0;
+    }();
+    if (capFps > 0) {
+        uint64_t intervalMs = 1000 / (uint64_t)capFps;
+        uint64_t now = tickCount();
+        if (now - m_lastVideoFrameCompositeTime < intervalMs) {
+            return;
+        }
+        m_lastVideoFrameCompositeTime = now;
+    }
+    setNeedsComposite();
 }
 
 void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
