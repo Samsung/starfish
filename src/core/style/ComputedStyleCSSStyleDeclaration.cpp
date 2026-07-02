@@ -1754,6 +1754,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                                lengthToCSSStyleValue(h).value());
             list->emplace_back(CSSStyleValuePair::ValueKind::Length,
                                lengthToCSSStyleValue(v).value());
+            p.setValueList(list);
         }
         addValuePair(p);
     } break;
