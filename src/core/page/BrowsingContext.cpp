@@ -347,6 +347,12 @@ void BrowsingContext::buildFrameTreeIfNeeds()
             FrameTreeBuilder::buildFrameTree(document());
             m_needsLayout = true;
             m_needsFrameTreeBuild = false;
+            // A frame tree rebuild replaces FrameBox objects, so any existing
+            // StackingContext tree now points at stale frames. Request a full
+            // SC re-establish here (the rebuild site) rather than in
+            // layoutIfNeeded, because getComputedStyle can trigger this
+            // rebuild outside the layout path.
+            webView()->setNeedsEstablishesStackingContext();
         }
     }
 }
@@ -396,7 +402,16 @@ bool BrowsingContext::layoutIfNeeded()
 
         registerDidLayoutInWebView();
 
-        webView()->setNeedsEstablishesStackingContext();
+        // A pure-geometry layout cannot change which boxes establish stacking
+        // contexts: SC establishment is style-derived and re-requested via
+        // ComputedStyleDamageEstablishesStackingContext, and frame tree
+        // rebuilds request it in buildFrameTreeIfNeeds. Skipping the full SC
+        // clear+rebuild here leaves only the property recompute per layout.
+        static bool scEstGate = getenv("STARFISH_SC_EST_GATE") &&
+            *getenv("STARFISH_SC_EST_GATE") == '1';
+        if (!scEstGate) {
+            webView()->setNeedsEstablishesStackingContext();
+        }
         webView()->setNeedsComputeStackingContextProperties();
 
         m_needsLayout = false;
