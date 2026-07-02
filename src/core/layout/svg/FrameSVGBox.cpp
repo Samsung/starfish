@@ -1063,6 +1063,12 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
 
     SVGGradientElement* gradientElement = matchingSvg->asSVGGradientElement();
 
+    // Per the SVG spec, a gradient with no color stops (own or inherited via
+    // href) disables painting of the element.
+    if (gradientElement->colorStops().empty()) {
+        return nullptr;
+    }
+
     CanvasGradient* canvasGradient = nullptr;
     bool isUserSpaceOnUseMode = false;
     auto vp = viewport();

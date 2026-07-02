@@ -20,6 +20,8 @@
 #include "Starfish.h"
 #include "core/dom/svg/SVGGradientElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/dom/svg/SVGStopElement.h"
+#include "core/style/GradientData.h"
 
 namespace Starfish {
 
@@ -29,7 +31,47 @@ SVGGradientElement::SVGGradientElement(Document* document,
     , m_gradientUnits(nullptr)
     , m_gradientTransform(nullptr)
     , m_spreadMethod(nullptr)
+    , m_href(String::emptyString)
 {
+}
+
+GCVector<ColorStop*> SVGGradientElement::colorStops()
+{
+    GCVector<ColorStop*> colorStops;
+
+    // Per the SVG spec, a gradient element without stop children uses the
+    // stops of the gradient referenced by its href (or xlink:href)
+    // attribute, following the reference chain until stops are found.
+    SVGGradientElement* current = this;
+    GCVector<SVGGradientElement*> visited;
+    while (current) {
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            if (c->isSVGStopElement()) {
+                colorStops.push_back(c->asSVGStopElement()->colorStop());
+            }
+        }
+        if (colorStops.size()) {
+            break;
+        }
+        visited.push_back(current);
+
+        SVGGradientElement* next = nullptr;
+        if (!current->m_href->isEmpty()) {
+            auto target = current->findHrefTarget(current->m_href);
+            if (target && target->isSVGGradientElement()) {
+                next = target->asSVGGradientElement();
+            }
+        }
+        for (auto v : visited) {
+            if (v == next) {
+                next = nullptr;
+                break;
+            }
+        }
+        current = next;
+    }
+
+    return colorStops;
 }
 
 void SVGGradientElement::didNodeInserted(Node* parent, Node* newChild)
@@ -106,6 +148,12 @@ void SVGGradientElement::didAttributeChanged(QualifiedName name,
                     SVG_SPREADMETHOD_REPEAT);
             }
         }
+    } else if (ss->m_href == name || ss->m_xlinkHref == name ||
+               (!name.hasPrefix() &&
+                ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
+                ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
+        m_href = attributeRemoved ? String::emptyString : value;
+        attributeOfPaintServerLikeUpdated(false);
     }
 }
 

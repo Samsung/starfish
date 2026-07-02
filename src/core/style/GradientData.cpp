@@ -208,6 +208,12 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
                                            float& y2, float& r2,
                                            FrameBox* owner)
 {
+    // An SVG gradient may have no color stops at all (e.g. an unresolvable
+    // href reference); there is nothing to resolve in that case.
+    if (m_colorStopList.empty()) {
+        return;
+    }
+
     float gradientLength = 0.0f;
     if (m_type == GradientType::LinearGradient) {
         gradientLength = hypotf(x2 - x1, y2 - y1);

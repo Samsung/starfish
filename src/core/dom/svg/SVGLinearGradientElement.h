@@ -26,7 +26,6 @@
 namespace Starfish {
 
 class SVGSVGElement;
-class ColorStop;
 
 class SVGLinearGradientElement : public SVGGradientElement {
 public:
@@ -73,8 +72,6 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-
-    GCVector<ColorStop*> colorStops();
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x1);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y1);

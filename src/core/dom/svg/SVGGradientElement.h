@@ -27,6 +27,7 @@
 namespace Starfish {
 
 class SVGSVGElement;
+class ColorStop;
 
 class SVGGradientElement : public SVGElement {
 public:
@@ -49,6 +50,7 @@ public:
         GC_set_bit(desc,
                    GC_WORD_OFFSET(SVGGradientElement, m_gradientTransform));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGGradientElement, m_spreadMethod));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGGradientElement, m_href));
         SVGElement::fillGCDescriptor(desc);
     }
 
@@ -83,12 +85,15 @@ public:
     SVGAnimatedTransformList* gradientTransform();
     SVGAnimatedEnumeration* spreadMethod();
 
+    GCVector<ColorStop*> colorStops();
+
 protected:
     virtual void computeAttributeChangeDamage(AtomicString attrName) override;
 
     Optional<SVGAnimatedEnumeration*> m_gradientUnits;
     Optional<SVGAnimatedTransformList*> m_gradientTransform;
     Optional<SVGAnimatedEnumeration*> m_spreadMethod;
+    String* m_href;
 };
 } // namespace Starfish
 
