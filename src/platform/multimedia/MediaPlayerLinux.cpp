@@ -1318,8 +1318,7 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
                         MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()
-                                ->setNeedsCompositeForVideoFrame();
+                            self->container()->setNeedsCompositeForVideoFrame();
                         }
                     },
                     player);
@@ -2269,8 +2268,7 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                         MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()
-                                ->setNeedsCompositeForVideoFrame();
+                            self->container()->setNeedsCompositeForVideoFrame();
                         }
                         Locker<Mutex> locker(
                             *self->m_setNeedsCompositeEventIdlerHandleMutex);

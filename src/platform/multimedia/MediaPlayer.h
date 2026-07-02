@@ -120,6 +120,14 @@ public:
                               const LayoutRect& absVideoRect) = 0;
     virtual void willDrawVideo(Compositor* canvas,
                                const LayoutRect& videoRect) = 0;
+    // Called when the video's stacking context is not composited this frame
+    // (scrolled fully off-screen). A HW overlay plane is not driven by the web
+    // compositor, so it must be hidden explicitly here; otherwise it stays
+    // painted at its last on-screen ROI. No-op unless the platform uses an
+    // overlay plane.
+    virtual void hideVideoOverlay()
+    {
+    }
 
     CanvasSurface* contentSurface();
 

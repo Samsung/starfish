@@ -3791,6 +3791,11 @@ public:
         lastState.abbreviatedClipPaths.push_back(path);
     }
 
+    virtual Unit::Rect currentClipRect() override
+    {
+        return m_state.back().clipRect;
+    }
+
     virtual void setFillColor(const Unit::Color& clr) override
     {
         m_state.back().color = clr;

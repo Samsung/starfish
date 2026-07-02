@@ -828,8 +828,7 @@ void MediaPlayerTizen::setNativePlayerDisplayModeWithGL()
                                         return;
                                     }
                                     if (self->container() != nullptr &&
-                                        self->container()->frame() !=
-                                            nullptr) {
+                                        self->container()->frame() != nullptr) {
                                         self->container()
                                             ->setNeedsCompositeForVideoFrame();
                                     }
