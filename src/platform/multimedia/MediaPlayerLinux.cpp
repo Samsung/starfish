@@ -1227,7 +1227,7 @@ static void updateTimeCallback(void* data)
     // decoder-driven setNeedsComposite stalls.
     if (self->isMSE() == true && self->container() != nullptr &&
         self->container()->frame() != nullptr) {
-        self->container()->setNeedsComposite();
+        self->container()->setNeedsCompositeForVideoFrame();
     }
 }
 
@@ -1315,10 +1315,14 @@ void MediaPlayerLinux::setNativePlayerDisplayModeWithGL()
                 ->addIdlerWithNoGCRootingInOtherThread(
                     player->window(),
                     [](size_t, void* data) {
-                        BrowsingContext* b = (BrowsingContext*)data;
-                        b->setNeedsComposite();
+                        MediaPlayerLinux* self = (MediaPlayerLinux*)data;
+                        if (self->alive() && self->container() != nullptr &&
+                            self->container()->frame() != nullptr) {
+                            self->container()
+                                ->setNeedsCompositeForVideoFrame();
+                        }
                     },
-                    player->window()->browsingContext());
+                    player);
         },
         this);
 }
@@ -1652,7 +1656,7 @@ void MediaPlayerLinux::willDrawVideo(Compositor* canvas,
                 MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                 if (self->alive() && self->container() != nullptr &&
                     self->container()->frame() != nullptr) {
-                    self->container()->setNeedsComposite();
+                    self->container()->setNeedsCompositeForVideoFrame();
                 }
             },
             delay, this);
@@ -2265,7 +2269,8 @@ void MediaPlayerLinux::publishDecodedFrame(AVFrame* frame)
                         MediaPlayerLinux* self = (MediaPlayerLinux*)data;
                         if (self->alive() && self->container() != nullptr &&
                             self->container()->frame() != nullptr) {
-                            self->container()->setNeedsComposite();
+                            self->container()
+                                ->setNeedsCompositeForVideoFrame();
                         }
                         Locker<Mutex> locker(
                             *self->m_setNeedsCompositeEventIdlerHandleMutex);
