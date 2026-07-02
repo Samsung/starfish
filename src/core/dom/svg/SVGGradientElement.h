@@ -86,6 +86,7 @@ public:
     SVGAnimatedEnumeration* spreadMethod();
 
     GCVector<ColorStop*> colorStops();
+    void registerPaintClientForHrefChain(SVGElement* client);
 
 protected:
     virtual void computeAttributeChangeDamage(AtomicString attrName) override;

@@ -1051,10 +1051,11 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
 {
     Unit::Rect rect = svgRect;
 
-    auto owner = node()->asSVGElement()->ownerSVGElement();
+    auto client = node()->asSVGElement();
+    auto owner = client->ownerSVGElement();
     STARFISH_ASSERT(owner);
 
-    document()->registerSVGPaintClientElements(id, node()->asSVGElement());
+    document()->registerSVGPaintClientElements(id, client);
 
     auto matchingSvg = owner->getSVGElementById(id);
     if (!matchingSvg || !matchingSvg->isSVGGradientElement()) {
@@ -1062,6 +1063,7 @@ Optional<CanvasFillStrokeSource*> FrameSVGBox::makeCanvasFillStrokeSource(
     }
 
     SVGGradientElement* gradientElement = matchingSvg->asSVGGradientElement();
+    gradientElement->registerPaintClientForHrefChain(client);
 
     // Per the SVG spec, a gradient with no color stops (own or inherited via
     // href) disables painting of the element.

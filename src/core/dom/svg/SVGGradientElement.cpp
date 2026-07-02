@@ -18,6 +18,7 @@
  */
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/dom/Document.h"
 #include "core/dom/svg/SVGGradientElement.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGStopElement.h"
@@ -34,6 +35,20 @@ SVGGradientElement::SVGGradientElement(Document* document,
     , m_href(String::emptyString)
 {
 }
+
+namespace {
+
+    AtomicString localHrefFragmentId(Starfish* starfish, String* href)
+    {
+        if (!href->startsWith("#") || href->length() <= 1) {
+            return AtomicString::emptyAtomicString();
+        }
+
+        return AtomicString::createAtomicString(
+            starfish, href->substring(1, href->length() - 1));
+    }
+
+} // namespace
 
 GCVector<ColorStop*> SVGGradientElement::colorStops()
 {
@@ -72,6 +87,46 @@ GCVector<ColorStop*> SVGGradientElement::colorStops()
     }
 
     return colorStops;
+}
+
+void SVGGradientElement::registerPaintClientForHrefChain(SVGElement* client)
+{
+    STARFISH_ASSERT(client);
+
+    SVGGradientElement* current = this;
+    GCVector<SVGGradientElement*> visited;
+    while (current) {
+        visited.push_back(current);
+        if (current->m_href->isEmpty()) {
+            break;
+        }
+
+        SVGGradientElement* next = nullptr;
+        auto target = current->findHrefTarget(current->m_href);
+        if (target && target->isSVGGradientElement()) {
+            next = target->asSVGGradientElement();
+        }
+
+        AtomicString dependencyId = AtomicString::emptyAtomicString();
+        if (next && next->atomicId().string()->length()) {
+            dependencyId = next->atomicId();
+        } else {
+            dependencyId =
+                localHrefFragmentId(current->starfish(), current->m_href);
+        }
+        if (dependencyId.string()->length()) {
+            current->document()->registerSVGPaintClientElements(dependencyId,
+                                                                client);
+        }
+
+        for (auto v : visited) {
+            if (v == next) {
+                next = nullptr;
+                break;
+            }
+        }
+        current = next;
+    }
 }
 
 void SVGGradientElement::didNodeInserted(Node* parent, Node* newChild)
