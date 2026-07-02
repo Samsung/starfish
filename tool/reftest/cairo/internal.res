@@ -308,6 +308,7 @@ test/cairo/internal-test/css/position2/left-margin-auto-right-margin-auto-width-
 test/cairo/internal-test/css/position2/left-margin-fixed-right-margin-fixed-width-auto.html
 test/cairo/internal-test/css/position2/left-margin-auto-right-margin-fixed-width-auto.html
 test/cairo/internal-test/css/table/table_fixed_20.html
+test/cairo/internal-test/css/table/table_border-spacing_computed_value.html
 test/cairo/internal-test/css/border/next-line-dont-show-end-mbp.html
 test/cairo/internal-test/click/click.html
 test/cairo/internal-test/click/click2.html
