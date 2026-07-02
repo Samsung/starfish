@@ -24,6 +24,7 @@
 
 #include "platform/multimedia/MediaPlayer.h"
 
+#include <array>
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
@@ -224,6 +225,14 @@ public:
     bool m_underrunMode : 1;
     size_t m_seekingTimer;
     LayoutRect m_lastAbsoluteROIArea;
+    // Source-side crop ratios (x, y, w, h in 0.0-1.0) last applied via
+    // player_set_video_roi_area; the identity means "no crop".
+    std::array<double, 4> m_lastVideoSourceROI{ { 0.0, 0.0, 1.0, 1.0 } };
+    // Once player_set_video_roi_area fails we stop clamping the display ROI
+    // to the viewport (falling back to the previous pass-through behavior),
+    // because shrinking the ROI without a matching source crop squeezes the
+    // whole frame into the visible remainder.
+    bool m_videoSourceROIUnsupported{ false };
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
 
