@@ -83,6 +83,16 @@ public:
 
     virtual void clip(const Unit::Rect& rt) = 0;
 
+    // Current accumulated clip rectangle in logical-screen coordinates (the
+    // same space as applyMatrixTo produces). A HW video overlay is a separate
+    // layer that the page clip does not affect, so the overlay path reads this
+    // to shrink the plane to the actually-visible region. An empty rect means
+    // "unknown / unbounded" (compositors that don't track it fall back).
+    virtual Unit::Rect currentClipRect()
+    {
+        return Unit::Rect(0, 0, 0, 0);
+    }
+
     // reset transform matrix & clip
     virtual void resetMatrixAndClip() = 0;
     // reset transform clip

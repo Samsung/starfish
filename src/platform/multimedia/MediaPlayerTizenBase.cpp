@@ -127,9 +127,34 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
                                     ecoreWaylandHandle, 0, 0, width, height);
 #endif
         player_set_display_visible(m_nativePlayer, true);
+        m_overlayPlaneVisible = true;
     } else {
         setNativePlayerDisplayModeWithGL();
     }
+}
+
+// Toggle the HW overlay plane on/off, pushing to the player only on a change.
+// Used to hide a video that has scrolled fully off-screen: the plane is not
+// clipped or culled by the web compositor, so it must be parked explicitly.
+void MediaPlayerTizen::setOverlayPlaneVisible(bool visible)
+{
+    if (m_overlayPlaneVisible == visible) {
+        return;
+    }
+    int ret = player_set_display_visible(m_nativePlayer, visible);
+    if (ret == PLAYER_ERROR_NONE) {
+        m_overlayPlaneVisible = visible;
+    } else {
+        PLAYER_LOGE("**ERROR: player_set_display_visible %x -> ", ret);
+    }
+}
+
+void MediaPlayerTizen::hideVideoOverlay()
+{
+    if (!videoOverlayEnabled()) {
+        return;
+    }
+    setOverlayPlaneVisible(false);
 }
 
 void MediaPlayerTizen::setPlayerDisplayVideoAtPausedState(int& ret)
@@ -145,39 +170,56 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
     canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
                                  videoRect.width(), videoRect.height()));
 
-    // The HW plane is not clipped by the page viewport, so a partially
-    // scrolled-out video must be handled here: crop the source to the
-    // on-screen part (player_set_video_roi_area, ratio-based) and shrink the
-    // display ROI to the visible intersection to match.
-    LayoutRect roiArea = absVideoRect;
-    std::array<double, 4> sourceROI{ { 0.0, 0.0, 1.0, 1.0 } };
-    if (!m_videoSourceROIUnsupported && absVideoRect.width() > 0 &&
-        absVideoRect.height() > 0) {
-        LayoutUnit visibleX = std::max(absVideoRect.x(), LayoutUnit(0));
-        LayoutUnit visibleY = std::max(absVideoRect.y(), LayoutUnit(0));
-        LayoutUnit visibleMaxX =
-            std::min(absVideoRect.maxX(),
-                     LayoutUnit(m_container->webView()->renderer()->width()));
-        LayoutUnit visibleMaxY =
-            std::min(absVideoRect.maxY(),
-                     LayoutUnit(m_container->webView()->renderer()->height()));
-        if (visibleMaxX <= visibleX || visibleMaxY <= visibleY) {
-            // Fully scrolled out: park the plane on a 1x1 dot instead of
-            // leaving the video painted outside the page.
-            roiArea = LayoutRect(0, 0, 1, 1);
-        } else {
-            roiArea = LayoutRect(visibleX, visibleY, visibleMaxX - visibleX,
-                                 visibleMaxY - visibleY);
-            double videoWidth = absVideoRect.width().toDouble();
-            double videoHeight = absVideoRect.height().toDouble();
-            sourceROI = {
-                { (visibleX - absVideoRect.x()).toDouble() / videoWidth,
-                  (visibleY - absVideoRect.y()).toDouble() / videoHeight,
-                  (visibleMaxX - visibleX).toDouble() / videoWidth,
-                  (visibleMaxY - visibleY).toDouble() / videoHeight }
-            };
-        }
+    // The HW plane is a separate layer behind the (transparent) page, so it is
+    // NOT clipped by the page: whatever rect it is given paints straight
+    // through the transparent background, including the part that scrolled out
+    // of its scroll container (e.g. a rounded card). The page clips the web
+    // content correctly, but the overlay must be confined here to match. The
+    // visible region is the video rect intersected with the compositor's
+    // current clip rect (logical-screen space, same as absVideoRect); it falls
+    // back to the page viewport when the compositor does not report a clip.
+    // In PLAYER_DISPLAY_MODE_DST_ROI the frame is scaled to fit the display
+    // ROI, so shrinking the display ROI to that intersection confines the
+    // plane; the source is cropped to the same part (player_set_video_roi_area,
+    // ratio-based) so the visible portion keeps its aspect instead of being
+    // squeezed. The display ROI is clamped even when the source crop is
+    // unavailable -- otherwise the full-size frame paints over the invisible
+    // region. A fully scrolled-out video is hidden outright via
+    // player_set_display_visible, because the compositor culls the off-screen
+    // stacking context and stops calling this method, so the plane would
+    // otherwise freeze at its last on-screen ROI.
+    Unit::Rect clipRect = canvas->currentClipRect();
+    LayoutUnit clipX(0);
+    LayoutUnit clipY(0);
+    LayoutUnit clipMaxX(m_container->webView()->renderer()->width());
+    LayoutUnit clipMaxY(m_container->webView()->renderer()->height());
+    if (!clipRect.isEmpty()) {
+        clipX = LayoutUnit(clipRect.x());
+        clipY = LayoutUnit(clipRect.y());
+        clipMaxX = LayoutUnit(clipRect.maxX());
+        clipMaxY = LayoutUnit(clipRect.maxY());
     }
+    LayoutUnit visibleX = std::max(absVideoRect.x(), clipX);
+    LayoutUnit visibleY = std::max(absVideoRect.y(), clipY);
+    LayoutUnit visibleMaxX = std::min(absVideoRect.maxX(), clipMaxX);
+    LayoutUnit visibleMaxY = std::min(absVideoRect.maxY(), clipMaxY);
+    if (absVideoRect.width() <= 0 || absVideoRect.height() <= 0 ||
+        visibleMaxX <= visibleX || visibleMaxY <= visibleY) {
+        setOverlayPlaneVisible(false);
+        return;
+    }
+    setOverlayPlaneVisible(true);
+
+    LayoutRect roiArea(visibleX, visibleY, visibleMaxX - visibleX,
+                       visibleMaxY - visibleY);
+    double videoWidth = absVideoRect.width().toDouble();
+    double videoHeight = absVideoRect.height().toDouble();
+    std::array<double, 4> sourceROI{
+        { (visibleX - absVideoRect.x()).toDouble() / videoWidth,
+          (visibleY - absVideoRect.y()).toDouble() / videoHeight,
+          (visibleMaxX - visibleX).toDouble() / videoWidth,
+          (visibleMaxY - visibleY).toDouble() / videoHeight }
+    };
 
     if (!m_videoSourceROIUnsupported && sourceROI != m_lastVideoSourceROI) {
         int ret =
@@ -188,7 +230,6 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
         } else {
             PLAYER_LOGE("**ERROR: player_set_video_roi_area %x -> ", ret);
             m_videoSourceROIUnsupported = true;
-            roiArea = absVideoRect;
         }
     }
 

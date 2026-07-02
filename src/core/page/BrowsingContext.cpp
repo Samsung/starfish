@@ -408,7 +408,7 @@ bool BrowsingContext::layoutIfNeeded()
         // rebuilds request it in buildFrameTreeIfNeeds. Skipping the full SC
         // clear+rebuild here leaves only the property recompute per layout.
         static bool scEstGate = getenv("STARFISH_SC_EST_GATE") &&
-            *getenv("STARFISH_SC_EST_GATE") == '1';
+                                *getenv("STARFISH_SC_EST_GATE") == '1';
         if (!scEstGate) {
             webView()->setNeedsEstablishesStackingContext();
         }

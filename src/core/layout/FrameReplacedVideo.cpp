@@ -57,6 +57,14 @@ void FrameReplacedVideo::didCompositeStackingContext(Compositor* c)
     }
 }
 
+void FrameReplacedVideo::didCullStackingContext()
+{
+    auto v = node()->asHTMLVideoElement();
+    if (v->activeMediaPlayer()) {
+        v->activeMediaPlayer()->hideVideoOverlay();
+    }
+}
+
 void FrameReplacedVideo::willCompositeStackingContext(Compositor* c)
 {
     auto v = node()->asHTMLVideoElement();

@@ -209,6 +209,7 @@ public:
     virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
                               const LayoutRect& absVideoRect);
     virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
+    virtual void hideVideoOverlay() override;
     virtual void prepareMediaSource();
 
     void updateStreamInfo(MediaPlayerSourceStream* stream, size_t pastInitIndex,
@@ -228,11 +229,14 @@ public:
     // Source-side crop ratios (x, y, w, h in 0.0-1.0) last applied via
     // player_set_video_roi_area; the identity means "no crop".
     std::array<double, 4> m_lastVideoSourceROI{ { 0.0, 0.0, 1.0, 1.0 } };
-    // Once player_set_video_roi_area fails we stop clamping the display ROI
-    // to the viewport (falling back to the previous pass-through behavior),
-    // because shrinking the ROI without a matching source crop squeezes the
-    // whole frame into the visible remainder.
+    // Once player_set_video_roi_area fails we stop attempting the source crop.
+    // The display ROI is still clamped to the on-screen intersection (so the
+    // plane never paints over the invisible region); the visible remainder is
+    // then scaled to fill it without the matching crop.
     bool m_videoSourceROIUnsupported{ false };
+    // Tracks the HW overlay plane visibility (player_set_display_visible) so
+    // the scroll-driven show/hide is only pushed to the player on a change.
+    bool m_overlayPlaneVisible{ true };
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
 
@@ -297,6 +301,7 @@ protected:
     bool videoOverlayEnabled();
     void punchHole(Compositor* canvas, const LayoutRect& videoRect,
                    const LayoutRect& absVideoRect);
+    void setOverlayPlaneVisible(bool visible);
     void setMediaFormatExtraForVideo(media_format_h& mediaFormat,
                                      StreamInfo* info);
     void setMediaFormatExtraForAudio(media_format_h& mediaFormat,

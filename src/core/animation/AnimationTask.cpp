@@ -407,11 +407,12 @@ bool ActiveAnimationTask::needsContinuousRendering(uint64_t tick)
     }
 
     // If the animated element itself is hidden by `visibility: hidden` (whether
-    // set directly or inherited) and nothing in its subtree overrides it back to
-    // `visible`, the animation has no visible effect. Skip forcing continuous
-    // rendering so e.g. an offscreen/hidden buffering spinner does not keep the
-    // whole render pipeline running at 60fps. `property() != Visibility` guards
-    // the rare case of an animation that would itself reveal the element.
+    // set directly or inherited) and nothing in its subtree overrides it back
+    // to `visible`, the animation has no visible effect. Skip forcing
+    // continuous rendering so e.g. an offscreen/hidden buffering spinner does
+    // not keep the whole render pipeline running at 60fps. `property() !=
+    // Visibility` guards the rare case of an animation that would itself reveal
+    // the element.
     ComputedStyle* style = frame->style();
     if (style &&
         style->visibility() == VisibilityValue::HiddenVisibilityValue &&

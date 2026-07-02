@@ -195,6 +195,13 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
 #endif
 }
 
+void MediaPlayerTizen::hideVideoOverlay()
+{
+    // The prod-TV overlay plane is clipped by the platform video path (the
+    // display ROI is passed through unclamped above), so no explicit hide on
+    // scroll-out is needed here.
+}
+
 void MediaPlayerTizen::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
