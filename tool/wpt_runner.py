@@ -41,18 +41,42 @@ import sys
 from argparse import ArgumentParser
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlsplit, urlunsplit
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
+                         ensure_imgdiff)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
+TMP_DIR = "/tmp"
 
 RE_PASS = re.compile(r"WPTR PASS (.*)")
 RE_FAIL = re.compile(r"WPTR FAIL (.*)")
 RE_DONE = re.compile(r"WPTR DONE status=(\d+) count=(\d+)")
+RE_CRASHOK = re.compile(r"WPTR CRASHOK")
+
+# Query marker inject_report.js checks for before entering the crashtest path,
+# so a crashtest run never accidentally engages the testharness completion
+# poll on a page that also happens to load testharness.js (or vice versa).
+# NOTE: the matching literal lives in tool/wpt/inject_report.js's crashtest
+# gate regex -- keep the two in sync (can't share a constant across Py/JS).
+CRASHTEST_QUERY = "__starfish_crashtest=1"
 
 GREEN, RED, YEL, RST = "\033[92m", "\033[91m", "\033[93m", "\033[0m"
+
+
+def reason_category(reason):
+    """Collapse a verdict reason to its leading category token.
+
+    Reasons may carry a free-text suffix ("IMGDIFF_ERROR: <msg>") or a
+    parenthesized sub-reason ("REF_LOAD_FAIL(TIMEOUT)"); the category is the
+    bit before the first ':'. Shared by the failure-reason histogram here and
+    by wpt_annotate.py's marker (`# [auto-fail:<category>]`) so the two never
+    disagree on how a reason is bucketed.
+    """
+    return reason.split(":", 1)[0].strip()
 
 
 def read_res(path, force=False):
@@ -125,6 +149,63 @@ def run_one(url, timeout):
     return True, "OK", npass, nfail
 
 
+def run_one_reftest(url, timeout, manifest):
+    """Return (ok, reason, 0, 0). See tool/wpt_reftest.py for the mechanism."""
+    ok, reason = run_reftest(url, manifest=manifest, timeout=timeout,
+                             tmp_dir=TMP_DIR)
+    return ok, reason, 0, 0
+
+
+def _with_crashtest_marker(url):
+    """Insert CRASHTEST_QUERY into url's query component, fragment-safe.
+
+    A plain string append (url + "?" + marker) would land the marker after a
+    "#fragment" instead of in the query, so inject_report.js's
+    location.search check would never see it. No current crashtest URL in the
+    corpus has a fragment, but this is nearly free to get right.
+    """
+    parts = urlsplit(url)
+    query = parts.query + ("&" if parts.query else "") + CRASHTEST_QUERY
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, parts.fragment))
+
+
+def run_one_crashtest(url, timeout):
+    """Return (ok, reason, 0, 0).
+
+    A crashtest has no testharness.js, so completion is signaled by
+    inject_report.js's crashtest path (see tool/wpt/inject_report.js) instead
+    of the WPTR DONE contract: it waits for the WPT `test-wait` class to be
+    gone from <html>, then prints WPTR CRASHOK. The query marker keeps that
+    path from engaging on ordinary testharness runs.
+    """
+    gated_url = _with_crashtest_marker(url)
+    cmd = [STARFISH, gated_url, "--hide-window", "--width=800", "--height=600"]
+    env = dict(os.environ)
+    env["HIDE_WINDOW"] = "1"
+    wpt_domains = ".web-platform.test,.not-web-platform.test"
+    for key in ("no_proxy", "NO_PROXY"):
+        existing = env.get(key, "")
+        env[key] = (existing + "," + wpt_domains) if existing else wpt_domains
+    try:
+        r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           env=env, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False, "TIMEOUT", 0, 0
+    except OSError:
+        return False, "SHELL_ERROR", 0, 0
+    out = r.stdout.decode("utf-8", "replace")
+    if r.returncode < 0:
+        # Distinct from reftest's "TC_CRASH" (tool/wpt_reftest.py's
+        # _screenshot, a broader "the render didn't come out right" bucket
+        # inherited from the legacy wpt_test.py driver) -- this specifically
+        # means the shell was killed by a signal, which is exactly the
+        # condition a crashtest exists to detect.
+        return False, "SIGNAL_CRASH", 0, 0
+    if RE_CRASHOK.search(out):
+        return True, "OK", 0, 0
+    return False, "NO_COMPLETION", 0, 0
+
+
 def load_done(results_path):
     """URLs already recorded in a results file (for --resume)."""
     done = set()
@@ -137,7 +218,8 @@ def load_done(results_path):
     return done
 
 
-def run_all(items, jobs, timeout, results_path, append=False):
+def run_all(items, jobs, timeout, results_path, append=False,
+           mode="testharness", manifest=None):
     total = len(items)
     npass = 0
     reasons = Counter()
@@ -149,7 +231,21 @@ def run_all(items, jobs, timeout, results_path, append=False):
 
     def task(item):
         name, url = item
-        ok, reason, np, nf = run_one(url, timeout)
+        try:
+            if mode == "reftest":
+                ok, reason, np, nf = run_one_reftest(url, timeout, manifest)
+            elif mode == "crashtest":
+                ok, reason, np, nf = run_one_crashtest(url, timeout)
+            else:
+                ok, reason, np, nf = run_one(url, timeout)
+        except Exception as e:
+            # Backstop: ThreadPoolExecutor.map() re-raises a worker exception
+            # when its result is consumed, which would abort this whole
+            # `for ... in ex.map(...)` loop and lose every not-yet-flushed
+            # result. One bad item (e.g. an unexpected crash deep in a mode's
+            # subprocess handling) must not take down a multi-thousand-item
+            # batch -- record it as this item's own failure instead.
+            ok, reason, np, nf = False, "INTERNAL_ERROR: %s" % e, 0, 0
         return name, url, ok, reason, np, nf
 
     with ThreadPoolExecutor(max_workers=jobs) as ex:
@@ -161,15 +257,25 @@ def run_all(items, jobs, timeout, results_path, append=False):
                 npass += 1
                 pl[0] += 1
             else:
-                reasons[reason] += 1
+                # Bucket by category (text before the first ":"), not the raw
+                # reason: IMGDIFF_ERROR/INTERNAL_ERROR embed a per-failure
+                # exception message, so without this every occurrence would
+                # be its own one-off Counter key -- defeating the point of a
+                # failure-reason histogram. The full message is still printed
+                # per-test below and written in full to --results.
+                reasons[reason_category(reason)] += 1
             # Per-test line in the legacy multi_basic format so failures are
             # identifiable: "[PASS] <url> (PASS: n)" / "[FAIL] <url> (...)".
-            if ok:
+            # reftest/crashtest have no subtests (np/nf are always 0 there),
+            # so skip the "(PASS: n)" suffix for those modes.
+            if mode == "testharness" and ok:
                 print("%s[PASS] %s%s (%sPASS: %d%s)"
                       % (GREEN, RST, url, GREEN, np, RST))
-            elif reason == "SUBTESTS_FAILED":
+            elif mode == "testharness" and reason == "SUBTESTS_FAILED":
                 print("%s[FAIL] %s%s (%sPASS: %d%s, %sFAIL: %d%s)"
                       % (RED, RST, url, GREEN, np, RST, RED, nf, RST))
+            elif ok:
+                print("%s[PASS] %s%s" % (GREEN, RST, url))
             else:
                 print("%s[FAIL] %s%s (%s%s%s)"
                       % (RED, RST, url, RED, reason, RST))
@@ -195,21 +301,31 @@ def main(argv):
                    help="skip URLs already in --results and append the rest")
     p.add_argument("--no-serve", action="store_true",
                    help="assume a server is already running")
+    p.add_argument("--mode", choices=("testharness", "reftest", "crashtest"),
+                   default="testharness",
+                   help="test kind the .res list(s) contain (default: "
+                        "testharness)")
     args = p.parse_args(argv)
     if not args.no_serve and not args.wpt_root:
         p.error("--wpt-root or WPT_ROOT is required (or pass --no-serve)")
+
+    manifest = None
+    if args.mode == "reftest":
+        ensure_imgdiff()
+        ensure_manifest(args.wpt_root, os.path.join(args.wpt_root, "MANIFEST.json"))
+        manifest = load_manifest(args.wpt_root)
 
     items = collect(args.res, args.force)
     if args.resume:
         done = load_done(args.results)
         items = [it for it in items if it[1] not in done]
         print("Resuming: %d already done, %d remaining" % (len(done), len(items)))
-    print("Running %d WPT tests (%d-way parallel) from %s"
-          % (len(items), args.jobs, args.res))
+    print("Running %d WPT %s tests (%d-way parallel) from %s"
+          % (len(items), args.mode, args.jobs, args.res))
 
     def go():
         return run_all(items, args.jobs, args.timeout, args.results,
-                       append=args.resume)
+                       append=args.resume, mode=args.mode, manifest=manifest)
 
     if args.no_serve:
         npass, reasons, per_list = go()

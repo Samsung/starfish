@@ -17,8 +17,12 @@
 
 This repo's convention is: active lines = expected-pass, `#`-commented lines =
 known failures. After a measurement run (tool/wpt_runner.py --results FILE),
-feed the results here to mark FAIL URLs as `# [auto-fail] ...`, so the lists
-become a clean green regression gate while keeping failures visible/auditable.
+feed the results here to mark FAIL URLs as `# [auto-fail:REASON] ...` (the
+FAIL reason from the results file, e.g. `# [auto-fail:TIMEOUT]`), so the
+lists become a clean green regression gate while keeping failures -- and why
+they were excluded -- visible/auditable. Note this label is write-once: an
+already-commented line's reason is not re-verified or refreshed by a later
+run until the line is uncommented and re-run by hand.
 
 Re-run after any engine fix or pin bump to refresh the gate.
 
@@ -29,17 +33,28 @@ Re-run after any engine fix or pin bump to refresh the gate.
 import os
 import sys
 
-MARK = "# [auto-fail] "
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from wpt_runner import reason_category  # noqa: E402
+
+MARK_FMT = "# [auto-fail:%s] "
 
 
 def load_verdicts(results_path):
-    """url -> True(pass)/False(fail); last verdict wins."""
+    """url -> (True(pass)/False(fail), reason); last verdict wins.
+
+    wpt_runner.py always writes 3 tab-separated columns (PASS|FAIL, reason,
+    url), so reason is always present here -- kept through to annotate_file()
+    so a FAIL caused by a known tooling gap (e.g. NO_REFERENCE for an
+    unresolved reftest, or IMGDIFF_ERROR) stays distinguishable in the .res
+    file from a genuine engine rendering bug, instead of both collapsing into
+    an identical, unlabeled "# [auto-fail] " comment.
+    """
     v = {}
     with open(results_path) as f:
         for line in f:
             parts = line.rstrip("\n").split("\t")
             if len(parts) == 3:
-                v[parts[2]] = (parts[0] == "PASS")
+                v[parts[2]] = (parts[0] == "PASS", parts[1])
     return v
 
 
@@ -55,9 +70,18 @@ def annotate_file(path, verdicts):
                 out.append(line)
                 continue
             url = s.split()[0]
-            passed = verdicts.get(url)
+            verdict = verdicts.get(url)
+            passed = verdict[0] if verdict else None
             if passed is False:
-                out.append(MARK + line)
+                # Bucket the reason to its leading category (shared with
+                # wpt_runner.py's histogram) so the marker stays a clean single
+                # token -- e.g. "IMGDIFF_ERROR: some corrupt file" ->
+                # "IMGDIFF_ERROR", giving "# [auto-fail:IMGDIFF_ERROR]" rather
+                # than a form with a dangling colon or free text that would be
+                # awkward to grep. (URL re-extraction and the "already
+                # commented" check are marker-text-agnostic regardless.)
+                reason = reason_category(verdict[1]) if verdict[1] else "UNKNOWN"
+                out.append((MARK_FMT % reason) + line)
                 commented += 1
             else:
                 out.append(line)
