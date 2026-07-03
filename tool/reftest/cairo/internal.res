@@ -643,6 +643,8 @@ test/cairo/internal-test/css/flex/flex_svg_maxHeight_03.html
 test/cairo/internal-test/css/flex/flex_auto_min_size_indefinite_main.html
 test/cairo/internal-test/css/flex/flex_auto_min_size_indefinite_main_multiline.html
 test/cairo/internal-test/css/flex/flex_auto_min_size_nested_stretch.html
+test/cairo/internal-test/css/flex/flex_auto_min_size_specified_cap.html
+test/cairo/internal-test/css/flex/flex_auto_min_size_specified_cap_border_box.html
 test/cairo/internal-test/css/flex/flex_basis_size_01.html
 test/cairo/internal-test/css/flex/flex_basis_size_02.html
 test/cairo/internal-test/css/flex/flex_item_margin-inline.html

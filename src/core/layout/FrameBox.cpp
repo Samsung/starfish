@@ -4326,6 +4326,18 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
             auto result = ctx.lookupFirstLineOrDefiniteHeight(this);
             if (result) {
                 minHeight = std::min(contentHeight(), result.value());
+                // CSS Flexbox §4.5: the content-based minimum is capped by the
+                // specified size suggestion -- the item's definite preferred
+                // main size. (widthAfterApplyingMinMaxWidths() does the same
+                // for a row flex item via its specified width.) Without this an
+                // item with a definite height smaller than its content
+                // over-expands to the content height, overriding the height.
+                if (!style->height().isAuto() &&
+                    style->height().isDefinite(parentHasFixedValue)) {
+                    LayoutUnit specified = contentHeightAfterApplyingBoxSizing(
+                        style->height().specifiedValue(parentHeight, this));
+                    minHeight = std::min(minHeight, specified);
+                }
             }
         }
 

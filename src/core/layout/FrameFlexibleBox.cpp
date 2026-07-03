@@ -235,6 +235,31 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
     if (contentSuggestion == intMaxForLayoutUnit) {
         return 0;
     }
+
+    // §4.5: cap the content-based minimum by the specified size suggestion --
+    // the item's preferred main size, when it is definite and not auto. The
+    // container main size is indefinite on this path, so a percentage preferred
+    // size is not definite and yields no cap (isDefinite(false)).
+    Length preferredMain = m_isMainAxisInInlineAxis
+                               ? flexItem->style()->width()
+                               : flexItem->style()->height();
+    if (!preferredMain.isAuto() && preferredMain.isDefinite(false)) {
+        // BMP is needed for the box-sizing conversion below; basisSize()'s
+        // MBPRestorer restores it to its pre-call state, so recompute it here.
+        // Percentages resolve against the inline size, matching the base used
+        // for the same call in computeMainSize().
+        flexItem->computeBorderMarginPadding(
+            m_layoutContext, m_isMainAxisInInlineAxis ? m_availableMainSize
+                                                      : m_availableCrossSize);
+        LayoutUnit specified =
+            preferredMain.specifiedValue(m_availableMainSize, m_container);
+        specified =
+            m_isMainAxisInInlineAxis
+                ? flexItem->contentWidthAfterApplyingBoxSizing(specified)
+                : flexItem->contentHeightAfterApplyingBoxSizing(specified);
+        contentSuggestion = std::min(contentSuggestion, specified);
+    }
+
     return contentSuggestion;
 }
 
