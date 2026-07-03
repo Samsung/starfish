@@ -2771,6 +2771,28 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     STARFISH_ASSERT(compositor != nullptr);
     STARFISH_ASSERT(needsComposite());
 
+    // A layer may stay composited even while fully hidden by visibility:hidden
+    // -- e.g. when an active transition/animation on the element forces
+    // compositing (see computeStackingContextProperties), overriding the
+    // visibility cull. The composite-draw path does not otherwise honor
+    // visibility, so its cached buffer keeps being blitted. That is how the
+    // YouTube progress ("position") bar, hidden via visibility:hidden on its
+    // own composited layer, stays painted over the video. Skip drawing when the
+    // owner and its whole subtree are hidden.
+    if (!owner()->contentSurface() &&
+        owner()->style()->visibility() == HiddenVisibilityValue) {
+        bool everyDescendantHidden = true;
+        owner()->iterateChildFrameBox([&everyDescendantHidden](FrameBox* fb) {
+            if (!fb->isAnonymous() &&
+                fb->style()->visibility() != HiddenVisibilityValue) {
+                everyDescendantHidden = false;
+            }
+        });
+        if (everyDescendantHidden) {
+            return;
+        }
+    }
+
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
     LayoutUnit maxX = visibleRect.maxX();
