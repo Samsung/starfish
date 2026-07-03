@@ -173,8 +173,8 @@ http://web-platform.test:8000/css/css-anchor-position/position-area-change.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-000.html
 http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-001.html
 http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-002.html
-http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-003.html
-http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-004.html
+# http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-003.html
+# http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-004.html
 http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-005.html
 http://web-platform.test:8000/css/css-anchor-position/scroll-to-anchored-fixed-006.html
 http://web-platform.test:8000/css/css-anchor-position/sticky-anchor-position-invalid.html

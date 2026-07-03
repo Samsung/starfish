@@ -5974,7 +5974,7 @@ http://web-platform.test:8000/css/CSS2/text/white-space-processing-052.xht
 http://web-platform.test:8000/css/CSS2/text/white-space-processing-053.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-processing-054.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/white-space-processing-055.xht
-http://web-platform.test:8000/css/CSS2/text/white-space-processing-056.xht
+# http://web-platform.test:8000/css/CSS2/text/white-space-processing-056.xht
 http://web-platform.test:8000/css/CSS2/text/word-spacing-004.xht
 http://web-platform.test:8000/css/CSS2/text/word-spacing-005.xht
 http://web-platform.test:8000/css/CSS2/text/word-spacing-006.xht

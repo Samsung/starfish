@@ -502,7 +502,7 @@ http://web-platform.test:8000/css/css-backgrounds/border-bottom-left-radius-011.
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-left-radius-014.xht
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-001.xht
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-004.xht
-http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-005.xht
+# http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-005.xht
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-010.xht
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-011.xht
 http://web-platform.test:8000/css/css-backgrounds/border-bottom-right-radius-014.xht

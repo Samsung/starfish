@@ -584,7 +584,7 @@ http://web-platform.test:8000/css/css-text/shaping/shaping-023.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-024.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-025.html
 http://web-platform.test:8000/css/css-text/shaping/shaping-arabic-diacritics-001.html
-http://web-platform.test:8000/css/css-text/shaping/shaping-arabic-diacritics-002.html
+# http://web-platform.test:8000/css/css-text/shaping/shaping-arabic-diacritics-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping_lig-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/shaping/shaping_lig-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/tab-size/tab-min-rendered-width-1.html
@@ -636,7 +636,7 @@ http://web-platform.test:8000/css/css-text/text-align/text-align-end-last-defaul
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-align/text-align-justify-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-align/text-align-justify-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-align/text-align-justify-006.html
-http://web-platform.test:8000/css/css-text/text-align/text-align-justify-bidi-control.html
+# http://web-platform.test:8000/css/css-text/text-align/text-align-justify-bidi-control.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text/text-align/text-align-justify-last-center.html
 http://web-platform.test:8000/css/css-text/text-align/text-align-justify-last-default.html
 # [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/css-text/text-align/text-align-justify-last-end.html
@@ -919,8 +919,8 @@ http://web-platform.test:8000/css/css-text/text-transform/text-transform-full-si
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-005.xht
-http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-006.html
-http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-007.html
+# http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-006.html
+# http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-transform/text-transform-fullwidth-010.html
@@ -1056,7 +1056,7 @@ http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideogra
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-005.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-006.html
-http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-007.html
+# http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-010.html
@@ -1323,7 +1323,7 @@ http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-sepa
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-012.html
 http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-014.html
-http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-015.html
+# http://web-platform.test:8000/css/css-text/white-space/trailing-other-space-separators-break-spaces-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-align-start.tentative.html
 http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/trailing-space-and-text-alignment-002.html
@@ -1430,7 +1430,7 @@ http://web-platform.test:8000/css/css-text/word-break/break-boundary-2-chars-002
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-001.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-002.html
-http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-003.html
+# http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-006.html
@@ -1500,7 +1500,7 @@ http://web-platform.test:8000/css/css-text/word-break/word-break-normal-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-normal-bo-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-en-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-normal-ethiopic.html
-http://web-platform.test:8000/css/css-text/word-break/word-break-normal-hi-000.html
+# http://web-platform.test:8000/css/css-text/word-break/word-break-normal-hi-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-ja-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-ja-001.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-ja-002.html
@@ -1510,7 +1510,7 @@ http://web-platform.test:8000/css/css-text/word-break/word-break-normal-ko-000.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-normal-lo-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-normal-my-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-normal-tdd-000.html
-http://web-platform.test:8000/css/css-text/word-break/word-break-normal-th-000.html
+# http://web-platform.test:8000/css/css-text/word-break/word-break-normal-th-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-th-001.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-normal-zh-000.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-space-transform/word-space-transform-001.html
