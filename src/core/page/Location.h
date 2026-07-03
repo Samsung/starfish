@@ -70,6 +70,14 @@ public:
 private:
     void assign(ResourceURL* url, bool force = false);
     void assign(ResourceURL* url, ReferrerURL* referrerURL, bool force = false);
+
+    // HTML "navigate" algorithm: a URL with a non-empty fragment that is
+    // otherwise identical to the current document URL is a same-document
+    // fragment navigation -- scroll + hashchange, never a reload. Returns
+    // true (and performs the fragment navigation) when `url` qualifies;
+    // otherwise leaves the document untouched and returns false so the
+    // caller falls through to a normal navigation.
+    bool tryFragmentNavigate(ResourceURL* url);
 };
 } // namespace Starfish
 
