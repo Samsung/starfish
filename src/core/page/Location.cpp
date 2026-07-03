@@ -102,8 +102,33 @@ String* Location::hash()
     return url()->hash();
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
+// A URL that has a fragment and is otherwise identical to the current
+// document URL is a same-document fragment navigation: update the fragment,
+// scroll to the target, and fire hashchange -- never reload. `replace()`
+// already special-cases the literal "#..." input for this; this generalizes
+// the check to any URL (relative or absolute) that resolves to "same
+// document, different fragment" so setHref/assign get the same behavior.
+bool Location::tryFragmentNavigate(ResourceURL* url)
+{
+    if (url->hash()->isEmpty()) {
+        return false;
+    }
+    if (!url->serialize(true)->equals(
+            document()->documentURI()->serialize(true))) {
+        return false;
+    }
+    setHash(url->hash());
+    return true;
+}
+
 void Location::setHref(String* newURL)
 {
+    ResourceURL* target =
+        new ResourceURL(newURL, document()->baseURL()->urlString());
+    if (tryFragmentNavigate(target)) {
+        return;
+    }
     setLocation(newURL, new ReferrerURL(document()->documentURI()));
 }
 
@@ -176,6 +201,9 @@ void Location::setLocation(String* url, ReferrerURL* referrerURL)
 void Location::assign(String* url)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
+    if (tryFragmentNavigate(r)) {
+        return;
+    }
     assign(r, document()->documentURI());
 }
 

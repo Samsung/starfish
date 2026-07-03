@@ -681,6 +681,17 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
                 url = baseURL->concat(url);
             }
         } else if (url->startsWith("#")) {
+            // A fragment-only reference replaces baseURL's fragment rather
+            // than appending to it (URL spec: the fragment is not part of
+            // the "path"/"input" being resolved against). Without stripping
+            // it here, resolving the same fragment-only reference against a
+            // URL that already carries a fragment (e.g. after a same-document
+            // fragment navigation) would keep growing the string
+            // ("p#a" -> "p#a#a" -> ...) instead of replacing it.
+            size_t hashPos = baseURL->find("#");
+            if (hashPos != SIZE_MAX) {
+                baseURL = baseURL->substring(0, hashPos);
+            }
             url = baseURL->concat(url);
         } else {
             size_t f = baseURL->find("://");
