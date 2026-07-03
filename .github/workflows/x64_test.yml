@@ -215,7 +215,7 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1
 
-  test_wpt_serve_all:
+  test_wpt_all:
     needs: build_x64
     timeout-minutes: 60
     runs-on: [ code-linux, code-2xlarge ]
@@ -247,6 +247,8 @@ jobs:
 
       - name: Prepare Test
         run: |
+          mkdir -p ~/.fonts
+          cp /root/workspace/Ahem.ttf ~/.fonts
           chmod a+x $PWD/out/debug/bin/lightweight-web-engine
           ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
           ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
@@ -255,9 +257,22 @@ jobs:
           ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.3
           ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.3
 
+      - name: Build image diff tool
+        run: |
+          cmake build/test -G Ninja
+          ninja install_pixel_test_dep
+
       - name: Setup WPT hosts
         run: python3.9 third_party/wpt/wpt make-hosts-file | sudo tee -a /etc/hosts
 
       - name: Run wpt_serve_all
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_all || exit 1
+
+      - name: Run wpt_serve_reftest
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_reftest || exit 1
+
+      - name: Run wpt_serve_crashtest
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a python3.9 ./tool/test_runner.py wpt_serve_crashtest || exit 1
