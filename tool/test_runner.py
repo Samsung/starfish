@@ -391,11 +391,15 @@ def wpt_serve_all():
     _wpt_serve_run()
 
 
-# WPT reftest / crashtest via on-demand `wpt serve` -- MVP, see docs/wpt.md.
-# Unlike wpt_serve_* (curated tool/wpt/lists/, ~100% by design), these lists
-# are generated straight from MANIFEST.json by wpt_manifest_lists.py and are
-# not yet curated with wpt_annotate.py, so a fresh run is expected to show
-# real failures rather than gate at 100%.
+# WPT reftest / crashtest via on-demand `wpt serve` -- see docs/wpt.md.
+# Runs the active (expected-pass) lists under tool/wpt/reftest_lists/ and
+# tool/wpt/crashtest_lists/; any active test failing is treated as a
+# regression, same CI-gate contract as wpt_serve_*. These lists have no
+# legacy corpus to carry forward (generated straight from MANIFEST.json by
+# wpt_manifest_lists.py, unlike wpt_serve_*'s wpt_audit.py source), but are
+# baselined and annotated the same way (wpt_runner.py + wpt_annotate.py) so
+# they also gate at ~100%. Re-run after an engine fix or pin bump to refresh
+# which tests gate.
 _WPT_REFTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/reftest_lists")
 _WPT_CRASHTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/crashtest_lists")
 
@@ -409,8 +413,6 @@ def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
               "--mode %s --out-dir %s" % (list_dir, mode, list_dir))
         sys.exit(ERRORCODE.TEST_STOPPED)
 
-    print("NOTE: un-curated MANIFEST-derived list, not yet baselined -- "
-          "failures are expected until annotated (see docs/wpt.md)")
     items = wpt_runner.collect(list_dir, force=False)
     print_table("Running WPT %s (on-demand)" % mode, "%d tests" % len(items))
     manifest = None
