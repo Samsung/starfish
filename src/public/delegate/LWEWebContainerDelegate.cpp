@@ -543,26 +543,51 @@ WebContainer* WebContainer::CreateWithPlatformImage(
             args.defaultFontName, args.locale, args.timezoneID, true);
 
         newWebContainer = new (NoGC) WebContainerImpl(webView);
+
+        // Tracks the currently CPU-mapped TBM surface so it can be unmapped
+        // before the next map and after the last render, preventing
+        // "tbm_bo_free with lock_cnt > 0" on SW backend. Heap-allocated
+        // (not a stack local) and captured by value below: the renderer
+        // stores and keeps invoking these callbacks long after this factory
+        // function returns, so a stack local captured by reference would be
+        // a dangling reference on every call after the first. Stored as
+        // void* so it can be captured unconditionally without requiring
+        // <tbm_surface.h> outside STARFISH_FLUTTER builds.
+        auto mappedTbmSurface = std::make_shared<void*>(nullptr);
+
         webView->renderer()->registerRenderingPrepareCallback(
-            [prepareImageCb](void) -> Starfish::RenderInfo {
+            [prepareImageCb, mappedTbmSurface](void) -> Starfish::RenderInfo {
                 WebContainer::ExternalImageInfo buffer = prepareImageCb();
                 Starfish::RenderInfo result;
 #ifdef STARFISH_FLUTTER
                 tbm_surface_info_s tbmSurfaceInfo;
+                // Unmap the previous frame's surface before mapping the new one.
+                if (*mappedTbmSurface != nullptr) {
+                    tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
+                    *mappedTbmSurface = nullptr;
+                }
                 if (tbm_surface_map((tbm_surface_h)buffer.imageAddress,
                                     TBM_SURF_OPTION_WRITE, &tbmSurfaceInfo) ==
                     TBM_SURFACE_ERROR_NONE) {
                     result.updatedBufferAddress = tbmSurfaceInfo.planes[0].ptr;
                     result.bufferStride = tbmSurfaceInfo.planes[0].stride;
+                    *mappedTbmSurface = (void*)buffer.imageAddress;
                 }
 #endif
                 return result;
             });
 
         webView->renderer()->registerRenderingFinishedCallback(
-            [newWebContainer,
-             flushCb](const Starfish::RenderResult& renderResult) {
+            [newWebContainer, flushCb, mappedTbmSurface](const Starfish::RenderResult& renderResult) {
                 flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
+#ifdef STARFISH_FLUTTER
+                // Unmap the TBM surface after rendering is complete.
+                // This ensures the surface is unmapped before Destroy() is called.
+                if (*mappedTbmSurface != nullptr) {
+                    tbm_surface_unmap((tbm_surface_h)*mappedTbmSurface);
+                    *mappedTbmSurface = nullptr;
+                }
+#endif
             });
     });
     return newWebContainer;
